@@ -2897,14 +2897,12 @@ export default {
       },
       purchase: {
         title: 'Purchase Page',
-        description: 'Show a "Purchase Subscription" entry in the sidebar and open the configured URL in an iframe',
+        description: 'Show a "Purchase Subscription" entry in the sidebar that opens the configured URL in a new window',
         enabled: 'Show Purchase Entry',
         enabledHint: 'Only shown in standard mode (not simple mode)',
         url: 'Purchase URL',
         urlPlaceholder: 'https://example.com/purchase',
-        urlHint: 'Must be an absolute http(s) URL',
-        iframeWarning:
-          '⚠️ iframe note: Some websites block embedding via X-Frame-Options or CSP (frame-ancestors). If the page is blank, provide an "Open in new tab" alternative.'
+        urlHint: 'Must be an absolute http(s) URL'
       },
       smtp: {
         title: 'SMTP Settings',
