@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="relative">
     <!-- 铃铛按钮 -->
     <button
       @click="openModal"
@@ -7,7 +7,7 @@
       :class="{ 'text-blue-600 dark:text-blue-400': unreadCount > 0 }"
       :aria-label="t('announcements.title')"
     >
-      <Icon name="bell" size="md" />
+      <Icon name="bell" size="md" :class="{ 'animate-bell-shake': unreadCount > 0 }" />
       <!-- 未读红点 -->
       <span
         v-if="unreadCount > 0"
@@ -17,6 +17,44 @@
         <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
       </span>
     </button>
+
+    <!-- 新公告 Tooltip 提示 -->
+    <Transition name="tooltip-slide">
+      <div
+        v-if="showTooltip && latestUnread"
+        class="absolute right-0 top-full mt-2 z-50 min-w-[200px] max-w-[280px]"
+      >
+        <!-- 小三角箭头 -->
+        <div class="absolute -top-1.5 right-4 h-3 w-3 rotate-45 bg-gradient-to-br from-blue-500 to-indigo-600"></div>
+        <!-- Tooltip 内容 -->
+        <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-3 shadow-lg shadow-blue-500/30">
+          <div class="flex items-start gap-2">
+            <div class="flex-shrink-0">
+              <div class="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20 text-white">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-medium text-white/80">{{ t('announcements.newAnnouncement') }}</p>
+              <p class="mt-0.5 truncate text-sm font-semibold text-white cursor-pointer hover:underline" @click="openLatestUnread">
+                {{ latestUnread.title }}
+              </p>
+            </div>
+            <button
+              @click.stop="dismissTooltip"
+              class="flex-shrink-0 flex h-5 w-5 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+              :aria-label="t('common.close')"
+            >
+              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- 公告列表 Modal -->
     <Teleport to="body">
@@ -337,11 +375,20 @@ const isModalOpen = ref(false)
 const detailModalOpen = ref(false)
 const selectedAnnouncement = ref<UserAnnouncement | null>(null)
 const loading = ref(false)
+const showTooltip = ref(false)
+const dismissedTooltipIds = ref<Set<number>>(new Set())
 
 // Computed
 const unreadCount = computed(() =>
   announcements.value.filter((a) => !a.read_at).length
 )
+
+const latestUnread = computed(() => {
+  const unreadAnnouncements = announcements.value.filter(
+    (a) => !a.read_at && !dismissedTooltipIds.value.has(a.id)
+  )
+  return unreadAnnouncements.length > 0 ? unreadAnnouncements[0] : null
+})
 
 // Methods
 function renderMarkdown(content: string): string {
@@ -355,6 +402,10 @@ async function loadAnnouncements() {
     loading.value = true
     const allAnnouncements = await announcementsAPI.list(false)
     announcements.value = allAnnouncements.slice(0, 20)
+    // 如果有未读公告，显示 tooltip
+    if (latestUnread.value) {
+      showTooltip.value = true
+    }
   } catch (err: any) {
     console.error('Failed to load announcements:', err)
     appStore.showError(err?.message || t('common.unknownError'))
@@ -365,6 +416,7 @@ async function loadAnnouncements() {
 
 function openModal() {
   isModalOpen.value = true
+  showTooltip.value = false  // 打开 modal 时隐藏 tooltip
   if (announcements.value.length === 0) {
     loadAnnouncements()
   }
@@ -372,6 +424,20 @@ function openModal() {
 
 function closeModal() {
   isModalOpen.value = false
+}
+
+function dismissTooltip() {
+  if (latestUnread.value) {
+    dismissedTooltipIds.value.add(latestUnread.value.id)
+  }
+  showTooltip.value = false
+}
+
+function openLatestUnread() {
+  if (latestUnread.value) {
+    showTooltip.value = false
+    openDetail(latestUnread.value)
+  }
 }
 
 function openDetail(announcement: UserAnnouncement) {
@@ -505,6 +571,46 @@ watch([isModalOpen, detailModalOpen], ([modal, detail]) => {
 
 .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #6b7280, #4b5563);
+}
+
+/* 铃铛晃动动画 */
+@keyframes bell-shake {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  10%, 30%, 50% {
+    transform: rotate(12deg);
+  }
+  20%, 40% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-bell-shake {
+  animation: bell-shake 1.5s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Tooltip 滑入动画 */
+.tooltip-slide-enter-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tooltip-slide-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.tooltip-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+}
+
+.tooltip-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
 }
 </style>
 

@@ -3436,7 +3436,8 @@ export default {
     total: '条公告',
     emptyDescription: '暂时没有任何系统公告',
     readStatus: '您已阅读此公告',
-    markReadHint: '点击"已读"标记此公告'
+    markReadHint: '点击"已读"标记此公告',
+    newAnnouncement: '新公告'
   },
 
   // User Subscriptions Page
