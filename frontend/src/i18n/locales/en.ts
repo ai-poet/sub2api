@@ -10,6 +10,13 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
+    pricing: {
+      title: 'Unbeatable Pay-As-You-Go Pricing',
+      subtitle: 'Get ~90% off official API prices',
+      highlight: '$8 ≈ $100',
+      description: 'Spend only $8 to get approximately $100 worth of API credits at official rates',
+      badge: '~10% of Official Price'
+    },
     tags: {
       subscriptionToApi: 'Subscription to API',
       stickySession: 'Sticky Session',

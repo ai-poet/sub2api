@@ -10,6 +10,13 @@ export default {
     login: '登录',
     getStarted: '开始使用',
     goToDashboard: '进入控制台',
+    pricing: {
+      title: '超值按量付费',
+      subtitle: '仅需官方价格的 1 折左右',
+      highlight: '$8 ≈ $100',
+      description: '仅需 $8 即可获得约 $100 官方等价额度',
+      badge: '约官方 1 折'
+    },
     tags: {
       subscriptionToApi: '订阅转 API',
       stickySession: '粘性会话',
