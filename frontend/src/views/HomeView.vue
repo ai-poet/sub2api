@@ -138,11 +138,11 @@
             </div>
 
             <!-- Pricing Highlights -->
-            <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:items-start lg:items-start">
+            <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:items-stretch lg:items-stretch">
               <!-- Card 1: Pay-As-You-Go -->
               <div class="flex flex-col items-center gap-2 lg:items-start">
                 <div
-                  class="inline-flex items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-r from-primary-50 to-primary-100/50 px-5 py-3.5 shadow-lg shadow-primary-500/10 dark:border-primary-800/50 dark:from-primary-900/30 dark:to-primary-800/20"
+                  class="inline-flex flex-1 items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-r from-primary-50 to-primary-100/50 px-5 py-3.5 shadow-lg shadow-primary-500/10 dark:border-primary-800/50 dark:from-primary-900/30 dark:to-primary-800/20"
                 >
                   <div class="flex flex-col">
                     <span class="text-xs font-medium uppercase tracking-wider text-primary-600 dark:text-primary-400">
@@ -176,7 +176,7 @@
               <!-- Card 2: Monthly Subscription -->
               <div class="flex flex-col items-center gap-2 lg:items-start">
                 <div
-                  class="inline-flex items-center gap-3 rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-purple-100/50 px-5 py-3.5 shadow-lg shadow-purple-500/10 dark:border-purple-800/50 dark:from-purple-900/30 dark:to-purple-800/20"
+                  class="inline-flex flex-1 items-center gap-3 rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-purple-100/50 px-5 py-3.5 shadow-lg shadow-purple-500/10 dark:border-purple-800/50 dark:from-purple-900/30 dark:to-purple-800/20"
                 >
                   <div class="flex flex-col">
                     <span class="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400">
