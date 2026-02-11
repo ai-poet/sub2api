@@ -14,11 +14,18 @@ export default {
     heroSubtitle: '一个密钥，畅用多个 AI 模型',
     heroDescription: '无需管理多个订阅账号，一站式接入 Claude、GPT、Gemini 等主流 AI 服务',
     pricing: {
-      title: '超值按量付费',
-      subtitle: '仅需官方价格的 1 折左右',
-      highlight: '$8 ≈ $100',
-      description: '仅需 $8 即可获得约 $100 官方等价额度',
-      badge: '约官方 1 折'
+      title: '按量付费',
+      subtitle: '对比官方 Claude Code / Codex',
+      highlight: '约 1 折',
+      description: '仅需官方价格的 1 折左右，极致性价比',
+      badge: '约官方 1 折',
+      monthly: {
+        title: '包月订阅',
+        subtitle: '对比官方 Claude Code',
+        highlight: '更低月费',
+        description: '远比官方 Claude Code 和 Codex 订阅便宜',
+        badge: '超值包月'
+      }
     },
     tags: {
       subscriptionToApi: '订阅转 API',
