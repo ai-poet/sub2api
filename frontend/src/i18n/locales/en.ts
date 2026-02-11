@@ -14,11 +14,18 @@ export default {
     heroSubtitle: 'One Key, All AI Models',
     heroDescription: 'No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key',
     pricing: {
-      title: 'Unbeatable Pay-As-You-Go Pricing',
-      subtitle: 'Get ~90% off official API prices',
-      highlight: '$8 ≈ $100',
-      description: 'Spend only $8 to get approximately $100 worth of API credits at official rates',
-      badge: '~10% of Official Price'
+      title: 'Pay-As-You-Go',
+      subtitle: 'vs Official Claude Code / Codex',
+      highlight: '~90% Off',
+      description: 'Just a fraction of official API pricing',
+      badge: '~10% of Official Price',
+      monthly: {
+        title: 'Monthly Plan',
+        subtitle: 'vs Official Claude Code',
+        highlight: 'Lower Monthly Cost',
+        description: 'Much cheaper than official Claude Code & Codex subscriptions',
+        badge: 'Best Value'
+      }
     },
     tags: {
       subscriptionToApi: 'Subscription to API',
