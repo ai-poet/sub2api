@@ -166,6 +166,19 @@ const (
 
 	// SettingKeyStreamTimeoutSettings stores JSON config for stream timeout handling.
 	SettingKeyStreamTimeoutSettings = "stream_timeout_settings"
+
+	// =========================
+	// Referral System
+	// =========================
+
+	SettingKeyReferralEnabled                = "referral_enabled"                  // 是否启用推荐功能
+	SettingKeyReferralReferrerBalanceReward   = "referral_referrer_balance_reward"   // 推荐人余额奖励
+	SettingKeyReferralReferrerGroupID         = "referral_referrer_group_id"         // 推荐人订阅分组 ID
+	SettingKeyReferralReferrerSubscriptionDays = "referral_referrer_subscription_days" // 推荐人订阅天数
+	SettingKeyReferralRefereeBalanceReward    = "referral_referee_balance_reward"    // 被推荐人余额奖励
+	SettingKeyReferralRefereeGroupID          = "referral_referee_group_id"          // 被推荐人订阅分组 ID
+	SettingKeyReferralRefereeSubscriptionDays  = "referral_referee_subscription_days"  // 被推荐人订阅天数
+	SettingKeyReferralMaxPerUser              = "referral_max_per_user"              // 每用户最大推荐人数
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

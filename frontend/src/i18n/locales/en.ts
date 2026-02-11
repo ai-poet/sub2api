@@ -287,6 +287,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
     buySubscription: 'Purchase Subscription',
+    referral: 'Referral',
     docs: 'Docs'
   },
 
@@ -674,6 +675,29 @@ export default {
     failedToRedeem: 'Failed to redeem code. Please check the code and try again.',
     subscriptionRefreshFailed: 'Redeemed successfully, but failed to refresh subscription status.',
     pleaseEnterCode: 'Please enter a redeem code'
+  },
+
+  // Referral
+  referral: {
+    title: 'Referral',
+    description: 'Invite friends to register and recharge, both parties will receive rewards',
+    yourLink: 'Your Referral Link',
+    copyLink: 'Copy Link',
+    copied: 'Copied',
+    code: 'Referral Code',
+    totalInvited: 'Total Invited',
+    rewarded: 'Rewarded',
+    pending: 'Pending',
+    totalEarned: 'Total Earned',
+    history: 'Referral History',
+    referee: 'Referred User',
+    status: 'Status',
+    reward: 'Reward',
+    time: 'Time',
+    noHistory: 'No referral records yet',
+    statusRewarded: 'Rewarded',
+    statusPending: 'Pending Recharge',
+    days: ' days'
   },
 
   // Profile

@@ -45,6 +45,8 @@ type User struct {
 	TotpEnabled bool `json:"totp_enabled,omitempty"`
 	// TotpEnabledAt holds the value of the "totp_enabled_at" field.
 	TotpEnabledAt *time.Time `json:"totp_enabled_at,omitempty"`
+	// ReferralCode holds the value of the "referral_code" field.
+	ReferralCode string `json:"referral_code,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -71,11 +73,15 @@ type UserEdges struct {
 	AttributeValues []*UserAttributeValue `json:"attribute_values,omitempty"`
 	// PromoCodeUsages holds the value of the promo_code_usages edge.
 	PromoCodeUsages []*PromoCodeUsage `json:"promo_code_usages,omitempty"`
+	// ReferralsMade holds the value of the referrals_made edge.
+	ReferralsMade []*UserReferral `json:"referrals_made,omitempty"`
+	// ReferralReceived holds the value of the referral_received edge.
+	ReferralReceived []*UserReferral `json:"referral_received,omitempty"`
 	// UserAllowedGroups holds the value of the user_allowed_groups edge.
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [10]bool
+	loadedTypes [12]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -159,10 +165,28 @@ func (e UserEdges) PromoCodeUsagesOrErr() ([]*PromoCodeUsage, error) {
 	return nil, &NotLoadedError{edge: "promo_code_usages"}
 }
 
+// ReferralsMadeOrErr returns the ReferralsMade value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReferralsMadeOrErr() ([]*UserReferral, error) {
+	if e.loadedTypes[9] {
+		return e.ReferralsMade, nil
+	}
+	return nil, &NotLoadedError{edge: "referrals_made"}
+}
+
+// ReferralReceivedOrErr returns the ReferralReceived value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReferralReceivedOrErr() ([]*UserReferral, error) {
+	if e.loadedTypes[10] {
+		return e.ReferralReceived, nil
+	}
+	return nil, &NotLoadedError{edge: "referral_received"}
+}
+
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[11] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -179,7 +203,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case user.FieldID, user.FieldConcurrency:
 			values[i] = new(sql.NullInt64)
-		case user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldUsername, user.FieldNotes, user.FieldTotpSecretEncrypted:
+		case user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldUsername, user.FieldNotes, user.FieldTotpSecretEncrypted, user.FieldReferralCode:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldTotpEnabledAt:
 			values[i] = new(sql.NullTime)
@@ -291,6 +315,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.TotpEnabledAt = new(time.Time)
 				*_m.TotpEnabledAt = value.Time
 			}
+		case user.FieldReferralCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field referral_code", values[i])
+			} else if value.Valid {
+				_m.ReferralCode = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -347,6 +377,16 @@ func (_m *User) QueryAttributeValues() *UserAttributeValueQuery {
 // QueryPromoCodeUsages queries the "promo_code_usages" edge of the User entity.
 func (_m *User) QueryPromoCodeUsages() *PromoCodeUsageQuery {
 	return NewUserClient(_m.config).QueryPromoCodeUsages(_m)
+}
+
+// QueryReferralsMade queries the "referrals_made" edge of the User entity.
+func (_m *User) QueryReferralsMade() *UserReferralQuery {
+	return NewUserClient(_m.config).QueryReferralsMade(_m)
+}
+
+// QueryReferralReceived queries the "referral_received" edge of the User entity.
+func (_m *User) QueryReferralReceived() *UserReferralQuery {
+	return NewUserClient(_m.config).QueryReferralReceived(_m)
 }
 
 // QueryUserAllowedGroups queries the "user_allowed_groups" edge of the User entity.
@@ -424,6 +464,9 @@ func (_m *User) String() string {
 		builder.WriteString("totp_enabled_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("referral_code=")
+	builder.WriteString(_m.ReferralCode)
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/userreferral"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
@@ -210,6 +211,20 @@ func (_c *UserCreate) SetNillableTotpEnabledAt(v *time.Time) *UserCreate {
 	return _c
 }
 
+// SetReferralCode sets the "referral_code" field.
+func (_c *UserCreate) SetReferralCode(v string) *UserCreate {
+	_c.mutation.SetReferralCode(v)
+	return _c
+}
+
+// SetNillableReferralCode sets the "referral_code" field if the given value is not nil.
+func (_c *UserCreate) SetNillableReferralCode(v *string) *UserCreate {
+	if v != nil {
+		_c.SetReferralCode(*v)
+	}
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *UserCreate) AddAPIKeyIDs(ids ...int64) *UserCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -345,6 +360,36 @@ func (_c *UserCreate) AddPromoCodeUsages(v ...*PromoCodeUsage) *UserCreate {
 	return _c.AddPromoCodeUsageIDs(ids...)
 }
 
+// AddReferralsMadeIDs adds the "referrals_made" edge to the UserReferral entity by IDs.
+func (_c *UserCreate) AddReferralsMadeIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddReferralsMadeIDs(ids...)
+	return _c
+}
+
+// AddReferralsMade adds the "referrals_made" edges to the UserReferral entity.
+func (_c *UserCreate) AddReferralsMade(v ...*UserReferral) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddReferralsMadeIDs(ids...)
+}
+
+// AddReferralReceivedIDs adds the "referral_received" edge to the UserReferral entity by IDs.
+func (_c *UserCreate) AddReferralReceivedIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddReferralReceivedIDs(ids...)
+	return _c
+}
+
+// AddReferralReceived adds the "referral_received" edges to the UserReferral entity.
+func (_c *UserCreate) AddReferralReceived(v ...*UserReferral) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddReferralReceivedIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -424,6 +469,10 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultTotpEnabled
 		_c.mutation.SetTotpEnabled(v)
 	}
+	if _, ok := _c.mutation.ReferralCode(); !ok {
+		v := user.DefaultReferralCode
+		_c.mutation.SetReferralCode(v)
+	}
 	return nil
 }
 
@@ -486,6 +535,14 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.TotpEnabled(); !ok {
 		return &ValidationError{Name: "totp_enabled", err: errors.New(`ent: missing required field "User.totp_enabled"`)}
+	}
+	if _, ok := _c.mutation.ReferralCode(); !ok {
+		return &ValidationError{Name: "referral_code", err: errors.New(`ent: missing required field "User.referral_code"`)}
+	}
+	if v, ok := _c.mutation.ReferralCode(); ok {
+		if err := user.ReferralCodeValidator(v); err != nil {
+			return &ValidationError{Name: "referral_code", err: fmt.Errorf(`ent: validator failed for field "User.referral_code": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -569,6 +626,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.TotpEnabledAt(); ok {
 		_spec.SetField(user.FieldTotpEnabledAt, field.TypeTime, value)
 		_node.TotpEnabledAt = &value
+	}
+	if value, ok := _c.mutation.ReferralCode(); ok {
+		_spec.SetField(user.FieldReferralCode, field.TypeString, value)
+		_node.ReferralCode = value
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -711,6 +772,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promocodeusage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ReferralsMadeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsMadeTable,
+			Columns: []string{user.ReferralsMadeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userreferral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ReferralReceivedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralReceivedTable,
+			Columns: []string{user.ReferralReceivedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userreferral.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -953,6 +1046,18 @@ func (u *UserUpsert) UpdateTotpEnabledAt() *UserUpsert {
 // ClearTotpEnabledAt clears the value of the "totp_enabled_at" field.
 func (u *UserUpsert) ClearTotpEnabledAt() *UserUpsert {
 	u.SetNull(user.FieldTotpEnabledAt)
+	return u
+}
+
+// SetReferralCode sets the "referral_code" field.
+func (u *UserUpsert) SetReferralCode(v string) *UserUpsert {
+	u.Set(user.FieldReferralCode, v)
+	return u
+}
+
+// UpdateReferralCode sets the "referral_code" field to the value that was provided on create.
+func (u *UserUpsert) UpdateReferralCode() *UserUpsert {
+	u.SetExcluded(user.FieldReferralCode)
 	return u
 }
 
@@ -1215,6 +1320,20 @@ func (u *UserUpsertOne) UpdateTotpEnabledAt() *UserUpsertOne {
 func (u *UserUpsertOne) ClearTotpEnabledAt() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearTotpEnabledAt()
+	})
+}
+
+// SetReferralCode sets the "referral_code" field.
+func (u *UserUpsertOne) SetReferralCode(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetReferralCode(v)
+	})
+}
+
+// UpdateReferralCode sets the "referral_code" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateReferralCode() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateReferralCode()
 	})
 }
 
@@ -1643,6 +1762,20 @@ func (u *UserUpsertBulk) UpdateTotpEnabledAt() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearTotpEnabledAt() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearTotpEnabledAt()
+	})
+}
+
+// SetReferralCode sets the "referral_code" field.
+func (u *UserUpsertBulk) SetReferralCode(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetReferralCode(v)
+	})
+}
+
+// UpdateReferralCode sets the "referral_code" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateReferralCode() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateReferralCode()
 	})
 }
 

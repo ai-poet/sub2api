@@ -43,6 +43,9 @@ type UserRepository interface {
 	UpdateTotpSecret(ctx context.Context, userID int64, encryptedSecret *string) error
 	EnableTotp(ctx context.Context, userID int64) error
 	DisableTotp(ctx context.Context, userID int64) error
+
+	// 推荐系统
+	GetByReferralCode(ctx context.Context, code string) (*User, error)
 }
 
 // UpdateProfileRequest 更新用户资料请求

@@ -24,6 +24,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/userreferral"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
@@ -868,6 +869,12 @@ func init() {
 	userDescTotpEnabled := userFields[9].Descriptor()
 	// user.DefaultTotpEnabled holds the default value on creation for the totp_enabled field.
 	user.DefaultTotpEnabled = userDescTotpEnabled.Default.(bool)
+	// userDescReferralCode is the schema descriptor for referral_code field.
+	userDescReferralCode := userFields[11].Descriptor()
+	// user.DefaultReferralCode holds the default value on creation for the referral_code field.
+	user.DefaultReferralCode = userDescReferralCode.Default.(string)
+	// user.ReferralCodeValidator is a validator for the "referral_code" field. It is called by the builders before save.
+	user.ReferralCodeValidator = userDescReferralCode.Validators[0].(func(string) error)
 	userallowedgroupFields := schema.UserAllowedGroup{}.Fields()
 	_ = userallowedgroupFields
 	// userallowedgroupDescCreatedAt is the schema descriptor for created_at field.
@@ -996,6 +1003,40 @@ func init() {
 	userattributevalueDescValue := userattributevalueFields[2].Descriptor()
 	// userattributevalue.DefaultValue holds the default value on creation for the value field.
 	userattributevalue.DefaultValue = userattributevalueDescValue.Default.(string)
+	userreferralFields := schema.UserReferral{}.Fields()
+	_ = userreferralFields
+	// userreferralDescStatus is the schema descriptor for status field.
+	userreferralDescStatus := userreferralFields[2].Descriptor()
+	// userreferral.DefaultStatus holds the default value on creation for the status field.
+	userreferral.DefaultStatus = userreferralDescStatus.Default.(string)
+	// userreferral.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	userreferral.StatusValidator = userreferralDescStatus.Validators[0].(func(string) error)
+	// userreferralDescReferrerBalanceReward is the schema descriptor for referrer_balance_reward field.
+	userreferralDescReferrerBalanceReward := userreferralFields[3].Descriptor()
+	// userreferral.DefaultReferrerBalanceReward holds the default value on creation for the referrer_balance_reward field.
+	userreferral.DefaultReferrerBalanceReward = userreferralDescReferrerBalanceReward.Default.(float64)
+	// userreferralDescReferrerSubscriptionDays is the schema descriptor for referrer_subscription_days field.
+	userreferralDescReferrerSubscriptionDays := userreferralFields[5].Descriptor()
+	// userreferral.DefaultReferrerSubscriptionDays holds the default value on creation for the referrer_subscription_days field.
+	userreferral.DefaultReferrerSubscriptionDays = userreferralDescReferrerSubscriptionDays.Default.(int)
+	// userreferralDescRefereeBalanceReward is the schema descriptor for referee_balance_reward field.
+	userreferralDescRefereeBalanceReward := userreferralFields[7].Descriptor()
+	// userreferral.DefaultRefereeBalanceReward holds the default value on creation for the referee_balance_reward field.
+	userreferral.DefaultRefereeBalanceReward = userreferralDescRefereeBalanceReward.Default.(float64)
+	// userreferralDescRefereeSubscriptionDays is the schema descriptor for referee_subscription_days field.
+	userreferralDescRefereeSubscriptionDays := userreferralFields[9].Descriptor()
+	// userreferral.DefaultRefereeSubscriptionDays holds the default value on creation for the referee_subscription_days field.
+	userreferral.DefaultRefereeSubscriptionDays = userreferralDescRefereeSubscriptionDays.Default.(int)
+	// userreferralDescCreatedAt is the schema descriptor for created_at field.
+	userreferralDescCreatedAt := userreferralFields[11].Descriptor()
+	// userreferral.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userreferral.DefaultCreatedAt = userreferralDescCreatedAt.Default.(func() time.Time)
+	// userreferralDescUpdatedAt is the schema descriptor for updated_at field.
+	userreferralDescUpdatedAt := userreferralFields[12].Descriptor()
+	// userreferral.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userreferral.DefaultUpdatedAt = userreferralDescUpdatedAt.Default.(func() time.Time)
+	// userreferral.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	userreferral.UpdateDefaultUpdatedAt = userreferralDescUpdatedAt.UpdateDefault.(func() time.Time)
 	usersubscriptionMixin := schema.UserSubscription{}.Mixin()
 	usersubscriptionMixinHooks1 := usersubscriptionMixin[1].Hooks()
 	usersubscription.Hooks[0] = usersubscriptionMixinHooks1[0]

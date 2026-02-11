@@ -60,5 +60,8 @@ type UserAttributeDefinition func(*sql.Selector)
 // UserAttributeValue is the predicate function for userattributevalue builders.
 type UserAttributeValue func(*sql.Selector)
 
+// UserReferral is the predicate function for userreferral builders.
+type UserReferral func(*sql.Selector)
+
 // UserSubscription is the predicate function for usersubscription builders.
 type UserSubscription func(*sql.Selector)

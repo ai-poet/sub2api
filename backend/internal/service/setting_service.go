@@ -77,6 +77,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyPurchaseSubscriptionEnabled,
 		SettingKeyPurchaseSubscriptionURL,
 		SettingKeyLinuxDoConnectEnabled,
+		SettingKeyReferralEnabled,
 	}
 
 	settings, err := s.settingRepo.GetMultiple(ctx, keys)
@@ -115,6 +116,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		PurchaseSubscriptionEnabled: settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:     strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		LinuxDoOAuthEnabled:         linuxDoEnabled,
+		ReferralEnabled:             settings[SettingKeyReferralEnabled] == "true",
 	}, nil
 }
 
@@ -158,6 +160,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PurchaseSubscriptionEnabled bool   `json:"purchase_subscription_enabled"`
 		PurchaseSubscriptionURL     string `json:"purchase_subscription_url,omitempty"`
 		LinuxDoOAuthEnabled         bool   `json:"linuxdo_oauth_enabled"`
+		ReferralEnabled             bool   `json:"referral_enabled"`
 		Version                     string `json:"version,omitempty"`
 	}{
 		RegistrationEnabled:         settings.RegistrationEnabled,
@@ -179,6 +182,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PurchaseSubscriptionEnabled: settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:     settings.PurchaseSubscriptionURL,
 		LinuxDoOAuthEnabled:         settings.LinuxDoOAuthEnabled,
+		ReferralEnabled:             settings.ReferralEnabled,
 		Version:                     s.version,
 	}, nil
 }

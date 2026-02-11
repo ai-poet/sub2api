@@ -60,6 +60,7 @@ export interface RegisterRequest {
   turnstile_token?: string
   promo_code?: string
   invitation_code?: string
+  referral_code?: string
 }
 
 export interface SendVerifyCodeRequest {
@@ -91,6 +92,7 @@ export interface PublicSettings {
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
   linuxdo_oauth_enabled: boolean
+  referral_enabled: boolean
   version: string
 }
 
@@ -1325,4 +1327,49 @@ export interface TotpLoginResponse {
 export interface TotpLogin2FARequest {
   temp_token: string
   totp_code: string
+}
+
+// ==================== Referral Types ====================
+
+export interface ReferralInfo {
+  referral_code: string
+  referral_link: string
+  stats: ReferralStats
+}
+
+export interface ReferralStats {
+  total_count: number
+  rewarded_count: number
+  pending_count: number
+  total_balance_earn: number
+}
+
+export interface UserReferral {
+  id: number
+  referrer_id: number
+  referee_id: number
+  status: 'pending' | 'rewarded'
+  referrer_balance_reward: number
+  referrer_group_id: number | null
+  referrer_subscription_days: number
+  referrer_rewarded_at: string | null
+  referee_balance_reward: number
+  referee_group_id: number | null
+  referee_subscription_days: number
+  referee_rewarded_at: string | null
+  created_at: string
+  updated_at: string
+  referrer_email?: string
+  referee_email?: string
+}
+
+export interface ReferralSettings {
+  enabled: boolean
+  referrer_balance_reward: number
+  referrer_group_id: number
+  referrer_subscription_days: number
+  referee_balance_reward: number
+  referee_group_id: number
+  referee_subscription_days: number
+  max_per_user: number
 }

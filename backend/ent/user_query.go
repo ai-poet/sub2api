@@ -23,6 +23,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/userreferral"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
@@ -42,6 +43,8 @@ type UserQuery struct {
 	withUsageLogs             *UsageLogQuery
 	withAttributeValues       *UserAttributeValueQuery
 	withPromoCodeUsages       *PromoCodeUsageQuery
+	withReferralsMade         *UserReferralQuery
+	withReferralReceived      *UserReferralQuery
 	withUserAllowedGroups     *UserAllowedGroupQuery
 	modifiers                 []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -278,6 +281,50 @@ func (_q *UserQuery) QueryPromoCodeUsages() *PromoCodeUsageQuery {
 	return query
 }
 
+// QueryReferralsMade chains the current query on the "referrals_made" edge.
+func (_q *UserQuery) QueryReferralsMade() *UserReferralQuery {
+	query := (&UserReferralClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userreferral.Table, userreferral.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralsMadeTable, user.ReferralsMadeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReferralReceived chains the current query on the "referral_received" edge.
+func (_q *UserQuery) QueryReferralReceived() *UserReferralQuery {
+	query := (&UserReferralClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userreferral.Table, userreferral.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralReceivedTable, user.ReferralReceivedColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryUserAllowedGroups chains the current query on the "user_allowed_groups" edge.
 func (_q *UserQuery) QueryUserAllowedGroups() *UserAllowedGroupQuery {
 	query := (&UserAllowedGroupClient{config: _q.config}).Query()
@@ -501,6 +548,8 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withUsageLogs:             _q.withUsageLogs.Clone(),
 		withAttributeValues:       _q.withAttributeValues.Clone(),
 		withPromoCodeUsages:       _q.withPromoCodeUsages.Clone(),
+		withReferralsMade:         _q.withReferralsMade.Clone(),
+		withReferralReceived:      _q.withReferralReceived.Clone(),
 		withUserAllowedGroups:     _q.withUserAllowedGroups.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
@@ -607,6 +656,28 @@ func (_q *UserQuery) WithPromoCodeUsages(opts ...func(*PromoCodeUsageQuery)) *Us
 	return _q
 }
 
+// WithReferralsMade tells the query-builder to eager-load the nodes that are connected to
+// the "referrals_made" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithReferralsMade(opts ...func(*UserReferralQuery)) *UserQuery {
+	query := (&UserReferralClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withReferralsMade = query
+	return _q
+}
+
+// WithReferralReceived tells the query-builder to eager-load the nodes that are connected to
+// the "referral_received" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithReferralReceived(opts ...func(*UserReferralQuery)) *UserQuery {
+	query := (&UserReferralClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withReferralReceived = query
+	return _q
+}
+
 // WithUserAllowedGroups tells the query-builder to eager-load the nodes that are connected to
 // the "user_allowed_groups" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithUserAllowedGroups(opts ...func(*UserAllowedGroupQuery)) *UserQuery {
@@ -696,7 +767,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [10]bool{
+		loadedTypes = [12]bool{
 			_q.withAPIKeys != nil,
 			_q.withRedeemCodes != nil,
 			_q.withSubscriptions != nil,
@@ -706,6 +777,8 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withUsageLogs != nil,
 			_q.withAttributeValues != nil,
 			_q.withPromoCodeUsages != nil,
+			_q.withReferralsMade != nil,
+			_q.withReferralReceived != nil,
 			_q.withUserAllowedGroups != nil,
 		}
 	)
@@ -792,6 +865,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadPromoCodeUsages(ctx, query, nodes,
 			func(n *User) { n.Edges.PromoCodeUsages = []*PromoCodeUsage{} },
 			func(n *User, e *PromoCodeUsage) { n.Edges.PromoCodeUsages = append(n.Edges.PromoCodeUsages, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withReferralsMade; query != nil {
+		if err := _q.loadReferralsMade(ctx, query, nodes,
+			func(n *User) { n.Edges.ReferralsMade = []*UserReferral{} },
+			func(n *User, e *UserReferral) { n.Edges.ReferralsMade = append(n.Edges.ReferralsMade, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withReferralReceived; query != nil {
+		if err := _q.loadReferralReceived(ctx, query, nodes,
+			func(n *User) { n.Edges.ReferralReceived = []*UserReferral{} },
+			func(n *User, e *UserReferral) { n.Edges.ReferralReceived = append(n.Edges.ReferralReceived, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1107,6 +1194,66 @@ func (_q *UserQuery) loadPromoCodeUsages(ctx context.Context, query *PromoCodeUs
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadReferralsMade(ctx context.Context, query *UserReferralQuery, nodes []*User, init func(*User), assign func(*User, *UserReferral)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userreferral.FieldReferrerID)
+	}
+	query.Where(predicate.UserReferral(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReferralsMadeColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ReferrerID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "referrer_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadReferralReceived(ctx context.Context, query *UserReferralQuery, nodes []*User, init func(*User), assign func(*User, *UserReferral)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userreferral.FieldRefereeID)
+	}
+	query.Where(predicate.UserReferral(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReferralReceivedColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RefereeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "referee_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

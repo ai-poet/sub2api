@@ -70,6 +70,9 @@ func RegisterAdminRoutes(
 
 		// 错误透传规则管理
 		registerErrorPassthroughRoutes(admin, h)
+
+		// 推荐系统管理
+		registerReferralRoutes(admin, h)
 	}
 }
 
@@ -409,5 +412,14 @@ func registerErrorPassthroughRoutes(admin *gin.RouterGroup, h *handler.Handlers)
 		rules.POST("", h.Admin.ErrorPassthrough.Create)
 		rules.PUT("/:id", h.Admin.ErrorPassthrough.Update)
 		rules.DELETE("/:id", h.Admin.ErrorPassthrough.Delete)
+	}
+}
+
+func registerReferralRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	referral := admin.Group("/referral")
+	{
+		referral.GET("/settings", h.Admin.Referral.GetSettings)
+		referral.PUT("/settings", h.Admin.Referral.UpdateSettings)
+		referral.GET("/list", h.Admin.Referral.ListReferrals)
 	}
 }

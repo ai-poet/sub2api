@@ -72,6 +72,11 @@ func (User) Fields() []ent.Field {
 		field.Time("totp_enabled_at").
 			Optional().
 			Nillable(),
+
+		// 推荐码
+		field.String("referral_code").
+			MaxLen(32).
+			Default(""),
 	}
 }
 
@@ -87,6 +92,8 @@ func (User) Edges() []ent.Edge {
 		edge.To("usage_logs", UsageLog.Type),
 		edge.To("attribute_values", UserAttributeValue.Type),
 		edge.To("promo_code_usages", PromoCodeUsage.Type),
+		edge.To("referrals_made", UserReferral.Type),
+		edge.To("referral_received", UserReferral.Type),
 	}
 }
 

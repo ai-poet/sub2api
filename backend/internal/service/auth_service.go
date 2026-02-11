@@ -65,6 +65,7 @@ type AuthService struct {
 	turnstileService  *TurnstileService
 	emailQueueService *EmailQueueService
 	promoService      *PromoService
+	referralService   *ReferralService
 }
 
 // NewAuthService 创建认证服务实例
@@ -78,6 +79,7 @@ func NewAuthService(
 	turnstileService *TurnstileService,
 	emailQueueService *EmailQueueService,
 	promoService *PromoService,
+	referralService *ReferralService,
 ) *AuthService {
 	return &AuthService{
 		userRepo:          userRepo,
@@ -89,16 +91,17 @@ func NewAuthService(
 		turnstileService:  turnstileService,
 		emailQueueService: emailQueueService,
 		promoService:      promoService,
+		referralService:   referralService,
 	}
 }
 
 // Register 用户注册，返回token和用户
 func (s *AuthService) Register(ctx context.Context, email, password string) (string, *User, error) {
-	return s.RegisterWithVerification(ctx, email, password, "", "", "")
+	return s.RegisterWithVerification(ctx, email, password, "", "", "", "")
 }
 
-// RegisterWithVerification 用户注册（支持邮件验证、优惠码和邀请码），返回token和用户
-func (s *AuthService) RegisterWithVerification(ctx context.Context, email, password, verifyCode, promoCode, invitationCode string) (string, *User, error) {
+// RegisterWithVerification 用户注册（支持邮件验证、优惠码、邀请码和推荐码），返回token和用户
+func (s *AuthService) RegisterWithVerification(ctx context.Context, email, password, verifyCode, promoCode, invitationCode, referralCode string) (string, *User, error) {
 	// 检查是否开放注册（默认关闭：settingService 未配置时不允许注册）
 	if s.settingService == nil || !s.settingService.IsRegistrationEnabled(ctx) {
 		return "", nil, ErrRegDisabled
@@ -206,6 +209,13 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 			if updatedUser, err := s.userRepo.GetByID(ctx, user.ID); err == nil {
 				user = updatedUser
 			}
+		}
+	}
+
+	// 记录推荐关系（如果提供了推荐码）
+	if referralCode != "" && s.referralService != nil {
+		if err := s.referralService.RegisterReferral(ctx, referralCode, user.ID); err != nil {
+			log.Printf("[Auth] Failed to register referral for user %d: %v", user.ID, err)
 		}
 	}
 
