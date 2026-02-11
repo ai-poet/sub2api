@@ -83,6 +83,7 @@ type PublicSettings struct {
 	PurchaseSubscriptionURL     string
 
 	LinuxDoOAuthEnabled bool
+	ReferralEnabled     bool
 	Version             string
 }
 

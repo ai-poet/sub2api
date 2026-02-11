@@ -43,6 +43,8 @@ const (
 	FieldTotpEnabled = "totp_enabled"
 	// FieldTotpEnabledAt holds the string denoting the totp_enabled_at field in the database.
 	FieldTotpEnabledAt = "totp_enabled_at"
+	// FieldReferralCode holds the string denoting the referral_code field in the database.
+	FieldReferralCode = "referral_code"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -61,6 +63,10 @@ const (
 	EdgeAttributeValues = "attribute_values"
 	// EdgePromoCodeUsages holds the string denoting the promo_code_usages edge name in mutations.
 	EdgePromoCodeUsages = "promo_code_usages"
+	// EdgeReferralsMade holds the string denoting the referrals_made edge name in mutations.
+	EdgeReferralsMade = "referrals_made"
+	// EdgeReferralReceived holds the string denoting the referral_received edge name in mutations.
+	EdgeReferralReceived = "referral_received"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -126,6 +132,20 @@ const (
 	PromoCodeUsagesInverseTable = "promo_code_usages"
 	// PromoCodeUsagesColumn is the table column denoting the promo_code_usages relation/edge.
 	PromoCodeUsagesColumn = "user_id"
+	// ReferralsMadeTable is the table that holds the referrals_made relation/edge.
+	ReferralsMadeTable = "user_referrals"
+	// ReferralsMadeInverseTable is the table name for the UserReferral entity.
+	// It exists in this package in order to avoid circular dependency with the "userreferral" package.
+	ReferralsMadeInverseTable = "user_referrals"
+	// ReferralsMadeColumn is the table column denoting the referrals_made relation/edge.
+	ReferralsMadeColumn = "referrer_id"
+	// ReferralReceivedTable is the table that holds the referral_received relation/edge.
+	ReferralReceivedTable = "user_referrals"
+	// ReferralReceivedInverseTable is the table name for the UserReferral entity.
+	// It exists in this package in order to avoid circular dependency with the "userreferral" package.
+	ReferralReceivedInverseTable = "user_referrals"
+	// ReferralReceivedColumn is the table column denoting the referral_received relation/edge.
+	ReferralReceivedColumn = "referee_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -152,6 +172,7 @@ var Columns = []string{
 	FieldTotpSecretEncrypted,
 	FieldTotpEnabled,
 	FieldTotpEnabledAt,
+	FieldReferralCode,
 }
 
 var (
@@ -208,6 +229,10 @@ var (
 	DefaultNotes string
 	// DefaultTotpEnabled holds the default value on creation for the "totp_enabled" field.
 	DefaultTotpEnabled bool
+	// DefaultReferralCode holds the default value on creation for the "referral_code" field.
+	DefaultReferralCode string
+	// ReferralCodeValidator is a validator for the "referral_code" field. It is called by the builders before save.
+	ReferralCodeValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -286,6 +311,11 @@ func ByTotpEnabled(opts ...sql.OrderTermOption) OrderOption {
 // ByTotpEnabledAt orders the results by the totp_enabled_at field.
 func ByTotpEnabledAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotpEnabledAt, opts...).ToFunc()
+}
+
+// ByReferralCode orders the results by the referral_code field.
+func ByReferralCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReferralCode, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.
@@ -414,6 +444,34 @@ func ByPromoCodeUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByReferralsMadeCount orders the results by referrals_made count.
+func ByReferralsMadeCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReferralsMadeStep(), opts...)
+	}
+}
+
+// ByReferralsMade orders the results by referrals_made terms.
+func ByReferralsMade(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReferralsMadeStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByReferralReceivedCount orders the results by referral_received count.
+func ByReferralReceivedCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReferralReceivedStep(), opts...)
+	}
+}
+
+// ByReferralReceived orders the results by referral_received terms.
+func ByReferralReceived(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReferralReceivedStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -488,6 +546,20 @@ func newPromoCodeUsagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PromoCodeUsagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PromoCodeUsagesTable, PromoCodeUsagesColumn),
+	)
+}
+func newReferralsMadeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReferralsMadeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReferralsMadeTable, ReferralsMadeColumn),
+	)
+}
+func newReferralReceivedStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReferralReceivedInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReferralReceivedTable, ReferralReceivedColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

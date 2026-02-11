@@ -763,6 +763,7 @@ var (
 		{Name: "totp_secret_encrypted", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
 		{Name: "totp_enabled", Type: field.TypeBool, Default: false},
 		{Name: "totp_enabled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "referral_code", Type: field.TypeString, Size: 32, Default: ""},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -901,6 +902,60 @@ var (
 			},
 		},
 	}
+	// UserReferralsColumns holds the columns for the "user_referrals" table.
+	UserReferralsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "status", Type: field.TypeString, Size: 20, Default: "pending"},
+		{Name: "referrer_balance_reward", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "referrer_group_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "referrer_subscription_days", Type: field.TypeInt, Default: 0},
+		{Name: "referrer_rewarded_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "referee_balance_reward", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "referee_group_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "referee_subscription_days", Type: field.TypeInt, Default: 0},
+		{Name: "referee_rewarded_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "referrer_id", Type: field.TypeInt64},
+		{Name: "referee_id", Type: field.TypeInt64},
+	}
+	// UserReferralsTable holds the schema information for the "user_referrals" table.
+	UserReferralsTable = &schema.Table{
+		Name:       "user_referrals",
+		Columns:    UserReferralsColumns,
+		PrimaryKey: []*schema.Column{UserReferralsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_referrals_users_referrals_made",
+				Columns:    []*schema.Column{UserReferralsColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_referrals_users_referral_received",
+				Columns:    []*schema.Column{UserReferralsColumns[13]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userreferral_referee_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserReferralsColumns[13]},
+			},
+			{
+				Name:    "userreferral_referrer_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserReferralsColumns[12]},
+			},
+			{
+				Name:    "userreferral_status",
+				Unique:  false,
+				Columns: []*schema.Column{UserReferralsColumns[1]},
+			},
+		},
+	}
 	// UserSubscriptionsColumns holds the columns for the "user_subscriptions" table.
 	UserSubscriptionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -1005,6 +1060,7 @@ var (
 		UserAllowedGroupsTable,
 		UserAttributeDefinitionsTable,
 		UserAttributeValuesTable,
+		UserReferralsTable,
 		UserSubscriptionsTable,
 	}
 )
@@ -1083,6 +1139,11 @@ func init() {
 	UserAttributeValuesTable.ForeignKeys[1].RefTable = UserAttributeDefinitionsTable
 	UserAttributeValuesTable.Annotation = &entsql.Annotation{
 		Table: "user_attribute_values",
+	}
+	UserReferralsTable.ForeignKeys[0].RefTable = UsersTable
+	UserReferralsTable.ForeignKeys[1].RefTable = UsersTable
+	UserReferralsTable.Annotation = &entsql.Annotation{
+		Table: "user_referrals",
 	}
 	UserSubscriptionsTable.ForeignKeys[0].RefTable = GroupsTable
 	UserSubscriptionsTable.ForeignKeys[1].RefTable = UsersTable

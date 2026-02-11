@@ -33,6 +33,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
+	"github.com/Wei-Shaw/sub2api/ent/userreferral"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 
 	stdsql "database/sql"
@@ -79,6 +80,8 @@ type Client struct {
 	UserAttributeDefinition *UserAttributeDefinitionClient
 	// UserAttributeValue is the client for interacting with the UserAttributeValue builders.
 	UserAttributeValue *UserAttributeValueClient
+	// UserReferral is the client for interacting with the UserReferral builders.
+	UserReferral *UserReferralClient
 	// UserSubscription is the client for interacting with the UserSubscription builders.
 	UserSubscription *UserSubscriptionClient
 }
@@ -110,6 +113,7 @@ func (c *Client) init() {
 	c.UserAllowedGroup = NewUserAllowedGroupClient(c.config)
 	c.UserAttributeDefinition = NewUserAttributeDefinitionClient(c.config)
 	c.UserAttributeValue = NewUserAttributeValueClient(c.config)
+	c.UserReferral = NewUserReferralClient(c.config)
 	c.UserSubscription = NewUserSubscriptionClient(c.config)
 }
 
@@ -221,6 +225,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		UserAllowedGroup:        NewUserAllowedGroupClient(cfg),
 		UserAttributeDefinition: NewUserAttributeDefinitionClient(cfg),
 		UserAttributeValue:      NewUserAttributeValueClient(cfg),
+		UserReferral:            NewUserReferralClient(cfg),
 		UserSubscription:        NewUserSubscriptionClient(cfg),
 	}, nil
 }
@@ -259,6 +264,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		UserAllowedGroup:        NewUserAllowedGroupClient(cfg),
 		UserAttributeDefinition: NewUserAttributeDefinitionClient(cfg),
 		UserAttributeValue:      NewUserAttributeValueClient(cfg),
+		UserReferral:            NewUserReferralClient(cfg),
 		UserSubscription:        NewUserSubscriptionClient(cfg),
 	}, nil
 }
@@ -293,7 +299,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ErrorPassthroughRule, c.Group, c.PromoCode, c.PromoCodeUsage, c.Proxy,
 		c.RedeemCode, c.Setting, c.UsageCleanupTask, c.UsageLog, c.User,
 		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserSubscription,
+		c.UserReferral, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -307,7 +313,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ErrorPassthroughRule, c.Group, c.PromoCode, c.PromoCodeUsage, c.Proxy,
 		c.RedeemCode, c.Setting, c.UsageCleanupTask, c.UsageLog, c.User,
 		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserSubscription,
+		c.UserReferral, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -352,6 +358,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UserAttributeDefinition.mutate(ctx, m)
 	case *UserAttributeValueMutation:
 		return c.UserAttributeValue.mutate(ctx, m)
+	case *UserReferralMutation:
+		return c.UserReferral.mutate(ctx, m)
 	case *UserSubscriptionMutation:
 		return c.UserSubscription.mutate(ctx, m)
 	default:
@@ -2928,6 +2936,38 @@ func (c *UserClient) QueryPromoCodeUsages(_m *User) *PromoCodeUsageQuery {
 	return query
 }
 
+// QueryReferralsMade queries the referrals_made edge of a User.
+func (c *UserClient) QueryReferralsMade(_m *User) *UserReferralQuery {
+	query := (&UserReferralClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userreferral.Table, userreferral.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralsMadeTable, user.ReferralsMadeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReferralReceived queries the referral_received edge of a User.
+func (c *UserClient) QueryReferralReceived(_m *User) *UserReferralQuery {
+	query := (&UserReferralClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userreferral.Table, userreferral.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralReceivedTable, user.ReferralReceivedColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserAllowedGroups queries the user_allowed_groups edge of a User.
 func (c *UserClient) QueryUserAllowedGroups(_m *User) *UserAllowedGroupQuery {
 	query := (&UserAllowedGroupClient{config: c.config}).Query()
@@ -3403,6 +3443,171 @@ func (c *UserAttributeValueClient) mutate(ctx context.Context, m *UserAttributeV
 	}
 }
 
+// UserReferralClient is a client for the UserReferral schema.
+type UserReferralClient struct {
+	config
+}
+
+// NewUserReferralClient returns a client for the UserReferral from the given config.
+func NewUserReferralClient(c config) *UserReferralClient {
+	return &UserReferralClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userreferral.Hooks(f(g(h())))`.
+func (c *UserReferralClient) Use(hooks ...Hook) {
+	c.hooks.UserReferral = append(c.hooks.UserReferral, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userreferral.Intercept(f(g(h())))`.
+func (c *UserReferralClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserReferral = append(c.inters.UserReferral, interceptors...)
+}
+
+// Create returns a builder for creating a UserReferral entity.
+func (c *UserReferralClient) Create() *UserReferralCreate {
+	mutation := newUserReferralMutation(c.config, OpCreate)
+	return &UserReferralCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserReferral entities.
+func (c *UserReferralClient) CreateBulk(builders ...*UserReferralCreate) *UserReferralCreateBulk {
+	return &UserReferralCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserReferralClient) MapCreateBulk(slice any, setFunc func(*UserReferralCreate, int)) *UserReferralCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserReferralCreateBulk{err: fmt.Errorf("calling to UserReferralClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserReferralCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserReferralCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserReferral.
+func (c *UserReferralClient) Update() *UserReferralUpdate {
+	mutation := newUserReferralMutation(c.config, OpUpdate)
+	return &UserReferralUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserReferralClient) UpdateOne(_m *UserReferral) *UserReferralUpdateOne {
+	mutation := newUserReferralMutation(c.config, OpUpdateOne, withUserReferral(_m))
+	return &UserReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserReferralClient) UpdateOneID(id int64) *UserReferralUpdateOne {
+	mutation := newUserReferralMutation(c.config, OpUpdateOne, withUserReferralID(id))
+	return &UserReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserReferral.
+func (c *UserReferralClient) Delete() *UserReferralDelete {
+	mutation := newUserReferralMutation(c.config, OpDelete)
+	return &UserReferralDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserReferralClient) DeleteOne(_m *UserReferral) *UserReferralDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserReferralClient) DeleteOneID(id int64) *UserReferralDeleteOne {
+	builder := c.Delete().Where(userreferral.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserReferralDeleteOne{builder}
+}
+
+// Query returns a query builder for UserReferral.
+func (c *UserReferralClient) Query() *UserReferralQuery {
+	return &UserReferralQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserReferral},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserReferral entity by its id.
+func (c *UserReferralClient) Get(ctx context.Context, id int64) (*UserReferral, error) {
+	return c.Query().Where(userreferral.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserReferralClient) GetX(ctx context.Context, id int64) *UserReferral {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryReferrer queries the referrer edge of a UserReferral.
+func (c *UserReferralClient) QueryReferrer(_m *UserReferral) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userreferral.Table, userreferral.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userreferral.ReferrerTable, userreferral.ReferrerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReferee queries the referee edge of a UserReferral.
+func (c *UserReferralClient) QueryReferee(_m *UserReferral) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userreferral.Table, userreferral.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userreferral.RefereeTable, userreferral.RefereeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserReferralClient) Hooks() []Hook {
+	return c.hooks.UserReferral
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserReferralClient) Interceptors() []Interceptor {
+	return c.inters.UserReferral
+}
+
+func (c *UserReferralClient) mutate(ctx context.Context, m *UserReferralMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserReferralCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserReferralUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserReferralDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserReferral mutation op: %q", m.Op())
+	}
+}
+
 // UserSubscriptionClient is a client for the UserSubscription schema.
 type UserSubscriptionClient struct {
 	config
@@ -3608,13 +3813,15 @@ type (
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead,
 		ErrorPassthroughRule, Group, PromoCode, PromoCodeUsage, Proxy, RedeemCode,
 		Setting, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserSubscription []ent.Hook
+		UserAttributeDefinition, UserAttributeValue, UserReferral,
+		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead,
 		ErrorPassthroughRule, Group, PromoCode, PromoCodeUsage, Proxy, RedeemCode,
 		Setting, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserSubscription []ent.Interceptor
+		UserAttributeDefinition, UserAttributeValue, UserReferral,
+		UserSubscription []ent.Interceptor
 	}
 )
 

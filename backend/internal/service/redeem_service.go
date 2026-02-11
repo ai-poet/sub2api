@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -80,6 +81,7 @@ type RedeemService struct {
 	billingCacheService  *BillingCacheService
 	entClient            *dbent.Client
 	authCacheInvalidator APIKeyAuthCacheInvalidator
+	referralService      *ReferralService
 }
 
 // NewRedeemService 创建兑换码服务实例
@@ -91,6 +93,7 @@ func NewRedeemService(
 	billingCacheService *BillingCacheService,
 	entClient *dbent.Client,
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	referralService *ReferralService,
 ) *RedeemService {
 	return &RedeemService{
 		redeemRepo:           redeemRepo,
@@ -100,6 +103,7 @@ func NewRedeemService(
 		billingCacheService:  billingCacheService,
 		entClient:            entClient,
 		authCacheInvalidator: authCacheInvalidator,
+		referralService:      referralService,
 	}
 }
 
@@ -327,6 +331,18 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 
 	// 事务提交成功后失效缓存
 	s.invalidateRedeemCaches(ctx, userID, redeemCode)
+
+	// 余额类型兑换成功后，异步触发推荐奖励
+	if redeemCode.Type == RedeemTypeBalance && s.referralService != nil {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("[Redeem] Panic in referral reward trigger: %v", r)
+				}
+			}()
+			s.referralService.TriggerReferralReward(context.Background(), userID)
+		}()
+	}
 
 	// 重新获取更新后的兑换码
 	redeemCode, err = s.redeemRepo.GetByID(ctx, redeemCode.ID)

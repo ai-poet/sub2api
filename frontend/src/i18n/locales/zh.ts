@@ -287,6 +287,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: '我的订阅',
     buySubscription: '购买订阅',
+    referral: '推荐邀请',
     docs: '文档'
   },
 
@@ -680,6 +681,29 @@ export default {
     failedToRedeem: '兑换失败，请检查兑换码后重试。',
     subscriptionRefreshFailed: '兑换成功，但订阅状态刷新失败。',
     pleaseEnterCode: '请输入兑换码'
+  },
+
+  // Referral
+  referral: {
+    title: '推荐邀请',
+    description: '邀请好友注册并充值，双方均可获得奖励',
+    yourLink: '您的推荐链接',
+    copyLink: '复制链接',
+    copied: '已复制',
+    code: '推荐码',
+    totalInvited: '总邀请数',
+    rewarded: '已奖励',
+    pending: '待奖励',
+    totalEarned: '累计获得',
+    history: '推荐历史',
+    referee: '被推荐人',
+    status: '状态',
+    reward: '奖励',
+    time: '时间',
+    noHistory: '暂无推荐记录',
+    statusRewarded: '已奖励',
+    statusPending: '待充值',
+    days: '天'
   },
 
   // Profile

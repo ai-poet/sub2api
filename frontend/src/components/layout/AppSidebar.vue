@@ -482,6 +482,9 @@ const userNavItems = computed(() => {
         ]
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
+    ...(appStore.cachedPublicSettings?.referral_enabled
+      ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon, hideInSimpleMode: true }]
+      : []),
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
@@ -505,6 +508,9 @@ const personalNavItems = computed(() => {
         ]
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
+    ...(appStore.cachedPublicSettings?.referral_enabled
+      ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon, hideInSimpleMode: true }]
+      : []),
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items

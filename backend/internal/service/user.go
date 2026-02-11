@@ -30,6 +30,8 @@ type User struct {
 	TotpEnabled         bool       // 是否启用 TOTP
 	TotpEnabledAt       *time.Time // TOTP 启用时间
 
+	ReferralCode string // 用户推荐码
+
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
 }

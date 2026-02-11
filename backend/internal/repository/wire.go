@@ -89,6 +89,8 @@ var ProviderSet = wire.NewSet(
 	NewTotpCache,
 	NewRefreshTokenCache,
 	NewErrorPassthroughCache,
+	NewReferralRepository,
+	NewReferralCache,
 
 	// Encryptors
 	NewAESEncryptor,
