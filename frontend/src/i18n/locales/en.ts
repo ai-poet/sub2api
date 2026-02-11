@@ -14,11 +14,18 @@ export default {
     heroSubtitle: 'One Key, All AI Models',
     heroDescription: 'No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key',
     pricing: {
-      title: 'Unbeatable Pay-As-You-Go Pricing',
-      subtitle: 'Get ~90% off official API prices',
-      highlight: '$8 ≈ $100',
-      description: 'Spend only $8 to get approximately $100 worth of API credits at official rates',
-      badge: '~10% of Official Price'
+      title: 'Pay-As-You-Go',
+      subtitle: 'vs Official Claude Code / Codex',
+      highlight: '~90% Off',
+      description: 'Just a fraction of official API pricing',
+      badge: '~10% of Official Price',
+      monthly: {
+        title: 'Monthly Plan',
+        subtitle: 'vs Official Claude Code',
+        highlight: 'Lower Monthly Cost',
+        description: 'Much cheaper than official Claude Code & Codex subscriptions',
+        badge: 'Best Value'
+      }
     },
     tags: {
       subscriptionToApi: 'Subscription to API',
@@ -872,7 +879,7 @@ export default {
       createUser: 'Create User',
       editUser: 'Edit User',
       deleteUser: 'Delete User',
-      searchUsers: 'Search users...',
+      searchUsers: 'Search by email, username, notes, or API key...',
       allRoles: 'All Roles',
       allStatus: 'All Status',
       admin: 'Admin',
@@ -1805,13 +1812,20 @@ export default {
           authCode: 'Authorization URL or Code',
           authCodePlaceholder:
             'Option 1: Copy the complete URL\n(http://localhost:xxx/auth/callback?code=...)\nOption 2: Copy only the code parameter value',
-          authCodeHint: 'You can copy the entire URL or just the code parameter value, the system will auto-detect',
-          failedToGenerateUrl: 'Failed to generate Antigravity auth URL',
-          missingExchangeParams: 'Missing code, session ID, or state',
-          failedToExchangeCode: 'Failed to exchange Antigravity auth code'
-        }
-	      },
-      // Gemini specific (platform-wide)
+                    authCodeHint: 'You can copy the entire URL or just the code parameter value, the system will auto-detect',
+                    failedToGenerateUrl: 'Failed to generate Antigravity auth URL',
+                    missingExchangeParams: 'Missing code, session ID, or state',
+                    failedToExchangeCode: 'Failed to exchange Antigravity auth code',
+                    // Refresh Token auth
+                    refreshTokenAuth: 'Manual RT',
+                    refreshTokenDesc: 'Enter your existing Antigravity Refresh Token. Supports batch input (one per line). The system will automatically validate and create accounts.',
+                    refreshTokenPlaceholder: 'Paste your Antigravity Refresh Token...\nSupports multiple tokens, one per line',
+                    validating: 'Validating...',
+                    validateAndCreate: 'Validate & Create',
+                    pleaseEnterRefreshToken: 'Please enter Refresh Token',
+                    failedToValidateRT: 'Failed to validate Refresh Token'
+                  }
+                },      // Gemini specific (platform-wide)
       gemini: {
         helpButton: 'Help',
         helpDialog: {
@@ -2160,7 +2174,7 @@ export default {
       title: 'Redeem Code Management',
       description: 'Generate and manage redeem codes',
       generateCodes: 'Generate Codes',
-      searchCodes: 'Search codes...',
+      searchCodes: 'Search codes or email...',
       allTypes: 'All Types',
       allStatus: 'All Status',
       balance: 'Balance',
@@ -3382,6 +3396,7 @@ export default {
       custom: 'Custom',
       code: 'Code',
       body: 'Body',
+      skipMonitoring: 'Skip Monitoring',
 
       // Columns
       columns: {
@@ -3426,6 +3441,8 @@ export default {
         passthroughBody: 'Passthrough upstream error message',
         customMessage: 'Custom error message',
         customMessagePlaceholder: 'Error message to return to client...',
+        skipMonitoring: 'Skip monitoring',
+        skipMonitoringHint: 'When enabled, errors matching this rule will not be recorded in ops monitoring',
         enabled: 'Enable this rule'
       },
 

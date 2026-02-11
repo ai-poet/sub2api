@@ -137,38 +137,75 @@
               </router-link>
             </div>
 
-            <!-- Pricing Highlight -->
-            <div class="mt-8 inline-flex flex-col items-center gap-2 lg:items-start">
-              <div
-                class="inline-flex items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-r from-primary-50 to-primary-100/50 px-6 py-4 shadow-lg shadow-primary-500/10 dark:border-primary-800/50 dark:from-primary-900/30 dark:to-primary-800/20"
-              >
-                <div class="flex flex-col">
-                  <span class="text-xs font-medium uppercase tracking-wider text-primary-600 dark:text-primary-400">
-                    {{ t('home.pricing.subtitle') }}
-                  </span>
-                  <span class="text-3xl font-bold text-gray-900 dark:text-white">
-                    {{ t('home.pricing.highlight') }}
-                  </span>
-                  <span class="text-sm text-gray-600 dark:text-dark-300">
-                    {{ t('home.pricing.description') }}
-                  </span>
-                </div>
+            <!-- Pricing Highlights -->
+            <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:items-stretch lg:items-stretch">
+              <!-- Card 1: Pay-As-You-Go -->
+              <div class="flex flex-col items-center gap-2 lg:items-start">
                 <div
-                  class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg shadow-green-500/30"
+                  class="inline-flex flex-1 items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-r from-primary-50 to-primary-100/50 px-5 py-3.5 shadow-lg shadow-primary-500/10 dark:border-primary-800/50 dark:from-primary-900/30 dark:to-primary-800/20"
                 >
-                  <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <div class="flex flex-col">
+                    <span class="text-xs font-medium uppercase tracking-wider text-primary-600 dark:text-primary-400">
+                      {{ t('home.pricing.subtitle') }}
+                    </span>
+                    <span class="text-2xl font-bold text-gray-900 dark:text-white">
+                      {{ t('home.pricing.highlight') }}
+                    </span>
+                    <span class="text-xs text-gray-600 dark:text-dark-300">
+                      {{ t('home.pricing.description') }}
+                    </span>
+                  </div>
+                  <div
+                    class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg shadow-green-500/30"
+                  >
+                    <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                 </div>
+                <span
+                  class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                >
+                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                  {{ t('home.pricing.badge') }}
+                </span>
               </div>
-              <span
-                class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              >
-                <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-                {{ t('home.pricing.badge') }}
-              </span>
+
+              <!-- Card 2: Monthly Subscription -->
+              <div class="flex flex-col items-center gap-2 lg:items-start">
+                <div
+                  class="inline-flex flex-1 items-center gap-3 rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-purple-100/50 px-5 py-3.5 shadow-lg shadow-purple-500/10 dark:border-purple-800/50 dark:from-purple-900/30 dark:to-purple-800/20"
+                >
+                  <div class="flex flex-col">
+                    <span class="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                      {{ t('home.pricing.monthly.subtitle') }}
+                    </span>
+                    <span class="text-2xl font-bold text-gray-900 dark:text-white">
+                      {{ t('home.pricing.monthly.highlight') }}
+                    </span>
+                    <span class="text-xs text-gray-600 dark:text-dark-300">
+                      {{ t('home.pricing.monthly.description') }}
+                    </span>
+                  </div>
+                  <div
+                    class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30"
+                  >
+                    <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                  </div>
+                </div>
+                <span
+                  class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                >
+                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                  {{ t('home.pricing.monthly.badge') }}
+                </span>
+              </div>
             </div>
           </div>
 
