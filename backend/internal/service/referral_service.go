@@ -67,6 +67,7 @@ type ReferralRepository interface {
 	GetByRefereeID(ctx context.Context, refereeID int64) (*UserReferral, error)
 	GetByID(ctx context.Context, id int64) (*UserReferral, error)
 	UpdateStatus(ctx context.Context, id int64, status string, rewards *ReferralRewardSnapshot) error
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
 	CountByReferrerID(ctx context.Context, referrerID int64) (int, error)
 	CountByReferrerIDAndStatus(ctx context.Context, referrerID int64, status string) (int, error)
 	SumReferrerBalanceReward(ctx context.Context, referrerID int64) (float64, error)
@@ -333,15 +334,33 @@ func (s *ReferralService) TriggerReferralReward(ctx context.Context, refereeUser
 		snapshot.RefereeGroupID = &gid
 	}
 
-	// 7. 发放奖励
-	if err := s.distributeRewards(ctx, ref, snapshot); err != nil {
-		log.Printf("[Referral] Failed to distribute rewards for referral %d: %v", ref.ID, err)
-		return
-	}
+	// 7. 在同一事务里发放奖励并更新状态，避免“已发奖但状态未更新”导致重复发放。
+	err = s.referralRepo.RunInTx(ctx, func(txCtx context.Context) error {
+		refInTx, err := s.referralRepo.GetByRefereeID(txCtx, refereeUserID)
+		if err != nil {
+			if errors.Is(err, ErrReferralNotFound) {
+				return nil
+			}
+			return fmt.Errorf("query referral in tx: %w", err)
+		}
 
-	// 8. 更新状态为 rewarded
-	if err := s.referralRepo.UpdateStatus(ctx, ref.ID, ReferralStatusRewarded, snapshot); err != nil {
-		log.Printf("[Referral] Failed to update referral status %d: %v", ref.ID, err)
+		if refInTx.Status == ReferralStatusRewarded {
+			return nil
+		}
+
+		if err := s.distributeRewards(txCtx, refInTx, snapshot); err != nil {
+			return fmt.Errorf("distribute rewards: %w", err)
+		}
+
+		if err := s.referralRepo.UpdateStatus(txCtx, refInTx.ID, ReferralStatusRewarded, snapshot); err != nil {
+			return fmt.Errorf("update referral status: %w", err)
+		}
+
+		ref = refInTx
+		return nil
+	})
+	if err != nil {
+		log.Printf("[Referral] Failed to complete referral reward transaction for referee %d: %v", refereeUserID, err)
 		return
 	}
 

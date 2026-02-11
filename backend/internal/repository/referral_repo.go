@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
@@ -16,6 +17,32 @@ type referralRepository struct {
 
 func NewReferralRepository(client *dbent.Client) service.ReferralRepository {
 	return &referralRepository{client: client}
+}
+
+func (r *referralRepository) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	if fn == nil {
+		return nil
+	}
+
+	if dbent.TxFromContext(ctx) != nil {
+		return fn(ctx)
+	}
+
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		if errors.Is(err, dbent.ErrTxStarted) {
+			return fn(ctx)
+		}
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	txCtx := dbent.NewTxContext(ctx, tx)
+	if err := fn(txCtx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (r *referralRepository) Create(ctx context.Context, ref *service.UserReferral) error {
@@ -193,19 +220,19 @@ func referralEntityToService(m *dbent.UserReferral) *service.UserReferral {
 		return nil
 	}
 	return &service.UserReferral{
-		ID:                      m.ID,
-		ReferrerID:              m.ReferrerID,
-		RefereeID:               m.RefereeID,
-		Status:                  m.Status,
-		ReferrerBalanceReward:   m.ReferrerBalanceReward,
-		ReferrerGroupID:         m.ReferrerGroupID,
+		ID:                       m.ID,
+		ReferrerID:               m.ReferrerID,
+		RefereeID:                m.RefereeID,
+		Status:                   m.Status,
+		ReferrerBalanceReward:    m.ReferrerBalanceReward,
+		ReferrerGroupID:          m.ReferrerGroupID,
 		ReferrerSubscriptionDays: m.ReferrerSubscriptionDays,
-		ReferrerRewardedAt:      m.ReferrerRewardedAt,
-		RefereeBalanceReward:    m.RefereeBalanceReward,
-		RefereeGroupID:          m.RefereeGroupID,
-		RefereeSubscriptionDays: m.RefereeSubscriptionDays,
-		RefereeRewardedAt:       m.RefereeRewardedAt,
-		CreatedAt:               m.CreatedAt,
-		UpdatedAt:               m.UpdatedAt,
+		ReferrerRewardedAt:       m.ReferrerRewardedAt,
+		RefereeBalanceReward:     m.RefereeBalanceReward,
+		RefereeGroupID:           m.RefereeGroupID,
+		RefereeSubscriptionDays:  m.RefereeSubscriptionDays,
+		RefereeRewardedAt:        m.RefereeRewardedAt,
+		CreatedAt:                m.CreatedAt,
+		UpdatedAt:                m.UpdatedAt,
 	}
 }

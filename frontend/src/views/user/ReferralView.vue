@@ -28,7 +28,7 @@
           <input
             type="text"
             readonly
-            :value="info.referral_link || `${window.location.origin}/register?ref=${info.referral_code}`"
+            :value="referralLink"
             class="input flex-1"
           />
           <button
@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getReferralInfo, getReferralHistory } from '@/api/referral'
 import type { ReferralInfo, UserReferral } from '@/types'
@@ -137,6 +137,13 @@ const loading = ref(true)
 const info = ref<ReferralInfo | null>(null)
 const history = ref<UserReferral[]>([])
 const copied = ref(false)
+
+const referralLink = computed(() => {
+  if (!info.value) return ''
+  if (info.value.referral_link) return info.value.referral_link
+  if (typeof window === 'undefined') return `/register?ref=${info.value.referral_code}`
+  return `${window.location.origin}/register?ref=${info.value.referral_code}`
+})
 
 onMounted(async () => {
   try {
@@ -155,8 +162,7 @@ onMounted(async () => {
 
 function copyLink() {
   if (!info.value) return
-  const link = info.value.referral_link || `${window.location.origin}/register?ref=${info.value.referral_code}`
-  navigator.clipboard.writeText(link)
+  navigator.clipboard.writeText(referralLink.value)
   copied.value = true
   setTimeout(() => { copied.value = false }, 2000)
 }
