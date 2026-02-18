@@ -358,6 +358,8 @@ export default {
     invitationCodeInvalid: 'Invalid or used invitation code',
     invitationCodeValidating: 'Validating invitation code...',
     invitationCodeInvalidCannotRegister: 'Invalid invitation code. Please check and try again',
+    referralCodeLabel: 'Referral Code',
+    referralCodePlaceholder: 'Enter referral code (optional)',
     linuxdo: {
       signIn: 'Continue with Linux.do',
       orContinue: 'or continue with email',
@@ -711,7 +713,9 @@ export default {
     rulesTitle: 'Referral Reward Rules',
     rule1: 'Share your referral link with friends. A referral relationship is established when they register through your link',
     rule2: 'Both parties receive rewards after the referred user makes their first recharge',
-    rule3: 'Rewards are automatically credited to account balance or subscription duration'
+    rule3: 'Rewards are automatically credited to account balance or subscription duration',
+    ruleReferrerReward: 'Referrer reward',
+    ruleRefereeReward: 'Referee reward',
   },
 
   // Profile

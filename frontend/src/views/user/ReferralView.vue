@@ -46,7 +46,16 @@
                 <ul class="mt-2 list-inside list-disc space-y-1 text-sm text-primary-700 dark:text-primary-400">
                   <li>{{ t('referral.rule1') }}</li>
                   <li>{{ t('referral.rule2') }}</li>
-                  <li>{{ t('referral.rule3') }}</li>
+                  <li v-if="info.rewards">
+                    <span v-if="info.rewards.referrer_balance_reward > 0 || info.rewards.referrer_subscription_days > 0">
+                      {{ t('referral.ruleReferrerReward') }}：<span v-if="info.rewards.referrer_balance_reward > 0">${{ info.rewards.referrer_balance_reward.toFixed(2) }}</span><span v-if="info.rewards.referrer_balance_reward > 0 && info.rewards.referrer_subscription_days > 0"> + </span><span v-if="info.rewards.referrer_subscription_days > 0">{{ info.rewards.referrer_subscription_days }}{{ t('referral.days') }}</span>
+                    </span>
+                    <span v-if="(info.rewards.referrer_balance_reward > 0 || info.rewards.referrer_subscription_days > 0) && (info.rewards.referee_balance_reward > 0 || info.rewards.referee_subscription_days > 0)">；</span>
+                    <span v-if="info.rewards.referee_balance_reward > 0 || info.rewards.referee_subscription_days > 0">
+                      {{ t('referral.ruleRefereeReward') }}：<span v-if="info.rewards.referee_balance_reward > 0">${{ info.rewards.referee_balance_reward.toFixed(2) }}</span><span v-if="info.rewards.referee_balance_reward > 0 && info.rewards.referee_subscription_days > 0"> + </span><span v-if="info.rewards.referee_subscription_days > 0">{{ info.rewards.referee_subscription_days }}{{ t('referral.days') }}</span>
+                    </span>
+                  </li>
+                  <li v-else>{{ t('referral.rule3') }}</li>
                 </ul>
               </div>
             </div>
@@ -133,7 +142,7 @@
                     </span>
                     <span v-else class="text-gray-400">-</span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-dark-400">{{ formatDate(item.created_at) }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-dark-400">{{ formatDate(item.status === 'rewarded' && item.referrer_rewarded_at ? item.referrer_rewarded_at : item.created_at) }}</td>
                 </tr>
               </tbody>
             </table>

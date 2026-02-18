@@ -30,9 +30,10 @@ type UserReferral struct {
 
 // ReferralInfo 推荐信息 DTO
 type ReferralInfo struct {
-	ReferralCode string        `json:"referral_code"`
-	ReferralLink string        `json:"referral_link"`
-	Stats        ReferralStats `json:"stats"`
+	ReferralCode string           `json:"referral_code"`
+	ReferralLink string           `json:"referral_link"`
+	Stats        ReferralStats    `json:"stats"`
+	Rewards      *ReferralSettings `json:"rewards,omitempty"`
 }
 
 // ReferralStats 推荐统计 DTO
@@ -94,6 +95,7 @@ func ReferralInfoFromService(info *service.ReferralInfo) *ReferralInfo {
 			PendingCount:     info.Stats.PendingCount,
 			TotalBalanceEarn: info.Stats.TotalBalanceEarn,
 		},
+		Rewards: ReferralSettingsFromService(info.Rewards),
 	}
 }
 

@@ -219,6 +219,13 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		}
 	}
 
+	// 预生成推荐码，避免首次访问推荐页时写数据库
+	if s.referralService != nil {
+		if _, err := s.referralService.GenerateReferralCode(ctx, user.ID); err != nil {
+			log.Printf("[Auth] Failed to pre-generate referral code for user %d: %v", user.ID, err)
+		}
+	}
+
 	// 生成token
 	token, err := s.GenerateToken(user)
 	if err != nil {

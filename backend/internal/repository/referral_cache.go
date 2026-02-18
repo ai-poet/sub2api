@@ -11,7 +11,7 @@ import (
 
 const (
 	referralRewardLockPrefix = "referral:reward:"
-	referralRewardLockTTL    = 30 * time.Second
+	referralRewardLockTTL    = 5 * time.Minute
 )
 
 type referralCache struct {

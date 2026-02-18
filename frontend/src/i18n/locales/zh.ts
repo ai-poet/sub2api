@@ -358,6 +358,8 @@ export default {
     invitationCodeInvalid: '邀请码无效或已被使用',
     invitationCodeValidating: '正在验证邀请码...',
     invitationCodeInvalidCannotRegister: '邀请码无效，请检查后重试',
+    referralCodeLabel: '推荐码',
+    referralCodePlaceholder: '输入推荐码（可选）',
     linuxdo: {
       signIn: '使用 Linux.do 登录',
       orContinue: '或使用邮箱密码继续',
@@ -717,7 +719,9 @@ export default {
     rulesTitle: '推荐奖励规则',
     rule1: '分享您的推荐链接给好友，好友通过链接注册即建立推荐关系',
     rule2: '被推荐人首次充值后，双方均可获得奖励',
-    rule3: '奖励将自动发放到账户余额或订阅时长'
+    rule3: '奖励将自动发放到账户余额或订阅时长',
+    ruleReferrerReward: '推荐人奖励',
+    ruleRefereeReward: '被推荐人奖励',
   },
 
   // Profile

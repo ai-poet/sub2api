@@ -1335,6 +1335,7 @@ export interface ReferralInfo {
   referral_code: string
   referral_link: string
   stats: ReferralStats
+  rewards?: ReferralSettings
 }
 
 export interface ReferralStats {

@@ -173,6 +173,7 @@ func (r *referralRepository) ListByReferrerID(ctx context.Context, referrerID in
 	paginationResult := paginationResultFromTotal(int64(total), params)
 
 	items, err := query.
+		WithReferee().
 		Order(dbent.Desc(userreferral.FieldCreatedAt)).
 		Offset(params.Offset()).
 		Limit(params.Limit()).
@@ -183,7 +184,11 @@ func (r *referralRepository) ListByReferrerID(ctx context.Context, referrerID in
 
 	out := make([]service.UserReferral, 0, len(items))
 	for _, m := range items {
-		out = append(out, *referralEntityToService(m))
+		ref := referralEntityToService(m)
+		if m.Edges.Referee != nil {
+			ref.RefereeEmail = maskEmail(m.Edges.Referee.Email)
+		}
+		out = append(out, *ref)
 	}
 	return out, paginationResult, nil
 }
@@ -200,6 +205,8 @@ func (r *referralRepository) ListAll(ctx context.Context, params pagination.Pagi
 	paginationResult := paginationResultFromTotal(int64(total), params)
 
 	items, err := query.
+		WithReferrer().
+		WithReferee().
 		Order(dbent.Desc(userreferral.FieldCreatedAt)).
 		Offset(params.Offset()).
 		Limit(params.Limit()).
@@ -210,9 +217,33 @@ func (r *referralRepository) ListAll(ctx context.Context, params pagination.Pagi
 
 	out := make([]service.UserReferral, 0, len(items))
 	for _, m := range items {
-		out = append(out, *referralEntityToService(m))
+		ref := referralEntityToService(m)
+		if m.Edges.Referrer != nil {
+			ref.ReferrerEmail = m.Edges.Referrer.Email
+		}
+		if m.Edges.Referee != nil {
+			ref.RefereeEmail = m.Edges.Referee.Email
+		}
+		out = append(out, *ref)
 	}
 	return out, paginationResult, nil
+}
+
+func maskEmail(email string) string {
+	at := -1
+	for i, c := range email {
+		if c == '@' {
+			at = i
+			break
+		}
+	}
+	if at <= 0 {
+		return "***"
+	}
+	if at <= 2 {
+		return email[:1] + "***" + email[at:]
+	}
+	return email[:2] + "***" + email[at:]
 }
 
 func referralEntityToService(m *dbent.UserReferral) *service.UserReferral {

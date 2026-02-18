@@ -83,9 +83,10 @@ type ReferralCache interface {
 
 // ReferralInfo 推荐信息（用户侧）
 type ReferralInfo struct {
-	ReferralCode string        `json:"referral_code"`
-	ReferralLink string        `json:"referral_link"`
-	Stats        ReferralStats `json:"stats"`
+	ReferralCode string           `json:"referral_code"`
+	ReferralLink string           `json:"referral_link"`
+	Stats        ReferralStats    `json:"stats"`
+	Rewards      *ReferralSettings `json:"rewards"`
 }
 
 // ReferralStats 推荐统计
@@ -214,6 +215,7 @@ func (s *ReferralService) GetReferralInfo(ctx context.Context, userID int64) (*R
 			PendingCount:     totalCount - rewardedCount,
 			TotalBalanceEarn: totalBalanceEarn,
 		},
+		Rewards: s.GetReferralSettings(ctx),
 	}, nil
 }
 
@@ -420,15 +422,6 @@ func (s *ReferralService) GetReferralHistory(ctx context.Context, userID int64, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("list referrals: %w", err)
 	}
-
-	// 加载被推荐人邮箱（脱敏）
-	for i := range refs {
-		user, err := s.userRepo.GetByID(ctx, refs[i].RefereeID)
-		if err == nil {
-			refs[i].RefereeEmail = maskEmail(user.Email)
-		}
-	}
-
 	return refs, pag, nil
 }
 
@@ -438,17 +431,6 @@ func (s *ReferralService) GetAllReferrals(ctx context.Context, params pagination
 	if err != nil {
 		return nil, nil, fmt.Errorf("list all referrals: %w", err)
 	}
-
-	// 加载推荐人和被推荐人邮箱
-	for i := range refs {
-		if referrer, err := s.userRepo.GetByID(ctx, refs[i].ReferrerID); err == nil {
-			refs[i].ReferrerEmail = referrer.Email
-		}
-		if referee, err := s.userRepo.GetByID(ctx, refs[i].RefereeID); err == nil {
-			refs[i].RefereeEmail = referee.Email
-		}
-	}
-
 	return refs, pag, nil
 }
 
@@ -535,22 +517,4 @@ func (s *ReferralService) getMaxPerUser(ctx context.Context) int {
 		return 0
 	}
 	return v
-}
-
-// maskEmail 邮箱脱敏
-func maskEmail(email string) string {
-	at := -1
-	for i, c := range email {
-		if c == '@' {
-			at = i
-			break
-		}
-	}
-	if at <= 0 {
-		return "***"
-	}
-	if at <= 2 {
-		return email[:1] + "***" + email[at:]
-	}
-	return email[:2] + "***" + email[at:]
 }
