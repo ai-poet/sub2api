@@ -284,6 +284,7 @@ export default {
     redeemCodes: 'Redeem Codes',
     ops: 'Ops',
     promoCodes: 'Promo Codes',
+    referralSettings: 'Referral',
     settings: 'Settings',
     myAccount: 'My Account',
     lightMode: 'Light Mode',
@@ -704,7 +705,13 @@ export default {
     noHistory: 'No referral records yet',
     statusRewarded: 'Rewarded',
     statusPending: 'Pending Recharge',
-    days: ' days'
+    days: ' days',
+    loadFailed: 'Failed to load referral info',
+    copyFailed: 'Copy failed, please copy manually',
+    rulesTitle: 'Referral Reward Rules',
+    rule1: 'Share your referral link with friends. A referral relationship is established when they register through your link',
+    rule2: 'Both parties receive rewards after the referred user makes their first recharge',
+    rule3: 'Rewards are automatically credited to account balance or subscription duration'
   },
 
   // Profile
@@ -3177,6 +3184,25 @@ export default {
         downloadChart: 'Download',
         downloadChartHint: 'Download chart as image'
       }
+    },
+
+    // Referral Settings
+    referral: {
+      title: 'Referral Settings',
+      description: 'Configure referral reward system parameters',
+      enabled: 'Enable Referral System',
+      enabledDesc: 'When enabled, users can invite friends to register via referral links',
+      maxPerUser: 'Max Referrals Per User',
+      maxPerUserHint: '0 means unlimited',
+      referrerRewards: 'Referrer Rewards',
+      refereeRewards: 'Referee Rewards',
+      balanceReward: 'Balance Reward',
+      groupId: 'Subscription Group ID',
+      groupIdHint: '0 means no subscription reward',
+      subscriptionDays: 'Subscription Days',
+      saved: 'Referral settings saved',
+      saveFailed: 'Failed to save referral settings',
+      loadFailed: 'Failed to load referral settings'
     },
 
     // Settings

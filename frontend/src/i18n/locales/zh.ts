@@ -284,6 +284,7 @@ export default {
     redeemCodes: '兑换码',
     ops: '运维监控',
     promoCodes: '优惠码',
+    referralSettings: '推荐设置',
     settings: '系统设置',
     myAccount: '我的账户',
     lightMode: '浅色模式',
@@ -710,7 +711,13 @@ export default {
     noHistory: '暂无推荐记录',
     statusRewarded: '已奖励',
     statusPending: '待充值',
-    days: '天'
+    days: '天',
+    loadFailed: '加载推荐信息失败',
+    copyFailed: '复制失败，请手动复制',
+    rulesTitle: '推荐奖励规则',
+    rule1: '分享您的推荐链接给好友，好友通过链接注册即建立推荐关系',
+    rule2: '被推荐人首次充值后，双方均可获得奖励',
+    rule3: '奖励将自动发放到账户余额或订阅时长'
   },
 
   // Profile
@@ -3351,6 +3358,25 @@ export default {
         downloadChart: '下载',
         downloadChartHint: '下载图表图片'
       }
+    },
+
+    // Referral Settings
+    referral: {
+      title: '推荐设置',
+      description: '配置推荐奖励系统参数',
+      enabled: '启用推荐系统',
+      enabledDesc: '开启后用户可以通过推荐链接邀请好友注册',
+      maxPerUser: '每用户最大推荐数',
+      maxPerUserHint: '0 表示不限制',
+      referrerRewards: '推荐人奖励',
+      refereeRewards: '被推荐人奖励',
+      balanceReward: '余额奖励',
+      groupId: '订阅分组 ID',
+      groupIdHint: '0 表示不发放订阅奖励',
+      subscriptionDays: '订阅天数',
+      saved: '推荐设置已保存',
+      saveFailed: '保存推荐设置失败',
+      loadFailed: '加载推荐设置失败'
     },
 
     // Settings

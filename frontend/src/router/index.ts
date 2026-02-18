@@ -314,6 +314,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/referral',
+    name: 'AdminReferral',
+    component: () => import('@/views/admin/ReferralSettingsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Referral Settings',
+      titleKey: 'admin.referral.title',
+      descriptionKey: 'admin.referral.description'
+    }
+  },
+  {
     path: '/admin/settings',
     name: 'AdminSettings',
     component: () => import('@/views/admin/SettingsView.vue'),
