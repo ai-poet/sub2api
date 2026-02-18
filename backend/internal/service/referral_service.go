@@ -386,8 +386,7 @@ func (s *ReferralService) distributeRewards(ctx context.Context, ref *UserReferr
 			Notes:        fmt.Sprintf("推荐奖励：推荐用户 %d 注册并充值", ref.RefereeID),
 		})
 		if err != nil {
-			log.Printf("[Referral] Failed to assign referrer subscription: %v", err)
-			// 订阅分配失败不阻止其他奖励
+			return fmt.Errorf("assign referrer subscription: %w", err)
 		}
 	}
 
@@ -408,7 +407,7 @@ func (s *ReferralService) distributeRewards(ctx context.Context, ref *UserReferr
 			Notes:        fmt.Sprintf("推荐奖励：通过推荐链接注册并充值"),
 		})
 		if err != nil {
-			log.Printf("[Referral] Failed to assign referee subscription: %v", err)
+			return fmt.Errorf("assign referee subscription: %w", err)
 		}
 	}
 
