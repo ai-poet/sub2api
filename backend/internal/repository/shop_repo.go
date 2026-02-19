@@ -148,9 +148,18 @@ SELECT id,product_id,redeem_code_id,status,order_id,created_at FROM shop_product
 	return result, rows.Err()
 }
 
-func (r *shopProductStockRepository) Delete(ctx context.Context, id int64) error {
-	_, err := r.db.ExecContext(ctx, `DELETE FROM shop_product_stocks WHERE id=$1 AND status='available'`, id)
-	return err
+func (r *shopProductStockRepository) Delete(ctx context.Context, id int64) (productID int64, deleted bool, err error) {
+	err = shopExecer(ctx, r.db).QueryRowContext(ctx, `
+	DELETE FROM shop_product_stocks
+	WHERE id=$1 AND status='available'
+	RETURNING product_id`, id).Scan(&productID)
+	if err == sql.ErrNoRows {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	return productID, true, nil
 }
 
 func (r *shopProductStockRepository) TakeOne(ctx context.Context, productID int64, orderID int64) (*service.ShopProductStock, error) {
@@ -200,9 +209,24 @@ UPDATE shop_orders SET status=$1,redeem_code_id=$2,paid_at=$3,updated_at=NOW() W
 
 func (r *shopOrderRepository) GetByOrderNo(ctx context.Context, orderNo string) (*service.ShopOrder, error) {
 	o := &service.ShopOrder{}
-	err := r.db.QueryRowContext(ctx, `
-SELECT id,order_no,user_id,product_id,product_name,amount,currency,payment_method,status,redeem_code_id,paid_at,expires_at,created_at,updated_at
-FROM shop_orders WHERE order_no=$1`, orderNo).Scan(
+	err := shopExecer(ctx, r.db).QueryRowContext(ctx, `
+	SELECT id,order_no,user_id,product_id,product_name,amount,currency,payment_method,status,redeem_code_id,paid_at,expires_at,created_at,updated_at
+	FROM shop_orders WHERE order_no=$1`, orderNo).Scan(
+		&o.ID, &o.OrderNo, &o.UserID, &o.ProductID, &o.ProductName, &o.Amount, &o.Currency,
+		&o.PaymentMethod, &o.Status, &o.RedeemCodeID, &o.PaidAt, &o.ExpiresAt, &o.CreatedAt, &o.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, service.ErrOrderNotFound
+	}
+	return o, err
+}
+
+func (r *shopOrderRepository) GetByOrderNoForUpdate(ctx context.Context, orderNo string) (*service.ShopOrder, error) {
+	o := &service.ShopOrder{}
+	err := shopExecer(ctx, r.db).QueryRowContext(ctx, `
+	SELECT id,order_no,user_id,product_id,product_name,amount,currency,payment_method,status,redeem_code_id,paid_at,expires_at,created_at,updated_at
+	FROM shop_orders
+	WHERE order_no=$1
+	FOR UPDATE`, orderNo).Scan(
 		&o.ID, &o.OrderNo, &o.UserID, &o.ProductID, &o.ProductName, &o.Amount, &o.Currency,
 		&o.PaymentMethod, &o.Status, &o.RedeemCodeID, &o.PaidAt, &o.ExpiresAt, &o.CreatedAt, &o.UpdatedAt)
 	if err == sql.ErrNoRows {

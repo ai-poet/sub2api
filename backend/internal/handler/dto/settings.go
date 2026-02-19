@@ -59,10 +59,16 @@ type SystemSettings struct {
 	OpsMetricsIntervalSeconds    int    `json:"ops_metrics_interval_seconds"`
 
 	// 易支付配置
-	EpayPID      string `json:"epay_pid"`
-	EpayKey      string `json:"epay_key,omitempty"`
-	EpayAPIURL   string `json:"epay_api_url"`
-	EpayChannels string `json:"epay_channels"`
+	EpayPID           string `json:"epay_pid"`
+	EpayKey           string `json:"epay_key,omitempty"`
+	EpayKeyConfigured bool   `json:"epay_key_configured"`
+	EpayAPIURL        string `json:"epay_api_url"`
+	EpayChannels      string `json:"epay_channels"`
+
+	// Creem 支付配置
+	CreemAPIKeyConfigured        bool `json:"creem_api_key_configured"`
+	CreemWebhookSecretConfigured bool `json:"creem_webhook_secret_configured"`
+	CreemTestMode                bool `json:"creem_test_mode"`
 }
 
 type PublicSettings struct {

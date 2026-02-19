@@ -85,14 +85,18 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		FallbackModelAntigravity:             settings.FallbackModelAntigravity,
 		EnableIdentityPatch:                  settings.EnableIdentityPatch,
 		IdentityPatchPrompt:                  settings.IdentityPatchPrompt,
-		OpsMonitoringEnabled:                 opsEnabled && settings.OpsMonitoringEnabled,
-		OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
-		OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
-		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
-		EpayPID:                              settings.EpayPID,
-		EpayAPIURL:                           settings.EpayAPIURL,
-		EpayChannels:                         settings.EpayChannels,
-	})
+			OpsMonitoringEnabled:                 opsEnabled && settings.OpsMonitoringEnabled,
+			OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
+			OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
+			OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
+			EpayPID:                              settings.EpayPID,
+			EpayKeyConfigured:                    settings.EpayKey != "",
+			EpayAPIURL:                           settings.EpayAPIURL,
+			EpayChannels:                         settings.EpayChannels,
+			CreemAPIKeyConfigured:                settings.CreemAPIKeyConfigured,
+			CreemWebhookSecretConfigured:         settings.CreemWebhookSecretConfigured,
+			CreemTestMode:                        settings.CreemTestMode,
+		})
 }
 
 // UpdateSettingsRequest 更新设置请求
@@ -435,15 +439,19 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		FallbackModelAntigravity:             updatedSettings.FallbackModelAntigravity,
 		EnableIdentityPatch:                  updatedSettings.EnableIdentityPatch,
 		IdentityPatchPrompt:                  updatedSettings.IdentityPatchPrompt,
-		OpsMonitoringEnabled:                 updatedSettings.OpsMonitoringEnabled,
-		OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
-		OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
-		OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
-		EpayPID:                              updatedSettings.EpayPID,
-		EpayAPIURL:                           updatedSettings.EpayAPIURL,
-		EpayChannels:                         updatedSettings.EpayChannels,
-	})
-}
+			OpsMonitoringEnabled:                 updatedSettings.OpsMonitoringEnabled,
+			OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
+			OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
+			OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
+			EpayPID:                              updatedSettings.EpayPID,
+			EpayKeyConfigured:                    updatedSettings.EpayKey != "",
+			EpayAPIURL:                           updatedSettings.EpayAPIURL,
+			EpayChannels:                         updatedSettings.EpayChannels,
+			CreemAPIKeyConfigured:                updatedSettings.CreemAPIKeyConfigured,
+			CreemWebhookSecretConfigured:         updatedSettings.CreemWebhookSecretConfigured,
+			CreemTestMode:                        updatedSettings.CreemTestMode,
+		})
+	}
 
 func (h *SettingHandler) auditSettingsUpdate(c *gin.Context, before *service.SystemSettings, after *service.SystemSettings, req UpdateSettingsRequest) {
 	if before == nil || after == nil {

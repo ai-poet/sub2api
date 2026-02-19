@@ -5,40 +5,20 @@ import (
 	"database/sql"
 	"encoding/json"
 	"time"
+
+	"github.com/Wei-Shaw/sub2api/internal/service"
 )
-
-// PaymentCallbackLog 支付回调日志
-type PaymentCallbackLog struct {
-	ID             int64
-	OrderNo        string
-	Provider       string // epay, creem
-	RawData        map[string]string
-	Signature      *string
-	Verified       bool
-	Processed      bool
-	ResultMessage  *string
-	ClientIP       *string
-	CreatedAt      time.Time
-	ProcessedAt    *time.Time
-}
-
-// PaymentCallbackLogRepository 支付回调日志仓库接口
-type PaymentCallbackLogRepository interface {
-	Create(ctx context.Context, log *PaymentCallbackLog) error
-	GetByOrderNo(ctx context.Context, orderNo string) ([]PaymentCallbackLog, error)
-	UpdateProcessed(ctx context.Context, id int64, processed bool, resultMessage string) error
-}
 
 type paymentCallbackLogRepository struct {
 	db *sql.DB
 }
 
-func NewPaymentCallbackLogRepository(db *sql.DB) PaymentCallbackLogRepository {
+func NewPaymentCallbackLogRepository(db *sql.DB) service.PaymentCallbackLogRepository {
 	return &paymentCallbackLogRepository{db: db}
 }
 
-func (r *paymentCallbackLogRepository) Create(ctx context.Context, log *PaymentCallbackLog) error {
-	rawDataJSON, err := json.Marshal(log.RawData)
+func (r *paymentCallbackLogRepository) Create(ctx context.Context, callbackLog *service.PaymentCallbackLog) error {
+	rawDataJSON, err := json.Marshal(callbackLog.RawData)
 	if err != nil {
 		return err
 	}
@@ -52,22 +32,22 @@ func (r *paymentCallbackLogRepository) Create(ctx context.Context, log *PaymentC
 	`
 
 	return r.db.QueryRowContext(ctx, query,
-		log.OrderNo,
-		log.Provider,
+		callbackLog.OrderNo,
+		callbackLog.Provider,
 		rawDataJSON,
-		log.Signature,
-		log.Verified,
-		log.Processed,
-		log.ResultMessage,
-		log.ClientIP,
-		log.CreatedAt,
-	).Scan(&log.ID)
+		callbackLog.Signature,
+		callbackLog.Verified,
+		callbackLog.Processed,
+		callbackLog.ResultMessage,
+		callbackLog.ClientIP,
+		callbackLog.CreatedAt,
+	).Scan(&callbackLog.ID)
 }
 
-func (r *paymentCallbackLogRepository) GetByOrderNo(ctx context.Context, orderNo string) ([]PaymentCallbackLog, error) {
+func (r *paymentCallbackLogRepository) GetByOrderNo(ctx context.Context, orderNo string) ([]service.PaymentCallbackLog, error) {
 	query := `
-		SELECT id, order_no, provider, raw_data, signature, verified,
-			   processed, result_message, client_ip, created_at, processed_at
+			SELECT id, order_no, provider, raw_data, signature, verified,
+				   processed, result_message, client_ip, created_at, processed_at
 		FROM payment_callback_logs
 		WHERE order_no = $1
 		ORDER BY created_at DESC
@@ -79,48 +59,48 @@ func (r *paymentCallbackLogRepository) GetByOrderNo(ctx context.Context, orderNo
 	}
 	defer rows.Close()
 
-	var logs []PaymentCallbackLog
+	var logs []service.PaymentCallbackLog
 	for rows.Next() {
-		var log PaymentCallbackLog
+		var callbackLog service.PaymentCallbackLog
 		var rawDataJSON []byte
 		var processedAt sql.NullTime
 		var signature, resultMessage, clientIP sql.NullString
 
 		err := rows.Scan(
-			&log.ID,
-			&log.OrderNo,
-			&log.Provider,
+			&callbackLog.ID,
+			&callbackLog.OrderNo,
+			&callbackLog.Provider,
 			&rawDataJSON,
 			&signature,
-			&log.Verified,
-			&log.Processed,
+			&callbackLog.Verified,
+			&callbackLog.Processed,
 			&resultMessage,
 			&clientIP,
-			&log.CreatedAt,
+			&callbackLog.CreatedAt,
 			&processedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		if err := json.Unmarshal(rawDataJSON, &log.RawData); err != nil {
-			log.RawData = make(map[string]string)
+		if err := json.Unmarshal(rawDataJSON, &callbackLog.RawData); err != nil {
+			callbackLog.RawData = make(map[string]string)
 		}
 
 		if signature.Valid {
-			log.Signature = &signature.String
+			callbackLog.Signature = &signature.String
 		}
 		if resultMessage.Valid {
-			log.ResultMessage = &resultMessage.String
+			callbackLog.ResultMessage = &resultMessage.String
 		}
 		if clientIP.Valid {
-			log.ClientIP = &clientIP.String
+			callbackLog.ClientIP = &clientIP.String
 		}
 		if processedAt.Valid {
-			log.ProcessedAt = &processedAt.Time
+			callbackLog.ProcessedAt = &processedAt.Time
 		}
 
-		logs = append(logs, log)
+		logs = append(logs, callbackLog)
 	}
 
 	return logs, rows.Err()

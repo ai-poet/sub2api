@@ -22,6 +22,7 @@ var (
 	ErrProductOutOfStock  = infraerrors.BadRequest("PRODUCT_OUT_OF_STOCK", "product out of stock")
 	ErrOrderNotFound      = infraerrors.NotFound("ORDER_NOT_FOUND", "order not found")
 	ErrOrderAlreadyPaid   = infraerrors.Conflict("ORDER_ALREADY_PAID", "order already paid")
+	ErrOrderNotPending    = infraerrors.Conflict("ORDER_NOT_PENDING", "order is not pending")
 	ErrEpayNotConfigured  = infraerrors.BadRequest("EPAY_NOT_CONFIGURED", "payment not configured")
 	ErrCreemNotConfigured = infraerrors.BadRequest("CREEM_NOT_CONFIGURED", "creem payment not configured")
 )
@@ -107,7 +108,7 @@ type ShopProductRepository interface {
 type ShopProductStockRepository interface {
 	CreateBatch(ctx context.Context, stocks []ShopProductStock) error
 	ListByProduct(ctx context.Context, productID int64) ([]ShopProductStock, error)
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) (productID int64, deleted bool, err error)
 	// TakeOne atomically takes one available stock item for a product (FIFO)
 	TakeOne(ctx context.Context, productID int64, orderID int64) (*ShopProductStock, error)
 	CountAvailable(ctx context.Context, productID int64) (int, error)
@@ -118,6 +119,7 @@ type ShopOrderRepository interface {
 	Create(ctx context.Context, o *ShopOrder) error
 	Update(ctx context.Context, o *ShopOrder) error
 	GetByOrderNo(ctx context.Context, orderNo string) (*ShopOrder, error)
+	GetByOrderNoForUpdate(ctx context.Context, orderNo string) (*ShopOrder, error)
 	ListByUser(ctx context.Context, userID int64) ([]ShopOrder, error)
 	ListByUserAndStatus(ctx context.Context, userID int64, status string) ([]ShopOrder, error)
 }
@@ -239,7 +241,17 @@ func (s *ShopService) GetStockList(ctx context.Context, productID int64) ([]Shop
 }
 
 func (s *ShopService) DeleteStock(ctx context.Context, stockID int64) error {
-	return s.stockRepo.Delete(ctx, stockID)
+	productID, deleted, err := s.stockRepo.Delete(ctx, stockID)
+	if err != nil {
+		return err
+	}
+	if !deleted {
+		return infraerrors.NotFound("STOCK_NOT_FOUND", "stock not found or already sold")
+	}
+	if err := s.productRepo.UpdateStockCount(ctx, productID, -1); err != nil {
+		return fmt.Errorf("update stock count: %w", err)
+	}
+	return nil
 }
 
 // --- User methods ---
@@ -257,7 +269,13 @@ func (s *ShopService) CreateOrder(ctx context.Context, userID int64, productID i
 	if !product.IsActive {
 		return nil, "", ErrProductNotFound
 	}
-	if product.StockCount <= 0 {
+
+	// Always use real-time stock to prevent stale stock_count from allowing unpaid orders.
+	availableCount, err := s.stockRepo.CountAvailable(ctx, productID)
+	if err != nil {
+		return nil, "", fmt.Errorf("count available stock: %w", err)
+	}
+	if availableCount <= 0 {
 		return nil, "", ErrProductOutOfStock
 	}
 
@@ -280,9 +298,12 @@ func (s *ShopService) CreateOrder(ctx context.Context, userID int64, productID i
 
 	var payURL string
 	if paymentMethod == "creem" {
-		// Creem 支付
-		if settings.CreemAPIKey == "" {
+		// Creem requires API key + webhook secret, otherwise callback cannot be verified safely.
+		if settings.CreemAPIKey == "" || settings.CreemWebhookSecret == "" {
 			return nil, "", ErrCreemNotConfigured
+		}
+		if strings.TrimSpace(product.CreemProductID) == "" {
+			return nil, "", infraerrors.BadRequest("CREEM_PRODUCT_NOT_CONFIGURED", "creem product id is not configured")
 		}
 		order.OrderNo = creemClient.GenerateOrderNo(userID)
 		if err := s.orderRepo.Create(ctx, order); err != nil {
@@ -332,12 +353,21 @@ func (s *ShopService) QueryOrder(ctx context.Context, orderNo string) (*ShopOrde
 	return s.orderRepo.GetByOrderNo(ctx, orderNo)
 }
 
-// fulfillOrder atomically takes stock, redeems code, and marks order as paid.
-// Must be called within a transaction context or will use its own transaction.
-func (s *ShopService) fulfillOrder(ctx context.Context, order *ShopOrder) error {
-	if order.Status == "paid" {
-		return nil // idempotent
+// QueryUserOrder returns an order only when it belongs to the specified user.
+func (s *ShopService) QueryUserOrder(ctx context.Context, userID int64, orderNo string) (*ShopOrder, error) {
+	order, err := s.orderRepo.GetByOrderNo(ctx, orderNo)
+	if err != nil {
+		return nil, err
 	}
+	// Hide cross-user order existence.
+	if order.UserID != userID {
+		return nil, ErrOrderNotFound
+	}
+	return order, nil
+}
+
+// fulfillOrder atomically takes stock, redeems code, and marks order as paid.
+func (s *ShopService) fulfillOrder(ctx context.Context, orderNo string) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
@@ -345,6 +375,18 @@ func (s *ShopService) fulfillOrder(ctx context.Context, order *ShopOrder) error 
 	defer func() { _ = tx.Rollback() }()
 
 	txCtx := context.WithValue(ctx, ShopSQLTxKey{}, tx)
+
+	// Lock order row first so concurrent callbacks become idempotent.
+	order, err := s.orderRepo.GetByOrderNoForUpdate(txCtx, orderNo)
+	if err != nil {
+		return fmt.Errorf("lock order: %w", err)
+	}
+	if order.Status == "paid" {
+		return nil
+	}
+	if order.Status != "pending" {
+		return ErrOrderNotPending
+	}
 
 	stock, err := s.stockRepo.TakeOne(txCtx, order.ProductID, order.ID)
 	if err != nil {
@@ -401,15 +443,15 @@ func (s *ShopService) HandlePaymentNotify(ctx context.Context, params map[string
 	// Log successful verification
 	s.logCallback(ctx, orderNo, "epay", params, nil, true, false, "", clientIP)
 
-	order, err := s.orderRepo.GetByOrderNo(ctx, orderNo)
-	if err != nil {
+	if err := s.fulfillOrder(ctx, orderNo); err != nil {
 		if errors.Is(err, ErrOrderNotFound) {
+			s.updateCallbackResult(ctx, orderNo, false, "order not found")
 			return nil
 		}
-		return fmt.Errorf("get order: %w", err)
-	}
-
-	if err := s.fulfillOrder(ctx, order); err != nil {
+		if errors.Is(err, ErrOrderNotPending) {
+			s.updateCallbackResult(ctx, orderNo, false, "order is not pending")
+			return nil
+		}
 		s.updateCallbackResult(ctx, orderNo, false, err.Error())
 		return err
 	}
@@ -423,6 +465,10 @@ func (s *ShopService) HandleCreemWebhook(ctx context.Context, rawBody []byte, si
 	settings, err := s.settingSvc.GetAllSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("get settings: %w", err)
+	}
+	if settings.CreemWebhookSecret == "" {
+		s.logCallback(ctx, "", "creem", map[string]string{"raw": string(rawBody)}, &signature, false, false, "webhook secret not configured", clientIP)
+		return ErrCreemNotConfigured
 	}
 	client := creemClient.NewClient(creemClient.Config{
 		APIKey:        settings.CreemAPIKey,
@@ -445,15 +491,15 @@ func (s *ShopService) HandleCreemWebhook(ctx context.Context, rawBody []byte, si
 	if orderStatus != "paid" {
 		return nil
 	}
-	order, err := s.orderRepo.GetByOrderNo(ctx, orderNo)
-	if err != nil {
+	if err := s.fulfillOrder(ctx, orderNo); err != nil {
 		if errors.Is(err, ErrOrderNotFound) {
+			s.updateCallbackResult(ctx, orderNo, false, "order not found")
 			return nil
 		}
-		return fmt.Errorf("get order: %w", err)
-	}
-
-	if err := s.fulfillOrder(ctx, order); err != nil {
+		if errors.Is(err, ErrOrderNotPending) {
+			s.updateCallbackResult(ctx, orderNo, false, "order is not pending")
+			return nil
+		}
 		s.updateCallbackResult(ctx, orderNo, false, err.Error())
 		return err
 	}
@@ -480,8 +526,8 @@ func (s *ShopService) GetPaymentChannels(ctx context.Context) ([]PaymentChannel,
 
 	var channels []PaymentChannel
 
-	// Check if Creem is configured
-	if settings.CreemAPIKey != "" {
+	// Check if Creem is configured (must include webhook secret for secure callback verification)
+	if settings.CreemAPIKey != "" && settings.CreemWebhookSecret != "" {
 		channels = append(channels, PaymentChannel{
 			ID:       "creem",
 			Name:     "Creem",
@@ -596,7 +642,7 @@ func (s *ShopService) logCallback(ctx context.Context, orderNo, provider string,
 		return
 	}
 
-	log := &PaymentCallbackLog{
+	entry := &PaymentCallbackLog{
 		OrderNo:       orderNo,
 		Provider:      provider,
 		RawData:       rawData,
@@ -608,7 +654,7 @@ func (s *ShopService) logCallback(ctx context.Context, orderNo, provider string,
 		CreatedAt:     time.Now(),
 	}
 
-	if err := s.callbackLog.Create(ctx, log); err != nil {
+	if err := s.callbackLog.Create(ctx, entry); err != nil {
 		log.Printf("[ShopService] failed to log callback: %v", err)
 	}
 }

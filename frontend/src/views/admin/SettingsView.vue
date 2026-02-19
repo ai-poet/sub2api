@@ -1187,6 +1187,9 @@ type SettingsForm = SystemSettings & {
   smtp_password: string
   turnstile_secret_key: string
   linuxdo_connect_client_secret: string
+  epay_key: string
+  creem_api_key: string
+  creem_webhook_secret: string
 }
 
 const form = reactive<SettingsForm>({

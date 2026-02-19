@@ -6,7 +6,7 @@
       </div>
 
       <div v-if="loading" class="flex justify-center py-12">
-        <Icon name="loader" size="xl" class="animate-spin text-primary-500" />
+        <Icon name="refresh" size="xl" class="animate-spin text-primary-500" />
       </div>
 
       <div v-else-if="products.length === 0" class="card p-12 text-center text-gray-500">
@@ -75,7 +75,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import Icon from '@/components/ui/Icon.vue'
+import Icon from '@/components/icons/Icon.vue'
 import { shopAPI, type ShopProduct, type PaymentChannel } from '@/api/shop'
 import { useToast } from '@/composables/useToast'
 

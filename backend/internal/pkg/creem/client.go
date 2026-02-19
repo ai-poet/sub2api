@@ -100,13 +100,14 @@ type WebhookEvent struct {
 // VerifyWebhook verifies the creem-signature header and returns the parsed event.
 // Pass rawBody as the raw request body bytes.
 func (c *Client) VerifyWebhook(rawBody []byte, signature string) (*WebhookEvent, error) {
-	if c.webhookSecret != "" {
-		h := hmac.New(sha256.New, []byte(c.webhookSecret))
-		h.Write(rawBody)
-		expected := hex.EncodeToString(h.Sum(nil))
-		if !hmac.Equal([]byte(expected), []byte(signature)) {
-			return nil, fmt.Errorf("creem: invalid webhook signature")
-		}
+	if c.webhookSecret == "" {
+		return nil, fmt.Errorf("creem: webhook secret is required")
+	}
+	h := hmac.New(sha256.New, []byte(c.webhookSecret))
+	h.Write(rawBody)
+	expected := hex.EncodeToString(h.Sum(nil))
+	if !hmac.Equal([]byte(expected), []byte(signature)) {
+		return nil, fmt.Errorf("creem: invalid webhook signature")
 	}
 	var event WebhookEvent
 	if err := json.Unmarshal(rawBody, &event); err != nil {

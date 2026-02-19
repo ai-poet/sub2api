@@ -67,7 +67,8 @@ func (h *ShopHandler) CreateOrder(c *gin.Context) {
 // QueryOrder GET /api/v1/shop/orders/:orderNo
 func (h *ShopHandler) QueryOrder(c *gin.Context) {
 	orderNo := c.Param("orderNo")
-	order, err := h.shopService.QueryOrder(c.Request.Context(), orderNo)
+	userID := c.GetInt64("user_id")
+	order, err := h.shopService.QueryUserOrder(c.Request.Context(), userID, orderNo)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
