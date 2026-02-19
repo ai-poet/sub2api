@@ -70,6 +70,9 @@ func RegisterAdminRoutes(
 
 		// 错误透传规则管理
 		registerErrorPassthroughRoutes(admin, h)
+
+		// 商店管理
+		registerShopAdminRoutes(admin, h)
 	}
 }
 
@@ -410,5 +413,18 @@ func registerErrorPassthroughRoutes(admin *gin.RouterGroup, h *handler.Handlers)
 		rules.POST("", h.Admin.ErrorPassthrough.Create)
 		rules.PUT("/:id", h.Admin.ErrorPassthrough.Update)
 		rules.DELETE("/:id", h.Admin.ErrorPassthrough.Delete)
+	}
+}
+
+func registerShopAdminRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	shop := admin.Group("/shop")
+	{
+		shop.GET("/products", h.Admin.Shop.ListProducts)
+		shop.POST("/products", h.Admin.Shop.CreateProduct)
+		shop.PUT("/products/:id", h.Admin.Shop.UpdateProduct)
+		shop.DELETE("/products/:id", h.Admin.Shop.DeleteProduct)
+		shop.GET("/products/:id/stocks", h.Admin.Shop.GetStockList)
+		shop.POST("/products/:id/stocks", h.Admin.Shop.AddStock)
+		shop.DELETE("/stocks/:id", h.Admin.Shop.DeleteStock)
 	}
 }

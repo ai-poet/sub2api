@@ -294,6 +294,8 @@ export default {
     github: 'GitHub',
     mySubscriptions: '我的订阅',
     buySubscription: '购买订阅',
+    shop: '商店',
+    shopManage: '商店管理',
     docs: '文档'
   },
 
@@ -649,6 +651,19 @@ export default {
     exportExcelFailed: '使用数据导出失败',
     imageUnit: '张',
     userAgent: 'User-Agent'
+  },
+
+  // Shop
+  shop: {
+    title: '商店',
+    noProducts: '暂无商品',
+    inStock: '库存 {n}',
+    outOfStock: '已售罄',
+    buy: '购买',
+    selectPayment: '选择支付方式',
+    alipay: '支付宝',
+    wxpay: '微信支付',
+    qqpay: 'QQ钱包',
   },
 
   // Redeem
@@ -3621,7 +3636,51 @@ export default {
       failedToSave: '保存规则失败',
       failedToDelete: '删除规则失败',
       failedToToggle: '切换状态失败'
-    }
+    },
+
+    // Shop Management
+    shop: {
+      title: '商店管理',
+      createProduct: '创建商品',
+      editProduct: '编辑商品',
+      productName: '商品名称',
+      description: '描述',
+      price: '价格',
+      currency: '货币',
+      redeemType: '兑换类型',
+      typeBalance: '余额',
+      typeSubscription: '订阅',
+      redeemValue: '余额金额',
+      groupId: '分组ID',
+      validityDays: '有效天数',
+      sortOrder: '排序',
+      stock: '库存',
+      manageStock: '库存',
+      stockFor: '{name} 的库存',
+      stockCount: '数量',
+      addStock: '添加库存',
+      stockAdded: '已添加 {n} 条库存',
+      stockStatus: '状态',
+      creemProductId: 'Creem 商品ID',
+      creemProductIdHint: '在 Creem 后台预先创建的商品ID（如 prod_xxx），Creem 支付必填。',
+    },
+
+    payment: {
+      title: '支付设置',
+      description: '配置内置商店的支付渠道',
+      epayTitle: '易支付',
+      epayPid: 'PID',
+      epayKey: '密钥',
+      epayApiUrl: 'API 地址',
+      creemTitle: 'Creem',
+      creemApiKey: 'API Key',
+      creemWebhookSecret: 'Webhook 密钥',
+      creemWebhookHint: '请在 Creem 后台将此地址配置为 Webhook 端点：{url}',
+      creemTestMode: '测试模式',
+      creemTestModeHint: '使用 Creem 测试环境（test-api.creem.io）',
+      configured: '已配置（留空保留当前值）',
+      notConfigured: '未配置',
+    },
   },
 
   // Subscription Progress (Header component)

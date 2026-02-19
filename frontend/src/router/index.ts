@@ -175,6 +175,17 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'userSubscriptions.description'
     }
   },
+  {
+    path: '/shop',
+    name: 'Shop',
+    component: () => import('@/views/user/ShopView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Shop',
+      titleKey: 'shop.title'
+    }
+  },
 
   // ==================== Admin Routes ====================
   {
@@ -323,6 +334,17 @@ const routes: RouteRecordRaw[] = [
       title: 'Usage Records',
       titleKey: 'admin.usage.title',
       descriptionKey: 'admin.usage.description'
+    }
+  },
+  {
+    path: '/admin/shop',
+    name: 'AdminShop',
+    component: () => import('@/views/admin/ShopView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Shop Management',
+      titleKey: 'admin.shop.title'
     }
   },
 

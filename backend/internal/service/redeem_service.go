@@ -448,3 +448,45 @@ func (s *RedeemService) GetUserHistory(ctx context.Context, userID int64, limit 
 	}
 	return codes, nil
 }
+
+// GenerateCodesForShop 为商店生成兑换码（支持 subscription 类型的 group_id 和 validity_days）
+func (s *RedeemService) GenerateCodesForShop(ctx context.Context, req GenerateCodesRequest, groupID *int64, validityDays int) ([]RedeemCode, error) {
+	if req.Count <= 0 || req.Count > 1000 {
+		return nil, errors.New("count must be between 1 and 1000")
+	}
+	if req.Type != RedeemTypeInvitation && req.Value <= 0 {
+		return nil, errors.New("value must be greater than 0")
+	}
+
+	codes := make([]RedeemCode, 0, req.Count)
+	for i := 0; i < req.Count; i++ {
+		code, err := s.GenerateRandomCode()
+		if err != nil {
+			return nil, fmt.Errorf("generate code: %w", err)
+		}
+		rc := RedeemCode{
+			Code:         code,
+			Type:         req.Type,
+			Value:        req.Value,
+			Status:       StatusUnused,
+			GroupID:      groupID,
+			ValidityDays: validityDays,
+		}
+		codes = append(codes, rc)
+	}
+
+	if err := s.redeemRepo.CreateBatch(ctx, codes); err != nil {
+		return nil, fmt.Errorf("create batch codes: %w", err)
+	}
+
+	// Reload to get IDs
+	result := make([]RedeemCode, 0, len(codes))
+	for _, c := range codes {
+		rc, err := s.redeemRepo.GetByCode(ctx, c.Code)
+		if err != nil {
+			return nil, fmt.Errorf("get generated code: %w", err)
+		}
+		result = append(result, *rc)
+	}
+	return result, nil
+}

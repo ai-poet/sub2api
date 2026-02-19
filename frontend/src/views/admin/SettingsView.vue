@@ -991,6 +991,66 @@
           </div>
         </div>
 
+        <!-- Payment Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.payment.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.payment.description') }}
+            </p>
+          </div>
+          <div class="space-y-6 p-6">
+            <!-- 易支付 -->
+            <div>
+              <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.epayTitle') }}</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.epayPid') }}</label>
+                  <input v-model="form.epay_pid" type="text" class="input font-mono text-sm" placeholder="PID" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.epayKey') }}</label>
+                  <input v-model="form.epay_key" type="password" class="input font-mono text-sm"
+                    :placeholder="form.epay_key_configured ? t('admin.settings.payment.configured') : t('admin.settings.payment.notConfigured')" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.epayApiUrl') }}</label>
+                  <input v-model="form.epay_api_url" type="url" class="input font-mono text-sm" placeholder="https://epay.example.com" />
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-6 dark:border-dark-700">
+              <!-- Creem -->
+              <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.creemTitle') }}</h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.creemApiKey') }}</label>
+                  <input v-model="form.creem_api_key" type="password" class="input font-mono text-sm"
+                    :placeholder="form.creem_api_key_configured ? t('admin.settings.payment.configured') : t('admin.settings.payment.notConfigured')" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.creemWebhookSecret') }}</label>
+                  <input v-model="form.creem_webhook_secret" type="password" class="input font-mono text-sm"
+                    :placeholder="form.creem_webhook_secret_configured ? t('admin.settings.payment.configured') : t('admin.settings.payment.notConfigured')" />
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.payment.creemWebhookHint', { url: (form.api_base_url || '') + '/api/v1/shop/notify/creem' }) }}
+                  </p>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="font-medium text-gray-900 dark:text-white">{{ t('admin.settings.payment.creemTestMode') }}</label>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.settings.payment.creemTestModeHint') }}</p>
+                  </div>
+                  <Toggle v-model="form.creem_test_mode" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Send Test Email - Only show when email verification is enabled -->
         <div v-if="form.email_verify_enabled" class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1174,7 +1234,18 @@ const form = reactive<SettingsForm>({
   ops_monitoring_enabled: true,
   ops_realtime_monitoring_enabled: true,
   ops_query_mode_default: 'auto',
-  ops_metrics_interval_seconds: 60
+  ops_metrics_interval_seconds: 60,
+  // 易支付配置
+  epay_pid: '',
+  epay_key: '',
+  epay_key_configured: false,
+  epay_api_url: '',
+  // Creem 支付配置
+  creem_api_key: '',
+  creem_api_key_configured: false,
+  creem_webhook_secret: '',
+  creem_webhook_secret_configured: false,
+  creem_test_mode: false
 })
 
 // LinuxDo OAuth redirect URL suggestion
@@ -1290,13 +1361,22 @@ async function saveSettings() {
       fallback_model_gemini: form.fallback_model_gemini,
       fallback_model_antigravity: form.fallback_model_antigravity,
       enable_identity_patch: form.enable_identity_patch,
-      identity_patch_prompt: form.identity_patch_prompt
+      identity_patch_prompt: form.identity_patch_prompt,
+      epay_pid: form.epay_pid,
+      epay_key: form.epay_key || undefined,
+      epay_api_url: form.epay_api_url,
+      creem_api_key: form.creem_api_key || undefined,
+      creem_webhook_secret: form.creem_webhook_secret || undefined,
+      creem_test_mode: form.creem_test_mode
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
     form.smtp_password = ''
     form.turnstile_secret_key = ''
     form.linuxdo_connect_client_secret = ''
+    form.epay_key = ''
+    form.creem_api_key = ''
+    form.creem_webhook_secret = ''
     // Refresh cached public settings so sidebar/header update immediately
     await appStore.fetchPublicSettings(true)
     appStore.showSuccess(t('admin.settings.settingsSaved'))

@@ -4,6 +4,7 @@ go 1.25.7
 
 require (
 	entgo.io/ent v0.14.5
+	github.com/Calcium-Ion/go-epay v0.0.4
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/dgraph-io/ristretto v0.2.0
 	github.com/gin-gonic/gin v1.9.1

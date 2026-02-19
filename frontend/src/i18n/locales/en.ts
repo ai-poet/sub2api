@@ -294,6 +294,8 @@ export default {
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
     buySubscription: 'Purchase Subscription',
+    shop: 'Shop',
+    shopManage: 'Shop Management',
     docs: 'Docs'
   },
 
@@ -643,6 +645,19 @@ export default {
     exportExcelFailed: 'Failed to export usage data',
     imageUnit: ' images',
     userAgent: 'User-Agent'
+  },
+
+  // Shop
+  shop: {
+    title: 'Shop',
+    noProducts: 'No products available',
+    inStock: '{n} in stock',
+    outOfStock: 'Out of stock',
+    buy: 'Buy',
+    selectPayment: 'Select Payment Method',
+    alipay: 'Alipay',
+    wxpay: 'WeChat Pay',
+    qqpay: 'QQ Pay',
   },
 
   // Redeem
@@ -3446,7 +3461,51 @@ export default {
       failedToSave: 'Failed to save rule',
       failedToDelete: 'Failed to delete rule',
       failedToToggle: 'Failed to toggle status'
-    }
+    },
+
+    // Shop Management
+    shop: {
+      title: 'Shop Management',
+      createProduct: 'Create Product',
+      editProduct: 'Edit Product',
+      productName: 'Product Name',
+      description: 'Description',
+      price: 'Price',
+      currency: 'Currency',
+      redeemType: 'Redeem Type',
+      typeBalance: 'Balance',
+      typeSubscription: 'Subscription',
+      redeemValue: 'Balance Amount',
+      groupId: 'Group ID',
+      validityDays: 'Validity Days',
+      sortOrder: 'Sort Order',
+      stock: 'Stock',
+      manageStock: 'Stock',
+      stockFor: 'Stock for {name}',
+      stockCount: 'Count',
+      addStock: 'Add Stock',
+      stockAdded: 'Added {n} stock items',
+      stockStatus: 'Status',
+      creemProductId: 'Creem Product ID',
+      creemProductIdHint: 'Pre-created product ID on Creem dashboard (e.g. prod_xxx). Required for Creem payments.',
+    },
+
+    payment: {
+      title: 'Payment Settings',
+      description: 'Configure payment providers for the built-in shop',
+      epayTitle: '易支付 (Epay)',
+      epayPid: 'PID',
+      epayKey: 'Key',
+      epayApiUrl: 'API URL',
+      creemTitle: 'Creem',
+      creemApiKey: 'API Key',
+      creemWebhookSecret: 'Webhook Secret',
+      creemWebhookHint: 'Configure this URL as the webhook endpoint in Creem dashboard: {url}',
+      creemTestMode: 'Test Mode',
+      creemTestModeHint: 'Use Creem test environment (test-api.creem.io)',
+      configured: 'Configured (leave blank to keep)',
+      notConfigured: 'Not configured',
+    },
   },
 
   // Subscription Progress (Header component)

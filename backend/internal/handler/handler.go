@@ -25,6 +25,7 @@ type AdminHandlers struct {
 	Usage            *admin.UsageHandler
 	UserAttribute    *admin.UserAttributeHandler
 	ErrorPassthrough *admin.ErrorPassthroughHandler
+	Shop             *admin.ShopHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -41,6 +42,7 @@ type Handlers struct {
 	OpenAIGateway *OpenAIGatewayHandler
 	Setting       *SettingHandler
 	Totp          *TotpHandler
+	Shop          *ShopHandler
 }
 
 // BuildInfo contains build-time information

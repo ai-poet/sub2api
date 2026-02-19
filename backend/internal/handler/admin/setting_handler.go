@@ -154,6 +154,16 @@ type UpdateSettingsRequest struct {
 	OpsRealtimeMonitoringEnabled *bool   `json:"ops_realtime_monitoring_enabled"`
 	OpsQueryModeDefault          *string `json:"ops_query_mode_default"`
 	OpsMetricsIntervalSeconds    *int    `json:"ops_metrics_interval_seconds"`
+
+	// 易支付配置
+	EpayPID    string `json:"epay_pid"`
+	EpayKey    string `json:"epay_key"`
+	EpayAPIURL string `json:"epay_api_url"`
+
+	// Creem 支付配置
+	CreemAPIKey        string `json:"creem_api_key"`
+	CreemWebhookSecret string `json:"creem_webhook_secret"`
+	CreemTestMode      *bool  `json:"creem_test_mode"`
 }
 
 // UpdateSettings 更新系统设置
@@ -351,6 +361,17 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 				return *req.OpsMetricsIntervalSeconds
 			}
 			return previousSettings.OpsMetricsIntervalSeconds
+		}(),
+		EpayPID:    req.EpayPID,
+		EpayKey:    req.EpayKey,
+		EpayAPIURL: req.EpayAPIURL,
+		CreemAPIKey:        req.CreemAPIKey,
+		CreemWebhookSecret: req.CreemWebhookSecret,
+		CreemTestMode: func() bool {
+			if req.CreemTestMode != nil {
+				return *req.CreemTestMode
+			}
+			return previousSettings.CreemTestMode
 		}(),
 	}
 

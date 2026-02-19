@@ -233,6 +233,22 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyPurchaseSubscriptionEnabled] = strconv.FormatBool(settings.PurchaseSubscriptionEnabled)
 	updates[SettingKeyPurchaseSubscriptionURL] = strings.TrimSpace(settings.PurchaseSubscriptionURL)
 
+	// 易支付配置
+	updates[SettingKeyEpayPID] = settings.EpayPID
+	updates[SettingKeyEpayAPIURL] = settings.EpayAPIURL
+	if settings.EpayKey != "" {
+		updates[SettingKeyEpayKey] = settings.EpayKey
+	}
+
+	// Creem 支付配置
+	updates[SettingKeyCreemTestMode] = strconv.FormatBool(settings.CreemTestMode)
+	if settings.CreemAPIKey != "" {
+		updates[SettingKeyCreemAPIKey] = settings.CreemAPIKey
+	}
+	if settings.CreemWebhookSecret != "" {
+		updates[SettingKeyCreemWebhookSecret] = settings.CreemWebhookSecret
+	}
+
 	// 默认配置
 	updates[SettingKeyDefaultConcurrency] = strconv.Itoa(settings.DefaultConcurrency)
 	updates[SettingKeyDefaultBalance] = strconv.FormatFloat(settings.DefaultBalance, 'f', 8, 64)
@@ -436,6 +452,14 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		HideCcsImportButton:          settings[SettingKeyHideCcsImportButton] == "true",
 		PurchaseSubscriptionEnabled:  settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:      strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
+		EpayPID:                      settings[SettingKeyEpayPID],
+		EpayKey:                      settings[SettingKeyEpayKey],
+		EpayAPIURL:                   settings[SettingKeyEpayAPIURL],
+		CreemAPIKey:                  settings[SettingKeyCreemAPIKey],
+		CreemWebhookSecret:           settings[SettingKeyCreemWebhookSecret],
+		CreemTestMode:                settings[SettingKeyCreemTestMode] == "true",
+		CreemAPIKeyConfigured:        settings[SettingKeyCreemAPIKey] != "",
+		CreemWebhookSecretConfigured: settings[SettingKeyCreemWebhookSecret] != "",
 	}
 
 	// 解析整数类型

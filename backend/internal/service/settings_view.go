@@ -43,6 +43,18 @@ type SystemSettings struct {
 	DefaultConcurrency int
 	DefaultBalance     float64
 
+	// 易支付配置
+	EpayPID    string
+	EpayKey    string
+	EpayAPIURL string
+
+	// Creem 支付配置
+	CreemAPIKey              string
+	CreemWebhookSecret       string
+	CreemTestMode            bool
+	CreemAPIKeyConfigured    bool
+	CreemWebhookSecretConfigured bool
+
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
 	FallbackModelAnthropic   string `json:"fallback_model_anthropic"`

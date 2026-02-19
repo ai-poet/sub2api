@@ -66,6 +66,16 @@ export interface SystemSettings {
   ops_realtime_monitoring_enabled: boolean
   ops_query_mode_default: 'auto' | 'raw' | 'preagg' | string
   ops_metrics_interval_seconds: number
+
+  // 易支付配置
+  epay_pid: string
+  epay_key_configured: boolean
+  epay_api_url: string
+
+  // Creem 支付配置
+  creem_api_key_configured: boolean
+  creem_webhook_secret_configured: boolean
+  creem_test_mode: boolean
 }
 
 export interface UpdateSettingsRequest {
@@ -112,6 +122,14 @@ export interface UpdateSettingsRequest {
   ops_realtime_monitoring_enabled?: boolean
   ops_query_mode_default?: 'auto' | 'raw' | 'preagg' | string
   ops_metrics_interval_seconds?: number
+  // 易支付配置
+  epay_pid?: string
+  epay_key?: string
+  epay_api_url?: string
+  // Creem 支付配置
+  creem_api_key?: string
+  creem_webhook_secret?: string
+  creem_test_mode?: boolean
 }
 
 /**

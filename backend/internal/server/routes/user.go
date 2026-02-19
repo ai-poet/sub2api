@@ -79,6 +79,14 @@ func RegisterUserRoutes(
 			redeem.GET("/history", h.Redeem.GetHistory)
 		}
 
+		// 商店
+		shop := authenticated.Group("/shop")
+		{
+			shop.GET("/products", h.Shop.ListProducts)
+			shop.POST("/orders", h.Shop.CreateOrder)
+			shop.GET("/orders/:orderNo", h.Shop.QueryOrder)
+		}
+
 		// 用户订阅
 		subscriptions := authenticated.Group("/subscriptions")
 		{

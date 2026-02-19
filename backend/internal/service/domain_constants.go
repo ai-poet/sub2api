@@ -160,6 +160,16 @@ const (
 	// SettingKeyOpsAdvancedSettings stores JSON config for ops advanced settings (data retention, aggregation).
 	SettingKeyOpsAdvancedSettings = "ops_advanced_settings"
 
+	// 易支付配置
+	SettingKeyEpayPID    = "epay_pid"
+	SettingKeyEpayKey    = "epay_key"
+	SettingKeyEpayAPIURL = "epay_api_url"
+
+	// Creem 支付配置
+	SettingKeyCreemAPIKey        = "creem_api_key"
+	SettingKeyCreemWebhookSecret = "creem_webhook_secret"
+	SettingKeyCreemTestMode      = "creem_test_mode"
+
 	// =========================
 	// Stream Timeout Handling
 	// =========================
