@@ -89,6 +89,9 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
+		EpayPID:                              settings.EpayPID,
+		EpayAPIURL:                           settings.EpayAPIURL,
+		EpayChannels:                         settings.EpayChannels,
 	})
 }
 
@@ -156,9 +159,10 @@ type UpdateSettingsRequest struct {
 	OpsMetricsIntervalSeconds    *int    `json:"ops_metrics_interval_seconds"`
 
 	// 易支付配置
-	EpayPID    string `json:"epay_pid"`
-	EpayKey    string `json:"epay_key"`
-	EpayAPIURL string `json:"epay_api_url"`
+	EpayPID      string `json:"epay_pid"`
+	EpayKey      string `json:"epay_key"`
+	EpayAPIURL   string `json:"epay_api_url"`
+	EpayChannels string `json:"epay_channels"`
 
 	// Creem 支付配置
 	CreemAPIKey        string `json:"creem_api_key"`
@@ -362,9 +366,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.OpsMetricsIntervalSeconds
 		}(),
-		EpayPID:    req.EpayPID,
-		EpayKey:    req.EpayKey,
-		EpayAPIURL: req.EpayAPIURL,
+		EpayPID:      req.EpayPID,
+		EpayKey:      req.EpayKey,
+		EpayAPIURL:   req.EpayAPIURL,
+		EpayChannels: req.EpayChannels,
 		CreemAPIKey:        req.CreemAPIKey,
 		CreemWebhookSecret: req.CreemWebhookSecret,
 		CreemTestMode: func() bool {
@@ -434,6 +439,9 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
+		EpayPID:                              updatedSettings.EpayPID,
+		EpayAPIURL:                           updatedSettings.EpayAPIURL,
+		EpayChannels:                         updatedSettings.EpayChannels,
 	})
 }
 

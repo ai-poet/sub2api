@@ -49,14 +49,17 @@
       <div v-if="selectedProduct" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div class="card w-full max-w-sm p-6">
           <h3 class="mb-4 text-lg font-semibold">{{ t('shop.selectPayment') }}</h3>
-          <div class="space-y-2">
+          <div v-if="paymentChannels.length === 0" class="text-center text-gray-500 py-4">
+            {{ t('shop.noPaymentMethod') }}
+          </div>
+          <div v-else class="space-y-2">
             <button
-              v-for="method in paymentMethods"
-              :key="method.value"
+              v-for="channel in paymentChannels"
+              :key="channel.id"
               class="btn btn-secondary w-full"
-              @click="createOrder(method.value)"
+              @click="createOrder(channel.id)"
             >
-              {{ method.label }}
+              {{ channel.name }}
             </button>
           </div>
           <button class="btn btn-ghost mt-3 w-full" @click="selectedProduct = null">
@@ -73,23 +76,17 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/ui/Icon.vue'
-import { shopAPI, type ShopProduct } from '@/api/shop'
+import { shopAPI, type ShopProduct, type PaymentChannel } from '@/api/shop'
 import { useToast } from '@/composables/useToast'
 
 const { t } = useI18n()
 const { showToast } = useToast()
 
 const products = ref<ShopProduct[]>([])
+const paymentChannels = ref<PaymentChannel[]>([])
 const loading = ref(false)
 const ordering = ref<number | null>(null)
 const selectedProduct = ref<ShopProduct | null>(null)
-
-const paymentMethods = [
-  { value: 'alipay', label: t('shop.alipay') },
-  { value: 'wxpay', label: t('shop.wxpay') },
-  { value: 'qqpay', label: t('shop.qqpay') },
-  { value: 'usdt', label: 'USDT' },
-]
 
 async function loadProducts() {
   loading.value = true
@@ -99,6 +96,18 @@ async function loadProducts() {
     showToast(t('common.unknownError'), 'error')
   } finally {
     loading.value = false
+  }
+}
+
+async function loadPaymentChannels() {
+  try {
+    paymentChannels.value = await shopAPI.getChannels()
+  } catch {
+    // 如果加载失败，使用默认支付方式
+    paymentChannels.value = [
+      { id: 'alipay', name: t('shop.alipay'), icon: 'wallet', provider: 'epay', fee: 0 },
+      { id: 'wxpay', name: t('shop.wxpay'), icon: 'credit-card', provider: 'epay', fee: 0 },
+    ]
   }
 }
 
@@ -121,5 +130,8 @@ async function createOrder(paymentMethod: string) {
   }
 }
 
-onMounted(loadProducts)
+onMounted(() => {
+  loadProducts()
+  loadPaymentChannels()
+})
 </script>

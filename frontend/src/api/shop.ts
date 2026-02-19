@@ -30,8 +30,17 @@ export interface CreateOrderResponse {
   pay_url: string
 }
 
+export interface PaymentChannel {
+  id: string
+  name: string
+  icon: string
+  provider: string
+  fee: number
+}
+
 export const shopAPI = {
   getProducts: () => apiClient.get<ShopProduct[]>('/shop/products').then(r => r.data),
+  getChannels: () => apiClient.get<PaymentChannel[]>('/shop/channels').then(r => r.data),
   createOrder: (product_id: number, payment_method: string) =>
     apiClient.post<CreateOrderResponse>('/shop/orders', { product_id, payment_method }).then(r => r.data),
   queryOrder: (orderNo: string) =>

@@ -236,6 +236,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	// 易支付配置
 	updates[SettingKeyEpayPID] = settings.EpayPID
 	updates[SettingKeyEpayAPIURL] = settings.EpayAPIURL
+	updates[SettingKeyEpayChannels] = settings.EpayChannels
 	if settings.EpayKey != "" {
 		updates[SettingKeyEpayKey] = settings.EpayKey
 	}
@@ -455,6 +456,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		EpayPID:                      settings[SettingKeyEpayPID],
 		EpayKey:                      settings[SettingKeyEpayKey],
 		EpayAPIURL:                   settings[SettingKeyEpayAPIURL],
+		EpayChannels:                 settings[SettingKeyEpayChannels],
 		CreemAPIKey:                  settings[SettingKeyCreemAPIKey],
 		CreemWebhookSecret:           settings[SettingKeyCreemWebhookSecret],
 		CreemTestMode:                settings[SettingKeyCreemTestMode] == "true",

@@ -57,6 +57,12 @@ type SystemSettings struct {
 	OpsRealtimeMonitoringEnabled bool   `json:"ops_realtime_monitoring_enabled"`
 	OpsQueryModeDefault          string `json:"ops_query_mode_default"`
 	OpsMetricsIntervalSeconds    int    `json:"ops_metrics_interval_seconds"`
+
+	// 易支付配置
+	EpayPID      string `json:"epay_pid"`
+	EpayKey      string `json:"epay_key,omitempty"`
+	EpayAPIURL   string `json:"epay_api_url"`
+	EpayChannels string `json:"epay_channels"`
 }
 
 type PublicSettings struct {

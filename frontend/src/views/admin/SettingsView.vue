@@ -1019,6 +1019,13 @@
                   <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.epayApiUrl') }}</label>
                   <input v-model="form.epay_api_url" type="url" class="input font-mono text-sm" placeholder="https://epay.example.com" />
                 </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('admin.settings.payment.epayChannels') }}</label>
+                  <input v-model="form.epay_channels" type="text" class="input font-mono text-sm" placeholder="alipay,wxpay,usdt.plasma,usdt.polygon" />
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.payment.epayChannelsHint') }}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -1240,6 +1247,7 @@ const form = reactive<SettingsForm>({
   epay_key: '',
   epay_key_configured: false,
   epay_api_url: '',
+  epay_channels: '',
   // Creem 支付配置
   creem_api_key: '',
   creem_api_key_configured: false,
@@ -1365,6 +1373,7 @@ async function saveSettings() {
       epay_pid: form.epay_pid,
       epay_key: form.epay_key || undefined,
       epay_api_url: form.epay_api_url,
+      epay_channels: form.epay_channels,
       creem_api_key: form.creem_api_key || undefined,
       creem_webhook_secret: form.creem_webhook_secret || undefined,
       creem_test_mode: form.creem_test_mode

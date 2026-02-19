@@ -71,6 +71,7 @@ export interface SystemSettings {
   epay_pid: string
   epay_key_configured: boolean
   epay_api_url: string
+  epay_channels: string
 
   // Creem 支付配置
   creem_api_key_configured: boolean
@@ -126,6 +127,7 @@ export interface UpdateSettingsRequest {
   epay_pid?: string
   epay_key?: string
   epay_api_url?: string
+  epay_channels?: string
   // Creem 支付配置
   creem_api_key?: string
   creem_webhook_secret?: string

@@ -36,4 +36,6 @@ func RegisterCommonRoutes(r *gin.Engine, h *handler.Handlers) {
 	r.GET("/api/v1/shop/notify/epay", h.Shop.EpayNotify)
 	// Creem 支付回调
 	r.POST("/api/v1/shop/notify/creem", h.Shop.CreemNotify)
+	// 支付渠道列表（公开，无需登录）
+	r.GET("/api/v1/shop/channels", h.Shop.GetPaymentChannels)
 }

@@ -32,6 +32,16 @@ func (h *ShopHandler) ListProducts(c *gin.Context) {
 	response.Success(c, out)
 }
 
+// GetPaymentChannels GET /api/v1/shop/channels
+func (h *ShopHandler) GetPaymentChannels(c *gin.Context) {
+	channels, err := h.shopService.GetPaymentChannels(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, channels)
+}
+
 // CreateOrder POST /api/v1/shop/orders
 func (h *ShopHandler) CreateOrder(c *gin.Context) {
 	var req struct {

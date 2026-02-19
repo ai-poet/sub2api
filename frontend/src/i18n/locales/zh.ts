@@ -3672,6 +3672,8 @@ export default {
       epayPid: 'PID',
       epayKey: '密钥',
       epayApiUrl: 'API 地址',
+      epayChannels: '支付渠道',
+      epayChannelsHint: '启用的支付渠道，逗号分隔。支持: alipay, wxpay, usdt.plasma, usdt.polygon, usdt.trc20, usdt.erc20',
       creemTitle: 'Creem',
       creemApiKey: 'API Key',
       creemWebhookSecret: 'Webhook 密钥',

@@ -3497,6 +3497,8 @@ export default {
       epayPid: 'PID',
       epayKey: 'Key',
       epayApiUrl: 'API URL',
+      epayChannels: 'Payment Channels',
+      epayChannelsHint: 'Enabled payment channels, comma separated. Supported: alipay, wxpay, usdt.plasma, usdt.polygon, usdt.trc20, usdt.erc20',
       creemTitle: 'Creem',
       creemApiKey: 'API Key',
       creemWebhookSecret: 'Webhook Secret',

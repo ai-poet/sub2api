@@ -161,9 +161,10 @@ const (
 	SettingKeyOpsAdvancedSettings = "ops_advanced_settings"
 
 	// 易支付配置
-	SettingKeyEpayPID    = "epay_pid"
-	SettingKeyEpayKey    = "epay_key"
-	SettingKeyEpayAPIURL = "epay_api_url"
+	SettingKeyEpayPID      = "epay_pid"
+	SettingKeyEpayKey      = "epay_key"
+	SettingKeyEpayAPIURL   = "epay_api_url"
+	SettingKeyEpayChannels = "epay_channels" // 启用的支付渠道，逗号分隔
 
 	// Creem 支付配置
 	SettingKeyCreemAPIKey        = "creem_api_key"

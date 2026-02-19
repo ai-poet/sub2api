@@ -44,9 +44,10 @@ type SystemSettings struct {
 	DefaultBalance     float64
 
 	// 易支付配置
-	EpayPID    string
-	EpayKey    string
-	EpayAPIURL string
+	EpayPID      string
+	EpayKey      string
+	EpayAPIURL   string
+	EpayChannels string // 启用的支付渠道，逗号分隔
 
 	// Creem 支付配置
 	CreemAPIKey              string

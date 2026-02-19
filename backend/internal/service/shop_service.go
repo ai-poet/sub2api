@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/domain"
@@ -21,6 +22,26 @@ var (
 	ErrEpayNotConfigured  = infraerrors.BadRequest("EPAY_NOT_CONFIGURED", "payment not configured")
 	ErrCreemNotConfigured = infraerrors.BadRequest("CREEM_NOT_CONFIGURED", "creem payment not configured")
 )
+
+// PaymentChannel represents a payment channel
+type PaymentChannel struct {
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Icon     string  `json:"icon"`
+	Provider string  `json:"provider"`
+	Fee      float64 `json:"fee"`
+}
+
+// USDTNetworks maps USDT network channel IDs to their display names
+var USDTNetworks = map[string]struct {
+	Name string
+	Icon string
+}{
+	"usdt.plasma": {Name: "USDT-Plasma", Icon: "credit-card"},
+	"usdt.polygon": {Name: "USDT-Polygon", Icon: "credit-card"},
+	"usdt.trc20":  {Name: "USDT-TRC20", Icon: "credit-card"},
+	"usdt.erc20":  {Name: "USDT-ERC20", Icon: "credit-card"},
+}
 
 // ShopProduct represents a shop product
 type ShopProduct struct {
@@ -394,3 +415,73 @@ const (
 
 // ShopSQLTxKey is the context key for passing *sql.Tx to shop repositories
 type ShopSQLTxKey struct{}
+
+// GetPaymentChannels returns available payment channels based on configuration
+func (s *ShopService) GetPaymentChannels(ctx context.Context) ([]PaymentChannel, error) {
+	settings, err := s.settingSvc.GetAllSettings(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get settings: %w", err)
+	}
+
+	var channels []PaymentChannel
+
+	// Check if Creem is configured
+	if settings.CreemAPIKey != "" {
+		channels = append(channels, PaymentChannel{
+			ID:       "creem",
+			Name:     "Creem",
+			Icon:     "credit-card",
+			Provider: "creem",
+			Fee:      0,
+		})
+	}
+
+	// Check if Epay is configured
+	if settings.EpayPID != "" && settings.EpayKey != "" && settings.EpayAPIURL != "" {
+		// Parse enabled channels from configuration
+		enabledChannels := settings.EpayChannels
+		if enabledChannels == "" {
+			enabledChannels = "alipay,wxpay" // Default channels
+		}
+
+		channelList := strings.Split(enabledChannels, ",")
+		for _, ch := range channelList {
+			ch = strings.TrimSpace(ch)
+			if ch == "" {
+				continue
+			}
+
+			switch ch {
+			case "alipay":
+				channels = append(channels, PaymentChannel{
+					ID:       "alipay",
+					Name:     "支付宝",
+					Icon:     "wallet",
+					Provider: "epay",
+					Fee:      0,
+				})
+			case "wxpay":
+				channels = append(channels, PaymentChannel{
+					ID:       "wxpay",
+					Name:     "微信支付",
+					Icon:     "credit-card",
+					Provider: "epay",
+					Fee:      0,
+				})
+			default:
+				// Check if it's a USDT network
+				if network, ok := USDTNetworks[ch]; ok {
+					channels = append(channels, PaymentChannel{
+						ID:       ch,
+						Name:     network.Name,
+						Icon:     network.Icon,
+						Provider: "epay",
+						Fee:      0,
+					})
+				}
+			}
+		}
+	}
+
+	return channels, nil
+}
