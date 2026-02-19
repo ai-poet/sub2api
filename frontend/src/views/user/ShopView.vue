@@ -79,6 +79,8 @@ import Icon from '@/components/ui/Icon.vue'
 import { shopAPI, type ShopProduct, type PaymentChannel } from '@/api/shop'
 import { useToast } from '@/composables/useToast'
 
+const PENDING_ORDER_KEY = 'shop_pending_order'
+
 const { t } = useI18n()
 const { showToast } = useToast()
 
@@ -87,6 +89,68 @@ const paymentChannels = ref<PaymentChannel[]>([])
 const loading = ref(false)
 const ordering = ref<number | null>(null)
 const selectedProduct = ref<ShopProduct | null>(null)
+const checkingOrder = ref(false)
+
+interface PendingOrder {
+  orderNo: string
+  productId: number
+  productName: string
+  createdAt: number
+}
+
+function savePendingOrder(orderNo: string, productId: number, productName: string) {
+  const pending: PendingOrder = {
+    orderNo,
+    productId,
+    productName,
+    createdAt: Date.now(),
+  }
+  localStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(pending))
+}
+
+function getPendingOrder(): PendingOrder | null {
+  try {
+    const data = localStorage.getItem(PENDING_ORDER_KEY)
+    if (!data) return null
+    const pending = JSON.parse(data) as PendingOrder
+    // 如果订单超过1小时，清除
+    if (Date.now() - pending.createdAt > 60 * 60 * 1000) {
+      localStorage.removeItem(PENDING_ORDER_KEY)
+      return null
+    }
+    return pending
+  } catch {
+    return null
+  }
+}
+
+function clearPendingOrder() {
+  localStorage.removeItem(PENDING_ORDER_KEY)
+}
+
+async function checkPendingOrder() {
+  const pending = getPendingOrder()
+  if (!pending) return
+
+  checkingOrder.value = true
+  try {
+    const order = await shopAPI.queryOrder(pending.orderNo)
+    if (order.status === 'paid') {
+      showToast(t('shop.paymentSuccess', { product: pending.productName }), 'success')
+      clearPendingOrder()
+    } else if (order.status === 'expired' || order.status === 'cancelled') {
+      showToast(t('shop.paymentExpired'), 'warning')
+      clearPendingOrder()
+    } else {
+      // 订单仍在处理中，显示提示
+      showToast(t('shop.paymentPending'), 'info')
+    }
+  } catch {
+    // 查询失败，保留订单状态
+  } finally {
+    checkingOrder.value = false
+  }
+}
 
 async function loadProducts() {
   loading.value = true
@@ -122,6 +186,8 @@ async function createOrder(paymentMethod: string) {
   ordering.value = product.id
   try {
     const result = await shopAPI.createOrder(product.id, paymentMethod)
+    // 保存订单状态以便支付后恢复
+    savePendingOrder(result.order.order_no, product.id, product.name)
     window.location.href = result.pay_url
   } catch (e: any) {
     showToast(e?.message || t('common.unknownError'), 'error')
@@ -133,5 +199,7 @@ async function createOrder(paymentMethod: string) {
 onMounted(() => {
   loadProducts()
   loadPaymentChannels()
+  // 检查是否有待处理的订单
+  checkPendingOrder()
 })
 </script>

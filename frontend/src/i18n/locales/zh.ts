@@ -664,6 +664,30 @@ export default {
     alipay: '支付宝',
     wxpay: '微信支付',
     qqpay: 'QQ钱包',
+    noPaymentMethod: '暂无可用支付方式',
+    paymentSuccess: '{product} 支付成功',
+    paymentExpired: '订单已过期，请重新下单',
+    paymentPending: '订单处理中，请稍后刷新查看',
+  },
+
+  // Order History
+  orderHistory: {
+    title: '订单记录',
+    subtitle: '查看您的购买历史',
+    allStatus: '全部状态',
+    statusPending: '待支付',
+    statusPaid: '已支付',
+    statusExpired: '已过期',
+    statusCancelled: '已取消',
+    noOrders: '暂无订单记录',
+    orderNo: '订单号',
+    createdAt: '创建时间',
+    paidAt: '支付时间',
+    expiresAt: '过期时间',
+    cancel: '取消订单',
+    cancelConfirm: '确定要取消此订单吗？',
+    cancelFailed: '取消订单失败',
+    continuePay: '继续支付',
   },
 
   // Redeem

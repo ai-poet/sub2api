@@ -59,10 +59,17 @@ type Config struct {
 	UsageCleanup UsageCleanupConfig         `mapstructure:"usage_cleanup"`
 	Concurrency  ConcurrencyConfig          `mapstructure:"concurrency"`
 	TokenRefresh TokenRefreshConfig         `mapstructure:"token_refresh"`
+	Shop         ShopConfig                 `mapstructure:"shop"`
 	RunMode      string                     `mapstructure:"run_mode" yaml:"run_mode"`
 	Timezone     string                     `mapstructure:"timezone"` // e.g. "Asia/Shanghai", "UTC"
 	Gemini       GeminiConfig               `mapstructure:"gemini"`
 	Update       UpdateConfig               `mapstructure:"update"`
+}
+
+// ShopConfig 商店配置
+type ShopConfig struct {
+	// CleanupSchedule: 过期订单清理的 cron 调度（默认每5分钟）
+	CleanupSchedule string `mapstructure:"cleanup_schedule"`
 }
 
 type GeminiConfig struct {
@@ -922,6 +929,9 @@ func setDefaults() {
 	viper.SetDefault("token_refresh.refresh_before_expiry_hours", 0.5) // 提前30分钟刷新（适配Google 1小时token）
 	viper.SetDefault("token_refresh.max_retries", 3)                   // 最多重试3次
 	viper.SetDefault("token_refresh.retry_backoff_seconds", 2)         // 重试退避基础2秒
+
+	// Shop
+	viper.SetDefault("shop.cleanup_schedule", "*/5 * * * *") // 每5分钟清理过期订单
 
 	// Gemini OAuth - configure via environment variables or config file
 	// GEMINI_OAUTH_CLIENT_ID and GEMINI_OAUTH_CLIENT_SECRET

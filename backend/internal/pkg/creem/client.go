@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -114,9 +115,11 @@ func (c *Client) VerifyWebhook(rawBody []byte, signature string) (*WebhookEvent,
 	return &event, nil
 }
 
-// GenerateOrderNo generates a unique order reference ID for creem
+// GenerateOrderNo generates a unique order reference ID for creem with random suffix
 func GenerateOrderNo(userID int64) string {
+	b := make([]byte, 4)
+	rand.Read(b)
 	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%d%d", userID, time.Now().UnixNano())))
+	h.Write([]byte(fmt.Sprintf("%d%d%x", userID, time.Now().UnixNano(), b)))
 	return fmt.Sprintf("ref_%s", hex.EncodeToString(h.Sum(nil))[:16])
 }

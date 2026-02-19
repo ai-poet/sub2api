@@ -83,7 +83,8 @@ func (h *ShopHandler) CreemNotify(c *gin.Context) {
 		return
 	}
 	signature := c.GetHeader("creem-signature")
-	if err := h.shopService.HandleCreemWebhook(c.Request.Context(), rawBody, signature); err != nil {
+	clientIP := c.ClientIP()
+	if err := h.shopService.HandleCreemWebhook(c.Request.Context(), rawBody, signature, clientIP); err != nil {
 		c.Status(400)
 		return
 	}
@@ -107,9 +108,37 @@ func (h *ShopHandler) EpayNotify(c *gin.Context) {
 			}
 		}
 	}
-	if err := h.shopService.HandlePaymentNotify(c.Request.Context(), params); err != nil {
+	clientIP := c.ClientIP()
+	if err := h.shopService.HandlePaymentNotify(c.Request.Context(), params, clientIP); err != nil {
 		_, _ = c.Writer.Write([]byte("fail"))
 		return
 	}
 	_, _ = c.Writer.Write([]byte("success"))
+}
+
+// ListUserOrders GET /api/v1/shop/my-orders
+func (h *ShopHandler) ListUserOrders(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	status := c.Query("status")
+	orders, err := h.shopService.GetUserOrders(c.Request.Context(), userID, status)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	out := make([]dto.ShopOrder, 0, len(orders))
+	for i := range orders {
+		out = append(out, dto.ShopOrderFromService(&orders[i]))
+	}
+	response.Success(c, out)
+}
+
+// CancelOrderByUser POST /api/v1/shop/my-orders/:orderNo/cancel
+func (h *ShopHandler) CancelOrderByUser(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	orderNo := c.Param("orderNo")
+	if err := h.shopService.CancelOrder(c.Request.Context(), userID, orderNo); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{"message": "order cancelled"})
 }

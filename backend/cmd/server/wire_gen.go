@@ -182,7 +182,8 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	shopProductRepository := repository.NewShopProductRepository(db)
 	shopProductStockRepository := repository.NewShopProductStockRepository(db)
 	shopOrderRepository := repository.NewShopOrderRepository(db)
-	shopService := service.NewShopService(shopProductRepository, shopProductStockRepository, shopOrderRepository, redeemService, settingService, db)
+	paymentCallbackLogRepository := repository.NewPaymentCallbackLogRepository(db)
+	shopService := service.NewShopService(shopProductRepository, shopProductStockRepository, shopOrderRepository, paymentCallbackLogRepository, redeemService, settingService, db)
 	adminShopHandler := admin.NewShopHandler(shopService)
 	adminHandlers := handler.ProvideAdminHandlers(dashboardHandler, adminUserHandler, groupHandler, accountHandler, adminAnnouncementHandler, oAuthHandler, openAIOAuthHandler, geminiOAuthHandler, antigravityOAuthHandler, proxyHandler, adminRedeemHandler, promoHandler, settingHandler, opsHandler, systemHandler, adminSubscriptionHandler, adminUsageHandler, userAttributeHandler, errorPassthroughHandler, adminShopHandler)
 	gatewayHandler := handler.NewGatewayHandler(gatewayService, geminiMessagesCompatService, antigravityGatewayService, userService, concurrencyService, billingCacheService, usageService, apiKeyService, errorPassthroughService, configConfig)
@@ -204,7 +205,8 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	tokenRefreshService := service.ProvideTokenRefreshService(accountRepository, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService, compositeTokenCacheInvalidator, schedulerCache, configConfig)
 	accountExpiryService := service.ProvideAccountExpiryService(accountRepository)
 	subscriptionExpiryService := service.ProvideSubscriptionExpiryService(userSubscriptionRepository)
-	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, schedulerSnapshotService, tokenRefreshService, accountExpiryService, subscriptionExpiryService, usageCleanupService, pricingService, emailQueueService, billingCacheService, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService)
+	shopCleanupService := service.ProvideShopCleanupService(shopService, redisClient, configConfig)
+	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, schedulerSnapshotService, tokenRefreshService, accountExpiryService, subscriptionExpiryService, usageCleanupService, pricingService, emailQueueService, billingCacheService, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService, shopCleanupService)
 	application := &Application{
 		Server:  httpServer,
 		Cleanup: v,
@@ -246,6 +248,7 @@ func provideCleanup(
 	openaiOAuth *service.OpenAIOAuthService,
 	geminiOAuth *service.GeminiOAuthService,
 	antigravityOAuth *service.AntigravityOAuthService,
+	shopCleanup *service.ShopCleanupService,
 ) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -255,6 +258,12 @@ func provideCleanup(
 			name string
 			fn   func() error
 		}{
+			{"ShopCleanupService", func() error {
+				if shopCleanup != nil {
+					shopCleanup.Stop()
+				}
+				return nil
+			}},
 			{"OpsScheduledReportService", func() error {
 				if opsScheduledReport != nil {
 					opsScheduledReport.Stop()

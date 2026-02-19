@@ -2,9 +2,12 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -116,6 +119,29 @@ type ShopOrderRepository interface {
 	Update(ctx context.Context, o *ShopOrder) error
 	GetByOrderNo(ctx context.Context, orderNo string) (*ShopOrder, error)
 	ListByUser(ctx context.Context, userID int64) ([]ShopOrder, error)
+	ListByUserAndStatus(ctx context.Context, userID int64, status string) ([]ShopOrder, error)
+}
+
+// PaymentCallbackLogRepository defines data access for payment callback logs
+type PaymentCallbackLogRepository interface {
+	Create(ctx context.Context, log *PaymentCallbackLog) error
+	GetByOrderNo(ctx context.Context, orderNo string) ([]PaymentCallbackLog, error)
+	UpdateProcessed(ctx context.Context, id int64, processed bool, resultMessage string) error
+}
+
+// PaymentCallbackLog represents a payment callback log entry
+type PaymentCallbackLog struct {
+	ID            int64
+	OrderNo       string
+	Provider      string // epay, creem
+	RawData       map[string]string
+	Signature     *string
+	Verified      bool
+	Processed     bool
+	ResultMessage *string
+	ClientIP      *string
+	CreatedAt     time.Time
+	ProcessedAt   *time.Time
 }
 
 // ShopService handles shop business logic
@@ -123,6 +149,7 @@ type ShopService struct {
 	productRepo ShopProductRepository
 	stockRepo   ShopProductStockRepository
 	orderRepo   ShopOrderRepository
+	callbackLog PaymentCallbackLogRepository
 	redeemSvc   *RedeemService
 	settingSvc  *SettingService
 	db          *sql.DB
@@ -132,6 +159,7 @@ func NewShopService(
 	productRepo ShopProductRepository,
 	stockRepo ShopProductStockRepository,
 	orderRepo ShopOrderRepository,
+	callbackLog PaymentCallbackLogRepository,
 	redeemSvc *RedeemService,
 	settingSvc *SettingService,
 	db *sql.DB,
@@ -140,6 +168,7 @@ func NewShopService(
 		productRepo: productRepo,
 		stockRepo:   stockRepo,
 		orderRepo:   orderRepo,
+		callbackLog: callbackLog,
 		redeemSvc:   redeemSvc,
 		settingSvc:  settingSvc,
 		db:          db,
@@ -344,7 +373,7 @@ func (s *ShopService) fulfillOrder(ctx context.Context, order *ShopOrder) error 
 }
 
 // HandlePaymentNotify processes epay payment callback
-func (s *ShopService) HandlePaymentNotify(ctx context.Context, params map[string]string) error {
+func (s *ShopService) HandlePaymentNotify(ctx context.Context, params map[string]string, clientIP string) error {
 	settings, err := s.settingSvc.GetAllSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("get settings: %w", err)
@@ -359,11 +388,19 @@ func (s *ShopService) HandlePaymentNotify(ctx context.Context, params map[string
 	}
 	orderNo, ok, err := client.Verify(params)
 	if err != nil {
+		// Log failed verification
+		s.logCallback(ctx, orderNo, "epay", params, nil, false, false, err.Error(), clientIP)
 		return fmt.Errorf("verify: %w", err)
 	}
 	if !ok {
+		// Log invalid signature
+		s.logCallback(ctx, orderNo, "epay", params, nil, false, false, "invalid signature", clientIP)
 		return nil
 	}
+
+	// Log successful verification
+	s.logCallback(ctx, orderNo, "epay", params, nil, true, false, "", clientIP)
+
 	order, err := s.orderRepo.GetByOrderNo(ctx, orderNo)
 	if err != nil {
 		if errors.Is(err, ErrOrderNotFound) {
@@ -371,11 +408,18 @@ func (s *ShopService) HandlePaymentNotify(ctx context.Context, params map[string
 		}
 		return fmt.Errorf("get order: %w", err)
 	}
-	return s.fulfillOrder(ctx, order)
+
+	if err := s.fulfillOrder(ctx, order); err != nil {
+		s.updateCallbackResult(ctx, orderNo, false, err.Error())
+		return err
+	}
+
+	s.updateCallbackResult(ctx, orderNo, true, "order fulfilled")
+	return nil
 }
 
 // HandleCreemWebhook processes creem payment webhook
-func (s *ShopService) HandleCreemWebhook(ctx context.Context, rawBody []byte, signature string) error {
+func (s *ShopService) HandleCreemWebhook(ctx context.Context, rawBody []byte, signature string, clientIP string) error {
 	settings, err := s.settingSvc.GetAllSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("get settings: %w", err)
@@ -387,24 +431,35 @@ func (s *ShopService) HandleCreemWebhook(ctx context.Context, rawBody []byte, si
 	})
 	event, err := client.VerifyWebhook(rawBody, signature)
 	if err != nil {
+		// Log failed verification
+		s.logCallback(ctx, "", "creem", map[string]string{"raw": string(rawBody)}, &signature, false, false, err.Error(), clientIP)
 		return fmt.Errorf("verify webhook: %w", err)
 	}
-	if event.Object.Order.Status != "paid" {
+
+	orderNo := event.Object.RequestID
+	orderStatus := event.Object.Order.Status
+
+	// Log successful verification
+	s.logCallback(ctx, orderNo, "creem", map[string]string{"raw": string(rawBody)}, &signature, true, false, "", clientIP)
+
+	if orderStatus != "paid" {
 		return nil
 	}
-	order, err := s.orderRepo.GetByOrderNo(ctx, event.Object.RequestID)
+	order, err := s.orderRepo.GetByOrderNo(ctx, orderNo)
 	if err != nil {
 		if errors.Is(err, ErrOrderNotFound) {
 			return nil
 		}
 		return fmt.Errorf("get order: %w", err)
 	}
-	return s.fulfillOrder(ctx, order)
-}
 
-// GetUserOrders returns orders for a user
-func (s *ShopService) GetUserOrders(ctx context.Context, userID int64) ([]ShopOrder, error) {
-	return s.orderRepo.ListByUser(ctx, userID)
+	if err := s.fulfillOrder(ctx, order); err != nil {
+		s.updateCallbackResult(ctx, orderNo, false, err.Error())
+		return err
+	}
+
+	s.updateCallbackResult(ctx, orderNo, true, "order fulfilled")
+	return nil
 }
 
 // RedeemTypeBalance and RedeemTypeSubscription constants
@@ -484,4 +539,94 @@ func (s *ShopService) GetPaymentChannels(ctx context.Context) ([]PaymentChannel,
 	}
 
 	return channels, nil
+}
+
+// CleanupExpiredOrders marks expired pending orders as cancelled
+// This should be called periodically by a scheduler
+func (s *ShopService) CleanupExpiredOrders(ctx context.Context) (int64, error) {
+	result, err := s.db.ExecContext(ctx, `
+		UPDATE shop_orders 
+		SET status = 'expired', updated_at = NOW() 
+		WHERE status = 'pending' AND expires_at IS NOT NULL AND expires_at < NOW()
+	`)
+	if err != nil {
+		return 0, fmt.Errorf("cleanup expired orders: %w", err)
+	}
+	affected, _ := result.RowsAffected()
+	if affected > 0 {
+		log.Printf("[ShopService] cleaned up %d expired orders", affected)
+	}
+	return affected, nil
+}
+
+// GetUserOrders returns orders for a user with optional status filter
+func (s *ShopService) GetUserOrders(ctx context.Context, userID int64, status string) ([]ShopOrder, error) {
+	if status != "" {
+		return s.orderRepo.ListByUserAndStatus(ctx, userID, status)
+	}
+	return s.orderRepo.ListByUser(ctx, userID)
+}
+
+// CancelOrder cancels a pending order (user-initiated)
+func (s *ShopService) CancelOrder(ctx context.Context, userID int64, orderNo string) error {
+	order, err := s.orderRepo.GetByOrderNo(ctx, orderNo)
+	if err != nil {
+		return err
+	}
+	if order.UserID != userID {
+		return infraerrors.Forbidden("ORDER_NOT_OWNER", "order does not belong to user")
+	}
+	if order.Status != "pending" {
+		return infraerrors.BadRequest("ORDER_NOT_PENDING", "only pending orders can be cancelled")
+	}
+	order.Status = "cancelled"
+	return s.orderRepo.Update(ctx, order)
+}
+
+// generateRandomSuffix generates a random hex suffix for order numbers
+func generateRandomSuffix() string {
+	b := make([]byte, 2)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+// logCallback records a payment callback log entry
+func (s *ShopService) logCallback(ctx context.Context, orderNo, provider string, rawData map[string]string, signature *string, verified bool, processed bool, resultMessage string, clientIP string) {
+	if s.callbackLog == nil {
+		return
+	}
+
+	log := &PaymentCallbackLog{
+		OrderNo:       orderNo,
+		Provider:      provider,
+		RawData:       rawData,
+		Signature:     signature,
+		Verified:      verified,
+		Processed:     processed,
+		ResultMessage: &resultMessage,
+		ClientIP:      &clientIP,
+		CreatedAt:     time.Now(),
+	}
+
+	if err := s.callbackLog.Create(ctx, log); err != nil {
+		log.Printf("[ShopService] failed to log callback: %v", err)
+	}
+}
+
+// updateCallbackResult updates the processing result of a callback log
+func (s *ShopService) updateCallbackResult(ctx context.Context, orderNo string, processed bool, resultMessage string) {
+	if s.callbackLog == nil {
+		return
+	}
+
+	logs, err := s.callbackLog.GetByOrderNo(ctx, orderNo)
+	if err != nil || len(logs) == 0 {
+		return
+	}
+
+	// Update the most recent log entry
+	latestLog := logs[0]
+	if err := s.callbackLog.UpdateProcessed(ctx, latestLog.ID, processed, resultMessage); err != nil {
+		log.Printf("[ShopService] failed to update callback result: %v", err)
+	}
 }

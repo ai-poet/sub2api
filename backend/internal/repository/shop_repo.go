@@ -230,3 +230,23 @@ FROM shop_orders WHERE user_id=$1 ORDER BY created_at DESC`, userID)
 	}
 	return result, rows.Err()
 }
+
+func (r *shopOrderRepository) ListByUserAndStatus(ctx context.Context, userID int64, status string) ([]service.ShopOrder, error) {
+	rows, err := r.db.QueryContext(ctx, `
+SELECT id,order_no,user_id,product_id,product_name,amount,currency,payment_method,status,redeem_code_id,paid_at,expires_at,created_at,updated_at
+FROM shop_orders WHERE user_id=$1 AND status=$2 ORDER BY created_at DESC`, userID, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var result []service.ShopOrder
+	for rows.Next() {
+		var o service.ShopOrder
+		if err := rows.Scan(&o.ID, &o.OrderNo, &o.UserID, &o.ProductID, &o.ProductName, &o.Amount, &o.Currency,
+			&o.PaymentMethod, &o.Status, &o.RedeemCodeID, &o.PaidAt, &o.ExpiresAt, &o.CreatedAt, &o.UpdatedAt); err != nil {
+			return nil, err
+		}
+		result = append(result, o)
+	}
+	return result, rows.Err()
+}

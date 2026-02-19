@@ -658,6 +658,30 @@ export default {
     alipay: 'Alipay',
     wxpay: 'WeChat Pay',
     qqpay: 'QQ Pay',
+    noPaymentMethod: 'No payment methods available',
+    paymentSuccess: '{product} payment successful',
+    paymentExpired: 'Order expired, please place a new order',
+    paymentPending: 'Payment processing, please refresh later',
+  },
+
+  // Order History
+  orderHistory: {
+    title: 'Order History',
+    subtitle: 'View your purchase history',
+    allStatus: 'All Status',
+    statusPending: 'Pending',
+    statusPaid: 'Paid',
+    statusExpired: 'Expired',
+    statusCancelled: 'Cancelled',
+    noOrders: 'No orders yet',
+    orderNo: 'Order No',
+    createdAt: 'Created At',
+    paidAt: 'Paid At',
+    expiresAt: 'Expires At',
+    cancel: 'Cancel Order',
+    cancelConfirm: 'Are you sure you want to cancel this order?',
+    cancelFailed: 'Failed to cancel order',
+    continuePay: 'Continue Payment',
   },
 
   // Redeem

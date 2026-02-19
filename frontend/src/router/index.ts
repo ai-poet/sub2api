@@ -186,6 +186,17 @@ const routes: RouteRecordRaw[] = [
       titleKey: 'shop.title'
     }
   },
+  {
+    path: '/orders',
+    name: 'OrderHistory',
+    component: () => import('@/views/user/OrderHistoryView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Order History',
+      titleKey: 'orderHistory.title'
+    }
+  },
 
   // ==================== Admin Routes ====================
   {

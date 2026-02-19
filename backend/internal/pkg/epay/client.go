@@ -2,6 +2,8 @@ package epay
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -84,7 +86,10 @@ func (c *Client) Verify(params map[string]string) (tradeNo string, ok bool, err 
 	return info.ServiceTradeNo, true, nil
 }
 
-// GenerateOrderNo generates a unique order number
+// GenerateOrderNo generates a unique order number with random suffix
 func GenerateOrderNo(userID int64) string {
-	return fmt.Sprintf("SHOP%d%d", userID, time.Now().UnixNano())
+	b := make([]byte, 2)
+	rand.Read(b)
+	randomSuffix := hex.EncodeToString(b)
+	return fmt.Sprintf("SHOP%d%d%s", userID, time.Now().UnixNano(), randomSuffix)
 }

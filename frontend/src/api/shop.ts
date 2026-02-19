@@ -45,6 +45,10 @@ export const shopAPI = {
     apiClient.post<CreateOrderResponse>('/shop/orders', { product_id, payment_method }).then(r => r.data),
   queryOrder: (orderNo: string) =>
     apiClient.get<ShopOrder>(`/shop/orders/${orderNo}`).then(r => r.data),
+  getMyOrders: (status?: string) =>
+    apiClient.get<ShopOrder[]>('/shop/my-orders', { params: status ? { status } : {} }).then(r => r.data),
+  cancelOrder: (orderNo: string) =>
+    apiClient.post<{ message: string }>(`/shop/my-orders/${orderNo}/cancel`).then(r => r.data),
 }
 
 export default shopAPI

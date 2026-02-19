@@ -210,6 +210,17 @@ func ProvideAPIKeyAuthCacheInvalidator(apiKeyService *APIKeyService) APIKeyAuthC
 	return apiKeyService
 }
 
+// ProvideShopCleanupService creates and starts ShopCleanupService (cron scheduled).
+func ProvideShopCleanupService(
+	shopSvc *ShopService,
+	redisClient *redis.Client,
+	cfg *config.Config,
+) *ShopCleanupService {
+	svc := NewShopCleanupService(shopSvc, redisClient, cfg)
+	svc.Start()
+	return svc
+}
+
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
 	// Core services
@@ -277,4 +288,5 @@ var ProviderSet = wire.NewSet(
 	NewErrorPassthroughService,
 	NewDigestSessionStore,
 	NewShopService,
+	ProvideShopCleanupService,
 )

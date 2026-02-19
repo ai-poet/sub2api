@@ -71,6 +71,7 @@ var ProviderSet = wire.NewSet(
 	NewShopProductRepository,
 	NewShopProductStockRepository,
 	NewShopOrderRepository,
+	NewPaymentCallbackLogRepository,
 
 	// Cache implementations
 	NewGatewayCache,

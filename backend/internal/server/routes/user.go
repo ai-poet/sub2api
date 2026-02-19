@@ -85,6 +85,8 @@ func RegisterUserRoutes(
 			shop.GET("/products", h.Shop.ListProducts)
 			shop.POST("/orders", h.Shop.CreateOrder)
 			shop.GET("/orders/:orderNo", h.Shop.QueryOrder)
+			shop.GET("/my-orders", h.Shop.ListUserOrders)
+			shop.POST("/my-orders/:orderNo/cancel", h.Shop.CancelOrderByUser)
 		}
 
 		// 用户订阅
