@@ -1,5 +1,6 @@
 <template>
-  <div class="p-6">
+  <AppLayout>
+    <div class="mx-auto max-w-6xl p-6">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
         {{ t('orderHistory.title') }}
@@ -105,15 +106,19 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AppLayout from '@/components/layout/AppLayout.vue'
 import { shopAPI, type ShopOrder } from '@/api/shop'
+import { useToast } from '@/composables/useToast'
 
 const { t } = useI18n()
+const { showToast } = useToast()
 
 const loading = ref(false)
 const orders = ref<ShopOrder[]>([])
@@ -123,8 +128,8 @@ const loadOrders = async () => {
   loading.value = true
   try {
     orders.value = await shopAPI.getMyOrders(statusFilter.value || undefined)
-  } catch (error) {
-    console.error('Failed to load orders:', error)
+  } catch {
+    showToast(t('common.unknownError'), 'error')
   } finally {
     loading.value = false
   }
@@ -137,9 +142,9 @@ const handleCancelOrder = async (orderNo: string) => {
   try {
     await shopAPI.cancelOrder(orderNo)
     await loadOrders()
-  } catch (error) {
-    console.error('Failed to cancel order:', error)
-    alert(t('orderHistory.cancelFailed'))
+    showToast(t('common.success'), 'success')
+  } catch {
+    showToast(t('orderHistory.cancelFailed'), 'error')
   }
 }
 

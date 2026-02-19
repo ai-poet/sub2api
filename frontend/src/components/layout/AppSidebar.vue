@@ -484,6 +484,7 @@ const userNavItems = computed(() => {
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/shop', label: t('nav.shop'), icon: CreditCardIcon, hideInSimpleMode: true },
+    { path: '/orders', label: t('nav.orders'), icon: TicketIcon, hideInSimpleMode: true },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
@@ -508,6 +509,7 @@ const personalNavItems = computed(() => {
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/shop', label: t('nav.shop'), icon: CreditCardIcon, hideInSimpleMode: true },
+    { path: '/orders', label: t('nav.orders'), icon: TicketIcon, hideInSimpleMode: true },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items

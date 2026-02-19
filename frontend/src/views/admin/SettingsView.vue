@@ -1171,6 +1171,7 @@ const adminApiKeyExists = ref(false)
 const adminApiKeyMasked = ref('')
 const adminApiKeyOperating = ref(false)
 const newAdminApiKey = ref('')
+const creemTestModeLoaded = ref(false)
 
 // Stream Timeout 状态
 const streamTimeoutLoading = ref(true)
@@ -1317,6 +1318,7 @@ async function loadSettings() {
   loading.value = true
   try {
     const settings = await adminAPI.settings.getSettings()
+    creemTestModeLoaded.value = Object.prototype.hasOwnProperty.call(settings, 'creem_test_mode')
     Object.assign(form, settings)
     form.smtp_password = ''
     form.turnstile_secret_key = ''
@@ -1333,6 +1335,13 @@ async function loadSettings() {
 async function saveSettings() {
   saving.value = true
   try {
+    const shouldSubmitCreemTestMode =
+      creemTestModeLoaded.value ||
+      form.creem_api_key_configured ||
+      form.creem_webhook_secret_configured ||
+      !!form.creem_api_key ||
+      !!form.creem_webhook_secret
+
     const payload: UpdateSettingsRequest = {
       registration_enabled: form.registration_enabled,
       email_verify_enabled: form.email_verify_enabled,
@@ -1379,7 +1388,7 @@ async function saveSettings() {
       epay_channels: form.epay_channels,
       creem_api_key: form.creem_api_key || undefined,
       creem_webhook_secret: form.creem_webhook_secret || undefined,
-      creem_test_mode: form.creem_test_mode
+      ...(shouldSubmitCreemTestMode ? { creem_test_mode: form.creem_test_mode } : {})
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)

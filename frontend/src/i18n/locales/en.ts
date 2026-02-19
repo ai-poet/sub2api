@@ -295,6 +295,7 @@ export default {
     mySubscriptions: 'My Subscriptions',
     buySubscription: 'Purchase Subscription',
     shop: 'Shop',
+    orders: 'Orders',
     shopManage: 'Shop Management',
     docs: 'Docs'
   },

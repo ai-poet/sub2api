@@ -25,6 +25,7 @@ var (
 	ErrOrderNotPending    = infraerrors.Conflict("ORDER_NOT_PENDING", "order is not pending")
 	ErrEpayNotConfigured  = infraerrors.BadRequest("EPAY_NOT_CONFIGURED", "payment not configured")
 	ErrCreemNotConfigured = infraerrors.BadRequest("CREEM_NOT_CONFIGURED", "creem payment not configured")
+	ErrPaymentMethodNotAllowed = infraerrors.BadRequest("PAYMENT_METHOD_NOT_ALLOWED", "payment method is not enabled")
 )
 
 // PaymentChannel represents a payment channel
@@ -198,7 +199,11 @@ func (s *ShopService) DeleteProduct(ctx context.Context, id int64) error {
 }
 
 func (s *ShopService) ListAllProducts(ctx context.Context) ([]ShopProduct, error) {
-	return s.productRepo.List(ctx, false)
+	products, err := s.productRepo.List(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return s.attachRealtimeStockCount(ctx, products)
 }
 
 // AddStock generates redeem codes and adds them to product stock
@@ -257,7 +262,11 @@ func (s *ShopService) DeleteStock(ctx context.Context, stockID int64) error {
 // --- User methods ---
 
 func (s *ShopService) GetActiveProducts(ctx context.Context) ([]ShopProduct, error) {
-	return s.productRepo.List(ctx, true)
+	products, err := s.productRepo.List(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return s.attachRealtimeStockCount(ctx, products)
 }
 
 // CreateOrder creates an order and returns the order + pay URL
@@ -270,6 +279,19 @@ func (s *ShopService) CreateOrder(ctx context.Context, userID int64, productID i
 		return nil, "", ErrProductNotFound
 	}
 
+	paymentMethod = strings.TrimSpace(paymentMethod)
+	if paymentMethod == "" {
+		return nil, "", infraerrors.BadRequest("PAYMENT_METHOD_REQUIRED", "payment method is required")
+	}
+
+	settings, err := s.settingSvc.GetAllSettings(ctx)
+	if err != nil {
+		return nil, "", fmt.Errorf("get settings: %w", err)
+	}
+	if !isPaymentMethodEnabled(settings, paymentMethod) {
+		return nil, "", ErrPaymentMethodNotAllowed
+	}
+
 	// Always use real-time stock to prevent stale stock_count from allowing unpaid orders.
 	availableCount, err := s.stockRepo.CountAvailable(ctx, productID)
 	if err != nil {
@@ -277,11 +299,6 @@ func (s *ShopService) CreateOrder(ctx context.Context, userID int64, productID i
 	}
 	if availableCount <= 0 {
 		return nil, "", ErrProductOutOfStock
-	}
-
-	settings, err := s.settingSvc.GetAllSettings(ctx)
-	if err != nil {
-		return nil, "", fmt.Errorf("get settings: %w", err)
 	}
 
 	expiresAt := time.Now().Add(30 * time.Minute)
@@ -435,7 +452,14 @@ func (s *ShopService) HandlePaymentNotify(ctx context.Context, params map[string
 		return fmt.Errorf("verify: %w", err)
 	}
 	if !ok {
-		// Log invalid signature
+		tradeStatus := strings.TrimSpace(params["trade_status"])
+		if tradeStatus != "" && tradeStatus != "TRADE_SUCCESS" {
+			msg := "trade status not success: " + tradeStatus
+			s.logCallback(ctx, orderNo, "epay", params, nil, true, false, msg, clientIP)
+			s.updateCallbackResult(ctx, orderNo, false, msg)
+			return nil
+		}
+		// Log invalid signature / invalid callback payload
 		s.logCallback(ctx, orderNo, "epay", params, nil, false, false, "invalid signature", clientIP)
 		return nil
 	}
@@ -489,6 +513,8 @@ func (s *ShopService) HandleCreemWebhook(ctx context.Context, rawBody []byte, si
 	s.logCallback(ctx, orderNo, "creem", map[string]string{"raw": string(rawBody)}, &signature, true, false, "", clientIP)
 
 	if orderStatus != "paid" {
+		msg := "order status not paid: " + orderStatus
+		s.updateCallbackResult(ctx, orderNo, false, msg)
 		return nil
 	}
 	if err := s.fulfillOrder(ctx, orderNo); err != nil {
@@ -585,6 +611,39 @@ func (s *ShopService) GetPaymentChannels(ctx context.Context) ([]PaymentChannel,
 	}
 
 	return channels, nil
+}
+
+func (s *ShopService) attachRealtimeStockCount(ctx context.Context, products []ShopProduct) ([]ShopProduct, error) {
+	for i := range products {
+		count, err := s.stockRepo.CountAvailable(ctx, products[i].ID)
+		if err != nil {
+			return nil, fmt.Errorf("count available stock for product %d: %w", products[i].ID, err)
+		}
+		products[i].StockCount = count
+	}
+	return products, nil
+}
+
+func isPaymentMethodEnabled(settings *SystemSettings, paymentMethod string) bool {
+	if paymentMethod == "creem" {
+		return settings.CreemAPIKey != "" && settings.CreemWebhookSecret != ""
+	}
+
+	if settings.EpayPID == "" || settings.EpayKey == "" || settings.EpayAPIURL == "" {
+		return false
+	}
+
+	enabledChannels := settings.EpayChannels
+	if enabledChannels == "" {
+		enabledChannels = "alipay,wxpay"
+	}
+
+	for _, ch := range strings.Split(enabledChannels, ",") {
+		if strings.TrimSpace(ch) == paymentMethod {
+			return true
+		}
+	}
+	return false
 }
 
 // CleanupExpiredOrders marks expired pending orders as cancelled

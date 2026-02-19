@@ -295,6 +295,7 @@ export default {
     mySubscriptions: '我的订阅',
     buySubscription: '购买订阅',
     shop: '商店',
+    orders: '订单',
     shopManage: '商店管理',
     docs: '文档'
   },

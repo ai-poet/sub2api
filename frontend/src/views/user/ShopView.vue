@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -80,6 +80,7 @@ import { shopAPI, type ShopProduct, type PaymentChannel } from '@/api/shop'
 import { useToast } from '@/composables/useToast'
 
 const PENDING_ORDER_KEY = 'shop_pending_order'
+const PENDING_ORDER_POLL_INTERVAL = 5000
 
 const { t } = useI18n()
 const { showToast } = useToast()
@@ -90,6 +91,7 @@ const loading = ref(false)
 const ordering = ref<number | null>(null)
 const selectedProduct = ref<ShopProduct | null>(null)
 const checkingOrder = ref(false)
+let pendingOrderTimer: number | null = null
 
 interface PendingOrder {
   orderNo: string
@@ -128,9 +130,16 @@ function clearPendingOrder() {
   localStorage.removeItem(PENDING_ORDER_KEY)
 }
 
-async function checkPendingOrder() {
+function stopPendingOrderPolling() {
+  if (pendingOrderTimer !== null) {
+    window.clearInterval(pendingOrderTimer)
+    pendingOrderTimer = null
+  }
+}
+
+async function checkPendingOrder(showPendingToast = true): Promise<boolean> {
   const pending = getPendingOrder()
-  if (!pending) return
+  if (!pending) return false
 
   checkingOrder.value = true
   try {
@@ -138,18 +147,43 @@ async function checkPendingOrder() {
     if (order.status === 'paid') {
       showToast(t('shop.paymentSuccess', { product: pending.productName }), 'success')
       clearPendingOrder()
+      return false
     } else if (order.status === 'expired' || order.status === 'cancelled') {
       showToast(t('shop.paymentExpired'), 'warning')
       clearPendingOrder()
+      return false
     } else {
-      // 订单仍在处理中，显示提示
-      showToast(t('shop.paymentPending'), 'info')
+      if (showPendingToast) {
+        showToast(t('shop.paymentPending'), 'info')
+      }
+      return true
     }
   } catch {
-    // 查询失败，保留订单状态
+    // 查询失败，保留订单状态并继续轮询
+    return true
   } finally {
     checkingOrder.value = false
   }
+}
+
+function startPendingOrderPolling() {
+  stopPendingOrderPolling()
+  if (!getPendingOrder()) return
+
+  checkPendingOrder(true).then((stillPending) => {
+    if (!stillPending) return
+    pendingOrderTimer = window.setInterval(async () => {
+      const activePending = getPendingOrder()
+      if (!activePending) {
+        stopPendingOrderPolling()
+        return
+      }
+      const keepPolling = await checkPendingOrder(false)
+      if (!keepPolling) {
+        stopPendingOrderPolling()
+      }
+    }, PENDING_ORDER_POLL_INTERVAL)
+  })
 }
 
 async function loadProducts() {
@@ -199,7 +233,10 @@ async function createOrder(paymentMethod: string) {
 onMounted(() => {
   loadProducts()
   loadPaymentChannels()
-  // 检查是否有待处理的订单
-  checkPendingOrder()
+  startPendingOrderPolling()
+})
+
+onUnmounted(() => {
+  stopPendingOrderPolling()
 })
 </script>
