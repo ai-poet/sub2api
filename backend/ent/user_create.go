@@ -225,6 +225,34 @@ func (_c *UserCreate) SetNillableReferralCode(v *string) *UserCreate {
 	return _c
 }
 
+// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
+func (_c *UserCreate) SetSoraStorageQuotaBytes(v int64) *UserCreate {
+	_c.mutation.SetSoraStorageQuotaBytes(v)
+	return _c
+}
+
+// SetNillableSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field if the given value is not nil.
+func (_c *UserCreate) SetNillableSoraStorageQuotaBytes(v *int64) *UserCreate {
+	if v != nil {
+		_c.SetSoraStorageQuotaBytes(*v)
+	}
+	return _c
+}
+
+// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
+func (_c *UserCreate) SetSoraStorageUsedBytes(v int64) *UserCreate {
+	_c.mutation.SetSoraStorageUsedBytes(v)
+	return _c
+}
+
+// SetNillableSoraStorageUsedBytes sets the "sora_storage_used_bytes" field if the given value is not nil.
+func (_c *UserCreate) SetNillableSoraStorageUsedBytes(v *int64) *UserCreate {
+	if v != nil {
+		_c.SetSoraStorageUsedBytes(*v)
+	}
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *UserCreate) AddAPIKeyIDs(ids ...int64) *UserCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -473,6 +501,14 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultReferralCode
 		_c.mutation.SetReferralCode(v)
 	}
+	if _, ok := _c.mutation.SoraStorageQuotaBytes(); !ok {
+		v := user.DefaultSoraStorageQuotaBytes
+		_c.mutation.SetSoraStorageQuotaBytes(v)
+	}
+	if _, ok := _c.mutation.SoraStorageUsedBytes(); !ok {
+		v := user.DefaultSoraStorageUsedBytes
+		_c.mutation.SetSoraStorageUsedBytes(v)
+	}
 	return nil
 }
 
@@ -543,6 +579,12 @@ func (_c *UserCreate) check() error {
 		if err := user.ReferralCodeValidator(v); err != nil {
 			return &ValidationError{Name: "referral_code", err: fmt.Errorf(`ent: validator failed for field "User.referral_code": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.SoraStorageQuotaBytes(); !ok {
+		return &ValidationError{Name: "sora_storage_quota_bytes", err: errors.New(`ent: missing required field "User.sora_storage_quota_bytes"`)}
+	}
+	if _, ok := _c.mutation.SoraStorageUsedBytes(); !ok {
+		return &ValidationError{Name: "sora_storage_used_bytes", err: errors.New(`ent: missing required field "User.sora_storage_used_bytes"`)}
 	}
 	return nil
 }
@@ -630,6 +672,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ReferralCode(); ok {
 		_spec.SetField(user.FieldReferralCode, field.TypeString, value)
 		_node.ReferralCode = value
+	}
+	if value, ok := _c.mutation.SoraStorageQuotaBytes(); ok {
+		_spec.SetField(user.FieldSoraStorageQuotaBytes, field.TypeInt64, value)
+		_node.SoraStorageQuotaBytes = value
+	}
+	if value, ok := _c.mutation.SoraStorageUsedBytes(); ok {
+		_spec.SetField(user.FieldSoraStorageUsedBytes, field.TypeInt64, value)
+		_node.SoraStorageUsedBytes = value
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1061,6 +1111,42 @@ func (u *UserUpsert) UpdateReferralCode() *UserUpsert {
 	return u
 }
 
+// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
+func (u *UserUpsert) SetSoraStorageQuotaBytes(v int64) *UserUpsert {
+	u.Set(user.FieldSoraStorageQuotaBytes, v)
+	return u
+}
+
+// UpdateSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field to the value that was provided on create.
+func (u *UserUpsert) UpdateSoraStorageQuotaBytes() *UserUpsert {
+	u.SetExcluded(user.FieldSoraStorageQuotaBytes)
+	return u
+}
+
+// AddSoraStorageQuotaBytes adds v to the "sora_storage_quota_bytes" field.
+func (u *UserUpsert) AddSoraStorageQuotaBytes(v int64) *UserUpsert {
+	u.Add(user.FieldSoraStorageQuotaBytes, v)
+	return u
+}
+
+// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
+func (u *UserUpsert) SetSoraStorageUsedBytes(v int64) *UserUpsert {
+	u.Set(user.FieldSoraStorageUsedBytes, v)
+	return u
+}
+
+// UpdateSoraStorageUsedBytes sets the "sora_storage_used_bytes" field to the value that was provided on create.
+func (u *UserUpsert) UpdateSoraStorageUsedBytes() *UserUpsert {
+	u.SetExcluded(user.FieldSoraStorageUsedBytes)
+	return u
+}
+
+// AddSoraStorageUsedBytes adds v to the "sora_storage_used_bytes" field.
+func (u *UserUpsert) AddSoraStorageUsedBytes(v int64) *UserUpsert {
+	u.Add(user.FieldSoraStorageUsedBytes, v)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1334,6 +1420,48 @@ func (u *UserUpsertOne) SetReferralCode(v string) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateReferralCode() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateReferralCode()
+	})
+}
+
+// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
+func (u *UserUpsertOne) SetSoraStorageQuotaBytes(v int64) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetSoraStorageQuotaBytes(v)
+	})
+}
+
+// AddSoraStorageQuotaBytes adds v to the "sora_storage_quota_bytes" field.
+func (u *UserUpsertOne) AddSoraStorageQuotaBytes(v int64) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.AddSoraStorageQuotaBytes(v)
+	})
+}
+
+// UpdateSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateSoraStorageQuotaBytes() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateSoraStorageQuotaBytes()
+	})
+}
+
+// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
+func (u *UserUpsertOne) SetSoraStorageUsedBytes(v int64) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetSoraStorageUsedBytes(v)
+	})
+}
+
+// AddSoraStorageUsedBytes adds v to the "sora_storage_used_bytes" field.
+func (u *UserUpsertOne) AddSoraStorageUsedBytes(v int64) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.AddSoraStorageUsedBytes(v)
+	})
+}
+
+// UpdateSoraStorageUsedBytes sets the "sora_storage_used_bytes" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateSoraStorageUsedBytes() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateSoraStorageUsedBytes()
 	})
 }
 
@@ -1776,6 +1904,48 @@ func (u *UserUpsertBulk) SetReferralCode(v string) *UserUpsertBulk {
 func (u *UserUpsertBulk) UpdateReferralCode() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateReferralCode()
+	})
+}
+
+// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
+func (u *UserUpsertBulk) SetSoraStorageQuotaBytes(v int64) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetSoraStorageQuotaBytes(v)
+	})
+}
+
+// AddSoraStorageQuotaBytes adds v to the "sora_storage_quota_bytes" field.
+func (u *UserUpsertBulk) AddSoraStorageQuotaBytes(v int64) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.AddSoraStorageQuotaBytes(v)
+	})
+}
+
+// UpdateSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateSoraStorageQuotaBytes() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateSoraStorageQuotaBytes()
+	})
+}
+
+// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
+func (u *UserUpsertBulk) SetSoraStorageUsedBytes(v int64) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetSoraStorageUsedBytes(v)
+	})
+}
+
+// AddSoraStorageUsedBytes adds v to the "sora_storage_used_bytes" field.
+func (u *UserUpsertBulk) AddSoraStorageUsedBytes(v int64) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.AddSoraStorageUsedBytes(v)
+	})
+}
+
+// UpdateSoraStorageUsedBytes sets the "sora_storage_used_bytes" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateSoraStorageUsedBytes() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateSoraStorageUsedBytes()
 	})
 }
 

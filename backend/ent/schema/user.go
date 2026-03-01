@@ -77,6 +77,12 @@ func (User) Fields() []ent.Field {
 		field.String("referral_code").
 			MaxLen(32).
 			Default(""),
+
+		// Sora 存储配额
+		field.Int64("sora_storage_quota_bytes").
+			Default(0),
+		field.Int64("sora_storage_used_bytes").
+			Default(0),
 	}
 }
 

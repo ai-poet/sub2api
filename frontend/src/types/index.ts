@@ -45,6 +45,9 @@ export interface AdminUser extends User {
   group_rates?: Record<number, number>
   // 当前并发数（仅管理员列表接口返回）
   current_concurrency?: number
+  // Sora 存储配额（字节）
+  sora_storage_quota_bytes: number
+  sora_storage_used_bytes: number
 }
 
 export interface LoginRequest {
@@ -93,6 +96,7 @@ export interface PublicSettings {
   purchase_subscription_url: string
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
+  sora_client_enabled: boolean
   version: string
 }
 
@@ -365,6 +369,8 @@ export interface Group {
   sora_image_price_540: number | null
   sora_video_price_per_request: number | null
   sora_video_price_per_request_hd: number | null
+  // Sora 存储配额（字节）
+  sora_storage_quota_bytes: number
   // Claude Code 客户端限制
   claude_code_only: boolean
   fallback_group_id: number | null
@@ -447,6 +453,7 @@ export interface CreateGroupRequest {
   sora_image_price_540?: number | null
   sora_video_price_per_request?: number | null
   sora_video_price_per_request_hd?: number | null
+  sora_storage_quota_bytes?: number
   claude_code_only?: boolean
   fallback_group_id?: number | null
   fallback_group_id_on_invalid_request?: number | null
@@ -474,6 +481,7 @@ export interface UpdateGroupRequest {
   sora_image_price_540?: number | null
   sora_video_price_per_request?: number | null
   sora_video_price_per_request_hd?: number | null
+  sora_storage_quota_bytes?: number
   claude_code_only?: boolean
   fallback_group_id?: number | null
   fallback_group_id_on_invalid_request?: number | null
@@ -655,6 +663,11 @@ export interface Account {
   max_sessions?: number | null
   session_idle_timeout_minutes?: number | null
 
+  // RPM 限制（仅 Anthropic OAuth/SetupToken 账号有效）
+  base_rpm?: number | null
+  rpm_strategy?: string | null
+  rpm_sticky_buffer?: number | null
+
   // TLS指纹伪装（仅 Anthropic OAuth/SetupToken 账号有效）
   enable_tls_fingerprint?: boolean | null
 
@@ -669,6 +682,7 @@ export interface Account {
   // 运行时状态（仅当启用对应限制时返回）
   current_window_cost?: number | null // 当前窗口费用
   active_sessions?: number | null // 当前活跃会话数
+  current_rpm?: number | null // 当前分钟 RPM 计数
 }
 
 // Account Usage types
@@ -861,6 +875,7 @@ export interface AdminDataImportResult {
 // ==================== Usage & Redeem Types ====================
 
 export type RedeemCodeType = 'balance' | 'concurrency' | 'subscription' | 'invitation'
+export type UsageRequestType = 'unknown' | 'sync' | 'stream' | 'ws_v2'
 
 export interface UsageLog {
   id: number
@@ -890,7 +905,9 @@ export interface UsageLog {
   rate_multiplier: number
   billing_type: number
 
+  request_type?: UsageRequestType
   stream: boolean
+  openai_ws_mode?: boolean
   duration_ms: number
   first_token_ms: number | null
 
@@ -936,6 +953,7 @@ export interface UsageCleanupFilters {
   account_id?: number
   group_id?: number
   model?: string | null
+  request_type?: UsageRequestType | null
   stream?: boolean | null
   billing_type?: number | null
 }
@@ -1180,6 +1198,7 @@ export interface UsageQueryParams {
   account_id?: number
   group_id?: number
   model?: string
+  request_type?: UsageRequestType
   stream?: boolean
   billing_type?: number | null
   start_date?: string

@@ -14,6 +14,7 @@ func ProvideAdminHandlers(
 	groupHandler *admin.GroupHandler,
 	accountHandler *admin.AccountHandler,
 	announcementHandler *admin.AnnouncementHandler,
+	dataManagementHandler *admin.DataManagementHandler,
 	oauthHandler *admin.OAuthHandler,
 	openaiOAuthHandler *admin.OpenAIOAuthHandler,
 	geminiOAuthHandler *admin.GeminiOAuthHandler,
@@ -29,6 +30,7 @@ func ProvideAdminHandlers(
 	userAttributeHandler *admin.UserAttributeHandler,
 	errorPassthroughHandler *admin.ErrorPassthroughHandler,
 	referralHandler *admin.ReferralHandler,
+	apiKeyHandler *admin.AdminAPIKeyHandler,
 ) *AdminHandlers {
 	return &AdminHandlers{
 		Dashboard:        dashboardHandler,
@@ -36,6 +38,7 @@ func ProvideAdminHandlers(
 		Group:            groupHandler,
 		Account:          accountHandler,
 		Announcement:     announcementHandler,
+		DataManagement:   dataManagementHandler,
 		OAuth:            oauthHandler,
 		OpenAIOAuth:      openaiOAuthHandler,
 		GeminiOAuth:      geminiOAuthHandler,
@@ -51,6 +54,7 @@ func ProvideAdminHandlers(
 		UserAttribute:    userAttributeHandler,
 		ErrorPassthrough: errorPassthroughHandler,
 		Referral:         referralHandler,
+		APIKey:           apiKeyHandler,
 	}
 }
 
@@ -77,6 +81,7 @@ func ProvideHandlers(
 	gatewayHandler *GatewayHandler,
 	openaiGatewayHandler *OpenAIGatewayHandler,
 	soraGatewayHandler *SoraGatewayHandler,
+	soraClientHandler *SoraClientHandler,
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
 	referralHandler *ReferralHandler,
@@ -95,6 +100,7 @@ func ProvideHandlers(
 		Gateway:       gatewayHandler,
 		OpenAIGateway: openaiGatewayHandler,
 		SoraGateway:   soraGatewayHandler,
+		SoraClient:    soraClientHandler,
 		Setting:       settingHandler,
 		Totp:          totpHandler,
 		Referral:      referralHandler,
@@ -124,6 +130,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewGroupHandler,
 	admin.NewAccountHandler,
 	admin.NewAnnouncementHandler,
+	admin.NewDataManagementHandler,
 	admin.NewOAuthHandler,
 	admin.NewOpenAIOAuthHandler,
 	admin.NewGeminiOAuthHandler,
@@ -139,6 +146,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewUserAttributeHandler,
 	admin.NewErrorPassthroughHandler,
 	admin.NewReferralHandler,
+	admin.NewAdminAPIKeyHandler,
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,
