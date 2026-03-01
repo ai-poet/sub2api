@@ -147,7 +147,7 @@ onMounted(async () => {
       getAllGroups()
     ])
     Object.assign(form, settings)
-    groups.value = groupList
+    groups.value = groupList.filter(g => g.subscription_type === 'subscription')
   } catch (error: any) {
     appStore.showError(t('admin.referral.loadFailed'))
   } finally {
