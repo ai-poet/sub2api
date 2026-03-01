@@ -208,43 +208,56 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 			newExpiresAt = MaxExpiresAt
 		}
 
-		// 开启事务：ExtendExpiry + UpdateStatus + UpdateNotes 在同一事务中完成
-		tx, err := s.entClient.Tx(ctx)
-		if err != nil {
-			return nil, false, fmt.Errorf("begin transaction: %w", err)
-		}
-		txCtx := dbent.NewTxContext(ctx, tx)
+		applyExtension := func(execCtx context.Context) error {
+			if err := s.userSubRepo.ExtendExpiry(execCtx, existingSub.ID, newExpiresAt); err != nil {
+				return fmt.Errorf("extend subscription: %w", err)
+			}
 
-		// 更新过期时间
-		if err := s.userSubRepo.ExtendExpiry(txCtx, existingSub.ID, newExpiresAt); err != nil {
-			_ = tx.Rollback()
-			return nil, false, fmt.Errorf("extend subscription: %w", err)
+			// 如果订阅已过期或被暂停，恢复为active状态
+			if existingSub.Status != SubscriptionStatusActive {
+				if err := s.userSubRepo.UpdateStatus(execCtx, existingSub.ID, SubscriptionStatusActive); err != nil {
+					return fmt.Errorf("update subscription status: %w", err)
+				}
+			}
+
+			// 追加备注
+			if input.Notes != "" {
+				newNotes := existingSub.Notes
+				if newNotes != "" {
+					newNotes += "\n"
+				}
+				newNotes += input.Notes
+				if err := s.userSubRepo.UpdateNotes(execCtx, existingSub.ID, newNotes); err != nil {
+					return fmt.Errorf("update subscription notes: %w", err)
+				}
+			}
+
+			return nil
 		}
 
-		// 如果订阅已过期或被暂停，恢复为active状态
-		if existingSub.Status != SubscriptionStatusActive {
-			if err := s.userSubRepo.UpdateStatus(txCtx, existingSub.ID, SubscriptionStatusActive); err != nil {
+		// 优先复用上层事务（例如推荐奖励发放事务），避免事务嵌套导致部分提交。
+		if dbent.TxFromContext(ctx) != nil {
+			if err := applyExtension(ctx); err != nil {
+				return nil, false, err
+			}
+		} else {
+			if s.entClient == nil {
+				return nil, false, fmt.Errorf("begin transaction: ent client is nil")
+			}
+
+			// 无上层事务时，开启独立事务保证续期操作原子性。
+			tx, err := s.entClient.Tx(ctx)
+			if err != nil {
+				return nil, false, fmt.Errorf("begin transaction: %w", err)
+			}
+			txCtx := dbent.NewTxContext(ctx, tx)
+			if err := applyExtension(txCtx); err != nil {
 				_ = tx.Rollback()
-				return nil, false, fmt.Errorf("update subscription status: %w", err)
+				return nil, false, err
 			}
-		}
-
-		// 追加备注
-		if input.Notes != "" {
-			newNotes := existingSub.Notes
-			if newNotes != "" {
-				newNotes += "\n"
+			if err := tx.Commit(); err != nil {
+				return nil, false, fmt.Errorf("commit transaction: %w", err)
 			}
-			newNotes += input.Notes
-			if err := s.userSubRepo.UpdateNotes(txCtx, existingSub.ID, newNotes); err != nil {
-				_ = tx.Rollback()
-				return nil, false, fmt.Errorf("update subscription notes: %w", err)
-			}
-		}
-
-		// 提交事务
-		if err := tx.Commit(); err != nil {
-			return nil, false, fmt.Errorf("commit transaction: %w", err)
 		}
 
 		// 失效订阅缓存

@@ -30,9 +30,9 @@ type UserReferral struct {
 
 // ReferralInfo 推荐信息 DTO
 type ReferralInfo struct {
-	ReferralCode string           `json:"referral_code"`
-	ReferralLink string           `json:"referral_link"`
-	Stats        ReferralStats    `json:"stats"`
+	ReferralCode string            `json:"referral_code"`
+	ReferralLink string            `json:"referral_link"`
+	Stats        ReferralStats     `json:"stats"`
 	Rewards      *ReferralSettings `json:"rewards,omitempty"`
 }
 
@@ -47,13 +47,13 @@ type ReferralStats struct {
 // ReferralSettings 推荐配置 DTO
 type ReferralSettings struct {
 	Enabled                  bool    `json:"enabled"`
-	ReferrerBalanceReward    float64 `json:"referrer_balance_reward"`
-	ReferrerGroupID          int64   `json:"referrer_group_id"`
-	ReferrerSubscriptionDays int     `json:"referrer_subscription_days"`
-	RefereeBalanceReward     float64 `json:"referee_balance_reward"`
-	RefereeGroupID           int64   `json:"referee_group_id"`
-	RefereeSubscriptionDays  int     `json:"referee_subscription_days"`
-	MaxPerUser               int     `json:"max_per_user"`
+	ReferrerBalanceReward    float64 `json:"referrer_balance_reward" binding:"gte=0"`
+	ReferrerGroupID          int64   `json:"referrer_group_id" binding:"gte=0"`
+	ReferrerSubscriptionDays int     `json:"referrer_subscription_days" binding:"gte=0"`
+	RefereeBalanceReward     float64 `json:"referee_balance_reward" binding:"gte=0"`
+	RefereeGroupID           int64   `json:"referee_group_id" binding:"gte=0"`
+	RefereeSubscriptionDays  int     `json:"referee_subscription_days" binding:"gte=0"`
+	MaxPerUser               int     `json:"max_per_user" binding:"gte=0"`
 }
 
 // UserReferralFromService 将 service 层 UserReferral 转换为 DTO
