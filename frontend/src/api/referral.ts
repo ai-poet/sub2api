@@ -8,16 +8,18 @@ import type { ReferralInfo, UserReferral, BasePaginationResponse } from '@/types
 /**
  * Get referral info (code, link, stats)
  */
-export function getReferralInfo(): Promise<ReferralInfo> {
-  return apiClient.get('/referral/info')
+export async function getReferralInfo(): Promise<ReferralInfo> {
+  const { data } = await apiClient.get<ReferralInfo>('/referral/info')
+  return data
 }
 
 /**
  * Get referral history (paginated)
  */
-export function getReferralHistory(params?: {
+export async function getReferralHistory(params?: {
   page?: number
   page_size?: number
 }): Promise<BasePaginationResponse<UserReferral>> {
-  return apiClient.get('/referral/history', { params })
+  const { data } = await apiClient.get<BasePaginationResponse<UserReferral>>('/referral/history', { params })
+  return data
 }

@@ -8,23 +8,25 @@ import type { ReferralSettings, UserReferral, BasePaginationResponse } from '@/t
 /**
  * Get referral settings
  */
-export function getReferralSettings(): Promise<ReferralSettings> {
-  return apiClient.get('/admin/referral/settings')
+export async function getReferralSettings(): Promise<ReferralSettings> {
+  const { data } = await apiClient.get<ReferralSettings>('/admin/referral/settings')
+  return data
 }
 
 /**
  * Update referral settings
  */
-export function updateReferralSettings(settings: ReferralSettings): Promise<void> {
-  return apiClient.put('/admin/referral/settings', settings)
+export async function updateReferralSettings(settings: ReferralSettings): Promise<void> {
+  await apiClient.put('/admin/referral/settings', settings)
 }
 
 /**
  * List all referral records (paginated)
  */
-export function listReferrals(params?: {
+export async function listReferrals(params?: {
   page?: number
   page_size?: number
 }): Promise<BasePaginationResponse<UserReferral>> {
-  return apiClient.get('/admin/referral/list', { params })
+  const { data } = await apiClient.get<BasePaginationResponse<UserReferral>>('/admin/referral/list', { params })
+  return data
 }
