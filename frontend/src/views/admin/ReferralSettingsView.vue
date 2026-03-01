@@ -54,7 +54,12 @@
             </div>
             <div>
               <label class="input-label">{{ t('admin.referral.groupId') }}</label>
-              <input v-model.number="form.referrer_group_id" type="number" min="0" class="input mt-1 w-40" />
+              <select v-model.number="form.referrer_group_id" class="input mt-1 w-64">
+                <option :value="0">{{ t('admin.referral.noGroup') }}</option>
+                <option v-for="group in groups" :key="group.id" :value="group.id">
+                  {{ group.name }} ({{ group.platform }})
+                </option>
+              </select>
               <p class="input-hint">{{ t('admin.referral.groupIdHint') }}</p>
             </div>
             <div>
@@ -78,7 +83,12 @@
             </div>
             <div>
               <label class="input-label">{{ t('admin.referral.groupId') }}</label>
-              <input v-model.number="form.referee_group_id" type="number" min="0" class="input mt-1 w-40" />
+              <select v-model.number="form.referee_group_id" class="input mt-1 w-64">
+                <option :value="0">{{ t('admin.referral.noGroup') }}</option>
+                <option v-for="group in groups" :key="group.id" :value="group.id">
+                  {{ group.name }} ({{ group.platform }})
+                </option>
+              </select>
               <p class="input-hint">{{ t('admin.referral.groupIdHint') }}</p>
             </div>
             <div>
@@ -107,16 +117,18 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getReferralSettings, updateReferralSettings } from '@/api/admin/referral'
+import { getAll as getAllGroups } from '@/api/admin/groups'
 import { useAppStore } from '@/stores'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Toggle from '@/components/common/Toggle.vue'
-import type { ReferralSettings } from '@/types'
+import type { ReferralSettings, AdminGroup } from '@/types'
 
 const { t } = useI18n()
 const appStore = useAppStore()
 
 const loading = ref(true)
 const saving = ref(false)
+const groups = ref<AdminGroup[]>([])
 const form = reactive<ReferralSettings>({
   enabled: false,
   referrer_balance_reward: 0,
@@ -130,8 +142,12 @@ const form = reactive<ReferralSettings>({
 
 onMounted(async () => {
   try {
-    const settings = await getReferralSettings()
+    const [settings, groupList] = await Promise.all([
+      getReferralSettings(),
+      getAllGroups()
+    ])
     Object.assign(form, settings)
+    groups.value = groupList
   } catch (error: any) {
     appStore.showError(t('admin.referral.loadFailed'))
   } finally {
