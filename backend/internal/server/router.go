@@ -25,6 +25,7 @@ func SetupRouter(
 	subscriptionService *service.SubscriptionService,
 	opsService *service.OpsService,
 	settingService *service.SettingService,
+	referralService *service.ReferralService,
 	cfg *config.Config,
 	redisClient *redis.Client,
 ) *gin.Engine {
@@ -43,6 +44,9 @@ func SetupRouter(
 		} else {
 			// Register cache invalidation callback
 			settingService.SetOnUpdateCallback(frontendServer.InvalidateCache)
+			if referralService != nil {
+				referralService.SetOnSettingsUpdateCallback(frontendServer.InvalidateCache)
+			}
 			r.Use(frontendServer.Middleware())
 		}
 	}

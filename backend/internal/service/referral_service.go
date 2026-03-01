@@ -83,9 +83,9 @@ type ReferralCache interface {
 
 // ReferralInfo 推荐信息（用户侧）
 type ReferralInfo struct {
-	ReferralCode string           `json:"referral_code"`
-	ReferralLink string           `json:"referral_link"`
-	Stats        ReferralStats    `json:"stats"`
+	ReferralCode string            `json:"referral_code"`
+	ReferralLink string            `json:"referral_link"`
+	Stats        ReferralStats     `json:"stats"`
 	Rewards      *ReferralSettings `json:"rewards"`
 }
 
@@ -116,6 +116,7 @@ type ReferralService struct {
 	userRepo            UserRepository
 	settingRepo         SettingRepository
 	subscriptionService *SubscriptionService
+	onSettingsUpdate    func()
 }
 
 // NewReferralService 创建推荐服务
@@ -133,6 +134,11 @@ func NewReferralService(
 		settingRepo:         settingRepo,
 		subscriptionService: subscriptionService,
 	}
+}
+
+// SetOnSettingsUpdateCallback sets a callback function to be called when referral settings are updated.
+func (s *ReferralService) SetOnSettingsUpdateCallback(callback func()) {
+	s.onSettingsUpdate = callback
 }
 
 // IsReferralEnabled 检查推荐功能是否启用
@@ -494,7 +500,15 @@ func (s *ReferralService) UpdateReferralSettings(ctx context.Context, settings *
 		SettingKeyReferralMaxPerUser:               strconv.Itoa(settings.MaxPerUser),
 	}
 
-	return s.settingRepo.SetMultiple(ctx, updates)
+	if err := s.settingRepo.SetMultiple(ctx, updates); err != nil {
+		return err
+	}
+
+	if s.onSettingsUpdate != nil {
+		s.onSettingsUpdate()
+	}
+
+	return nil
 }
 
 // findUserByReferralCode 通过推荐码查找用户

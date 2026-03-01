@@ -81,6 +81,7 @@ type PublicSettings struct {
 	PurchaseSubscriptionURL     string `json:"purchase_subscription_url"`
 	LinuxDoOAuthEnabled         bool   `json:"linuxdo_oauth_enabled"`
 	SoraClientEnabled           bool   `json:"sora_client_enabled"`
+	ReferralEnabled             bool   `json:"referral_enabled"`
 	Version                     string `json:"version"`
 }
 
