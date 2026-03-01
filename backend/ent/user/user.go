@@ -337,7 +337,6 @@ func BySoraStorageQuotaBytes(opts ...sql.OrderTermOption) OrderOption {
 func BySoraStorageUsedBytes(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSoraStorageUsedBytes, opts...).ToFunc()
 }
-}
 
 // ByAPIKeysCount orders the results by api_keys count.
 func ByAPIKeysCount(opts ...sql.OrderTermOption) OrderOption {

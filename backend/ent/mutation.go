@@ -21034,28 +21034,6 @@ func (m *UserMutation) SoraStorageQuotaBytes() (r int64, exists bool) {
 }
 
 
-// OldReferralCode returns the old "referral_code" field's value of the User entity.
-// If the User object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldReferralCode(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldReferralCode is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldReferralCode requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldReferralCode: %w", err)
-	}
-	return oldValue.ReferralCode, nil
-}
-
-// ResetReferralCode resets all changes to the "referral_code" field.
-func (m *UserMutation) ResetReferralCode() {
-	m.referral_code = nil
-}
-
 // OldSoraStorageQuotaBytes returns the old "sora_storage_quota_bytes" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
