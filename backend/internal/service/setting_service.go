@@ -123,6 +123,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyHideCcsImportButton,
 		SettingKeyPurchaseSubscriptionEnabled,
 		SettingKeyPurchaseSubscriptionURL,
+		SettingKeyPurchaseSubscriptionOpenMode,
 		SettingKeySoraClientEnabled,
 		SettingKeyLinuxDoConnectEnabled,
 	}
@@ -160,9 +161,10 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		DocURL:                      settings[SettingKeyDocURL],
 		HomeContent:                 settings[SettingKeyHomeContent],
 		HideCcsImportButton:         settings[SettingKeyHideCcsImportButton] == "true",
-		PurchaseSubscriptionEnabled: settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
-		PurchaseSubscriptionURL:     strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
-		SoraClientEnabled:           settings[SettingKeySoraClientEnabled] == "true",
+		PurchaseSubscriptionEnabled:  settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
+		PurchaseSubscriptionURL:      strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
+		PurchaseSubscriptionOpenMode: s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
+		SoraClientEnabled:            settings[SettingKeySoraClientEnabled] == "true",
 		LinuxDoOAuthEnabled:         linuxDoEnabled,
 	}, nil
 }
@@ -292,6 +294,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyHideCcsImportButton] = strconv.FormatBool(settings.HideCcsImportButton)
 	updates[SettingKeyPurchaseSubscriptionEnabled] = strconv.FormatBool(settings.PurchaseSubscriptionEnabled)
 	updates[SettingKeyPurchaseSubscriptionURL] = strings.TrimSpace(settings.PurchaseSubscriptionURL)
+	updates[SettingKeyPurchaseSubscriptionOpenMode] = s.getStringOrDefault(map[string]string{SettingKeyPurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode}, SettingKeyPurchaseSubscriptionOpenMode, "iframe")
 	updates[SettingKeySoraClientEnabled] = strconv.FormatBool(settings.SoraClientEnabled)
 
 	// 默认配置
@@ -506,9 +509,10 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyPromoCodeEnabled:            "true", // 默认启用优惠码功能
 		SettingKeySiteName:                    "Sub2API",
 		SettingKeySiteLogo:                    "",
-		SettingKeyPurchaseSubscriptionEnabled: "false",
-		SettingKeyPurchaseSubscriptionURL:     "",
-		SettingKeySoraClientEnabled:           "false",
+		SettingKeyPurchaseSubscriptionEnabled:  "false",
+		SettingKeyPurchaseSubscriptionURL:      "",
+		SettingKeyPurchaseSubscriptionOpenMode: "iframe",
+		SettingKeySoraClientEnabled:            "false",
 		SettingKeyDefaultConcurrency:          strconv.Itoa(s.cfg.Default.UserConcurrency),
 		SettingKeyDefaultBalance:              strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
 		SettingKeyDefaultSubscriptions:        "[]",
@@ -566,6 +570,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		HideCcsImportButton:          settings[SettingKeyHideCcsImportButton] == "true",
 		PurchaseSubscriptionEnabled:  settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:      strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
+		PurchaseSubscriptionOpenMode: s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
 		SoraClientEnabled:            settings[SettingKeySoraClientEnabled] == "true",
 	}
 

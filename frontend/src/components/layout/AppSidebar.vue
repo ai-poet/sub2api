@@ -494,12 +494,19 @@ const userNavItems = computed(() => {
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled &&
     appStore.cachedPublicSettings?.purchase_subscription_url
       ? [
-          {
-            externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
-            label: t('nav.buySubscription'),
-            icon: RechargeSubscriptionIcon,
-            hideInSimpleMode: true
-          }
+          appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
+            ? {
+                externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
+            : {
+                path: '/purchase',
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
         ]
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
@@ -517,12 +524,19 @@ const personalNavItems = computed(() => {
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled &&
     appStore.cachedPublicSettings?.purchase_subscription_url
       ? [
-          {
-            externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
-            label: t('nav.buySubscription'),
-            icon: RechargeSubscriptionIcon,
-            hideInSimpleMode: true
-          }
+          appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
+            ? {
+                externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
+            : {
+                path: '/purchase',
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
         ]
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },

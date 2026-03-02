@@ -1110,6 +1110,57 @@
               </p>
             </div>
 
+            <!-- Open Mode -->
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('admin.settings.purchase.openMode') }}
+              </label>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    v-model="form.purchase_subscription_open_mode"
+                    value="iframe"
+                    class="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span class="text-sm text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.purchase.openModeIframe') }}
+                  </span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    v-model="form.purchase_subscription_open_mode"
+                    value="new_window"
+                    class="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span class="text-sm text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.purchase.openModeNewWindow') }}
+                  </span>
+                </label>
+              </div>
+              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('admin.settings.purchase.openModeHint') }}
+              </p>
+            </div>
+
+            <!-- iframe Warning (only show when iframe mode is selected) -->
+            <div
+              v-if="form.purchase_subscription_open_mode === 'iframe'"
+              class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+            >
+              <div class="flex items-start">
+                <Icon
+                  name="exclamationTriangle"
+                  size="md"
+                  class="mt-0.5 flex-shrink-0 text-amber-500"
+                />
+                <p class="ml-3 text-sm text-amber-700 dark:text-amber-300">
+                  {{ t('admin.settings.purchase.iframeWarning') }}
+                </p>
+              </div>
+            </div>
+
             <!-- Integration Docs -->
             <div class="flex items-center gap-2 text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1328,6 +1379,7 @@ const form = reactive<SettingsForm>({
   hide_ccs_import_button: false,
   purchase_subscription_enabled: false,
   purchase_subscription_url: '',
+  purchase_subscription_open_mode: 'iframe',
   sora_client_enabled: false,
   smtp_host: '',
   smtp_port: 587,
@@ -1530,6 +1582,7 @@ async function saveSettings() {
       hide_ccs_import_button: form.hide_ccs_import_button,
       purchase_subscription_enabled: form.purchase_subscription_enabled,
       purchase_subscription_url: form.purchase_subscription_url,
+      purchase_subscription_open_mode: form.purchase_subscription_open_mode,
       sora_client_enabled: form.sora_client_enabled,
       smtp_host: form.smtp_host,
       smtp_port: form.smtp_port,

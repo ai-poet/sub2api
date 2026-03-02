@@ -36,10 +36,11 @@ type SystemSettings struct {
 	ContactInfo                 string
 	DocURL                      string
 	HomeContent                 string
-	HideCcsImportButton         bool
-	PurchaseSubscriptionEnabled bool
-	PurchaseSubscriptionURL     string
-	SoraClientEnabled           bool
+	HideCcsImportButton          bool
+	PurchaseSubscriptionEnabled  bool
+	PurchaseSubscriptionURL      string
+	PurchaseSubscriptionOpenMode string // iframe or new_window
+	SoraClientEnabled            bool
 
 	DefaultConcurrency   int
 	DefaultBalance       float64
@@ -89,9 +90,10 @@ type PublicSettings struct {
 	HomeContent           string
 	HideCcsImportButton   bool
 
-	PurchaseSubscriptionEnabled bool
-	PurchaseSubscriptionURL     string
-	SoraClientEnabled           bool
+	PurchaseSubscriptionEnabled  bool
+	PurchaseSubscriptionURL      string
+	PurchaseSubscriptionOpenMode string // iframe or new_window
+	SoraClientEnabled            bool
 
 	LinuxDoOAuthEnabled bool
 	Version             string

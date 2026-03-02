@@ -34,10 +34,11 @@ type SystemSettings struct {
 	ContactInfo                 string `json:"contact_info"`
 	DocURL                      string `json:"doc_url"`
 	HomeContent                 string `json:"home_content"`
-	HideCcsImportButton         bool   `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled bool   `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL     string `json:"purchase_subscription_url"`
-	SoraClientEnabled           bool   `json:"sora_client_enabled"`
+	HideCcsImportButton          bool   `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled  bool   `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL      string `json:"purchase_subscription_url"`
+	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"` // iframe or new_window
+	SoraClientEnabled            bool   `json:"sora_client_enabled"`
 
 	DefaultConcurrency   int                          `json:"default_concurrency"`
 	DefaultBalance       float64                      `json:"default_balance"`
@@ -84,11 +85,12 @@ type PublicSettings struct {
 	ContactInfo                 string `json:"contact_info"`
 	DocURL                      string `json:"doc_url"`
 	HomeContent                 string `json:"home_content"`
-	HideCcsImportButton         bool   `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled bool   `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL     string `json:"purchase_subscription_url"`
-	LinuxDoOAuthEnabled         bool   `json:"linuxdo_oauth_enabled"`
-	SoraClientEnabled           bool   `json:"sora_client_enabled"`
+	HideCcsImportButton          bool   `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled  bool   `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL      string `json:"purchase_subscription_url"`
+	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"` // iframe or new_window
+	LinuxDoOAuthEnabled          bool   `json:"linuxdo_oauth_enabled"`
+	SoraClientEnabled            bool   `json:"sora_client_enabled"`
 	Version                     string `json:"version"`
 }
 

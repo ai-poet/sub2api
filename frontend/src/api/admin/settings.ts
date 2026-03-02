@@ -37,6 +37,7 @@ export interface SystemSettings {
   hide_ccs_import_button: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
+  purchase_subscription_open_mode: string // 'iframe' or 'new_window'
   sora_client_enabled: boolean
   // SMTP settings
   smtp_host: string
@@ -98,6 +99,7 @@ export interface UpdateSettingsRequest {
   hide_ccs_import_button?: boolean
   purchase_subscription_enabled?: boolean
   purchase_subscription_url?: string
+  purchase_subscription_open_mode?: string // 'iframe' or 'new_window'
   sora_client_enabled?: boolean
   smtp_host?: string
   smtp_port?: number

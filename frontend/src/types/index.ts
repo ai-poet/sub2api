@@ -93,6 +93,7 @@ export interface PublicSettings {
   hide_ccs_import_button: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
+  purchase_subscription_open_mode: string // 'iframe' or 'new_window'
   linuxdo_oauth_enabled: boolean
   sora_client_enabled: boolean
   version: string
