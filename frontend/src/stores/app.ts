@@ -330,6 +330,7 @@ export const useAppStore = defineStore('app', () => {
         linuxdo_oauth_enabled: false,
         referral_enabled: false,
         sora_client_enabled: false,
+        purchase_subscription_open_mode: 'current_tab',
         version: siteVersion.value
       }
     }
