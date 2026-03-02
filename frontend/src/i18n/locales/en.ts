@@ -295,7 +295,7 @@ export default {
     logout: 'Logout',
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
-    buySubscription: 'Purchase Subscription',
+    buySubscription: 'Recharge / Subscription',
     referral: 'Referral',
     docs: 'Docs',
     sora: 'Sora Studio'
@@ -426,9 +426,12 @@ export default {
     day: 'Day',
     hour: 'Hour',
     modelDistribution: 'Model Distribution',
+    groupDistribution: 'Group Usage Distribution',
     tokenUsageTrend: 'Token Usage Trend',
     noDataAvailable: 'No data available',
     model: 'Model',
+    group: 'Group',
+    noGroup: 'No Group',
     requests: 'Requests',
     tokens: 'Tokens',
     actual: 'Actual',
@@ -881,9 +884,12 @@ export default {
       day: 'Day',
       hour: 'Hour',
       modelDistribution: 'Model Distribution',
+      groupDistribution: 'Group Usage Distribution',
       tokenUsageTrend: 'Token Usage Trend',
       userUsageTrend: 'User Usage Trend (Top 12)',
       model: 'Model',
+      group: 'Group',
+      noGroup: 'No Group',
       requests: 'Requests',
       tokens: 'Tokens',
       actual: 'Actual',
@@ -2388,6 +2394,8 @@ export default {
       dataExportConfirm: 'Confirm Export',
       dataExported: 'Data exported successfully',
       dataExportFailed: 'Failed to export data',
+      copyProxyUrl: 'Copy Proxy URL',
+      urlCopied: 'Proxy URL copied',
       searchProxies: 'Search proxies...',
       allProtocols: 'All Protocols',
       allStatus: 'All Status',
@@ -2401,6 +2409,7 @@ export default {
         name: 'Name',
         protocol: 'Protocol',
         address: 'Address',
+        auth: 'Auth',
         location: 'Location',
         status: 'Status',
         accounts: 'Accounts',
@@ -3615,7 +3624,23 @@ export default {
         defaultBalance: 'Default Balance',
         defaultBalanceHint: 'Initial balance for new users',
         defaultConcurrency: 'Default Concurrency',
-        defaultConcurrencyHint: 'Maximum concurrent requests for new users'
+        defaultConcurrencyHint: 'Maximum concurrent requests for new users',
+        defaultSubscriptions: 'Default Subscriptions',
+        defaultSubscriptionsHint: 'Auto-assign these subscriptions when a new user is created or registered',
+        addDefaultSubscription: 'Add Default Subscription',
+        defaultSubscriptionsEmpty: 'No default subscriptions configured.',
+        defaultSubscriptionsDuplicate:
+          'Duplicate subscription group: {groupId}. Each group can only appear once.',
+        subscriptionGroup: 'Subscription Group',
+        subscriptionValidityDays: 'Validity (days)'
+      },
+      claudeCode: {
+        title: 'Claude Code Settings',
+        description: 'Control Claude Code client access requirements',
+        minVersion: 'Minimum Version',
+        minVersionPlaceholder: 'e.g. 2.1.63',
+        minVersionHint:
+          'Reject Claude Code clients below this version (semver format). Leave empty to disable version check.'
       },
       site: {
         title: 'Site Settings',
@@ -3651,13 +3676,21 @@ export default {
         hideCcsImportButtonHint: 'When enabled, the "Import to CCS" button will be hidden on the API Keys page'
       },
       purchase: {
-        title: 'Purchase Page',
-        description: 'Show a "Purchase Subscription" entry in the sidebar that opens the configured URL in a new window',
-        enabled: 'Show Purchase Entry',
+        title: 'Recharge / Subscription Page',
+        description: 'Show a "Recharge / Subscription" entry in the sidebar',
+        enabled: 'Show Recharge / Subscription Entry',
         enabledHint: 'Only shown in standard mode (not simple mode)',
-        url: 'Purchase URL',
+        url: 'Recharge / Subscription URL',
         urlPlaceholder: 'https://example.com/purchase',
-        urlHint: 'Must be an absolute http(s) URL'
+        urlHint: 'Must be an absolute http(s) URL',
+        openMode: 'Open Mode',
+        openModeIframe: 'Embedded (iframe)',
+        openModeNewWindow: 'New Window',
+        openModeHint: 'Choose how to open the recharge/subscription page',
+        iframeWarning:
+          '⚠️ iframe note: Some websites block embedding via X-Frame-Options or CSP (frame-ancestors). If the page is blank, provide an "Open in new tab" alternative.',
+        integrationDoc: 'Payment Integration Docs',
+        integrationDocHint: 'Covers endpoint specs, idempotency semantics, and code samples'
       },
       soraClient: {
         title: 'Sora Client',
@@ -3941,16 +3974,16 @@ export default {
     retry: 'Retry'
   },
 
-  // Purchase Subscription Page
+  // Recharge / Subscription Page
   purchase: {
-    title: 'Purchase Subscription',
-    description: 'Purchase a subscription via the embedded page',
+    title: 'Recharge / Subscription',
+    description: 'Recharge balance or purchase subscription via the embedded page',
     openInNewTab: 'Open in new tab',
     notEnabledTitle: 'Feature not enabled',
-    notEnabledDesc: 'The administrator has not enabled the purchase page. Please contact admin.',
-    notConfiguredTitle: 'Purchase URL not configured',
+    notEnabledDesc: 'The administrator has not enabled the recharge/subscription entry. Please contact admin.',
+    notConfiguredTitle: 'Recharge / Subscription URL not configured',
     notConfiguredDesc:
-      'The administrator enabled the entry but has not configured a purchase URL. Please contact admin.'
+      'The administrator enabled the entry but has not configured a recharge/subscription URL. Please contact admin.'
   },
 
   // Announcements Page

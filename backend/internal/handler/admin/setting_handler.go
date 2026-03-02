@@ -3,6 +3,8 @@ package admin
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,6 +16,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// semverPattern 预编译 semver 格式校验正则
+var semverPattern = regexp.MustCompile(`^\d+\.\d+\.\d+$`)
 
 // SettingHandler 系统设置处理器
 type SettingHandler struct {
@@ -46,6 +51,13 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 
 	// Check if ops monitoring is enabled (respects config.ops.enabled)
 	opsEnabled := h.opsService != nil && h.opsService.IsMonitoringEnabled(c.Request.Context())
+	defaultSubscriptions := make([]dto.DefaultSubscriptionSetting, 0, len(settings.DefaultSubscriptions))
+	for _, sub := range settings.DefaultSubscriptions {
+		defaultSubscriptions = append(defaultSubscriptions, dto.DefaultSubscriptionSetting{
+			GroupID:      sub.GroupID,
+			ValidityDays: sub.ValidityDays,
+		})
+	}
 
 	response.Success(c, dto.SystemSettings{
 		RegistrationEnabled:                  settings.RegistrationEnabled,
@@ -79,9 +91,11 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		HideCcsImportButton:                  settings.HideCcsImportButton,
 		PurchaseSubscriptionEnabled:          settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              settings.PurchaseSubscriptionURL,
+		PurchaseSubscriptionOpenMode:         settings.PurchaseSubscriptionOpenMode,
 		SoraClientEnabled:                    settings.SoraClientEnabled,
 		DefaultConcurrency:                   settings.DefaultConcurrency,
 		DefaultBalance:                       settings.DefaultBalance,
+		DefaultSubscriptions:                 defaultSubscriptions,
 		EnableModelFallback:                  settings.EnableModelFallback,
 		FallbackModelAnthropic:               settings.FallbackModelAnthropic,
 		FallbackModelOpenAI:                  settings.FallbackModelOpenAI,
@@ -93,6 +107,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
+		MinClaudeCodeVersion:                 settings.MinClaudeCodeVersion,
 	})
 }
 
@@ -140,8 +155,9 @@ type UpdateSettingsRequest struct {
 	SoraClientEnabled           bool    `json:"sora_client_enabled"`
 
 	// 默认配置
-	DefaultConcurrency int     `json:"default_concurrency"`
-	DefaultBalance     float64 `json:"default_balance"`
+	DefaultConcurrency   int                              `json:"default_concurrency"`
+	DefaultBalance       float64                          `json:"default_balance"`
+	DefaultSubscriptions []dto.DefaultSubscriptionSetting `json:"default_subscriptions"`
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
@@ -159,6 +175,8 @@ type UpdateSettingsRequest struct {
 	OpsRealtimeMonitoringEnabled *bool   `json:"ops_realtime_monitoring_enabled"`
 	OpsQueryModeDefault          *string `json:"ops_query_mode_default"`
 	OpsMetricsIntervalSeconds    *int    `json:"ops_metrics_interval_seconds"`
+
+	MinClaudeCodeVersion string `json:"min_claude_code_version"`
 }
 
 // UpdateSettings 更新系统设置
@@ -186,6 +204,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	if req.SMTPPort <= 0 {
 		req.SMTPPort = 587
 	}
+	req.DefaultSubscriptions = normalizeDefaultSubscriptions(req.DefaultSubscriptions)
 
 	// Turnstile 参数验证
 	if req.TurnstileEnabled {
@@ -292,6 +311,21 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		}
 		req.OpsMetricsIntervalSeconds = &v
 	}
+	defaultSubscriptions := make([]service.DefaultSubscriptionSetting, 0, len(req.DefaultSubscriptions))
+	for _, sub := range req.DefaultSubscriptions {
+		defaultSubscriptions = append(defaultSubscriptions, service.DefaultSubscriptionSetting{
+			GroupID:      sub.GroupID,
+			ValidityDays: sub.ValidityDays,
+		})
+	}
+
+	// 验证最低版本号格式（空字符串=禁用，或合法 semver）
+	if req.MinClaudeCodeVersion != "" {
+		if !semverPattern.MatchString(req.MinClaudeCodeVersion) {
+			response.Error(c, http.StatusBadRequest, "min_claude_code_version must be empty or a valid semver (e.g. 2.1.63)")
+			return
+		}
+	}
 
 	settings := &service.SystemSettings{
 		RegistrationEnabled:         req.RegistrationEnabled,
@@ -327,6 +361,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		SoraClientEnabled:           req.SoraClientEnabled,
 		DefaultConcurrency:          req.DefaultConcurrency,
 		DefaultBalance:              req.DefaultBalance,
+		DefaultSubscriptions:        defaultSubscriptions,
 		EnableModelFallback:         req.EnableModelFallback,
 		FallbackModelAnthropic:      req.FallbackModelAnthropic,
 		FallbackModelOpenAI:         req.FallbackModelOpenAI,
@@ -334,6 +369,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		FallbackModelAntigravity:    req.FallbackModelAntigravity,
 		EnableIdentityPatch:         req.EnableIdentityPatch,
 		IdentityPatchPrompt:         req.IdentityPatchPrompt,
+		MinClaudeCodeVersion:        req.MinClaudeCodeVersion,
 		OpsMonitoringEnabled: func() bool {
 			if req.OpsMonitoringEnabled != nil {
 				return *req.OpsMonitoringEnabled
@@ -373,6 +409,13 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
+	updatedDefaultSubscriptions := make([]dto.DefaultSubscriptionSetting, 0, len(updatedSettings.DefaultSubscriptions))
+	for _, sub := range updatedSettings.DefaultSubscriptions {
+		updatedDefaultSubscriptions = append(updatedDefaultSubscriptions, dto.DefaultSubscriptionSetting{
+			GroupID:      sub.GroupID,
+			ValidityDays: sub.ValidityDays,
+		})
+	}
 
 	response.Success(c, dto.SystemSettings{
 		RegistrationEnabled:                  updatedSettings.RegistrationEnabled,
@@ -409,6 +452,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		SoraClientEnabled:                    updatedSettings.SoraClientEnabled,
 		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
 		DefaultBalance:                       updatedSettings.DefaultBalance,
+		DefaultSubscriptions:                 updatedDefaultSubscriptions,
 		EnableModelFallback:                  updatedSettings.EnableModelFallback,
 		FallbackModelAnthropic:               updatedSettings.FallbackModelAnthropic,
 		FallbackModelOpenAI:                  updatedSettings.FallbackModelOpenAI,
@@ -420,6 +464,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
+		MinClaudeCodeVersion:                 updatedSettings.MinClaudeCodeVersion,
 	})
 }
 
@@ -529,6 +574,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.DefaultBalance != after.DefaultBalance {
 		changed = append(changed, "default_balance")
 	}
+	if !equalDefaultSubscriptions(before.DefaultSubscriptions, after.DefaultSubscriptions) {
+		changed = append(changed, "default_subscriptions")
+	}
 	if before.EnableModelFallback != after.EnableModelFallback {
 		changed = append(changed, "enable_model_fallback")
 	}
@@ -562,7 +610,39 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.OpsMetricsIntervalSeconds != after.OpsMetricsIntervalSeconds {
 		changed = append(changed, "ops_metrics_interval_seconds")
 	}
+	if before.MinClaudeCodeVersion != after.MinClaudeCodeVersion {
+		changed = append(changed, "min_claude_code_version")
+	}
 	return changed
+}
+
+func normalizeDefaultSubscriptions(input []dto.DefaultSubscriptionSetting) []dto.DefaultSubscriptionSetting {
+	if len(input) == 0 {
+		return nil
+	}
+	normalized := make([]dto.DefaultSubscriptionSetting, 0, len(input))
+	for _, item := range input {
+		if item.GroupID <= 0 || item.ValidityDays <= 0 {
+			continue
+		}
+		if item.ValidityDays > service.MaxValidityDays {
+			item.ValidityDays = service.MaxValidityDays
+		}
+		normalized = append(normalized, item)
+	}
+	return normalized
+}
+
+func equalDefaultSubscriptions(a, b []service.DefaultSubscriptionSetting) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].GroupID != b[i].GroupID || a[i].ValidityDays != b[i].ValidityDays {
+			return false
+		}
+	}
+	return true
 }
 
 // TestSMTPRequest 测试SMTP连接请求

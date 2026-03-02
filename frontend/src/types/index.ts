@@ -94,6 +94,7 @@ export interface PublicSettings {
   hide_ccs_import_button: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
+  purchase_subscription_open_mode: string // 'iframe' or 'new_window'
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
   sora_client_enabled: boolean
@@ -1083,6 +1084,15 @@ export interface ModelStat {
   requests: number
   input_tokens: number
   output_tokens: number
+  total_tokens: number
+  cost: number // 标准计费
+  actual_cost: number // 实际扣除
+}
+
+export interface GroupStat {
+  group_id: number
+  group_name: string
+  requests: number
   total_tokens: number
   cost: number // 标准计费
   actual_cost: number // 实际扣除

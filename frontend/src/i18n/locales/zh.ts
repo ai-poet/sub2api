@@ -294,9 +294,10 @@ export default {
     logout: '退出登录',
     github: 'GitHub',
     mySubscriptions: '我的订阅',
-    buySubscription: '购买订阅',
+    buySubscription: '充值/订阅',
     referral: '推荐邀请',
-    docs: '文档'
+    docs: '文档',
+    sora: 'Sora 创作'
   },
 
   // Auth
@@ -425,9 +426,12 @@ export default {
     day: '按天',
     hour: '按小时',
     modelDistribution: '模型分布',
+    groupDistribution: '分组使用分布',
     tokenUsageTrend: 'Token 使用趋势',
     noDataAvailable: '暂无数据',
     model: '模型',
+    group: '分组',
+    noGroup: '无分组',
     requests: '请求',
     tokens: 'Token',
     actual: '实际',
@@ -890,9 +894,12 @@ export default {
       day: '按天',
       hour: '按小时',
       modelDistribution: '模型分布',
+      groupDistribution: '分组使用分布',
       tokenUsageTrend: 'Token 使用趋势',
       noDataAvailable: '暂无数据',
       model: '模型',
+      group: '分组',
+      noGroup: '无分组',
       requests: '请求',
       tokens: 'Token',
       cache: '缓存',
@@ -2256,6 +2263,7 @@ export default {
         name: '名称',
         protocol: '协议',
         address: '地址',
+        auth: '认证',
         location: '地理位置',
         status: '状态',
         accounts: '账号数',
@@ -2283,6 +2291,8 @@ export default {
         allStatuses: '全部状态'
       },
       // Additional keys used in ProxiesView
+      copyProxyUrl: '复制代理 URL',
+      urlCopied: '代理 URL 已复制',
       allProtocols: '全部协议',
       allStatus: '全部状态',
       searchProxies: '搜索代理...',
@@ -3539,7 +3549,21 @@ export default {
         defaultBalance: '默认余额',
         defaultBalanceHint: '新用户的初始余额',
         defaultConcurrency: '默认并发数',
-        defaultConcurrencyHint: '新用户的最大并发请求数'
+        defaultConcurrencyHint: '新用户的最大并发请求数',
+        defaultSubscriptions: '默认订阅列表',
+        defaultSubscriptionsHint: '新用户创建或注册时自动分配这些订阅',
+        addDefaultSubscription: '添加默认订阅',
+        defaultSubscriptionsEmpty: '未配置默认订阅。新用户不会自动获得订阅套餐。',
+        defaultSubscriptionsDuplicate: '默认订阅存在重复分组：{groupId}。每个分组只能出现一次。',
+        subscriptionGroup: '订阅分组',
+        subscriptionValidityDays: '有效期（天）'
+      },
+      claudeCode: {
+        title: 'Claude Code 设置',
+        description: '控制 Claude Code 客户端访问要求',
+        minVersion: '最低版本号',
+        minVersionPlaceholder: '例如 2.1.63',
+        minVersionHint: '拒绝低于此版本的 Claude Code 客户端请求（semver 格式）。留空则不检查版本。'
       },
       site: {
         title: '站点设置',
@@ -3577,13 +3601,27 @@ export default {
         hideCcsImportButtonHint: '启用后将在 API Keys 页面隐藏"导入 CCS"按钮'
       },
       purchase: {
-        title: '购买订阅页面',
-        description: '在侧边栏展示"购买订阅"入口，点击后直接在新窗口打开指定链接',
-        enabled: '显示购买订阅入口',
+        title: '充值/订阅页面',
+        description: '在侧边栏展示”充值/订阅”入口',
+        enabled: '显示充值/订阅入口',
         enabledHint: '仅在标准模式（非简单模式）下展示',
-        url: '购买页面 URL',
+        url: '充值/订阅页面 URL',
         urlPlaceholder: 'https://example.com/purchase',
-        urlHint: '必须是完整的 http(s) 链接'
+        urlHint: '必须是完整的 http(s) 链接',
+        openMode: '打开方式',
+        openModeIframe: '内嵌模式（iframe）',
+        openModeNewWindow: '新窗口',
+        openModeHint: '选择充值/订阅页面的打开方式',
+        iframeWarning:
+          '⚠️ iframe 提示：部分网站会通过 X-Frame-Options 或 CSP（frame-ancestors）禁止被 iframe 嵌入，出现空白时可引导用户使用”新窗口打开”。',
+        integrationDoc: '支付集成文档',
+        integrationDocHint: '包含接口说明、幂等语义及示例代码'
+      },
+      soraClient: {
+        title: 'Sora 客户端',
+        description: '控制是否在侧边栏展示 Sora 客户端入口',
+        enabled: '启用 Sora 客户端',
+        enabledHint: '开启后，侧边栏将显示 Sora 入口，用户可访问 Sora 功能'
       },
       smtp: {
         title: 'SMTP 设置',
@@ -3806,15 +3844,15 @@ export default {
     retry: '重试'
   },
 
-  // Purchase Subscription Page
+  // Recharge / Subscription Page
   purchase: {
-    title: '购买订阅',
-    description: '通过内嵌页面完成订阅购买',
+    title: '充值/订阅',
+    description: '通过内嵌页面完成充值/订阅',
     openInNewTab: '新窗口打开',
     notEnabledTitle: '该功能未开启',
-    notEnabledDesc: '管理员暂未开启购买订阅入口，请联系管理员。',
-    notConfiguredTitle: '购买链接未配置',
-    notConfiguredDesc: '管理员已开启入口，但尚未配置购买订阅链接，请联系管理员。'
+    notEnabledDesc: '管理员暂未开启充值/订阅入口，请联系管理员。',
+    notConfiguredTitle: '充值/订阅链接未配置',
+    notConfiguredDesc: '管理员已开启入口，但尚未配置充值/订阅链接，请联系管理员。'
   },
 
   // Announcements Page

@@ -324,6 +324,26 @@ const CreditCardIcon = {
     )
 }
 
+const RechargeSubscriptionIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9z'
+        }),
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M6.75 12h3m4.5 0h3m-3-3v6'
+        })
+      ]
+    )
+}
+
 const GlobeIcon = {
   render: () =>
     h(
@@ -474,12 +494,19 @@ const userNavItems = computed(() => {
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled &&
     appStore.cachedPublicSettings?.purchase_subscription_url
       ? [
-          {
-            externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
-            label: t('nav.buySubscription'),
-            icon: CreditCardIcon,
-            hideInSimpleMode: true
-          }
+          appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
+            ? {
+                externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
+            : {
+                path: '/purchase',
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
         ]
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
@@ -500,12 +527,19 @@ const personalNavItems = computed(() => {
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled &&
     appStore.cachedPublicSettings?.purchase_subscription_url
       ? [
-          {
-            externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
-            label: t('nav.buySubscription'),
-            icon: CreditCardIcon,
-            hideInSimpleMode: true
-          }
+          appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
+            ? {
+                externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
+            : {
+                path: '/purchase',
+                label: t('nav.buySubscription'),
+                icon: RechargeSubscriptionIcon,
+                hideInSimpleMode: true
+              }
         ]
       : []),
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },

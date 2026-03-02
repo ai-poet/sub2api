@@ -34,13 +34,15 @@ type SystemSettings struct {
 	ContactInfo                 string `json:"contact_info"`
 	DocURL                      string `json:"doc_url"`
 	HomeContent                 string `json:"home_content"`
-	HideCcsImportButton         bool   `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled bool   `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL     string `json:"purchase_subscription_url"`
-	SoraClientEnabled           bool   `json:"sora_client_enabled"`
+	HideCcsImportButton          bool   `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled  bool   `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL      string `json:"purchase_subscription_url"`
+	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"` // iframe or new_window
+	SoraClientEnabled            bool   `json:"sora_client_enabled"`
 
-	DefaultConcurrency int     `json:"default_concurrency"`
-	DefaultBalance     float64 `json:"default_balance"`
+	DefaultConcurrency   int                          `json:"default_concurrency"`
+	DefaultBalance       float64                      `json:"default_balance"`
+	DefaultSubscriptions []DefaultSubscriptionSetting `json:"default_subscriptions"`
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
@@ -58,6 +60,13 @@ type SystemSettings struct {
 	OpsRealtimeMonitoringEnabled bool   `json:"ops_realtime_monitoring_enabled"`
 	OpsQueryModeDefault          string `json:"ops_query_mode_default"`
 	OpsMetricsIntervalSeconds    int    `json:"ops_metrics_interval_seconds"`
+
+	MinClaudeCodeVersion string `json:"min_claude_code_version"`
+}
+
+type DefaultSubscriptionSetting struct {
+	GroupID      int64 `json:"group_id"`
+	ValidityDays int   `json:"validity_days"`
 }
 
 type PublicSettings struct {
@@ -76,12 +85,13 @@ type PublicSettings struct {
 	ContactInfo                 string `json:"contact_info"`
 	DocURL                      string `json:"doc_url"`
 	HomeContent                 string `json:"home_content"`
-	HideCcsImportButton         bool   `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled bool   `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL     string `json:"purchase_subscription_url"`
-	LinuxDoOAuthEnabled         bool   `json:"linuxdo_oauth_enabled"`
-	SoraClientEnabled           bool   `json:"sora_client_enabled"`
-	ReferralEnabled             bool   `json:"referral_enabled"`
+	HideCcsImportButton          bool   `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled  bool   `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL      string `json:"purchase_subscription_url"`
+	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"` // iframe or new_window
+	LinuxDoOAuthEnabled          bool   `json:"linuxdo_oauth_enabled"`
+	SoraClientEnabled            bool   `json:"sora_client_enabled"`
+	ReferralEnabled              bool   `json:"referral_enabled"`
 	Version                     string `json:"version"`
 }
 
