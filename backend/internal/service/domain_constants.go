@@ -117,8 +117,9 @@ const (
 	SettingKeyPurchaseSubscriptionURL     = "purchase_subscription_url"     // “购买订阅”页面 URL（作为 iframe src）
 
 	// 默认配置
-	SettingKeyDefaultConcurrency = "default_concurrency" // 新用户默认并发量
-	SettingKeyDefaultBalance     = "default_balance"     // 新用户默认余额
+	SettingKeyDefaultConcurrency   = "default_concurrency"   // 新用户默认并发量
+	SettingKeyDefaultBalance       = "default_balance"       // 新用户默认余额
+	SettingKeyDefaultSubscriptions = "default_subscriptions" // 新用户默认订阅列表（JSON）
 
 	// 管理员 API Key
 	SettingKeyAdminAPIKey = "admin_api_key" // 全局管理员 API Key（用于外部系统集成）
@@ -192,6 +193,13 @@ const (
 	// =========================
 
 	SettingKeySoraDefaultStorageQuotaBytes = "sora_default_storage_quota_bytes" // 新用户默认 Sora 存储配额（字节）
+
+	// =========================
+	// Claude Code Version Check
+	// =========================
+
+	// SettingKeyMinClaudeCodeVersion 最低 Claude Code 版本号要求 (semver, 如 "2.1.0"，空值=不检查)
+	SettingKeyMinClaudeCodeVersion = "min_claude_code_version"
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

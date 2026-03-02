@@ -499,6 +499,7 @@ func TestAPIContracts(t *testing.T) {
 					"doc_url": "https://docs.example.com",
 					"default_concurrency": 5,
 					"default_balance": 1.25,
+					"default_subscriptions": [],
 					"enable_model_fallback": false,
 					"fallback_model_anthropic": "claude-3-5-sonnet-20241022",
 					"fallback_model_antigravity": "gemini-2.5-pro",
@@ -511,7 +512,8 @@ func TestAPIContracts(t *testing.T) {
 						"home_content": "",
 					"hide_ccs_import_button": false,
 					"purchase_subscription_enabled": false,
-					"purchase_subscription_url": ""
+					"purchase_subscription_url": "",
+					"min_claude_code_version": ""
 				}
 			}`,
 		},
@@ -619,7 +621,7 @@ func newContractDeps(t *testing.T) *contractDeps {
 	settingRepo := newStubSettingRepo()
 	settingService := service.NewSettingService(settingRepo, cfg)
 
-	adminService := service.NewAdminService(userRepo, groupRepo, &accountRepo, nil, proxyRepo, apiKeyRepo, redeemRepo, nil, nil, nil, nil, nil, nil)
+	adminService := service.NewAdminService(userRepo, groupRepo, &accountRepo, nil, proxyRepo, apiKeyRepo, redeemRepo, nil, nil, nil, nil, nil, nil, nil, nil)
 	authHandler := handler.NewAuthHandler(cfg, nil, userService, settingService, nil, redeemService, nil)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
 	usageHandler := handler.NewUsageHandler(usageService, apiKeyService)
@@ -1568,6 +1570,10 @@ func (r *stubUsageLogRepo) GetUsageTrendWithFilters(ctx context.Context, startTi
 }
 
 func (r *stubUsageLogRepo) GetModelStatsWithFilters(ctx context.Context, startTime, endTime time.Time, userID, apiKeyID, accountID, groupID int64, requestType *int16, stream *bool, billingType *int8) ([]usagestats.ModelStat, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (r *stubUsageLogRepo) GetGroupStatsWithFilters(ctx context.Context, startTime, endTime time.Time, userID, apiKeyID, accountID, groupID int64, requestType *int16, stream *bool, billingType *int8) ([]usagestats.GroupStat, error) {
 	return nil, errors.New("not implemented")
 }
 
