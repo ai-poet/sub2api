@@ -81,6 +81,11 @@ type ReferralCache interface {
 	ReleaseRewardLock(ctx context.Context, refereeID int64) error
 }
 
+// ReferralRewardRecordRepository 推荐奖励记录仓储接口（用于充值记录展示）
+type ReferralRewardRecordRepository interface {
+	Create(ctx context.Context, code *RedeemCode) error
+}
+
 // ReferralInfo 推荐信息（用户侧）
 type ReferralInfo struct {
 	ReferralCode string            `json:"referral_code"`
@@ -115,6 +120,7 @@ type ReferralService struct {
 	referralCache       ReferralCache
 	userRepo            UserRepository
 	settingRepo         SettingRepository
+	rewardRecordRepo    ReferralRewardRecordRepository
 	subscriptionService *SubscriptionService
 	onSettingsUpdate    func()
 }
@@ -125,6 +131,7 @@ func NewReferralService(
 	referralCache ReferralCache,
 	userRepo UserRepository,
 	settingRepo SettingRepository,
+	rewardRecordRepo ReferralRewardRecordRepository,
 	subscriptionService *SubscriptionService,
 ) *ReferralService {
 	return &ReferralService{
@@ -132,6 +139,7 @@ func NewReferralService(
 		referralCache:       referralCache,
 		userRepo:            userRepo,
 		settingRepo:         settingRepo,
+		rewardRecordRepo:    rewardRecordRepo,
 		subscriptionService: subscriptionService,
 	}
 }
@@ -382,6 +390,9 @@ func (s *ReferralService) distributeRewards(ctx context.Context, ref *UserReferr
 		if err := s.userRepo.UpdateBalance(ctx, ref.ReferrerID, snapshot.ReferrerBalanceReward); err != nil {
 			return fmt.Errorf("update referrer balance: %w", err)
 		}
+		if err := s.createBalanceRewardRecord(ctx, ref.ReferrerID, snapshot.ReferrerBalanceReward, fmt.Sprintf("推荐奖励：邀请用户 %d 首次充值", ref.RefereeID)); err != nil {
+			return fmt.Errorf("create referrer reward record: %w", err)
+		}
 	}
 
 	// 推荐人订阅奖励
@@ -403,6 +414,9 @@ func (s *ReferralService) distributeRewards(ctx context.Context, ref *UserReferr
 		if err := s.userRepo.UpdateBalance(ctx, ref.RefereeID, snapshot.RefereeBalanceReward); err != nil {
 			return fmt.Errorf("update referee balance: %w", err)
 		}
+		if err := s.createBalanceRewardRecord(ctx, ref.RefereeID, snapshot.RefereeBalanceReward, fmt.Sprintf("推荐奖励：通过推荐链接注册并完成首次充值（推荐人 %d）", ref.ReferrerID)); err != nil {
+			return fmt.Errorf("create referee reward record: %w", err)
+		}
 	}
 
 	// 被推荐人订阅奖励
@@ -420,6 +434,41 @@ func (s *ReferralService) distributeRewards(ctx context.Context, ref *UserReferr
 	}
 
 	return nil
+}
+
+func (s *ReferralService) createBalanceRewardRecord(ctx context.Context, userID int64, amount float64, notes string) error {
+	if s.rewardRecordRepo == nil {
+		return errors.New("reward record repository is nil")
+	}
+	now := time.Now()
+	usedBy := userID
+
+	var lastErr error
+	for i := 0; i < 5; i++ {
+		code, err := GenerateRedeemCode()
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		record := &RedeemCode{
+			Code:   code,
+			Type:   AdjustmentTypeReferralReward,
+			Value:  amount,
+			Status: StatusUsed,
+			UsedBy: &usedBy,
+			UsedAt: &now,
+			Notes:  notes,
+		}
+		if err := s.rewardRecordRepo.Create(ctx, record); err == nil {
+			return nil
+		} else {
+			lastErr = err
+		}
+	}
+	if lastErr == nil {
+		lastErr = errors.New("unknown error")
+	}
+	return lastErr
 }
 
 // GetReferralHistory 获取推荐历史

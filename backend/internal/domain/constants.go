@@ -51,6 +51,7 @@ const (
 const (
 	AdjustmentTypeAdminBalance     = "admin_balance"     // 管理员调整余额
 	AdjustmentTypeAdminConcurrency = "admin_concurrency" // 管理员调整并发数
+	AdjustmentTypeReferralReward   = "referral_reward"   // 推荐奖励余额发放
 )
 
 // Group subscription type constants

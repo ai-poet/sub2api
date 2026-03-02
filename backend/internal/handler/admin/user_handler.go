@@ -325,7 +325,7 @@ func (h *UserHandler) GetUserUsage(c *gin.Context) {
 // GetBalanceHistory handles getting user's balance/concurrency change history
 // GET /api/v1/admin/users/:id/balance-history
 // Query params:
-//   - type: filter by record type (balance, admin_balance, concurrency, admin_concurrency, subscription)
+//   - type: filter by record type (balance, admin_balance, referral_reward, concurrency, admin_concurrency, subscription)
 func (h *UserHandler) GetBalanceHistory(c *gin.Context) {
 	userID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

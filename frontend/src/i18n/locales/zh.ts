@@ -688,6 +688,7 @@ export default {
     balanceAddedRedeem: '余额充值（兑换）',
     balanceAddedAdmin: '余额充值（管理员）',
     balanceDeductedAdmin: '余额扣除（管理员）',
+    referralReward: '推荐奖励',
     concurrencyAddedRedeem: '并发增加（兑换）',
     concurrencyAddedAdmin: '并发增加（管理员）',
     concurrencyReducedAdmin: '并发减少（管理员）',
@@ -1081,6 +1082,7 @@ export default {
       allTypes: '全部类型',
       typeBalance: '余额（兑换码）',
       typeAdminBalance: '余额（管理员调整）',
+      typeReferralReward: '余额（推荐奖励）',
       typeConcurrency: '并发（兑换码）',
       typeAdminConcurrency: '并发（管理员调整）',
       typeSubscription: '订阅',
@@ -2422,7 +2424,8 @@ export default {
         invitation: '邀请码',
         // 管理员在用户管理页面调整余额/并发时产生的记录
         admin_balance: '余额（管理员）',
-        admin_concurrency: '并发数（管理员）'
+        admin_concurrency: '并发数（管理员）',
+        referral_reward: '推荐奖励'
       },
       // 用于选择器和筛选器的直接键
       balance: '余额',

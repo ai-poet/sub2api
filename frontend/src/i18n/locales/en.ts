@@ -686,6 +686,7 @@ export default {
     balanceAddedRedeem: 'Balance Added (Redeem)',
     balanceAddedAdmin: 'Balance Added (Admin)',
     balanceDeductedAdmin: 'Balance Deducted (Admin)',
+    referralReward: 'Referral Reward',
     concurrencyAddedRedeem: 'Concurrency Added (Redeem)',
     concurrencyAddedAdmin: 'Concurrency Added (Admin)',
     concurrencyReducedAdmin: 'Concurrency Reduced (Admin)',
@@ -1204,6 +1205,7 @@ export default {
       allTypes: 'All Types',
       typeBalance: 'Balance (Redeem)',
       typeAdminBalance: 'Balance (Admin)',
+      typeReferralReward: 'Balance (Referral Reward)',
       typeConcurrency: 'Concurrency (Redeem)',
       typeAdminConcurrency: 'Concurrency (Admin)',
       typeSubscription: 'Subscription',
@@ -2576,7 +2578,8 @@ export default {
         invitation: 'Invitation',
         // Admin adjustment types (created when admin modifies user balance/concurrency)
         admin_balance: 'Balance (Admin)',
-        admin_concurrency: 'Concurrency (Admin)'
+        admin_concurrency: 'Concurrency (Admin)',
+        referral_reward: 'Referral Reward'
       },
       selectGroup: 'Select Group',
       selectGroupPlaceholder: 'Choose a subscription group',

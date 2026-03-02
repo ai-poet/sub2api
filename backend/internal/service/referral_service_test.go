@@ -71,7 +71,7 @@ func (r *stubSettingRepoForReferralService) Delete(_ context.Context, key string
 
 func TestReferralService_UpdateReferralSettings_TriggersCallbackOnSuccess(t *testing.T) {
 	settingRepo := &stubSettingRepoForReferralService{values: make(map[string]string)}
-	referralService := NewReferralService(nil, nil, nil, settingRepo, nil)
+	referralService := NewReferralService(nil, nil, nil, settingRepo, nil, nil)
 
 	callbackCalled := 0
 	referralService.SetOnSettingsUpdateCallback(func() {
@@ -100,7 +100,7 @@ func TestReferralService_UpdateReferralSettings_DoesNotTriggerCallbackOnFailure(
 		values:         make(map[string]string),
 		setMultipleErr: errors.New("set settings failed"),
 	}
-	referralService := NewReferralService(nil, nil, nil, settingRepo, nil)
+	referralService := NewReferralService(nil, nil, nil, settingRepo, nil, nil)
 
 	callbackCalled := 0
 	referralService.SetOnSettingsUpdateCallback(func() {
