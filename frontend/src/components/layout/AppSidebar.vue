@@ -32,9 +32,9 @@
           <router-link
             v-for="item in adminNavItems"
             :key="item.path"
-            :to="item.path"
+            :to="item.path!"
             class="sidebar-link mb-1"
-            :class="{ 'sidebar-link-active': isActive(item.path) }"
+            :class="{ 'sidebar-link-active': isActive(item.path!) }"
             :title="sidebarCollapsed ? item.label : undefined"
             :id="
               item.path === '/admin/accounts'
@@ -45,7 +45,7 @@
                     ? 'sidebar-wallet'
                     : undefined
             "
-            @click="handleMenuItemClick(item.path)"
+            @click="handleMenuItemClick(item.path!)"
           >
             <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
             <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
@@ -191,7 +191,8 @@ import VersionBadge from '@/components/common/VersionBadge.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
 
 interface NavItem {
-  path: string
+  path?: string
+  externalUrl?: string
   label: string
   icon: unknown
   iconSvg?: string
@@ -539,6 +540,11 @@ const userNavItems = computed((): NavItem[] => {
       icon: null,
       iconSvg: item.icon_svg,
     })),
+  ]
+  return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
+})
+
+// Personal navigation items for admin users (My Account section)
 const personalNavItems = computed((): NavItem[] => {
   const items: NavItem[] = [
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
@@ -574,7 +580,7 @@ const personalNavItems = computed((): NavItem[] => {
       iconSvg: item.icon_svg,
     })),
   ]
-  return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
+  return items
 })
 
 // Custom menu items filtered by visibility
