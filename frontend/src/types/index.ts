@@ -76,9 +76,19 @@ export interface SendVerifyCodeResponse {
   countdown: number
 }
 
+export interface CustomMenuItem {
+  id: string
+  label: string
+  icon_svg: string
+  url: string
+  visibility: 'user' | 'admin'
+  sort_order: number
+}
+
 export interface PublicSettings {
   registration_enabled: boolean
   email_verify_enabled: boolean
+  registration_email_suffix_whitelist: string[]
   promo_code_enabled: boolean
   password_reset_enabled: boolean
   invitation_code_enabled: boolean
@@ -95,6 +105,7 @@ export interface PublicSettings {
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
   purchase_subscription_open_mode: string // 'iframe' or 'new_window'
+  custom_menu_items: CustomMenuItem[]
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
   sora_client_enabled: boolean
@@ -414,6 +425,15 @@ export interface ApiKey {
   created_at: string
   updated_at: string
   group?: Group
+  rate_limit_5h: number
+  rate_limit_1d: number
+  rate_limit_7d: number
+  usage_5h: number
+  usage_1d: number
+  usage_7d: number
+  window_5h_start: string | null
+  window_1d_start: string | null
+  window_7d_start: string | null
 }
 
 export interface CreateApiKeyRequest {
@@ -424,6 +444,9 @@ export interface CreateApiKeyRequest {
   ip_blacklist?: string[]
   quota?: number // Quota limit in USD (0 = unlimited)
   expires_in_days?: number // Days until expiry (null = never expires)
+  rate_limit_5h?: number
+  rate_limit_1d?: number
+  rate_limit_7d?: number
 }
 
 export interface UpdateApiKeyRequest {
@@ -435,6 +458,10 @@ export interface UpdateApiKeyRequest {
   quota?: number // Quota limit in USD (null = no change, 0 = unlimited)
   expires_at?: string | null // Expiration time (null = no change)
   reset_quota?: boolean // Reset quota_used to 0
+  rate_limit_5h?: number
+  rate_limit_1d?: number
+  rate_limit_7d?: number
+  reset_rate_limit_usage?: boolean
 }
 
 export interface CreateGroupRequest {
@@ -668,6 +695,7 @@ export interface Account {
   base_rpm?: number | null
   rpm_strategy?: string | null
   rpm_sticky_buffer?: number | null
+  user_msg_queue_mode?: string | null  // "serialize" | "throttle" | null
 
   // TLS指纹伪装（仅 Anthropic OAuth/SetupToken 账号有效）
   enable_tls_fingerprint?: boolean | null

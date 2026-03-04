@@ -72,22 +72,31 @@ func APIKeyFromService(k *service.APIKey) *APIKey {
 		return nil
 	}
 	return &APIKey{
-		ID:          k.ID,
-		UserID:      k.UserID,
-		Key:         k.Key,
-		Name:        k.Name,
-		GroupID:     k.GroupID,
-		Status:      k.Status,
-		IPWhitelist: k.IPWhitelist,
-		IPBlacklist: k.IPBlacklist,
-		LastUsedAt:  k.LastUsedAt,
-		Quota:       k.Quota,
-		QuotaUsed:   k.QuotaUsed,
-		ExpiresAt:   k.ExpiresAt,
-		CreatedAt:   k.CreatedAt,
-		UpdatedAt:   k.UpdatedAt,
-		User:        UserFromServiceShallow(k.User),
-		Group:       GroupFromServiceShallow(k.Group),
+		ID:            k.ID,
+		UserID:        k.UserID,
+		Key:           k.Key,
+		Name:          k.Name,
+		GroupID:       k.GroupID,
+		Status:        k.Status,
+		IPWhitelist:   k.IPWhitelist,
+		IPBlacklist:   k.IPBlacklist,
+		LastUsedAt:    k.LastUsedAt,
+		Quota:         k.Quota,
+		QuotaUsed:     k.QuotaUsed,
+		ExpiresAt:     k.ExpiresAt,
+		CreatedAt:     k.CreatedAt,
+		UpdatedAt:     k.UpdatedAt,
+		RateLimit5h:   k.RateLimit5h,
+		RateLimit1d:   k.RateLimit1d,
+		RateLimit7d:   k.RateLimit7d,
+		Usage5h:       k.Usage5h,
+		Usage1d:       k.Usage1d,
+		Usage7d:       k.Usage7d,
+		Window5hStart: k.Window5hStart,
+		Window1dStart: k.Window1dStart,
+		Window7dStart: k.Window7dStart,
+		User:          UserFromServiceShallow(k.User),
+		Group:         GroupFromServiceShallow(k.Group),
 	}
 }
 
@@ -215,6 +224,10 @@ func AccountFromServiceShallow(a *service.Account) *Account {
 			out.RPMStrategy = &strategy
 			buffer := a.GetRPMStickyBuffer()
 			out.RPMStickyBuffer = &buffer
+		}
+		// 用户消息队列模式
+		if mode := a.GetUserMsgQueueMode(); mode != "" {
+			out.UserMsgQueueMode = &mode
 		}
 		// TLS指纹伪装开关
 		if a.IsTLSFingerprintEnabled() {

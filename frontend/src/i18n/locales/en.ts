@@ -328,6 +328,9 @@ export default {
     passwordMinLength: 'Password must be at least 6 characters',
     loginFailed: 'Login failed. Please check your credentials and try again.',
     registrationFailed: 'Registration failed. Please try again.',
+    emailSuffixNotAllowed: 'This email domain is not allowed for registration.',
+    emailSuffixNotAllowedWithAllowed:
+      'This email domain is not allowed. Allowed domains: {suffixes}',
     loginSuccess: 'Login successful! Welcome back.',
     accountCreatedSuccess: 'Account created successfully! Welcome to {siteName}.',
     reloginRequired: 'Session expired. Please log in again.',
@@ -342,6 +345,16 @@ export default {
     sendingCode: 'Sending...',
     clickToResend: 'Click to resend code',
     resendCode: 'Resend verification code',
+    sendCodeDesc: "We'll send a verification code to",
+    codeSentSuccess: 'Verification code sent! Please check your inbox.',
+    verifying: 'Verifying...',
+    verifyAndCreate: 'Verify & Create Account',
+    resendCountdown: 'Resend code in {countdown}s',
+    backToRegistration: 'Back to registration',
+    sendCodeFailed: 'Failed to send verification code. Please try again.',
+    verifyFailed: 'Verification failed. Please try again.',
+    codeRequired: 'Verification code is required',
+    invalidCode: 'Please enter a valid 6-digit code',
     promoCodeLabel: 'Promo Code',
     promoCodePlaceholder: 'Enter promo code (optional)',
     promoCodeValid: 'Valid! You will receive ${amount} bonus balance',
@@ -462,6 +475,9 @@ export default {
   keys: {
     title: 'API Keys',
     description: 'Manage your API keys and access tokens',
+    searchPlaceholder: 'Search name or key...',
+    allGroups: 'All Groups',
+    allStatus: 'All Status',
     createKey: 'Create API Key',
     editKey: 'Edit API Key',
     deleteKey: 'Delete API Key',
@@ -578,6 +594,19 @@ export default {
     resetQuotaConfirmMessage: 'Are you sure you want to reset the used quota (${used}) for key "{name}" to 0? This action cannot be undone.',
     quotaResetSuccess: 'Quota reset successfully',
     failedToResetQuota: 'Failed to reset quota',
+    rateLimitColumn: 'Rate Limit',
+    rateLimitSection: 'Rate Limit',
+    resetUsage: 'Reset',
+    rateLimit5h: '5-Hour Limit (USD)',
+    rateLimit1d: 'Daily Limit (USD)',
+    rateLimit7d: '7-Day Limit (USD)',
+    rateLimitHint: 'Set the maximum spending for this key within each time window. 0 = unlimited.',
+    rateLimitUsage: 'Rate Limit Usage',
+    resetRateLimitUsage: 'Reset Rate Limit Usage',
+    resetRateLimitTitle: 'Confirm Reset Rate Limit',
+    resetRateLimitConfirmMessage: 'Are you sure you want to reset the rate limit usage for key "{name}"? All time window usage will be reset to zero. This action cannot be undone.',
+    rateLimitResetSuccess: 'Rate limit usage reset successfully',
+    failedToResetRateLimit: 'Failed to reset rate limit usage',
     expiration: 'Expiration',
     expiresInDays: '{days} days',
     extendDays: '+{days} days',
@@ -1915,7 +1944,12 @@ export default {
           strategyHint: 'Tiered: gradually restrict when exceeded; Sticky Exempt: existing sessions unrestricted',
           stickyBuffer: 'Sticky Buffer',
           stickyBufferPlaceholder: 'Default: 20% of base RPM',
-          stickyBufferHint: 'Extra requests allowed for sticky sessions after exceeding base RPM. Leave empty to use default (20% of base RPM, min 1)'
+          stickyBufferHint: 'Extra requests allowed for sticky sessions after exceeding base RPM. Leave empty to use default (20% of base RPM, min 1)',
+          userMsgQueue: 'User Message Rate Control',
+          userMsgQueueHint: 'Rate-limit user messages to avoid triggering upstream RPM limits',
+          umqModeOff: 'Off',
+          umqModeThrottle: 'Throttle',
+          umqModeSerialize: 'Serialize',
         },
         tlsFingerprint: {
           label: 'TLS Fingerprint Simulation',
@@ -3572,6 +3606,15 @@ export default {
     settings: {
       title: 'System Settings',
       description: 'Manage registration, email verification, default values, and SMTP settings',
+      tabs: {
+        general: 'General',
+        security: 'Security',
+        users: 'Users',
+        gateway: 'Gateway',
+        email: 'Email',
+      },
+      emailTabDisabledTitle: 'Email Verification Not Enabled',
+      emailTabDisabledHint: 'Enable email verification in the Security tab to configure SMTP settings.',
       registration: {
         title: 'Registration Settings',
         description: 'Control user registration and verification',
@@ -3579,6 +3622,11 @@ export default {
         enableRegistrationHint: 'Allow new users to register',
         emailVerification: 'Email Verification',
         emailVerificationHint: 'Require email verification for new registrations',
+        emailSuffixWhitelist: 'Email Domain Whitelist',
+        emailSuffixWhitelistHint:
+          "Only email addresses from the specified domains can register (for example, {'@'}qq.com, {'@'}gmail.com)",
+        emailSuffixWhitelistPlaceholder: 'example.com',
+        emailSuffixWhitelistInputHint: 'Leave empty for no restriction',
         promoCode: 'Promo Code',
         promoCodeHint: 'Allow users to use promo codes during registration',
         invitationCode: 'Invitation Code Registration',
@@ -3645,6 +3693,12 @@ export default {
         minVersionHint:
           'Reject Claude Code clients below this version (semver format). Leave empty to disable version check.'
       },
+      scheduling: {
+        title: 'Gateway Scheduling Settings',
+        description: 'Control API Key scheduling behavior',
+        allowUngroupedKey: 'Allow Ungrouped Key Scheduling',
+        allowUngroupedKeyHint: 'When disabled, API Keys not assigned to any group cannot make requests (403 Forbidden). Keep disabled to ensure all Keys belong to a specific group.'
+      },
       site: {
         title: 'Site Settings',
         description: 'Customize site branding',
@@ -3700,6 +3754,27 @@ export default {
         description: 'Control whether to show the Sora client entry in the sidebar',
         enabled: 'Enable Sora Client',
         enabledHint: 'When enabled, the Sora entry will be shown in the sidebar for users to access Sora features'
+      },
+      customMenu: {
+        title: 'Custom Menu Pages',
+        description: 'Add custom iframe pages to the sidebar navigation. Each page can be visible to regular users or administrators.',
+        itemLabel: 'Menu Item #{n}',
+        name: 'Menu Name',
+        namePlaceholder: 'e.g. Help Center',
+        url: 'Page URL',
+        urlPlaceholder: 'https://example.com/page',
+        iconSvg: 'SVG Icon',
+        iconSvgPlaceholder: '<svg>...</svg>',
+        iconPreview: 'Icon Preview',
+        uploadSvg: 'Upload SVG',
+        removeSvg: 'Remove',
+        visibility: 'Visible To',
+        visibilityUser: 'Regular Users',
+        visibilityAdmin: 'Administrators',
+        add: 'Add Menu Item',
+        remove: 'Remove',
+        moveUp: 'Move Up',
+        moveDown: 'Move Down',
       },
       smtp: {
         title: 'SMTP Settings',
@@ -3987,6 +4062,16 @@ export default {
     notConfiguredTitle: 'Recharge / Subscription URL not configured',
     notConfiguredDesc:
       'The administrator enabled the entry but has not configured a recharge/subscription URL. Please contact admin.'
+  },
+
+  // Custom Page (iframe embed)
+  customPage: {
+    title: 'Custom Page',
+    openInNewTab: 'Open in new tab',
+    notFoundTitle: 'Page not found',
+    notFoundDesc: 'This custom page does not exist or has been removed.',
+    notConfiguredTitle: 'Page URL not configured',
+    notConfiguredDesc: 'The URL for this custom page has not been properly configured.',
   },
 
   // Announcements Page

@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '../client'
+import type { CustomMenuItem } from '@/types'
 
 export interface DefaultSubscriptionSetting {
   group_id: number
@@ -17,6 +18,7 @@ export interface SystemSettings {
   // Registration settings
   registration_enabled: boolean
   email_verify_enabled: boolean
+  registration_email_suffix_whitelist: string[]
   promo_code_enabled: boolean
   password_reset_enabled: boolean
   invitation_code_enabled: boolean
@@ -39,6 +41,7 @@ export interface SystemSettings {
   purchase_subscription_url: string
   purchase_subscription_open_mode: string // 'iframe' or 'new_window'
   sora_client_enabled: boolean
+  custom_menu_items: CustomMenuItem[]
   // SMTP settings
   smtp_host: string
   smtp_port: number
@@ -77,11 +80,15 @@ export interface SystemSettings {
 
   // Claude Code version check
   min_claude_code_version: string
+
+  // 分组隔离
+  allow_ungrouped_key_scheduling: boolean
 }
 
 export interface UpdateSettingsRequest {
   registration_enabled?: boolean
   email_verify_enabled?: boolean
+  registration_email_suffix_whitelist?: string[]
   promo_code_enabled?: boolean
   password_reset_enabled?: boolean
   invitation_code_enabled?: boolean
@@ -101,6 +108,7 @@ export interface UpdateSettingsRequest {
   purchase_subscription_url?: string
   purchase_subscription_open_mode?: string // 'iframe' or 'new_window'
   sora_client_enabled?: boolean
+  custom_menu_items?: CustomMenuItem[]
   smtp_host?: string
   smtp_port?: number
   smtp_username?: string
@@ -127,6 +135,7 @@ export interface UpdateSettingsRequest {
   ops_query_mode_default?: 'auto' | 'raw' | 'preagg' | string
   ops_metrics_interval_seconds?: number
   min_claude_code_version?: string
+  allow_ungrouped_key_scheduling?: boolean
 }
 
 /**

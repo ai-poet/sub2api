@@ -47,6 +47,17 @@ type APIKey struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 
+	// Rate limit fields
+	RateLimit5h   float64    `json:"rate_limit_5h"`
+	RateLimit1d   float64    `json:"rate_limit_1d"`
+	RateLimit7d   float64    `json:"rate_limit_7d"`
+	Usage5h       float64    `json:"usage_5h"`
+	Usage1d       float64    `json:"usage_1d"`
+	Usage7d       float64    `json:"usage_7d"`
+	Window5hStart *time.Time `json:"window_5h_start"`
+	Window1dStart *time.Time `json:"window_1d_start"`
+	Window7dStart *time.Time `json:"window_7d_start"`
+
 	User  *User  `json:"user,omitempty"`
 	Group *Group `json:"group,omitempty"`
 }
@@ -155,9 +166,10 @@ type Account struct {
 
 	// RPM 限制（仅 Anthropic OAuth/SetupToken 账号有效）
 	// 从 extra 字段提取，方便前端显示和编辑
-	BaseRPM         *int    `json:"base_rpm,omitempty"`
-	RPMStrategy     *string `json:"rpm_strategy,omitempty"`
-	RPMStickyBuffer *int    `json:"rpm_sticky_buffer,omitempty"`
+	BaseRPM          *int    `json:"base_rpm,omitempty"`
+	RPMStrategy      *string `json:"rpm_strategy,omitempty"`
+	RPMStickyBuffer  *int    `json:"rpm_sticky_buffer,omitempty"`
+	UserMsgQueueMode *string `json:"user_msg_queue_mode,omitempty"`
 
 	// TLS指纹伪装（仅 Anthropic OAuth/SetupToken 账号有效）
 	// 从 extra 字段提取，方便前端显示和编辑
