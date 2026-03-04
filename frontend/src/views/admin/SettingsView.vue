@@ -53,6 +53,264 @@
                   {{ t('admin.settings.adminApiKey.securityWarning') }}
                 </p>
               </div>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="adminApiKeyLoading" class="flex items-center gap-2 text-gray-500">
+              <div class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"></div>
+              {{ t('common.loading') }}
+            </div>
+
+            <!-- No Key Configured -->
+            <div v-else-if="!adminApiKeyExists" class="flex items-center justify-between">
+              <span class="text-gray-500 dark:text-gray-400">
+                {{ t('admin.settings.adminApiKey.notConfigured') }}
+              </span>
+              <button
+                type="button"
+                @click="createAdminApiKey"
+                :disabled="adminApiKeyOperating"
+                class="btn btn-primary btn-sm"
+              >
+                <svg
+                  v-if="adminApiKeyOperating"
+                  class="mr-1 h-4 w-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                {{
+                  adminApiKeyOperating
+                    ? t('admin.settings.adminApiKey.creating')
+                    : t('admin.settings.adminApiKey.create')
+                }}
+              </button>
+            </div>
+
+            <!-- Key Exists -->
+            <div v-else class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.adminApiKey.currentKey') }}
+                  </label>
+                  <code
+                    class="rounded bg-gray-100 px-2 py-1 font-mono text-sm text-gray-900 dark:bg-dark-700 dark:text-gray-100"
+                  >
+                    {{ adminApiKeyMasked }}
+                  </code>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    @click="regenerateAdminApiKey"
+                    :disabled="adminApiKeyOperating"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    {{
+                      adminApiKeyOperating
+                        ? t('admin.settings.adminApiKey.regenerating')
+                        : t('admin.settings.adminApiKey.regenerate')
+                    }}
+                  </button>
+                  <button
+                    type="button"
+                    @click="deleteAdminApiKey"
+                    :disabled="adminApiKeyOperating"
+                    class="btn btn-secondary btn-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                  >
+                    {{ t('admin.settings.adminApiKey.delete') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Newly Generated Key Display -->
+              <div
+                v-if="newAdminApiKey"
+                class="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
+              >
+                <p class="text-sm font-medium text-green-700 dark:text-green-300">
+                  {{ t('admin.settings.adminApiKey.keyWarning') }}
+                </p>
+                <div class="flex items-center gap-2">
+                  <code
+                    class="flex-1 select-all break-all rounded border border-green-300 bg-white px-3 py-2 font-mono text-sm dark:border-green-700 dark:bg-dark-800"
+                  >
+                    {{ newAdminApiKey }}
+                  </code>
+                  <button
+                    type="button"
+                    @click="copyNewKey"
+                    class="btn btn-primary btn-sm flex-shrink-0"
+                  >
+                    {{ t('admin.settings.adminApiKey.copyKey') }}
+                  </button>
+                </div>
+                <p class="text-xs text-green-600 dark:text-green-400">
+                  {{ t('admin.settings.adminApiKey.usage') }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /Tab: Security — Admin API Key -->
+
+        <!-- Tab: Gateway — Stream Timeout -->
+        <div v-show="activeTab === 'gateway'" class="space-y-6">
+        <!-- Stream Timeout Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.streamTimeout.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.streamTimeout.description') }}
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <!-- Loading State -->
+            <div v-if="streamTimeoutLoading" class="flex items-center gap-2 text-gray-500">
+              <div class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"></div>
+              {{ t('common.loading') }}
+            </div>
+
+            <template v-else>
+              <!-- Enable Stream Timeout -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="font-medium text-gray-900 dark:text-white">{{
+                    t('admin.settings.streamTimeout.enabled')
+                  }}</label>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.streamTimeout.enabledHint') }}
+                  </p>
+                </div>
+                <Toggle v-model="streamTimeoutForm.enabled" />
+              </div>
+
+              <!-- Settings - Only show when enabled -->
+              <div
+                v-if="streamTimeoutForm.enabled"
+                class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700"
+              >
+                <!-- Action -->
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.streamTimeout.action') }}
+                  </label>
+                  <select v-model="streamTimeoutForm.action" class="input w-64">
+                    <option value="temp_unsched">{{ t('admin.settings.streamTimeout.actionTempUnsched') }}</option>
+                    <option value="error">{{ t('admin.settings.streamTimeout.actionError') }}</option>
+                    <option value="none">{{ t('admin.settings.streamTimeout.actionNone') }}</option>
+                  </select>
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.streamTimeout.actionHint') }}
+                  </p>
+                </div>
+
+                <!-- Temp Unsched Minutes (only show when action is temp_unsched) -->
+                <div v-if="streamTimeoutForm.action === 'temp_unsched'">
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.streamTimeout.tempUnschedMinutes') }}
+                  </label>
+                  <input
+                    v-model.number="streamTimeoutForm.temp_unsched_minutes"
+                    type="number"
+                    min="1"
+                    max="60"
+                    class="input w-32"
+                  />
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.streamTimeout.tempUnschedMinutesHint') }}
+                  </p>
+                </div>
+
+                <!-- Threshold Count -->
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.streamTimeout.thresholdCount') }}
+                  </label>
+                  <input
+                    v-model.number="streamTimeoutForm.threshold_count"
+                    type="number"
+                    min="1"
+                    max="10"
+                    class="input w-32"
+                  />
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.streamTimeout.thresholdCountHint') }}
+                  </p>
+                </div>
+
+                <!-- Threshold Window Minutes -->
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.streamTimeout.thresholdWindowMinutes') }}
+                  </label>
+                  <input
+                    v-model.number="streamTimeoutForm.threshold_window_minutes"
+                    type="number"
+                    min="1"
+                    max="60"
+                    class="input w-32"
+                  />
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.streamTimeout.thresholdWindowMinutesHint') }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Save Button -->
+              <div class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700">
+                <button
+                  type="button"
+                  @click="saveStreamTimeoutSettings"
+                  :disabled="streamTimeoutSaving"
+                  class="btn btn-primary btn-sm"
+                >
+                  <svg
+                    v-if="streamTimeoutSaving"
+                    class="mr-1 h-4 w-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  {{ streamTimeoutSaving ? t('common.saving') : t('common.save') }}
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+        </div><!-- /Tab: Gateway — Stream Timeout (continued below with Claude Code & Scheduling) -->
+
+        <!-- Tab: Security — Registration, Turnstile, LinuxDo -->
+        <div v-show="activeTab === 'security'" class="space-y-6">
         <!-- Registration Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -385,317 +643,8 @@
               </div>
             </div>
           </div>
-            </div>
-
-            <!-- Loading State -->
-            <div v-if="adminApiKeyLoading" class="flex items-center gap-2 text-gray-500">
-              <div class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"></div>
-              {{ t('common.loading') }}
-            </div>
-
-            <!-- No Key Configured -->
-            <div v-else-if="!adminApiKeyExists" class="flex items-center justify-between">
-              <span class="text-gray-500 dark:text-gray-400">
-                {{ t('admin.settings.adminApiKey.notConfigured') }}
-              </span>
-              <button
-                type="button"
-                @click="createAdminApiKey"
-                :disabled="adminApiKeyOperating"
-                class="btn btn-primary btn-sm"
-              >
-                <svg
-                  v-if="adminApiKeyOperating"
-                  class="mr-1 h-4 w-4 animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  ></circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                {{
-                  adminApiKeyOperating
-                    ? t('admin.settings.adminApiKey.creating')
-                    : t('admin.settings.adminApiKey.create')
-                }}
-              </button>
-            </div>
-
-            <!-- Key Exists -->
-            <div v-else class="space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ t('admin.settings.adminApiKey.currentKey') }}
-                  </label>
-                  <code
-                    class="rounded bg-gray-100 px-2 py-1 font-mono text-sm text-gray-900 dark:bg-dark-700 dark:text-gray-100"
-                  >
-                    {{ adminApiKeyMasked }}
-                  </code>
-                </div>
-                <div class="flex gap-2">
-                  <button
-                    type="button"
-                    @click="regenerateAdminApiKey"
-                    :disabled="adminApiKeyOperating"
-                    class="btn btn-secondary btn-sm"
-                  >
-                    {{
-                      adminApiKeyOperating
-                        ? t('admin.settings.adminApiKey.regenerating')
-                        : t('admin.settings.adminApiKey.regenerate')
-                    }}
-                  </button>
-                  <button
-                    type="button"
-                    @click="deleteAdminApiKey"
-                    :disabled="adminApiKeyOperating"
-                    class="btn btn-secondary btn-sm text-red-600 hover:text-red-700 dark:text-red-400"
-                  >
-                    {{ t('admin.settings.adminApiKey.delete') }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Newly Generated Key Display -->
-              <div
-                v-if="newAdminApiKey"
-                class="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
-              >
-                <p class="text-sm font-medium text-green-700 dark:text-green-300">
-                  {{ t('admin.settings.adminApiKey.keyWarning') }}
-                </p>
-                <div class="flex items-center gap-2">
-                  <code
-                    class="flex-1 select-all break-all rounded border border-green-300 bg-white px-3 py-2 font-mono text-sm dark:border-green-700 dark:bg-dark-800"
-                  >
-                    {{ newAdminApiKey }}
-                  </code>
-                  <button
-                    type="button"
-                    @click="copyNewKey"
-                    class="btn btn-primary btn-sm flex-shrink-0"
-                  >
-                    {{ t('admin.settings.adminApiKey.copyKey') }}
-                  </button>
-                </div>
-                <p class="text-xs text-green-600 dark:text-green-400">
-                  {{ t('admin.settings.adminApiKey.usage') }}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
-        </div>
-
-        <!-- Tab: Gateway — Stream Timeout -->
-        <div v-show="activeTab === 'gateway'" class="space-y-6">
-        <!-- Stream Timeout Settings -->
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.streamTimeout.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.streamTimeout.description') }}
-            </p>
-          </div>
-          <div class="space-y-5 p-6">
-            <!-- Loading State -->
-            <div v-if="streamTimeoutLoading" class="flex items-center gap-2 text-gray-500">
-              <div class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"></div>
-              {{ t('common.loading') }}
-            </div>
-
-            <template v-else>
-              <!-- Enable Stream Timeout -->
-              <div class="flex items-center justify-between">
-                <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
-                    t('admin.settings.streamTimeout.enabled')
-                  }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ t('admin.settings.streamTimeout.enabledHint') }}
-                  </p>
-                </div>
-                <Toggle v-model="streamTimeoutForm.enabled" />
-              </div>
-
-              <!-- Settings - Only show when enabled -->
-              <div
-                v-if="streamTimeoutForm.enabled"
-                class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700"
-              >
-                <!-- Action -->
-                <div>
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ t('admin.settings.streamTimeout.action') }}
-                  </label>
-                  <select v-model="streamTimeoutForm.action" class="input w-64">
-                    <option value="temp_unsched">{{ t('admin.settings.streamTimeout.actionTempUnsched') }}</option>
-                    <option value="error">{{ t('admin.settings.streamTimeout.actionError') }}</option>
-                    <option value="none">{{ t('admin.settings.streamTimeout.actionNone') }}</option>
-                  </select>
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {{ t('admin.settings.streamTimeout.actionHint') }}
-                  </p>
-                </div>
-
-                <!-- Temp Unsched Minutes (only show when action is temp_unsched) -->
-                <div v-if="streamTimeoutForm.action === 'temp_unsched'">
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ t('admin.settings.streamTimeout.tempUnschedMinutes') }}
-                  </label>
-                  <input
-                    v-model.number="streamTimeoutForm.temp_unsched_minutes"
-                    type="number"
-                    min="1"
-                    max="60"
-                    class="input w-32"
-                  />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {{ t('admin.settings.streamTimeout.tempUnschedMinutesHint') }}
-                  </p>
-                </div>
-
-                <!-- Threshold Count -->
-                <div>
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ t('admin.settings.streamTimeout.thresholdCount') }}
-                  </label>
-                  <input
-                    v-model.number="streamTimeoutForm.threshold_count"
-                    type="number"
-                    min="1"
-                    max="10"
-                    class="input w-32"
-                  />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {{ t('admin.settings.streamTimeout.thresholdCountHint') }}
-                  </p>
-                </div>
-
-                <!-- Threshold Window Minutes -->
-                <div>
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ t('admin.settings.streamTimeout.thresholdWindowMinutes') }}
-                  </label>
-                  <input
-                    v-model.number="streamTimeoutForm.threshold_window_minutes"
-                    type="number"
-                    min="1"
-                    max="60"
-                    class="input w-32"
-                  />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {{ t('admin.settings.streamTimeout.thresholdWindowMinutesHint') }}
-                  </p>
-                </div>
-              </div>
-
-              <!-- Save Button -->
-              <div class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700">
-                <button
-                  type="button"
-                  @click="saveStreamTimeoutSettings"
-                  :disabled="streamTimeoutSaving"
-                  class="btn btn-primary btn-sm"
-                >
-                  <svg
-                    v-if="streamTimeoutSaving"
-                    class="mr-1 h-4 w-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  {{ streamTimeoutSaving ? t('common.saving') : t('common.save') }}
-                </button>
-              </div>
-            </template>
-          </div>
-        </div>
-        <!-- Claude Code Settings -->
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.claudeCode.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.claudeCode.description') }}
-            </p>
-          </div>
-          <div class="p-6">
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ t('admin.settings.claudeCode.minVersion') }}
-              </label>
-              <input
-                v-model="form.min_claude_code_version"
-                type="text"
-                class="input max-w-xs font-mono text-sm"
-                :placeholder="t('admin.settings.claudeCode.minVersionPlaceholder')"
-                pattern="\d+\.\d+\.\d+"
-              />
-              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                {{ t('admin.settings.claudeCode.minVersionHint') }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Gateway Scheduling Settings -->
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.scheduling.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.scheduling.description') }}
-            </p>
-          </div>
-          <div class="p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.scheduling.allowUngroupedKey') }}
-                </label>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.scheduling.allowUngroupedKeyHint') }}
-                </p>
-              </div>
-              <label class="toggle">
-                <input v-model="form.allow_ungrouped_key_scheduling" type="checkbox" />
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        </div><!-- /Tab: Gateway — Stream Timeout -->
-
+        </div><!-- /Tab: Security — Registration, Turnstile, LinuxDo -->
 
         <!-- Tab: Users -->
         <div v-show="activeTab === 'users'" class="space-y-6">
@@ -839,6 +788,65 @@
         </div>
         </div><!-- /Tab: Users -->
 
+        <!-- Tab: Gateway — Claude Code, Scheduling -->
+        <div v-show="activeTab === 'gateway'" class="space-y-6">
+        <!-- Claude Code Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.claudeCode.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.claudeCode.description') }}
+            </p>
+          </div>
+          <div class="p-6">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('admin.settings.claudeCode.minVersion') }}
+              </label>
+              <input
+                v-model="form.min_claude_code_version"
+                type="text"
+                class="input max-w-xs font-mono text-sm"
+                :placeholder="t('admin.settings.claudeCode.minVersionPlaceholder')"
+                pattern="\d+\.\d+\.\d+"
+              />
+              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('admin.settings.claudeCode.minVersionHint') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gateway Scheduling Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.scheduling.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.scheduling.description') }}
+            </p>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.settings.scheduling.allowUngroupedKey') }}
+                </label>
+                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.scheduling.allowUngroupedKeyHint') }}
+                </p>
+              </div>
+              <label class="toggle">
+                <input v-model="form.allow_ungrouped_key_scheduling" type="checkbox" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        </div><!-- /Tab: Gateway — Claude Code, Scheduling -->
 
         <!-- Tab: General -->
         <div v-show="activeTab === 'general'" class="space-y-6">
@@ -1096,6 +1104,8 @@
             </div>
           </div>
         </div>
+
+        <!-- Sora Client Toggle -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1516,6 +1526,12 @@ import {
   parseRegistrationEmailSuffixWhitelistInput
 } from '@/utils/registrationEmailPolicy'
 
+function normalizePurchaseSubscriptionOpenMode(mode?: string): string {
+  const normalized = (mode || '').trim()
+  if (normalized === 'new_window') return 'new_window'
+  return 'iframe'
+}
+
 const { t } = useI18n()
 const appStore = useAppStore()
 const adminSettingsStore = useAdminSettingsStore()
@@ -1572,10 +1588,6 @@ type SettingsForm = SystemSettings & {
   smtp_password: string
   turnstile_secret_key: string
   linuxdo_connect_client_secret: string
-}
-
-function normalizePurchaseSubscriptionOpenMode(mode?: string): string {
-  return mode === 'new_window' ? 'new_window' : 'iframe'
 }
 
 const form = reactive<SettingsForm>({
