@@ -146,28 +146,28 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 	passwordResetEnabled := emailVerifyEnabled && settings[SettingKeyPasswordResetEnabled] == "true"
 
 	return &PublicSettings{
-		RegistrationEnabled:         settings[SettingKeyRegistrationEnabled] == "true",
-		EmailVerifyEnabled:          emailVerifyEnabled,
-		PromoCodeEnabled:            settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用
-		PasswordResetEnabled:        passwordResetEnabled,
-		InvitationCodeEnabled:       settings[SettingKeyInvitationCodeEnabled] == "true",
-		TotpEnabled:                 settings[SettingKeyTotpEnabled] == "true",
-		TurnstileEnabled:            settings[SettingKeyTurnstileEnabled] == "true",
-		TurnstileSiteKey:            settings[SettingKeyTurnstileSiteKey],
-		SiteName:                    s.getStringOrDefault(settings, SettingKeySiteName, "Sub2API"),
-		SiteLogo:                    settings[SettingKeySiteLogo],
-		SiteSubtitle:                s.getStringOrDefault(settings, SettingKeySiteSubtitle, "Subscription to API Conversion Platform"),
-		APIBaseURL:                  settings[SettingKeyAPIBaseURL],
-		ContactInfo:                 settings[SettingKeyContactInfo],
-		DocURL:                      settings[SettingKeyDocURL],
-		HomeContent:                 settings[SettingKeyHomeContent],
-		HideCcsImportButton:         settings[SettingKeyHideCcsImportButton] == "true",
+		RegistrationEnabled:          settings[SettingKeyRegistrationEnabled] == "true",
+		EmailVerifyEnabled:           emailVerifyEnabled,
+		PromoCodeEnabled:             settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用
+		PasswordResetEnabled:         passwordResetEnabled,
+		InvitationCodeEnabled:        settings[SettingKeyInvitationCodeEnabled] == "true",
+		TotpEnabled:                  settings[SettingKeyTotpEnabled] == "true",
+		TurnstileEnabled:             settings[SettingKeyTurnstileEnabled] == "true",
+		TurnstileSiteKey:             settings[SettingKeyTurnstileSiteKey],
+		SiteName:                     s.getStringOrDefault(settings, SettingKeySiteName, "Sub2API"),
+		SiteLogo:                     settings[SettingKeySiteLogo],
+		SiteSubtitle:                 s.getStringOrDefault(settings, SettingKeySiteSubtitle, "Subscription to API Conversion Platform"),
+		APIBaseURL:                   settings[SettingKeyAPIBaseURL],
+		ContactInfo:                  settings[SettingKeyContactInfo],
+		DocURL:                       settings[SettingKeyDocURL],
+		HomeContent:                  settings[SettingKeyHomeContent],
+		HideCcsImportButton:          settings[SettingKeyHideCcsImportButton] == "true",
 		PurchaseSubscriptionEnabled:  settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:      strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		PurchaseSubscriptionOpenMode: s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
 		SoraClientEnabled:            settings[SettingKeySoraClientEnabled] == "true",
-		LinuxDoOAuthEnabled:         linuxDoEnabled,
-		ReferralEnabled:             settings[SettingKeyReferralEnabled] == "true",
+		LinuxDoOAuthEnabled:          linuxDoEnabled,
+		ReferralEnabled:              settings[SettingKeyReferralEnabled] == "true",
 	}, nil
 }
 
@@ -197,51 +197,53 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 
 	// Return a struct that matches the frontend's expected format
 	return &struct {
-		RegistrationEnabled         bool   `json:"registration_enabled"`
-		EmailVerifyEnabled          bool   `json:"email_verify_enabled"`
-		PromoCodeEnabled            bool   `json:"promo_code_enabled"`
-		PasswordResetEnabled        bool   `json:"password_reset_enabled"`
-		InvitationCodeEnabled       bool   `json:"invitation_code_enabled"`
-		TotpEnabled                 bool   `json:"totp_enabled"`
-		TurnstileEnabled            bool   `json:"turnstile_enabled"`
-		TurnstileSiteKey            string `json:"turnstile_site_key,omitempty"`
-		SiteName                    string `json:"site_name"`
-		SiteLogo                    string `json:"site_logo,omitempty"`
-		SiteSubtitle                string `json:"site_subtitle,omitempty"`
-		APIBaseURL                  string `json:"api_base_url,omitempty"`
-		ContactInfo                 string `json:"contact_info,omitempty"`
-		DocURL                      string `json:"doc_url,omitempty"`
-		HomeContent                 string `json:"home_content,omitempty"`
-		HideCcsImportButton         bool   `json:"hide_ccs_import_button"`
-		PurchaseSubscriptionEnabled bool   `json:"purchase_subscription_enabled"`
-		PurchaseSubscriptionURL     string `json:"purchase_subscription_url,omitempty"`
-		SoraClientEnabled           bool   `json:"sora_client_enabled"`
-		LinuxDoOAuthEnabled         bool   `json:"linuxdo_oauth_enabled"`
-		ReferralEnabled             bool   `json:"referral_enabled"`
-		Version                     string `json:"version,omitempty"`
+		RegistrationEnabled          bool   `json:"registration_enabled"`
+		EmailVerifyEnabled           bool   `json:"email_verify_enabled"`
+		PromoCodeEnabled             bool   `json:"promo_code_enabled"`
+		PasswordResetEnabled         bool   `json:"password_reset_enabled"`
+		InvitationCodeEnabled        bool   `json:"invitation_code_enabled"`
+		TotpEnabled                  bool   `json:"totp_enabled"`
+		TurnstileEnabled             bool   `json:"turnstile_enabled"`
+		TurnstileSiteKey             string `json:"turnstile_site_key,omitempty"`
+		SiteName                     string `json:"site_name"`
+		SiteLogo                     string `json:"site_logo,omitempty"`
+		SiteSubtitle                 string `json:"site_subtitle,omitempty"`
+		APIBaseURL                   string `json:"api_base_url,omitempty"`
+		ContactInfo                  string `json:"contact_info,omitempty"`
+		DocURL                       string `json:"doc_url,omitempty"`
+		HomeContent                  string `json:"home_content,omitempty"`
+		HideCcsImportButton          bool   `json:"hide_ccs_import_button"`
+		PurchaseSubscriptionEnabled  bool   `json:"purchase_subscription_enabled"`
+		PurchaseSubscriptionURL      string `json:"purchase_subscription_url,omitempty"`
+		PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"`
+		SoraClientEnabled            bool   `json:"sora_client_enabled"`
+		LinuxDoOAuthEnabled          bool   `json:"linuxdo_oauth_enabled"`
+		ReferralEnabled              bool   `json:"referral_enabled"`
+		Version                      string `json:"version,omitempty"`
 	}{
-		RegistrationEnabled:         settings.RegistrationEnabled,
-		EmailVerifyEnabled:          settings.EmailVerifyEnabled,
-		PromoCodeEnabled:            settings.PromoCodeEnabled,
-		PasswordResetEnabled:        settings.PasswordResetEnabled,
-		InvitationCodeEnabled:       settings.InvitationCodeEnabled,
-		TotpEnabled:                 settings.TotpEnabled,
-		TurnstileEnabled:            settings.TurnstileEnabled,
-		TurnstileSiteKey:            settings.TurnstileSiteKey,
-		SiteName:                    settings.SiteName,
-		SiteLogo:                    settings.SiteLogo,
-		SiteSubtitle:                settings.SiteSubtitle,
-		APIBaseURL:                  settings.APIBaseURL,
-		ContactInfo:                 settings.ContactInfo,
-		DocURL:                      settings.DocURL,
-		HomeContent:                 settings.HomeContent,
-		HideCcsImportButton:         settings.HideCcsImportButton,
-		PurchaseSubscriptionEnabled: settings.PurchaseSubscriptionEnabled,
-		PurchaseSubscriptionURL:     settings.PurchaseSubscriptionURL,
-		SoraClientEnabled:           settings.SoraClientEnabled,
-		LinuxDoOAuthEnabled:         settings.LinuxDoOAuthEnabled,
-		ReferralEnabled:             settings.ReferralEnabled,
-		Version:                     s.version,
+		RegistrationEnabled:          settings.RegistrationEnabled,
+		EmailVerifyEnabled:           settings.EmailVerifyEnabled,
+		PromoCodeEnabled:             settings.PromoCodeEnabled,
+		PasswordResetEnabled:         settings.PasswordResetEnabled,
+		InvitationCodeEnabled:        settings.InvitationCodeEnabled,
+		TotpEnabled:                  settings.TotpEnabled,
+		TurnstileEnabled:             settings.TurnstileEnabled,
+		TurnstileSiteKey:             settings.TurnstileSiteKey,
+		SiteName:                     settings.SiteName,
+		SiteLogo:                     settings.SiteLogo,
+		SiteSubtitle:                 settings.SiteSubtitle,
+		APIBaseURL:                   settings.APIBaseURL,
+		ContactInfo:                  settings.ContactInfo,
+		DocURL:                       settings.DocURL,
+		HomeContent:                  settings.HomeContent,
+		HideCcsImportButton:          settings.HideCcsImportButton,
+		PurchaseSubscriptionEnabled:  settings.PurchaseSubscriptionEnabled,
+		PurchaseSubscriptionURL:      settings.PurchaseSubscriptionURL,
+		PurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode,
+		SoraClientEnabled:            settings.SoraClientEnabled,
+		LinuxDoOAuthEnabled:          settings.LinuxDoOAuthEnabled,
+		ReferralEnabled:              settings.ReferralEnabled,
+		Version:                      s.version,
 	}, nil
 }
 
@@ -508,20 +510,20 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 
 	// 初始化默认设置
 	defaults := map[string]string{
-		SettingKeyRegistrationEnabled:         "true",
-		SettingKeyEmailVerifyEnabled:          "false",
-		SettingKeyPromoCodeEnabled:            "true", // 默认启用优惠码功能
-		SettingKeySiteName:                    "Sub2API",
-		SettingKeySiteLogo:                    "",
+		SettingKeyRegistrationEnabled:          "true",
+		SettingKeyEmailVerifyEnabled:           "false",
+		SettingKeyPromoCodeEnabled:             "true", // 默认启用优惠码功能
+		SettingKeySiteName:                     "Sub2API",
+		SettingKeySiteLogo:                     "",
 		SettingKeyPurchaseSubscriptionEnabled:  "false",
 		SettingKeyPurchaseSubscriptionURL:      "",
 		SettingKeyPurchaseSubscriptionOpenMode: "iframe",
 		SettingKeySoraClientEnabled:            "false",
-		SettingKeyDefaultConcurrency:          strconv.Itoa(s.cfg.Default.UserConcurrency),
-		SettingKeyDefaultBalance:              strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
-		SettingKeyDefaultSubscriptions:        "[]",
-		SettingKeySMTPPort:                    "587",
-		SettingKeySMTPUseTLS:                  "false",
+		SettingKeyDefaultConcurrency:           strconv.Itoa(s.cfg.Default.UserConcurrency),
+		SettingKeyDefaultBalance:               strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
+		SettingKeyDefaultSubscriptions:         "[]",
+		SettingKeySMTPPort:                     "587",
+		SettingKeySMTPUseTLS:                   "false",
 		// Model fallback defaults
 		SettingKeyEnableModelFallback:      "false",
 		SettingKeyFallbackModelAnthropic:   "claude-3-5-sonnet-20241022",

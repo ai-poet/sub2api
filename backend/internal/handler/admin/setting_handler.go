@@ -142,17 +142,18 @@ type UpdateSettingsRequest struct {
 	LinuxDoConnectRedirectURL  string `json:"linuxdo_connect_redirect_url"`
 
 	// OEM设置
-	SiteName                    string  `json:"site_name"`
-	SiteLogo                    string  `json:"site_logo"`
-	SiteSubtitle                string  `json:"site_subtitle"`
-	APIBaseURL                  string  `json:"api_base_url"`
-	ContactInfo                 string  `json:"contact_info"`
-	DocURL                      string  `json:"doc_url"`
-	HomeContent                 string  `json:"home_content"`
-	HideCcsImportButton         bool    `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled *bool   `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL     *string `json:"purchase_subscription_url"`
-	SoraClientEnabled           bool    `json:"sora_client_enabled"`
+	SiteName                     string  `json:"site_name"`
+	SiteLogo                     string  `json:"site_logo"`
+	SiteSubtitle                 string  `json:"site_subtitle"`
+	APIBaseURL                   string  `json:"api_base_url"`
+	ContactInfo                  string  `json:"contact_info"`
+	DocURL                       string  `json:"doc_url"`
+	HomeContent                  string  `json:"home_content"`
+	HideCcsImportButton          bool    `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled  *bool   `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL      *string `json:"purchase_subscription_url"`
+	PurchaseSubscriptionOpenMode *string `json:"purchase_subscription_open_mode"`
+	SoraClientEnabled            bool    `json:"sora_client_enabled"`
 
 	// 默认配置
 	DefaultConcurrency   int                              `json:"default_concurrency"`
@@ -281,6 +282,14 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	if req.PurchaseSubscriptionURL != nil {
 		purchaseURL = strings.TrimSpace(*req.PurchaseSubscriptionURL)
 	}
+	purchaseOpenMode := normalizePurchaseSubscriptionOpenMode(previousSettings.PurchaseSubscriptionOpenMode)
+	if req.PurchaseSubscriptionOpenMode != nil {
+		purchaseOpenMode = normalizePurchaseSubscriptionOpenMode(*req.PurchaseSubscriptionOpenMode)
+	}
+	if purchaseOpenMode != "iframe" && purchaseOpenMode != "new_window" {
+		response.BadRequest(c, "Purchase Subscription open mode must be 'iframe' or 'new_window'")
+		return
+	}
 
 	// - 启用时要求 URL 合法且非空
 	// - 禁用时允许为空；若提供了 URL 也做基本校验，避免误配置
@@ -328,48 +337,49 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	}
 
 	settings := &service.SystemSettings{
-		RegistrationEnabled:         req.RegistrationEnabled,
-		EmailVerifyEnabled:          req.EmailVerifyEnabled,
-		PromoCodeEnabled:            req.PromoCodeEnabled,
-		PasswordResetEnabled:        req.PasswordResetEnabled,
-		InvitationCodeEnabled:       req.InvitationCodeEnabled,
-		TotpEnabled:                 req.TotpEnabled,
-		SMTPHost:                    req.SMTPHost,
-		SMTPPort:                    req.SMTPPort,
-		SMTPUsername:                req.SMTPUsername,
-		SMTPPassword:                req.SMTPPassword,
-		SMTPFrom:                    req.SMTPFrom,
-		SMTPFromName:                req.SMTPFromName,
-		SMTPUseTLS:                  req.SMTPUseTLS,
-		TurnstileEnabled:            req.TurnstileEnabled,
-		TurnstileSiteKey:            req.TurnstileSiteKey,
-		TurnstileSecretKey:          req.TurnstileSecretKey,
-		LinuxDoConnectEnabled:       req.LinuxDoConnectEnabled,
-		LinuxDoConnectClientID:      req.LinuxDoConnectClientID,
-		LinuxDoConnectClientSecret:  req.LinuxDoConnectClientSecret,
-		LinuxDoConnectRedirectURL:   req.LinuxDoConnectRedirectURL,
-		SiteName:                    req.SiteName,
-		SiteLogo:                    req.SiteLogo,
-		SiteSubtitle:                req.SiteSubtitle,
-		APIBaseURL:                  req.APIBaseURL,
-		ContactInfo:                 req.ContactInfo,
-		DocURL:                      req.DocURL,
-		HomeContent:                 req.HomeContent,
-		HideCcsImportButton:         req.HideCcsImportButton,
-		PurchaseSubscriptionEnabled: purchaseEnabled,
-		PurchaseSubscriptionURL:     purchaseURL,
-		SoraClientEnabled:           req.SoraClientEnabled,
-		DefaultConcurrency:          req.DefaultConcurrency,
-		DefaultBalance:              req.DefaultBalance,
-		DefaultSubscriptions:        defaultSubscriptions,
-		EnableModelFallback:         req.EnableModelFallback,
-		FallbackModelAnthropic:      req.FallbackModelAnthropic,
-		FallbackModelOpenAI:         req.FallbackModelOpenAI,
-		FallbackModelGemini:         req.FallbackModelGemini,
-		FallbackModelAntigravity:    req.FallbackModelAntigravity,
-		EnableIdentityPatch:         req.EnableIdentityPatch,
-		IdentityPatchPrompt:         req.IdentityPatchPrompt,
-		MinClaudeCodeVersion:        req.MinClaudeCodeVersion,
+		RegistrationEnabled:          req.RegistrationEnabled,
+		EmailVerifyEnabled:           req.EmailVerifyEnabled,
+		PromoCodeEnabled:             req.PromoCodeEnabled,
+		PasswordResetEnabled:         req.PasswordResetEnabled,
+		InvitationCodeEnabled:        req.InvitationCodeEnabled,
+		TotpEnabled:                  req.TotpEnabled,
+		SMTPHost:                     req.SMTPHost,
+		SMTPPort:                     req.SMTPPort,
+		SMTPUsername:                 req.SMTPUsername,
+		SMTPPassword:                 req.SMTPPassword,
+		SMTPFrom:                     req.SMTPFrom,
+		SMTPFromName:                 req.SMTPFromName,
+		SMTPUseTLS:                   req.SMTPUseTLS,
+		TurnstileEnabled:             req.TurnstileEnabled,
+		TurnstileSiteKey:             req.TurnstileSiteKey,
+		TurnstileSecretKey:           req.TurnstileSecretKey,
+		LinuxDoConnectEnabled:        req.LinuxDoConnectEnabled,
+		LinuxDoConnectClientID:       req.LinuxDoConnectClientID,
+		LinuxDoConnectClientSecret:   req.LinuxDoConnectClientSecret,
+		LinuxDoConnectRedirectURL:    req.LinuxDoConnectRedirectURL,
+		SiteName:                     req.SiteName,
+		SiteLogo:                     req.SiteLogo,
+		SiteSubtitle:                 req.SiteSubtitle,
+		APIBaseURL:                   req.APIBaseURL,
+		ContactInfo:                  req.ContactInfo,
+		DocURL:                       req.DocURL,
+		HomeContent:                  req.HomeContent,
+		HideCcsImportButton:          req.HideCcsImportButton,
+		PurchaseSubscriptionEnabled:  purchaseEnabled,
+		PurchaseSubscriptionURL:      purchaseURL,
+		PurchaseSubscriptionOpenMode: purchaseOpenMode,
+		SoraClientEnabled:            req.SoraClientEnabled,
+		DefaultConcurrency:           req.DefaultConcurrency,
+		DefaultBalance:               req.DefaultBalance,
+		DefaultSubscriptions:         defaultSubscriptions,
+		EnableModelFallback:          req.EnableModelFallback,
+		FallbackModelAnthropic:       req.FallbackModelAnthropic,
+		FallbackModelOpenAI:          req.FallbackModelOpenAI,
+		FallbackModelGemini:          req.FallbackModelGemini,
+		FallbackModelAntigravity:     req.FallbackModelAntigravity,
+		EnableIdentityPatch:          req.EnableIdentityPatch,
+		IdentityPatchPrompt:          req.IdentityPatchPrompt,
+		MinClaudeCodeVersion:         req.MinClaudeCodeVersion,
 		OpsMonitoringEnabled: func() bool {
 			if req.OpsMonitoringEnabled != nil {
 				return *req.OpsMonitoringEnabled
@@ -449,6 +459,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		HideCcsImportButton:                  updatedSettings.HideCcsImportButton,
 		PurchaseSubscriptionEnabled:          updatedSettings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              updatedSettings.PurchaseSubscriptionURL,
+		PurchaseSubscriptionOpenMode:         updatedSettings.PurchaseSubscriptionOpenMode,
 		SoraClientEnabled:                    updatedSettings.SoraClientEnabled,
 		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
 		DefaultBalance:                       updatedSettings.DefaultBalance,
@@ -568,6 +579,15 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.HideCcsImportButton != after.HideCcsImportButton {
 		changed = append(changed, "hide_ccs_import_button")
 	}
+	if before.PurchaseSubscriptionEnabled != after.PurchaseSubscriptionEnabled {
+		changed = append(changed, "purchase_subscription_enabled")
+	}
+	if before.PurchaseSubscriptionURL != after.PurchaseSubscriptionURL {
+		changed = append(changed, "purchase_subscription_url")
+	}
+	if before.PurchaseSubscriptionOpenMode != after.PurchaseSubscriptionOpenMode {
+		changed = append(changed, "purchase_subscription_open_mode")
+	}
 	if before.DefaultConcurrency != after.DefaultConcurrency {
 		changed = append(changed, "default_concurrency")
 	}
@@ -631,6 +651,18 @@ func normalizeDefaultSubscriptions(input []dto.DefaultSubscriptionSetting) []dto
 		normalized = append(normalized, item)
 	}
 	return normalized
+}
+
+func normalizePurchaseSubscriptionOpenMode(mode string) string {
+	normalized := strings.TrimSpace(mode)
+	switch normalized {
+	case "", "iframe", "current_tab":
+		return "iframe"
+	case "new_window":
+		return "new_window"
+	default:
+		return normalized
+	}
 }
 
 func equalDefaultSubscriptions(a, b []service.DefaultSubscriptionSetting) bool {

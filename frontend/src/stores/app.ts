@@ -50,6 +50,13 @@ export const useAppStore = defineStore('app', () => {
 
   const loadingCount = ref<number>(0)
 
+  function normalizePurchaseSubscriptionOpenMode(mode?: string): 'iframe' | 'new_window' {
+    if (mode === 'new_window') {
+      return 'new_window'
+    }
+    return 'iframe'
+  }
+
   // ==================== Actions ====================
 
   /**
@@ -283,13 +290,20 @@ export const useAppStore = defineStore('app', () => {
    * Apply settings to store state (internal helper to avoid code duplication)
    */
   function applySettings(config: PublicSettings): void {
-    cachedPublicSettings.value = config
-    siteName.value = config.site_name || 'Sub2API'
-    siteLogo.value = config.site_logo || ''
-    siteVersion.value = config.version || ''
-    contactInfo.value = config.contact_info || ''
-    apiBaseUrl.value = config.api_base_url || ''
-    docUrl.value = config.doc_url || ''
+    const normalizedConfig: PublicSettings = {
+      ...config,
+      purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
+        config.purchase_subscription_open_mode
+      )
+    }
+
+    cachedPublicSettings.value = normalizedConfig
+    siteName.value = normalizedConfig.site_name || 'Sub2API'
+    siteLogo.value = normalizedConfig.site_logo || ''
+    siteVersion.value = normalizedConfig.version || ''
+    contactInfo.value = normalizedConfig.contact_info || ''
+    apiBaseUrl.value = normalizedConfig.api_base_url || ''
+    docUrl.value = normalizedConfig.doc_url || ''
     publicSettingsLoaded.value = true
   }
 
@@ -330,7 +344,7 @@ export const useAppStore = defineStore('app', () => {
         linuxdo_oauth_enabled: false,
         referral_enabled: false,
         sora_client_enabled: false,
-        purchase_subscription_open_mode: 'current_tab',
+        purchase_subscription_open_mode: 'iframe',
         version: siteVersion.value
       }
     }

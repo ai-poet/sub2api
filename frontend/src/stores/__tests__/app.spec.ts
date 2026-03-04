@@ -258,6 +258,7 @@ describe('useAppStore', () => {
         contact_info: 'test@test.com',
         api_base_url: 'https://api.test.com',
         doc_url: 'https://docs.test.com',
+        purchase_subscription_open_mode: 'new_window',
       }
 
       const store = useAppStore()
@@ -267,7 +268,35 @@ describe('useAppStore', () => {
       expect(store.siteName).toBe('TestSite')
       expect(store.siteLogo).toBe('/logo.png')
       expect(store.siteVersion).toBe('1.0.0')
+      expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('new_window')
       expect(store.publicSettingsLoaded).toBe(true)
+    })
+
+    it('注入配置缺失打开方式时默认 iframe', () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = {
+        site_name: 'TestSite',
+      }
+
+      const store = useAppStore()
+      const result = store.initFromInjectedConfig()
+
+      expect(result).toBe(true)
+      expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('iframe')
+    })
+
+    it('注入配置为 legacy current_tab 时归一化为 iframe', () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = {
+        site_name: 'TestSite',
+        purchase_subscription_open_mode: 'current_tab',
+      }
+
+      const store = useAppStore()
+      const result = store.initFromInjectedConfig()
+
+      expect(result).toBe(true)
+      expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('iframe')
     })
 
     it('无注入配置时返回 false', () => {

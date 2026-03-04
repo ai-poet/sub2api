@@ -1358,6 +1358,10 @@ type SettingsForm = SystemSettings & {
   linuxdo_connect_client_secret: string
 }
 
+function normalizePurchaseSubscriptionOpenMode(mode?: string): string {
+  return mode === 'new_window' ? 'new_window' : 'iframe'
+}
+
 const form = reactive<SettingsForm>({
   registration_enabled: true,
   email_verify_enabled: false,
@@ -1488,6 +1492,9 @@ async function loadSettings() {
   try {
     const settings = await adminAPI.settings.getSettings()
     Object.assign(form, settings)
+    form.purchase_subscription_open_mode = normalizePurchaseSubscriptionOpenMode(
+      settings.purchase_subscription_open_mode
+    )
     form.default_subscriptions = Array.isArray(settings.default_subscriptions)
       ? settings.default_subscriptions
           .filter((item) => item.group_id > 0 && item.validity_days > 0)
@@ -1582,7 +1589,9 @@ async function saveSettings() {
       hide_ccs_import_button: form.hide_ccs_import_button,
       purchase_subscription_enabled: form.purchase_subscription_enabled,
       purchase_subscription_url: form.purchase_subscription_url,
-      purchase_subscription_open_mode: form.purchase_subscription_open_mode,
+      purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
+        form.purchase_subscription_open_mode
+      ),
       sora_client_enabled: form.sora_client_enabled,
       smtp_host: form.smtp_host,
       smtp_port: form.smtp_port,
@@ -1609,6 +1618,9 @@ async function saveSettings() {
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
+    form.purchase_subscription_open_mode = normalizePurchaseSubscriptionOpenMode(
+      updated.purchase_subscription_open_mode
+    )
     form.smtp_password = ''
     form.turnstile_secret_key = ''
     form.linuxdo_connect_client_secret = ''
