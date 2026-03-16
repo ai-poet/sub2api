@@ -100,7 +100,7 @@
       </template>
 
       <!-- Regular User View -->
-      <template v-else>
+      <template v-else-if="!appStore.backendModeEnabled">
         <div class="sidebar-section">
           <template v-for="item in userNavItems" :key="item.path || item.externalUrl">
             <!-- External link (opens in new window) -->

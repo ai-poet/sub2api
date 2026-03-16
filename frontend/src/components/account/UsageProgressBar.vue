@@ -1,21 +1,20 @@
 <template>
   <div>
-    <!-- Window stats row (above progress bar, left-right aligned with progress bar) -->
+    <!-- Window stats row (above progress bar) -->
     <div
       v-if="windowStats"
-      class="mb-0.5 flex items-center justify-between"
-      :title="statsTitle || t('admin.accounts.usageWindow.statsTitle')"
+      class="mb-0.5 flex items-center"
     >
-      <div
-        class="flex cursor-help items-center gap-1.5 text-[9px] text-gray-500 dark:text-gray-400"
-      >
+      <div class="flex items-center gap-1.5 text-[9px] text-gray-500 dark:text-gray-400">
         <span class="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-gray-800">
           {{ formatRequests }} req
         </span>
         <span class="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-gray-800">
           {{ formatTokens }}
         </span>
-        <span class="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-gray-800"> A ${{ formatAccountCost }} </span>
+        <span class="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-gray-800">
+          A ${{ formatAccountCost }}
+        </span>
         <span
           v-if="windowStats?.user_cost != null"
           class="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-gray-800"
@@ -57,7 +56,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
 import type { WindowStats } from '@/types'
 
 const props = defineProps<{
@@ -66,10 +64,7 @@ const props = defineProps<{
   resetsAt?: string | null
   color: 'indigo' | 'emerald' | 'purple' | 'amber'
   windowStats?: WindowStats | null
-  statsTitle?: string
 }>()
-
-const { t } = useI18n()
 
 // Label background colors
 const labelClass = computed(() => {
@@ -117,12 +112,12 @@ const displayPercent = computed(() => {
 
 // Format reset time
 const formatResetTime = computed(() => {
-  if (!props.resetsAt) return t('common.notAvailable')
+  if (!props.resetsAt) return '-'
   const date = new Date(props.resetsAt)
   const now = new Date()
   const diffMs = date.getTime() - now.getTime()
 
-  if (diffMs <= 0) return t('common.now')
+  if (diffMs <= 0) return '现在'
 
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
@@ -137,7 +132,7 @@ const formatResetTime = computed(() => {
   }
 })
 
-// Format window stats
+// Window stats formatters
 const formatRequests = computed(() => {
   if (!props.windowStats) return ''
   const r = props.windowStats.requests
@@ -164,4 +159,5 @@ const formatUserCost = computed(() => {
   if (!props.windowStats || props.windowStats.user_cost == null) return '0.00'
   return props.windowStats.user_cost.toFixed(2)
 })
+
 </script>

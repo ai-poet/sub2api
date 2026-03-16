@@ -352,16 +352,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { announcementsAPI } from '@/api'
 import { useAppStore } from '@/stores/app'
+import { useAnnouncementStore } from '@/stores/announcements'
 import { formatRelativeTime, formatRelativeWithDateTime } from '@/utils/format'
 import type { UserAnnouncement } from '@/types'
 import Icon from '@/components/icons/Icon.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const announcementStore = useAnnouncementStore()
 
 // Configure marked
 marked.setOptions({
@@ -369,19 +371,16 @@ marked.setOptions({
   gfm: true,
 })
 
-// State
-const announcements = ref<UserAnnouncement[]>([])
+// Use store state (storeToRefs for reactivity)
+const { announcements, loading } = storeToRefs(announcementStore)
+const unreadCount = computed(() => announcementStore.unreadCount)
+
+// Local modal state
 const isModalOpen = ref(false)
 const detailModalOpen = ref(false)
 const selectedAnnouncement = ref<UserAnnouncement | null>(null)
-const loading = ref(false)
 const showTooltip = ref(false)
 const dismissedTooltipIds = ref<Set<number>>(new Set())
-
-// Computed
-const unreadCount = computed(() =>
-  announcements.value.filter((a) => !a.read_at).length
-)
 
 const latestUnread = computed(() => {
   const unreadAnnouncements = announcements.value.filter(
@@ -397,29 +396,9 @@ function renderMarkdown(content: string): string {
   return DOMPurify.sanitize(html)
 }
 
-async function loadAnnouncements() {
-  try {
-    loading.value = true
-    const allAnnouncements = await announcementsAPI.list(false)
-    announcements.value = allAnnouncements.slice(0, 20)
-    // 如果有未读公告，显示 tooltip
-    if (latestUnread.value) {
-      showTooltip.value = true
-    }
-  } catch (err: any) {
-    console.error('Failed to load announcements:', err)
-    appStore.showError(err?.message || t('common.unknownError'))
-  } finally {
-    loading.value = false
-  }
-}
-
 function openModal() {
   isModalOpen.value = true
   showTooltip.value = false  // 打开 modal 时隐藏 tooltip
-  if (announcements.value.length === 0) {
-    loadAnnouncements()
-  }
 }
 
 function closeModal() {
@@ -455,14 +434,7 @@ function closeDetail() {
 
 async function markAsRead(id: number) {
   try {
-    await announcementsAPI.markRead(id)
-    const announcement = announcements.value.find((a) => a.id === id)
-    if (announcement) {
-      announcement.read_at = new Date().toISOString()
-    }
-    if (selectedAnnouncement.value?.id === id) {
-      selectedAnnouncement.value.read_at = new Date().toISOString()
-    }
+    await announcementStore.markAsRead(id)
   } catch (err: any) {
     appStore.showError(err?.message || t('common.unknownError'))
   }
@@ -476,19 +448,10 @@ async function markAsReadAndClose(id: number) {
 
 async function markAllAsRead() {
   try {
-    loading.value = true
-    const unreadAnnouncements = announcements.value.filter((a) => !a.read_at)
-    await Promise.all(unreadAnnouncements.map((a) => announcementsAPI.markRead(a.id)))
-    announcements.value.forEach((a) => {
-      if (!a.read_at) {
-        a.read_at = new Date().toISOString()
-      }
-    })
+    await announcementStore.markAllAsRead()
     appStore.showSuccess(t('announcements.allMarkedAsRead'))
   } catch (err: any) {
     appStore.showError(err?.message || t('common.unknownError'))
-  } finally {
-    loading.value = false
   }
 }
 
@@ -504,22 +467,19 @@ function handleEscape(e: KeyboardEvent) {
 
 onMounted(() => {
   document.addEventListener('keydown', handleEscape)
-  loadAnnouncements()
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleEscape)
-  // Restore body overflow in case component is unmounted while modals are open
   document.body.style.overflow = ''
 })
 
-watch([isModalOpen, detailModalOpen], ([modal, detail]) => {
-  if (modal || detail) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
+watch(
+  [isModalOpen, detailModalOpen, () => announcementStore.currentPopup],
+  ([modal, detail, popup]) => {
+    document.body.style.overflow = (modal || detail || popup) ? 'hidden' : ''
   }
-})
+)
 </script>
 
 <style scoped>

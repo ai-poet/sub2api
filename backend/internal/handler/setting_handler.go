@@ -56,6 +56,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
 		SoraClientEnabled:                settings.SoraClientEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,
+		BackendModeEnabled:               settings.BackendModeEnabled,
 		Version:                          h.version,
 	})
 }
