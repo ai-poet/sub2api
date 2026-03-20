@@ -232,7 +232,7 @@ export default {
       email: 'Email',
       password: 'Password',
       confirmPassword: 'Confirm Password',
-      passwordPlaceholder: 'Min 6 characters',
+      passwordPlaceholder: 'Min 8 characters',
       confirmPasswordPlaceholder: 'Confirm password',
       passwordMismatch: 'Passwords do not match'
     },
@@ -593,7 +593,7 @@ export default {
     groupRequired: 'Please select a group',
     usage: 'Usage',
     today: 'Today',
-    total: 'Total',
+    total: 'Last 30d',
     quota: 'Quota',
     lastUsedAt: 'Last Used',
     useKey: 'Use Key',
@@ -737,11 +737,14 @@ export default {
     exporting: 'Exporting...',
     preparingExport: 'Preparing export...',
     model: 'Model',
+    requestedModel: 'Requested',
+    upstreamModel: 'Upstream',
     reasoningEffort: 'Reasoning Effort',
     endpoint: 'Endpoint',
     endpointDistribution: 'Endpoint Distribution',
     inbound: 'Inbound',
     upstream: 'Upstream',
+    mapping: 'Mapping',
     path: 'Path',
     inboundEndpoint: 'Inbound Endpoint',
     upstreamEndpoint: 'Upstream Endpoint',
@@ -971,6 +974,7 @@ export default {
     lastWeek: 'Last Week',
     thisMonth: 'This Month',
     lastMonth: 'Last Month',
+    last24Hours: 'Last 24 Hours',
     last7Days: 'Last 7 Days',
     last14Days: 'Last 14 Days',
     last30Days: 'Last 30 Days',
@@ -1076,7 +1080,12 @@ export default {
         createBackup: 'Create Backup',
         backing: 'Backing up...',
         backupCreated: 'Backup created successfully',
-        expireDays: 'Expire Days'
+        expireDays: 'Expire Days',
+        alreadyInProgress: 'A backup is already in progress',
+        backupRunning: 'Backup in progress...',
+        backupFailed: 'Backup failed',
+        restoreRunning: 'Restore in progress...',
+        restoreFailed: 'Restore failed',
       },
       columns: {
         status: 'Status',
@@ -1092,6 +1101,11 @@ export default {
         running: 'Running',
         completed: 'Completed',
         failed: 'Failed'
+      },
+      progress: {
+        pending: 'Preparing',
+        dumping: 'Dumping database',
+        uploading: 'Uploading',
       },
       trigger: {
         manual: 'Manual',
@@ -1326,6 +1340,9 @@ export default {
       searchUsers: 'Search by email, username, notes, or API key...',
       allRoles: 'All Roles',
       allStatus: 'All Status',
+      allGroups: 'All Groups',
+      searchGroups: 'Search groups...',
+      fuzzySearch: 'Fuzzy search',
       admin: 'Admin',
       user: 'User',
       disabled: 'Disabled',
@@ -1350,6 +1367,7 @@ export default {
         username: 'Username',
         notes: 'Notes',
         role: 'Role',
+        groups: 'Groups',
         subscriptions: 'Subscriptions',
         balance: 'Balance',
         usage: 'Usage',
@@ -1359,8 +1377,11 @@ export default {
         actions: 'Actions'
       },
       today: 'Today',
-      total: 'Total',
+      total: 'Last 30d',
       noSubscription: 'No subscription',
+      publicGroupCount: '+{count} public',
+      exclusiveLabel: 'exclusive',
+      publicLabel: 'public',
       daysRemaining: '{days}d',
       expired: 'Expired',
       disable: 'Disable',
@@ -1416,6 +1437,14 @@ export default {
       useDefaultRate: 'Use Default',
       customRatePlaceholder: 'Leave empty for default',
       groupConfigUpdated: 'Group configuration updated successfully',
+      replaceGroup: 'Replace Group',
+      clickToReplace: 'Click to replace',
+      replaceGroupTitle: 'Replace Exclusive Group',
+      replaceGroupHint: 'Select a new group to replace "{old}". Keys will be migrated and permissions updated automatically.',
+      replaceGroupConfirm: 'Confirm Replace',
+      replaceGroupSuccess: 'Group replaced successfully, {count} key(s) migrated',
+      selectNewGroup: 'Select target group',
+      noOtherGroups: 'No other exclusive groups available',
       deposit: 'Deposit',
       withdraw: 'Withdraw',
       depositAmount: 'Deposit Amount',
@@ -1546,6 +1575,8 @@ export default {
         rateMultiplier: 'Rate Multiplier',
         type: 'Type',
         accounts: 'Accounts',
+        capacity: 'Capacity',
+        usage: 'Usage',
         status: 'Status',
         actions: 'Actions',
         billingType: 'Billing Type',
@@ -1554,6 +1585,12 @@ export default {
         userNotes: 'Notes',
         userStatus: 'Status'
       },
+      usageToday: 'Today',
+      usageTotal: 'Total',
+      accountsAvailable: 'Avail:',
+      accountsRateLimited: 'Limited:',
+      accountsTotal: 'Total:',
+      accountsUnit: '',
       rateAndAccounts: '{rate}x rate · {count} accounts',
       accountsCount: '{count} accounts',
       form: {
@@ -1735,6 +1772,7 @@ export default {
       revokeSubscription: 'Revoke Subscription',
       allStatus: 'All Status',
       allGroups: 'All Groups',
+      allPlatforms: 'All Platforms',
       daily: 'Daily',
       weekly: 'Weekly',
       monthly: 'Monthly',
@@ -1800,7 +1838,37 @@ export default {
       pleaseSelectGroup: 'Please select a group',
       validityDaysRequired: 'Please enter a valid number of days (at least 1)',
       revokeConfirm:
-        "Are you sure you want to revoke the subscription for '{user}'? This action cannot be undone."
+        "Are you sure you want to revoke the subscription for '{user}'? This action cannot be undone.",
+      guide: {
+        title: 'Subscription Management Guide',
+        subtitle: 'Subscription mode lets you assign time-based usage quotas to users, with daily/weekly/monthly limits. Follow these steps to get started.',
+        showGuide: 'Usage Guide',
+        step1: {
+          title: 'Create a Subscription Group',
+          line1: 'Go to "Group Management" page, click "Create Group"',
+          line2: 'Set billing type to "Subscription", configure daily/weekly/monthly quota limits',
+          line3: 'Save the group and ensure its status is "Active"',
+          link: 'Go to Group Management'
+        },
+        step2: {
+          title: 'Assign Subscription to User',
+          line1: 'Click the "Assign Subscription" button in the top right',
+          line2: 'Search for a user by email and select them',
+          line3: 'Choose a subscription group, set validity days, then click "Assign"'
+        },
+        step3: {
+          title: 'Manage Existing Subscriptions'
+        },
+        actions: {
+          adjust: 'Adjust',
+          adjustDesc: 'Extend or shorten the subscription validity period',
+          resetQuota: 'Reset Quota',
+          resetQuotaDesc: 'Reset daily/weekly/monthly usage to zero',
+          revoke: 'Revoke',
+          revokeDesc: 'Immediately terminate the subscription (irreversible)'
+        },
+        tip: 'Tip: Only groups with billing type "Subscription" and status "Active" appear in the group dropdown. If no options are available, create one in Group Management first.'
+      }
     },
 
     // Accounts
@@ -1882,6 +1950,7 @@ export default {
       allTypes: 'All Types',
       allStatus: 'All Status',
       allGroups: 'All Groups',
+      ungroupedGroup: 'Ungrouped',
       oauthType: 'OAuth',
       setupToken: 'Setup Token',
       apiKey: 'API Key',
@@ -2759,7 +2828,9 @@ export default {
         gemini3Pro: 'G3P',
         gemini3Flash: 'G3F',
         gemini3Image: 'G31FI',
-        claude: 'Claude'
+        claude: 'Claude',
+        passiveSampled: 'Passive',
+        activeQuery: 'Query'
       },
       tier: {
         free: 'Free',
@@ -4136,7 +4207,11 @@ export default {
         minVersion: 'Minimum Version',
         minVersionPlaceholder: 'e.g. 2.1.63',
         minVersionHint:
-          'Reject Claude Code clients below this version (semver format). Leave empty to disable version check.'
+          'Reject Claude Code clients below this version (semver format). Leave empty to disable version check.',
+        maxVersion: 'Maximum Version',
+        maxVersionPlaceholder: 'e.g. 2.5.0',
+        maxVersionHint:
+          'Reject Claude Code clients above this version (semver format). Leave empty to allow any version.'
       },
       scheduling: {
         title: 'Gateway Scheduling Settings',
@@ -4385,6 +4460,16 @@ export default {
           testSuccess: 'Google Drive storage test passed (upload, access, delete all OK)',
           testFailed: 'Google Drive storage test failed'
         }
+      },
+      overloadCooldown: {
+        title: '529 Overload Cooldown',
+        description: 'Configure account scheduling pause strategy when upstream returns 529 (overloaded)',
+        enabled: 'Enable Overload Cooldown',
+        enabledHint: 'Pause account scheduling on 529 errors, auto-recover after cooldown',
+        cooldownMinutes: 'Cooldown Duration (minutes)',
+        cooldownMinutesHint: 'Duration to pause account scheduling (1-120 minutes)',
+        saved: 'Overload cooldown settings saved',
+        saveFailed: 'Failed to save overload cooldown settings'
       },
       streamTimeout: {
         title: 'Stream Timeout Handling',
