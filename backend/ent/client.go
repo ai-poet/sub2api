@@ -4239,14 +4239,14 @@ type (
 		ErrorPassthroughRule, Group, IdempotencyRecord, PromoCode, PromoCodeUsage,
 		Proxy, RedeemCode, SecuritySecret, Setting, TLSFingerprintProfile,
 		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
-		UserAttributeValue, UserSubscription []ent.Hook
+		UserAttributeValue, UserReferral, UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead,
 		ErrorPassthroughRule, Group, IdempotencyRecord, PromoCode, PromoCodeUsage,
 		Proxy, RedeemCode, SecuritySecret, Setting, TLSFingerprintProfile,
 		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
-		UserAttributeValue, UserSubscription []ent.Interceptor
+		UserAttributeValue, UserReferral, UserSubscription []ent.Interceptor
 	}
 )
 
