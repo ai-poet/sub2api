@@ -85,6 +85,12 @@ export interface CustomMenuItem {
   sort_order: number
 }
 
+export interface CustomEndpoint {
+  name: string
+  endpoint: string
+  description: string
+}
+
 export interface PublicSettings {
   registration_enabled: boolean
   email_verify_enabled: boolean
@@ -106,6 +112,7 @@ export interface PublicSettings {
   purchase_subscription_url: string
   purchase_subscription_open_mode: string // 'iframe' or 'new_window'
   custom_menu_items: CustomMenuItem[]
+  custom_endpoints: CustomEndpoint[]
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
   sora_client_enabled: boolean
@@ -720,6 +727,7 @@ export interface Account {
 
   // TLS指纹伪装（仅 Anthropic OAuth/SetupToken 账号有效）
   enable_tls_fingerprint?: boolean | null
+  tls_fingerprint_profile_id?: number | null
 
   // 会话ID伪装（仅 Anthropic OAuth/SetupToken 账号有效）
   // 启用后将在15分钟内固定 metadata.user_id 中的 session ID
@@ -728,6 +736,10 @@ export interface Account {
   // 缓存 TTL 强制替换（仅 Anthropic OAuth/SetupToken 账号有效）
   cache_ttl_override_enabled?: boolean | null
   cache_ttl_override_target?: string | null
+
+  // 自定义 Base URL 中继转发（仅 Anthropic OAuth/SetupToken 账号有效）
+  custom_base_url_enabled?: boolean | null
+  custom_base_url?: string | null
 
   // 客户端亲和调度（仅 Anthropic/Antigravity 平台有效）
   // 启用后新会话会优先调度到客户端之前使用过的账号
@@ -981,7 +993,6 @@ export interface UsageLog {
   account_id: number | null
   request_id: string
   model: string
-  upstream_model?: string | null
   service_tier?: string | null
   reasoning_effort?: string | null
   inbound_endpoint?: string | null
@@ -1036,6 +1047,8 @@ export interface UsageLogAccountSummary {
 }
 
 export interface AdminUsageLog extends UsageLog {
+  upstream_model?: string | null
+
   // 账号计费倍率（仅管理员可见）
   account_rate_multiplier?: number | null
 

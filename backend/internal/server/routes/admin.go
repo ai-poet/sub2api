@@ -82,6 +82,9 @@ func RegisterAdminRoutes(
 		// 推荐系统管理
 		registerReferralRoutes(admin, h)
 
+		// TLS 指纹模板管理
+		registerTLSFingerprintProfileRoutes(admin, h)
+
 		// API Key 管理
 		registerAdminAPIKeyRoutes(admin, h)
 
@@ -260,6 +263,7 @@ func registerAccountRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		accounts.POST("/:id/test", h.Admin.Account.Test)
 		accounts.POST("/:id/recover-state", h.Admin.Account.RecoverState)
 		accounts.POST("/:id/refresh", h.Admin.Account.Refresh)
+		accounts.POST("/:id/set-privacy", h.Admin.Account.SetPrivacy)
 		accounts.POST("/:id/refresh-tier", h.Admin.Account.RefreshTier)
 		accounts.GET("/:id/stats", h.Admin.Account.GetStats)
 		accounts.POST("/:id/clear-error", h.Admin.Account.ClearError)
@@ -562,5 +566,16 @@ func registerReferralRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		referral.GET("/settings", h.Admin.Referral.GetSettings)
 		referral.PUT("/settings", h.Admin.Referral.UpdateSettings)
 		referral.GET("/list", h.Admin.Referral.ListReferrals)
+	}
+}
+
+func registerTLSFingerprintProfileRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	profiles := admin.Group("/tls-fingerprint-profiles")
+	{
+		profiles.GET("", h.Admin.TLSFingerprintProfile.List)
+		profiles.GET("/:id", h.Admin.TLSFingerprintProfile.GetByID)
+		profiles.POST("", h.Admin.TLSFingerprintProfile.Create)
+		profiles.PUT("/:id", h.Admin.TLSFingerprintProfile.Update)
+		profiles.DELETE("/:id", h.Admin.TLSFingerprintProfile.Delete)
 	}
 }
