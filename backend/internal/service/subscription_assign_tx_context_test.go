@@ -55,7 +55,7 @@ func (s *txContextUserSubRepoStub) ListByGroupID(context.Context, int64, paginat
 	return nil, nil, nil
 }
 
-func (s *txContextUserSubRepoStub) List(context.Context, pagination.PaginationParams, *int64, *int64, string, string, string) ([]UserSubscription, *pagination.PaginationResult, error) {
+func (s *txContextUserSubRepoStub) List(context.Context, pagination.PaginationParams, *int64, *int64, string, string, string, string) ([]UserSubscription, *pagination.PaginationResult, error) {
 	return nil, nil, nil
 }
 
@@ -141,8 +141,8 @@ func (s *txContextGroupRepoStub) ListActiveByPlatform(context.Context, string) (
 func (s *txContextGroupRepoStub) ExistsByName(context.Context, string) (bool, error) {
 	return false, nil
 }
-func (s *txContextGroupRepoStub) GetAccountCount(context.Context, int64) (int64, error) {
-	return 0, nil
+func (s *txContextGroupRepoStub) GetAccountCount(context.Context, int64) (int64, int64, error) {
+	return 0, 0, nil
 }
 func (s *txContextGroupRepoStub) DeleteAccountGroupsByGroupID(context.Context, int64) (int64, error) {
 	return 0, nil
