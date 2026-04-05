@@ -206,7 +206,8 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       requiresAdmin: false,
       title: 'Purchase Subscription',
-      titleKey: 'nav.buySubscription'
+      titleKey: 'purchase.title',
+      descriptionKey: 'purchase.description'
     }
   },
   {
@@ -272,6 +273,18 @@ const routes: RouteRecordRaw[] = [
       title: 'Group Management',
       titleKey: 'admin.groups.title',
       descriptionKey: 'admin.groups.description'
+    }
+  },
+  {
+    path: '/admin/channels',
+    name: 'AdminChannels',
+    component: () => import('@/views/admin/ChannelsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Channel Management',
+      titleKey: 'admin.channels.title',
+      descriptionKey: 'admin.channels.description'
     }
   },
   {

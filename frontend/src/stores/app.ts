@@ -347,7 +347,6 @@ export const useAppStore = defineStore('app', () => {
         custom_endpoints: [],
         linuxdo_oauth_enabled: false,
         referral_enabled: false,
-        sora_client_enabled: false,
         purchase_subscription_open_mode: 'iframe',
         backend_mode_enabled: false,
         version: siteVersion.value
