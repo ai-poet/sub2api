@@ -22,7 +22,10 @@ export function buildEmbeddedUrl(
 ): string {
   if (!baseUrl) return baseUrl
   try {
-    const url = new URL(baseUrl)
+    const url =
+      typeof window !== 'undefined'
+        ? new URL(baseUrl, window.location.origin)
+        : new URL(baseUrl)
     if (userId) {
       url.searchParams.set(EMBEDDED_USER_ID_QUERY_KEY, String(userId))
     }
@@ -38,6 +41,31 @@ export function buildEmbeddedUrl(
     if (typeof window !== 'undefined') {
       url.searchParams.set(EMBEDDED_SRC_HOST_QUERY_KEY, window.location.origin)
       url.searchParams.set(EMBEDDED_SRC_QUERY_KEY, window.location.href)
+    }
+    return url.toString()
+  } catch {
+    return baseUrl
+  }
+}
+
+export function buildStandaloneUrl(
+  baseUrl: string,
+  authToken?: string | null,
+  theme: 'light' | 'dark' = 'light',
+  lang?: string,
+): string {
+  if (!baseUrl) return baseUrl
+  try {
+    const url =
+      typeof window !== 'undefined'
+        ? new URL(baseUrl, window.location.origin)
+        : new URL(baseUrl)
+    if (authToken) {
+      url.searchParams.set(EMBEDDED_AUTH_TOKEN_QUERY_KEY, authToken)
+    }
+    url.searchParams.set(EMBEDDED_THEME_QUERY_KEY, theme)
+    if (lang) {
+      url.searchParams.set(EMBEDDED_LANG_QUERY_KEY, lang)
     }
     return url.toString()
   } catch {

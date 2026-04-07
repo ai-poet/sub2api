@@ -89,13 +89,12 @@ const purchaseEnabled = computed(() => {
 })
 
 const purchaseUrl = computed(() => {
-  const baseUrl = (appStore.cachedPublicSettings?.purchase_subscription_url || '').trim()
-  return buildEmbeddedUrl(baseUrl, authStore.user?.id, authStore.token, purchaseTheme.value, locale.value)
+  if (!purchaseEnabled.value) return ''
+  return buildEmbeddedUrl('/pay', authStore.user?.id, authStore.token, purchaseTheme.value, locale.value)
 })
 
 const isValidUrl = computed(() => {
-  const url = purchaseUrl.value
-  return url.startsWith('http://') || url.startsWith('https://')
+  return purchaseUrl.value.length > 0
 })
 
 onMounted(async () => {

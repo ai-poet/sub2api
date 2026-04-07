@@ -2,8 +2,10 @@
 # Sub2API Multi-Stage Dockerfile
 # =============================================================================
 # Stage 1: Build frontend
-# Stage 2: Build Go backend with embedded frontend
-# Stage 3: Final minimal image
+# Stage 2: Build integrated sub2apipay
+# Stage 3: Build Go backend with embedded frontend
+# Stage 4: PostgreSQL client
+# Stage 5: Final runtime image
 # =============================================================================
 
 ARG NODE_IMAGE=node:24-alpine
@@ -32,7 +34,24 @@ COPY frontend/ ./
 RUN pnpm run build
 
 # -----------------------------------------------------------------------------
-# Stage 2: Backend Builder
+# Stage 2: Integrated Payment Builder
+# -----------------------------------------------------------------------------
+FROM ${NODE_IMAGE} AS pay-builder
+
+WORKDIR /app/sub2apipay
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+COPY sub2apipay/ ./
+RUN pnpm install --frozen-lockfile
+RUN pnpm exec prisma generate
+RUN pnpm run build
+
+# -----------------------------------------------------------------------------
+# Stage 3: Backend Builder
 # -----------------------------------------------------------------------------
 FROM ${GOLANG_IMAGE} AS backend-builder
 
@@ -73,12 +92,12 @@ RUN VERSION_VALUE="${VERSION}" && \
     ./cmd/server
 
 # -----------------------------------------------------------------------------
-# Stage 3: PostgreSQL Client (version-matched with docker-compose)
+# Stage 4: PostgreSQL Client (version-matched with docker-compose)
 # -----------------------------------------------------------------------------
 FROM ${POSTGRES_IMAGE} AS pg-client
 
 # -----------------------------------------------------------------------------
-# Stage 4: Final Runtime Image
+# Stage 5: Final Runtime Image
 # -----------------------------------------------------------------------------
 FROM ${ALPINE_IMAGE}
 
@@ -92,6 +111,8 @@ RUN apk add --no-cache \
     ca-certificates \
     tzdata \
     su-exec \
+    nodejs \
+    wget \
     libpq \
     zstd-libs \
     lz4-libs \
@@ -115,9 +136,15 @@ WORKDIR /app
 
 # Copy binary from builder
 COPY --from=backend-builder /app/sub2api /app/sub2api
+COPY --from=pay-builder /app/sub2apipay/.next/standalone /app/sub2apipay
+COPY --from=pay-builder /app/sub2apipay/.next/static /app/sub2apipay/.next/static
+COPY --from=pay-builder /app/sub2apipay/public /app/sub2apipay/public
+COPY --from=pay-builder /app/sub2apipay/node_modules /app/sub2apipay/node_modules
+COPY --from=pay-builder /app/sub2apipay/package.json /app/sub2apipay/package.json
+COPY --from=pay-builder /app/sub2apipay/prisma /app/sub2apipay/prisma
 
 # Create data directory
-RUN mkdir -p /app/data && chown -R sub2api:sub2api /app
+RUN mkdir -p /app/data /app/sub2apipay && chown -R sub2api:sub2api /app
 
 # Copy entrypoint script (fixes volume permissions then drops to sub2api)
 COPY deploy/docker-entrypoint.sh /app/docker-entrypoint.sh
@@ -128,7 +155,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${SERVER_PORT:-8080}/health || exit 1
+    CMD wget -q -T 5 -O /dev/null http://localhost:${SERVER_PORT:-8080}/health || exit 1
 
 # Run the application (entrypoint fixes /app/data ownership then execs as sub2api)
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

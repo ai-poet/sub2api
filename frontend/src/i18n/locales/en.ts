@@ -367,6 +367,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
     buySubscription: 'Recharge / Subscription',
+    paymentManagement: 'Payment Management',
     referral: 'Referral',
     docs: 'Docs',
     sora: 'Sora Studio'
