@@ -18,6 +18,8 @@ ARG POSTGRES_IMAGE=postgres:18-alpine
 ARG GOPROXY=https://goproxy.cn,direct
 ARG GOSUMDB=sum.golang.google.cn
 ARG PNPM_VERSION=10.30.3
+ARG APP_UID=1000
+ARG APP_GID=1000
 
 # -----------------------------------------------------------------------------
 # Stage 1: Frontend Builder
@@ -131,6 +133,9 @@ FROM ${POSTGRES_IMAGE} AS pg-client
 # -----------------------------------------------------------------------------
 FROM ${ALPINE_IMAGE}
 
+ARG APP_UID
+ARG APP_GID
+
 # Labels
 LABEL maintainer="Wei-Shaw <github.com/Wei-Shaw>"
 LABEL description="Sub2API - AI API Gateway Platform"
@@ -158,19 +163,19 @@ COPY --link --from=pg-client /usr/local/bin/psql /usr/local/bin/psql
 COPY --link --from=pg-client /usr/local/lib/libpq.so.5* /usr/local/lib/
 
 # Create non-root user
-RUN addgroup -g 1000 sub2api && \
-    adduser -u 1000 -G sub2api -s /bin/sh -D sub2api
+RUN addgroup -g ${APP_GID} sub2api && \
+    adduser -u ${APP_UID} -G sub2api -s /bin/sh -D sub2api
 
 # Set working directory
 WORKDIR /app
 
 # Copy binary from builder
-COPY --link --from=backend-builder --chown=sub2api:sub2api /app/sub2api /app/sub2api
-COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/.next/standalone /app/sub2apipay
-COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/.next/static /app/sub2apipay/.next/static
-COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/public /app/sub2apipay/public
-COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/prisma /app/sub2apipay/prisma
-COPY --link --from=prisma-runtime-builder --chown=sub2api:sub2api /app/prisma-runtime/node_modules /app/prisma-runtime/node_modules
+COPY --from=backend-builder --chown=${APP_UID}:${APP_GID} /app/sub2api /app/sub2api
+COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/.next/standalone /app/sub2apipay
+COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/.next/static /app/sub2apipay/.next/static
+COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/public /app/sub2apipay/public
+COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/prisma /app/sub2apipay/prisma
+COPY --from=prisma-runtime-builder --chown=${APP_UID}:${APP_GID} /app/prisma-runtime/node_modules /app/prisma-runtime/node_modules
 
 # Create data directory
 RUN mkdir -p /app/data /app/sub2apipay /app/prisma-runtime
