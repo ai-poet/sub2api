@@ -1,9 +1,11 @@
 import { prisma } from '@/lib/db';
 import { ORDER_STATUS } from '@/lib/constants';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
-import { getMethodFeeRate } from './fee';
+import { getEnv } from '@/lib/config';
+import { getMethodFeeRate, getMaxSettlementAmountForPayLimit, getMinSettlementAmountForPayLimit } from './fee';
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import { getSystemConfig } from '@/lib/system-config';
+import { convertCnySettlementToUsdBalance, normalizeBalanceCreditRate } from '@/lib/currency';
 
 /**
  * 获取指定支付渠道的每日全平台限额（0 = 不限制）。
@@ -67,6 +69,23 @@ interface InstanceChannelLimits {
   dailyLimit?: number;
   singleMin?: number;
   singleMax?: number;
+}
+
+function roundDownToCents(value: number): number {
+  return Math.floor(value * 100) / 100;
+}
+
+function roundUpToCents(value: number): number {
+  return Math.ceil(value * 100) / 100;
+}
+
+function convertSettlementCnyToCreditedUsd(
+  amountCny: number,
+  balanceCreditRate: number,
+  mode: 'floor' | 'ceil',
+): number {
+  const converted = convertCnySettlementToUsdBalance(amountCny, balanceCreditRate) ?? 0;
+  return mode === 'ceil' ? roundUpToCents(converted) : roundDownToCents(converted);
 }
 
 /**
@@ -215,6 +234,12 @@ async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
  */
 export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<string, MethodLimitStatus>> {
   const todayStart = getBizDayStartUTC();
+  const env = getEnv();
+  const balanceCreditRateConfig = await getSystemConfig('BALANCE_CREDIT_USD_PER_CNY');
+  const balanceCreditRate =
+    normalizeBalanceCreditRate(balanceCreditRateConfig) ??
+    normalizeBalanceCreditRate(env.BALANCE_CREDIT_USD_PER_CNY) ??
+    1;
 
   const [usageRows, instanceAgg] = await Promise.all([
     prisma.order.groupBy({
@@ -224,49 +249,80 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
         status: { in: [ORDER_STATUS.PAID, ORDER_STATUS.RECHARGING, ORDER_STATUS.COMPLETED] },
         paidAt: { gte: todayStart },
       },
-      _sum: { amount: true },
+      _sum: { payAmount: true },
     }),
     aggregateInstanceLimits(paymentTypes),
   ]);
 
-  const usageMap = Object.fromEntries(usageRows.map((row) => [row.paymentType, Number(row._sum.amount ?? 0)]));
+  const usageMap = Object.fromEntries(usageRows.map((row) => [row.paymentType, Number(row._sum.payAmount ?? 0)]));
 
   const result: Record<string, MethodLimitStatus> = {};
   for (const type of paymentTypes) {
     const globalDailyLimit = await getMethodDailyLimit(type);
     const globalSingleMax = await getMethodSingleLimit(type);
     const feeRate = getMethodFeeRate(type);
-    const used = usageMap[type] ?? 0;
-    const remaining = globalDailyLimit > 0 ? Math.max(0, globalDailyLimit - used) : null;
+    const usedPayAmount = usageMap[type] ?? 0;
+    const remainingPayAmount = globalDailyLimit > 0 ? Math.max(0, globalDailyLimit - usedPayAmount) : null;
 
     const inst = instanceAgg[type];
     // 全局可用：全局日限额未超
-    const globalAvailable = globalDailyLimit === 0 || used < globalDailyLimit;
+    const globalAvailable = globalDailyLimit === 0 || usedPayAmount < globalDailyLimit;
     // 实例可用：无实例(走环境变量provider) 或 不是所有实例都被日限额阻塞
     const instanceAvailable = !inst?.hasInstances || !inst.allInstancesDailyBlocked;
 
-    // 聚合单笔范围：实例级限额与全局取交集
-    const singleMin = inst?.singleMin ?? 0;
-    let singleMax = globalSingleMax;
+    // 聚合单笔范围：实例级限额与全局取交集（这里仍使用网关实付金额，单位 CNY）
+    const singleMinPayAmount = inst?.singleMin ?? 0;
+    let singleMaxPayAmount = globalSingleMax;
     if (inst?.hasInstances && inst.singleMax > 0) {
-      singleMax = singleMax > 0 ? Math.min(singleMax, inst.singleMax) : inst.singleMax;
+      singleMaxPayAmount = singleMaxPayAmount > 0 ? Math.min(singleMaxPayAmount, inst.singleMax) : inst.singleMax;
     }
 
     // 实例剩余日容量约束：singleMax 不能超过最大剩余容量
     if (inst?.hasInstances && inst.maxRemainingCapacity !== null && inst.maxRemainingCapacity >= 0) {
-      singleMax = singleMax > 0 ? Math.min(singleMax, inst.maxRemainingCapacity) : inst.maxRemainingCapacity;
+      singleMaxPayAmount =
+        singleMaxPayAmount > 0 ? Math.min(singleMaxPayAmount, inst.maxRemainingCapacity) : inst.maxRemainingCapacity;
     }
 
     // 全局剩余日容量约束
-    if (remaining !== null && remaining >= 0) {
-      singleMax = singleMax > 0 ? Math.min(singleMax, remaining) : remaining;
+    if (remainingPayAmount !== null && remainingPayAmount >= 0) {
+      singleMaxPayAmount = singleMaxPayAmount > 0 ? Math.min(singleMaxPayAmount, remainingPayAmount) : remainingPayAmount;
     }
 
-    // 最终可用性：如果 singleMax < singleMin，该渠道实质不可用
+    const usedSettlementAmount = getMaxSettlementAmountForPayLimit(usedPayAmount, feeRate);
+    const remainingSettlementAmount =
+      remainingPayAmount !== null ? getMaxSettlementAmountForPayLimit(remainingPayAmount, feeRate) : null;
+    const singleMinSettlementAmount =
+      singleMinPayAmount > 0 ? getMinSettlementAmountForPayLimit(singleMinPayAmount, feeRate) : 0;
+    const singleMaxSettlementAmount =
+      singleMaxPayAmount > 0 ? getMaxSettlementAmountForPayLimit(singleMaxPayAmount, feeRate) : 0;
+
+    const used = convertSettlementCnyToCreditedUsd(usedSettlementAmount, balanceCreditRate, 'floor');
+    const remaining =
+      remainingSettlementAmount !== null
+        ? convertSettlementCnyToCreditedUsd(remainingSettlementAmount, balanceCreditRate, 'floor')
+        : null;
+    const dailyLimit =
+      globalDailyLimit > 0
+        ? convertSettlementCnyToCreditedUsd(
+            getMaxSettlementAmountForPayLimit(globalDailyLimit, feeRate),
+            balanceCreditRate,
+            'floor',
+          )
+        : 0;
+    const singleMin =
+      singleMinSettlementAmount > 0
+        ? convertSettlementCnyToCreditedUsd(singleMinSettlementAmount, balanceCreditRate, 'ceil')
+        : 0;
+    const singleMax =
+      singleMaxSettlementAmount > 0
+        ? convertSettlementCnyToCreditedUsd(singleMaxSettlementAmount, balanceCreditRate, 'floor')
+        : 0;
+
+    // 最终可用性：如果换算后的到账区间为空，该渠道实质不可用
     const effectivelyAvailable = globalAvailable && instanceAvailable && (singleMin === 0 || singleMax >= singleMin);
 
     result[type] = {
-      dailyLimit: globalDailyLimit,
+      dailyLimit,
       used,
       remaining,
       available: effectivelyAvailable,

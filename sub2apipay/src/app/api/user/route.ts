@@ -7,7 +7,12 @@ import { getPaymentDisplayInfo } from '@/lib/pay-utils';
 import { resolveLocale } from '@/lib/locale';
 import { getSystemConfig } from '@/lib/system-config';
 import { getVisiblePaymentTypes } from '@/lib/payment/visibility';
-import { DEFAULT_USD_EXCHANGE_RATE, normalizeUsdExchangeRate } from '@/lib/currency';
+import {
+  DEFAULT_BALANCE_CREDIT_USD_PER_CNY,
+  DEFAULT_USD_EXCHANGE_RATE,
+  normalizeBalanceCreditRate,
+  normalizeUsdExchangeRate,
+} from '@/lib/currency';
 
 export async function GET(request: NextRequest) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang') || request.headers.get('accept-language'));
@@ -50,6 +55,7 @@ export async function GET(request: NextRequest) {
       getSystemConfig('RECHARGE_MAX_AMOUNT'),
       getSystemConfig('DAILY_RECHARGE_LIMIT'),
       getSystemConfig('USD_EXCHANGE_RATE'),
+      getSystemConfig('BALANCE_CREDIT_USD_PER_CNY'),
     ]).then(
       async ([
         visibleTypes,
@@ -59,6 +65,7 @@ export async function GET(request: NextRequest) {
         maxAmountVal,
         dailyLimitVal,
         usdExchangeRateVal,
+        balanceCreditRateVal,
       ]) => {
         const methodLimits = await queryMethodLimits(visibleTypes);
         return {
@@ -70,6 +77,10 @@ export async function GET(request: NextRequest) {
           maxAmount: maxAmountVal ? parseFloat(maxAmountVal) || env.MAX_RECHARGE_AMOUNT : env.MAX_RECHARGE_AMOUNT,
           maxDailyAmount: dailyLimitVal ? parseFloat(dailyLimitVal) : env.MAX_DAILY_RECHARGE_AMOUNT,
           usdExchangeRate: normalizeUsdExchangeRate(usdExchangeRateVal) ?? DEFAULT_USD_EXCHANGE_RATE,
+          balanceCreditRate:
+            normalizeBalanceCreditRate(balanceCreditRateVal) ??
+            normalizeBalanceCreditRate(env.BALANCE_CREDIT_USD_PER_CNY) ??
+            DEFAULT_BALANCE_CREDIT_USD_PER_CNY,
         };
       },
     );
@@ -83,6 +94,7 @@ export async function GET(request: NextRequest) {
       maxAmount,
       maxDailyAmount,
       usdExchangeRate,
+      balanceCreditRate,
     } = await configPromise;
 
     // 收集 sublabel 覆盖
@@ -124,6 +136,7 @@ export async function GET(request: NextRequest) {
         maxAmount,
         maxDailyAmount,
         usdExchangeRate,
+        balanceCreditRate,
         methodLimits,
         helpImageUrl: env.PAY_HELP_IMAGE_URL ?? null,
         helpText: env.PAY_HELP_TEXT ?? null,

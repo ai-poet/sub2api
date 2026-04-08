@@ -6,7 +6,7 @@ import PayPageLayout from '@/components/PayPageLayout';
 import { DEFAULT_PRODUCT_NAME_PREFIX, DEFAULT_PRODUCT_NAME_SUFFIX, getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
-import { DEFAULT_USD_EXCHANGE_RATE } from '@/lib/currency';
+import { DEFAULT_BALANCE_CREDIT_USD_PER_CNY, DEFAULT_USD_EXCHANGE_RATE } from '@/lib/currency';
 
 // ── i18n ──
 
@@ -47,6 +47,9 @@ function getTexts(locale: Locale) {
         dailyRechargeLimit: 'Daily Credited Limit (USD, 0=unlimited)',
         usdExchangeRate: 'USD Exchange Rate',
         usdExchangeRateHint: 'Used to display USDT/USDC settlement amounts. Format: 1 USD = ? CNY.',
+        balanceCreditRate: 'Balance Credit Rate',
+        balanceCreditRateHint:
+          'Used for balance top-up settlement. Format: 1 CNY = ? USD balance. Non-stablecoin payments use this for actual credited balance.',
         orderTimeoutMinutes: 'Order Timeout (min)',
         loadingEnvDefaults: 'Loading defaults...',
         providerManagement: 'Provider Management',
@@ -110,6 +113,8 @@ function getTexts(locale: Locale) {
         dailyRechargeLimit: '每日到账限额（USD，0=不限）',
         usdExchangeRate: '美元汇率',
         usdExchangeRateHint: '用于展示 USDT/USDC 的美元实付金额。填写规则：1 USD = 多少 CNY。',
+        balanceCreditRate: '到账比例',
+        balanceCreditRateHint: '用于余额充值到账换算。填写规则：1 CNY = 多少 USD 余额。非稳定币支付按此比例计算实际到账。',
         orderTimeoutMinutes: '订单超时（分钟）',
         loadingEnvDefaults: '加载默认值...',
         providerManagement: '服务商管理',
@@ -278,6 +283,7 @@ function PaymentConfigContent() {
   const [rcMaxAmount, setRcMaxAmount] = useState('');
   const [rcDailyLimit, setRcDailyLimit] = useState('');
   const [rcUsdExchangeRate, setRcUsdExchangeRate] = useState(DEFAULT_USD_EXCHANGE_RATE.toFixed(2));
+  const [rcBalanceCreditRate, setRcBalanceCreditRate] = useState(DEFAULT_BALANCE_CREDIT_USD_PER_CNY.toFixed(4));
   const [rcOrderTimeout, setRcOrderTimeout] = useState('');
   const [loadingEnvDefaults, setLoadingEnvDefaults] = useState(false);
 
@@ -337,6 +343,8 @@ function PaymentConfigContent() {
         if (c.key === 'RECHARGE_MAX_AMOUNT') setRcMaxAmount(c.value);
         if (c.key === 'DAILY_RECHARGE_LIMIT') setRcDailyLimit(c.value);
         if (c.key === 'USD_EXCHANGE_RATE') setRcUsdExchangeRate(c.value || DEFAULT_USD_EXCHANGE_RATE.toFixed(2));
+        if (c.key === 'BALANCE_CREDIT_USD_PER_CNY')
+          setRcBalanceCreditRate(c.value || DEFAULT_BALANCE_CREDIT_USD_PER_CNY.toFixed(4));
         if (c.key === 'ORDER_TIMEOUT_MINUTES') setRcOrderTimeout(c.value);
         if (c.key === 'LOAD_BALANCE_STRATEGY') setRcLoadBalanceStrategy(c.value || 'round-robin');
         if (c.key === 'DEFAULT_DEDUCT_BALANCE') setRcAutoRefundEnabled(c.value === 'true');
@@ -582,6 +590,7 @@ function PaymentConfigContent() {
             { key: 'RECHARGE_MAX_AMOUNT', value: rcMaxAmount, group: 'payment', label: '最大到账金额（USD）' },
             { key: 'DAILY_RECHARGE_LIMIT', value: rcDailyLimit, group: 'payment', label: '每日到账限额（USD）' },
             { key: 'USD_EXCHANGE_RATE', value: rcUsdExchangeRate, group: 'payment', label: '美元汇率' },
+            { key: 'BALANCE_CREDIT_USD_PER_CNY', value: rcBalanceCreditRate, group: 'payment', label: '到账比例' },
             { key: 'ORDER_TIMEOUT_MINUTES', value: rcOrderTimeout, group: 'payment', label: '订单超时时间' },
             { key: 'LOAD_BALANCE_STRATEGY', value: rcLoadBalanceStrategy, group: 'payment', label: '负载均衡策略' },
             { key: 'ENABLED_PROVIDERS', value: rcEnabledProviders, group: 'payment', label: '启用的服务商' },
@@ -867,7 +876,7 @@ function PaymentConfigContent() {
                 </div>
 
                 {/* Amount / timeout fields */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-4">
                   <div>
                     <label className={labelCls}>{t.minRechargeAmount}</label>
                     <input
@@ -910,6 +919,17 @@ function PaymentConfigContent() {
                     />
                   </div>
                   <div>
+                    <label className={labelCls}>{t.balanceCreditRate}</label>
+                    <input
+                      type="number"
+                      min="0.0001"
+                      step="0.0001"
+                      value={rcBalanceCreditRate}
+                      onChange={(e) => setRcBalanceCreditRate(e.target.value)}
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
                     <label className={labelCls}>{t.orderTimeoutMinutes}</label>
                     <input
                       type="number"
@@ -920,9 +940,10 @@ function PaymentConfigContent() {
                     />
                   </div>
                 </div>
-                <p className={`-mt-1 mb-4 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {t.usdExchangeRateHint}
-                </p>
+                <div className={`-mt-1 mb-4 space-y-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <p>{t.usdExchangeRateHint}</p>
+                  <p>{t.balanceCreditRateHint}</p>
+                </div>
 
                 {/* ── 服务商管理 ── */}
                 {enabledProviderKeys.length > 0 && (

@@ -7,9 +7,21 @@ vi.mock('@/lib/system-config', () => ({
   getSystemConfig: (...args: unknown[]) => mockGetSystemConfig(...(args as [string])),
 }));
 
+vi.mock('@/lib/config', () => ({
+  getEnv: () => ({
+    BALANCE_CREDIT_USD_PER_CNY: 1,
+  }),
+}));
+
+const mockOrderGroupBy = vi.fn();
+const mockFindManyProviderInstances = vi.fn();
+
 vi.mock('@/lib/db', () => ({
   prisma: {
-    order: { groupBy: vi.fn() },
+    order: { groupBy: (...args: unknown[]) => mockOrderGroupBy(...args) },
+    paymentProviderInstance: {
+      findMany: (...args: unknown[]) => mockFindManyProviderInstances(...args),
+    },
   },
 }));
 
@@ -22,7 +34,7 @@ vi.mock('@/lib/payment', () => ({
 }));
 
 import { paymentRegistry } from '@/lib/payment';
-import { getMethodDailyLimit, getMethodSingleLimit } from '@/lib/order/limits';
+import { getMethodDailyLimit, getMethodSingleLimit, queryMethodLimits } from '@/lib/order/limits';
 
 const mockedGetDefaultLimit = vi.mocked(paymentRegistry.getDefaultLimit);
 
@@ -30,6 +42,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetSystemConfig.mockResolvedValue(undefined);
   mockedGetDefaultLimit.mockReturnValue(undefined);
+  mockOrderGroupBy.mockResolvedValue([]);
+  mockFindManyProviderInstances.mockResolvedValue([]);
+  delete process.env.FEE_RATE_ALIPAY;
 });
 
 describe('getMethodDailyLimit', () => {
@@ -154,5 +169,30 @@ describe('getMethodSingleLimit', () => {
 
   it('未知支付类型返回 0', async () => {
     expect(await getMethodSingleLimit('unknown_type')).toBe(0);
+  });
+});
+
+describe('queryMethodLimits', () => {
+  it('将支付渠道单笔上限换算成到账 USD', async () => {
+    mockGetSystemConfig.mockImplementation(async (key) => {
+      if (key === 'BALANCE_CREDIT_USD_PER_CNY') return '0.15';
+      return undefined;
+    });
+    mockedGetDefaultLimit.mockReturnValue({ singleMax: 1000, dailyMax: 10000 } as MethodDefaultLimits);
+
+    const result = await queryMethodLimits(['alipay']);
+
+    expect(result.alipay.singleMax).toBe(150);
+    expect(result.alipay.dailyLimit).toBe(1500);
+    expect(result.alipay.available).toBe(true);
+  });
+
+  it('在有手续费时按网关实付上限反推到账上限', async () => {
+    process.env.FEE_RATE_ALIPAY = '10';
+    mockedGetDefaultLimit.mockReturnValue({ singleMax: 110 } as MethodDefaultLimits);
+
+    const result = await queryMethodLimits(['alipay']);
+
+    expect(result.alipay.singleMax).toBe(100);
   });
 });

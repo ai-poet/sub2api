@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { PAYMENT_TYPE_META, getPaymentIconType, getPaymentMeta, getPaymentDisplayInfo } from '@/lib/pay-utils';
-import { getSettlementDisplay, isStablecoinPaymentType } from '@/lib/currency';
+import { convertUsdBalanceToCnyPayment, getSettlementDisplay, isStablecoinPaymentType } from '@/lib/currency';
 
 export interface MethodLimitInfo {
   available: boolean;
@@ -25,6 +25,7 @@ interface PaymentFormProps {
   minAmount: number;
   maxAmount: number;
   usdExchangeRate?: number | null;
+  balanceCreditRate?: number | null;
   onSubmit: (amount: number, paymentType: string) => Promise<void>;
   loading?: boolean;
   dark?: boolean;
@@ -51,6 +52,7 @@ export default function PaymentForm({
   minAmount,
   maxAmount,
   usdExchangeRate,
+  balanceCreditRate,
   onSubmit,
   loading,
   dark = false,
@@ -100,10 +102,15 @@ export default function PaymentForm({
   const effectiveMin =
     methodSingleMin !== undefined && methodSingleMin > 0 ? Math.max(methodSingleMin, minAmount) : minAmount;
   const feeRate = methodLimits?.[effectivePaymentType]?.feeRate ?? 0;
-  const feeAmount = feeRate > 0 && selectedAmount > 0 ? Math.ceil(((selectedAmount * feeRate) / 100) * 100) / 100 : 0;
-  const payAmount =
-    feeRate > 0 && selectedAmount > 0 ? Math.round((selectedAmount + feeAmount) * 100) / 100 : selectedAmount;
-  const settlementDisplay = getSettlementDisplay(payAmount, effectivePaymentType, usdExchangeRate);
+  const settlementAmountCny =
+    selectedAmount > 0 ? (convertUsdBalanceToCnyPayment(selectedAmount, balanceCreditRate) ?? selectedAmount) : 0;
+  const feeAmount =
+    feeRate > 0 && settlementAmountCny > 0 ? Math.ceil(((settlementAmountCny * feeRate) / 100) * 100) / 100 : 0;
+  const payAmountCny =
+    feeRate > 0 && settlementAmountCny > 0
+      ? Math.round((settlementAmountCny + feeAmount) * 100) / 100
+      : settlementAmountCny;
+  const settlementDisplay = getSettlementDisplay(payAmountCny, effectivePaymentType, usdExchangeRate);
   const showStablecoinSettlement = isStablecoinPaymentType(effectivePaymentType) && settlementDisplay.currency === 'USD';
   const showPaymentSummary = selectedAmount > 0;
   const isValid =

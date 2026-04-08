@@ -43,6 +43,7 @@ interface AppConfig {
   maxAmount: number;
   maxDailyAmount: number;
   usdExchangeRate?: number | null;
+  balanceCreditRate?: number | null;
   methodLimits?: Record<string, MethodLimitInfo>;
   helpImageUrl?: string | null;
   helpText?: string | null;
@@ -214,6 +215,7 @@ function PayContent() {
             maxAmount: cfgData.config.maxAmount ?? 1000,
             maxDailyAmount: cfgData.config.maxDailyAmount ?? 0,
             usdExchangeRate: cfgData.config.usdExchangeRate ?? null,
+            balanceCreditRate: cfgData.config.balanceCreditRate ?? null,
             methodLimits: cfgData.config.methodLimits,
             helpImageUrl: cfgData.config.helpImageUrl ?? null,
             helpText: cfgData.config.helpText ?? null,
@@ -826,6 +828,7 @@ function PayContent() {
                         minAmount={config.minAmount}
                         maxAmount={config.maxAmount}
                         usdExchangeRate={config.usdExchangeRate}
+                        balanceCreditRate={config.balanceCreditRate}
                         onSubmit={handleSubmit}
                         loading={loading}
                         dark={isDark}
@@ -927,6 +930,7 @@ function PayContent() {
                 minAmount={config.minAmount}
                 maxAmount={config.maxAmount}
                 usdExchangeRate={config.usdExchangeRate}
+                balanceCreditRate={config.balanceCreditRate}
                 onSubmit={handleSubmit}
                 loading={loading}
                 dark={isDark}
@@ -969,6 +973,7 @@ function PayContent() {
                     minAmount={config.minAmount}
                     maxAmount={config.maxAmount}
                     usdExchangeRate={config.usdExchangeRate}
+                    balanceCreditRate={config.balanceCreditRate}
                     onSubmit={handleSubmit}
                     loading={loading}
                     dark={isDark}
@@ -1000,6 +1005,7 @@ function PayContent() {
                       minAmount={config.minAmount}
                       maxAmount={config.maxAmount}
                       usdExchangeRate={config.usdExchangeRate}
+                      balanceCreditRate={config.balanceCreditRate}
                       onSubmit={handleSubmit}
                       loading={loading}
                       dark={isDark}
@@ -1029,7 +1035,7 @@ function PayContent() {
                         </li>
                         {config.maxDailyAmount > 0 && (
                           <li>
-                            {pickLocaleText(locale, '每日最大充值', 'Max daily recharge')} ¥
+                            {pickLocaleText(locale, '每日累计到账上限', 'Max daily credited amount')} $
                             {config.maxDailyAmount.toFixed(2)}
                           </li>
                         )}

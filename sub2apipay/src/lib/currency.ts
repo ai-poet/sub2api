@@ -1,6 +1,7 @@
 import { PAYMENT_PREFIX } from './constants';
 
 export const DEFAULT_USD_EXCHANGE_RATE = 7.2;
+export const DEFAULT_BALANCE_CREDIT_USD_PER_CNY = 1;
 
 export interface SettlementDisplay {
   currency: 'CNY' | 'USD';
@@ -10,6 +11,14 @@ export interface SettlementDisplay {
 }
 
 export function normalizeUsdExchangeRate(value: number | string | null | undefined): number | null {
+  const parsed = typeof value === 'string' ? parseFloat(value) : value;
+  if (parsed == null || !Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return Math.round(parsed * 10000) / 10000;
+}
+
+export function normalizeBalanceCreditRate(value: number | string | null | undefined): number | null {
   const parsed = typeof value === 'string' ? parseFloat(value) : value;
   if (parsed == null || !Number.isFinite(parsed) || parsed <= 0) {
     return null;
@@ -49,5 +58,46 @@ export function getSettlementDisplay(
     symbol: '$',
     amount: Math.round((normalizedAmount / normalizedRate) * 100) / 100,
     exchangeRate: normalizedRate,
+  };
+}
+
+export function convertUsdBalanceToCnyPayment(
+  amountUsd: number,
+  balanceCreditRate: number | string | null | undefined,
+): number | null {
+  const normalizedRate = normalizeBalanceCreditRate(balanceCreditRate);
+  if (!normalizedRate || !Number.isFinite(amountUsd)) {
+    return null;
+  }
+  return Math.round((amountUsd / normalizedRate) * 100) / 100;
+}
+
+export function convertCnySettlementToUsdBalance(
+  amountCny: number,
+  balanceCreditRate: number | string | null | undefined,
+): number | null {
+  const normalizedRate = normalizeBalanceCreditRate(balanceCreditRate);
+  if (!normalizedRate || !Number.isFinite(amountCny)) {
+    return null;
+  }
+  return Math.round(amountCny * normalizedRate * 100) / 100;
+}
+
+export function getBalanceRechargeSettlementDisplay(
+  creditedAmountUsd: number,
+  paymentType: string | null | undefined,
+  balanceCreditRate: number | string | null | undefined,
+): SettlementDisplay {
+  const normalizedAmount = Number.isFinite(creditedAmountUsd) ? Math.round(creditedAmountUsd * 100) / 100 : 0;
+  if (isStablecoinPaymentType(paymentType)) {
+    return { currency: 'USD', symbol: '$', amount: normalizedAmount, exchangeRate: null };
+  }
+
+  const amountCny = convertUsdBalanceToCnyPayment(normalizedAmount, balanceCreditRate);
+  return {
+    currency: 'CNY',
+    symbol: '¥',
+    amount: amountCny ?? normalizedAmount,
+    exchangeRate: null,
   };
 }

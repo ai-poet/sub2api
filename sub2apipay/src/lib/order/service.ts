@@ -4,7 +4,7 @@ import { buildDefaultRechargeSubject, buildDefaultSubscriptionSubject } from '@/
 import { ORDER_STATUS } from '@/lib/constants';
 import { generateRechargeCode } from './code-gen';
 import { getMethodDailyLimit } from './limits';
-import { getMethodFeeRate, calculatePayAmount } from './fee';
+import { getMethodFeeRate, calculatePayAmount, getMaxSettlementAmountForPayLimit } from './fee';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import type { PaymentType, PaymentNotification, PaymentProvider } from '@/lib/payment';
 import {
@@ -25,6 +25,7 @@ import { buildOrderResultUrl, createOrderStatusAccessToken } from '@/lib/order/s
 import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
 import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/lib/payment/load-balancer';
 import { createProviderFromInstance } from '@/lib/payment/provider-factory';
+import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, normalizeBalanceCreditRate } from '@/lib/currency';
 
 const DEFAULT_MAX_PENDING_ORDERS = 3;
 /** Decimal(10,2) 允许的最大金额 */
@@ -232,6 +233,15 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     input.amount = Number(plan.price);
   }
 
+  const balanceCreditRateConfig =
+    orderType === 'balance' ? await getSystemConfig('BALANCE_CREDIT_USD_PER_CNY') : undefined;
+  const balanceCreditRate =
+    orderType === 'balance'
+      ? normalizeBalanceCreditRate(balanceCreditRateConfig) ??
+        normalizeBalanceCreditRate(env.BALANCE_CREDIT_USD_PER_CNY) ??
+        1
+      : null;
+
   const user = await getUser(input.userId);
   if (user.status !== 'active') {
     throw new OrderError('USER_INACTIVE', message(locale, '用户账号已被禁用', 'User account is disabled'), 422);
@@ -327,8 +337,12 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     }
   }
 
+  const settlementAmount =
+    orderType === 'balance'
+      ? convertUsdBalanceToCnyPayment(input.amount, balanceCreditRate) ?? input.amount
+      : input.amount;
   const feeRate = getMethodFeeRate(input.paymentType);
-  const payAmountStr = calculatePayAmount(input.amount, feeRate);
+  const payAmountStr = calculatePayAmount(settlementAmount, feeRate);
   const payAmountNum = Number(payAmountStr);
 
   const orderTimeoutConfig = await getSystemConfig('ORDER_TIMEOUT_MINUTES');
@@ -368,10 +382,11 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     }
 
     // 每日累计充值限额校验（0 = 不限制）
-    if (maxDailyRechargeAmount > 0) {
+    if (orderType === 'balance' && maxDailyRechargeAmount > 0) {
       const dailyAgg = await tx.order.aggregate({
         where: {
           userId: input.userId,
+          orderType: 'balance',
           status: { in: [ORDER_STATUS.PAID, ORDER_STATUS.RECHARGING, ORDER_STATUS.COMPLETED] },
           paidAt: { gte: todayStart },
         },
@@ -401,23 +416,30 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           status: { in: [ORDER_STATUS.PAID, ORDER_STATUS.RECHARGING, ORDER_STATUS.COMPLETED] },
           paidAt: { gte: todayStart },
         },
-        _sum: { amount: true },
+        _sum: { payAmount: true },
       });
-      const methodUsed = Number(methodAgg._sum.amount ?? 0);
-      if (methodUsed + input.amount > methodDailyLimit) {
-        const remaining = Math.max(0, methodDailyLimit - methodUsed);
+      const methodUsed = Number(methodAgg._sum.payAmount ?? 0);
+      if (methodUsed + payAmountNum > methodDailyLimit) {
+        const remainingGatewayPay = Math.max(0, methodDailyLimit - methodUsed);
+        const remainingCredited =
+          orderType === 'balance' && balanceCreditRate
+            ? convertCnySettlementToUsdBalance(
+                getMaxSettlementAmountForPayLimit(remainingGatewayPay, feeRate),
+                balanceCreditRate,
+              )
+            : null;
         throw new OrderError(
           'METHOD_DAILY_LIMIT_EXCEEDED',
-          remaining > 0
+          remainingCredited !== null && remainingCredited > 0
             ? message(
                 locale,
-                `${input.paymentType} 今日剩余到账额度 $${remaining.toFixed(2)}，请减少到账金额或使用其他支付方式`,
-                `${input.paymentType} remaining daily credited quota: $${remaining.toFixed(2)}. Reduce the credited amount or use another payment method`,
+                `${input.paymentType} 今日剩余到账额度 $${remainingCredited.toFixed(2)}，请减少到账金额或使用其他支付方式`,
+                `${input.paymentType} remaining daily credited quota: $${remainingCredited.toFixed(2)}. Reduce the credited amount or use another payment method`,
               )
             : message(
                 locale,
-                `${input.paymentType} 今日到账额度已满，请使用其他支付方式`,
-                `${input.paymentType} daily credited quota is full. Please use another payment method`,
+                `${input.paymentType} 今日支付额度已满，请使用其他支付方式`,
+                `${input.paymentType} daily payment quota is full. Please use another payment method`,
               ),
           429,
         );
@@ -469,7 +491,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     const strategyConfig = await getSystemConfig('LOAD_BALANCE_STRATEGY');
     const strategy = (strategyConfig === 'least-amount' ? 'least-amount' : 'round-robin') as LoadBalanceStrategy;
 
-    const instanceResult = await selectInstance(provider.providerKey, strategy, input.paymentType, input.amount);
+    const instanceResult = await selectInstance(provider.providerKey, strategy, input.paymentType, payAmountNum);
     if (instanceResult) {
       const instanceProvider = await createProviderFromInstance(
         provider.providerKey,
