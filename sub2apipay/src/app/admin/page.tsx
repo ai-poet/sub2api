@@ -8,6 +8,7 @@ import DailyChart from '@/components/admin/DailyChart';
 import Leaderboard from '@/components/admin/Leaderboard';
 import PaymentMethodChart from '@/components/admin/PaymentMethodChart';
 import { resolveLocale } from '@/lib/locale';
+import { buildAppApiPath } from '@/lib/public-path';
 
 interface DashboardData {
   summary: {
@@ -78,7 +79,7 @@ function DashboardContent() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/admin/dashboard?token=${encodeURIComponent(token)}&days=${days}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/dashboard?token=${encodeURIComponent(token)}&days=${days}`));
       if (!res.ok) {
         if (res.status === 401) {
           setError(text.invalidToken);

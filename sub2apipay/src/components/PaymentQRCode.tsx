@@ -7,6 +7,7 @@ import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
 import { isStripeType, getPaymentMeta, getPaymentIconSrc, getPaymentChannelLabel } from '@/lib/pay-utils';
 import { buildOrderStatusUrl } from '@/lib/order/status-url';
 import { TERMINAL_STATUSES } from '@/lib/constants';
+import { buildAppApiPath } from '@/lib/public-path';
 
 interface PaymentQRCodeProps {
   orderId: string;
@@ -358,7 +359,7 @@ export default function PaymentQRCode({
         return;
       }
 
-      const cancelRes = await fetch(`/api/orders/${orderId}/cancel`, {
+      const cancelRes = await fetch(buildAppApiPath(`/api/orders/${orderId}/cancel`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),

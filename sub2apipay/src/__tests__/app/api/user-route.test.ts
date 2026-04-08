@@ -6,6 +6,7 @@ const mockGetUser = vi.fn();
 const mockGetSystemConfig = vi.fn();
 const mockQueryMethodLimits = vi.fn();
 const mockGetSupportedTypes = vi.fn();
+const mockFindManyProviderInstances = vi.fn();
 
 vi.mock('@/lib/sub2api/client', () => ({
   getCurrentUserByToken: (...args: unknown[]) => mockGetCurrentUserByToken(...args),
@@ -32,6 +33,20 @@ vi.mock('@/lib/payment', () => ({
   ensureDBProviders: vi.fn().mockResolvedValue(undefined),
   paymentRegistry: {
     getSupportedTypes: (...args: unknown[]) => mockGetSupportedTypes(...args),
+    getProviderKey: (type: string) => {
+      if (type.startsWith('alipay')) return 'alipay';
+      if (type.startsWith('wxpay')) return 'wxpay';
+      if (type.startsWith('stripe')) return 'stripe';
+      return type;
+    },
+  },
+}));
+
+vi.mock('@/lib/db', () => ({
+  prisma: {
+    paymentProviderInstance: {
+      findMany: (...args: unknown[]) => mockFindManyProviderInstances(...args),
+    },
   },
 }));
 
@@ -76,6 +91,7 @@ describe('GET /api/user', () => {
     mockGetCurrentUserByToken.mockResolvedValue({ id: 1, status: 'active' });
     mockGetUser.mockResolvedValue({ id: 1, status: 'active' });
     mockGetSupportedTypes.mockReturnValue(['alipay', 'wxpay', 'stripe']);
+    mockFindManyProviderInstances.mockResolvedValue([]);
     mockQueryMethodLimits.mockResolvedValue({
       alipay: { maxDailyAmount: 1000 },
       wxpay: { maxDailyAmount: 1000 },

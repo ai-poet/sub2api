@@ -247,8 +247,8 @@ describe('Payment Flow - PC/Mobile, QR/Redirect', () => {
       const result = await provider.createPayment(request);
 
       expect(result.tradeNo).toBe('order-ali-001');
-      expect(result.payUrl).toBe('https://pay.example.com/pay/order-ali-001');
-      expect(result.qrCode).toBe('https://pay.example.com/pay/order-ali-001');
+      expect(result.payUrl).toBe('/pay/order-ali-001');
+      expect(result.qrCode).toBe('/pay/order-ali-001');
       expect(mockAlipayPageExecute).not.toHaveBeenCalled();
 
       expect(
@@ -289,6 +289,7 @@ describe('Payment Flow - PC/Mobile, QR/Redirect', () => {
         expect.objectContaining({
           method: 'alipay.trade.wap.pay',
         }),
+        undefined,
       );
 
       // Mobile + payUrl => shouldAutoRedirect = true
@@ -321,6 +322,7 @@ describe('Payment Flow - PC/Mobile, QR/Redirect', () => {
       expect(mockAlipayPageExecute).toHaveBeenCalledWith(
         expect.objectContaining({ product_code: 'QUICK_WAP_WAY' }),
         expect.objectContaining({ method: 'alipay.trade.wap.pay' }),
+        undefined,
       );
     });
 

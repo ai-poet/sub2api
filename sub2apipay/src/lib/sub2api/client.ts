@@ -1,4 +1,4 @@
-import { getSub2ApiInternalBaseUrl } from '@/lib/config';
+import { getEnv } from '@/lib/config';
 import { getInternalPayHeaders } from '@/lib/internal-auth';
 import type { Sub2ApiUser, Sub2ApiRedeemCode, Sub2ApiGroup, Sub2ApiSubscription } from './types';
 
@@ -7,7 +7,10 @@ const RECHARGE_TIMEOUT_MS = 30_000;
 const RECHARGE_MAX_ATTEMPTS = 2;
 
 function buildInternalUrl(pathname: string): string {
-  return `${getSub2ApiInternalBaseUrl()}${pathname}`;
+  const env = getEnv();
+  const baseUrl = env.SUB2API_INTERNAL_BASE_URL || env.SUB2API_BASE_URL || 'http://127.0.0.1:8080';
+  const normalized = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return `${normalized}${pathname}`;
 }
 
 function getHeaders(idempotencyKey?: string): Record<string, string> {

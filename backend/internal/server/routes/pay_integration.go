@@ -79,6 +79,8 @@ func registerPayProxyRoutes(r *gin.Engine) {
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
+		req.URL.Path = rewritePayProxyPath(req.URL.Path)
+		req.URL.RawPath = rewritePayProxyPath(req.URL.RawPath)
 		originalDirector(req)
 		if req.Header.Get("X-Forwarded-Host") == "" && req.Host != "" {
 			req.Header.Set("X-Forwarded-Host", req.Host)
@@ -105,8 +107,22 @@ func registerPayProxyRoutes(r *gin.Engine) {
 		c.Abort()
 	}
 
+	r.Any("/_next/*proxyPath", handler)
 	r.Any("/pay", handler)
 	r.Any("/pay/*proxyPath", handler)
+}
+
+func rewritePayProxyPath(path string) string {
+	switch {
+	case path == "/pay/admin" || strings.HasPrefix(path, "/pay/admin/"):
+		return strings.TrimPrefix(path, "/pay")
+	case path == "/pay/api" || strings.HasPrefix(path, "/pay/api/"):
+		return strings.TrimPrefix(path, "/pay")
+	case path == "/pay/icons" || strings.HasPrefix(path, "/pay/icons/"):
+		return strings.TrimPrefix(path, "/pay")
+	default:
+		return path
+	}
 }
 
 func resolvePayProxyTarget() string {

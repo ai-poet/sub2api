@@ -7,6 +7,27 @@ import { resolveEnabledPaymentTypes } from '@/lib/payment/resolve-enabled-types'
 const EASY_PAY_FIAT_TYPES = new Set(['alipay', 'wxpay']);
 const EASY_PAY_CRYPTO_TYPES = new Set(['usdt.plasma', 'usdt.polygon', 'usdc.solana']);
 
+function getProviderKeyForType(type: string): string | undefined {
+  const registry = paymentRegistry as {
+    getProviderKey?: (paymentType: string) => string | undefined;
+    getProvider?: (paymentType: string) => { providerKey?: string } | undefined;
+  };
+
+  if (typeof registry.getProviderKey === 'function') {
+    return registry.getProviderKey(type);
+  }
+
+  if (typeof registry.getProvider === 'function') {
+    try {
+      return registry.getProvider(type)?.providerKey;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return type || undefined;
+}
+
 function filterEasyPayTypesByLocale(types: string[], locale: Locale): string[] {
   const allowFiat = locale === 'zh';
   return types.filter((type) => {
@@ -24,7 +45,7 @@ export async function getVisiblePaymentTypes(locale?: Locale): Promise<string[]>
   const enabledTypes = resolveEnabledPaymentTypes(supportedTypes, configuredTypes);
   if (enabledTypes.length === 0) return [];
 
-  const providerKeys = [...new Set(enabledTypes.map((type) => paymentRegistry.getProviderKey(type)).filter(Boolean))] as string[];
+  const providerKeys = [...new Set(enabledTypes.map((type) => getProviderKeyForType(type)).filter(Boolean))] as string[];
   const activeInstances = providerKeys.length
     ? await prisma.paymentProviderInstance.findMany({
         where: { providerKey: { in: providerKeys }, enabled: true },
@@ -33,7 +54,7 @@ export async function getVisiblePaymentTypes(locale?: Locale): Promise<string[]>
     : [];
 
   const visible = enabledTypes.filter((type) => {
-    const providerKey = paymentRegistry.getProviderKey(type);
+    const providerKey = getProviderKeyForType(type);
     if (!providerKey) return false;
 
     const providerInstances = activeInstances.filter((instance) => instance.providerKey === providerKey);

@@ -1,16 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockGetSystemConfig = vi.fn();
-
 vi.mock('@/lib/config', () => ({
   getEnv: () => ({
+    SUB2API_INTERNAL_BASE_URL: 'https://test.sub2api.com',
     SUB2API_BASE_URL: 'https://test.sub2api.com',
-    SUB2API_ADMIN_API_KEY: 'admin-testkey123',
+    SUB2API_ADMIN_API_KEY: 'legacy-admin-testkey123',
+    JWT_SECRET: 'test-jwt-secret-123456',
   }),
-}));
-
-vi.mock('@/lib/system-config', () => ({
-  getSystemConfig: (...args: unknown[]) => mockGetSystemConfig(...args),
 }));
 
 import {
@@ -25,11 +21,11 @@ import {
   getUserSubscriptions,
   extendSubscription,
 } from '@/lib/sub2api/client';
+import { deriveInternalPayToken } from '@/lib/internal-auth';
 
 describe('Sub2API Client', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    mockGetSystemConfig.mockResolvedValue(undefined);
   });
 
   // ── getCurrentUserByToken ──
@@ -45,10 +41,10 @@ describe('Sub2API Client', () => {
     expect(user.id).toBe(1);
 
     const fetchCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(fetchCall[0]).toContain('/api/v1/auth/me');
+    expect(fetchCall[0]).toBe('https://test.sub2api.com/api/internal/pay/auth/me');
     const headers = fetchCall[1].headers as Record<string, string>;
     expect(headers['Authorization']).toBe('Bearer my-user-token');
-    // Should NOT use admin API key header
+    expect(headers['x-sub2api-pay-token']).toBe(deriveInternalPayToken());
     expect(headers['x-api-key']).toBeUndefined();
   });
 
@@ -57,10 +53,9 @@ describe('Sub2API Client', () => {
     await expect(getCurrentUserByToken('bad-token')).rejects.toThrow('401');
   });
 
-  // ── getHeaders DB precedence ──
+  // ── internal bridge auth ──
 
-  it('uses DB API key over env when available', async () => {
-    mockGetSystemConfig.mockResolvedValue('db-api-key-value');
+  it('uses derived internal pay token for bridge requests', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ data: { id: 1 } }),
@@ -70,11 +65,10 @@ describe('Sub2API Client', () => {
 
     const fetchCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     const headers = fetchCall[1].headers as Record<string, string>;
-    expect(headers['x-api-key']).toBe('db-api-key-value');
+    expect(headers['x-sub2api-pay-token']).toBe(deriveInternalPayToken());
   });
 
-  it('falls back to env API key when DB returns empty', async () => {
-    mockGetSystemConfig.mockResolvedValue('  ');
+  it('does not send the legacy admin API key header', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ data: { id: 1 } }),
@@ -84,7 +78,7 @@ describe('Sub2API Client', () => {
 
     const fetchCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     const headers = fetchCall[1].headers as Record<string, string>;
-    expect(headers['x-api-key']).toBe('admin-testkey123');
+    expect(headers['x-api-key']).toBeUndefined();
   });
 
   // ── getUser ──

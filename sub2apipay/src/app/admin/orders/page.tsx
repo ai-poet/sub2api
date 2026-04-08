@@ -8,6 +8,7 @@ import RefundDialog from '@/components/admin/RefundDialog';
 import PaginationBar from '@/components/PaginationBar';
 import PayPageLayout from '@/components/PayPageLayout';
 import { resolveLocale } from '@/lib/locale';
+import { buildAppApiPath } from '@/lib/public-path';
 
 interface AdminOrder {
   id: string;
@@ -173,7 +174,7 @@ function AdminContent() {
       if (statusFilter) params.set('status', statusFilter);
       if (orderTypeFilter) params.set('orderType', orderTypeFilter);
 
-      const res = await fetch(`/api/admin/orders?${params}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/orders?${params}`));
       if (!res.ok) {
         if (res.status === 401) {
           setError(text.invalidToken);
@@ -199,7 +200,7 @@ function AdminContent() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`/api/admin/config?token=${token}`)
+    fetch(buildAppApiPath(`/api/admin/config?token=${token}`))
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         const val = data?.configs?.find((c: { key: string }) => c.key === 'DEFAULT_DEDUCT_BALANCE');
@@ -222,7 +223,7 @@ function AdminContent() {
   const handleRetry = async (orderId: string) => {
     if (!confirm(text.retryConfirm)) return;
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}/retry?token=${token}`, { method: 'POST' });
+      const res = await fetch(buildAppApiPath(`/api/admin/orders/${orderId}/retry?token=${token}`), { method: 'POST' });
       if (res.ok) {
         fetchOrders();
       } else {
@@ -237,7 +238,7 @@ function AdminContent() {
   const handleCancel = async (orderId: string) => {
     if (!confirm(text.cancelConfirm)) return;
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}/cancel?token=${token}`, { method: 'POST' });
+      const res = await fetch(buildAppApiPath(`/api/admin/orders/${orderId}/cancel?token=${token}`), { method: 'POST' });
       if (res.ok) {
         fetchOrders();
       } else {
@@ -266,7 +267,9 @@ function AdminContent() {
       if (order.orderType === 'subscription' && order.subscriptionGroupId) {
         // 订阅订单：获取用户该分组的活跃订阅剩余天数
         const subsRes = await fetch(
-          `/api/admin/subscriptions?token=${token}&user_id=${order.userId}&group_id=${order.subscriptionGroupId}&status=active`,
+          buildAppApiPath(
+            `/api/admin/subscriptions?token=${token}&user_id=${order.userId}&group_id=${order.subscriptionGroupId}&status=active`,
+          ),
         );
         if (subsRes.ok) {
           const subsData = await subsRes.json();
@@ -281,7 +284,7 @@ function AdminContent() {
         }
       } else {
         // 余额订单：获取用户余额
-        const userRes = await fetch(`/api/admin/user-balance?token=${token}&userId=${order.userId}`);
+        const userRes = await fetch(buildAppApiPath(`/api/admin/user-balance?token=${token}&userId=${order.userId}`));
         if (userRes.ok) {
           const userData = await userRes.json();
           setRefundUserBalance(userData.balance);
@@ -295,7 +298,7 @@ function AdminContent() {
   const handleConfirmRefund = async (reason: string, force: boolean, deductBalance: boolean, amount?: number) => {
     if (!refundOrder) return;
     try {
-      const res = await fetch(`/api/admin/refund?token=${token}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/refund?token=${token}`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -329,7 +332,7 @@ function AdminContent() {
       setRefundRequireForce(false);
       await fetchOrders();
       if (detailOrder?.id === refundOrder.id) {
-        const detailRes = await fetch(`/api/admin/orders/${refundOrder.id}?token=${token}`);
+        const detailRes = await fetch(buildAppApiPath(`/api/admin/orders/${refundOrder.id}?token=${token}`));
         if (detailRes.ok) setDetailOrder(await detailRes.json());
       }
     } catch {
@@ -339,7 +342,7 @@ function AdminContent() {
 
   const handleViewDetail = async (orderId: string) => {
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}?token=${token}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/orders/${orderId}?token=${token}`));
       if (res.ok) {
         const data = await res.json();
         setDetailOrder(data);

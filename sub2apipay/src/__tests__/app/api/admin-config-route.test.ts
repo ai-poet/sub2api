@@ -160,7 +160,7 @@ describe('PUT /api/admin/config', () => {
     );
   });
 
-  it('filters out masked sensitive values (unchanged by user)', async () => {
+  it('rejects env-only sensitive keys even when the value is masked', async () => {
     const res = await PUT(
       createRequest('PUT', {
         configs: [
@@ -170,24 +170,19 @@ describe('PUT /api/admin/config', () => {
       }),
     );
 
-    expect(res.status).toBe(200);
-    // Only the non-masked config should be passed to setSystemConfigs
-    expect(mockSetSystemConfigs).toHaveBeenCalledWith([
-      expect.objectContaining({ key: 'RECHARGE_MIN_AMOUNT', value: '10' }),
-    ]);
+    expect(res.status).toBe(400);
+    expect(mockSetSystemConfigs).not.toHaveBeenCalled();
   });
 
-  it('passes through actual (non-masked) sensitive values', async () => {
+  it('rejects env-only sensitive keys even when the value is changed', async () => {
     const res = await PUT(
       createRequest('PUT', {
         configs: [{ key: 'SUB2API_ADMIN_API_KEY', value: 'new-real-api-key' }],
       }),
     );
 
-    expect(res.status).toBe(200);
-    expect(mockSetSystemConfigs).toHaveBeenCalledWith([
-      expect.objectContaining({ key: 'SUB2API_ADMIN_API_KEY', value: 'new-real-api-key' }),
-    ]);
+    expect(res.status).toBe(400);
+    expect(mockSetSystemConfigs).not.toHaveBeenCalled();
   });
 
   it('returns 409 when removing a provider that has instances', async () => {

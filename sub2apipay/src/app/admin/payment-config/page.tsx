@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import PayPageLayout from '@/components/PayPageLayout';
 import { resolveLocale, type Locale } from '@/lib/locale';
+import { buildAppApiPath } from '@/lib/public-path';
 
 // ── i18n ──
 
@@ -309,7 +310,7 @@ function PaymentConfigContent() {
   const fetchConfig = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`/api/admin/config?token=${encodeURIComponent(token)}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/config?token=${encodeURIComponent(token)}`));
       if (!res.ok) return;
       const data = await res.json();
       const configs: { key: string; value: string }[] = data.configs ?? [];
@@ -342,7 +343,7 @@ function PaymentConfigContent() {
   const fetchInstances = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`/api/admin/provider-instances?token=${encodeURIComponent(token)}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/provider-instances?token=${encodeURIComponent(token)}`));
       if (res.ok) {
         const data = await res.json();
         setInstances(data.instances ?? []);
@@ -397,7 +398,7 @@ function PaymentConfigContent() {
       const url = editingInstance
         ? `/api/admin/provider-instances/${editingInstance.id}`
         : '/api/admin/provider-instances';
-      const res = await fetch(url, {
+      const res = await fetch(buildAppApiPath(url), {
         method: editingInstance ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -429,7 +430,7 @@ function PaymentConfigContent() {
   const handleDeleteInstance = async (id: string) => {
     if (!confirm(t.deleteInstanceConfirm)) return;
     try {
-      const res = await fetch(`/api/admin/provider-instances/${id}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/provider-instances/${id}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -479,7 +480,7 @@ function PaymentConfigContent() {
 
   const toggleInstanceEnabled = async (inst: ProviderInstanceData) => {
     try {
-      const res = await fetch(`/api/admin/provider-instances/${inst.id}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/provider-instances/${inst.id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ enabled: !inst.enabled }),
@@ -497,7 +498,7 @@ function PaymentConfigContent() {
 
   const toggleInstanceRefundEnabled = async (inst: ProviderInstanceData) => {
     try {
-      const res = await fetch(`/api/admin/provider-instances/${inst.id}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/provider-instances/${inst.id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ refundEnabled: !inst.refundEnabled }),
@@ -519,7 +520,7 @@ function PaymentConfigContent() {
     setRcSaving(true);
     setError('');
     try {
-      const res = await fetch('/api/admin/config', {
+      const res = await fetch(buildAppApiPath('/api/admin/config'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({

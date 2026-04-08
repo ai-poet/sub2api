@@ -37,7 +37,7 @@ vi.mock('@/lib/sub2api/client', () => ({
 }));
 
 const mockProviderRefund = vi.fn();
-const mockGetProvider = vi.fn().mockReturnValue({ refund: mockProviderRefund });
+const mockGetProvider = vi.fn().mockReturnValue({ providerKey: 'easypay', refund: mockProviderRefund });
 
 vi.mock('@/lib/payment', () => ({
   initPaymentProviders: vi.fn(),
@@ -67,6 +67,7 @@ vi.mock('@/lib/easy-pay/provider', () => {
 
 vi.mock('@/lib/config', () => ({
   getEnv: () => ({
+    JWT_SECRET: 'test-jwt-secret-123456',
     ADMIN_TOKEN: 'test-admin-token',
   }),
 }));
@@ -813,8 +814,10 @@ describe('processRefund', () => {
 
     expect(result.success).toBe(true);
     expect(mockGetInstanceConfig).toHaveBeenCalledWith('inst-002');
-    // 当 instConfig 存在时，不应回退到 paymentRegistry
-    expect(mockGetProvider).not.toHaveBeenCalled();
+    // 允许为了 providerKey 解析读取一次注册表，但退款应走实例 provider
+    expect(mockGetProvider).toHaveBeenCalledTimes(1);
+    expect(mockProviderRefund).not.toHaveBeenCalled();
+    expect(mockEasyPayProviderRefund).toHaveBeenCalled();
   });
 
   // ── CAS 锁在 requireForce 返回前不应执行 ──

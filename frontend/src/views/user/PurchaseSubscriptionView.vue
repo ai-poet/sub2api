@@ -90,7 +90,9 @@ const purchaseEnabled = computed(() => {
 
 const purchaseUrl = computed(() => {
   if (!purchaseEnabled.value) return ''
-  return buildEmbeddedUrl('/pay', authStore.user?.id, authStore.token, purchaseTheme.value, locale.value)
+  const configuredUrl = (appStore.cachedPublicSettings?.purchase_subscription_url || '').trim()
+  const baseUrl = configuredUrl || '/pay'
+  return buildEmbeddedUrl(baseUrl, authStore.user?.id, authStore.token, purchaseTheme.value, locale.value)
 })
 
 const isValidUrl = computed(() => {

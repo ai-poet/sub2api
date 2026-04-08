@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSub2ApiInternalBaseUrl } from '@/lib/config';
+import { getEnv } from '@/lib/config';
 import { getInternalPayHeaders } from '@/lib/internal-auth';
 import { resolveLocale } from '@/lib/locale';
 
 async function isSub2ApiAdmin(token: string): Promise<boolean> {
   try {
+    const env = getEnv();
+    const candidate = env.SUB2API_INTERNAL_BASE_URL || env.SUB2API_BASE_URL || 'http://127.0.0.1:8080';
+    const baseUrl = candidate.endsWith('/') ? candidate.slice(0, -1) : candidate;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
-    const response = await fetch(`${getSub2ApiInternalBaseUrl()}/api/internal/pay/auth/admin`, {
+    const response = await fetch(`${baseUrl}/api/internal/pay/auth/admin`, {
       headers: {
         ...getInternalPayHeaders(),
         Authorization: `Bearer ${token}`,

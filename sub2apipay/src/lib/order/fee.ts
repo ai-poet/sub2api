@@ -1,6 +1,27 @@
 import { initPaymentProviders, paymentRegistry } from '@/lib/payment';
 import { Prisma } from '@prisma/client';
 
+function getProviderKeyForType(paymentType: string): string | undefined {
+  const registry = paymentRegistry as {
+    getProviderKey?: (type: string) => string | undefined;
+    getProvider?: (type: string) => { providerKey?: string } | undefined;
+  };
+
+  if (typeof registry.getProviderKey === 'function') {
+    return registry.getProviderKey(paymentType);
+  }
+
+  if (typeof registry.getProvider === 'function') {
+    try {
+      return registry.getProvider(paymentType)?.providerKey;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 /**
  * 获取指定支付渠道的手续费率（百分比）。
  * 优先级：FEE_RATE_{TYPE} > FEE_RATE_PROVIDER_{KEY} > 0
@@ -15,7 +36,7 @@ export function getMethodFeeRate(paymentType: string): number {
 
   // 提供商级别：FEE_RATE_PROVIDER_EASYPAY / FEE_RATE_PROVIDER_STRIPE
   initPaymentProviders();
-  const providerKey = paymentRegistry.getProviderKey(paymentType);
+  const providerKey = getProviderKeyForType(paymentType);
   if (providerKey) {
     const providerRaw = process.env[`FEE_RATE_PROVIDER_${providerKey.toUpperCase()}`];
     if (providerRaw !== undefined && providerRaw !== '') {

@@ -2,13 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@/lib/config', () => ({
   getEnv: () => ({
+    SUB2API_INTERNAL_BASE_URL: 'https://test.sub2api.com',
     SUB2API_BASE_URL: 'https://test.sub2api.com',
-    SUB2API_ADMIN_API_KEY: 'admin-testkey123',
+    SUB2API_ADMIN_API_KEY: 'legacy-admin-testkey123',
+    JWT_SECRET: 'test-jwt-secret-123456',
   }),
-}));
-
-vi.mock('@/lib/system-config', () => ({
-  getSystemConfig: () => Promise.resolve(undefined),
 }));
 
 import { listSubscriptions } from '@/lib/sub2api/client';
@@ -28,7 +26,7 @@ describe('listSubscriptions', () => {
 
     const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     // URL should end with "subscriptions?" and have no params after the ?
-    expect(url).toBe('https://test.sub2api.com/api/v1/admin/subscriptions?');
+    expect(url).toBe('https://test.sub2api.com/api/internal/pay/subscriptions?');
   });
 
   it('should build correct query params when all params provided', async () => {

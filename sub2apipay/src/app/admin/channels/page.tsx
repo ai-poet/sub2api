@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import PayPageLayout from '@/components/PayPageLayout';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { PlatformBadge, getPlatformStyle } from '@/lib/platform-style';
+import { buildAppApiPath } from '@/lib/public-path';
 
 // ── Types ──
 
@@ -230,7 +231,7 @@ function ChannelsContent() {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/channels?token=${encodeURIComponent(token)}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/channels?token=${encodeURIComponent(token)}`));
       if (!res.ok) {
         if (res.status === 401) {
           setError(t.invalidToken);
@@ -318,7 +319,7 @@ function ChannelsContent() {
       const url = editingChannel ? `/api/admin/channels/${editingChannel.id}` : '/api/admin/channels';
       const method = editingChannel ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await fetch(buildAppApiPath(url), {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -347,7 +348,7 @@ function ChannelsContent() {
   const handleDelete = async (channel: Channel) => {
     if (!confirm(t.deleteConfirm)) return;
     try {
-      const res = await fetch(`/api/admin/channels/${channel.id}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/channels/${channel.id}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -366,7 +367,7 @@ function ChannelsContent() {
 
   const handleToggleEnabled = async (channel: Channel) => {
     try {
-      const res = await fetch(`/api/admin/channels/${channel.id}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/channels/${channel.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -389,7 +390,7 @@ function ChannelsContent() {
     setSyncLoading(true);
     setSyncSelected(new Set());
     try {
-      const res = await fetch(`/api/admin/sub2api/groups?token=${encodeURIComponent(token)}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/sub2api/groups?token=${encodeURIComponent(token)}`));
       if (!res.ok) throw new Error();
       const data = await res.json();
       setSyncGroups(data.groups ?? []);
@@ -429,7 +430,7 @@ function ChannelsContent() {
       if (!group) continue;
 
       try {
-        const res = await fetch('/api/admin/channels', {
+        const res = await fetch(buildAppApiPath('/api/admin/channels'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

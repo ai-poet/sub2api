@@ -9,6 +9,7 @@ import OrderTable from '@/components/OrderTable';
 import PaginationBar from '@/components/PaginationBar';
 import { applyLocaleToSearchParams, pickLocaleText, resolveLocale } from '@/lib/locale';
 import { detectDeviceIsMobile, type UserInfo, type MyOrder, type OrderStatusFilter } from '@/lib/pay-utils';
+import { buildAppApiPath } from '@/lib/public-path';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
 
@@ -93,7 +94,7 @@ function OrdersContent() {
         page: String(targetPage),
         page_size: String(targetPageSize),
       });
-      const res = await fetch(`/api/orders/my?${params}`);
+      const res = await fetch(buildAppApiPath(`/api/orders/my?${params}`));
       if (!res.ok) {
         setError(res.status === 401 ? text.sessionExpired : text.loadFailed);
         setOrders([]);
@@ -145,7 +146,7 @@ function OrdersContent() {
   const handleRefundRequest = async (orderId: string, amount: number, reason: string) => {
     const params = new URLSearchParams({ token });
     applyLocaleToSearchParams(params, locale);
-    const res = await fetch(`/api/orders/${orderId}/refund-request?${params.toString()}`, {
+    const res = await fetch(buildAppApiPath(`/api/orders/${orderId}/refund-request?${params.toString()}`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount, reason }),

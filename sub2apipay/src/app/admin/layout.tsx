@@ -3,6 +3,7 @@
 import { useSearchParams, usePathname } from 'next/navigation';
 import { Suspense } from 'react';
 import { resolveLocale } from '@/lib/locale';
+import { withPublicBasePath } from '@/lib/public-path';
 
 const NAV_ITEMS = [
   { path: '/admin', label: { zh: '数据概览', en: 'Dashboard' } },
@@ -27,7 +28,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
     if (locale !== 'zh') params.set('lang', locale);
-    return `${path}?${params.toString()}`;
+    return `${withPublicBasePath(path)}?${params.toString()}`;
   };
 
   const isActive = (navPath: string) => {

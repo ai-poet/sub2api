@@ -18,6 +18,7 @@ vi.mock('@/lib/config', () => ({
     NEXT_PUBLIC_APP_URL: 'https://pay.example.com',
     ALIPAY_NOTIFY_URL: 'https://pay.example.com/api/alipay/notify',
     ALIPAY_RETURN_URL: 'https://pay.example.com/pay/result',
+    JWT_SECRET: 'test-jwt-secret-123456',
     ADMIN_TOKEN: 'test-admin-token',
   }),
 }));

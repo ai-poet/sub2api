@@ -14,6 +14,7 @@ vi.mock('@/lib/db', () => ({
 
 vi.mock('@/lib/config', () => ({
   getEnv: () => ({
+    JWT_SECRET: 'test-jwt-secret-123456',
     ADMIN_TOKEN: 'test-admin-token',
   }),
 }));

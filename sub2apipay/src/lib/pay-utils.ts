@@ -1,5 +1,6 @@
 import { ORDER_STATUS, PAYMENT_TYPE, PAYMENT_PREFIX, REDIRECT_PAYMENT_TYPES } from './constants';
 import type { Locale } from './locale';
+import { withPublicBasePath } from './public-path';
 
 export interface UserInfo {
   id?: number;
@@ -302,7 +303,8 @@ export function getPaymentMeta(type: string): PaymentTypeMeta {
 }
 
 export function getPaymentIconSrc(type: string): string {
-  return getPaymentMeta(type).iconSrc || '';
+  const iconSrc = getPaymentMeta(type).iconSrc || '';
+  return iconSrc ? withPublicBasePath(iconSrc) : '';
 }
 
 export function getPaymentChannelLabel(type: string, locale: Locale = 'zh'): string {

@@ -64,9 +64,30 @@ export interface CreateOrderResult {
   statusAccessToken: string;
 }
 
+function getProviderKeyForType(paymentType: string): string | undefined {
+  const registry = paymentRegistry as {
+    getProviderKey?: (type: string) => string | undefined;
+    getProvider?: (type: PaymentType) => { providerKey?: string } | undefined;
+  };
+
+  if (typeof registry.getProviderKey === 'function') {
+    return registry.getProviderKey(paymentType);
+  }
+
+  if (typeof registry.getProvider === 'function') {
+    try {
+      return registry.getProvider(paymentType as PaymentType)?.providerKey;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 async function getProviderForInstance(paymentType: string, providerInstanceId: string) {
   await ensureDBProviders();
-  const providerKey = paymentRegistry.getProviderKey(paymentType);
+  const providerKey = getProviderKeyForType(paymentType);
   if (!providerKey) return null;
   const instanceConfig = await getInstanceConfig(providerInstanceId);
   if (!instanceConfig) return null;

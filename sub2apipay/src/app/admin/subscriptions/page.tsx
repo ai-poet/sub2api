@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import PayPageLayout from '@/components/PayPageLayout';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { PlatformBadge } from '@/lib/platform-style';
+import { buildAppApiPath } from '@/lib/public-path';
 
 /* ---------- types ---------- */
 
@@ -361,7 +362,7 @@ function SubscriptionsContent() {
     if (!token) return;
     setPlansLoading(true);
     try {
-      const res = await fetch(`/api/admin/subscription-plans?token=${encodeURIComponent(token)}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/subscription-plans?token=${encodeURIComponent(token)}`));
       if (!res.ok) {
         if (res.status === 401) {
           setError(t.invalidToken);
@@ -382,7 +383,7 @@ function SubscriptionsContent() {
   const fetchGroups = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`/api/admin/sub2api/groups?token=${encodeURIComponent(token)}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/sub2api/groups?token=${encodeURIComponent(token)}`));
       if (res.ok) {
         const data = await res.json();
         setGroups(Array.isArray(data) ? data : (data.groups ?? []));
@@ -466,7 +467,7 @@ function SubscriptionsContent() {
     try {
       const url = editingPlan ? `/api/admin/subscription-plans/${editingPlan.id}` : '/api/admin/subscription-plans';
       const method = editingPlan ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await fetch(buildAppApiPath(url), {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -493,7 +494,7 @@ function SubscriptionsContent() {
   const handleDelete = async (plan: SubscriptionPlan) => {
     if (!confirm(t.deleteConfirm)) return;
     try {
-      const res = await fetch(`/api/admin/subscription-plans/${plan.id}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/subscription-plans/${plan.id}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -510,7 +511,7 @@ function SubscriptionsContent() {
   /* --- toggle plan enabled --- */
   const handleToggleEnabled = async (plan: SubscriptionPlan) => {
     try {
-      const res = await fetch(`/api/admin/subscription-plans/${plan.id}`, {
+      const res = await fetch(buildAppApiPath(`/api/admin/subscription-plans/${plan.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -539,7 +540,9 @@ function SubscriptionsContent() {
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/admin/sub2api/search-users?token=${encodeURIComponent(token)}&keyword=${encodeURIComponent(value.trim())}`,
+          buildAppApiPath(
+            `/api/admin/sub2api/search-users?token=${encodeURIComponent(token)}&keyword=${encodeURIComponent(value.trim())}`,
+          ),
         );
         if (res.ok) {
           const data = await res.json();
@@ -569,7 +572,7 @@ function SubscriptionsContent() {
     try {
       const qs = new URLSearchParams({ token });
       if (subsUserId.trim()) qs.set('user_id', subsUserId.trim());
-      const res = await fetch(`/api/admin/subscriptions?${qs}`);
+      const res = await fetch(buildAppApiPath(`/api/admin/subscriptions?${qs}`));
       if (!res.ok) {
         if (res.status === 401) {
           setError(t.invalidToken);

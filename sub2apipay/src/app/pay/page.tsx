@@ -16,6 +16,7 @@ import PurchaseFlow from '@/components/PurchaseFlow';
 import { resolveLocale, pickLocaleText, applyLocaleToSearchParams } from '@/lib/locale';
 import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrder } from '@/lib/pay-utils';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
+import { buildAppApiPath } from '@/lib/public-path';
 import type { MethodLimitInfo } from '@/components/PaymentForm';
 import type { ChannelInfo } from '@/components/ChannelGrid';
 import type { PlanInfo } from '@/components/SubscriptionPlanCard';
@@ -164,7 +165,7 @@ function PayContent() {
     if (!token) return;
     setUserNotFound(false);
     try {
-      const meRes = await fetch(`/api/orders/my?token=${encodeURIComponent(token)}`);
+      const meRes = await fetch(buildAppApiPath(`/api/orders/my?token=${encodeURIComponent(token)}`));
       if (!meRes.ok) {
         setUserNotFound(true);
         return;
@@ -200,7 +201,7 @@ function PayContent() {
         setOrdersHasMore(false);
       }
 
-      const cfgRes = await fetch(`/api/user?user_id=${meId}&token=${encodeURIComponent(token)}`);
+      const cfgRes = await fetch(buildAppApiPath(`/api/user?user_id=${meId}&token=${encodeURIComponent(token)}`));
       if (cfgRes.ok) {
         const cfgData = await cfgRes.json();
         if (cfgData.config) {
@@ -232,9 +233,9 @@ function PayContent() {
     if (!token) return;
     try {
       const [chRes, plRes, subRes] = await Promise.all([
-        fetch(`/api/channels?token=${encodeURIComponent(token)}`),
-        fetch(`/api/subscription-plans?token=${encodeURIComponent(token)}`),
-        fetch(`/api/subscriptions/my?token=${encodeURIComponent(token)}`),
+        fetch(buildAppApiPath(`/api/channels?token=${encodeURIComponent(token)}`)),
+        fetch(buildAppApiPath(`/api/subscription-plans?token=${encodeURIComponent(token)}`)),
+        fetch(buildAppApiPath(`/api/subscriptions/my?token=${encodeURIComponent(token)}`)),
       ]);
 
       if (chRes.ok) {
@@ -260,7 +261,9 @@ function PayContent() {
     const nextPage = ordersPage + 1;
     setOrdersLoadingMore(true);
     try {
-      const res = await fetch(`/api/orders/my?token=${encodeURIComponent(token)}&page=${nextPage}&page_size=20`);
+      const res = await fetch(
+        buildAppApiPath(`/api/orders/my?token=${encodeURIComponent(token)}&page=${nextPage}&page_size=20`),
+      );
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data.orders) && data.orders.length > 0) {
@@ -378,7 +381,7 @@ function PayContent() {
     setError('');
 
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch(buildAppApiPath('/api/orders'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -471,7 +474,7 @@ function PayContent() {
     setError('');
 
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch(buildAppApiPath('/api/orders'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

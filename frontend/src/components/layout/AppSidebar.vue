@@ -189,7 +189,7 @@ import { useI18n } from 'vue-i18n'
 import { useAdminSettingsStore, useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
 import VersionBadge from '@/components/common/VersionBadge.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
-import { buildEmbeddedUrl, buildStandaloneUrl } from '@/utils/embedded-url'
+import { buildStandaloneUrl } from '@/utils/embedded-url'
 
 interface NavItem {
   path?: string
@@ -223,8 +223,14 @@ function getCurrentThemeMode(): 'light' | 'dark' {
   return isDark.value ? 'dark' : 'light'
 }
 
-const purchasePageUrl = computed(() =>
-  buildEmbeddedUrl('/pay', authStore.user?.id, authStore.token, getCurrentThemeMode(), locale.value)
+const configuredPurchaseUrl = computed(() =>
+  (appStore.cachedPublicSettings?.purchase_subscription_url || '').trim()
+)
+
+const purchaseWindowUrl = computed(() =>
+  configuredPurchaseUrl.value
+    ? configuredPurchaseUrl.value
+    : buildStandaloneUrl('/pay', authStore.token, getCurrentThemeMode(), locale.value)
 )
 
 const paymentAdminUrl = computed(() =>
@@ -528,7 +534,7 @@ const userNavItems = computed((): NavItem[] => {
       ? [
           appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
             ? {
-                externalUrl: purchasePageUrl.value,
+                externalUrl: purchaseWindowUrl.value,
                 label: t('nav.buySubscription'),
                 icon: RechargeSubscriptionIcon,
                 hideInSimpleMode: true
@@ -566,7 +572,7 @@ const personalNavItems = computed((): NavItem[] => {
       ? [
           appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
             ? {
-                externalUrl: purchasePageUrl.value,
+                externalUrl: purchaseWindowUrl.value,
                 label: t('nav.buySubscription'),
                 icon: RechargeSubscriptionIcon,
                 hideInSimpleMode: true
