@@ -4,9 +4,22 @@ import { getEnv } from '@/lib/config';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
+function getConnectionSchema(connectionString: string): string | undefined {
+  try {
+    const url = new URL(connectionString);
+    const schema = url.searchParams.get('schema')?.trim();
+    return schema || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function createPrismaClient() {
   const connectionString = getEnv().DATABASE_URL;
-  const adapter = new PrismaPg({ connectionString });
+  const schema = getConnectionSchema(connectionString);
+  const adapter = schema
+    ? new PrismaPg({ connectionString }, { schema })
+    : new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 
