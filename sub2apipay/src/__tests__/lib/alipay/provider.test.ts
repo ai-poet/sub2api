@@ -62,7 +62,7 @@ describe('AlipayProvider', () => {
         orderId: 'order-001',
         amount: 100,
         paymentType: 'alipay_direct',
-        subject: 'Sub2API Balance Recharge 100.00 CNY',
+        subject: 'Payment 100.00 CNY',
         clientIp: '127.0.0.1',
       };
 
@@ -86,7 +86,7 @@ describe('AlipayProvider', () => {
         orderId: 'order-002',
         amount: 50,
         paymentType: 'alipay_direct',
-        subject: 'Sub2API Balance Recharge 50.00 CNY',
+        subject: 'Payment 50.00 CNY',
         clientIp: '127.0.0.1',
         isMobile: true,
       };
@@ -100,7 +100,7 @@ describe('AlipayProvider', () => {
           out_trade_no: 'order-002',
           product_code: 'QUICK_WAP_WAY',
           total_amount: '50.00',
-          subject: 'Sub2API Balance Recharge 50.00 CNY',
+          subject: 'Payment 50.00 CNY',
         },
         expect.objectContaining({ method: 'alipay.trade.wap.pay' }),
         undefined,

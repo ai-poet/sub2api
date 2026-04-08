@@ -64,7 +64,7 @@ describe('StripeProvider', () => {
         orderId: 'order-001',
         amount: 99.99,
         paymentType: 'stripe',
-        subject: 'Sub2API Balance Recharge 99.99 CNY',
+        subject: 'Payment 99.99 CNY',
         clientIp: '127.0.0.1',
       };
 
@@ -78,7 +78,7 @@ describe('StripeProvider', () => {
           currency: 'cny',
           automatic_payment_methods: { enabled: true },
           metadata: { orderId: 'order-001' },
-          description: 'Sub2API Balance Recharge 99.99 CNY',
+          description: 'Payment 99.99 CNY',
         }),
         expect.objectContaining({
           idempotencyKey: 'pi-order-001',

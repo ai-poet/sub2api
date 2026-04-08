@@ -1,4 +1,5 @@
 import React from 'react';
+import { getPayCenterBadge } from '@/lib/branding';
 import type { Locale } from '@/lib/locale';
 
 interface PayPageLayoutProps {
@@ -68,7 +69,7 @@ export default function PayPageLayout({
                 isDark ? 'bg-indigo-500/20 text-indigo-200' : 'bg-indigo-50 text-indigo-700',
               ].join(' ')}
             >
-              {locale === 'en' ? 'Sub2API Secure Pay' : 'Sub2API 安全支付'}
+              {getPayCenterBadge(locale)}
             </div>
             <h1
               className={['text-2xl font-semibold tracking-tight', isDark ? 'text-slate-100' : 'text-slate-900'].join(

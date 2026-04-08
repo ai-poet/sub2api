@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { getEnv } from '@/lib/config';
+import { buildDefaultRechargeSubject, buildDefaultSubscriptionSubject } from '@/lib/branding';
 import { ORDER_STATUS } from '@/lib/constants';
 import { generateRechargeCode } from './code-gen';
 import { getMethodDailyLimit } from './limits';
@@ -456,7 +457,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     let paymentSubject: string;
     if (subscriptionPlan) {
       // R3: 订阅订单优先使用套餐自定义商品名称
-      paymentSubject = subscriptionPlan.productName || `Sub2API 订阅 ${subscriptionGroupName || subscriptionPlan.name}`;
+      paymentSubject = subscriptionPlan.productName || buildDefaultSubscriptionSubject(subscriptionGroupName || subscriptionPlan.name);
     } else {
       // R5: 余额订单使用前缀/后缀配置
       const nameConfigs = await getSystemConfigs(['PRODUCT_NAME_PREFIX', 'PRODUCT_NAME_SUFFIX']);
@@ -465,7 +466,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       if (prefix || suffix) {
         paymentSubject = `${prefix || ''} ${payAmountStr} ${suffix || ''}`.trim();
       } else {
-        paymentSubject = `Sub2API ${payAmountStr} CNY`;
+        paymentSubject = buildDefaultRechargeSubject(payAmountStr);
       }
     }
 
@@ -905,7 +906,7 @@ export async function executeSubscriptionFulfillment(orderId: string): Promise<v
       order.rechargeCode,
       Number(order.amount),
       order.userId,
-      `sub2apipay subscription order:${orderId}`,
+      `payment center subscription order:${orderId}`,
       {
         type: 'subscription',
         groupId: order.subscriptionGroupId,
@@ -988,7 +989,7 @@ export async function executeRecharge(orderId: string): Promise<void> {
       order.rechargeCode,
       Number(order.amount),
       order.userId,
-      `sub2apipay recharge order:${orderId}`,
+      `payment center recharge order:${orderId}`,
     );
 
     await prisma.order.updateMany({
@@ -1355,7 +1356,7 @@ async function executeDeduction(orderId: string, userId: number, plan: Deduction
     await subtractBalance(
       userId,
       plan.balanceAmount,
-      `sub2apipay refund order:${orderId}`,
+      `payment center refund order:${orderId}`,
       `sub2apipay:refund:${orderId}:${ts}`,
     );
   }
@@ -1402,7 +1403,7 @@ async function rollbackDeduction(
       await addBalance(
         userId,
         plan.balanceAmount,
-        `sub2apipay refund rollback order:${orderId}`,
+        `payment center refund rollback order:${orderId}`,
         `sub2apipay:refund-rollback:${orderId}:${ts}`,
       );
       return true;
@@ -1475,7 +1476,7 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
   // 网关退款金额：部分退款时用 refundAmount，全额时用 payAmount
   const gatewayRefundAmount = input.amount ?? maxGatewayRefund;
   const refundReason =
-    input.reason?.trim() || order.refundRequestReason?.trim() || `sub2apipay refund order:${order.id}`;
+    input.reason?.trim() || order.refundRequestReason?.trim() || `payment center refund order:${order.id}`;
 
   // 1. 准备扣减计划（可能提前返回 requireForce）
   const planOrResult = await prepareDeduction(order, deductBalance, input.force ?? false, locale, input.amount);

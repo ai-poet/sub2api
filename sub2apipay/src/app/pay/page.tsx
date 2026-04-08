@@ -13,6 +13,7 @@ import SubscriptionPlanCard from '@/components/SubscriptionPlanCard';
 import SubscriptionConfirm from '@/components/SubscriptionConfirm';
 import UserSubscriptions from '@/components/UserSubscriptions';
 import PurchaseFlow from '@/components/PurchaseFlow';
+import { getRechargeAccessHint } from '@/lib/branding';
 import { resolveLocale, pickLocaleText, applyLocaleToSearchParams } from '@/lib/locale';
 import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrder } from '@/lib/pay-utils';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
@@ -319,13 +320,7 @@ function PayContent() {
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <div className="text-center text-red-500">
           <p className="text-lg font-medium">{pickLocaleText(locale, '缺少认证信息', 'Missing authentication info')}</p>
-          <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-            {pickLocaleText(
-              locale,
-              '请从 Sub2API 平台正确访问充值页面',
-              'Please open the recharge page from the Sub2API platform',
-            )}
-          </p>
+          <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>{getRechargeAccessHint(locale)}</p>
         </div>
       </div>
     );
@@ -539,7 +534,7 @@ function PayContent() {
   const effectiveTab = !canTopUp ? 'subscribe' : !hasPlans ? 'topup' : mainTab;
   const pageTitle = showMainTabs
     ? pickLocaleText(locale, '选择适合你的 充值/订阅服务', 'Choose Your Recharge / Subscription')
-    : pickLocaleText(locale, 'Sub2API 余额充值', 'Sub2API Balance Recharge');
+    : pickLocaleText(locale, '余额充值', 'Balance Recharge');
   const pageSubtitle = showMainTabs
     ? pickLocaleText(locale, '充值余额或者订阅套餐', 'Top up balance or subscribe to a plan')
     : pickLocaleText(locale, '安全支付，自动到账', 'Secure payment, automatic crediting');

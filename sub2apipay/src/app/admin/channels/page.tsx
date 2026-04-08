@@ -3,6 +3,14 @@
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import PayPageLayout from '@/components/PayPageLayout';
+import {
+  getAdminAccessHint,
+  getFetchSystemGroupsFailed,
+  getNoSystemGroupsHint,
+  getSyncSystemGroupsLabel,
+  getSystemGroupIdLabel,
+  getSystemGroupStatusLabel,
+} from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { PlatformBadge, getPlatformStyle } from '@/lib/platform-style';
 import { buildAppApiPath } from '@/lib/public-path';
@@ -51,24 +59,29 @@ const PLATFORMS = ['claude', 'anthropic', 'openai', 'gemini', 'codex', 'sora', '
 // ── i18n ──
 
 function getTexts(locale: Locale) {
+  const syncGroupsLabel = getSyncSystemGroupsLabel(locale);
+  const groupStatusLabel = getSystemGroupStatusLabel(locale);
+  const groupIdLabel = getSystemGroupIdLabel(locale);
+  const noGroupsHint = getNoSystemGroupsHint(locale);
+  const fetchGroupsFailed = getFetchSystemGroupsFailed(locale);
   return locale === 'en'
     ? {
         missingToken: 'Missing admin token',
-        missingTokenHint: 'Please access the admin page from the Sub2API platform.',
+        missingTokenHint: getAdminAccessHint(locale),
         invalidToken: 'Invalid admin token',
         title: 'Channel Management',
         subtitle: 'Configure and manage subscription channels',
         refresh: 'Refresh',
         loading: 'Loading...',
         noChannels: 'No channels found',
-        noChannelsHint: 'Click "Sync from Sub2API" or "New Channel" to get started.',
-        syncFromSub2Api: 'Sync from Sub2API',
+        noChannelsHint: `Click "${syncGroupsLabel}" or "New Channel" to get started.`,
+        syncFromSub2Api: syncGroupsLabel,
         newChannel: 'New Channel',
         editChannel: 'Edit Channel',
         colName: 'Name',
         colPlatform: 'Platform',
         colRate: 'Rate',
-        colSub2ApiStatus: 'Sub2API Status',
+        colSub2ApiStatus: groupStatusLabel,
         colSortOrder: 'Sort',
         colEnabled: 'Enabled',
         colActions: 'Actions',
@@ -84,21 +97,21 @@ function getTexts(locale: Locale) {
         fieldFeatures: 'Features (one per line)',
         fieldSortOrder: 'Sort Order',
         fieldEnabled: 'Enable Channel',
-        fieldGroupId: 'Sub2API Group ID',
+        fieldGroupId: groupIdLabel,
         cancel: 'Cancel',
         save: 'Save',
         saving: 'Saving...',
-        syncTitle: 'Sync from Sub2API',
+        syncTitle: syncGroupsLabel,
         syncHint: 'Select groups to import as channels',
         syncLoading: 'Loading groups...',
-        syncNoGroups: 'No groups found in Sub2API',
+        syncNoGroups: noGroupsHint,
         syncAlreadyExists: 'Already imported',
         syncImport: 'Import Selected',
         syncImporting: 'Importing...',
         loadFailed: 'Failed to load channels',
         saveFailed: 'Failed to save channel',
         deleteFailed: 'Failed to delete channel',
-        syncFetchFailed: 'Failed to fetch Sub2API groups',
+        syncFetchFailed: fetchGroupsFailed,
         syncImportFailed: 'Failed to import groups',
         syncImportSuccess: (n: number) => `Successfully imported ${n} channel(s)`,
         yes: 'Yes',
@@ -107,21 +120,21 @@ function getTexts(locale: Locale) {
       }
     : {
         missingToken: '缺少管理员凭证',
-        missingTokenHint: '请从 Sub2API 平台正确访问管理页面',
+        missingTokenHint: getAdminAccessHint(locale),
         invalidToken: '管理员凭证无效',
         title: '渠道管理',
         subtitle: '配置和管理订阅渠道',
         refresh: '刷新',
         loading: '加载中...',
         noChannels: '暂无渠道',
-        noChannelsHint: '点击「从 Sub2API 同步」或「新建渠道」开始创建。',
-        syncFromSub2Api: '从 Sub2API 同步',
+        noChannelsHint: `点击「${syncGroupsLabel}」或「新建渠道」开始创建。`,
+        syncFromSub2Api: syncGroupsLabel,
         newChannel: '新建渠道',
         editChannel: '编辑渠道',
         colName: '名称',
         colPlatform: '平台',
         colRate: '倍率',
-        colSub2ApiStatus: 'Sub2API 状态',
+        colSub2ApiStatus: groupStatusLabel,
         colSortOrder: '排序',
         colEnabled: '启用',
         colActions: '操作',
@@ -137,21 +150,21 @@ function getTexts(locale: Locale) {
         fieldFeatures: '功能特性（每行一个）',
         fieldSortOrder: '排序',
         fieldEnabled: '启用渠道',
-        fieldGroupId: 'Sub2API 分组 ID',
+        fieldGroupId: groupIdLabel,
         cancel: '取消',
         save: '保存',
         saving: '保存中...',
-        syncTitle: '从 Sub2API 同步',
+        syncTitle: syncGroupsLabel,
         syncHint: '选择要导入为渠道的分组',
         syncLoading: '加载分组中...',
-        syncNoGroups: 'Sub2API 中没有找到分组',
+        syncNoGroups: noGroupsHint,
         syncAlreadyExists: '已导入',
         syncImport: '导入所选',
         syncImporting: '导入中...',
         loadFailed: '加载渠道列表失败',
         saveFailed: '保存渠道失败',
         deleteFailed: '删除渠道失败',
-        syncFetchFailed: '获取 Sub2API 分组列表失败',
+        syncFetchFailed: fetchGroupsFailed,
         syncImportFailed: '导入分组失败',
         syncImportSuccess: (n: number) => `成功导入 ${n} 个渠道`,
         yes: '是',

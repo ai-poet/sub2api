@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import PayPageLayout from '@/components/PayPageLayout';
+import { DEFAULT_PRODUCT_NAME_PREFIX, DEFAULT_PRODUCT_NAME_SUFFIX, getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
 
@@ -12,7 +13,7 @@ function getTexts(locale: Locale) {
   return locale === 'en'
     ? {
         missingToken: 'Missing admin token',
-        missingTokenHint: 'Please access the admin page from the Sub2API platform.',
+        missingTokenHint: getAdminAccessHint(locale),
         title: 'Payment Config',
         subtitle: 'Configure payment providers and settings',
         basicConfig: 'Basic Settings',
@@ -73,7 +74,7 @@ function getTexts(locale: Locale) {
       }
     : {
         missingToken: '缺少管理员凭证',
-        missingTokenHint: '请从 Sub2API 平台正确访问管理页面',
+        missingTokenHint: getAdminAccessHint(locale),
         title: '支付配置',
         subtitle: '管理支付服务商与相关设置',
         basicConfig: '基础配置',
@@ -686,7 +687,7 @@ function PaymentConfigContent() {
               value={rcPrefix}
               onChange={(e) => setRcPrefix(e.target.value)}
               className={inputCls}
-              placeholder="Sub2API"
+              placeholder={DEFAULT_PRODUCT_NAME_PREFIX}
             />
           </div>
           <div>
@@ -704,7 +705,7 @@ function PaymentConfigContent() {
             <div
               className={`rounded-lg border px-3 py-2 text-sm ${isDark ? 'border-slate-600 bg-slate-700 text-slate-300' : 'border-slate-300 bg-slate-50 text-slate-600'}`}
             >
-              {`${rcPrefix.trim() || 'Sub2API'} 100 ${rcSuffix.trim() || 'CNY'}`.trim()}
+              {`${rcPrefix.trim() || DEFAULT_PRODUCT_NAME_PREFIX} 100 ${rcSuffix.trim() || DEFAULT_PRODUCT_NAME_SUFFIX}`.trim()}
             </div>
           </div>
         </div>

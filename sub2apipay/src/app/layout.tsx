@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { PAY_CENTER_METADATA_DESCRIPTION, PAY_CENTER_METADATA_TITLE } from '@/lib/branding';
 import { normalizeBasePath } from '@/lib/public-path';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Sub2API Recharge',
-  description: 'Sub2API balance recharge platform',
+  title: PAY_CENTER_METADATA_TITLE,
+  description: PAY_CENTER_METADATA_DESCRIPTION,
 };
 
 export default async function RootLayout({

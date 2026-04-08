@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const groups = await getAllGroups();
     return NextResponse.json({ groups });
   } catch (error) {
-    console.error('Failed to fetch Sub2API groups:', error);
-    return NextResponse.json({ error: '获取 Sub2API 分组列表失败' }, { status: 500 });
+    console.error('Failed to fetch main-system groups:', error);
+    return NextResponse.json({ error: '获取主系统分组列表失败' }, { status: 500 });
   }
 }

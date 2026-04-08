@@ -3,6 +3,13 @@
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import PayPageLayout from '@/components/PayPageLayout';
+import {
+  getAdminAccessHint,
+  getSystemGroupInfoLabel,
+  getSystemGroupLabel,
+  getSystemGroupReadonlyHint,
+  getSystemGroupStatusLabel,
+} from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { PlatformBadge } from '@/lib/platform-style';
 import { buildAppApiPath } from '@/lib/public-path';
@@ -72,10 +79,14 @@ interface SubsUserInfo {
 /* ---------- i18n ---------- */
 
 function buildText(locale: Locale) {
+  const groupLabel = getSystemGroupLabel(locale);
+  const groupStatusLabel = getSystemGroupStatusLabel(locale);
+  const groupInfoLabel = getSystemGroupInfoLabel(locale);
+  const groupReadonlyHint = getSystemGroupReadonlyHint(locale);
   return locale === 'en'
     ? {
         missingToken: 'Missing admin token',
-        missingTokenHint: 'Please access the admin page from the Sub2API platform.',
+        missingTokenHint: getAdminAccessHint(locale),
         invalidToken: 'Invalid admin token',
         requestFailed: 'Request failed',
         title: 'Subscription Management',
@@ -90,7 +101,7 @@ function buildText(locale: Locale) {
         deleteConfirm: 'Delete this plan?',
         save: 'Save',
         cancel: 'Cancel',
-        fieldGroup: 'Sub2API Group',
+        fieldGroup: groupLabel,
         fieldGroupPlaceholder: 'Select a group',
         fieldName: 'Plan Name',
         fieldDescription: 'Description',
@@ -110,7 +121,7 @@ function buildText(locale: Locale) {
         colOriginalPrice: 'Original Price',
         colValidDays: 'Validity',
         colEnabled: 'For Sale',
-        colGroupStatus: 'Sub2API Status',
+        colGroupStatus: groupStatusLabel,
         colActions: 'Actions',
         edit: 'Edit',
         delete: 'Delete',
@@ -144,8 +155,8 @@ function buildText(locale: Locale) {
         unlimited: 'Unlimited',
         resetIn: 'Reset in',
         noGroup: 'Unknown Group',
-        groupInfo: 'Sub2API Group Info',
-        groupInfoReadonly: '(read-only, from Sub2API)',
+        groupInfo: groupInfoLabel,
+        groupInfoReadonly: groupReadonlyHint,
         platform: 'Platform',
         rateMultiplier: 'Rate',
         dailyLimit: 'Daily Limit',
@@ -155,7 +166,7 @@ function buildText(locale: Locale) {
       }
     : {
         missingToken: '缺少管理员凭证',
-        missingTokenHint: '请从 Sub2API 平台正确访问管理页面',
+        missingTokenHint: getAdminAccessHint(locale),
         invalidToken: '管理员凭证无效',
         requestFailed: '请求失败',
         title: '订阅管理',
@@ -170,7 +181,7 @@ function buildText(locale: Locale) {
         deleteConfirm: '确认删除该套餐？',
         save: '保存',
         cancel: '取消',
-        fieldGroup: 'Sub2API 分组',
+        fieldGroup: groupLabel,
         fieldGroupPlaceholder: '请选择分组',
         fieldName: '套餐名称',
         fieldDescription: '描述',
@@ -190,7 +201,7 @@ function buildText(locale: Locale) {
         colOriginalPrice: '原价',
         colValidDays: '有效期',
         colEnabled: '启用售卖',
-        colGroupStatus: 'Sub2API 状态',
+        colGroupStatus: groupStatusLabel,
         colActions: '操作',
         edit: '编辑',
         delete: '删除',
@@ -224,8 +235,8 @@ function buildText(locale: Locale) {
         unlimited: '无限制',
         resetIn: '重置于',
         noGroup: '未知分组',
-        groupInfo: 'Sub2API 分组信息',
-        groupInfoReadonly: '（只读，来自 Sub2API）',
+        groupInfo: groupInfoLabel,
+        groupInfoReadonly: groupReadonlyHint,
         platform: '平台',
         rateMultiplier: '倍率',
         dailyLimit: '日限额',

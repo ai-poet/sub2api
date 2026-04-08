@@ -21,7 +21,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // 必须绑定分组才能保存
     if (finalGroupId === null || finalGroupId === undefined) {
-      return NextResponse.json({ error: '必须关联一个 Sub2API 分组' }, { status: 400 });
+      return NextResponse.json({ error: '必须关联一个主系统分组' }, { status: 400 });
     }
 
     // 校验分组在 Sub2API 中仍然存在
@@ -32,7 +32,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         where: { id },
         data: { groupId: null, forSale: false },
       });
-      return NextResponse.json({ error: '该分组在 Sub2API 中已被删除，已自动解绑，请重新选择分组' }, { status: 409 });
+      return NextResponse.json({ error: '该分组已在主系统中删除，已自动解绑，请重新选择分组' }, { status: 409 });
     }
 
     if (body.price !== undefined && (typeof body.price !== 'number' || body.price <= 0 || body.price > 99999999.99)) {

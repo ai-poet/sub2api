@@ -185,7 +185,7 @@ describe('GET /pay/[orderId]', () => {
     expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith({
       orderId: 'order-001',
       amount: 100.5,
-      subject: 'Sub2API 100.50 CNY',
+      subject: 'Payment 100.50 CNY',
       notifyUrl: 'https://pay.example.com/api/alipay/notify',
       returnUrl: expectedReturnUrl,
       isMobile: false,
@@ -218,7 +218,7 @@ describe('GET /pay/[orderId]', () => {
     expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith({
       orderId: 'order-001',
       amount: 88,
-      subject: 'Sub2API 88.00 CNY',
+      subject: 'Payment 88.00 CNY',
       notifyUrl: 'https://pay.example.com/api/alipay/notify',
       returnUrl: expectedReturnUrl,
       isMobile: true,
@@ -248,7 +248,7 @@ describe('GET /pay/[orderId]', () => {
     expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith({
       orderId: 'order-001',
       amount: 66,
-      subject: 'Sub2API 66.00 CNY',
+      subject: 'Payment 66.00 CNY',
       notifyUrl: 'https://pay.example.com/api/alipay/notify',
       returnUrl: null,
       isMobile: true,

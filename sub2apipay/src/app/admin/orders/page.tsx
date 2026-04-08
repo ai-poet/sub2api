@@ -7,6 +7,7 @@ import OrderDetail from '@/components/admin/OrderDetail';
 import RefundDialog from '@/components/admin/RefundDialog';
 import PaginationBar from '@/components/PaginationBar';
 import PayPageLayout from '@/components/PayPageLayout';
+import { getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
 
@@ -70,7 +71,7 @@ function AdminContent() {
     locale === 'en'
       ? {
           missingToken: 'Missing admin token',
-          missingTokenHint: 'Please access the admin page from the Sub2API platform.',
+          missingTokenHint: getAdminAccessHint(locale),
           invalidToken: 'Invalid admin token',
           requestFailed: 'Request failed',
           loadOrdersFailed: 'Failed to load orders',
@@ -110,7 +111,7 @@ function AdminContent() {
         }
       : {
           missingToken: '缺少管理员凭证',
-          missingTokenHint: '请从 Sub2API 平台正确访问管理页面',
+          missingTokenHint: getAdminAccessHint(locale),
           invalidToken: '管理员凭证无效',
           requestFailed: '请求失败',
           loadOrdersFailed: '加载订单列表失败',

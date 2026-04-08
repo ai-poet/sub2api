@@ -103,7 +103,7 @@ export async function createAndRedeem(
       if (attempt >= RECHARGE_MAX_ATTEMPTS || !isRetryableFetchError(error)) {
         throw error;
       }
-      console.warn(`Sub2API createAndRedeem attempt ${attempt} timed out, retrying...`);
+      console.warn(`Internal recharge attempt ${attempt} timed out, retrying...`);
     }
   }
 
@@ -157,7 +157,7 @@ export async function assignSubscription(
       user_id: userId,
       group_id: groupId,
       validity_days: validityDays,
-      notes: notes || `Sub2ApiPay subscription order`,
+      notes: notes || `payment center subscription order`,
     }),
     signal: AbortSignal.timeout(RECHARGE_TIMEOUT_MS),
   });

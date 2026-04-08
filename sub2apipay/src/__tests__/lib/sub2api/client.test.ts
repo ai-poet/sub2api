@@ -23,7 +23,7 @@ import {
 } from '@/lib/sub2api/client';
 import { deriveInternalPayToken } from '@/lib/internal-auth';
 
-describe('Sub2API Client', () => {
+describe('Internal pay client', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
