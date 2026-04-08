@@ -76,7 +76,7 @@ func setupSettingHandlerForPurchaseOpenModeTest(repo service.SettingRepository) 
 			UserBalance:     0,
 		},
 	})
-	handler := NewSettingHandler(settingService, nil, nil, nil, nil)
+	handler := NewSettingHandler(settingService, nil, nil, nil)
 	router.PUT("/api/v1/admin/settings", handler.UpdateSettings)
 	return router
 }
