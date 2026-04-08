@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEnv } from '@/lib/config';
 import { getInternalPayHeaders } from '@/lib/internal-auth';
 import { resolveLocale } from '@/lib/locale';
+import { getCurrentUserByToken } from '@/lib/sub2api/client';
 
 async function isSub2ApiAdmin(token: string): Promise<boolean> {
   try {
@@ -18,8 +19,23 @@ async function isSub2ApiAdmin(token: string): Promise<boolean> {
       signal: controller.signal,
     });
     clearTimeout(timeout);
-    if (!response.ok) return false;
-    return true;
+    if (response.ok) return true;
+
+    const responseText = await response.text().catch(() => '');
+    console.error(
+      `[sub2apipay] admin auth check failed: status=${response.status} body=${responseText || '<empty>'}`,
+    );
+  } catch (error) {
+    console.error(
+      `[sub2apipay] admin auth check request failed, falling back to /auth/me role inspection: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+
+  try {
+    const user = await getCurrentUserByToken(token);
+    return user.role === 'admin' && user.status === 'active';
   } catch {
     return false;
   }

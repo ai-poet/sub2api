@@ -395,6 +395,17 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'admin.usage.description'
     }
   },
+  {
+    path: '/admin/payment-management',
+    name: 'AdminPaymentManagement',
+    component: () => import('@/views/admin/PaymentManagementView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Payment Management',
+      descriptionKey: 'purchase.description'
+    }
+  },
 
   // ==================== 404 Not Found ====================
   {

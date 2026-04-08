@@ -2,6 +2,7 @@ export interface Sub2ApiUser {
   id: number;
   username: string;
   email: string;
+  role?: string;
   status: string; // "active", "banned", etc.
   balance: number;
   notes?: string;

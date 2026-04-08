@@ -12,7 +12,18 @@ export function normalizeBasePath(value: string | null | undefined): string {
 
 export function getPublicBasePath(): string {
   if (typeof document === 'undefined') return '';
-  return normalizeBasePath(document.documentElement.dataset.basePath);
+
+  const explicitBasePath = normalizeBasePath(document.documentElement.dataset.basePath);
+  if (explicitBasePath) return explicitBasePath;
+
+  if (typeof window !== 'undefined') {
+    const pathname = window.location.pathname || '';
+    if (pathname === '/pay' || pathname.startsWith('/pay/')) {
+      return '/pay';
+    }
+  }
+
+  return '';
 }
 
 export function withPublicBasePath(path: string, basePath = getPublicBasePath()): string {

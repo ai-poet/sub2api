@@ -249,10 +249,6 @@ const purchaseWindowUrl = computed(() =>
     : buildStandaloneUrl('/pay', authStore.token, getCurrentThemeMode(), locale.value)
 )
 
-const paymentAdminUrl = computed(() =>
-  buildStandaloneUrl('/pay/admin', authStore.token, getCurrentThemeMode(), locale.value)
-)
-
 // SVG Icon Components
 const DashboardIcon = {
   render: () =>
@@ -663,7 +659,7 @@ const adminNavItems = computed((): NavItem[] => {
     { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/admin/referral', label: t('nav.referralSettings'), icon: UsersIcon, hideInSimpleMode: true },
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
-    { externalUrl: paymentAdminUrl.value, label: t('nav.paymentManagement'), icon: RechargeSubscriptionIcon, hideInSimpleMode: true },
+    { path: '/admin/payment-management', label: t('nav.paymentManagement'), icon: RechargeSubscriptionIcon, hideInSimpleMode: true },
   ]
 
   // 简单模式下，在系统设置前插入 API密钥

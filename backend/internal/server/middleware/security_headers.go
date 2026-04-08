@@ -125,6 +125,13 @@ func enhanceCSPPolicy(policy string) string {
 		policy = addToDirective(policy, "script-src", CloudflareInsightsDomain)
 	}
 
+	// Allow same-origin iframe embeds for integrated pages like /purchase -> /pay.
+	if !strings.Contains(policy, "frame-src") {
+		policy = addToDirective(policy, "frame-src", "https://challenges.cloudflare.com")
+	} else if !strings.Contains(policy, "frame-src 'self'") {
+		policy = addToDirective(policy, "frame-src", "'self'")
+	}
+
 	return policy
 }
 

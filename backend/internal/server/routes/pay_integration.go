@@ -79,22 +79,25 @@ func registerPayProxyRoutes(r *gin.Engine) {
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
+		originalHost := req.Host
+		originalPath := req.URL.Path
+		originalQuery := req.URL.RawQuery
 		req.URL.Path = rewritePayProxyPath(req.URL.Path)
 		req.URL.RawPath = rewritePayProxyPath(req.URL.RawPath)
 		originalDirector(req)
-		if req.Header.Get("X-Forwarded-Host") == "" && req.Host != "" {
-			req.Header.Set("X-Forwarded-Host", req.Host)
+		if originalHost != "" {
+			req.Header.Set("X-Forwarded-Host", originalHost)
 		}
-		if req.Header.Get("X-Forwarded-Proto") == "" {
-			if req.TLS != nil {
-				req.Header.Set("X-Forwarded-Proto", "https")
-			} else {
-				req.Header.Set("X-Forwarded-Proto", "http")
-			}
+		if req.TLS != nil {
+			req.Header.Set("X-Forwarded-Proto", "https")
+		} else {
+			req.Header.Set("X-Forwarded-Proto", "http")
 		}
-		if req.Header.Get("X-Forwarded-Prefix") == "" {
-			req.Header.Set("X-Forwarded-Prefix", "/pay")
-		}
+		// Always force the integrated pay prefix so embedded navigation
+		// consistently generates /pay/... URLs even behind extra reverse proxies.
+		req.Header.Set("X-Forwarded-Prefix", "/pay")
+		req.Header.Set("X-Pathname", originalPath)
+		req.Header.Set("X-Search", originalQuery)
 	}
 	proxy.ErrorHandler = func(w http.ResponseWriter, req *http.Request, proxyErr error) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
