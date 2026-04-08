@@ -176,10 +176,10 @@ COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/.next/stat
 COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/public /app/sub2apipay/public
 COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/prisma /app/sub2apipay/prisma
 COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/prisma.config.ts /app/sub2apipay/prisma.config.ts
-COPY --from=prisma-runtime-builder --chown=${APP_UID}:${APP_GID} /app/prisma-runtime/node_modules /app/prisma-runtime/node_modules
+COPY --from=prisma-runtime-builder --chown=${APP_UID}:${APP_GID} /app/prisma-runtime/node_modules /app/node_modules
 
 # Create data directory
-RUN mkdir -p /app/data /app/sub2apipay /app/prisma-runtime
+RUN mkdir -p /app/data /app/sub2apipay
 
 # Copy entrypoint script (fixes volume permissions then drops to sub2api)
 COPY --link deploy/docker-entrypoint.sh /app/docker-entrypoint.sh
