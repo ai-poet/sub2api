@@ -189,6 +189,7 @@ import { useI18n } from 'vue-i18n'
 import { useAdminSettingsStore, useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
 import VersionBadge from '@/components/common/VersionBadge.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
+import { buildStandaloneUrl } from '@/utils/embedded-url'
 
 interface NavItem {
   path?: string
@@ -199,7 +200,7 @@ interface NavItem {
   hideInSimpleMode?: boolean
 }
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const route = useRoute()
 const appStore = useAppStore()
@@ -217,6 +218,24 @@ const siteName = computed(() => appStore.siteName)
 const siteLogo = computed(() => appStore.siteLogo)
 const siteVersion = computed(() => appStore.siteVersion)
 const settingsLoaded = computed(() => appStore.publicSettingsLoaded)
+
+function getCurrentThemeMode(): 'light' | 'dark' {
+  return isDark.value ? 'dark' : 'light'
+}
+
+const configuredPurchaseUrl = computed(() =>
+  (appStore.cachedPublicSettings?.purchase_subscription_url || '').trim()
+)
+
+const purchaseWindowUrl = computed(() =>
+  configuredPurchaseUrl.value
+    ? configuredPurchaseUrl.value
+    : buildStandaloneUrl('/pay', authStore.token, getCurrentThemeMode(), locale.value)
+)
+
+const paymentAdminUrl = computed(() =>
+  buildStandaloneUrl('/pay/admin', authStore.token, getCurrentThemeMode(), locale.value)
+)
 
 // SVG Icon Components
 const DashboardIcon = {
@@ -530,7 +549,7 @@ const userNavItems = computed((): NavItem[] => {
       ? [
           appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
             ? {
-                externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
+                externalUrl: purchaseWindowUrl.value,
                 label: t('nav.buySubscription'),
                 icon: RechargeSubscriptionIcon,
                 hideInSimpleMode: true
@@ -568,7 +587,7 @@ const personalNavItems = computed((): NavItem[] => {
       ? [
           appStore.cachedPublicSettings.purchase_subscription_open_mode === 'new_window'
             ? {
-                externalUrl: appStore.cachedPublicSettings.purchase_subscription_url,
+                externalUrl: purchaseWindowUrl.value,
                 label: t('nav.buySubscription'),
                 icon: RechargeSubscriptionIcon,
                 hideInSimpleMode: true
@@ -628,6 +647,7 @@ const adminNavItems = computed((): NavItem[] => {
     { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/admin/referral', label: t('nav.referralSettings'), icon: UsersIcon, hideInSimpleMode: true },
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
+    { externalUrl: paymentAdminUrl.value, label: t('nav.paymentManagement'), icon: RechargeSubscriptionIcon, hideInSimpleMode: true },
   ]
 
   // 简单模式下，在系统设置前插入 API密钥

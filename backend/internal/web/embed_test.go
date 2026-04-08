@@ -634,6 +634,7 @@ func TestServeEmbeddedFrontend(t *testing.T) {
 
 		apiPaths := []string{
 			"/api/users",
+			"/_next/static/chunks/app.js",
 			"/v1/models",
 			"/v1beta/chat",
 			"/antigravity/test",

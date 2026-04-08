@@ -2441,19 +2441,8 @@ async function saveSettings() {
     // Optional URL fields: auto-clear invalid values so they don't cause backend 400 errors
     if (!isValidHttpUrl(form.frontend_url)) form.frontend_url = ''
     if (!isValidHttpUrl(form.doc_url)) form.doc_url = ''
-    // Purchase URL: required when enabled; auto-clear when disabled to avoid backend rejection
-    if (form.purchase_subscription_enabled) {
-      if (!form.purchase_subscription_url) {
-        appStore.showError(t('admin.settings.purchase.url') + ': URL is required when purchase is enabled')
-        saving.value = false
-        return
-      }
-      if (!isValidHttpUrl(form.purchase_subscription_url)) {
-        appStore.showError(t('admin.settings.purchase.url') + ': must be an absolute http(s) URL (e.g. https://example.com)')
-        saving.value = false
-        return
-      }
-    } else if (!isValidHttpUrl(form.purchase_subscription_url)) {
+    // Purchase URL is deprecated in integrated pay mode. Keep it optional for backward compatibility.
+    if (!isValidHttpUrl(form.purchase_subscription_url)) {
       form.purchase_subscription_url = ''
     }
 

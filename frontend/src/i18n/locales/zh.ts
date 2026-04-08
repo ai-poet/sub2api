@@ -368,6 +368,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: '我的订阅',
     buySubscription: '充值/订阅',
+    paymentManagement: '支付管理',
     referral: '推荐邀请',
     docs: '文档',
     sora: 'Sora 创作'
