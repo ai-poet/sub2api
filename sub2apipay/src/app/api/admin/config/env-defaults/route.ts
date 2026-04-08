@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
 import { getEnv } from '@/lib/config';
+import { DEFAULT_USD_EXCHANGE_RATE } from '@/lib/currency';
 
 const ALL_PROVIDERS = [
   { key: 'easypay', types: ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana'] },
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
         RECHARGE_MIN_AMOUNT: String(env.MIN_RECHARGE_AMOUNT),
         RECHARGE_MAX_AMOUNT: String(env.MAX_RECHARGE_AMOUNT),
         DAILY_RECHARGE_LIMIT: String(env.MAX_DAILY_RECHARGE_AMOUNT),
+        USD_EXCHANGE_RATE: String(DEFAULT_USD_EXCHANGE_RATE),
         ORDER_TIMEOUT_MINUTES: String(env.ORDER_TIMEOUT_MINUTES),
         MAX_PENDING_ORDERS: '3',
         LOAD_BALANCE_STRATEGY: 'round-robin',

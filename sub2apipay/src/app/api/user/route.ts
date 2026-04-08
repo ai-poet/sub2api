@@ -7,6 +7,7 @@ import { getPaymentDisplayInfo } from '@/lib/pay-utils';
 import { resolveLocale } from '@/lib/locale';
 import { getSystemConfig } from '@/lib/system-config';
 import { getVisiblePaymentTypes } from '@/lib/payment/visibility';
+import { DEFAULT_USD_EXCHANGE_RATE, normalizeUsdExchangeRate } from '@/lib/currency';
 
 export async function GET(request: NextRequest) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang') || request.headers.get('accept-language'));
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
       getSystemConfig('RECHARGE_MIN_AMOUNT'),
       getSystemConfig('RECHARGE_MAX_AMOUNT'),
       getSystemConfig('DAILY_RECHARGE_LIMIT'),
+      getSystemConfig('USD_EXCHANGE_RATE'),
     ]).then(
       async ([
         visibleTypes,
@@ -56,6 +58,7 @@ export async function GET(request: NextRequest) {
         minAmountVal,
         maxAmountVal,
         dailyLimitVal,
+        usdExchangeRateVal,
       ]) => {
         const methodLimits = await queryMethodLimits(visibleTypes);
         return {
@@ -66,12 +69,21 @@ export async function GET(request: NextRequest) {
           minAmount: minAmountVal ? parseFloat(minAmountVal) || env.MIN_RECHARGE_AMOUNT : env.MIN_RECHARGE_AMOUNT,
           maxAmount: maxAmountVal ? parseFloat(maxAmountVal) || env.MAX_RECHARGE_AMOUNT : env.MAX_RECHARGE_AMOUNT,
           maxDailyAmount: dailyLimitVal ? parseFloat(dailyLimitVal) : env.MAX_DAILY_RECHARGE_AMOUNT,
+          usdExchangeRate: normalizeUsdExchangeRate(usdExchangeRateVal) ?? DEFAULT_USD_EXCHANGE_RATE,
         };
       },
     );
 
-    const { enabledTypes, methodLimits, balanceDisabled, maxPendingOrders, minAmount, maxAmount, maxDailyAmount } =
-      await configPromise;
+    const {
+      enabledTypes,
+      methodLimits,
+      balanceDisabled,
+      maxPendingOrders,
+      minAmount,
+      maxAmount,
+      maxDailyAmount,
+      usdExchangeRate,
+    } = await configPromise;
 
     // 收集 sublabel 覆盖
     const sublabelOverrides: Record<string, string> = {};
@@ -87,8 +99,9 @@ export async function GET(request: NextRequest) {
     for (const [, types] of labelCount) {
       if (types.length > 1) {
         for (const type of types) {
-          const { provider } = getPaymentDisplayInfo(type, locale);
-          if (provider) sublabelOverrides[type] = provider;
+          const { provider, sublabel } = getPaymentDisplayInfo(type, locale);
+          const preferredSublabel = sublabel || provider;
+          if (preferredSublabel) sublabelOverrides[type] = preferredSublabel;
         }
       }
     }
@@ -110,6 +123,7 @@ export async function GET(request: NextRequest) {
         minAmount,
         maxAmount,
         maxDailyAmount,
+        usdExchangeRate,
         methodLimits,
         helpImageUrl: env.PAY_HELP_IMAGE_URL ?? null,
         helpText: env.PAY_HELP_TEXT ?? null,

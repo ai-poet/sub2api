@@ -145,6 +145,7 @@ describe('PUT /api/admin/config', () => {
         configs: [
           { key: 'RECHARGE_MIN_AMOUNT', value: '5' },
           { key: 'RECHARGE_MAX_AMOUNT', value: '500' },
+          { key: 'USD_EXCHANGE_RATE', value: '7.2' },
         ],
       }),
     );
@@ -156,6 +157,7 @@ describe('PUT /api/admin/config', () => {
       expect.arrayContaining([
         expect.objectContaining({ key: 'RECHARGE_MIN_AMOUNT', value: '5' }),
         expect.objectContaining({ key: 'RECHARGE_MAX_AMOUNT', value: '500' }),
+        expect.objectContaining({ key: 'USD_EXCHANGE_RATE', value: '7.2' }),
       ]),
     );
   });

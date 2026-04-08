@@ -6,6 +6,7 @@ import PayPageLayout from '@/components/PayPageLayout';
 import { DEFAULT_PRODUCT_NAME_PREFIX, DEFAULT_PRODUCT_NAME_SUFFIX, getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
+import { DEFAULT_USD_EXCHANGE_RATE } from '@/lib/currency';
 
 // ── i18n ──
 
@@ -44,6 +45,8 @@ function getTexts(locale: Locale) {
         minRechargeAmount: 'Min Recharge Amount',
         maxRechargeAmount: 'Max Recharge Amount',
         dailyRechargeLimit: 'Daily Limit (0=unlimited)',
+        usdExchangeRate: 'USD Exchange Rate',
+        usdExchangeRateHint: 'Used to display USDT/USDC settlement amounts. Format: 1 USD = ? CNY.',
         orderTimeoutMinutes: 'Order Timeout (min)',
         loadingEnvDefaults: 'Loading defaults...',
         providerManagement: 'Provider Management',
@@ -105,6 +108,8 @@ function getTexts(locale: Locale) {
         minRechargeAmount: '最小充值金额',
         maxRechargeAmount: '最大充值金额',
         dailyRechargeLimit: '每日限额（0=不限）',
+        usdExchangeRate: '美元汇率',
+        usdExchangeRateHint: '用于展示 USDT/USDC 的美元实付金额。填写规则：1 USD = 多少 CNY。',
         orderTimeoutMinutes: '订单超时（分钟）',
         loadingEnvDefaults: '加载默认值...',
         providerManagement: '服务商管理',
@@ -272,6 +277,7 @@ function PaymentConfigContent() {
   const [rcMinAmount, setRcMinAmount] = useState('');
   const [rcMaxAmount, setRcMaxAmount] = useState('');
   const [rcDailyLimit, setRcDailyLimit] = useState('');
+  const [rcUsdExchangeRate, setRcUsdExchangeRate] = useState(DEFAULT_USD_EXCHANGE_RATE.toFixed(2));
   const [rcOrderTimeout, setRcOrderTimeout] = useState('');
   const [loadingEnvDefaults, setLoadingEnvDefaults] = useState(false);
 
@@ -330,6 +336,7 @@ function PaymentConfigContent() {
         if (c.key === 'RECHARGE_MIN_AMOUNT') setRcMinAmount(c.value);
         if (c.key === 'RECHARGE_MAX_AMOUNT') setRcMaxAmount(c.value);
         if (c.key === 'DAILY_RECHARGE_LIMIT') setRcDailyLimit(c.value);
+        if (c.key === 'USD_EXCHANGE_RATE') setRcUsdExchangeRate(c.value || DEFAULT_USD_EXCHANGE_RATE.toFixed(2));
         if (c.key === 'ORDER_TIMEOUT_MINUTES') setRcOrderTimeout(c.value);
         if (c.key === 'LOAD_BALANCE_STRATEGY') setRcLoadBalanceStrategy(c.value || 'round-robin');
         if (c.key === 'DEFAULT_DEDUCT_BALANCE') setRcAutoRefundEnabled(c.value === 'true');
@@ -574,6 +581,7 @@ function PaymentConfigContent() {
             { key: 'RECHARGE_MIN_AMOUNT', value: rcMinAmount, group: 'payment', label: '最小充值金额' },
             { key: 'RECHARGE_MAX_AMOUNT', value: rcMaxAmount, group: 'payment', label: '最大充值金额' },
             { key: 'DAILY_RECHARGE_LIMIT', value: rcDailyLimit, group: 'payment', label: '每日充值限额' },
+            { key: 'USD_EXCHANGE_RATE', value: rcUsdExchangeRate, group: 'payment', label: '美元汇率' },
             { key: 'ORDER_TIMEOUT_MINUTES', value: rcOrderTimeout, group: 'payment', label: '订单超时时间' },
             { key: 'LOAD_BALANCE_STRATEGY', value: rcLoadBalanceStrategy, group: 'payment', label: '负载均衡策略' },
             { key: 'ENABLED_PROVIDERS', value: rcEnabledProviders, group: 'payment', label: '启用的服务商' },
@@ -859,7 +867,7 @@ function PaymentConfigContent() {
                 </div>
 
                 {/* Amount / timeout fields */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
                   <div>
                     <label className={labelCls}>{t.minRechargeAmount}</label>
                     <input
@@ -891,6 +899,17 @@ function PaymentConfigContent() {
                     />
                   </div>
                   <div>
+                    <label className={labelCls}>{t.usdExchangeRate}</label>
+                    <input
+                      type="number"
+                      min="0.0001"
+                      step="0.0001"
+                      value={rcUsdExchangeRate}
+                      onChange={(e) => setRcUsdExchangeRate(e.target.value)}
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
                     <label className={labelCls}>{t.orderTimeoutMinutes}</label>
                     <input
                       type="number"
@@ -901,6 +920,9 @@ function PaymentConfigContent() {
                     />
                   </div>
                 </div>
+                <p className={`-mt-1 mb-4 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {t.usdExchangeRateHint}
+                </p>
 
                 {/* ── 服务商管理 ── */}
                 {enabledProviderKeys.length > 0 && (

@@ -41,6 +41,7 @@ interface AppConfig {
   minAmount: number;
   maxAmount: number;
   maxDailyAmount: number;
+  usdExchangeRate?: number | null;
   methodLimits?: Record<string, MethodLimitInfo>;
   helpImageUrl?: string | null;
   helpText?: string | null;
@@ -211,6 +212,7 @@ function PayContent() {
             minAmount: cfgData.config.minAmount ?? 1,
             maxAmount: cfgData.config.maxAmount ?? 1000,
             maxDailyAmount: cfgData.config.maxDailyAmount ?? 0,
+            usdExchangeRate: cfgData.config.usdExchangeRate ?? null,
             methodLimits: cfgData.config.methodLimits,
             helpImageUrl: cfgData.config.helpImageUrl ?? null,
             helpText: cfgData.config.helpText ?? null,
@@ -820,6 +822,7 @@ function PayContent() {
                         methodLimits={config.methodLimits}
                         minAmount={config.minAmount}
                         maxAmount={config.maxAmount}
+                        usdExchangeRate={config.usdExchangeRate}
                         onSubmit={handleSubmit}
                         loading={loading}
                         dark={isDark}
@@ -920,6 +923,7 @@ function PayContent() {
                 methodLimits={config.methodLimits}
                 minAmount={config.minAmount}
                 maxAmount={config.maxAmount}
+                usdExchangeRate={config.usdExchangeRate}
                 onSubmit={handleSubmit}
                 loading={loading}
                 dark={isDark}
@@ -937,6 +941,7 @@ function PayContent() {
               <SubscriptionConfirm
                 plan={selectedPlan}
                 paymentTypes={config.enabledPaymentTypes}
+                usdExchangeRate={config.usdExchangeRate}
                 onBack={() => setSelectedPlan(null)}
                 onSubmit={handleSubscriptionSubmit}
                 loading={loading}
@@ -960,6 +965,7 @@ function PayContent() {
                     methodLimits={config.methodLimits}
                     minAmount={config.minAmount}
                     maxAmount={config.maxAmount}
+                    usdExchangeRate={config.usdExchangeRate}
                     onSubmit={handleSubmit}
                     loading={loading}
                     dark={isDark}
@@ -990,6 +996,7 @@ function PayContent() {
                       methodLimits={config.methodLimits}
                       minAmount={config.minAmount}
                       maxAmount={config.maxAmount}
+                      usdExchangeRate={config.usdExchangeRate}
                       onSubmit={handleSubmit}
                       loading={loading}
                       dark={isDark}
@@ -1092,6 +1099,7 @@ function PayContent() {
             paymentType={orderResult.paymentType}
             amount={orderResult.amount}
             payAmount={orderResult.payAmount}
+            usdExchangeRate={config.usdExchangeRate}
             expiresAt={orderResult.expiresAt}
             statusAccessToken={orderResult.statusAccessToken}
             onStatusChange={handleStatusChange}

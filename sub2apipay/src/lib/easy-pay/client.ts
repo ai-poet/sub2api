@@ -141,17 +141,15 @@ export async function queryOrder(
     apiBase = env.EASY_PAY_API_BASE;
   }
 
-  // 使用 POST 避免密钥暴露在 URL 中（URL 会被记录到服务器/CDN 日志）
+  // 兼容这套易支付实现：api.php 的 order 查询只读取 $_GET，不读取 POST body。
   const params = new URLSearchParams({
     act: 'order',
     pid,
     key: pkey,
     out_trade_no: outTradeNo,
   });
-  const response = await fetch(`${apiBase}/api.php`, {
-    method: 'POST',
-    body: params,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  const response = await fetch(`${apiBase}/api.php?${params.toString()}`, {
+    method: 'GET',
     signal: AbortSignal.timeout(10_000),
   });
   const data = (await response.json()) as EasyPayQueryResponse;

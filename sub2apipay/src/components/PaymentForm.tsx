@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { PAYMENT_TYPE_META, getPaymentIconType, getPaymentMeta, getPaymentDisplayInfo } from '@/lib/pay-utils';
+import { getSettlementDisplay, isStablecoinPaymentType } from '@/lib/currency';
 
 export interface MethodLimitInfo {
   available: boolean;
@@ -23,6 +24,7 @@ interface PaymentFormProps {
   methodLimits?: Record<string, MethodLimitInfo>;
   minAmount: number;
   maxAmount: number;
+  usdExchangeRate?: number | null;
   onSubmit: (amount: number, paymentType: string) => Promise<void>;
   loading?: boolean;
   dark?: boolean;
@@ -48,6 +50,7 @@ export default function PaymentForm({
   methodLimits,
   minAmount,
   maxAmount,
+  usdExchangeRate,
   onSubmit,
   loading,
   dark = false,
@@ -100,6 +103,9 @@ export default function PaymentForm({
   const feeAmount = feeRate > 0 && selectedAmount > 0 ? Math.ceil(((selectedAmount * feeRate) / 100) * 100) / 100 : 0;
   const payAmount =
     feeRate > 0 && selectedAmount > 0 ? Math.round((selectedAmount + feeAmount) * 100) / 100 : selectedAmount;
+  const settlementDisplay = getSettlementDisplay(payAmount, effectivePaymentType, usdExchangeRate);
+  const showStablecoinSettlement = isStablecoinPaymentType(effectivePaymentType) && settlementDisplay.currency === 'USD';
+  const showPaymentSummary = selectedAmount > 0 && (feeRate > 0 || showStablecoinSettlement);
   const isValid =
     selectedAmount >= effectiveMin &&
     selectedAmount <= effectiveMax &&
@@ -201,6 +207,12 @@ export default function PaymentForm({
           <div className={['mt-1 text-3xl font-bold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
             ¥{fixedAmount.toFixed(2)}
           </div>
+          {showStablecoinSettlement && (
+            <div className={['mt-2 text-sm', dark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
+              {locale === 'en' ? 'Amount to Pay' : '实付金额'} {settlementDisplay.symbol}
+              {settlementDisplay.amount.toFixed(2)}
+            </div>
+          )}
         </div>
       ) : (
         <>
@@ -354,7 +366,7 @@ export default function PaymentForm({
         </div>
       )}
 
-      {feeRate > 0 && selectedAmount > 0 && (
+      {showPaymentSummary && (
         <div
           className={[
             'rounded-xl border px-4 py-3 text-sm',
@@ -375,9 +387,25 @@ export default function PaymentForm({
               dark ? 'border-slate-700 text-slate-100' : 'border-slate-200 text-slate-900',
             ].join(' ')}
           >
-            <span>{locale === 'en' ? 'Amount to Pay' : '实付金额'}</span>
-            <span>¥{payAmount.toFixed(2)}</span>
+            <span>
+              {locale === 'en'
+                ? settlementDisplay.currency === 'USD'
+                  ? 'Amount to Pay (USD)'
+                  : 'Amount to Pay'
+                : settlementDisplay.currency === 'USD'
+                  ? '实付金额（USD）'
+                  : '实付金额'}
+            </span>
+            <span>
+              {settlementDisplay.symbol}
+              {settlementDisplay.amount.toFixed(2)}
+            </span>
           </div>
+          {showStablecoinSettlement && settlementDisplay.exchangeRate && (
+            <div className="mt-1 text-right text-xs">
+              {locale === 'en' ? 'Rate' : '汇率'}: 1 USD = ¥{settlementDisplay.exchangeRate.toFixed(4)}
+            </div>
+          )}
         </div>
       )}
 
@@ -409,13 +437,13 @@ export default function PaymentForm({
           ? locale === 'en'
             ? 'Processing...'
             : '处理中...'
-          : pendingBlocked
-            ? locale === 'en'
-              ? 'Too many pending orders'
-              : '待支付订单过多'
-            : locale === 'en'
-              ? `Recharge Now ¥${(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0).toFixed(2)}`
-              : `立即充值 ¥${(feeRate > 0 && selectedAmount > 0 ? payAmount : selectedAmount || 0).toFixed(2)}`}
+            : pendingBlocked
+              ? locale === 'en'
+                ? 'Too many pending orders'
+                : '待支付订单过多'
+              : locale === 'en'
+              ? `Recharge Now ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`
+              : `立即充值 ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
       </button>
     </form>
   );

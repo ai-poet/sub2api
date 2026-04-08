@@ -7,10 +7,12 @@ import { pickLocaleText } from '@/lib/locale';
 import { getPaymentTypeLabel, getPaymentIconSrc, PAYMENT_TYPE_META } from '@/lib/pay-utils';
 import type { PlanInfo } from '@/components/SubscriptionPlanCard';
 import { PlanInfoDisplay } from '@/components/SubscriptionPlanCard';
+import { getSettlementDisplay } from '@/lib/currency';
 
 interface SubscriptionConfirmProps {
   plan: PlanInfo;
   paymentTypes: string[];
+  usdExchangeRate?: number | null;
   onBack: () => void;
   onSubmit: (paymentType: string) => void;
   loading: boolean;
@@ -21,6 +23,7 @@ interface SubscriptionConfirmProps {
 export default function SubscriptionConfirm({
   plan,
   paymentTypes,
+  usdExchangeRate,
   onBack,
   onSubmit,
   loading,
@@ -28,6 +31,7 @@ export default function SubscriptionConfirm({
   locale,
 }: SubscriptionConfirmProps) {
   const [selectedPayment, setSelectedPayment] = useState(paymentTypes[0] || '');
+  const settlementDisplay = getSettlementDisplay(plan.price, selectedPayment, usdExchangeRate);
 
   const handleSubmit = () => {
     if (selectedPayment && !loading) {
@@ -137,9 +141,24 @@ export default function SubscriptionConfirm({
         ].join(' ')}
       >
         <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-          {pickLocaleText(locale, '应付金额', 'Amount Due')}
+          {pickLocaleText(
+            locale,
+            settlementDisplay.currency === 'USD' ? '应付金额（USD）' : '应付金额',
+            settlementDisplay.currency === 'USD' ? 'Amount Due (USD)' : 'Amount Due',
+          )}
         </span>
-        <span className="text-xl font-bold text-emerald-500">¥{plan.price}</span>
+        <div className="text-right">
+          <div className="text-xl font-bold text-emerald-500">
+            {settlementDisplay.symbol}
+            {settlementDisplay.amount.toFixed(2)}
+          </div>
+          {settlementDisplay.currency === 'USD' && settlementDisplay.exchangeRate && (
+            <div className={['mt-1 text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+              {pickLocaleText(locale, '套餐价格', 'Plan Price')} ¥{plan.price.toFixed(2)} · 1 USD = ¥
+              {settlementDisplay.exchangeRate.toFixed(4)}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Submit button */}
@@ -156,7 +175,9 @@ export default function SubscriptionConfirm({
               : 'cursor-not-allowed bg-slate-200 text-slate-400',
         ].join(' ')}
       >
-        {loading ? pickLocaleText(locale, '处理中...', 'Processing...') : pickLocaleText(locale, '立即购买', 'Buy Now')}
+        {loading
+          ? pickLocaleText(locale, '处理中...', 'Processing...')
+          : `${pickLocaleText(locale, '立即购买', 'Buy Now')} ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
       </button>
     </div>
   );

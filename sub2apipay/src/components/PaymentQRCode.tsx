@@ -8,6 +8,7 @@ import { isStripeType, getPaymentMeta, getPaymentIconSrc, getPaymentChannelLabel
 import { buildOrderStatusUrl } from '@/lib/order/status-url';
 import { TERMINAL_STATUSES } from '@/lib/constants';
 import { buildAppApiPath } from '@/lib/public-path';
+import { getSettlementDisplay } from '@/lib/currency';
 
 interface PaymentQRCodeProps {
   orderId: string;
@@ -19,6 +20,7 @@ interface PaymentQRCodeProps {
   paymentType?: string;
   amount: number;
   payAmount?: number;
+  usdExchangeRate?: number | null;
   expiresAt: string;
   statusAccessToken?: string;
   onStatusChange: (status: PublicOrderStatusSnapshot) => void;
@@ -43,6 +45,7 @@ export default function PaymentQRCode({
   paymentType,
   amount,
   payAmount: payAmountProp,
+  usdExchangeRate,
   expiresAt,
   statusAccessToken,
   onStatusChange,
@@ -52,8 +55,10 @@ export default function PaymentQRCode({
   isMobile = false,
   locale = 'zh',
 }: PaymentQRCodeProps) {
-  const displayAmount = payAmountProp ?? amount;
+  const displayAmountCny = payAmountProp ?? amount;
   const hasFeeDiff = payAmountProp !== undefined && payAmountProp !== amount;
+  const settlementDisplay = getSettlementDisplay(displayAmountCny, paymentType, usdExchangeRate);
+  const showCreditedAmount = settlementDisplay.currency === 'USD' || hasFeeDiff;
   const [timeLeft, setTimeLeft] = useState('');
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(Infinity);
   const [expired, setExpired] = useState(false);
@@ -91,6 +96,7 @@ export default function PaymentQRCode({
         : '该订单已支付完成，无法取消。充值将自动到账。',
     backToRecharge: locale === 'en' ? 'Back to Recharge' : '返回充值',
     credited: locale === 'en' ? 'Credited ¥' : '到账 ¥',
+    settlementRate: locale === 'en' ? 'Rate' : '汇率',
     stripeLoadFailed:
       locale === 'en'
         ? 'Failed to load payment component. Please refresh and try again.'
@@ -414,13 +420,18 @@ export default function PaymentQRCode({
     <div className="flex flex-col items-center space-y-4">
       <div className="text-center">
         <div className={['text-4xl font-bold', dark ? 'text-blue-400' : 'text-blue-600'].join(' ')}>
-          {'¥'}
-          {displayAmount.toFixed(2)}
+          {settlementDisplay.symbol}
+          {settlementDisplay.amount.toFixed(2)}
         </div>
-        {hasFeeDiff && (
+        {showCreditedAmount && (
           <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
             {t.credited}
             {amount.toFixed(2)}
+          </div>
+        )}
+        {settlementDisplay.currency === 'USD' && settlementDisplay.exchangeRate && (
+          <div className={['mt-1 text-xs', dark ? 'text-slate-500' : 'text-gray-400'].join(' ')}>
+            {t.settlementRate}: 1 USD = ¥{settlementDisplay.exchangeRate.toFixed(4)}
           </div>
         )}
         <div
@@ -501,7 +512,7 @@ export default function PaymentQRCode({
                           {t.processing}
                         </span>
                       ) : (
-                        `${t.payNow} ¥${amount.toFixed(2)}`
+                        `${t.payNow} ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`
                       )}
                     </button>
                   )}
