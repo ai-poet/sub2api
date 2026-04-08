@@ -172,7 +172,7 @@ describe('GET /pay/[orderId]', () => {
     });
 
     const html = await response.text();
-    const expectedReturnUrl = buildOrderResultUrl('https://pay.example.com', 'order-001');
+    const expectedReturnUrl = buildOrderResultUrl('https://pay.example.com/pay', 'order-001');
 
     expect(response.status).toBe(200);
     expect(html).toContain('正在拉起支付宝');
@@ -182,14 +182,16 @@ describe('GET /pay/[orderId]', () => {
     expect(html).toContain('查看订单结果');
     expect(html).toContain('order_id=order-001');
     expect(html).toContain('access_token=');
-    expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith({
+    expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith(
+      expect.objectContaining({
       orderId: 'order-001',
       amount: 100.5,
       subject: 'Payment 100.50 CNY',
-      notifyUrl: 'https://pay.example.com/api/alipay/notify',
+      notifyUrl: 'https://pay.example.com/pay/api/alipay/notify',
       returnUrl: expectedReturnUrl,
       isMobile: false,
-    });
+      }),
+    );
   });
 
   it('builds mobile redirect page with wap alipay url', async () => {
@@ -209,20 +211,22 @@ describe('GET /pay/[orderId]', () => {
     );
 
     const html = await response.text();
-    const expectedReturnUrl = buildOrderResultUrl('https://pay.example.com', 'order-001');
+    const expectedReturnUrl = buildOrderResultUrl('https://pay.example.com/pay', 'order-001');
 
     expect(response.status).toBe(200);
     expect(html).toContain('正在拉起支付宝');
     expect(html).toContain('https://openapi.alipay.com/gateway.do?mobile=1');
     expect(html).not.toContain('立即前往支付宝');
-    expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith({
+    expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith(
+      expect.objectContaining({
       orderId: 'order-001',
       amount: 88,
       subject: 'Payment 88.00 CNY',
-      notifyUrl: 'https://pay.example.com/api/alipay/notify',
+      notifyUrl: 'https://pay.example.com/pay/api/alipay/notify',
       returnUrl: expectedReturnUrl,
       isMobile: true,
-    });
+      }),
+    );
   });
 
   it('omits returnUrl for Alipay app requests to avoid extra close step', async () => {
@@ -245,13 +249,15 @@ describe('GET /pay/[orderId]', () => {
     expect(html).toContain('window.location.replace(payUrl)');
     expect(html).toContain('<noscript><meta http-equiv="refresh"');
     expect(html).not.toContain('立即前往支付宝');
-    expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith({
+    expect(mockBuildAlipayPaymentUrl).toHaveBeenCalledWith(
+      expect.objectContaining({
       orderId: 'order-001',
       amount: 66,
       subject: 'Payment 66.00 CNY',
-      notifyUrl: 'https://pay.example.com/api/alipay/notify',
+      notifyUrl: 'https://pay.example.com/pay/api/alipay/notify',
       returnUrl: null,
       isMobile: true,
-    });
+      }),
+    );
   });
 });

@@ -5,9 +5,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ============================================================
 
 const mockEasyPayCreatePayment = vi.fn();
+const mockEasyPayQueryOrder = vi.fn();
 vi.mock('@/lib/easy-pay/client', () => ({
   createPayment: (...args: unknown[]) => mockEasyPayCreatePayment(...args),
-  queryOrder: vi.fn(),
+  queryOrder: (...args: unknown[]) => mockEasyPayQueryOrder(...args),
   refund: vi.fn(),
 }));
 
@@ -84,6 +85,7 @@ vi.mock('@/lib/config', () => ({
 // ============================================================
 
 import { EasyPayProvider } from '@/lib/easy-pay/provider';
+import { verifySign } from '@/lib/easy-pay/sign';
 import { AlipayProvider } from '@/lib/alipay/provider';
 import { WxpayProvider } from '@/lib/wxpay/provider';
 import { isStripeType } from '@/lib/pay-utils';
@@ -221,6 +223,53 @@ describe('Payment Flow - PC/Mobile, QR/Redirect', () => {
         }),
         undefined,
       );
+    });
+
+    it('queryOrder treats string status "1" as paid', async () => {
+      mockEasyPayQueryOrder.mockResolvedValue({
+        code: 1,
+        trade_no: 'EP-QUERY-001',
+        out_trade_no: 'order-ep-query-001',
+        type: 'alipay',
+        pid: '1001',
+        addtime: '2026-04-09 03:00:00',
+        endtime: '2026-04-09 03:01:00',
+        name: 'Test Recharge',
+        money: '88.00',
+        status: '1',
+      });
+
+      const result = await provider.queryOrder('order-ep-query-001');
+
+      expect(result.status).toBe('paid');
+      expect(result.amount).toBe(88);
+      expect(result.tradeNo).toBe('EP-QUERY-001');
+    });
+
+    it('verifyNotification ignores local routing params like inst when verifying MD5 signature', async () => {
+      vi.mocked(verifySign).mockReturnValue(true);
+
+      const notification = await provider.verifyNotification(
+        'inst=epay-main&pid=test-pid&trade_no=EP-001&out_trade_no=order-ep-001&type=alipay&name=Test+Recharge&money=88.00&trade_status=TRADE_SUCCESS&sign=mock-sign&sign_type=MD5',
+        {},
+      );
+
+      expect(verifySign).toHaveBeenCalledWith(
+        {
+          pid: 'test-pid',
+          trade_no: 'EP-001',
+          out_trade_no: 'order-ep-001',
+          type: 'alipay',
+          name: 'Test Recharge',
+          money: '88.00',
+          trade_status: 'TRADE_SUCCESS',
+        },
+        'test-pkey',
+        'mock-sign',
+      );
+      expect(notification.orderId).toBe('order-ep-001');
+      expect(notification.tradeNo).toBe('EP-001');
+      expect(notification.status).toBe('success');
     });
   });
 

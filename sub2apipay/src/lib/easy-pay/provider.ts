@@ -12,6 +12,8 @@ import { createPayment, queryOrder, refund } from './client';
 import { verifySign } from './sign';
 import { getEnv } from '@/lib/config';
 
+const ROUTING_QUERY_KEYS = new Set(['inst']);
+
 export class EasyPayProvider implements PaymentProvider {
   readonly name: string;
   readonly providerKey = 'easypay';
@@ -58,7 +60,7 @@ export class EasyPayProvider implements PaymentProvider {
     const result = await queryOrder(tradeNo, this.instanceConfig);
     return {
       tradeNo: result.trade_no,
-      status: result.status === 1 ? 'paid' : 'pending',
+      status: String(result.status) === '1' ? 'paid' : 'pending',
       amount: parseFloat(result.money),
       paidAt: result.endtime ? new Date(result.endtime) : undefined,
     };
@@ -88,7 +90,13 @@ export class EasyPayProvider implements PaymentProvider {
     const sign = params.sign || '';
     const paramsForSign: Record<string, string> = {};
     for (const [key, value] of Object.entries(params)) {
-      if (key !== 'sign' && key !== 'sign_type' && value !== undefined && value !== null) {
+      if (
+        key !== 'sign' &&
+        key !== 'sign_type' &&
+        !ROUTING_QUERY_KEYS.has(key) &&
+        value !== undefined &&
+        value !== null
+      ) {
         paramsForSign[key] = value;
       }
     }
