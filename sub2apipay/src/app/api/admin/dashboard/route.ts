@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
-import { prisma } from '@/lib/db';
+import { getConfiguredDatabaseSchema, prisma } from '@/lib/db';
 import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
 import { OrderStatus } from '@prisma/client';
 import { BIZ_TZ_NAME, getBizDayStartUTC, toBizDateStr } from '@/lib/time/biz-day';
@@ -23,6 +23,9 @@ export async function GET(request: NextRequest) {
     OrderStatus.REFUNDED,
     OrderStatus.REFUND_FAILED,
   ];
+  const schemaName = getConfiguredDatabaseSchema().replace(/"/g, '""');
+  const ordersTable = Prisma.raw(`"${schemaName}"."orders"`);
+  const businessTz = Prisma.raw(`'${BIZ_TZ_NAME}'`);
 
   const [
     todayStats,
@@ -72,12 +75,12 @@ export async function GET(request: NextRequest) {
     // Daily series: use AT TIME ZONE to group by business timezone date
     // Prisma.raw() inlines the timezone name to avoid parameterization mismatch between SELECT and GROUP BY
     prisma.$queryRaw<{ date: string; amount: string; count: bigint }[]>`
-        SELECT (paid_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${BIZ_TZ_NAME}'`)})::date::text as date,
+        SELECT (paid_at AT TIME ZONE 'UTC' AT TIME ZONE ${businessTz})::date::text as date,
                SUM(amount)::text as amount, COUNT(*) as count
-        FROM orders
+        FROM ${ordersTable}
         WHERE status IN ('PAID', 'RECHARGING', 'COMPLETED', 'REFUNDING', 'REFUNDED', 'REFUND_FAILED')
           AND paid_at >= ${startDate}
-        GROUP BY (paid_at AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${BIZ_TZ_NAME}'`)})::date
+        GROUP BY (paid_at AT TIME ZONE 'UTC' AT TIME ZONE ${businessTz})::date
         ORDER BY date
       `,
     // Leaderboard: GROUP BY user_id only, MAX() for name/email
@@ -92,7 +95,7 @@ export async function GET(request: NextRequest) {
     >`
         SELECT user_id, MAX(user_name) as user_name, MAX(user_email) as user_email,
                SUM(amount)::text as total_amount, COUNT(*) as order_count
-        FROM orders
+        FROM ${ordersTable}
         WHERE status IN ('PAID', 'RECHARGING', 'COMPLETED', 'REFUNDING', 'REFUNDED', 'REFUND_FAILED')
           AND paid_at >= ${startDate}
         GROUP BY user_id

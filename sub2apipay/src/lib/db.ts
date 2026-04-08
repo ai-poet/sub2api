@@ -4,7 +4,7 @@ import { getEnv } from '@/lib/config';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-function getConnectionSchema(connectionString: string): string | undefined {
+export function getConnectionSchema(connectionString: string): string | undefined {
   try {
     const url = new URL(connectionString);
     const schema = url.searchParams.get('schema')?.trim();
@@ -12,6 +12,10 @@ function getConnectionSchema(connectionString: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+export function getConfiguredDatabaseSchema(): string {
+  return getConnectionSchema(getEnv().DATABASE_URL) || 'public';
 }
 
 function createPrismaClient() {

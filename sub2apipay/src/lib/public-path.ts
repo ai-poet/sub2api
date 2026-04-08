@@ -10,6 +10,14 @@ export function normalizeBasePath(value: string | null | undefined): string {
   return normalized === '/' ? '' : normalized;
 }
 
+export function inferPublicBasePathFromPathname(pathname: string | null | undefined): string {
+  const normalizedPath = normalizeLeadingSlash((pathname || '').trim() || '/');
+  if (normalizedPath === '/pay' || normalizedPath.startsWith('/pay/')) {
+    return '/pay';
+  }
+  return '';
+}
+
 export function getPublicBasePath(): string {
   if (typeof document === 'undefined') return '';
 
@@ -17,10 +25,7 @@ export function getPublicBasePath(): string {
   if (explicitBasePath) return explicitBasePath;
 
   if (typeof window !== 'undefined') {
-    const pathname = window.location.pathname || '';
-    if (pathname === '/pay' || pathname.startsWith('/pay/')) {
-      return '/pay';
-    }
+    return inferPublicBasePathFromPathname(window.location.pathname || '');
   }
 
   return '';

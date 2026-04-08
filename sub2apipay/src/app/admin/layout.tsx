@@ -3,7 +3,7 @@
 import { useSearchParams, usePathname } from 'next/navigation';
 import { Suspense } from 'react';
 import { resolveLocale } from '@/lib/locale';
-import { withPublicBasePath } from '@/lib/public-path';
+import { inferPublicBasePathFromPathname, withPublicBasePath } from '@/lib/public-path';
 
 const NAV_ITEMS = [
   { path: '/admin', label: { zh: '数据概览', en: 'Dashboard' } },
@@ -15,12 +15,14 @@ const NAV_ITEMS = [
 
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
-  const pathname = usePathname();
+  const pathname = usePathname() || '/admin';
   const token = searchParams.get('token') || '';
   const theme = searchParams.get('theme') || 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
   const isDark = theme === 'dark';
+  const publicBasePath = inferPublicBasePathFromPathname(pathname);
+  const scopedPathname = publicBasePath && pathname.startsWith(publicBasePath) ? pathname.slice(publicBasePath.length) || '/' : pathname;
 
   const buildUrl = (path: string) => {
     const params = new URLSearchParams();
@@ -28,12 +30,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
     if (locale !== 'zh') params.set('lang', locale);
-    return `${withPublicBasePath(path)}?${params.toString()}`;
+    return `${withPublicBasePath(path, publicBasePath)}?${params.toString()}`;
   };
 
   const isActive = (navPath: string) => {
-    if (navPath === '/admin') return pathname === '/admin' || pathname === '/admin/dashboard';
-    return pathname.startsWith(navPath);
+    if (navPath === '/admin') return scopedPathname === '/admin' || scopedPathname === '/admin/dashboard';
+    return scopedPathname.startsWith(navPath);
   };
 
   return (
