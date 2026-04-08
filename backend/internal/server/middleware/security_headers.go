@@ -63,8 +63,13 @@ func SecurityHeaders(cfg config.CSPConfig, getFrameSrcOrigins func() []string) g
 		}
 
 		c.Header("X-Content-Type-Options", "nosniff")
-		c.Header("X-Frame-Options", "DENY")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		if isPayProxyPath(c) {
+			c.Next()
+			return
+		}
+
+		c.Header("X-Frame-Options", "DENY")
 		if isAPIRoutePath(c) {
 			c.Next()
 			return
@@ -95,6 +100,16 @@ func isAPIRoutePath(c *gin.Context) bool {
 		strings.HasPrefix(path, "/v1beta/") ||
 		strings.HasPrefix(path, "/antigravity/") ||
 		strings.HasPrefix(path, "/responses")
+}
+
+func isPayProxyPath(c *gin.Context) bool {
+	if c == nil || c.Request == nil || c.Request.URL == nil {
+		return false
+	}
+	path := c.Request.URL.Path
+	return path == "/pay" ||
+		strings.HasPrefix(path, "/pay/") ||
+		strings.HasPrefix(path, "/_next/")
 }
 
 // enhanceCSPPolicy ensures the CSP policy includes nonce support and Cloudflare Insights domain.
