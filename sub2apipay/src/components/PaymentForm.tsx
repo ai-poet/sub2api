@@ -25,7 +25,7 @@ interface PaymentFormProps {
   minAmount: number;
   maxAmount: number;
   usdExchangeRate?: number | null;
-  balanceCreditRate?: number | null;
+  balanceCreditCnyPerUsd?: number | null;
   onSubmit: (amount: number, paymentType: string) => Promise<void>;
   loading?: boolean;
   dark?: boolean;
@@ -52,7 +52,7 @@ export default function PaymentForm({
   minAmount,
   maxAmount,
   usdExchangeRate,
-  balanceCreditRate,
+  balanceCreditCnyPerUsd,
   onSubmit,
   loading,
   dark = false,
@@ -103,7 +103,7 @@ export default function PaymentForm({
     methodSingleMin !== undefined && methodSingleMin > 0 ? Math.max(methodSingleMin, minAmount) : minAmount;
   const feeRate = methodLimits?.[effectivePaymentType]?.feeRate ?? 0;
   const settlementAmountCny =
-    selectedAmount > 0 ? (convertUsdBalanceToCnyPayment(selectedAmount, balanceCreditRate) ?? selectedAmount) : 0;
+    selectedAmount > 0 ? (convertUsdBalanceToCnyPayment(selectedAmount, balanceCreditCnyPerUsd) ?? selectedAmount) : 0;
   const feeAmount =
     feeRate > 0 && settlementAmountCny > 0 ? Math.ceil(((settlementAmountCny * feeRate) / 100) * 100) / 100 : 0;
   const payAmountCny =

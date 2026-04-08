@@ -43,7 +43,7 @@ interface AppConfig {
   maxAmount: number;
   maxDailyAmount: number;
   usdExchangeRate?: number | null;
-  balanceCreditRate?: number | null;
+  balanceCreditCnyPerUsd?: number | null;
   methodLimits?: Record<string, MethodLimitInfo>;
   helpImageUrl?: string | null;
   helpText?: string | null;
@@ -215,7 +215,7 @@ function PayContent() {
             maxAmount: cfgData.config.maxAmount ?? 1000,
             maxDailyAmount: cfgData.config.maxDailyAmount ?? 0,
             usdExchangeRate: cfgData.config.usdExchangeRate ?? null,
-            balanceCreditRate: cfgData.config.balanceCreditRate ?? null,
+            balanceCreditCnyPerUsd: cfgData.config.balanceCreditCnyPerUsd ?? null,
             methodLimits: cfgData.config.methodLimits,
             helpImageUrl: cfgData.config.helpImageUrl ?? null,
             helpText: cfgData.config.helpText ?? null,
@@ -828,7 +828,7 @@ function PayContent() {
                         minAmount={config.minAmount}
                         maxAmount={config.maxAmount}
                         usdExchangeRate={config.usdExchangeRate}
-                        balanceCreditRate={config.balanceCreditRate}
+                        balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
                         onSubmit={handleSubmit}
                         loading={loading}
                         dark={isDark}
@@ -930,7 +930,7 @@ function PayContent() {
                 minAmount={config.minAmount}
                 maxAmount={config.maxAmount}
                 usdExchangeRate={config.usdExchangeRate}
-                balanceCreditRate={config.balanceCreditRate}
+                balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
                 onSubmit={handleSubmit}
                 loading={loading}
                 dark={isDark}
@@ -973,7 +973,7 @@ function PayContent() {
                     minAmount={config.minAmount}
                     maxAmount={config.maxAmount}
                     usdExchangeRate={config.usdExchangeRate}
-                    balanceCreditRate={config.balanceCreditRate}
+                    balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
                     onSubmit={handleSubmit}
                     loading={loading}
                     dark={isDark}
@@ -1005,7 +1005,7 @@ function PayContent() {
                       minAmount={config.minAmount}
                       maxAmount={config.maxAmount}
                       usdExchangeRate={config.usdExchangeRate}
-                      balanceCreditRate={config.balanceCreditRate}
+                      balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
                       onSubmit={handleSubmit}
                       loading={loading}
                       dark={isDark}

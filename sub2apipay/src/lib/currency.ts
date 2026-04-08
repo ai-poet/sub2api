@@ -1,7 +1,7 @@
 import { PAYMENT_PREFIX } from './constants';
 
 export const DEFAULT_USD_EXCHANGE_RATE = 7.2;
-export const DEFAULT_BALANCE_CREDIT_USD_PER_CNY = 1;
+export const DEFAULT_BALANCE_CREDIT_CNY_PER_USD = 1;
 
 export interface SettlementDisplay {
   currency: 'CNY' | 'USD';
@@ -18,12 +18,41 @@ export function normalizeUsdExchangeRate(value: number | string | null | undefin
   return Math.round(parsed * 10000) / 10000;
 }
 
-export function normalizeBalanceCreditRate(value: number | string | null | undefined): number | null {
+export function normalizeBalanceCreditCnyPerUsd(value: number | string | null | undefined): number | null {
   const parsed = typeof value === 'string' ? parseFloat(value) : value;
   if (parsed == null || !Number.isFinite(parsed) || parsed <= 0) {
     return null;
   }
   return Math.round(parsed * 10000) / 10000;
+}
+
+export function normalizeLegacyBalanceCreditUsdPerCny(value: number | string | null | undefined): number | null {
+  const parsed = typeof value === 'string' ? parseFloat(value) : value;
+  if (parsed == null || !Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return Math.round(parsed * 10000) / 10000;
+}
+
+export function legacyBalanceCreditUsdPerCnyToCnyPerUsd(
+  legacyValue: number | string | null | undefined,
+): number | null {
+  const normalizedLegacy = normalizeLegacyBalanceCreditUsdPerCny(legacyValue);
+  if (!normalizedLegacy) {
+    return null;
+  }
+  return Math.round((1 / normalizedLegacy) * 10000) / 10000;
+}
+
+export function resolveBalanceCreditCnyPerUsd(
+  cnyPerUsdValue: number | string | null | undefined,
+  legacyUsdPerCnyValue?: number | string | null | undefined,
+): number {
+  return (
+    normalizeBalanceCreditCnyPerUsd(cnyPerUsdValue) ??
+    legacyBalanceCreditUsdPerCnyToCnyPerUsd(legacyUsdPerCnyValue) ??
+    DEFAULT_BALANCE_CREDIT_CNY_PER_USD
+  );
 }
 
 export function isStablecoinPaymentType(type: string | null | undefined): boolean {
@@ -63,37 +92,37 @@ export function getSettlementDisplay(
 
 export function convertUsdBalanceToCnyPayment(
   amountUsd: number,
-  balanceCreditRate: number | string | null | undefined,
+  balanceCreditCnyPerUsd: number | string | null | undefined,
 ): number | null {
-  const normalizedRate = normalizeBalanceCreditRate(balanceCreditRate);
-  if (!normalizedRate || !Number.isFinite(amountUsd)) {
+  const normalizedCost = normalizeBalanceCreditCnyPerUsd(balanceCreditCnyPerUsd);
+  if (!normalizedCost || !Number.isFinite(amountUsd)) {
     return null;
   }
-  return Math.round((amountUsd / normalizedRate) * 100) / 100;
+  return Math.round(amountUsd * normalizedCost * 100) / 100;
 }
 
 export function convertCnySettlementToUsdBalance(
   amountCny: number,
-  balanceCreditRate: number | string | null | undefined,
+  balanceCreditCnyPerUsd: number | string | null | undefined,
 ): number | null {
-  const normalizedRate = normalizeBalanceCreditRate(balanceCreditRate);
-  if (!normalizedRate || !Number.isFinite(amountCny)) {
+  const normalizedCost = normalizeBalanceCreditCnyPerUsd(balanceCreditCnyPerUsd);
+  if (!normalizedCost || !Number.isFinite(amountCny)) {
     return null;
   }
-  return Math.round(amountCny * normalizedRate * 100) / 100;
+  return Math.round((amountCny / normalizedCost) * 100) / 100;
 }
 
 export function getBalanceRechargeSettlementDisplay(
   creditedAmountUsd: number,
   paymentType: string | null | undefined,
-  balanceCreditRate: number | string | null | undefined,
+  balanceCreditCnyPerUsd: number | string | null | undefined,
 ): SettlementDisplay {
   const normalizedAmount = Number.isFinite(creditedAmountUsd) ? Math.round(creditedAmountUsd * 100) / 100 : 0;
   if (isStablecoinPaymentType(paymentType)) {
     return { currency: 'USD', symbol: '$', amount: normalizedAmount, exchangeRate: null };
   }
 
-  const amountCny = convertUsdBalanceToCnyPayment(normalizedAmount, balanceCreditRate);
+  const amountCny = convertUsdBalanceToCnyPayment(normalizedAmount, balanceCreditCnyPerUsd);
   return {
     currency: 'CNY',
     symbol: '¥',

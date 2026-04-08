@@ -25,7 +25,7 @@ import { buildOrderResultUrl, createOrderStatusAccessToken } from '@/lib/order/s
 import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
 import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/lib/payment/load-balancer';
 import { createProviderFromInstance } from '@/lib/payment/provider-factory';
-import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, normalizeBalanceCreditRate } from '@/lib/currency';
+import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
 
 const DEFAULT_MAX_PENDING_ORDERS = 3;
 /** Decimal(10,2) 允许的最大金额 */
@@ -233,13 +233,16 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     input.amount = Number(plan.price);
   }
 
-  const balanceCreditRateConfig =
-    orderType === 'balance' ? await getSystemConfig('BALANCE_CREDIT_USD_PER_CNY') : undefined;
-  const balanceCreditRate =
+  const balanceCreditConfigs =
     orderType === 'balance'
-      ? normalizeBalanceCreditRate(balanceCreditRateConfig) ??
-        normalizeBalanceCreditRate(env.BALANCE_CREDIT_USD_PER_CNY) ??
-        1
+      ? await getSystemConfigs(['BALANCE_CREDIT_CNY_PER_USD', 'BALANCE_CREDIT_USD_PER_CNY'])
+      : {};
+  const balanceCreditCnyPerUsd =
+    orderType === 'balance'
+      ? resolveBalanceCreditCnyPerUsd(
+          balanceCreditConfigs['BALANCE_CREDIT_CNY_PER_USD'] ?? env.BALANCE_CREDIT_CNY_PER_USD,
+          balanceCreditConfigs['BALANCE_CREDIT_USD_PER_CNY'] ?? env.BALANCE_CREDIT_USD_PER_CNY,
+        )
       : null;
 
   const user = await getUser(input.userId);
@@ -339,7 +342,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
   const settlementAmount =
     orderType === 'balance'
-      ? convertUsdBalanceToCnyPayment(input.amount, balanceCreditRate) ?? input.amount
+      ? convertUsdBalanceToCnyPayment(input.amount, balanceCreditCnyPerUsd) ?? input.amount
       : input.amount;
   const feeRate = getMethodFeeRate(input.paymentType);
   const payAmountStr = calculatePayAmount(settlementAmount, feeRate);
@@ -422,10 +425,10 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       if (methodUsed + payAmountNum > methodDailyLimit) {
         const remainingGatewayPay = Math.max(0, methodDailyLimit - methodUsed);
         const remainingCredited =
-          orderType === 'balance' && balanceCreditRate
+          orderType === 'balance' && balanceCreditCnyPerUsd
             ? convertCnySettlementToUsdBalance(
                 getMaxSettlementAmountForPayLimit(remainingGatewayPay, feeRate),
-                balanceCreditRate,
+                balanceCreditCnyPerUsd,
               )
             : null;
         throw new OrderError(

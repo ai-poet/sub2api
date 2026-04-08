@@ -5,7 +5,7 @@ import { getEnv } from '@/lib/config';
 import { getMethodFeeRate, getMaxSettlementAmountForPayLimit, getMinSettlementAmountForPayLimit } from './fee';
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import { getSystemConfig } from '@/lib/system-config';
-import { convertCnySettlementToUsdBalance, normalizeBalanceCreditRate } from '@/lib/currency';
+import { convertCnySettlementToUsdBalance, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
 
 /**
  * 获取指定支付渠道的每日全平台限额（0 = 不限制）。
@@ -81,10 +81,10 @@ function roundUpToCents(value: number): number {
 
 function convertSettlementCnyToCreditedUsd(
   amountCny: number,
-  balanceCreditRate: number,
+  balanceCreditCnyPerUsd: number,
   mode: 'floor' | 'ceil',
 ): number {
-  const converted = convertCnySettlementToUsdBalance(amountCny, balanceCreditRate) ?? 0;
+  const converted = convertCnySettlementToUsdBalance(amountCny, balanceCreditCnyPerUsd) ?? 0;
   return mode === 'ceil' ? roundUpToCents(converted) : roundDownToCents(converted);
 }
 
@@ -235,11 +235,14 @@ async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
 export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<string, MethodLimitStatus>> {
   const todayStart = getBizDayStartUTC();
   const env = getEnv();
-  const balanceCreditRateConfig = await getSystemConfig('BALANCE_CREDIT_USD_PER_CNY');
-  const balanceCreditRate =
-    normalizeBalanceCreditRate(balanceCreditRateConfig) ??
-    normalizeBalanceCreditRate(env.BALANCE_CREDIT_USD_PER_CNY) ??
-    1;
+  const [balanceCreditCnyPerUsdConfig, legacyBalanceCreditUsdPerCnyConfig] = await Promise.all([
+    getSystemConfig('BALANCE_CREDIT_CNY_PER_USD'),
+    getSystemConfig('BALANCE_CREDIT_USD_PER_CNY'),
+  ]);
+  const balanceCreditCnyPerUsd = resolveBalanceCreditCnyPerUsd(
+    balanceCreditCnyPerUsdConfig ?? env.BALANCE_CREDIT_CNY_PER_USD,
+    legacyBalanceCreditUsdPerCnyConfig ?? env.BALANCE_CREDIT_USD_PER_CNY,
+  );
 
   const [usageRows, instanceAgg] = await Promise.all([
     prisma.order.groupBy({
@@ -296,26 +299,26 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
     const singleMaxSettlementAmount =
       singleMaxPayAmount > 0 ? getMaxSettlementAmountForPayLimit(singleMaxPayAmount, feeRate) : 0;
 
-    const used = convertSettlementCnyToCreditedUsd(usedSettlementAmount, balanceCreditRate, 'floor');
+    const used = convertSettlementCnyToCreditedUsd(usedSettlementAmount, balanceCreditCnyPerUsd, 'floor');
     const remaining =
       remainingSettlementAmount !== null
-        ? convertSettlementCnyToCreditedUsd(remainingSettlementAmount, balanceCreditRate, 'floor')
+        ? convertSettlementCnyToCreditedUsd(remainingSettlementAmount, balanceCreditCnyPerUsd, 'floor')
         : null;
     const dailyLimit =
       globalDailyLimit > 0
         ? convertSettlementCnyToCreditedUsd(
             getMaxSettlementAmountForPayLimit(globalDailyLimit, feeRate),
-            balanceCreditRate,
+            balanceCreditCnyPerUsd,
             'floor',
           )
         : 0;
     const singleMin =
       singleMinSettlementAmount > 0
-        ? convertSettlementCnyToCreditedUsd(singleMinSettlementAmount, balanceCreditRate, 'ceil')
+        ? convertSettlementCnyToCreditedUsd(singleMinSettlementAmount, balanceCreditCnyPerUsd, 'ceil')
         : 0;
     const singleMax =
       singleMaxSettlementAmount > 0
-        ? convertSettlementCnyToCreditedUsd(singleMaxSettlementAmount, balanceCreditRate, 'floor')
+        ? convertSettlementCnyToCreditedUsd(singleMaxSettlementAmount, balanceCreditCnyPerUsd, 'floor')
         : 0;
 
     // 最终可用性：如果换算后的到账区间为空，该渠道实质不可用

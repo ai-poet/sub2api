@@ -19,7 +19,8 @@ vi.mock('@/lib/config', () => ({
     MIN_RECHARGE_AMOUNT: 1,
     MAX_RECHARGE_AMOUNT: 1000,
     MAX_DAILY_RECHARGE_AMOUNT: 10000,
-    BALANCE_CREDIT_USD_PER_CNY: 1,
+    BALANCE_CREDIT_CNY_PER_USD: 1,
+    BALANCE_CREDIT_USD_PER_CNY: undefined,
     PAY_HELP_IMAGE_URL: undefined,
     PAY_HELP_TEXT: undefined,
     STRIPE_PUBLISHABLE_KEY: 'pk_test',
@@ -279,7 +280,7 @@ describe('GET /api/user', () => {
     expect(data.config).toHaveProperty('maxAmount');
     expect(data.config).toHaveProperty('maxDailyAmount');
     expect(data.config).toHaveProperty('usdExchangeRate');
-    expect(data.config).toHaveProperty('balanceCreditRate');
+    expect(data.config).toHaveProperty('balanceCreditCnyPerUsd');
     expect(data.config).toHaveProperty('methodLimits');
     expect(data.config).toHaveProperty('balanceDisabled');
     expect(data.config).toHaveProperty('maxPendingOrders');

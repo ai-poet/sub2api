@@ -9,7 +9,8 @@ vi.mock('@/lib/system-config', () => ({
 
 vi.mock('@/lib/config', () => ({
   getEnv: () => ({
-    BALANCE_CREDIT_USD_PER_CNY: 1,
+    BALANCE_CREDIT_CNY_PER_USD: 1,
+    BALANCE_CREDIT_USD_PER_CNY: undefined,
   }),
 }));
 
@@ -175,7 +176,7 @@ describe('getMethodSingleLimit', () => {
 describe('queryMethodLimits', () => {
   it('将支付渠道单笔上限换算成到账 USD', async () => {
     mockGetSystemConfig.mockImplementation(async (key) => {
-      if (key === 'BALANCE_CREDIT_USD_PER_CNY') return '0.15';
+      if (key === 'BALANCE_CREDIT_CNY_PER_USD') return '6.6667';
       return undefined;
     });
     mockedGetDefaultLimit.mockReturnValue({ singleMax: 1000, dailyMax: 10000 } as MethodDefaultLimits);
@@ -183,7 +184,7 @@ describe('queryMethodLimits', () => {
     const result = await queryMethodLimits(['alipay']);
 
     expect(result.alipay.singleMax).toBe(150);
-    expect(result.alipay.dailyLimit).toBe(1500);
+    expect(result.alipay.dailyLimit).toBe(1499.99);
     expect(result.alipay.available).toBe(true);
   });
 

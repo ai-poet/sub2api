@@ -6,7 +6,11 @@ import PayPageLayout from '@/components/PayPageLayout';
 import { DEFAULT_PRODUCT_NAME_PREFIX, DEFAULT_PRODUCT_NAME_SUFFIX, getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
-import { DEFAULT_BALANCE_CREDIT_USD_PER_CNY, DEFAULT_USD_EXCHANGE_RATE } from '@/lib/currency';
+import {
+  DEFAULT_BALANCE_CREDIT_CNY_PER_USD,
+  DEFAULT_USD_EXCHANGE_RATE,
+  legacyBalanceCreditUsdPerCnyToCnyPerUsd,
+} from '@/lib/currency';
 
 // ── i18n ──
 
@@ -47,9 +51,9 @@ function getTexts(locale: Locale) {
         dailyRechargeLimit: 'Daily Credited Limit (USD, 0=unlimited)',
         usdExchangeRate: 'USD Exchange Rate',
         usdExchangeRateHint: 'Used to display USDT/USDC settlement amounts. Format: 1 USD = ? CNY.',
-        balanceCreditRate: 'Balance Credit Rate',
-        balanceCreditRateHint:
-          'Used for balance top-up settlement. Format: 1 CNY = ? USD balance. Non-stablecoin payments use this for actual credited balance.',
+        balanceCreditCnyPerUsd: 'Credit Cost (CNY/USD)',
+        balanceCreditCnyPerUsdHint:
+          'Used for balance top-up settlement. Format: How many CNY are required to credit 1 USD balance. Non-stablecoin payments use this for actual settlement.',
         orderTimeoutMinutes: 'Order Timeout (min)',
         loadingEnvDefaults: 'Loading defaults...',
         providerManagement: 'Provider Management',
@@ -113,8 +117,8 @@ function getTexts(locale: Locale) {
         dailyRechargeLimit: '每日到账限额（USD，0=不限）',
         usdExchangeRate: '美元汇率',
         usdExchangeRateHint: '用于展示 USDT/USDC 的美元实付金额。填写规则：1 USD = 多少 CNY。',
-        balanceCreditRate: '到账比例',
-        balanceCreditRateHint: '用于余额充值到账换算。填写规则：1 CNY = 多少 USD 余额。非稳定币支付按此比例计算实际到账。',
+        balanceCreditCnyPerUsd: '到账单价',
+        balanceCreditCnyPerUsdHint: '用于余额充值到账换算。填写规则：到账 1 USD 余额需要多少 CNY。非稳定币支付按此单价计算实际实付。',
         orderTimeoutMinutes: '订单超时（分钟）',
         loadingEnvDefaults: '加载默认值...',
         providerManagement: '服务商管理',
@@ -283,7 +287,9 @@ function PaymentConfigContent() {
   const [rcMaxAmount, setRcMaxAmount] = useState('');
   const [rcDailyLimit, setRcDailyLimit] = useState('');
   const [rcUsdExchangeRate, setRcUsdExchangeRate] = useState(DEFAULT_USD_EXCHANGE_RATE.toFixed(2));
-  const [rcBalanceCreditRate, setRcBalanceCreditRate] = useState(DEFAULT_BALANCE_CREDIT_USD_PER_CNY.toFixed(4));
+  const [rcBalanceCreditCnyPerUsd, setRcBalanceCreditCnyPerUsd] = useState(
+    DEFAULT_BALANCE_CREDIT_CNY_PER_USD.toFixed(4),
+  );
   const [rcOrderTimeout, setRcOrderTimeout] = useState('');
   const [loadingEnvDefaults, setLoadingEnvDefaults] = useState(false);
 
@@ -327,6 +333,8 @@ function PaymentConfigContent() {
       if (!res.ok) return;
       const data = await res.json();
       const configs: { key: string; value: string }[] = data.configs ?? [];
+      let balanceCreditCnyPerUsdValue: string | null = null;
+      let legacyBalanceCreditUsdPerCnyValue: string | null = null;
       for (const c of configs) {
         if (c.key === 'PRODUCT_NAME_PREFIX') setRcPrefix(c.value);
         if (c.key === 'PRODUCT_NAME_SUFFIX') setRcSuffix(c.value);
@@ -343,12 +351,18 @@ function PaymentConfigContent() {
         if (c.key === 'RECHARGE_MAX_AMOUNT') setRcMaxAmount(c.value);
         if (c.key === 'DAILY_RECHARGE_LIMIT') setRcDailyLimit(c.value);
         if (c.key === 'USD_EXCHANGE_RATE') setRcUsdExchangeRate(c.value || DEFAULT_USD_EXCHANGE_RATE.toFixed(2));
-        if (c.key === 'BALANCE_CREDIT_USD_PER_CNY')
-          setRcBalanceCreditRate(c.value || DEFAULT_BALANCE_CREDIT_USD_PER_CNY.toFixed(4));
+        if (c.key === 'BALANCE_CREDIT_CNY_PER_USD') balanceCreditCnyPerUsdValue = c.value;
+        if (c.key === 'BALANCE_CREDIT_USD_PER_CNY') legacyBalanceCreditUsdPerCnyValue = c.value;
         if (c.key === 'ORDER_TIMEOUT_MINUTES') setRcOrderTimeout(c.value);
         if (c.key === 'LOAD_BALANCE_STRATEGY') setRcLoadBalanceStrategy(c.value || 'round-robin');
         if (c.key === 'DEFAULT_DEDUCT_BALANCE') setRcAutoRefundEnabled(c.value === 'true');
       }
+      setRcBalanceCreditCnyPerUsd(
+        balanceCreditCnyPerUsdValue ||
+          (legacyBalanceCreditUsdPerCnyValue
+            ? String(legacyBalanceCreditUsdPerCnyToCnyPerUsd(legacyBalanceCreditUsdPerCnyValue) ?? DEFAULT_BALANCE_CREDIT_CNY_PER_USD)
+            : DEFAULT_BALANCE_CREDIT_CNY_PER_USD.toFixed(4)),
+      );
       setRcOverrideEnv(true);
       setRcOverrideSaved(true);
     } catch {
@@ -590,7 +604,12 @@ function PaymentConfigContent() {
             { key: 'RECHARGE_MAX_AMOUNT', value: rcMaxAmount, group: 'payment', label: '最大到账金额（USD）' },
             { key: 'DAILY_RECHARGE_LIMIT', value: rcDailyLimit, group: 'payment', label: '每日到账限额（USD）' },
             { key: 'USD_EXCHANGE_RATE', value: rcUsdExchangeRate, group: 'payment', label: '美元汇率' },
-            { key: 'BALANCE_CREDIT_USD_PER_CNY', value: rcBalanceCreditRate, group: 'payment', label: '到账比例' },
+            {
+              key: 'BALANCE_CREDIT_CNY_PER_USD',
+              value: rcBalanceCreditCnyPerUsd,
+              group: 'payment',
+              label: '到账单价',
+            },
             { key: 'ORDER_TIMEOUT_MINUTES', value: rcOrderTimeout, group: 'payment', label: '订单超时时间' },
             { key: 'LOAD_BALANCE_STRATEGY', value: rcLoadBalanceStrategy, group: 'payment', label: '负载均衡策略' },
             { key: 'ENABLED_PROVIDERS', value: rcEnabledProviders, group: 'payment', label: '启用的服务商' },
@@ -919,13 +938,13 @@ function PaymentConfigContent() {
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>{t.balanceCreditRate}</label>
+                    <label className={labelCls}>{t.balanceCreditCnyPerUsd}</label>
                     <input
                       type="number"
                       min="0.0001"
                       step="0.0001"
-                      value={rcBalanceCreditRate}
-                      onChange={(e) => setRcBalanceCreditRate(e.target.value)}
+                      value={rcBalanceCreditCnyPerUsd}
+                      onChange={(e) => setRcBalanceCreditCnyPerUsd(e.target.value)}
                       className={inputCls}
                     />
                   </div>
@@ -942,7 +961,7 @@ function PaymentConfigContent() {
                 </div>
                 <div className={`-mt-1 mb-4 space-y-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   <p>{t.usdExchangeRateHint}</p>
-                  <p>{t.balanceCreditRateHint}</p>
+                  <p>{t.balanceCreditCnyPerUsdHint}</p>
                 </div>
 
                 {/* ── 服务商管理 ── */}
