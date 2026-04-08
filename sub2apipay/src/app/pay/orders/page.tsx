@@ -39,7 +39,7 @@ function OrdersContent() {
     switchingMobileTab: pickLocaleText(locale, '正在切换到移动端订单 Tab...', 'Switching to mobile orders tab...'),
     myOrders: pickLocaleText(locale, '我的订单', 'My Orders'),
     refresh: pickLocaleText(locale, '刷新', 'Refresh'),
-    backToPay: pickLocaleText(locale, '返回充值', 'Back to Top Up'),
+    backToPay: pickLocaleText(locale, '返回充值/订阅', 'Back to Purchase'),
     loading: pickLocaleText(locale, '加载中...', 'Loading...'),
     userPrefix: pickLocaleText(locale, '用户', 'User'),
     authError: pickLocaleText(
@@ -196,7 +196,10 @@ function OrdersContent() {
     if (token) params.set('token', token);
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
+    if (srcHost) params.set('src_host', srcHost);
     applyLocaleToSearchParams(params, locale);
+    const srcUrl = searchParams.get('src_url') || '';
+    if (srcUrl) params.set('src_url', srcUrl);
     return `${path}?${params.toString()}`;
   };
 
@@ -206,16 +209,16 @@ function OrdersContent() {
       isEmbedded={isEmbedded}
       title={text.myOrders}
       subtitle={userInfo?.username || text.myOrders}
+      leadingAction={
+        <a href={buildScopedUrl('/pay')} className={btnClass}>
+          {'<'} {text.backToPay}
+        </a>
+      }
       actions={
         <>
           <button type="button" onClick={() => loadOrders(page, pageSize)} className={btnClass}>
             {text.refresh}
           </button>
-          {!srcHost && (
-            <a href={buildScopedUrl('/pay')} className={btnClass}>
-              {text.backToPay}
-            </a>
-          )}
         </>
       }
     >

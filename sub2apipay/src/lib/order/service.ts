@@ -6,7 +6,7 @@ import { generateRechargeCode } from './code-gen';
 import { getMethodDailyLimit } from './limits';
 import { getMethodFeeRate, calculatePayAmount } from './fee';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
-import type { PaymentType, PaymentNotification } from '@/lib/payment';
+import type { PaymentType, PaymentNotification, PaymentProvider } from '@/lib/payment';
 import {
   getUser,
   createAndRedeem,
@@ -93,6 +93,65 @@ async function getProviderForInstance(paymentType: string, providerInstanceId: s
   const instanceConfig = await getInstanceConfig(providerInstanceId);
   if (!instanceConfig) return null;
   return createProviderFromInstance(providerKey, providerInstanceId, instanceConfig);
+}
+
+function resolveProviderQueryReference(
+  order: { id: string; paymentTradeNo: string | null },
+  provider: { providerKey: string },
+): string | null {
+  if (provider.providerKey === 'easypay') {
+    return order.id;
+  }
+
+  return order.paymentTradeNo;
+}
+
+export async function reconcilePendingOrderPayment(orderId: string): Promise<void> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true,
+      status: true,
+      paymentTradeNo: true,
+      paymentType: true,
+      providerInstanceId: true,
+    },
+  });
+
+  if (!order || order.status !== ORDER_STATUS.PENDING || !order.paymentType) {
+    return;
+  }
+
+  let provider: PaymentProvider | null = null;
+  try {
+    if (order.providerInstanceId) {
+      provider = await getProviderForInstance(order.paymentType, order.providerInstanceId);
+    }
+
+    if (!provider) {
+      await ensureDBProviders();
+      provider = paymentRegistry.getProvider(order.paymentType as PaymentType);
+    }
+
+    const queryReference = resolveProviderQueryReference(order, provider);
+    if (!queryReference) {
+      return;
+    }
+
+    const queryResult = await provider.queryOrder(queryReference);
+    if (queryResult.status !== 'paid') {
+      return;
+    }
+
+    await confirmPayment({
+      orderId: order.id,
+      tradeNo: queryResult.tradeNo || order.paymentTradeNo || queryReference,
+      paidAmount: queryResult.amount,
+      providerName: provider.name,
+    });
+  } catch (error) {
+    console.warn(`Failed to reconcile payment status for order ${orderId}:`, error);
+  }
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
@@ -586,7 +645,11 @@ export async function cancelOrderCore(options: {
         await ensureDBProviders();
         provider = paymentRegistry.getProvider(paymentType as PaymentType);
       }
-      const queryResult = await provider.queryOrder(paymentTradeNo);
+      const queryReference = resolveProviderQueryReference({ id: orderId, paymentTradeNo }, provider);
+      if (!queryReference) {
+        throw new Error(`No provider query reference for order ${orderId}`);
+      }
+      const queryResult = await provider.queryOrder(queryReference);
 
       if (queryResult.status === 'paid') {
         await confirmPayment({

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { verifyAdminToken } from '@/lib/admin-auth';
 import { deriveOrderState } from '@/lib/order/status';
 import { ORDER_STATUS_ACCESS_QUERY_KEY, verifyOrderStatusAccessToken } from '@/lib/order/status-access';
+import { reconcilePendingOrderPayment } from '@/lib/order/service';
 
 /**
  * 订单状态轮询接口。
@@ -37,15 +38,34 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: '订单不存在' }, { status: 404 });
   }
 
-  const derived = deriveOrderState(order);
+  let currentOrder = order;
+  if (order.status === 'PENDING') {
+    await reconcilePendingOrderPayment(order.id);
+    const refreshedOrder = await prisma.order.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        expiresAt: true,
+        paidAt: true,
+        completedAt: true,
+        failedReason: true,
+      },
+    });
+    if (refreshedOrder) {
+      currentOrder = refreshedOrder;
+    }
+  }
+
+  const derived = deriveOrderState(currentOrder);
 
   return NextResponse.json({
-    id: order.id,
-    status: order.status,
-    expiresAt: order.expiresAt,
+    id: currentOrder.id,
+    status: currentOrder.status,
+    expiresAt: currentOrder.expiresAt,
     paymentSuccess: derived.paymentSuccess,
     rechargeSuccess: derived.rechargeSuccess,
     rechargeStatus: derived.rechargeStatus,
-    failedReason: order.failedReason ?? null,
+    failedReason: currentOrder.failedReason ?? null,
   });
 }

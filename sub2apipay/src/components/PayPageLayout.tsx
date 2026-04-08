@@ -8,6 +8,7 @@ interface PayPageLayoutProps {
   maxWidth?: 'sm' | 'lg' | 'full';
   title: string;
   subtitle: string;
+  leadingAction?: React.ReactNode;
   actions?: React.ReactNode;
   children: React.ReactNode;
   locale?: Locale;
@@ -19,6 +20,7 @@ export default function PayPageLayout({
   maxWidth = 'full',
   title,
   subtitle,
+  leadingAction,
   actions,
   children,
   locale = 'zh',
@@ -63,6 +65,7 @@ export default function PayPageLayout({
       >
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
+            {leadingAction && <div className="mb-3">{leadingAction}</div>}
             <div
               className={[
                 'mb-2 inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium',

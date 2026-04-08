@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 
 const mockFindUnique = vi.fn();
 const mockVerifyAdminToken = vi.fn();
+const mockReconcilePendingOrderPayment = vi.fn();
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -23,6 +24,10 @@ vi.mock('@/lib/admin-auth', () => ({
   verifyAdminToken: (...args: unknown[]) => mockVerifyAdminToken(...args),
 }));
 
+vi.mock('@/lib/order/service', () => ({
+  reconcilePendingOrderPayment: (...args: unknown[]) => mockReconcilePendingOrderPayment(...args),
+}));
+
 import { GET } from '@/app/api/orders/[id]/route';
 import { createOrderStatusAccessToken } from '@/lib/order/status-access';
 
@@ -38,6 +43,7 @@ describe('GET /api/orders/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockVerifyAdminToken.mockResolvedValue(false);
+    mockReconcilePendingOrderPayment.mockResolvedValue(undefined);
     mockFindUnique.mockResolvedValue({
       id: 'order-001',
       status: 'PENDING',
@@ -60,6 +66,7 @@ describe('GET /api/orders/[id]', () => {
     expect(response.status).toBe(200);
     expect(data.id).toBe('order-001');
     expect(data.paymentSuccess).toBe(false);
+    expect(mockReconcilePendingOrderPayment).toHaveBeenCalledWith('order-001');
   });
 
   it('allows admin-authenticated access as fallback', async () => {
@@ -67,5 +74,34 @@ describe('GET /api/orders/[id]', () => {
     const response = await GET(createRequest('order-001'), { params: Promise.resolve({ id: 'order-001' }) });
 
     expect(response.status).toBe(200);
+  });
+
+  it('returns refreshed paid status after reconciliation', async () => {
+    mockFindUnique
+      .mockResolvedValueOnce({
+        id: 'order-001',
+        status: 'PENDING',
+        expiresAt: new Date('2026-03-10T00:00:00.000Z'),
+        paidAt: null,
+        completedAt: null,
+        failedReason: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'order-001',
+        status: 'COMPLETED',
+        expiresAt: new Date('2026-03-10T00:00:00.000Z'),
+        paidAt: new Date('2026-03-10T00:01:00.000Z'),
+        completedAt: new Date('2026-03-10T00:01:30.000Z'),
+        failedReason: null,
+      });
+
+    const token = createOrderStatusAccessToken('order-001');
+    const response = await GET(createRequest('order-001', token), { params: Promise.resolve({ id: 'order-001' }) });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.status).toBe('COMPLETED');
+    expect(data.paymentSuccess).toBe(true);
+    expect(data.rechargeSuccess).toBe(true);
   });
 });
