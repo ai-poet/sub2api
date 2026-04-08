@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
           {
             error:
               locale === 'en'
-                ? `Credited amount must be between $${effectiveMin} and $${effectiveMax}`
+                ? `Credited balance must be between $${effectiveMin} and $${effectiveMax}`
                 : `到账金额需在 $${effectiveMin} - $${effectiveMax} 之间`,
           },
           { status: 400 },

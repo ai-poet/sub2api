@@ -437,7 +437,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
             ? message(
                 locale,
                 `${input.paymentType} 今日剩余到账额度 $${remainingCredited.toFixed(2)}，请减少到账金额或使用其他支付方式`,
-                `${input.paymentType} remaining daily credited quota: $${remainingCredited.toFixed(2)}. Reduce the credited amount or use another payment method`,
+                `${input.paymentType} remaining daily credited balance quota: $${remainingCredited.toFixed(2)}. Reduce the credited balance or use another payment method`,
               )
             : message(
                 locale,

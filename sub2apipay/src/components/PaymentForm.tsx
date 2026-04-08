@@ -118,7 +118,7 @@ export default function PaymentForm({
     selectedAmount <= effectiveMax &&
     hasValidCentPrecision(selectedAmount) &&
     isMethodAvailable;
-  const creditedAmountLabel = locale === 'en' ? 'Credited Amount (USD)' : '到账金额（USD）';
+  const creditedAmountLabel = locale === 'en' ? 'Credited Balance (USD)' : '到账金额（USD）';
   const payAmountLabel =
     locale === 'en'
       ? settlementDisplay.currency === 'USD'
@@ -302,9 +302,9 @@ export default function PaymentForm({
               : '到账金额需在范围内，且最多支持 2 位小数';
           if (!isNaN(num)) {
             if (num < minAmount)
-              msg = locale === 'en' ? `Minimum credited amount: $${minAmount}` : `单笔最低到账 $${minAmount}`;
+              msg = locale === 'en' ? `Minimum credited balance: $${minAmount}` : `单笔最低到账 $${minAmount}`;
             else if (num > effectiveMax)
-              msg = locale === 'en' ? `Maximum credited amount: $${effectiveMax}` : `单笔最高到账 $${effectiveMax}`;
+              msg = locale === 'en' ? `Maximum credited balance: $${effectiveMax}` : `单笔最高到账 $${effectiveMax}`;
           }
           return <div className={['text-xs', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>{msg}</div>;
         })()}

@@ -39,7 +39,7 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           refundReason: 'Refund Reason',
           refundReasonPlaceholder: 'Enter refund reason (optional)',
           currentBalance: 'Current Balance (USD)',
-          orderAmount: 'Credited Amount (USD)',
+          orderAmount: 'Credited Balance (USD)',
           cancel: 'Cancel',
           submit: 'Submit Request',
           submitting: 'Submitting...',

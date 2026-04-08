@@ -1035,7 +1035,7 @@ function PayContent() {
                         </li>
                         {config.maxDailyAmount > 0 && (
                           <li>
-                            {pickLocaleText(locale, '每日累计到账上限', 'Max daily credited amount')} $
+                            {pickLocaleText(locale, '每日累计到账上限', 'Max daily credited balance')} $
                             {config.maxDailyAmount.toFixed(2)}
                           </li>
                         )}

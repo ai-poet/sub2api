@@ -37,7 +37,7 @@ export default function TopUpModal({ open, onClose, onConfirm, amounts, isDark, 
       >
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{pickLocaleText(locale, '选择到账金额', 'Select Credited Amount')}</h2>
+          <h2 className="text-lg font-semibold">{pickLocaleText(locale, '选择到账金额', 'Select Credited Balance')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -102,7 +102,7 @@ export default function TopUpModal({ open, onClose, onConfirm, amounts, isDark, 
                 : 'cursor-not-allowed bg-slate-200 text-slate-400',
           ].join(' ')}
         >
-          {pickLocaleText(locale, '确认到账金额', 'Confirm Credit')}
+          {pickLocaleText(locale, '确认到账金额', 'Confirm Credited Balance')}
         </button>
       </div>
     </div>
