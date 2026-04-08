@@ -175,6 +175,7 @@ COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/.next/stan
 COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/.next/static /app/sub2apipay/.next/static
 COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/public /app/sub2apipay/public
 COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/prisma /app/sub2apipay/prisma
+COPY --from=pay-builder --chown=${APP_UID}:${APP_GID} /app/sub2apipay/prisma.config.ts /app/sub2apipay/prisma.config.ts
 COPY --from=prisma-runtime-builder --chown=${APP_UID}:${APP_GID} /app/prisma-runtime/node_modules /app/prisma-runtime/node_modules
 
 # Create data directory

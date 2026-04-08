@@ -11,6 +11,11 @@ build_payment_database_url() {
         return
     fi
 
+    if [ -n "${DATABASE_URL:-}" ]; then
+        printf '%s' "${DATABASE_URL}"
+        return
+    fi
+
     db_host="${DATABASE_HOST:-localhost}"
     db_port="${DATABASE_PORT:-5432}"
     db_user="${DATABASE_USER:-postgres}"
@@ -74,7 +79,7 @@ export SUB2APIPAY_INTERNAL_URL="${SUB2APIPAY_INTERNAL_URL:-http://127.0.0.1:3000
 export NEXT_TELEMETRY_DISABLED=1
 
 cd /app/sub2apipay
-/app/prisma-runtime/node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma
+/app/prisma-runtime/node_modules/.bin/prisma migrate deploy --config prisma.config.ts
 
 HOSTNAME=127.0.0.1 PORT=3000 node server.js &
 pay_pid=$!
