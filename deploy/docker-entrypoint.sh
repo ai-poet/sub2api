@@ -5,14 +5,56 @@ urlencode() {
     node -e 'process.stdout.write(encodeURIComponent(process.argv[1] ?? ""))' "$1"
 }
 
+get_payment_database_schema() {
+    if [ "${SUB2APIPAY_DATABASE_SCHEMA+x}" = "x" ]; then
+        printf '%s' "${SUB2APIPAY_DATABASE_SCHEMA}"
+        return
+    fi
+
+    printf '%s' "sub2apipay"
+}
+
+is_payment_database_schema_explicit() {
+    [ "${SUB2APIPAY_DATABASE_SCHEMA+x}" = "x" ]
+}
+
+ensure_database_url_schema() {
+    db_url="$1"
+    db_schema="$2"
+    force_schema="${3:-false}"
+
+    if [ -z "${db_schema}" ]; then
+        printf '%s' "${db_url}"
+        return
+    fi
+
+    node - "${db_url}" "${db_schema}" "${force_schema}" <<'NODE'
+const [dbUrl, schema, forceSchema] = process.argv.slice(2)
+const url = new URL(dbUrl)
+
+if (forceSchema === 'true' || !url.searchParams.has('schema')) {
+  url.searchParams.set('schema', schema)
+}
+
+process.stdout.write(url.toString())
+NODE
+}
+
 build_payment_database_url() {
+    payment_schema="$(get_payment_database_schema)"
+    if is_payment_database_schema_explicit; then
+        payment_schema_force="true"
+    else
+        payment_schema_force="false"
+    fi
+
     if [ -n "${SUB2APIPAY_DATABASE_URL:-}" ]; then
-        printf '%s' "${SUB2APIPAY_DATABASE_URL}"
+        ensure_database_url_schema "${SUB2APIPAY_DATABASE_URL}" "${payment_schema}" "${payment_schema_force}"
         return
     fi
 
     if [ -n "${DATABASE_URL:-}" ]; then
-        printf '%s' "${DATABASE_URL}"
+        ensure_database_url_schema "${DATABASE_URL}" "${payment_schema}" "${payment_schema_force}"
         return
     fi
 
@@ -32,12 +74,13 @@ build_payment_database_url() {
         auth_part="${user_enc}"
     fi
 
-    printf 'postgresql://%s@%s:%s/%s?sslmode=%s' \
+    raw_url="$(printf 'postgresql://%s@%s:%s/%s?sslmode=%s' \
         "${auth_part}" \
         "${db_host}" \
         "${db_port}" \
         "${db_name}" \
-        "${db_sslmode}"
+        "${db_sslmode}")"
+    ensure_database_url_schema "${raw_url}" "${payment_schema}" "${payment_schema_force}"
 }
 
 shutdown_children() {
