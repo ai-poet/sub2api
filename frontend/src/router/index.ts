@@ -403,6 +403,7 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       requiresAdmin: true,
       title: 'Payment Management',
+      titleKey: 'nav.paymentManagement',
       descriptionKey: 'purchase.description'
     }
   },

@@ -1,28 +1,24 @@
-'use client';
-
-import { useSearchParams, usePathname } from 'next/navigation';
-import { Suspense } from 'react';
+import { headers } from 'next/headers';
 import { resolveLocale } from '@/lib/locale';
-import { inferPublicBasePathFromPathname, withPublicBasePath } from '@/lib/public-path';
+import { normalizeBasePath, withPublicBasePath } from '@/lib/public-path';
 
 const NAV_ITEMS = [
-  { path: '/admin', label: { zh: '数据概览', en: 'Dashboard' } },
   { path: '/admin/orders', label: { zh: '订单管理', en: 'Orders' } },
   { path: '/admin/payment-config', label: { zh: '支付配置', en: 'Payment Config' } },
-  { path: '/admin/channels', label: { zh: '渠道管理', en: 'Channels' } },
-  { path: '/admin/subscriptions', label: { zh: '订阅管理', en: 'Subscriptions' } },
 ];
 
-function AdminLayoutInner({ children }: { children: React.ReactNode }) {
-  const searchParams = useSearchParams();
-  const pathname = usePathname() || '/admin';
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const headerStore = await headers();
+  const pathname = headerStore.get('x-pathname') || '/admin';
+  const search = headerStore.get('x-search') || '';
+  const basePath = normalizeBasePath(headerStore.get('x-forwarded-prefix'));
+  const searchParams = new URLSearchParams(search);
   const token = searchParams.get('token') || '';
   const theme = searchParams.get('theme') || 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
   const isDark = theme === 'dark';
-  const publicBasePath = inferPublicBasePathFromPathname(pathname);
-  const scopedPathname = publicBasePath && pathname.startsWith(publicBasePath) ? pathname.slice(publicBasePath.length) || '/' : pathname;
+  const scopedPathname = basePath && pathname.startsWith(basePath) ? pathname.slice(basePath.length) || '/' : pathname;
 
   const buildUrl = (path: string) => {
     const params = new URLSearchParams();
@@ -30,11 +26,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
     if (locale !== 'zh') params.set('lang', locale);
-    return `${withPublicBasePath(path, publicBasePath)}?${params.toString()}`;
+    return `${withPublicBasePath(path, basePath)}?${params.toString()}`;
   };
 
   const isActive = (navPath: string) => {
-    if (navPath === '/admin') return scopedPathname === '/admin' || scopedPathname === '/admin/dashboard';
     return scopedPathname.startsWith(navPath);
   };
 
@@ -69,13 +64,5 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       </div>
       {children}
     </div>
-  );
-}
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <Suspense>
-      <AdminLayoutInner>{children}</AdminLayoutInner>
-    </Suspense>
   );
 }
