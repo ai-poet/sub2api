@@ -1,11 +1,14 @@
+# syntax=docker/dockerfile:1.7
+
 # =============================================================================
 # Sub2API Multi-Stage Dockerfile
 # =============================================================================
 # Stage 1: Build frontend
 # Stage 2: Build integrated sub2apipay
-# Stage 3: Build Go backend with embedded frontend
-# Stage 4: PostgreSQL client
-# Stage 5: Final runtime image
+# Stage 3: Build runtime Prisma CLI
+# Stage 4: Build Go backend with embedded frontend
+# Stage 5: PostgreSQL client
+# Stage 6: Final runtime image
 # =============================================================================
 
 ARG NODE_IMAGE=node:24-alpine
@@ -14,6 +17,7 @@ ARG ALPINE_IMAGE=alpine:3.21
 ARG POSTGRES_IMAGE=postgres:18-alpine
 ARG GOPROXY=https://goproxy.cn,direct
 ARG GOSUMDB=sum.golang.google.cn
+ARG PNPM_VERSION=10.30.3
 
 # -----------------------------------------------------------------------------
 # Stage 1: Frontend Builder
@@ -21,16 +25,20 @@ ARG GOSUMDB=sum.golang.google.cn
 FROM ${NODE_IMAGE} AS frontend-builder
 
 WORKDIR /app/frontend
+ENV PNPM_HOME=/pnpm
+ENV PATH=${PNPM_HOME}:${PATH}
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
 # Install dependencies first (better caching)
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY --link frontend/package.json frontend/pnpm-lock.yaml ./
+RUN --mount=type=cache,id=sub2api-frontend-pnpm-store,target=/pnpm/store \
+    pnpm config set store-dir /pnpm/store && \
+    pnpm install --frozen-lockfile
 
 # Copy frontend source and build
-COPY frontend/ ./
+COPY --link frontend/ ./
 RUN pnpm run build
 
 # -----------------------------------------------------------------------------
@@ -41,17 +49,36 @@ FROM ${NODE_IMAGE} AS pay-builder
 WORKDIR /app/sub2apipay
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PNPM_HOME=/pnpm
+ENV PATH=${PNPM_HOME}:${PATH}
 
 RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-COPY sub2apipay/ ./
-RUN pnpm install --frozen-lockfile
+COPY --link sub2apipay/package.json sub2apipay/pnpm-lock.yaml sub2apipay/pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=sub2api-pay-pnpm-store,target=/pnpm/store \
+    pnpm config set store-dir /pnpm/store && \
+    pnpm install --frozen-lockfile
+
+COPY --link sub2apipay/ ./
 RUN pnpm exec prisma generate
 RUN pnpm run build
 
 # -----------------------------------------------------------------------------
-# Stage 3: Backend Builder
+# Stage 3: Prisma Runtime Builder
+# -----------------------------------------------------------------------------
+FROM ${NODE_IMAGE} AS prisma-runtime-builder
+
+WORKDIR /app/prisma-runtime
+
+COPY --link sub2apipay/package.json /tmp/sub2apipay-package.json
+RUN PRISMA_VERSION="$(node -p "const pkg=require('/tmp/sub2apipay-package.json'); const version=pkg.dependencies?.prisma ?? pkg.devDependencies?.prisma; if (!version) throw new Error('prisma version not found in package.json'); if (!/^\\d+\\.\\d+\\.\\d+(?:[-+].+)?$/.test(version)) throw new Error('prisma version must be pinned exactly in package.json'); version")" && \
+    node -e "const fs=require('node:fs'); const version=process.argv[1]; fs.writeFileSync('package.json', JSON.stringify({ name: 'sub2apipay-prisma-runtime', private: true, dependencies: { prisma: version } }, null, 2) + '\n')" "${PRISMA_VERSION}"
+RUN --mount=type=cache,id=sub2api-prisma-npm-cache,target=/root/.npm \
+    npm install --omit=dev --omit=optional --prefer-offline --no-audit --no-fund
+
+# -----------------------------------------------------------------------------
+# Stage 4: Backend Builder
 # -----------------------------------------------------------------------------
 FROM ${GOLANG_IMAGE} AS backend-builder
 
@@ -71,18 +98,21 @@ RUN apk add --no-cache git ca-certificates tzdata
 WORKDIR /app/backend
 
 # Copy go mod files first (better caching)
-COPY backend/go.mod backend/go.sum ./
-RUN go mod download
+COPY --link backend/go.mod backend/go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 # Copy backend source first
-COPY backend/ ./
+COPY --link backend/ ./
 
 # Copy frontend dist from previous stage (must be after backend copy to avoid being overwritten)
-COPY --from=frontend-builder /app/backend/internal/web/dist ./internal/web/dist
+COPY --link --from=frontend-builder /app/backend/internal/web/dist ./internal/web/dist
 
 # Build the binary (BuildType=release for CI builds, embed frontend)
 # Version precedence: build arg VERSION > cmd/server/VERSION
-RUN VERSION_VALUE="${VERSION}" && \
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    VERSION_VALUE="${VERSION}" && \
     if [ -z "${VERSION_VALUE}" ]; then VERSION_VALUE="$(tr -d '\r\n' < ./cmd/server/VERSION)"; fi && \
     DATE_VALUE="${DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" && \
     CGO_ENABLED=0 GOOS=linux go build \
@@ -92,12 +122,12 @@ RUN VERSION_VALUE="${VERSION}" && \
     ./cmd/server
 
 # -----------------------------------------------------------------------------
-# Stage 4: PostgreSQL Client (version-matched with docker-compose)
+# Stage 5: PostgreSQL Client (version-matched with docker-compose)
 # -----------------------------------------------------------------------------
 FROM ${POSTGRES_IMAGE} AS pg-client
 
 # -----------------------------------------------------------------------------
-# Stage 5: Final Runtime Image
+# Stage 6: Final Runtime Image
 # -----------------------------------------------------------------------------
 FROM ${ALPINE_IMAGE}
 
@@ -123,9 +153,9 @@ RUN apk add --no-cache \
 
 # Copy pg_dump and psql from the same postgres image used in docker-compose
 # This ensures version consistency between backup tools and the database server
-COPY --from=pg-client /usr/local/bin/pg_dump /usr/local/bin/pg_dump
-COPY --from=pg-client /usr/local/bin/psql /usr/local/bin/psql
-COPY --from=pg-client /usr/local/lib/libpq.so.5* /usr/local/lib/
+COPY --link --from=pg-client /usr/local/bin/pg_dump /usr/local/bin/pg_dump
+COPY --link --from=pg-client /usr/local/bin/psql /usr/local/bin/psql
+COPY --link --from=pg-client /usr/local/lib/libpq.so.5* /usr/local/lib/
 
 # Create non-root user
 RUN addgroup -g 1000 sub2api && \
@@ -135,19 +165,18 @@ RUN addgroup -g 1000 sub2api && \
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=backend-builder /app/sub2api /app/sub2api
-COPY --from=pay-builder /app/sub2apipay/.next/standalone /app/sub2apipay
-COPY --from=pay-builder /app/sub2apipay/.next/static /app/sub2apipay/.next/static
-COPY --from=pay-builder /app/sub2apipay/public /app/sub2apipay/public
-COPY --from=pay-builder /app/sub2apipay/node_modules /app/sub2apipay/node_modules
-COPY --from=pay-builder /app/sub2apipay/package.json /app/sub2apipay/package.json
-COPY --from=pay-builder /app/sub2apipay/prisma /app/sub2apipay/prisma
+COPY --link --from=backend-builder --chown=sub2api:sub2api /app/sub2api /app/sub2api
+COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/.next/standalone /app/sub2apipay
+COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/.next/static /app/sub2apipay/.next/static
+COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/public /app/sub2apipay/public
+COPY --link --from=pay-builder --chown=sub2api:sub2api /app/sub2apipay/prisma /app/sub2apipay/prisma
+COPY --link --from=prisma-runtime-builder --chown=sub2api:sub2api /app/prisma-runtime/node_modules /app/prisma-runtime/node_modules
 
 # Create data directory
-RUN mkdir -p /app/data /app/sub2apipay && chown -R sub2api:sub2api /app
+RUN mkdir -p /app/data /app/sub2apipay /app/prisma-runtime
 
 # Copy entrypoint script (fixes volume permissions then drops to sub2api)
-COPY deploy/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --link deploy/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
 # Expose port (can be overridden by SERVER_PORT env var)

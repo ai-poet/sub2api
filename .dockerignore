@@ -28,10 +28,15 @@ build/
 
 # Node modules (will be installed in container)
 frontend/node_modules/
+sub2apipay/node_modules/
 node_modules/
+frontend/.vite/
+frontend/dist/
+sub2apipay/.next/
 
 # Go build cache (will be built in container)
 backend/vendor/
+backend/internal/web/dist/
 
 # Test files
 *_test.go
