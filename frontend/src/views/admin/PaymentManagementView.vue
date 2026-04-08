@@ -55,7 +55,7 @@ let themeObserver: MutationObserver | null = null
 
 const paymentAdminUrl = computed(() => {
   if (!authStore.token) return ''
-  return buildEmbeddedUrl('/pay/admin/orders', undefined, authStore.token, paymentTheme.value, locale.value)
+  return buildEmbeddedUrl('/pay/admin', undefined, authStore.token, paymentTheme.value, locale.value)
 })
 
 onMounted(() => {

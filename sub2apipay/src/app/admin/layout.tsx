@@ -3,6 +3,7 @@ import { resolveLocale } from '@/lib/locale';
 import { normalizeBasePath, withPublicBasePath } from '@/lib/public-path';
 
 const NAV_ITEMS = [
+  { path: '/admin', label: { zh: '支付统计', en: 'Overview' } },
   { path: '/admin/orders', label: { zh: '订单管理', en: 'Orders' } },
   { path: '/admin/payment-config', label: { zh: '支付配置', en: 'Payment Config' } },
 ];
@@ -30,6 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   };
 
   const isActive = (navPath: string) => {
+    if (navPath === '/admin') return scopedPathname === '/admin' || scopedPathname === '/admin/dashboard';
     return scopedPathname.startsWith(navPath);
   };
 
