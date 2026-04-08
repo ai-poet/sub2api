@@ -35,11 +35,11 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           requested: 'Requested',
           partialRefunded: 'Partially refunded',
           dialogTitle: 'Refund Request',
-          refundAmount: 'Refund Amount',
+          refundAmount: 'Refund Amount (USD)',
           refundReason: 'Refund Reason',
           refundReasonPlaceholder: 'Enter refund reason (optional)',
-          currentBalance: 'Current Balance',
-          orderAmount: 'Order Amount',
+          currentBalance: 'Current Balance (USD)',
+          orderAmount: 'Credited Amount (USD)',
           cancel: 'Cancel',
           submit: 'Submit Request',
           submitting: 'Submitting...',
@@ -59,11 +59,11 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           requested: '已申请',
           partialRefunded: '已部分退款',
           dialogTitle: '申请退款',
-          refundAmount: '退款金额',
+          refundAmount: '退款金额（USD）',
           refundReason: '退款原因',
           refundReasonPlaceholder: '请输入退款原因（可选）',
-          currentBalance: '当前余额',
-          orderAmount: '订单金额',
+          currentBalance: '当前余额（USD）',
+          orderAmount: '到账金额（USD）',
           cancel: '取消',
           submit: '提交申请',
           submitting: '提交中...',
@@ -76,6 +76,9 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
   const [refundOrder, setRefundOrder] = useState<MyOrder | null>(null);
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
+  const formatOrderAmount = (order: MyOrder) => `${order.orderType === 'subscription' ? '¥' : '$'}${order.amount.toFixed(2)}`;
+  const formatRefundAmount = (amount: number, order: MyOrder) =>
+    `${order.orderType === 'subscription' ? '¥' : '$'}${amount.toFixed(2)}`;
 
   useEffect(() => {
     if (!refundOrder) return;
@@ -189,7 +192,7 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
                   ].join(' ')}
                 >
                   <div className="font-medium">#{order.id.slice(0, 12)}</div>
-                  <div className="font-semibold">¥{order.amount.toFixed(2)}</div>
+                  <div className="font-semibold">{formatOrderAmount(order)}</div>
                   <div>{getPaymentDisplayInfo(order.paymentType, locale).channel}</div>
                   <div>
                     <span className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}>
@@ -197,7 +200,8 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
                     </span>
                     {(order.status === 'PARTIALLY_REFUNDED' || order.status === 'REFUND_REQUESTED') && order.refundAmount != null && (
                       <div className={['mt-1 text-xs', isDark ? 'text-fuchsia-300' : 'text-fuchsia-700'].join(' ')}>
-                        {order.status === 'PARTIALLY_REFUNDED' ? text.partialRefunded : text.requested}: ¥{order.refundAmount.toFixed(2)}
+                        {order.status === 'PARTIALLY_REFUNDED' ? text.partialRefunded : text.requested}:{' '}
+                        {formatRefundAmount(order.refundAmount, order)}
                       </div>
                     )}
                   </div>
@@ -239,11 +243,11 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
               <div className={['grid grid-cols-2 gap-3 text-sm', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ')}>
                 <div className={['rounded-lg p-3', isDark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
                   <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>{text.orderAmount}</div>
-                  <div className="mt-1 font-semibold">¥{refundOrder.amount.toFixed(2)}</div>
+                  <div className="mt-1 font-semibold">${refundOrder.amount.toFixed(2)}</div>
                 </div>
                 <div className={['rounded-lg p-3', isDark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
                   <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>{text.currentBalance}</div>
-                  <div className="mt-1 font-semibold">¥{userBalance.toFixed(2)}</div>
+                  <div className="mt-1 font-semibold">${userBalance.toFixed(2)}</div>
                 </div>
               </div>
 

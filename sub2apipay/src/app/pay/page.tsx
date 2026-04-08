@@ -27,6 +27,7 @@ interface OrderResult {
   orderId: string;
   amount: number;
   payAmount?: number;
+  orderType: 'balance' | 'subscription';
   status: string;
   paymentType: string;
   payUrl?: string | null;
@@ -448,6 +449,7 @@ function PayContent() {
         orderId: data.orderId,
         amount: data.amount,
         payAmount: data.payAmount,
+        orderType: 'balance',
         status: data.status,
         paymentType: data.paymentType || paymentType,
         payUrl: data.payUrl,
@@ -496,6 +498,7 @@ function PayContent() {
         orderId: data.orderId,
         amount: data.amount,
         payAmount: data.payAmount,
+        orderType: 'subscription',
         status: data.status,
         paymentType: data.paymentType || paymentType,
         payUrl: data.payUrl,
@@ -756,8 +759,8 @@ function PayContent() {
                           <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                             {pickLocaleText(
                               locale,
-                              '无需订阅，充值即用，按实际消耗扣费。余额所有渠道通用，可自由切换。价格以美元计价（当前比例：1美元≈1人民币）',
-                              'No subscription needed. Top up and use. Charged by actual usage. Balance works across all channels. Priced in USD (current rate: 1 USD ≈ 1 CNY)',
+                              '无需订阅，充值即用，按实际消耗扣费。账户余额按 USD 展示；支付宝/微信会显示实付 CNY，USDT/USDC 会显示实付 USD。',
+                              'No subscription needed. Top up and use. Charged by actual usage. Balance is shown in USD; Alipay/WeChat display paid CNY, while USDT/USDC display paid USD.',
                             )}
                           </p>
                           <div className="flex flex-wrap gap-4 text-sm">
@@ -795,8 +798,8 @@ function PayContent() {
                               <span>
                                 {pickLocaleText(
                                   locale,
-                                  '0.15倍率 = 1元可用约6.67美元额度',
-                                  '0.15 rate = 1 CNY ≈ $6.67 quota',
+                                  '0.15倍率 = 1美元余额可用约6.67美元额度',
+                                  '0.15 rate = 1 USD balance ≈ $6.67 quota',
                                 )}
                               </span>
                             </div>
@@ -1099,6 +1102,7 @@ function PayContent() {
             paymentType={orderResult.paymentType}
             amount={orderResult.amount}
             payAmount={orderResult.payAmount}
+            orderType={orderResult.orderType}
             usdExchangeRate={config.usdExchangeRate}
             expiresAt={orderResult.expiresAt}
             statusAccessToken={orderResult.statusAccessToken}

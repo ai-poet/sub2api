@@ -40,6 +40,7 @@ export default function MobileOrderList({
     if (activeFilter === 'ALL') return orders;
     return orders.filter((item) => item.status === activeFilter);
   }, [orders, activeFilter]);
+  const formatOrderAmount = (order: MyOrder) => `${order.orderType === 'subscription' ? '¥' : '$'}${order.amount.toFixed(2)}`;
 
   useEffect(() => {
     if (!hasMore || loadingMore) return;
@@ -111,7 +112,7 @@ export default function MobileOrderList({
               ].join(' ')}
             >
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-semibold">¥{order.amount.toFixed(2)}</span>
+                <span className="text-2xl font-semibold">{formatOrderAmount(order)}</span>
                 <span
                   className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}
                 >

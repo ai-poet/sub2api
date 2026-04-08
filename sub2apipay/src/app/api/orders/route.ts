@@ -64,7 +64,15 @@ export async function POST(request: NextRequest) {
         ? parseFloat(amountConfigs['RECHARGE_MAX_AMOUNT']) || env.MAX_RECHARGE_AMOUNT
         : env.MAX_RECHARGE_AMOUNT;
       if (amount < effectiveMin || amount > effectiveMax) {
-        return NextResponse.json({ error: `充值金额需在 ${effectiveMin} - ${effectiveMax} 之间` }, { status: 400 });
+        return NextResponse.json(
+          {
+            error:
+              locale === 'en'
+                ? `Credited amount must be between $${effectiveMin} and $${effectiveMax}`
+                : `到账金额需在 $${effectiveMin} - $${effectiveMax} 之间`,
+          },
+          { status: 400 },
+        );
       }
     }
 

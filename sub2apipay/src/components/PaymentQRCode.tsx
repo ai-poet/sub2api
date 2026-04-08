@@ -20,6 +20,7 @@ interface PaymentQRCodeProps {
   paymentType?: string;
   amount: number;
   payAmount?: number;
+  orderType?: 'balance' | 'subscription';
   usdExchangeRate?: number | null;
   expiresAt: string;
   statusAccessToken?: string;
@@ -45,6 +46,7 @@ export default function PaymentQRCode({
   paymentType,
   amount,
   payAmount: payAmountProp,
+  orderType = 'balance',
   usdExchangeRate,
   expiresAt,
   statusAccessToken,
@@ -56,9 +58,9 @@ export default function PaymentQRCode({
   locale = 'zh',
 }: PaymentQRCodeProps) {
   const displayAmountCny = payAmountProp ?? amount;
-  const hasFeeDiff = payAmountProp !== undefined && payAmountProp !== amount;
   const settlementDisplay = getSettlementDisplay(displayAmountCny, paymentType, usdExchangeRate);
-  const showCreditedAmount = settlementDisplay.currency === 'USD' || hasFeeDiff;
+  const isBalanceOrder = orderType === 'balance';
+  const showCreditedAmount = isBalanceOrder;
   const [timeLeft, setTimeLeft] = useState('');
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(Infinity);
   const [expired, setExpired] = useState(false);
@@ -95,7 +97,7 @@ export default function PaymentQRCode({
         ? 'This order has already been paid and cannot be cancelled. The recharge will be credited automatically.'
         : '该订单已支付完成，无法取消。充值将自动到账。',
     backToRecharge: locale === 'en' ? 'Back to Recharge' : '返回充值',
-    credited: locale === 'en' ? 'Credited ¥' : '到账 ¥',
+    credited: locale === 'en' ? 'Credited $' : '到账 $',
     settlementRate: locale === 'en' ? 'Rate' : '汇率',
     stripeLoadFailed:
       locale === 'en'
@@ -279,7 +281,7 @@ export default function PaymentQRCode({
     popupUrl.pathname = '/pay/stripe-popup';
     popupUrl.search = '';
     popupUrl.searchParams.set('order_id', orderId);
-    popupUrl.searchParams.set('amount', String(amount));
+    popupUrl.searchParams.set('amount', String(payAmountProp ?? amount));
     popupUrl.searchParams.set('theme', dark ? 'dark' : 'light');
     popupUrl.searchParams.set('method', stripePaymentMethod);
     if (statusAccessToken) {

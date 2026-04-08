@@ -105,12 +105,29 @@ export default function PaymentForm({
     feeRate > 0 && selectedAmount > 0 ? Math.round((selectedAmount + feeAmount) * 100) / 100 : selectedAmount;
   const settlementDisplay = getSettlementDisplay(payAmount, effectivePaymentType, usdExchangeRate);
   const showStablecoinSettlement = isStablecoinPaymentType(effectivePaymentType) && settlementDisplay.currency === 'USD';
-  const showPaymentSummary = selectedAmount > 0 && (feeRate > 0 || showStablecoinSettlement);
+  const showPaymentSummary = selectedAmount > 0;
   const isValid =
     selectedAmount >= effectiveMin &&
     selectedAmount <= effectiveMax &&
     hasValidCentPrecision(selectedAmount) &&
     isMethodAvailable;
+  const creditedAmountLabel = locale === 'en' ? 'Credited Amount (USD)' : '到账金额（USD）';
+  const payAmountLabel =
+    locale === 'en'
+      ? settlementDisplay.currency === 'USD'
+        ? feeRate > 0
+          ? 'Amount to Pay (USD, incl. fee)'
+          : 'Amount to Pay (USD)'
+        : feeRate > 0
+          ? 'Amount to Pay (CNY, incl. fee)'
+          : 'Amount to Pay (CNY)'
+      : settlementDisplay.currency === 'USD'
+        ? feeRate > 0
+          ? '实付金额（USD，含手续费）'
+          : '实付金额（USD）'
+        : feeRate > 0
+          ? '实付金额（CNY，含手续费）'
+          : '实付金额（CNY）';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,8 +205,8 @@ export default function PaymentForm({
         </div>
         {userBalance !== undefined && (
           <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-            {locale === 'en' ? 'Current Balance:' : '当前余额:'}{' '}
-            <span className="font-medium text-green-600">{userBalance.toFixed(2)}</span>
+            {locale === 'en' ? 'Current Balance (USD):' : '当前余额（USD）:'}{' '}
+            <span className="font-medium text-green-600">${userBalance.toFixed(2)}</span>
           </div>
         )}
       </div>
@@ -202,23 +219,17 @@ export default function PaymentForm({
           ].join(' ')}
         >
           <div className={['text-xs uppercase tracking-wide', dark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-            {locale === 'en' ? 'Recharge Amount' : '充值金额'}
+            {creditedAmountLabel}
           </div>
           <div className={['mt-1 text-3xl font-bold', dark ? 'text-emerald-400' : 'text-emerald-600'].join(' ')}>
-            ¥{fixedAmount.toFixed(2)}
+            ${fixedAmount.toFixed(2)}
           </div>
-          {showStablecoinSettlement && (
-            <div className={['mt-2 text-sm', dark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-              {locale === 'en' ? 'Amount to Pay' : '实付金额'} {settlementDisplay.symbol}
-              {settlementDisplay.amount.toFixed(2)}
-            </div>
-          )}
         </div>
       ) : (
         <>
           <div>
             <label className={['mb-2 block text-sm font-medium', dark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-              {locale === 'en' ? 'Recharge Amount' : '充值金额'}
+              {creditedAmountLabel}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {QUICK_AMOUNTS.filter((val) => val >= effectiveMin && val <= effectiveMax).map((val) => (
@@ -236,7 +247,7 @@ export default function PaymentForm({
                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  ¥{val}
+                  ${val}
                 </button>
               ))}
             </div>
@@ -252,7 +263,7 @@ export default function PaymentForm({
                   ' ',
                 )}
               >
-                ¥
+                $
               </span>
               <input
                 type="text"
@@ -281,12 +292,12 @@ export default function PaymentForm({
           let msg =
             locale === 'en'
               ? 'Amount must be within range and support up to 2 decimal places'
-              : '金额需在范围内，且最多支持 2 位小数（精确到分）';
+              : '到账金额需在范围内，且最多支持 2 位小数';
           if (!isNaN(num)) {
             if (num < minAmount)
-              msg = locale === 'en' ? `Minimum per transaction: ¥${minAmount}` : `单笔最低充值 ¥${minAmount}`;
+              msg = locale === 'en' ? `Minimum credited amount: $${minAmount}` : `单笔最低到账 $${minAmount}`;
             else if (num > effectiveMax)
-              msg = locale === 'en' ? `Maximum per transaction: ¥${effectiveMax}` : `单笔最高充值 ¥${effectiveMax}`;
+              msg = locale === 'en' ? `Maximum credited amount: $${effectiveMax}` : `单笔最高到账 $${effectiveMax}`;
           }
           return <div className={['text-xs', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>{msg}</div>;
         })()}
@@ -374,12 +385,8 @@ export default function PaymentForm({
           ].join(' ')}
         >
           <div className="flex items-center justify-between">
-            <span>{locale === 'en' ? 'Recharge Amount' : '充值金额'}</span>
-            <span>¥{selectedAmount.toFixed(2)}</span>
-          </div>
-          <div className="mt-1 flex items-center justify-between">
-            <span>{locale === 'en' ? `Fee (${feeRate}%)` : `手续费（${feeRate}%）`}</span>
-            <span>¥{feeAmount.toFixed(2)}</span>
+            <span>{creditedAmountLabel}</span>
+            <span>${selectedAmount.toFixed(2)}</span>
           </div>
           <div
             className={[
@@ -387,15 +394,7 @@ export default function PaymentForm({
               dark ? 'border-slate-700 text-slate-100' : 'border-slate-200 text-slate-900',
             ].join(' ')}
           >
-            <span>
-              {locale === 'en'
-                ? settlementDisplay.currency === 'USD'
-                  ? 'Amount to Pay (USD)'
-                  : 'Amount to Pay'
-                : settlementDisplay.currency === 'USD'
-                  ? '实付金额（USD）'
-                  : '实付金额'}
-            </span>
+            <span>{payAmountLabel}</span>
             <span>
               {settlementDisplay.symbol}
               {settlementDisplay.amount.toFixed(2)}
@@ -442,8 +441,8 @@ export default function PaymentForm({
                 ? 'Too many pending orders'
                 : '待支付订单过多'
               : locale === 'en'
-              ? `Recharge Now ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`
-              : `立即充值 ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
+                ? `Pay Now ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`
+                : `立即支付 ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
       </button>
     </form>
   );

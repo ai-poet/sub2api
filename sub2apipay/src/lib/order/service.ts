@@ -384,8 +384,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           'DAILY_LIMIT_EXCEEDED',
           message(
             locale,
-            `今日累计充值已达上限，剩余可充值 ${remaining.toFixed(2)} 元`,
-            `Daily recharge limit reached. Remaining amount: ${remaining.toFixed(2)} CNY`,
+            `今日累计到账额度已达上限，剩余可充值 $${remaining.toFixed(2)}`,
+            `Daily credited limit reached. Remaining amount: $${remaining.toFixed(2)}`,
           ),
           429,
         );
@@ -411,13 +411,13 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           remaining > 0
             ? message(
                 locale,
-                `${input.paymentType} 今日剩余额度 ${remaining.toFixed(2)} 元，请减少充值金额或使用其他支付方式`,
-                `${input.paymentType} remaining daily quota: ${remaining.toFixed(2)} CNY. Reduce the amount or use another payment method`,
+                `${input.paymentType} 今日剩余到账额度 $${remaining.toFixed(2)}，请减少到账金额或使用其他支付方式`,
+                `${input.paymentType} remaining daily credited quota: $${remaining.toFixed(2)}. Reduce the credited amount or use another payment method`,
               )
             : message(
                 locale,
-                `${input.paymentType} 今日充值额度已满，请使用其他支付方式`,
-                `${input.paymentType} daily quota is full. Please use another payment method`,
+                `${input.paymentType} 今日到账额度已满，请使用其他支付方式`,
+                `${input.paymentType} daily credited quota is full. Please use another payment method`,
               ),
           429,
         );

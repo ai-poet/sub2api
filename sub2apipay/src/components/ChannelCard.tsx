@@ -62,10 +62,10 @@ export default function ChannelCard({ channel, onTopUp, isDark, locale }: Channe
             {pickLocaleText(
               locale,
               <>
-                1元可用约<span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span>美元额度
+                1美元余额可用约<span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span>美元额度
               </>,
               <>
-                1 CNY ≈ <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD quota
+                1 USD balance ≈ <span className={['font-medium', accentCls].join(' ')}>{usableQuota}</span> USD quota
               </>,
             )}
           </p>
