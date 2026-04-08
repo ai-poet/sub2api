@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -136,15 +137,49 @@ func resolvePayProxyTarget() string {
 }
 
 func internalPayAuthMiddleware(jwtSecret string) gin.HandlerFunc {
-	expected := deriveInternalPayToken(jwtSecret)
+	expectedTokens := deriveAcceptedInternalPayTokens(jwtSecret)
 	return func(c *gin.Context) {
 		received := strings.TrimSpace(c.GetHeader(internalPayTokenHeader))
-		if received == "" || !hmac.Equal([]byte(received), []byte(expected)) {
+		if received == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid internal pay token"})
 			return
 		}
-		c.Next()
+
+		for _, expected := range expectedTokens {
+			if hmac.Equal([]byte(received), []byte(expected)) {
+				c.Next()
+				return
+			}
+		}
+
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid internal pay token"})
 	}
+}
+
+func deriveAcceptedInternalPayTokens(jwtSecret string) []string {
+	secrets := []string{strings.TrimSpace(jwtSecret)}
+	if envSecret := strings.TrimSpace(os.Getenv("JWT_SECRET")); envSecret != "" {
+		secrets = append(secrets, envSecret)
+	}
+
+	tokens := make([]string, 0, len(secrets))
+	seen := make(map[string]struct{}, len(secrets))
+	for _, secret := range secrets {
+		if secret == "" {
+			continue
+		}
+		if _, exists := seen[secret]; exists {
+			continue
+		}
+		seen[secret] = struct{}{}
+		tokens = append(tokens, deriveInternalPayToken(secret))
+	}
+
+	if len(secrets) >= 2 && len(tokens) >= 2 && strings.TrimSpace(jwtSecret) != strings.TrimSpace(os.Getenv("JWT_SECRET")) {
+		log.Printf("[pay_integration] detected JWT secret mismatch between runtime env and active config; accepting both internal pay tokens")
+	}
+
+	return tokens
 }
 
 func internalPayAdminContextMiddleware(userService *service.UserService) gin.HandlerFunc {
