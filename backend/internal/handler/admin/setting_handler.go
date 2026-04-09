@@ -119,6 +119,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		FallbackModelAntigravity:             settings.FallbackModelAntigravity,
 		EnableIdentityPatch:                  settings.EnableIdentityPatch,
 		IdentityPatchPrompt:                  settings.IdentityPatchPrompt,
+		ModelMirrorKnowledgeProbes:           settings.ModelMirrorKnowledgeProbes,
 		OpsMonitoringEnabled:                 opsEnabled && settings.OpsMonitoringEnabled,
 		OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
@@ -193,8 +194,9 @@ type UpdateSettingsRequest struct {
 	FallbackModelAntigravity string `json:"fallback_model_antigravity"`
 
 	// Identity patch configuration (Claude -> Gemini)
-	EnableIdentityPatch bool   `json:"enable_identity_patch"`
-	IdentityPatchPrompt string `json:"identity_patch_prompt"`
+	EnableIdentityPatch        bool                                 `json:"enable_identity_patch"`
+	IdentityPatchPrompt        string                               `json:"identity_patch_prompt"`
+	ModelMirrorKnowledgeProbes *[]service.ModelMirrorKnowledgeProbe `json:"model_mirror_knowledge_probes"`
 
 	// Ops monitoring (vNext)
 	OpsMonitoringEnabled         *bool   `json:"ops_monitoring_enabled"`
@@ -533,6 +535,16 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		}
 	}
 
+	modelMirrorKnowledgeProbes := previousSettings.ModelMirrorKnowledgeProbes
+	if req.ModelMirrorKnowledgeProbes != nil {
+		validatedProbes, err := service.ValidateModelMirrorKnowledgeProbes(*req.ModelMirrorKnowledgeProbes)
+		if err != nil {
+			response.Error(c, http.StatusBadRequest, "model_mirror_knowledge_probes: "+err.Error())
+			return
+		}
+		modelMirrorKnowledgeProbes = validatedProbes
+	}
+
 	settings := &service.SystemSettings{
 		RegistrationEnabled:              req.RegistrationEnabled,
 		EmailVerifyEnabled:               req.EmailVerifyEnabled,
@@ -579,6 +591,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		FallbackModelAntigravity:         req.FallbackModelAntigravity,
 		EnableIdentityPatch:              req.EnableIdentityPatch,
 		IdentityPatchPrompt:              req.IdentityPatchPrompt,
+		ModelMirrorKnowledgeProbes:       modelMirrorKnowledgeProbes,
 		MinClaudeCodeVersion:             req.MinClaudeCodeVersion,
 		MaxClaudeCodeVersion:             req.MaxClaudeCodeVersion,
 		AllowUngroupedKeyScheduling:      req.AllowUngroupedKeyScheduling,
@@ -695,6 +708,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		FallbackModelAntigravity:             updatedSettings.FallbackModelAntigravity,
 		EnableIdentityPatch:                  updatedSettings.EnableIdentityPatch,
 		IdentityPatchPrompt:                  updatedSettings.IdentityPatchPrompt,
+		ModelMirrorKnowledgeProbes:           updatedSettings.ModelMirrorKnowledgeProbes,
 		OpsMonitoringEnabled:                 updatedSettings.OpsMonitoringEnabled,
 		OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
@@ -854,6 +868,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.IdentityPatchPrompt != after.IdentityPatchPrompt {
 		changed = append(changed, "identity_patch_prompt")
 	}
+	if !equalModelMirrorKnowledgeProbes(before.ModelMirrorKnowledgeProbes, after.ModelMirrorKnowledgeProbes) {
+		changed = append(changed, "model_mirror_knowledge_probes")
+	}
 	if before.OpsMonitoringEnabled != after.OpsMonitoringEnabled {
 		changed = append(changed, "ops_monitoring_enabled")
 	}
@@ -946,6 +963,23 @@ func equalDefaultSubscriptions(a, b []service.DefaultSubscriptionSetting) bool {
 	}
 	for i := range a {
 		if a[i].GroupID != b[i].GroupID || a[i].ValidityDays != b[i].ValidityDays {
+			return false
+		}
+	}
+	return true
+}
+
+func equalModelMirrorKnowledgeProbes(a, b []service.ModelMirrorKnowledgeProbe) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].ID != b[i].ID ||
+			a[i].Prompt != b[i].Prompt ||
+			a[i].PassMode != b[i].PassMode ||
+			a[i].Weight != b[i].Weight ||
+			a[i].Enabled != b[i].Enabled ||
+			!equalStringSlice(a[i].ExpectedKeywords, b[i].ExpectedKeywords) {
 			return false
 		}
 	}

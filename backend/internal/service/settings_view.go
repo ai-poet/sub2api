@@ -31,13 +31,13 @@ type SystemSettings struct {
 	LinuxDoConnectClientSecretConfigured bool
 	LinuxDoConnectRedirectURL            string
 
-	SiteName                    string
-	SiteLogo                    string
-	SiteSubtitle                string
-	APIBaseURL                  string
-	ContactInfo                 string
-	DocURL                      string
-	HomeContent                 string
+	SiteName                     string
+	SiteLogo                     string
+	SiteSubtitle                 string
+	APIBaseURL                   string
+	ContactInfo                  string
+	DocURL                       string
+	HomeContent                  string
 	HideCcsImportButton          bool
 	PurchaseSubscriptionEnabled  bool
 	PurchaseSubscriptionURL      string
@@ -59,6 +59,9 @@ type SystemSettings struct {
 	// Identity patch configuration (Claude -> Gemini)
 	EnableIdentityPatch bool   `json:"enable_identity_patch"`
 	IdentityPatchPrompt string `json:"identity_patch_prompt"`
+
+	// Claude relay inspector knowledge probe bank
+	ModelMirrorKnowledgeProbes []ModelMirrorKnowledgeProbe `json:"model_mirror_knowledge_probes"`
 
 	// Ops monitoring (vNext)
 	OpsMonitoringEnabled         bool

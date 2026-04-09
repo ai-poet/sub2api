@@ -1391,6 +1391,122 @@
             </div>
           </div>
         </div>
+
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.modelMirror.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.modelMirror.description') }}
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div
+              class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300"
+            >
+              {{ t('admin.settings.modelMirror.hint') }}
+            </div>
+
+            <div
+              v-for="(probe, index) in form.model_mirror_knowledge_probes"
+              :key="probe.id || index"
+              class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-dark-600"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ t('admin.settings.modelMirror.probeTitle', { index: index + 1 }) }}
+                  </div>
+                  <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    ID: {{ probe.id || '-' }}
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <input v-model="probe.enabled" type="checkbox" class="rounded border-gray-300" />
+                    {{ t('admin.settings.modelMirror.enabled') }}
+                  </label>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                    @click="removeModelMirrorKnowledgeProbe(index)"
+                  >
+                    {{ t('admin.settings.modelMirror.removeProbe') }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.modelMirror.probeId') }}
+                  </label>
+                  <input v-model="probe.id" type="text" class="input" :placeholder="`probe-${index + 1}`" />
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.modelMirror.passMode') }}
+                  </label>
+                  <select v-model="probe.pass_mode" class="input">
+                    <option value="any">{{ t('admin.settings.modelMirror.passModeAny') }}</option>
+                    <option value="all">{{ t('admin.settings.modelMirror.passModeAll') }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.settings.modelMirror.prompt') }}
+                </label>
+                <textarea
+                  v-model="probe.prompt"
+                  rows="3"
+                  class="input min-h-[96px]"
+                  :placeholder="t('admin.settings.modelMirror.promptPlaceholder')"
+                ></textarea>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-[1fr_120px]">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.modelMirror.expectedKeywords') }}
+                  </label>
+                  <input
+                    :value="probe.expected_keywords.join(', ')"
+                    type="text"
+                    class="input"
+                    :placeholder="t('admin.settings.modelMirror.expectedKeywordsPlaceholder')"
+                    @input="handleModelMirrorProbeKeywordsInput(index, $event)"
+                  />
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.modelMirror.expectedKeywordsHint') }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.modelMirror.weight') }}
+                  </label>
+                  <input
+                    v-model.number="probe.weight"
+                    type="number"
+                    min="1"
+                    max="100"
+                    class="input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button type="button" class="btn btn-secondary btn-sm" @click="addModelMirrorKnowledgeProbe">
+                {{ t('admin.settings.modelMirror.addProbe') }}
+              </button>
+            </div>
+          </div>
+        </div>
         </div><!-- /Tab: Gateway — Claude Code, Scheduling -->
 
         <!-- Tab: General -->
@@ -2127,7 +2243,8 @@ import { adminAPI } from '@/api'
 import type {
   SystemSettings,
   UpdateSettingsRequest,
-  DefaultSubscriptionSetting
+  DefaultSubscriptionSetting,
+  ModelMirrorKnowledgeProbe
 } from '@/api/admin/settings'
 import type { AdminGroup } from '@/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -2218,6 +2335,17 @@ const rectifierForm = reactive({
   apikey_signature_patterns: [] as string[]
 })
 
+function createModelMirrorKnowledgeProbe(index: number): ModelMirrorKnowledgeProbe {
+  return {
+    id: `probe-${Date.now()}-${index + 1}`,
+    prompt: '',
+    expected_keywords: [],
+    pass_mode: 'any',
+    weight: 10,
+    enabled: true
+  }
+}
+
 // Beta Policy 状态
 const betaPolicyLoading = ref(true)
 const betaPolicySaving = ref(false)
@@ -2304,6 +2432,7 @@ const form = reactive<SettingsForm>({
   // Identity patch (Claude -> Gemini)
   enable_identity_patch: true,
   identity_patch_prompt: '',
+  model_mirror_knowledge_probes: [createModelMirrorKnowledgeProbe(0)] as ModelMirrorKnowledgeProbe[],
   // Ops monitoring (vNext)
   ops_monitoring_enabled: true,
   ops_realtime_monitoring_enabled: true,
@@ -2457,6 +2586,53 @@ function removeEndpoint(index: number) {
   form.custom_endpoints.splice(index, 1)
 }
 
+function normalizeModelMirrorKnowledgeProbes(
+  probes?: ModelMirrorKnowledgeProbe[] | null
+): ModelMirrorKnowledgeProbe[] {
+  if (!Array.isArray(probes) || probes.length === 0) {
+    return [createModelMirrorKnowledgeProbe(0)]
+  }
+
+  return probes.map((probe, index) => ({
+    id: probe.id || `probe-${Date.now()}-${index + 1}`,
+    prompt: probe.prompt || '',
+    expected_keywords: Array.isArray(probe.expected_keywords)
+      ? probe.expected_keywords.filter(Boolean)
+      : [],
+    pass_mode: probe.pass_mode === 'all' ? 'all' : 'any',
+    weight:
+      typeof probe.weight === 'number' && Number.isFinite(probe.weight) && probe.weight > 0
+        ? probe.weight
+        : 10,
+    enabled: probe.enabled !== false
+  }))
+}
+
+function updateModelMirrorProbeKeywords(index: number, value: string) {
+  form.model_mirror_knowledge_probes[index].expected_keywords = value
+    .split(/[\n,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function handleModelMirrorProbeKeywordsInput(index: number, event: Event) {
+  const target = event.target as HTMLInputElement | null
+  updateModelMirrorProbeKeywords(index, target?.value || '')
+}
+
+function addModelMirrorKnowledgeProbe() {
+  form.model_mirror_knowledge_probes.push(
+    createModelMirrorKnowledgeProbe(form.model_mirror_knowledge_probes.length)
+  )
+}
+
+function removeModelMirrorKnowledgeProbe(index: number) {
+  form.model_mirror_knowledge_probes.splice(index, 1)
+  if (form.model_mirror_knowledge_probes.length === 0) {
+    form.model_mirror_knowledge_probes.push(createModelMirrorKnowledgeProbe(0))
+  }
+}
+
 async function loadSettings() {
   loading.value = true
   loadFailed.value = false
@@ -2477,6 +2653,9 @@ async function loadSettings() {
       : []
     registrationEmailSuffixWhitelistTags.value = normalizeRegistrationEmailSuffixDomains(
       settings.registration_email_suffix_whitelist
+    )
+    form.model_mirror_knowledge_probes = normalizeModelMirrorKnowledgeProbes(
+      settings.model_mirror_knowledge_probes
     )
     registrationEmailSuffixWhitelistDraft.value = ''
     form.smtp_password = ''
@@ -2616,6 +2795,16 @@ async function saveSettings() {
       fallback_model_antigravity: form.fallback_model_antigravity,
       enable_identity_patch: form.enable_identity_patch,
       identity_patch_prompt: form.identity_patch_prompt,
+      model_mirror_knowledge_probes: form.model_mirror_knowledge_probes.map((probe) => ({
+        id: probe.id.trim(),
+        prompt: probe.prompt.trim(),
+        expected_keywords: probe.expected_keywords
+          .map((keyword) => keyword.trim())
+          .filter(Boolean),
+        pass_mode: probe.pass_mode === 'all' ? 'all' : 'any',
+        weight: Math.max(1, Math.min(100, Math.round(probe.weight || 10))),
+        enabled: probe.enabled
+      })),
       min_claude_code_version: form.min_claude_code_version,
       max_claude_code_version: form.max_claude_code_version,
       allow_ungrouped_key_scheduling: form.allow_ungrouped_key_scheduling,
@@ -2630,6 +2819,9 @@ async function saveSettings() {
     )
     registrationEmailSuffixWhitelistTags.value = normalizeRegistrationEmailSuffixDomains(
       updated.registration_email_suffix_whitelist
+    )
+    form.model_mirror_knowledge_probes = normalizeModelMirrorKnowledgeProbes(
+      updated.model_mirror_knowledge_probes
     )
     registrationEmailSuffixWhitelistDraft.value = ''
     form.smtp_password = ''

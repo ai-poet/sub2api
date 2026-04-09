@@ -194,6 +194,75 @@ export default {
     queryFailedRetry: '查询失败，请稍后重试',
   },
 
+  modelMirror: {
+    title: '模型照妖镜',
+    description: '专门用于检测 Claude 中转链路的真实性、结构完整性和注入风险',
+    statusLabel: '当前状态',
+    verdictLabel: '最终判定',
+    scoreLabel: '综合评分',
+    scoreHint: '共通过 {passed}/{total} 项检测',
+    configTitle: 'Claude Relay Inspector',
+    configDescription: '填写待检测的 Claude 中转接口信息，系统会串行执行流式结构、身份覆盖和知识探测。',
+    endpoint: '接口地址',
+    endpointPlaceholder: 'https://example.com/v1/messages',
+    model: '模型名称',
+    modelPlaceholder: '如 claude-opus-4-6',
+    apiKey: 'API Key',
+    apiKeyPlaceholder: '粘贴待检测接口的临时测试 Key',
+    privacyHint: '本地仅保存接口地址和模型名称，不会持久化 API Key。',
+    securityHint: '建议使用临时测试 Key。检测完成后请立即删除或轮换该 Key。',
+    backendModeBlocked: 'Backend 模式下普通用户自助工具已禁用，请联系管理员使用。',
+    start: '开始检测',
+    stop: '停止检测',
+    reset: '清空结果',
+    starting: '正在初始化检测任务...',
+    idleTitle: '等待检测',
+    idleSubtitle: '填写接口地址、模型和 API Key 后即可开始检测。',
+    testingTitle: '检测中',
+    testingSubtitle: '正在调用上游并执行多轮探测，请稍候。',
+    failedTitle: '检测失败',
+    stoppedTitle: '检测已停止',
+    stoppedSubtitle: '检测流程已被手动中止。',
+    stoppedToast: '检测已停止',
+    endpointRequired: '请输入接口地址',
+    apiKeyRequired: '请输入 API Key',
+    modelRequired: '请输入模型名称',
+    checksTitle: '检测明细',
+    checksDescription: '逐项展示结构信号、身份识别、注入探测和知识题结果。',
+    emptyChecks: '暂无检测结果，开始一次检测后会显示详细判定。',
+    evidenceTitle: '证据摘录',
+    evidenceDescription: '展示主请求返回的响应片段、thinking 片段和模型回传信息，便于人工复核。',
+    upstreamModel: '上游回传模型名',
+    responseExcerpt: '主响应摘录',
+    thinkingExcerpt: 'Thinking 摘录',
+    weight: '权重 {weight}',
+    pass: '通过',
+    fail: '未通过',
+    info: '信息',
+    verdicts: {
+      pending: {
+        label: '待检测',
+        description: '尚未生成最终判定。'
+      },
+      max_pure: {
+        label: 'Max 纯血号池转发',
+        description: '官方 Claude Code Max 订阅直连，结构、渠道和身份信号都较完整。'
+      },
+      official_api: {
+        label: 'Claude 官方接口',
+        description: '模型大概率是真实 Claude，但未表现出明显 Claude Code 号池特征。'
+      },
+      reverse_proxy: {
+        label: '疑似逆向接口',
+        description: '模型可能真实，但检测到注入、覆盖或其他链路异常。'
+      },
+      likely_not_claude: {
+        label: '可能不是 Claude',
+        description: '多项关键特征未通过，目标接口大概率并非真实 Claude 中转。'
+      }
+    }
+  },
+
   // Setup Wizard
   setup: {
     title: 'Sub2API 安装向导',
@@ -370,6 +439,7 @@ export default {
     buySubscription: '充值/订阅',
     paymentManagement: '支付管理',
     referral: '推荐邀请',
+    modelMirror: '模型照妖镜',
     docs: '文档',
     sora: 'Sora 创作'
   },
@@ -4507,6 +4577,25 @@ export default {
         metadataPassthroughHint: '透传客户端原始 metadata.user_id，不进行重写。可能提高上游缓存命中率。',
         cchSigning: 'CCH 签名',
         cchSigningHint: '对转发请求的 billing header 进行 CCH 哈希签名。关闭时保留原始占位符。',
+      },
+      modelMirror: {
+        title: '模型照妖镜题库',
+        description: '配置 Claude Relay Inspector 使用的知识探测题，避免固定题目被外部直接针对。',
+        hint: '仅保存到数据库，不会写死到前端页面。建议定期轮换题目和关键词。',
+        probeTitle: '探测题 #{index}',
+        enabled: '启用',
+        removeProbe: '删除题目',
+        addProbe: '添加题目',
+        probeId: '题目 ID',
+        prompt: '探测题',
+        promptPlaceholder: '输入一条不允许联网、用于识别知识库真实性的问题',
+        expectedKeywords: '命中关键词',
+        expectedKeywordsPlaceholder: '多个关键词用逗号分隔，例如：leo xiv, american',
+        expectedKeywordsHint: '按逗号或换行分隔，后端会做去重和标准化匹配。',
+        passMode: '通过策略',
+        passModeAny: '命中任意关键词即可',
+        passModeAll: '必须命中全部关键词',
+        weight: '权重'
       },
       site: {
         title: '站点设置',

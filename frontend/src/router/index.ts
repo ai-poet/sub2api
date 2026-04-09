@@ -199,6 +199,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/model-mirror',
+    name: 'ModelMirror',
+    component: () => import('@/views/user/ModelMirrorView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Claude Relay Inspector',
+      titleKey: 'modelMirror.title',
+      descriptionKey: 'modelMirror.description'
+    }
+  },
+  {
     path: '/purchase',
     name: 'Purchase',
     component: () => import('@/views/user/PurchaseSubscriptionView.vue'),

@@ -91,6 +91,7 @@ func ProvideHandlers(
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
 	referralHandler *ReferralHandler,
+	modelMirrorHandler *ModelMirrorHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 ) *Handlers {
@@ -108,6 +109,7 @@ func ProvideHandlers(
 		Setting:       settingHandler,
 		Totp:          totpHandler,
 		Referral:      referralHandler,
+		ModelMirror:   modelMirrorHandler,
 	}
 }
 
@@ -125,6 +127,7 @@ var ProviderSet = wire.NewSet(
 	NewOpenAIGatewayHandler,
 	NewTotpHandler,
 	NewReferralHandler,
+	NewModelMirrorHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers

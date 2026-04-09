@@ -11,6 +11,15 @@ export interface DefaultSubscriptionSetting {
   validity_days: number
 }
 
+export interface ModelMirrorKnowledgeProbe {
+  id: string
+  prompt: string
+  expected_keywords: string[]
+  pass_mode: 'any' | 'all'
+  weight: number
+  enabled: boolean
+}
+
 /**
  * System settings interface
  */
@@ -73,6 +82,7 @@ export interface SystemSettings {
   // Identity patch configuration (Claude -> Gemini)
   enable_identity_patch: boolean
   identity_patch_prompt: string
+  model_mirror_knowledge_probes: ModelMirrorKnowledgeProbe[]
 
   // Ops Monitoring (vNext)
   ops_monitoring_enabled: boolean
@@ -140,6 +150,7 @@ export interface UpdateSettingsRequest {
   fallback_model_antigravity?: string
   enable_identity_patch?: boolean
   identity_patch_prompt?: string
+  model_mirror_knowledge_probes?: ModelMirrorKnowledgeProbe[]
   ops_monitoring_enabled?: boolean
   ops_realtime_monitoring_enabled?: boolean
   ops_query_mode_default?: 'auto' | 'raw' | 'preagg' | string

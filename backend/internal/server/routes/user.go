@@ -97,5 +97,11 @@ func RegisterUserRoutes(
 			referral.GET("/info", h.Referral.GetInfo)
 			referral.GET("/history", h.Referral.GetHistory)
 		}
+
+		// 用户工具
+		tools := authenticated.Group("/tools")
+		{
+			tools.POST("/model-mirror/verify", h.ModelMirror.Verify)
+		}
 	}
 }

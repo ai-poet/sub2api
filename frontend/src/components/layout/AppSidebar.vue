@@ -295,6 +295,21 @@ const ChartIcon = {
     )
 }
 
+const MagnifierIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'm21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.04 6.04a7.5 7.5 0 0 0 10.61 10.61z'
+        })
+      ]
+    )
+}
+
 const GiftIcon = {
   render: () =>
     h(
@@ -556,6 +571,7 @@ const userNavItems = computed((): NavItem[] => {
     { path: '/dashboard', label: t('nav.dashboard'), icon: DashboardIcon },
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
+    { path: '/model-mirror', label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled
       ? [
@@ -594,6 +610,7 @@ const personalNavItems = computed((): NavItem[] => {
   const items: NavItem[] = [
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
+    { path: '/model-mirror', label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled
       ? [

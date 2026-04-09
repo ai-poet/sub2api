@@ -107,19 +107,19 @@ const (
 	SettingKeyLinuxDoConnectRedirectURL  = "linuxdo_connect_redirect_url"
 
 	// OEM设置
-	SettingKeySiteName                    = "site_name"                     // 网站名称
-	SettingKeySiteLogo                    = "site_logo"                     // 网站Logo (base64)
-	SettingKeySiteSubtitle                = "site_subtitle"                 // 网站副标题
-	SettingKeyAPIBaseURL                  = "api_base_url"                  // API端点地址（用于客户端配置和导入）
-	SettingKeyContactInfo                 = "contact_info"                  // 客服联系方式
-	SettingKeyDocURL                      = "doc_url"                       // 文档链接
-	SettingKeyHomeContent                 = "home_content"                  // 首页内容（支持 Markdown/HTML，或 URL 作为 iframe src）
-	SettingKeyHideCcsImportButton         = "hide_ccs_import_button"        // 是否隐藏 API Keys 页面的导入 CCS 按钮
-	SettingKeyPurchaseSubscriptionEnabled  = "purchase_subscription_enabled"  // 是否展示购买订阅页面入口
-	SettingKeyPurchaseSubscriptionURL      = "purchase_subscription_url"      // 购买订阅页面 URL
+	SettingKeySiteName                     = "site_name"                       // 网站名称
+	SettingKeySiteLogo                     = "site_logo"                       // 网站Logo (base64)
+	SettingKeySiteSubtitle                 = "site_subtitle"                   // 网站副标题
+	SettingKeyAPIBaseURL                   = "api_base_url"                    // API端点地址（用于客户端配置和导入）
+	SettingKeyContactInfo                  = "contact_info"                    // 客服联系方式
+	SettingKeyDocURL                       = "doc_url"                         // 文档链接
+	SettingKeyHomeContent                  = "home_content"                    // 首页内容（支持 Markdown/HTML，或 URL 作为 iframe src）
+	SettingKeyHideCcsImportButton          = "hide_ccs_import_button"          // 是否隐藏 API Keys 页面的导入 CCS 按钮
+	SettingKeyPurchaseSubscriptionEnabled  = "purchase_subscription_enabled"   // 是否展示购买订阅页面入口
+	SettingKeyPurchaseSubscriptionURL      = "purchase_subscription_url"       // 购买订阅页面 URL
 	SettingKeyPurchaseSubscriptionOpenMode = "purchase_subscription_open_mode" // 购买订阅页面打开方式：iframe（内嵌）或 new_window（新窗口）
-	SettingKeyCustomMenuItems             = "custom_menu_items"             // 自定义菜单项（JSON 数组）
-	SettingKeyCustomEndpoints             = "custom_endpoints"              // 自定义端点列表（JSON 数组）
+	SettingKeyCustomMenuItems              = "custom_menu_items"               // 自定义菜单项（JSON 数组）
+	SettingKeyCustomEndpoints              = "custom_endpoints"                // 自定义端点列表（JSON 数组）
 
 	// 默认配置
 	SettingKeyDefaultConcurrency   = "default_concurrency"   // 新用户默认并发量
@@ -142,6 +142,9 @@ const (
 	// Request identity patch (Claude -> Gemini systemInstruction injection)
 	SettingKeyEnableIdentityPatch = "enable_identity_patch"
 	SettingKeyIdentityPatchPrompt = "identity_patch_prompt"
+
+	// Claude Relay Inspector knowledge probe bank (JSON array)
+	SettingKeyModelMirrorKnowledgeProbes = "model_mirror_knowledge_probes"
 
 	// =========================
 	// Ops Monitoring (vNext)
@@ -189,14 +192,14 @@ const (
 	// Referral System
 	// =========================
 
-	SettingKeyReferralEnabled                = "referral_enabled"                  // 是否启用推荐功能
-	SettingKeyReferralReferrerBalanceReward   = "referral_referrer_balance_reward"   // 推荐人余额奖励
-	SettingKeyReferralReferrerGroupID         = "referral_referrer_group_id"         // 推荐人订阅分组 ID
+	SettingKeyReferralEnabled                  = "referral_enabled"                    // 是否启用推荐功能
+	SettingKeyReferralReferrerBalanceReward    = "referral_referrer_balance_reward"    // 推荐人余额奖励
+	SettingKeyReferralReferrerGroupID          = "referral_referrer_group_id"          // 推荐人订阅分组 ID
 	SettingKeyReferralReferrerSubscriptionDays = "referral_referrer_subscription_days" // 推荐人订阅天数
-	SettingKeyReferralRefereeBalanceReward    = "referral_referee_balance_reward"    // 被推荐人余额奖励
-	SettingKeyReferralRefereeGroupID          = "referral_referee_group_id"          // 被推荐人订阅分组 ID
+	SettingKeyReferralRefereeBalanceReward     = "referral_referee_balance_reward"     // 被推荐人余额奖励
+	SettingKeyReferralRefereeGroupID           = "referral_referee_group_id"           // 被推荐人订阅分组 ID
 	SettingKeyReferralRefereeSubscriptionDays  = "referral_referee_subscription_days"  // 被推荐人订阅天数
-	SettingKeyReferralMaxPerUser              = "referral_max_per_user"              // 每用户最大推荐人数
+	SettingKeyReferralMaxPerUser               = "referral_max_per_user"               // 每用户最大推荐人数
 
 	// =========================
 	// Request Rectifier (请求整流器)
