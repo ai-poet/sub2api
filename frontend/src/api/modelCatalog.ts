@@ -222,9 +222,13 @@ export function normalizePaymentCenterOrigin(
   purchaseSubscriptionUrl: string | null | undefined,
   baseOrigin?: string,
 ): string | null {
+  const raw = (purchaseSubscriptionUrl || '').trim()
+  if (!raw) {
+    return null
+  }
+
   const fallbackOrigin =
     baseOrigin || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
-  const raw = (purchaseSubscriptionUrl || '').trim() || '/pay'
 
   try {
     const url = new URL(raw, fallbackOrigin)

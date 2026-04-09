@@ -5139,7 +5139,7 @@ export default {
     },
     capabilities: {
       promptCaching: 'Prompt caching',
-      longContext: 'Long context @{threshold}',
+      longContext: 'Long context threshold {threshold}',
       tieredPricing: '{count} pricing tiers',
       userRateOverride: 'User override'
     },

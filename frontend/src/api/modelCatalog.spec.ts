@@ -224,6 +224,7 @@ describe('modelCatalog helpers', () => {
   it('normalizes payment center origin and fetches balance conversion config', async () => {
     expect(normalizePaymentCenterOrigin('https://pay.example.com/pay?mode=embed')).toBe('https://pay.example.com')
     expect(normalizePaymentCenterOrigin('/pay', 'https://sub2api.example.com')).toBe('https://sub2api.example.com')
+    expect(normalizePaymentCenterOrigin('')).toBeNull()
     expect(normalizePaymentCenterOrigin('javascript:alert(1)')).toBeNull()
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({

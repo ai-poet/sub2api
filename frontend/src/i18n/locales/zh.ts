@@ -5303,7 +5303,7 @@ export default {
     },
     capabilities: {
       promptCaching: '支持提示缓存',
-      longContext: '长上下文倍率 @{threshold}',
+      longContext: '长上下文阈值 {threshold}',
       tieredPricing: '{count} 档区间价',
       userRateOverride: '专属倍率'
     },
