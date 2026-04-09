@@ -34,6 +34,14 @@ Demo credentials (shared demo environment; **not** created automatically for sel
 
 Sub2API is an AI API gateway platform designed to distribute and manage API quotas from AI product subscriptions. Users can access upstream AI services through platform-generated API Keys, while the platform handles authentication, billing, load balancing, and request forwarding.
 
+## What This Edition Adds
+
+Compared with the original base deployment, this repository additionally bundles:
+
+- **Built-in Payment Module** - Integrated self-service purchase/top-up flow and admin payment management via the bundled `sub2apipay` module
+- **Referral System** - Invite-and-reward workflow with user-facing referral pages and admin-configurable reward rules
+- **Claude Relay Inspector** - User-facing `Model Mirror` tool for checking Claude relay authenticity, structure, and injection/override risk
+
 ## Features
 
 - **Multi-Account Management** - Support multiple upstream account types (OAuth, API Key)
@@ -42,6 +50,9 @@ Sub2API is an AI API gateway platform designed to distribute and manage API quot
 - **Smart Scheduling** - Intelligent account selection with sticky sessions
 - **Concurrency Control** - Per-user and per-account concurrency limits
 - **Rate Limiting** - Configurable request and token rate limits
+- **Built-in Payment** - Integrated `/pay` purchase flow and admin payment management
+- **Referral System** - Referral links, reward history, and configurable referral rewards
+- **Claude Relay Inspector** - Built-in relay inspection tool for ordinary users
 - **Admin Dashboard** - Web interface for monitoring and management
 - **External System Integration** - Embed external systems (e.g. payment, ticketing) via iframe to extend the admin dashboard
 
@@ -82,7 +93,7 @@ Community projects that extend or integrate with Sub2API:
 
 | Project | Description | Features |
 |---------|-------------|----------|
-| [Sub2ApiPay](https://github.com/touwaeriol/sub2apipay) | Self-service payment system | Self-service top-up and subscription purchase; supports YiPay protocol, WeChat Pay, Alipay, Stripe; embeddable via iframe |
+| [Sub2ApiPay](https://github.com/touwaeriol/sub2apipay) | Bundled payment module | This repository bundles the payment module for integrated deployment; supports self-service top-up and subscription purchase; compatible with YiPay, WeChat Pay, Alipay, and Stripe |
 | [sub2api-mobile](https://github.com/ckken/sub2api-mobile) | Mobile admin console | Cross-platform app (iOS/Android/Web) for user management, account management, monitoring dashboard, and multi-backend switching; built with Expo + React Native |
 
 ## Tech Stack
