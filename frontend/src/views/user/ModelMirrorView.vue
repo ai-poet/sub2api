@@ -65,7 +65,12 @@
                 class="input"
                 :placeholder="t('modelMirror.endpointPlaceholder')"
                 :disabled="running"
+                @blur="normalizeEndpointField"
+                @paste="handleEndpointPaste"
               />
+              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('modelMirror.endpointHint') }}
+              </p>
             </div>
 
             <div>
@@ -136,7 +141,7 @@
         </div>
       </div>
 
-      <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div class="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -178,7 +183,7 @@
           </div>
         </div>
 
-        <div class="space-y-6">
+        <div class="space-y-6 2xl:sticky 2xl:top-6 2xl:self-start">
           <div class="card">
             <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -324,6 +329,19 @@ function normalizeEndpoint(value: string): string {
   return trimmed.endsWith('/v1/messages') ? trimmed : `${trimmed}/v1/messages`
 }
 
+function normalizeEndpointField() {
+  form.api_endpoint = normalizeEndpoint(form.api_endpoint)
+}
+
+function handleEndpointPaste(event: ClipboardEvent) {
+  const pasted = event.clipboardData?.getData('text') || ''
+  if (!pasted.trim()) {
+    return
+  }
+  event.preventDefault()
+  form.api_endpoint = normalizeEndpoint(pasted)
+}
+
 function setStatus(next: typeof status.value, title: string, subtitle: string) {
   status.value = next
   customStatusTitle.value = title
@@ -452,4 +470,5 @@ onBeforeUnmount(() => {
 })
 
 loadSavedConfig()
+normalizeEndpointField()
 </script>

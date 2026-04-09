@@ -1185,18 +1185,10 @@ func matchingKeywords(text string, keywords []string) []string {
 }
 
 func buildKnowledgeProbeDetail(probe ModelMirrorKnowledgeProbe, text string, pass bool) string {
-	matches := matchingKeywords(text, probe.ExpectedKeywords)
 	if pass {
-		if len(matches) == 0 {
-			return "知识题通过"
-		}
-		return fmt.Sprintf("题库项 %s 命中关键词: %s", probe.ID, strings.Join(matches, ", "))
+		return "知识库事实校验通过"
 	}
-
-	if len(matches) > 0 {
-		return fmt.Sprintf("题库项 %s 仅命中部分关键词: %s", probe.ID, strings.Join(matches, ", "))
-	}
-	return fmt.Sprintf("题库项 %s 未命中预期关键词", probe.ID)
+	return "知识库事实校验未通过"
 }
 
 func sanitizeModelMirrorErrorBody(body []byte) string {

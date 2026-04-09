@@ -206,6 +206,7 @@ export default {
     configDescription: 'Fill in the upstream endpoint, model, and test key. The inspector will run streaming, identity, injection, and knowledge probes in sequence.',
     endpoint: 'Endpoint',
     endpointPlaceholder: 'https://example.com/v1/messages',
+    endpointHint: 'Pasting a base URL will auto-complete it to /v1/messages.',
     model: 'Model',
     modelPlaceholder: 'e.g. claude-opus-4-6',
     apiKey: 'API Key',

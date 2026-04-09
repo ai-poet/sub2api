@@ -206,6 +206,7 @@ export default {
     configDescription: '填写待检测的 Claude 中转接口信息，系统会串行执行流式结构、身份覆盖和知识探测。',
     endpoint: '接口地址',
     endpointPlaceholder: 'https://example.com/v1/messages',
+    endpointHint: '粘贴基础地址后会自动补全为 /v1/messages。',
     model: '模型名称',
     modelPlaceholder: '如 claude-opus-4-6',
     apiKey: 'API Key',
