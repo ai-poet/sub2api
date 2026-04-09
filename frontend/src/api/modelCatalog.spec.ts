@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  buildPaymentCenterUserApiUrl,
   compareModelCatalogItems,
   convertUsdAmountToCny,
   fetchBalanceCreditCnyPerUsd,
@@ -125,6 +126,7 @@ describe('modelCatalog helpers', () => {
 
     const filtered = filterModelCatalogItems(items, {
       search: 'beta claude',
+      groupId: 2,
       platform: 'anthropic',
       billingMode: 'token',
       onlySavings: false,
@@ -135,6 +137,7 @@ describe('modelCatalog helpers', () => {
 
     const savingsOnly = filterModelCatalogItems(items, {
       search: '',
+      groupId: null,
       platform: 'all',
       billingMode: 'all',
       onlySavings: true,
@@ -226,15 +229,27 @@ describe('modelCatalog helpers', () => {
     expect(normalizePaymentCenterOrigin('/pay', 'https://sub2api.example.com')).toBe('https://sub2api.example.com')
     expect(normalizePaymentCenterOrigin('')).toBeNull()
     expect(normalizePaymentCenterOrigin('javascript:alert(1)')).toBeNull()
+    expect(buildPaymentCenterUserApiUrl({
+      purchaseSubscriptionUrl: 'https://pay.example.com/pay',
+      userId: 42,
+      token: 'token-123',
+      locale: 'zh-CN',
+    })).toBe('https://pay.example.com/pay/api/user?user_id=42&token=token-123&lang=zh-CN')
+    expect(buildPaymentCenterUserApiUrl({
+      purchaseSubscriptionUrl: 'https://pay.example.com',
+      userId: 42,
+      token: 'token-123',
+    })).toBe('https://pay.example.com/api/user?user_id=42&token=token-123')
 
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         config: {
           balanceCreditCnyPerUsd: 7.2,
         },
       }),
-    }))
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
     const success = await fetchBalanceCreditCnyPerUsd({
       purchaseSubscriptionUrl: 'https://pay.example.com/pay',
@@ -247,6 +262,10 @@ describe('modelCatalog helpers', () => {
       balanceCreditCnyPerUsd: 7.2,
       error: null,
     })
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://pay.example.com/pay/api/user?user_id=42&token=token-123&lang=zh-CN',
+      expect.objectContaining({ method: 'GET' }),
+    )
 
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('cors failed')))
 

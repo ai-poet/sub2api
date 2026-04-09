@@ -84,6 +84,7 @@ export interface ModelCatalogResponse {
 
 export interface ModelCatalogFilters {
   search: string
+  groupId: number | null
   platform: string
   billingMode: string
   onlySavings: boolean
@@ -153,6 +154,10 @@ export function filterModelCatalogItems(
     }
 
     if (targetMode && targetMode !== 'all' && normalizeSearch(item.billing_mode) !== targetMode) {
+      return false
+    }
+
+    if (filters.groupId != null && item.best_group.id !== filters.groupId) {
       return false
     }
 
@@ -241,6 +246,47 @@ export function normalizePaymentCenterOrigin(
   }
 }
 
+export function buildPaymentCenterUserApiUrl(input: {
+  purchaseSubscriptionUrl?: string | null
+  userId?: number | null
+  token?: string | null
+  locale?: string
+  baseOrigin?: string
+}): string | null {
+  if (!input.userId || !input.token) {
+    return null
+  }
+
+  const raw = (input.purchaseSubscriptionUrl || '').trim()
+  if (!raw) {
+    return null
+  }
+
+  const fallbackOrigin =
+    input.baseOrigin || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+
+  try {
+    const baseUrl = new URL(raw, fallbackOrigin)
+    if (baseUrl.protocol !== 'http:' && baseUrl.protocol !== 'https:') {
+      return null
+    }
+
+    const normalizedBasePath = baseUrl.pathname.replace(/\/+$/, '')
+    const apiPath = normalizedBasePath ? `${normalizedBasePath}/api/user` : '/api/user'
+    const apiUrl = new URL(baseUrl.origin)
+    apiUrl.pathname = apiPath
+    apiUrl.searchParams.set('user_id', String(input.userId))
+    apiUrl.searchParams.set('token', input.token)
+    if (input.locale) {
+      apiUrl.searchParams.set('lang', input.locale)
+    }
+
+    return apiUrl.toString()
+  } catch {
+    return null
+  }
+}
+
 export async function fetchBalanceCreditCnyPerUsd(input: {
   purchaseSubscriptionUrl?: string | null
   userId?: number | null
@@ -252,20 +298,13 @@ export async function fetchBalanceCreditCnyPerUsd(input: {
     return { balanceCreditCnyPerUsd: null, error: 'missing_auth' }
   }
 
-  const origin = normalizePaymentCenterOrigin(input.purchaseSubscriptionUrl, input.baseOrigin)
-  if (!origin) {
+  const url = buildPaymentCenterUserApiUrl(input)
+  if (!url) {
     return { balanceCreditCnyPerUsd: null, error: 'missing_origin' }
   }
 
-  const url = new URL('/api/user', origin)
-  url.searchParams.set('user_id', String(input.userId))
-  url.searchParams.set('token', input.token)
-  if (input.locale) {
-    url.searchParams.set('lang', input.locale)
-  }
-
   try {
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       method: 'GET',
       headers: input.locale ? { 'Accept-Language': input.locale } : undefined,
       mode: 'cors',

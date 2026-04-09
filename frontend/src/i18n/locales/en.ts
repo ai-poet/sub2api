@@ -5060,7 +5060,7 @@ export default {
     description: 'Compare the official reference price with your actual group-level charge for models you can truly access.',
     caption: 'Group x Model Price Cards',
     intro: 'Each card represents one accessible "group + model" combination. Cards are sorted by savings first and focus on the lowest real charge for that specific group.',
-    sortNotice: 'Savings are always compared against the official USD reference price. CNY is only used to show the settlement-facing amount.',
+    sortNotice: 'Savings compare the official reference with the cash price first. If payment conversion is unavailable, the page falls back to the USD balance charge.',
     lastUpdated: 'Last Updated',
     neverUpdated: 'Not loaded yet',
     paymentNoticeTitle: 'Cash price unavailable',
@@ -5089,8 +5089,14 @@ export default {
       effectivePriceAsc: 'Lowest effective price',
       modelAsc: 'Model name'
     },
+    groupTabs: {
+      title: 'Browse by group',
+      description: 'Use group tabs as the primary switcher. Search and other filters stay available as secondary tools.',
+      allGroups: 'All groups',
+      currentGroup: 'Current group: {group}'
+    },
     filterResult: 'Showing {visible} / {total} cards',
-    priceBasis: 'Official reference vs USD balance charge',
+    priceBasis: 'Official reference vs cash price (falls back to balance price)',
     cnyRateReady: 'Cash conversion ready at ¥{rate} per $1 balance',
     loadFailedTitle: 'Failed to load model catalog',
     loadFailedDescription: 'The catalog is temporarily unavailable. Refresh and try again.',

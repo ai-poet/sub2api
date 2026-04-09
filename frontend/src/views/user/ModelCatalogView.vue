@@ -98,6 +98,39 @@
       </section>
 
       <section class="rounded-3xl border border-gray-200/80 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-dark-700 dark:bg-dark-900/80">
+        <div class="flex flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+              {{ t('modelCatalog.groupTabs.title') }}
+            </div>
+            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ t('modelCatalog.groupTabs.description') }}
+            </div>
+          </div>
+
+          <div class="text-xs text-gray-500 dark:text-gray-400">
+            {{ t('modelCatalog.groupTabs.currentGroup', { group: activeGroupTabLabel }) }}
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            v-for="tab in groupTabs"
+            :key="tab.id == null ? 'all' : tab.id"
+            type="button"
+            class="group-tab"
+            :class="selectedGroupId === tab.id ? 'group-tab-active' : 'group-tab-inactive'"
+            @click="selectedGroupId = tab.id"
+          >
+            <span class="truncate">{{ tab.name }}</span>
+            <span class="group-tab-count">
+              {{ tab.count }}
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="rounded-3xl border border-gray-200/80 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-dark-700 dark:bg-dark-900/80">
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.8fr))]">
           <div>
             <label class="input-label">{{ t('modelCatalog.filters.search') }}</label>
@@ -370,8 +403,11 @@
                           {{ t('modelCatalog.groupRateLabel', { rate: formatRate(other.group.rate_multiplier) }) }}
                         </div>
                       </div>
-                      <span class="savings-pill text-[11px]" :class="getPeerSavingsBadgeClass(other.comparison.savings_percent)">
-                        {{ peerSavingsText(other.comparison.savings_percent) }}
+                      <span
+                        class="savings-pill text-[11px]"
+                        :class="getPeerSavingsBadgeClass(getPeerDisplaySavingsPercent(item, other.effective_pricing_usd))"
+                      >
+                        {{ peerSavingsText(getPeerDisplaySavingsPercent(item, other.effective_pricing_usd)) }}
                       </span>
                     </div>
 
@@ -415,6 +451,7 @@ import {
   type ModelCatalogBillingMode,
   type ModelCatalogItem,
   type ModelCatalogPriceInterval,
+  type ModelCatalogPricing,
   type ModelCatalogSortKey,
   type ModelCatalogSummary,
 } from '@/api/modelCatalog'
@@ -434,6 +471,12 @@ interface IntervalDetail {
   value: number | null
 }
 
+interface GroupTab {
+  id: number | null
+  name: string
+  count: number
+}
+
 const { t, locale } = useI18n()
 const appStore = useAppStore()
 const authStore = useAuthStore()
@@ -449,10 +492,44 @@ const lastUpdatedAt = ref<Date | null>(null)
 const expandedKeys = ref<Set<string>>(new Set())
 
 const search = ref('')
+const selectedGroupId = ref<number | null>(null)
 const selectedPlatform = ref('all')
 const selectedBillingMode = ref('all')
 const onlySavings = ref(false)
 const sortBy = ref<ModelCatalogSortKey>('savings_desc')
+
+const groupTabs = computed<GroupTab[]>(() => {
+  const counts = new Map<number, GroupTab>()
+
+  for (const item of allItems.value) {
+    const current = counts.get(item.best_group.id)
+    if (current) {
+      current.count += 1
+      continue
+    }
+
+    counts.set(item.best_group.id, {
+      id: item.best_group.id,
+      name: item.best_group.name,
+      count: 1,
+    })
+  }
+
+  const groups = [...counts.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+
+  return [
+    {
+      id: null,
+      name: t('modelCatalog.groupTabs.allGroups'),
+      count: allItems.value.length,
+    },
+    ...groups,
+  ]
+})
+
+const activeGroupTabLabel = computed(() => {
+  return groupTabs.value.find(tab => tab.id === selectedGroupId.value)?.name || t('modelCatalog.groupTabs.allGroups')
+})
 
 const platformOptions = computed(() => {
   return [...new Set(allItems.value.map(item => item.platform).filter(Boolean))].sort((a, b) =>
@@ -463,6 +540,7 @@ const platformOptions = computed(() => {
 const filteredItems = computed(() =>
   filterModelCatalogItems(allItems.value, {
     search: search.value,
+    groupId: selectedGroupId.value,
     platform: selectedPlatform.value,
     billingMode: selectedBillingMode.value,
     onlySavings: onlySavings.value,
@@ -489,10 +567,14 @@ const lowestInputSummary = computed(() => {
 
 const maxSavingsSummary = computed(() => {
   const itemsWithSavings = visibleItems.value
-    .filter(item => item.comparison.savings_percent != null)
     .map(item => ({
       item,
-      savings: item.comparison.savings_percent as number,
+      savings: getDisplaySavingsPercent(item),
+    }))
+    .filter((entry): entry is { item: ModelCatalogItem; savings: number } => entry.savings != null)
+    .map(item => ({
+      item: item.item,
+      savings: item.savings,
     }))
 
   if (itemsWithSavings.length === 0) {
@@ -547,6 +629,9 @@ async function loadCatalog(options: { refresh?: boolean } = {}) {
 
     const response = await modelCatalogAPI.getCatalog()
     allItems.value = response.items || []
+    if (selectedGroupId.value != null && !allItems.value.some(item => item.best_group.id === selectedGroupId.value)) {
+      selectedGroupId.value = null
+    }
     summary.value = response.summary || null
     lastUpdatedAt.value = new Date()
     await loadPaymentConfig()
@@ -784,18 +869,56 @@ function formatIntervalRange(interval: ModelCatalogPriceInterval): string {
   return `${formatThreshold(interval.min_tokens)} - ${formatThreshold(interval.max_tokens)}`
 }
 
+function getDisplaySavingsPercent(item: ModelCatalogItem): number | null {
+  const officialUsd = getPrimaryPrice(item.official_pricing, item.billing_mode)
+  const effectiveUsd = getPrimaryPrice(item.effective_pricing_usd, item.billing_mode)
+
+  if (balanceCreditCnyPerUsd.value != null) {
+    const officialCny = convertUsdAmountToCny(officialUsd, balanceCreditCnyPerUsd.value)
+    const actualCny = convertUsdAmountToCny(effectiveUsd, balanceCreditCnyPerUsd.value)
+    return calculateDisplaySavingsPercent(officialCny, actualCny)
+  }
+
+  return calculateDisplaySavingsPercent(officialUsd, effectiveUsd)
+}
+
+function getPeerDisplaySavingsPercent(
+  item: ModelCatalogItem,
+  effectivePricingUsd: ModelCatalogPricing,
+): number | null {
+  const officialUsd = getPrimaryPrice(item.official_pricing, item.billing_mode)
+  const effectiveUsd = getPrimaryPrice(effectivePricingUsd, item.billing_mode)
+
+  if (balanceCreditCnyPerUsd.value != null) {
+    const officialCny = convertUsdAmountToCny(officialUsd, balanceCreditCnyPerUsd.value)
+    const actualCny = convertUsdAmountToCny(effectiveUsd, balanceCreditCnyPerUsd.value)
+    return calculateDisplaySavingsPercent(officialCny, actualCny)
+  }
+
+  return calculateDisplaySavingsPercent(officialUsd, effectiveUsd)
+}
+
+function calculateDisplaySavingsPercent(official: number | null, actual: number | null): number | null {
+  if (official == null || actual == null || !Number.isFinite(official) || !Number.isFinite(actual) || official <= 0) {
+    return null
+  }
+
+  const savings = 1 - actual / official
+  if (savings <= 0) {
+    return 0
+  }
+  return savings
+}
+
 function savingsBadgeText(item: ModelCatalogItem): string {
-  const savings = item.comparison.savings_percent
+  const savings = getDisplaySavingsPercent(item)
   if (savings == null) {
     return t('modelCatalog.badges.noReference')
   }
   if (Math.abs(savings) < 1e-9) {
     return t('modelCatalog.badges.sameAsOfficial')
   }
-  if (savings > 0) {
-    return t('modelCatalog.badges.saving', { percent: formatPercent(savings) })
-  }
-  return t('modelCatalog.badges.higherThanOfficial', { percent: formatPercent(Math.abs(savings)) })
+  return t('modelCatalog.badges.saving', { percent: formatPercent(savings) })
 }
 
 function peerSavingsText(savings: number | null): string {
@@ -805,10 +928,7 @@ function peerSavingsText(savings: number | null): string {
   if (Math.abs(savings) < 1e-9) {
     return t('modelCatalog.badges.sameAsOfficial')
   }
-  if (savings > 0) {
-    return t('modelCatalog.badges.saving', { percent: formatPercent(savings) })
-  }
-  return t('modelCatalog.badges.higherThanOfficial', { percent: formatPercent(Math.abs(savings)) })
+  return t('modelCatalog.badges.saving', { percent: formatPercent(savings) })
 }
 
 function getCardClass(item: ModelCatalogItem): string {
@@ -835,14 +955,13 @@ function getModeBadgeClass(mode: ModelCatalogBillingMode): string {
 }
 
 function getSavingsBadgeClass(item: ModelCatalogItem): string {
-  return getPeerSavingsBadgeClass(item.comparison.savings_percent)
+  return getPeerSavingsBadgeClass(getDisplaySavingsPercent(item))
 }
 
 function getPeerSavingsBadgeClass(savings: number | null): string {
   if (savings == null) return 'savings-pill-neutral'
   if (Math.abs(savings) < 1e-9) return 'savings-pill-neutral'
-  if (savings > 0) return 'savings-pill-positive'
-  return 'savings-pill-negative'
+  return 'savings-pill-positive'
 }
 
 function formatNumber(value: number): string {
@@ -966,12 +1085,24 @@ function formatNumber(value: number): string {
   @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300;
 }
 
-.savings-pill-negative {
-  @apply bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300;
-}
-
 .savings-pill-neutral {
   @apply bg-gray-100 text-gray-600 dark:bg-dark-800 dark:text-gray-300;
+}
+
+.group-tab {
+  @apply inline-flex max-w-full items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors;
+}
+
+.group-tab-active {
+  @apply border-cyan-200 bg-cyan-50 text-cyan-700 shadow-sm dark:border-cyan-900/60 dark:bg-cyan-950/30 dark:text-cyan-300;
+}
+
+.group-tab-inactive {
+  @apply border-gray-200 bg-gray-50/80 text-gray-600 hover:border-gray-300 hover:bg-white hover:text-gray-900 dark:border-dark-700 dark:bg-dark-800/80 dark:text-gray-300 dark:hover:border-dark-600 dark:hover:bg-dark-800 dark:hover:text-white;
+}
+
+.group-tab-count {
+  @apply rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-gray-500 dark:bg-dark-900/80 dark:text-gray-300;
 }
 
 .price-stat {

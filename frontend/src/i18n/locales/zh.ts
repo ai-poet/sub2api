@@ -5224,7 +5224,7 @@ export default {
     description: '查看你当前真实可调用的分组模型卡片、官方参考价与实际扣费价对比',
     caption: '分组 x 模型定价卡',
     intro: '每张卡代表一个你当前可用的“分组 + 模型”。页面优先展示最低实际扣费口径，默认按“比官方省得最多”排序。',
-    sortNotice: '节省比例按官方参考价与平台余额扣费价比较，CNY 仅用于展示实付金额。',
+    sortNotice: '节省比例优先按官方参考价与实付价比较；未接入支付换算时回退为美元余额扣费价。',
     lastUpdated: '最近更新',
     neverUpdated: '尚未加载',
     paymentNoticeTitle: '实付价未启用',
@@ -5253,8 +5253,14 @@ export default {
       effectivePriceAsc: '按实际价格升序',
       modelAsc: '按模型名称'
     },
+    groupTabs: {
+      title: '按分组切换',
+      description: '优先通过分组标签切换查看，搜索和其他筛选作为辅助。',
+      allGroups: '全部分组',
+      currentGroup: '当前分组：{group}'
+    },
     filterResult: '当前显示 {visible} / {total} 张卡',
-    priceBasis: '官方价 vs 美元余额扣费价',
+    priceBasis: '官方价 vs 实付价（未启用时回退余额价）',
     cnyRateReady: '实付换算已接入 ¥{rate} / $1 余额',
     loadFailedTitle: '模型广场加载失败',
     loadFailedDescription: '暂时无法获取模型卡片，请稍后刷新重试。',
