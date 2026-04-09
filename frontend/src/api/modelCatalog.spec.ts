@@ -240,6 +240,12 @@ describe('modelCatalog helpers', () => {
       userId: 42,
       token: 'token-123',
     })).toBe('https://pay.example.com/api/user?user_id=42&token=token-123')
+    expect(buildPaymentCenterUserApiUrl({
+      purchaseSubscriptionUrl: '',
+      userId: 42,
+      token: 'token-123',
+      baseOrigin: 'https://sub2api.example.com',
+    })).toBe('https://sub2api.example.com/pay/api/user?user_id=42&token=token-123')
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

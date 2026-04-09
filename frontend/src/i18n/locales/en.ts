@@ -5154,7 +5154,7 @@ export default {
     intervalSectionTitle: 'Channel tier pricing',
     intervalDefaultLabel: 'Default tier',
     otherGroupsTitle: 'Other accessible groups for this model',
-    peerEffectivePrice: 'Effective USD balance price'
+    peerDisplayedPrice: 'Displayed price for this group'
   },
 
   // Recharge / Subscription Page

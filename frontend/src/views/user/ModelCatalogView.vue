@@ -51,52 +51,6 @@
         </div>
       </div>
 
-      <section class="grid gap-4 xl:grid-cols-4">
-        <article class="summary-card summary-card-cyan">
-          <div class="summary-kicker">{{ t('modelCatalog.summary.visibleCards') }}</div>
-          <div class="summary-value">{{ visibleItems.length }}</div>
-          <div class="summary-note">
-            {{ t('modelCatalog.summary.totalCards', { total: summary?.total_models ?? allItems.length }) }}
-          </div>
-        </article>
-
-        <article class="summary-card summary-card-emerald">
-          <div class="summary-kicker">{{ t('modelCatalog.summary.lowestInput') }}</div>
-          <div class="summary-value summary-value-sm">
-            {{ lowestInputSummary?.item.display_name || '—' }}
-          </div>
-          <div class="summary-note">
-            {{
-              lowestInputSummary
-                ? `${lowestInputSummary.item.best_group.name} · ${formatUsd(lowestInputSummary.price)}`
-                : '—'
-            }}
-          </div>
-        </article>
-
-        <article class="summary-card summary-card-rose">
-          <div class="summary-kicker">{{ t('modelCatalog.summary.maxSavings') }}</div>
-          <div class="summary-value">
-            {{ maxSavingsSummary ? formatPercent(maxSavingsSummary.savings) : '—' }}
-          </div>
-          <div class="summary-note">
-            {{
-              maxSavingsSummary
-                ? `${maxSavingsSummary.item.display_name} · ${maxSavingsSummary.item.best_group.name}`
-                : t('modelCatalog.summary.noSavingsReference')
-            }}
-          </div>
-        </article>
-
-        <article class="summary-card summary-card-amber">
-          <div class="summary-kicker">{{ t('modelCatalog.summary.cachingCount') }}</div>
-          <div class="summary-value">{{ cachingCount }}</div>
-          <div class="summary-note">
-            {{ t('modelCatalog.summary.tokenAndNonToken', { token: tokenCount, nonToken: nonTokenCount }) }}
-          </div>
-        </article>
-      </section>
-
       <section class="rounded-3xl border border-gray-200/80 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-dark-700 dark:bg-dark-900/80">
         <div class="flex flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
           <div>
@@ -270,10 +224,10 @@
                 {{ t('modelCatalog.primaryPrice') }}
               </div>
               <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                {{ formatUsd(getPrimaryEffectivePrice(item)) }}
+                {{ formatPrimaryDisplayPrice(item) }}
               </div>
               <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {{ billingUnitLabel(item.billing_mode) }}
+                {{ `${displayedChargeLabel()} · ${billingUnitLabel(item.billing_mode)}` }}
               </div>
             </div>
           </div>
@@ -295,22 +249,16 @@
                 </div>
 
                 <div
-                  class="grid min-w-0 flex-1 gap-2"
-                  :class="balanceCreditCnyPerUsd ? 'md:grid-cols-3' : 'md:grid-cols-2'"
+                  class="grid min-w-0 flex-1 gap-2 md:grid-cols-2"
                 >
                   <div class="price-stat">
                     <div class="price-stat-label">{{ t('modelCatalog.priceColumns.official') }}</div>
                     <div class="price-stat-value">{{ formatUsd(row.officialUsd) }}</div>
                   </div>
 
-                  <div class="price-stat price-stat-strong">
-                    <div class="price-stat-label">{{ t('modelCatalog.priceColumns.balance') }}</div>
-                    <div class="price-stat-value">{{ formatUsd(row.balanceUsd) }}</div>
-                  </div>
-
-                  <div v-if="balanceCreditCnyPerUsd" class="price-stat price-stat-cny">
-                    <div class="price-stat-label">{{ t('modelCatalog.priceColumns.cash') }}</div>
-                    <div class="price-stat-value">{{ formatCny(row.actualCny) }}</div>
+                  <div class="price-stat" :class="displayedChargeStatClass()">
+                    <div class="price-stat-label">{{ displayedChargeLabel() }}</div>
+                    <div class="price-stat-value">{{ formatDisplayedCharge(row.balanceUsd, row.actualCny) }}</div>
                   </div>
                 </div>
               </div>
@@ -413,10 +361,18 @@
 
                     <div class="mt-3 rounded-xl bg-gray-50 px-3 py-2 text-sm dark:bg-dark-800">
                       <div class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ t('modelCatalog.peerEffectivePrice') }}
+                        {{ t('modelCatalog.peerDisplayedPrice') }}
                       </div>
                       <div class="mt-1 font-semibold text-gray-900 dark:text-white">
-                        {{ formatUsd(getPrimaryPrice(other.effective_pricing_usd, item.billing_mode)) }}
+                        {{
+                          formatDisplayedCharge(
+                            getPrimaryPrice(other.effective_pricing_usd, item.billing_mode),
+                            convertUsdAmountToCny(
+                              getPrimaryPrice(other.effective_pricing_usd, item.billing_mode),
+                              balanceCreditCnyPerUsd,
+                            ),
+                          )
+                        }}
                       </div>
                     </div>
                   </div>
@@ -453,7 +409,6 @@ import {
   type ModelCatalogPriceInterval,
   type ModelCatalogPricing,
   type ModelCatalogSortKey,
-  type ModelCatalogSummary,
 } from '@/api/modelCatalog'
 
 interface PriceRow {
@@ -482,7 +437,6 @@ const appStore = useAppStore()
 const authStore = useAuthStore()
 
 const allItems = ref<ModelCatalogItem[]>([])
-const summary = ref<ModelCatalogSummary | null>(null)
 const loading = ref(true)
 const refreshing = ref(false)
 const loadError = ref('')
@@ -549,49 +503,6 @@ const filteredItems = computed(() =>
 
 const visibleItems = computed(() => sortModelCatalogItems(filteredItems.value, sortBy.value))
 
-const lowestInputSummary = computed(() => {
-  const tokenItems = visibleItems.value
-    .filter(item => item.billing_mode === 'token' && item.effective_pricing_usd.input_per_mtok_usd != null)
-    .map(item => ({
-      item,
-      price: item.effective_pricing_usd.input_per_mtok_usd as number,
-    }))
-
-  if (tokenItems.length === 0) {
-    return null
-  }
-
-  tokenItems.sort((a, b) => a.price - b.price)
-  return tokenItems[0]
-})
-
-const maxSavingsSummary = computed(() => {
-  const itemsWithSavings = visibleItems.value
-    .map(item => ({
-      item,
-      savings: getDisplaySavingsPercent(item),
-    }))
-    .filter((entry): entry is { item: ModelCatalogItem; savings: number } => entry.savings != null)
-    .map(item => ({
-      item: item.item,
-      savings: item.savings,
-    }))
-
-  if (itemsWithSavings.length === 0) {
-    return null
-  }
-
-  itemsWithSavings.sort((a, b) => b.savings - a.savings)
-  return itemsWithSavings[0]
-})
-
-const cachingCount = computed(() =>
-  visibleItems.value.filter(item => item.pricing_details.supports_prompt_caching).length,
-)
-
-const tokenCount = computed(() => visibleItems.value.filter(item => item.billing_mode === 'token').length)
-const nonTokenCount = computed(() => visibleItems.value.length - tokenCount.value)
-
 const lastUpdatedLabel = computed(() => {
   if (!lastUpdatedAt.value) {
     return t('modelCatalog.neverUpdated')
@@ -632,7 +543,6 @@ async function loadCatalog(options: { refresh?: boolean } = {}) {
     if (selectedGroupId.value != null && !allItems.value.some(item => item.best_group.id === selectedGroupId.value)) {
       selectedGroupId.value = null
     }
-    summary.value = response.summary || null
     lastUpdatedAt.value = new Date()
     await loadPaymentConfig()
   } catch (error) {
@@ -835,6 +745,29 @@ function formatCny(value: number | null | undefined): string {
   return `¥${formatNumber(value)}`
 }
 
+function displayedChargeLabel(): string {
+  return balanceCreditCnyPerUsd.value != null
+    ? t('modelCatalog.priceColumns.cash')
+    : t('modelCatalog.priceColumns.balance')
+}
+
+function displayedChargeStatClass(): string {
+  return balanceCreditCnyPerUsd.value != null ? 'price-stat-cny' : 'price-stat-strong'
+}
+
+function formatDisplayedCharge(balanceUsd: number | null | undefined, actualCny: number | null | undefined): string {
+  if (balanceCreditCnyPerUsd.value != null) {
+    return formatCny(actualCny)
+  }
+  return formatUsd(balanceUsd)
+}
+
+function formatPrimaryDisplayPrice(item: ModelCatalogItem): string {
+  const balanceUsd = getPrimaryEffectivePrice(item)
+  const actualCny = convertUsdAmountToCny(balanceUsd, balanceCreditCnyPerUsd.value)
+  return formatDisplayedCharge(balanceUsd, actualCny)
+}
+
 function formatPercent(value: number | null | undefined): string {
   if (value == null || !Number.isFinite(value)) {
     return '—'
@@ -979,47 +912,6 @@ function formatNumber(value: number): string {
 </script>
 
 <style scoped>
-.summary-card {
-  @apply relative overflow-hidden rounded-3xl border border-gray-200/80 bg-white/90 p-5 shadow-sm backdrop-blur dark:border-dark-700 dark:bg-dark-900/80;
-}
-
-.summary-card::before {
-  content: '';
-  @apply absolute inset-x-0 top-0 h-1.5;
-}
-
-.summary-card-cyan::before {
-  @apply bg-gradient-to-r from-cyan-500 to-sky-400;
-}
-
-.summary-card-emerald::before {
-  @apply bg-gradient-to-r from-emerald-500 to-teal-400;
-}
-
-.summary-card-rose::before {
-  @apply bg-gradient-to-r from-rose-500 to-orange-400;
-}
-
-.summary-card-amber::before {
-  @apply bg-gradient-to-r from-amber-500 to-yellow-400;
-}
-
-.summary-kicker {
-  @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400;
-}
-
-.summary-value {
-  @apply mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white;
-}
-
-.summary-value-sm {
-  @apply text-2xl leading-tight;
-}
-
-.summary-note {
-  @apply mt-2 text-sm text-gray-500 dark:text-gray-400;
-}
-
 .model-card {
   @apply relative overflow-hidden rounded-3xl border border-gray-200/80 bg-white/95 p-5 shadow-sm backdrop-blur transition-all duration-200 dark:border-dark-700 dark:bg-dark-900/80;
 }

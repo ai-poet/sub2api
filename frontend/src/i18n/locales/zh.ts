@@ -5318,7 +5318,7 @@ export default {
     intervalSectionTitle: '渠道区间价',
     intervalDefaultLabel: '默认档位',
     otherGroupsTitle: '同模型其他可用分组',
-    peerEffectivePrice: '该分组实际余额价'
+    peerDisplayedPrice: '该分组展示价'
   },
 
   // Recharge / Subscription Page

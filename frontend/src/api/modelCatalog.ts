@@ -258,15 +258,11 @@ export function buildPaymentCenterUserApiUrl(input: {
   }
 
   const raw = (input.purchaseSubscriptionUrl || '').trim()
-  if (!raw) {
-    return null
-  }
-
   const fallbackOrigin =
     input.baseOrigin || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
 
   try {
-    const baseUrl = new URL(raw, fallbackOrigin)
+    const baseUrl = raw ? new URL(raw, fallbackOrigin) : new URL('/pay', fallbackOrigin)
     if (baseUrl.protocol !== 'http:' && baseUrl.protocol !== 'https:') {
       return null
     }
