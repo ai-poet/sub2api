@@ -137,7 +137,7 @@
             <button
               type="button"
               class="btn btn-secondary btn-sm"
-              :disabled="saving || probing"
+              :disabled="loading || saving || probing"
               @click="handleProbe"
             >
               <span
@@ -238,7 +238,7 @@
           <button type="button" class="btn btn-secondary" :disabled="saving || probing" @click="emit('close')">
             {{ t('common.cancel') }}
           </button>
-          <button type="button" class="btn btn-primary" :disabled="saving || probing || !group" @click="handleSave">
+          <button type="button" class="btn btn-primary" :disabled="loading || saving || probing || !group" @click="handleSave">
             <span
               v-if="saving"
               class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"

@@ -250,6 +250,8 @@ func buildGroupStatusHistory(records []GroupStatusRecord, start, end time.Time, 
 		bucketCount = 1
 	}
 	buckets := make([]GroupStatusHistoryBucket, 0, bucketCount)
+	latencySums := make([]float64, 0, bucketCount)
+	latencyCounts := make([]int, 0, bucketCount)
 	cursor := start
 	for cursor.Before(end) {
 		bucketEnd := cursor.Add(step)
@@ -257,6 +259,8 @@ func buildGroupStatusHistory(records []GroupStatusRecord, start, end time.Time, 
 			BucketStart: cursor,
 			BucketEnd:   bucketEnd,
 		})
+		latencySums = append(latencySums, 0)
+		latencyCounts = append(latencyCounts, 0)
 		cursor = bucketEnd
 		if len(buckets) > 64 {
 			break
@@ -277,14 +281,8 @@ func buildGroupStatusHistory(records []GroupStatusRecord, start, end time.Time, 
 			bucket.DownCount++
 		}
 		if record.LatencyMS != nil {
-			if bucket.AvgLatencyMS == nil {
-				value := float64(*record.LatencyMS)
-				bucket.AvgLatencyMS = &value
-			} else {
-				currentTotal := *bucket.AvgLatencyMS * float64(bucket.TotalCount-1)
-				value := (currentTotal + float64(*record.LatencyMS)) / float64(bucket.TotalCount)
-				bucket.AvgLatencyMS = &value
-			}
+			latencySums[index] += float64(*record.LatencyMS)
+			latencyCounts[index]++
 		}
 		bucket.LatestStatus = record.Status
 	}
@@ -295,6 +293,10 @@ func buildGroupStatusHistory(records []GroupStatusRecord, start, end time.Time, 
 		}
 		available := buckets[i].TotalCount - buckets[i].DownCount
 		buckets[i].Availability = (float64(available) / float64(buckets[i].TotalCount)) * 100
+		if latencyCounts[i] > 0 {
+			value := latencySums[i] / float64(latencyCounts[i])
+			buckets[i].AvgLatencyMS = &value
+		}
 	}
 	return buckets
 }
