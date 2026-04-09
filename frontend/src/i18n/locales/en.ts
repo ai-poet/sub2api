@@ -18,14 +18,7 @@ export default {
       subtitle: 'vs Official Claude Code / Codex',
       highlight: '~90% Off',
       description: 'Just a fraction of official API pricing',
-      badge: '~10% of Official Price',
-      monthly: {
-        title: 'Monthly Plan',
-        subtitle: 'vs Official Claude Code',
-        highlight: 'Lower Monthly Cost',
-        description: 'Much cheaper than official Claude Code & Codex subscriptions',
-        badge: 'Best Value'
-      }
+      badge: '~10% of Official Price'
     },
     tags: {
       subscriptionToApi: 'Subscription to API',

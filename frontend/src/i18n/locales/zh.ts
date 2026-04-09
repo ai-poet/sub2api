@@ -18,14 +18,7 @@ export default {
       subtitle: '对比官方 Claude Code / Codex',
       highlight: '约 1 折',
       description: '仅需官方价格的 1 折左右，极致性价比',
-      badge: '约官方 1 折',
-      monthly: {
-        title: '包月订阅',
-        subtitle: '对比官方 Claude Code',
-        highlight: '更低月费',
-        description: '远比官方 Claude Code 和 Codex 订阅便宜',
-        badge: '超值包月'
-      }
+      badge: '约官方 1 折'
     },
     tags: {
       subscriptionToApi: '订阅转 API',

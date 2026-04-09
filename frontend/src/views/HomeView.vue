@@ -172,40 +172,6 @@
                   {{ t('home.pricing.badge') }}
                 </span>
               </div>
-
-              <!-- Card 2: Monthly Subscription -->
-              <div class="flex flex-col items-center gap-2 lg:items-start">
-                <div
-                  class="inline-flex flex-1 items-center gap-3 rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-purple-100/50 px-5 py-3.5 shadow-lg shadow-purple-500/10 dark:border-purple-800/50 dark:from-purple-900/30 dark:to-purple-800/20"
-                >
-                  <div class="flex flex-col">
-                    <span class="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                      {{ t('home.pricing.monthly.subtitle') }}
-                    </span>
-                    <span class="text-2xl font-bold text-gray-900 dark:text-white">
-                      {{ t('home.pricing.monthly.highlight') }}
-                    </span>
-                    <span class="text-xs text-gray-600 dark:text-dark-300">
-                      {{ t('home.pricing.monthly.description') }}
-                    </span>
-                  </div>
-                  <div
-                    class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30"
-                  >
-                    <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                    </svg>
-                  </div>
-                </div>
-                <span
-                  class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                >
-                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                  </svg>
-                  {{ t('home.pricing.monthly.badge') }}
-                </span>
-              </div>
             </div>
           </div>
 
