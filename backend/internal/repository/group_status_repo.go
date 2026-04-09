@@ -70,7 +70,10 @@ func (r *groupStatusRepository) ListDueConfigs(ctx context.Context, now time.Tim
 		FROM group_status_configs c
 		LEFT JOIN group_status_states s ON s.group_id = c.group_id
 		WHERE c.enabled = TRUE
-		  AND (s.observed_at IS NULL OR s.observed_at <= $1 - make_interval(secs => c.interval_seconds))
+		  AND (
+		        s.observed_at IS NULL
+		        OR s.observed_at <= ($1::timestamptz - (c.interval_seconds * INTERVAL '1 second'))
+		      )
 		ORDER BY COALESCE(s.observed_at, to_timestamp(0)) ASC, c.group_id ASC
 		LIMIT $2
 	`, now, limit)
