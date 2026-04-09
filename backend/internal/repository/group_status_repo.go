@@ -240,7 +240,7 @@ func (r *groupStatusRepository) ListRecordsSince(ctx context.Context, groupID in
 	}
 	defer func() { _ = rows.Close() }()
 
-	var out []service.GroupStatusRecord
+	out := make([]service.GroupStatusRecord, 0)
 	for rows.Next() {
 		record, err := scanGroupStatusRecord(rows)
 		if err != nil {
@@ -267,7 +267,7 @@ func (r *groupStatusRepository) ListRecentRecords(ctx context.Context, groupID i
 	}
 	defer func() { _ = rows.Close() }()
 
-	var out []service.GroupStatusRecord
+	out := make([]service.GroupStatusRecord, 0)
 	for rows.Next() {
 		record, err := scanGroupStatusRecord(rows)
 		if err != nil {
@@ -294,7 +294,7 @@ func (r *groupStatusRepository) ListEvents(ctx context.Context, groupID int64, l
 	}
 	defer func() { _ = rows.Close() }()
 
-	var out []service.GroupStatusEvent
+	out := make([]service.GroupStatusEvent, 0)
 	for rows.Next() {
 		event, err := scanGroupStatusEvent(rows)
 		if err != nil {

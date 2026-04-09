@@ -7,6 +7,10 @@ import type {
   GroupStatusRecord,
 } from '@/types'
 
+function ensureArray<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : []
+}
+
 function normalizeGroup(raw: any): Group {
   return {
     id: raw?.id ?? raw?.ID ?? 0,
@@ -37,7 +41,7 @@ function normalizeGroup(raw: any): Group {
 
 export async function listStatuses(): Promise<GroupStatusListItem[]> {
   const { data } = await apiClient.get<GroupStatusListItem[]>('/group-status')
-  return data.map((item: any) => ({
+  return ensureArray(data).map((item: any) => ({
     ...item,
     group: normalizeGroup(item.group)
   }))
@@ -50,7 +54,7 @@ export async function getHistory(
   const { data } = await apiClient.get<GroupStatusHistoryBucket[]>(`/group-status/${groupId}/history`, {
     params: { period }
   })
-  return data
+  return ensureArray(data)
 }
 
 export async function getEvents(
@@ -60,7 +64,7 @@ export async function getEvents(
   const { data } = await apiClient.get<GroupStatusEvent[]>(`/group-status/${groupId}/events`, {
     params: { limit }
   })
-  return data
+  return ensureArray(data)
 }
 
 export async function getRecentRecords(
@@ -70,7 +74,7 @@ export async function getRecentRecords(
   const { data } = await apiClient.get<GroupStatusRecord[]>(`/group-status/${groupId}/records`, {
     params: { limit }
   })
-  return data
+  return ensureArray(data)
 }
 
 export const groupStatusAPI = {
