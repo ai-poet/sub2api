@@ -41,6 +41,8 @@ Compared with the original base deployment, this repository additionally bundles
 - **Built-in Payment Module** - Integrated self-service purchase/top-up flow and admin payment management via the bundled `sub2apipay` module
 - **Referral System** - Invite-and-reward workflow with user-facing referral pages and admin-configurable reward rules
 - **Claude Relay Inspector** - User-facing `Model Mirror` tool for checking Claude relay authenticity, structure, and injection/override risk
+- **Model Catalog** - User-facing model marketplace showing available models across groups with pricing comparison, savings analysis, and multi-dimensional filtering
+- **Group Runtime Status** - Real-time monitoring of group model service health with availability tracking, latency metrics, and historical incident records
 
 ## Features
 
@@ -53,6 +55,8 @@ Compared with the original base deployment, this repository additionally bundles
 - **Built-in Payment** - Integrated `/pay` purchase flow and admin payment management
 - **Referral System** - Referral links, reward history, and configurable referral rewards
 - **Claude Relay Inspector** - Built-in relay inspection tool for ordinary users
+- **Model Catalog** - Browse available models with pricing comparison and savings analysis
+- **Group Runtime Status** - Monitor group model service health and availability in real-time
 - **Admin Dashboard** - Web interface for monitoring and management
 - **External System Integration** - Embed external systems (e.g. payment, ticketing) via iframe to extend the admin dashboard
 
