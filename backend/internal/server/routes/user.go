@@ -108,6 +108,7 @@ func RegisterUserRoutes(
 		{
 			groupStatus.GET("", h.GroupStatus.List)
 			groupStatus.GET("/:groupId/history", h.GroupStatus.History)
+			groupStatus.GET("/:groupId/records", h.GroupStatus.Records)
 			groupStatus.GET("/:groupId/events", h.GroupStatus.Events)
 		}
 	}

@@ -479,6 +479,20 @@ export interface GroupStatusHistoryBucket {
   latest_status: GroupRuntimeStatus | ''
 }
 
+export interface GroupStatusRecord {
+  id: number
+  group_id: number
+  config_id: number
+  status: GroupRuntimeStatus
+  response_excerpt: string
+  latency_ms: number | null
+  http_code: number | null
+  sub_status: string
+  error_detail: string
+  observed_at: string
+  created_at: string
+}
+
 export interface GroupStatusEvent {
   id: number
   group_id: number

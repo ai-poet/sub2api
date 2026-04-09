@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="mx-auto max-w-6xl space-y-6">
+    <div class="mx-auto max-w-7xl space-y-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('modelStatus.autoRefresh') }}</div>
@@ -86,76 +86,120 @@
           </p>
         </div>
 
-        <div v-else class="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <div v-else class="space-y-3">
           <article
             v-for="item in items"
-            :key="item.group.id"
-            class="card p-5"
+            :key="getGroupId(item)"
+            class="overflow-hidden rounded-2xl border bg-white/95 p-4 shadow-sm transition-all dark:bg-dark-900/90"
+            :class="getMonitorRowClass(getItemStatus(item))"
           >
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <PlatformIcon :platform="item.group.platform" size="sm" />
-                  <h3 class="truncate text-base font-semibold text-gray-900 dark:text-white">
-                    {{ item.group.name }}
-                  </h3>
+            <div class="flex items-start gap-4">
+              <div class="flex flex-col items-center pt-1">
+                <span
+                  class="h-3.5 w-3.5 rounded-full ring-4"
+                  :class="getMonitorDotClass(getItemStatus(item))"
+                ></span>
+                <div class="mt-3 hidden h-full w-px bg-gray-200 dark:bg-dark-700 sm:block"></div>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <PlatformIcon :platform="item.group.platform" size="md" />
+                      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        {{ getGroupDisplayName(item) }}
+                      </h3>
+                      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-dark-800 dark:text-gray-400">
+                        #{{ getGroupId(item) }}
+                      </span>
+                      <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(item))]">
+                        {{ getSummaryStatusText(item.summary) }}
+                      </span>
+                    </div>
+
+                    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                      <span>{{ t(`admin.groups.platforms.${item.group.platform}`) }}</span>
+                      <span class="text-gray-300 dark:text-dark-500">•</span>
+                      <span
+                        class="max-w-full truncate"
+                        :class="item.group.description ? 'text-gray-500 dark:text-gray-400' : 'italic text-gray-400 dark:text-gray-500'"
+                      >
+                        {{ item.group.description || t('modelStatus.noDescription') }}
+                      </span>
+                    </div>
+
+                    <div class="mt-4">
+                      <div class="mb-2 flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+                        <span>{{ t('modelStatus.uptimeTimeline') }}</span>
+                        <span>{{ t('modelStatus.recentChecksHint') }}</span>
+                      </div>
+                      <div class="overflow-x-auto pb-1">
+                        <div class="flex min-w-[360px] gap-1">
+                          <div
+                            v-for="cell in getRowHeartbeatCells(item)"
+                            :key="cell.key"
+                            class="h-8 min-w-0 flex-1 rounded-md border transition-opacity hover:opacity-100"
+                            :class="getHeartbeatCellClass(cell.status)"
+                            :title="cell.title"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="mt-4 rounded-xl border px-4 py-3"
+                      :class="getGroupRuntimeStatusSurfaceClass(getItemStatus(item))"
+                    >
+                      <div class="text-xs font-medium opacity-80">{{ t('modelStatus.latestResult') }}</div>
+                      <div class="mt-2 text-sm leading-6">
+                        {{ getSummaryPreview(item.summary) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="grid min-w-full grid-cols-2 gap-2 sm:min-w-[360px] xl:min-w-[420px] xl:grid-cols-4">
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                      <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.latestProbe') }}</div>
+                      <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                        {{ item.summary.observed_at ? formatRelativeTime(item.summary.observed_at) : t('modelStatus.waitingForProbe') }}
+                      </div>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                      <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.latestLatency') }}</div>
+                      <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                        {{ formatGroupRuntimeLatency(item.summary.latency_ms) }}
+                      </div>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                      <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.availability24') }}</div>
+                      <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                        {{ formatGroupRuntimeAvailability(item.availability_24h) }}
+                      </div>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                      <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.availability7') }}</div>
+                      <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                        {{ formatGroupRuntimeAvailability(item.availability_7d) }}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p class="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
-                  {{ item.group.description || t('modelStatus.noDescription') }}
-                </p>
-              </div>
-              <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(item))]">
-                {{ getSummaryStatusText(item.summary) }}
-              </span>
-            </div>
 
-            <div class="mt-4 grid grid-cols-2 gap-3">
-              <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.latestProbe') }}</div>
-                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ item.summary.observed_at ? formatRelativeTime(item.summary.observed_at) : t('modelStatus.waitingForProbe') }}
+                <div class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-3 dark:border-dark-800 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span>{{ item.summary.observed_at ? formatDateTime(item.summary.observed_at) : '—' }}</span>
+                    <span class="text-gray-300 dark:text-dark-500">•</span>
+                    <span>{{ t('modelStatus.lastUpdated') }} {{ lastUpdatedLabel }}</span>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm self-start sm:self-auto" @click="openDetails(item)">
+                    {{ t('modelStatus.openDetails') }}
+                  </button>
                 </div>
               </div>
-
-              <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.latestLatency') }}</div>
-                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ formatGroupRuntimeLatency(item.summary.latency_ms) }}
-                </div>
-              </div>
-
-              <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.availability24') }}</div>
-                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ formatGroupRuntimeAvailability(item.availability_24h) }}
-                </div>
-              </div>
-
-              <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.availability7') }}</div>
-                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ formatGroupRuntimeAvailability(item.availability_7d) }}
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="mt-4 rounded-xl border px-3 py-3"
-              :class="getGroupRuntimeStatusSurfaceClass(getItemStatus(item))"
-            >
-              <div class="text-xs font-medium opacity-80">{{ t('modelStatus.latestResult') }}</div>
-              <div class="mt-2 text-sm leading-6">
-                {{ getSummaryPreview(item.summary) }}
-              </div>
-            </div>
-
-            <div class="mt-4 flex items-center justify-between">
-              <div class="text-xs text-gray-500 dark:text-gray-400">
-                {{ item.summary.observed_at ? formatDateTime(item.summary.observed_at) : '—' }}
-              </div>
-              <button type="button" class="btn btn-secondary btn-sm" @click="openDetails(item)">
-                {{ t('modelStatus.openDetails') }}
-              </button>
             </div>
           </article>
         </div>
@@ -164,7 +208,7 @@
 
     <BaseDialog
       :show="showDetails"
-      :title="selectedItem ? selectedItem.group.name : t('modelStatus.title')"
+      :title="selectedItem ? getGroupDisplayName(selectedItem) : t('modelStatus.title')"
       width="extra-wide"
       @close="closeDetails"
     >
@@ -174,11 +218,11 @@
             <div class="flex items-center gap-2">
               <PlatformIcon :platform="selectedItem.group.platform" size="sm" />
               <div class="text-base font-semibold text-gray-900 dark:text-white">
-                {{ selectedItem.group.name }}
+                {{ getGroupDisplayName(selectedItem) }}
               </div>
             </div>
             <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t(`admin.groups.platforms.${selectedItem.group.platform}`) }}
+              {{ t(`admin.groups.platforms.${selectedItem.group.platform}`) }} · #{{ getGroupId(selectedItem) }}
             </div>
           </div>
           <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(selectedItem))]">
@@ -377,6 +421,7 @@ import type {
   GroupStatusEvent,
   GroupStatusHistoryBucket,
   GroupStatusListItem,
+  GroupStatusRecord,
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
@@ -390,6 +435,7 @@ import {
 } from '@/utils/groupStatus'
 
 const POLL_INTERVAL_MS = 30_000
+const HEARTBEAT_RECORD_COUNT = 24
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -408,8 +454,16 @@ const detailError = ref('')
 const detailPeriod = ref<'24h' | '7d'>('24h')
 const historyBuckets = ref<GroupStatusHistoryBucket[]>([])
 const events = ref<GroupStatusEvent[]>([])
+const rowHeartbeatMap = ref<Map<number, RowHeartbeatCell[]>>(new Map())
 
 let pollTimer: number | null = null
+let rowHeartbeatRequestSeq = 0
+
+interface RowHeartbeatCell {
+  key: string
+  status: 'up' | 'degraded' | 'down' | 'unknown'
+  title: string
+}
 
 const featureEnabled = computed(() => {
   return (appStore.cachedPublicSettings?.group_status_enabled ?? false) && !featureForcedOff.value
@@ -434,6 +488,96 @@ function getItemStatus(item: GroupStatusListItem): 'up' | 'degraded' | 'down' | 
     return normalizeGroupRuntimeStatus(item.summary.latest_status)
   }
   return 'unknown'
+}
+
+function getGroupId(item: GroupStatusListItem | null): number {
+  if (!item) {
+    return 0
+  }
+  return item.group?.id ?? (item.group as any)?.ID ?? item.summary?.group_id ?? 0
+}
+
+function getGroupDisplayName(item: GroupStatusListItem): string {
+  return item.group.name?.trim() || (item.group as any)?.Name?.trim?.() || `#${getGroupId(item)}`
+}
+
+function getMonitorDotClass(status: 'up' | 'degraded' | 'down' | 'unknown'): string {
+  switch (status) {
+    case 'up':
+      return 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-500/20'
+    case 'degraded':
+      return 'bg-amber-500 ring-amber-100 dark:ring-amber-500/20'
+    case 'down':
+      return 'bg-rose-500 ring-rose-100 dark:ring-rose-500/20'
+    default:
+      return 'bg-gray-400 ring-gray-100 dark:ring-dark-700'
+  }
+}
+
+function getMonitorRowClass(status: 'up' | 'degraded' | 'down' | 'unknown'): string {
+  switch (status) {
+    case 'up':
+      return 'border-emerald-200 hover:border-emerald-300 dark:border-emerald-900/40 dark:hover:border-emerald-800/70'
+    case 'degraded':
+      return 'border-amber-200 hover:border-amber-300 dark:border-amber-900/40 dark:hover:border-amber-800/70'
+    case 'down':
+      return 'border-rose-200 hover:border-rose-300 dark:border-rose-900/40 dark:hover:border-rose-800/70'
+    default:
+      return 'border-gray-200 hover:border-gray-300 dark:border-dark-700 dark:hover:border-dark-600'
+  }
+}
+
+function getHeartbeatCellClass(status: 'up' | 'degraded' | 'down' | 'unknown'): string {
+  switch (status) {
+    case 'up':
+      return 'border-emerald-200 bg-emerald-500 dark:border-emerald-900/40 dark:bg-emerald-500'
+    case 'degraded':
+      return 'border-amber-200 bg-amber-400 dark:border-amber-900/40 dark:bg-amber-400'
+    case 'down':
+      return 'border-rose-200 bg-rose-500 dark:border-rose-900/40 dark:bg-rose-500'
+    default:
+      return 'border-gray-200 bg-gray-200 dark:border-dark-700 dark:bg-dark-700'
+  }
+}
+
+function buildHeartbeatCellTooltip(record: GroupStatusRecord): string {
+  const lines = [
+    `${formatDateTime(record.observed_at)}`,
+    `${t('modelStatus.statuses.' + normalizeGroupRuntimeStatus(record.status))}`,
+    `${t('modelStatus.latestLatency')}: ${formatGroupRuntimeLatency(record.latency_ms)}`,
+    `${t('modelStatus.httpCode')}: ${record.http_code ?? '-'}`
+  ]
+  if (record.sub_status) {
+    lines.push(`${t('modelStatus.subStatus')}: ${record.sub_status}`)
+  }
+  return lines.join('\n')
+}
+
+function buildRowHeartbeatCells(records: GroupStatusRecord[]): RowHeartbeatCell[] {
+  const trimmed = records.slice(-HEARTBEAT_RECORD_COUNT)
+  const cells = trimmed.map((record, index) => ({
+    key: `${record.id}-${record.observed_at}-${index}`,
+    status: normalizeGroupRuntimeStatus(record.status),
+    title: buildHeartbeatCellTooltip(record)
+  }))
+
+  if (cells.length >= HEARTBEAT_RECORD_COUNT) {
+    return cells
+  }
+
+  const placeholders = Array.from({ length: HEARTBEAT_RECORD_COUNT - cells.length }, (_, index) => ({
+    key: `placeholder-${index}`,
+    status: 'unknown' as const,
+    title: t('modelStatus.waitingForProbe')
+  }))
+  return [...placeholders, ...cells]
+}
+
+function getRowHeartbeatCells(item: GroupStatusListItem): RowHeartbeatCell[] {
+  return (
+    rowHeartbeatMap.value.get(getGroupId(item)) ??
+    buildRowHeartbeatCells([])
+  )
 }
 
 function getSummaryStatusText(summary: GroupStatusListItem['summary']): string {
@@ -466,6 +610,7 @@ async function ensurePublicSettingsLoaded() {
 async function loadStatuses(manual: boolean = false) {
   if (!featureEnabled.value) {
     items.value = []
+    rowHeartbeatMap.value = new Map()
     initialLoading.value = false
     refreshing.value = false
     return
@@ -480,11 +625,13 @@ async function loadStatuses(manual: boolean = false) {
   try {
     const data = await groupStatusAPI.listStatuses()
     items.value = data
+    void loadRowHeartbeatRecords(data)
     lastUpdatedAt.value = new Date()
     loadError.value = ''
 
     if (selectedItem.value) {
-      const matched = data.find((item) => item.group.id === selectedItem.value?.group.id)
+      const selectedGroupID = getGroupId(selectedItem.value)
+      const matched = data.find((item) => getGroupId(item) === selectedGroupID)
       if (matched) {
         selectedItem.value = matched
       }
@@ -505,8 +652,49 @@ async function loadStatuses(manual: boolean = false) {
   }
 }
 
+async function loadRowHeartbeatRecords(statusItems: GroupStatusListItem[]) {
+  const requestSeq = ++rowHeartbeatRequestSeq
+  if (statusItems.length === 0) {
+    rowHeartbeatMap.value = new Map()
+    return
+  }
+
+  const entries = await Promise.all(
+    statusItems.map(async (item) => {
+      const groupID = getGroupId(item)
+      if (!groupID) {
+        return [0, buildRowHeartbeatCells([])] as const
+      }
+      try {
+        const records = await groupStatusAPI.getRecentRecords(groupID, HEARTBEAT_RECORD_COUNT)
+        return [groupID, buildRowHeartbeatCells(records)] as const
+      } catch {
+        return [groupID, buildRowHeartbeatCells([])] as const
+      }
+    })
+  )
+
+  if (requestSeq !== rowHeartbeatRequestSeq) {
+    return
+  }
+
+  const nextMap = new Map<number, RowHeartbeatCell[]>()
+  for (const [groupId, cells] of entries) {
+    if (!groupId) {
+      continue
+    }
+    nextMap.set(groupId, cells)
+  }
+  rowHeartbeatMap.value = nextMap
+}
+
 async function loadDetails() {
   if (!selectedItem.value) {
+    return
+  }
+  const groupID = getGroupId(selectedItem.value)
+  if (!groupID) {
+    detailError.value = t('modelStatus.detailLoadFailed')
     return
   }
 
@@ -514,8 +702,8 @@ async function loadDetails() {
   detailError.value = ''
   try {
     const [history, recentEvents] = await Promise.all([
-      groupStatusAPI.getHistory(selectedItem.value.group.id, detailPeriod.value),
-      groupStatusAPI.getEvents(selectedItem.value.group.id, 20)
+      groupStatusAPI.getHistory(groupID, detailPeriod.value),
+      groupStatusAPI.getEvents(groupID, 20)
     ])
     historyBuckets.value = history
     events.value = recentEvents
@@ -531,6 +719,10 @@ function handleRefresh() {
 }
 
 function openDetails(item: GroupStatusListItem) {
+  if (!getGroupId(item)) {
+    appStore.showError(t('modelStatus.detailLoadFailed'))
+    return
+  }
   selectedItem.value = item
   detailPeriod.value = '24h'
   showDetails.value = true

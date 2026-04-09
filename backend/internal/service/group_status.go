@@ -142,6 +142,7 @@ type GroupStatusRepository interface {
 	ListAllSummaries(ctx context.Context) ([]GroupStatusSummary, error)
 	SaveProbeResult(ctx context.Context, result *GroupStatusProbeResult) (*GroupStatusState, *GroupStatusEvent, error)
 	ListRecordsSince(ctx context.Context, groupID int64, since time.Time) ([]GroupStatusRecord, error)
+	ListRecentRecords(ctx context.Context, groupID int64, limit int) ([]GroupStatusRecord, error)
 	ListEvents(ctx context.Context, groupID int64, limit int) ([]GroupStatusEvent, error)
 	CalculateAvailability(ctx context.Context, groupIDs []int64, since time.Time) (map[int64]float64, error)
 	DeleteRecordsOlderThan(ctx context.Context, before time.Time) (int64, error)

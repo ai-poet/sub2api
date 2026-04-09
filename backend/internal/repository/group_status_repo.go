@@ -251,6 +251,33 @@ func (r *groupStatusRepository) ListRecordsSince(ctx context.Context, groupID in
 	return out, rows.Err()
 }
 
+func (r *groupStatusRepository) ListRecentRecords(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusRecord, error) {
+	if limit <= 0 {
+		limit = 24
+	}
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT id, group_id, config_id, status, response_excerpt, latency_ms, http_code, sub_status, error_detail, observed_at, created_at
+		FROM group_status_records
+		WHERE group_id = $1
+		ORDER BY observed_at DESC
+		LIMIT $2
+	`, groupID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	var out []service.GroupStatusRecord
+	for rows.Next() {
+		record, err := scanGroupStatusRecord(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, *record)
+	}
+	return out, rows.Err()
+}
+
 func (r *groupStatusRepository) ListEvents(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusEvent, error) {
 	if limit <= 0 {
 		limit = 20

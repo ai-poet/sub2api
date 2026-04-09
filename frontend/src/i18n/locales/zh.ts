@@ -273,6 +273,8 @@ export default {
     latestLatency: '最新延迟',
     availability24: '24h 可用率',
     availability7: '7d 可用率',
+    uptimeTimeline: '最近 24 次检测',
+    recentChecksHint: '每个色块对应一次真实检测结果',
     latestResult: '最近结果',
     openDetails: '查看详情',
     emptyTitle: '暂无可展示的分组',

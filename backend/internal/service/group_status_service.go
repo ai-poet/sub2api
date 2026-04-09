@@ -190,6 +190,26 @@ func (s *GroupStatusService) GetUserEvents(ctx context.Context, userID, groupID 
 	return s.repo.ListEvents(ctx, groupID, limit)
 }
 
+func (s *GroupStatusService) GetUserRecentRecords(ctx context.Context, userID, groupID int64, limit int) ([]GroupStatusRecord, error) {
+	if err := s.ensureUserGroupAccess(ctx, userID, groupID); err != nil {
+		return nil, err
+	}
+	if limit <= 0 {
+		limit = 24
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	records, err := s.repo.ListRecentRecords(ctx, groupID, limit)
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].ObservedAt.Before(records[j].ObservedAt)
+	})
+	return records, nil
+}
+
 func (s *GroupStatusService) ensureFeatureEnabled(ctx context.Context) error {
 	if s.settingService == nil {
 		return nil

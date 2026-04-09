@@ -75,3 +75,28 @@ func (h *GroupStatusHandler) Events(c *gin.Context) {
 	}
 	response.Success(c, events)
 }
+
+func (h *GroupStatusHandler) Records(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	groupID, err := strconv.ParseInt(c.Param("groupId"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid group ID")
+		return
+	}
+	limit := 24
+	if raw := c.Query("limit"); raw != "" {
+		if parsed, parseErr := strconv.Atoi(raw); parseErr == nil && parsed > 0 && parsed <= 100 {
+			limit = parsed
+		}
+	}
+	records, err := h.groupStatusService.GetUserRecentRecords(c.Request.Context(), subject.UserID, groupID, limit)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, records)
+}

@@ -273,6 +273,8 @@ export default {
     latestLatency: 'Latest Latency',
     availability24: '24h Availability',
     availability7: '7d Availability',
+    uptimeTimeline: 'Last 24 Checks',
+    recentChecksHint: 'Each block represents one real probe result',
     latestResult: 'Latest Result',
     openDetails: 'View Details',
     emptyTitle: 'No Visible Groups',
