@@ -190,7 +190,7 @@ export default {
   modelMirror: {
     title: '模型照妖镜',
     description: '专门用于检测 Claude 中转链路的真实性、结构完整性和注入风险',
-    disclaimer: '本检测有一定参考价值，但仅供参考，不构成绝对真实性判定。',
+    disclaimer: '本检测主要针对 Claude 4.6 系列中转（如 claude-opus-4-6、claude-sonnet-4-6），用于检测中转的 Claude 4.6 模型是否真实，仅供参考，不构成绝对真实性判定。',
     statusLabel: '当前状态',
     verdictLabel: '最终判定',
     scoreLabel: '综合评分',
@@ -252,8 +252,8 @@ export default {
         description: '模型可能真实，但检测到注入、覆盖或其他链路异常。'
       },
       likely_not_claude: {
-        label: '可能不是 Claude',
-        description: '多项关键特征未通过，目标接口大概率并非真实 Claude 中转。'
+        label: '可能不是 Claude 4.6 系列模型',
+        description: '多项关键特征未通过，目标接口大概率并非真实 Claude 4.6 系列中转。'
       }
     }
   },

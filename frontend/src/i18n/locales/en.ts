@@ -190,7 +190,7 @@ export default {
   modelMirror: {
     title: 'Claude Relay Inspector',
     description: 'Inspect whether a Claude relay preserves authentic Claude signals, structure, and channel integrity',
-    disclaimer: 'This inspection is informative but not definitive. Use the result as a reference only.',
+    disclaimer: 'This inspection primarily targets Claude 4.6 series relays (e.g., claude-opus-4-6, claude-sonnet-4-6) to verify whether the relayed Claude 4.6 model is authentic. Results are for reference only and not definitive.',
     statusLabel: 'Status',
     verdictLabel: 'Verdict',
     scoreLabel: 'Score',
@@ -252,8 +252,8 @@ export default {
         description: 'The model may be real Claude, but the channel shows injection or override anomalies.'
       },
       likely_not_claude: {
-        label: 'Likely Not Claude',
-        description: 'Too many critical checks failed for the target to look like a real Claude relay.'
+        label: 'Likely Not Claude 4.6',
+        description: 'Too many critical checks failed for the target to look like a real Claude 4.6 series relay.'
       }
     }
   },
