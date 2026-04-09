@@ -91,6 +91,7 @@ export interface ModelCatalogFilters {
 
 export interface PaymentConfigResult {
   balanceCreditCnyPerUsd: number | null
+  usdExchangeRate: number | null
   error: string | null
 }
 
@@ -210,6 +211,21 @@ export function convertUsdAmountToCny(
   return amountUsd * balanceCreditCnyPerUsd
 }
 
+export function convertCnyAmountToUsd(
+  amountCny: number | null | undefined,
+  usdExchangeRate: number | null | undefined,
+): number | null {
+  if (amountCny == null || usdExchangeRate == null) {
+    return null
+  }
+
+  if (!Number.isFinite(amountCny) || !Number.isFinite(usdExchangeRate) || usdExchangeRate <= 0) {
+    return null
+  }
+
+  return amountCny / usdExchangeRate
+}
+
 export function normalizePaymentCenterOrigin(
   purchaseSubscriptionUrl: string | null | undefined,
   baseOrigin?: string,
@@ -278,12 +294,12 @@ export async function fetchBalanceCreditCnyPerUsd(input: {
   baseOrigin?: string
 }): Promise<PaymentConfigResult> {
   if (!input.userId || !input.token) {
-    return { balanceCreditCnyPerUsd: null, error: 'missing_auth' }
+    return { balanceCreditCnyPerUsd: null, usdExchangeRate: null, error: 'missing_auth' }
   }
 
   const url = buildPaymentCenterUserApiUrl(input)
   if (!url) {
-    return { balanceCreditCnyPerUsd: null, error: 'missing_origin' }
+    return { balanceCreditCnyPerUsd: null, usdExchangeRate: null, error: 'missing_origin' }
   }
 
   try {
@@ -294,28 +310,36 @@ export async function fetchBalanceCreditCnyPerUsd(input: {
     })
 
     if (!response.ok) {
-      return { balanceCreditCnyPerUsd: null, error: `http_${response.status}` }
+      return { balanceCreditCnyPerUsd: null, usdExchangeRate: null, error: `http_${response.status}` }
     }
 
     const payload = await response.json() as {
-      config?: { balanceCreditCnyPerUsd?: number | string | null }
+      config?: {
+        balanceCreditCnyPerUsd?: number | string | null
+        usdExchangeRate?: number | string | null
+      }
     }
 
-    const rawValue = payload?.config?.balanceCreditCnyPerUsd
-    const numericValue =
-      typeof rawValue === 'number'
-        ? rawValue
-        : typeof rawValue === 'string'
-          ? Number(rawValue)
-          : NaN
-
-    if (!Number.isFinite(numericValue) || numericValue <= 0) {
-      return { balanceCreditCnyPerUsd: null, error: 'missing_rate' }
+    const parseNullablePositiveNumber = (value: number | string | null | undefined): number | null => {
+      const numericValue =
+        typeof value === 'number'
+          ? value
+          : typeof value === 'string'
+            ? Number(value)
+            : NaN
+      return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null
     }
 
-    return { balanceCreditCnyPerUsd: numericValue, error: null }
+    const balanceCreditCnyPerUsd = parseNullablePositiveNumber(payload?.config?.balanceCreditCnyPerUsd)
+    const usdExchangeRate = parseNullablePositiveNumber(payload?.config?.usdExchangeRate)
+
+    if (balanceCreditCnyPerUsd == null) {
+      return { balanceCreditCnyPerUsd: null, usdExchangeRate, error: 'missing_rate' }
+    }
+
+    return { balanceCreditCnyPerUsd, usdExchangeRate, error: null }
   } catch {
-    return { balanceCreditCnyPerUsd: null, error: 'request_failed' }
+    return { balanceCreditCnyPerUsd: null, usdExchangeRate: null, error: 'request_failed' }
   }
 }
 

@@ -372,6 +372,7 @@ import Icon from '@/components/icons/Icon.vue'
 import { useAppStore } from '@/stores'
 import { useAuthStore } from '@/stores/auth'
 import {
+  convertCnyAmountToUsd,
   convertUsdAmountToCny,
   fetchBalanceCreditCnyPerUsd,
   filterModelCatalogItems,
@@ -416,6 +417,7 @@ const loading = ref(true)
 const refreshing = ref(false)
 const loadError = ref('')
 const balanceCreditCnyPerUsd = ref<number | null>(null)
+const usdExchangeRate = ref<number | null>(null)
 const paymentConfigError = ref<string | null>(null)
 const lastUpdatedAt = ref<Date | null>(null)
 const expandedKeys = ref<Set<string>>(new Set())
@@ -536,6 +538,7 @@ async function loadPaymentConfig() {
   })
 
   balanceCreditCnyPerUsd.value = result.balanceCreditCnyPerUsd
+  usdExchangeRate.value = result.usdExchangeRate
   paymentConfigError.value = result.error
 }
 
@@ -728,8 +731,15 @@ function displayedChargeStatClass(): string {
   return balanceCreditCnyPerUsd.value != null ? 'price-stat-cny' : 'price-stat-strong'
 }
 
+function shouldDisplayCashInUsd(): boolean {
+  return locale.value.toLowerCase().startsWith('en')
+}
+
 function formatDisplayedCharge(balanceUsd: number | null | undefined, actualCny: number | null | undefined): string {
   if (balanceCreditCnyPerUsd.value != null) {
+    if (shouldDisplayCashInUsd()) {
+      return formatUsd(convertCnyAmountToUsd(actualCny, usdExchangeRate.value))
+    }
     return formatCny(actualCny)
   }
   return formatUsd(balanceUsd)

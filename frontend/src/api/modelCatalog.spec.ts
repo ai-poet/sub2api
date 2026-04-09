@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   buildPaymentCenterUserApiUrl,
   compareModelCatalogItems,
+  convertCnyAmountToUsd,
   convertUsdAmountToCny,
   fetchBalanceCreditCnyPerUsd,
   filterModelCatalogItems,
@@ -235,6 +236,7 @@ describe('modelCatalog helpers', () => {
       json: async () => ({
         config: {
           balanceCreditCnyPerUsd: 7.2,
+          usdExchangeRate: 6.9,
         },
       }),
     })
@@ -249,6 +251,7 @@ describe('modelCatalog helpers', () => {
 
     expect(success).toEqual({
       balanceCreditCnyPerUsd: 7.2,
+      usdExchangeRate: 6.9,
       error: null,
     })
     expect(fetchMock).toHaveBeenCalledWith(
@@ -266,14 +269,19 @@ describe('modelCatalog helpers', () => {
 
     expect(failure).toEqual({
       balanceCreditCnyPerUsd: null,
+      usdExchangeRate: null,
       error: 'request_failed',
     })
   })
 
-  it('converts usd amounts to cny only when both values are valid', () => {
+  it('converts usd/cny amounts only when both values are valid', () => {
     expect(convertUsdAmountToCny(1.25, 7.2)).toBeCloseTo(9)
+    expect(convertCnyAmountToUsd(6.9, 6.9)).toBeCloseTo(1)
     expect(convertUsdAmountToCny(null, 7.2)).toBeNull()
     expect(convertUsdAmountToCny(1.25, null)).toBeNull()
     expect(convertUsdAmountToCny(1.25, 0)).toBeNull()
+    expect(convertCnyAmountToUsd(null, 6.9)).toBeNull()
+    expect(convertCnyAmountToUsd(6.9, null)).toBeNull()
+    expect(convertCnyAmountToUsd(6.9, 0)).toBeNull()
   })
 })
