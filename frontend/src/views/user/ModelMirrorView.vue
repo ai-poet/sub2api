@@ -1,6 +1,10 @@
 <template>
   <AppLayout>
     <div class="mx-auto max-w-6xl space-y-6">
+      <div class="rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-900/50 dark:bg-yellow-950/30 dark:text-yellow-200">
+        {{ t('modelMirror.disclaimer') }}
+      </div>
+
       <div class="grid gap-4 md:grid-cols-3">
         <div class="card p-5">
           <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('modelMirror.statusLabel') }}</div>

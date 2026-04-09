@@ -197,6 +197,7 @@ export default {
   modelMirror: {
     title: '模型照妖镜',
     description: '专门用于检测 Claude 中转链路的真实性、结构完整性和注入风险',
+    disclaimer: '本检测有一定参考价值，但仅供参考，不构成绝对真实性判定。',
     statusLabel: '当前状态',
     verdictLabel: '最终判定',
     scoreLabel: '综合评分',

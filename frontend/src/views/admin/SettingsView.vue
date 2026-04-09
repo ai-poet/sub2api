@@ -2620,6 +2620,10 @@ function handleModelMirrorProbeKeywordsInput(index: number, event: Event) {
   updateModelMirrorProbeKeywords(index, target?.value || '')
 }
 
+function isModelMirrorKnowledgeProbeBlank(probe: ModelMirrorKnowledgeProbe): boolean {
+  return probe.prompt.trim() === '' && probe.expected_keywords.every((keyword) => !keyword.trim())
+}
+
 function addModelMirrorKnowledgeProbe() {
   form.model_mirror_knowledge_probes.push(
     createModelMirrorKnowledgeProbe(form.model_mirror_knowledge_probes.length)
@@ -2795,16 +2799,18 @@ async function saveSettings() {
       fallback_model_antigravity: form.fallback_model_antigravity,
       enable_identity_patch: form.enable_identity_patch,
       identity_patch_prompt: form.identity_patch_prompt,
-      model_mirror_knowledge_probes: form.model_mirror_knowledge_probes.map((probe) => ({
-        id: probe.id.trim(),
-        prompt: probe.prompt.trim(),
-        expected_keywords: probe.expected_keywords
-          .map((keyword) => keyword.trim())
-          .filter(Boolean),
-        pass_mode: probe.pass_mode === 'all' ? 'all' : 'any',
-        weight: Math.max(1, Math.min(100, Math.round(probe.weight || 10))),
-        enabled: probe.enabled
-      })),
+      model_mirror_knowledge_probes: form.model_mirror_knowledge_probes
+        .filter((probe) => !isModelMirrorKnowledgeProbeBlank(probe))
+        .map((probe) => ({
+          id: probe.id.trim(),
+          prompt: probe.prompt.trim(),
+          expected_keywords: probe.expected_keywords
+            .map((keyword) => keyword.trim())
+            .filter(Boolean),
+          pass_mode: probe.pass_mode === 'all' ? 'all' : 'any',
+          weight: Math.max(1, Math.min(100, Math.round(probe.weight || 10))),
+          enabled: probe.enabled
+        })),
       min_claude_code_version: form.min_claude_code_version,
       max_claude_code_version: form.max_claude_code_version,
       allow_ungrouped_key_scheduling: form.allow_ungrouped_key_scheduling,

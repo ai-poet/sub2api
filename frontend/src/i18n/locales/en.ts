@@ -197,6 +197,7 @@ export default {
   modelMirror: {
     title: 'Claude Relay Inspector',
     description: 'Inspect whether a Claude relay preserves authentic Claude signals, structure, and channel integrity',
+    disclaimer: 'This inspection is informative but not definitive. Use the result as a reference only.',
     statusLabel: 'Status',
     verdictLabel: 'Verdict',
     scoreLabel: 'Score',

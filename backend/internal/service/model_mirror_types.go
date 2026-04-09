@@ -60,7 +60,29 @@ func DefaultModelMirrorKnowledgeProbes() []ModelMirrorKnowledgeProbe {
 			PassMode: ModelMirrorProbePassModeAny,
 			Weight:   10,
 			Enabled:  true,
-		}
+		},
+		{
+			ID:     "claude-3-7-release",
+			Prompt: "Claude 3.7 Sonnet 发布时主打的一个能力关键词是什么？请直接回答，不允许联网。",
+			ExpectedKeywords: []string{
+				"hybrid reasoning",
+				"reasoning",
+				"混合推理",
+			},
+			PassMode: ModelMirrorProbePassModeAny,
+			Weight:   10,
+			Enabled:  true,
+		},
+		{
+			ID:     "anthropic-origin",
+			Prompt: "Claude 系列模型的公司是谁？请只回答公司名，不允许联网。",
+			ExpectedKeywords: []string{
+				"anthropic",
+			},
+			PassMode: ModelMirrorProbePassModeAll,
+			Weight:   8,
+			Enabled:  true,
+		},
 	}
 }
 
