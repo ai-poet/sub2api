@@ -293,6 +293,7 @@ export const useAppStore = defineStore('app', () => {
   function applySettings(config: PublicSettings): void {
     const normalizedConfig: PublicSettings = {
       ...config,
+      group_status_enabled: config.group_status_enabled ?? false,
       purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
         config.purchase_subscription_open_mode
       )
@@ -343,6 +344,7 @@ export const useAppStore = defineStore('app', () => {
         hide_ccs_import_button: false,
         purchase_subscription_enabled: false,
         purchase_subscription_url: '',
+        group_status_enabled: false,
         custom_menu_items: [],
         custom_endpoints: [],
         linuxdo_oauth_enabled: false,

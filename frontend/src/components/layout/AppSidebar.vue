@@ -572,6 +572,9 @@ const userNavItems = computed((): NavItem[] => {
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/model-mirror', label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
+    ...(appStore.cachedPublicSettings?.group_status_enabled
+      ? [{ path: '/model-status', label: t('nav.modelStatus'), icon: ServerIcon }]
+      : []),
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled
       ? [
@@ -611,6 +614,9 @@ const personalNavItems = computed((): NavItem[] => {
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/model-mirror', label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
+    ...(appStore.cachedPublicSettings?.group_status_enabled
+      ? [{ path: '/model-status', label: t('nav.modelStatus'), icon: ServerIcon }]
+      : []),
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     ...(appStore.cachedPublicSettings?.purchase_subscription_enabled
       ? [

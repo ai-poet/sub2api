@@ -19,6 +19,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
@@ -55,6 +59,10 @@ const (
 	TypeAnnouncementRead        = "AnnouncementRead"
 	TypeErrorPassthroughRule    = "ErrorPassthroughRule"
 	TypeGroup                   = "Group"
+	TypeGroupStatusConfig       = "GroupStatusConfig"
+	TypeGroupStatusEvent        = "GroupStatusEvent"
+	TypeGroupStatusRecord       = "GroupStatusRecord"
+	TypeGroupStatusState        = "GroupStatusState"
 	TypeIdempotencyRecord       = "IdempotencyRecord"
 	TypePromoCode               = "PromoCode"
 	TypePromoCodeUsage          = "PromoCodeUsage"
@@ -11147,6 +11155,4443 @@ func (m *GroupMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Group edge %s", name)
+}
+
+// GroupStatusConfigMutation represents an operation that mutates the GroupStatusConfig nodes in the graph.
+type GroupStatusConfigMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int64
+	created_at              *time.Time
+	updated_at              *time.Time
+	group_id                *int64
+	addgroup_id             *int64
+	enabled                 *bool
+	probe_model             *string
+	probe_prompt            *string
+	validation_mode         *string
+	expected_keywords       *[]string
+	appendexpected_keywords []string
+	interval_seconds        *int
+	addinterval_seconds     *int
+	timeout_seconds         *int
+	addtimeout_seconds      *int
+	slow_latency_ms         *int64
+	addslow_latency_ms      *int64
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*GroupStatusConfig, error)
+	predicates              []predicate.GroupStatusConfig
+}
+
+var _ ent.Mutation = (*GroupStatusConfigMutation)(nil)
+
+// groupstatusconfigOption allows management of the mutation configuration using functional options.
+type groupstatusconfigOption func(*GroupStatusConfigMutation)
+
+// newGroupStatusConfigMutation creates new mutation for the GroupStatusConfig entity.
+func newGroupStatusConfigMutation(c config, op Op, opts ...groupstatusconfigOption) *GroupStatusConfigMutation {
+	m := &GroupStatusConfigMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupStatusConfig,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupStatusConfigID sets the ID field of the mutation.
+func withGroupStatusConfigID(id int64) groupstatusconfigOption {
+	return func(m *GroupStatusConfigMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupStatusConfig
+		)
+		m.oldValue = func(ctx context.Context) (*GroupStatusConfig, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupStatusConfig.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupStatusConfig sets the old GroupStatusConfig of the mutation.
+func withGroupStatusConfig(node *GroupStatusConfig) groupstatusconfigOption {
+	return func(m *GroupStatusConfigMutation) {
+		m.oldValue = func(context.Context) (*GroupStatusConfig, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupStatusConfigMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupStatusConfigMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupStatusConfigMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupStatusConfigMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupStatusConfig.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GroupStatusConfigMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GroupStatusConfigMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GroupStatusConfigMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *GroupStatusConfigMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *GroupStatusConfigMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *GroupStatusConfigMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *GroupStatusConfigMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *GroupStatusConfigMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldGroupID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *GroupStatusConfigMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *GroupStatusConfigMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *GroupStatusConfigMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+}
+
+// SetEnabled sets the "enabled" field.
+func (m *GroupStatusConfigMutation) SetEnabled(b bool) {
+	m.enabled = &b
+}
+
+// Enabled returns the value of the "enabled" field in the mutation.
+func (m *GroupStatusConfigMutation) Enabled() (r bool, exists bool) {
+	v := m.enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnabled returns the old "enabled" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnabled: %w", err)
+	}
+	return oldValue.Enabled, nil
+}
+
+// ResetEnabled resets all changes to the "enabled" field.
+func (m *GroupStatusConfigMutation) ResetEnabled() {
+	m.enabled = nil
+}
+
+// SetProbeModel sets the "probe_model" field.
+func (m *GroupStatusConfigMutation) SetProbeModel(s string) {
+	m.probe_model = &s
+}
+
+// ProbeModel returns the value of the "probe_model" field in the mutation.
+func (m *GroupStatusConfigMutation) ProbeModel() (r string, exists bool) {
+	v := m.probe_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProbeModel returns the old "probe_model" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldProbeModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProbeModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProbeModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProbeModel: %w", err)
+	}
+	return oldValue.ProbeModel, nil
+}
+
+// ResetProbeModel resets all changes to the "probe_model" field.
+func (m *GroupStatusConfigMutation) ResetProbeModel() {
+	m.probe_model = nil
+}
+
+// SetProbePrompt sets the "probe_prompt" field.
+func (m *GroupStatusConfigMutation) SetProbePrompt(s string) {
+	m.probe_prompt = &s
+}
+
+// ProbePrompt returns the value of the "probe_prompt" field in the mutation.
+func (m *GroupStatusConfigMutation) ProbePrompt() (r string, exists bool) {
+	v := m.probe_prompt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProbePrompt returns the old "probe_prompt" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldProbePrompt(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProbePrompt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProbePrompt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProbePrompt: %w", err)
+	}
+	return oldValue.ProbePrompt, nil
+}
+
+// ResetProbePrompt resets all changes to the "probe_prompt" field.
+func (m *GroupStatusConfigMutation) ResetProbePrompt() {
+	m.probe_prompt = nil
+}
+
+// SetValidationMode sets the "validation_mode" field.
+func (m *GroupStatusConfigMutation) SetValidationMode(s string) {
+	m.validation_mode = &s
+}
+
+// ValidationMode returns the value of the "validation_mode" field in the mutation.
+func (m *GroupStatusConfigMutation) ValidationMode() (r string, exists bool) {
+	v := m.validation_mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidationMode returns the old "validation_mode" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldValidationMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidationMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidationMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidationMode: %w", err)
+	}
+	return oldValue.ValidationMode, nil
+}
+
+// ResetValidationMode resets all changes to the "validation_mode" field.
+func (m *GroupStatusConfigMutation) ResetValidationMode() {
+	m.validation_mode = nil
+}
+
+// SetExpectedKeywords sets the "expected_keywords" field.
+func (m *GroupStatusConfigMutation) SetExpectedKeywords(s []string) {
+	m.expected_keywords = &s
+	m.appendexpected_keywords = nil
+}
+
+// ExpectedKeywords returns the value of the "expected_keywords" field in the mutation.
+func (m *GroupStatusConfigMutation) ExpectedKeywords() (r []string, exists bool) {
+	v := m.expected_keywords
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedKeywords returns the old "expected_keywords" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldExpectedKeywords(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedKeywords is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedKeywords requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedKeywords: %w", err)
+	}
+	return oldValue.ExpectedKeywords, nil
+}
+
+// AppendExpectedKeywords adds s to the "expected_keywords" field.
+func (m *GroupStatusConfigMutation) AppendExpectedKeywords(s []string) {
+	m.appendexpected_keywords = append(m.appendexpected_keywords, s...)
+}
+
+// AppendedExpectedKeywords returns the list of values that were appended to the "expected_keywords" field in this mutation.
+func (m *GroupStatusConfigMutation) AppendedExpectedKeywords() ([]string, bool) {
+	if len(m.appendexpected_keywords) == 0 {
+		return nil, false
+	}
+	return m.appendexpected_keywords, true
+}
+
+// ResetExpectedKeywords resets all changes to the "expected_keywords" field.
+func (m *GroupStatusConfigMutation) ResetExpectedKeywords() {
+	m.expected_keywords = nil
+	m.appendexpected_keywords = nil
+}
+
+// SetIntervalSeconds sets the "interval_seconds" field.
+func (m *GroupStatusConfigMutation) SetIntervalSeconds(i int) {
+	m.interval_seconds = &i
+	m.addinterval_seconds = nil
+}
+
+// IntervalSeconds returns the value of the "interval_seconds" field in the mutation.
+func (m *GroupStatusConfigMutation) IntervalSeconds() (r int, exists bool) {
+	v := m.interval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIntervalSeconds returns the old "interval_seconds" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldIntervalSeconds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIntervalSeconds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIntervalSeconds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIntervalSeconds: %w", err)
+	}
+	return oldValue.IntervalSeconds, nil
+}
+
+// AddIntervalSeconds adds i to the "interval_seconds" field.
+func (m *GroupStatusConfigMutation) AddIntervalSeconds(i int) {
+	if m.addinterval_seconds != nil {
+		*m.addinterval_seconds += i
+	} else {
+		m.addinterval_seconds = &i
+	}
+}
+
+// AddedIntervalSeconds returns the value that was added to the "interval_seconds" field in this mutation.
+func (m *GroupStatusConfigMutation) AddedIntervalSeconds() (r int, exists bool) {
+	v := m.addinterval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetIntervalSeconds resets all changes to the "interval_seconds" field.
+func (m *GroupStatusConfigMutation) ResetIntervalSeconds() {
+	m.interval_seconds = nil
+	m.addinterval_seconds = nil
+}
+
+// SetTimeoutSeconds sets the "timeout_seconds" field.
+func (m *GroupStatusConfigMutation) SetTimeoutSeconds(i int) {
+	m.timeout_seconds = &i
+	m.addtimeout_seconds = nil
+}
+
+// TimeoutSeconds returns the value of the "timeout_seconds" field in the mutation.
+func (m *GroupStatusConfigMutation) TimeoutSeconds() (r int, exists bool) {
+	v := m.timeout_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimeoutSeconds returns the old "timeout_seconds" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldTimeoutSeconds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimeoutSeconds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimeoutSeconds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimeoutSeconds: %w", err)
+	}
+	return oldValue.TimeoutSeconds, nil
+}
+
+// AddTimeoutSeconds adds i to the "timeout_seconds" field.
+func (m *GroupStatusConfigMutation) AddTimeoutSeconds(i int) {
+	if m.addtimeout_seconds != nil {
+		*m.addtimeout_seconds += i
+	} else {
+		m.addtimeout_seconds = &i
+	}
+}
+
+// AddedTimeoutSeconds returns the value that was added to the "timeout_seconds" field in this mutation.
+func (m *GroupStatusConfigMutation) AddedTimeoutSeconds() (r int, exists bool) {
+	v := m.addtimeout_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTimeoutSeconds resets all changes to the "timeout_seconds" field.
+func (m *GroupStatusConfigMutation) ResetTimeoutSeconds() {
+	m.timeout_seconds = nil
+	m.addtimeout_seconds = nil
+}
+
+// SetSlowLatencyMs sets the "slow_latency_ms" field.
+func (m *GroupStatusConfigMutation) SetSlowLatencyMs(i int64) {
+	m.slow_latency_ms = &i
+	m.addslow_latency_ms = nil
+}
+
+// SlowLatencyMs returns the value of the "slow_latency_ms" field in the mutation.
+func (m *GroupStatusConfigMutation) SlowLatencyMs() (r int64, exists bool) {
+	v := m.slow_latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSlowLatencyMs returns the old "slow_latency_ms" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldSlowLatencyMs(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSlowLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSlowLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSlowLatencyMs: %w", err)
+	}
+	return oldValue.SlowLatencyMs, nil
+}
+
+// AddSlowLatencyMs adds i to the "slow_latency_ms" field.
+func (m *GroupStatusConfigMutation) AddSlowLatencyMs(i int64) {
+	if m.addslow_latency_ms != nil {
+		*m.addslow_latency_ms += i
+	} else {
+		m.addslow_latency_ms = &i
+	}
+}
+
+// AddedSlowLatencyMs returns the value that was added to the "slow_latency_ms" field in this mutation.
+func (m *GroupStatusConfigMutation) AddedSlowLatencyMs() (r int64, exists bool) {
+	v := m.addslow_latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSlowLatencyMs resets all changes to the "slow_latency_ms" field.
+func (m *GroupStatusConfigMutation) ResetSlowLatencyMs() {
+	m.slow_latency_ms = nil
+	m.addslow_latency_ms = nil
+}
+
+// Where appends a list predicates to the GroupStatusConfigMutation builder.
+func (m *GroupStatusConfigMutation) Where(ps ...predicate.GroupStatusConfig) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupStatusConfigMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupStatusConfigMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupStatusConfig, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupStatusConfigMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupStatusConfigMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupStatusConfig).
+func (m *GroupStatusConfigMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupStatusConfigMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.created_at != nil {
+		fields = append(fields, groupstatusconfig.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, groupstatusconfig.FieldUpdatedAt)
+	}
+	if m.group_id != nil {
+		fields = append(fields, groupstatusconfig.FieldGroupID)
+	}
+	if m.enabled != nil {
+		fields = append(fields, groupstatusconfig.FieldEnabled)
+	}
+	if m.probe_model != nil {
+		fields = append(fields, groupstatusconfig.FieldProbeModel)
+	}
+	if m.probe_prompt != nil {
+		fields = append(fields, groupstatusconfig.FieldProbePrompt)
+	}
+	if m.validation_mode != nil {
+		fields = append(fields, groupstatusconfig.FieldValidationMode)
+	}
+	if m.expected_keywords != nil {
+		fields = append(fields, groupstatusconfig.FieldExpectedKeywords)
+	}
+	if m.interval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldIntervalSeconds)
+	}
+	if m.timeout_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldTimeoutSeconds)
+	}
+	if m.slow_latency_ms != nil {
+		fields = append(fields, groupstatusconfig.FieldSlowLatencyMs)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupStatusConfigMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusconfig.FieldCreatedAt:
+		return m.CreatedAt()
+	case groupstatusconfig.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case groupstatusconfig.FieldGroupID:
+		return m.GroupID()
+	case groupstatusconfig.FieldEnabled:
+		return m.Enabled()
+	case groupstatusconfig.FieldProbeModel:
+		return m.ProbeModel()
+	case groupstatusconfig.FieldProbePrompt:
+		return m.ProbePrompt()
+	case groupstatusconfig.FieldValidationMode:
+		return m.ValidationMode()
+	case groupstatusconfig.FieldExpectedKeywords:
+		return m.ExpectedKeywords()
+	case groupstatusconfig.FieldIntervalSeconds:
+		return m.IntervalSeconds()
+	case groupstatusconfig.FieldTimeoutSeconds:
+		return m.TimeoutSeconds()
+	case groupstatusconfig.FieldSlowLatencyMs:
+		return m.SlowLatencyMs()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupStatusConfigMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupstatusconfig.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case groupstatusconfig.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case groupstatusconfig.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case groupstatusconfig.FieldEnabled:
+		return m.OldEnabled(ctx)
+	case groupstatusconfig.FieldProbeModel:
+		return m.OldProbeModel(ctx)
+	case groupstatusconfig.FieldProbePrompt:
+		return m.OldProbePrompt(ctx)
+	case groupstatusconfig.FieldValidationMode:
+		return m.OldValidationMode(ctx)
+	case groupstatusconfig.FieldExpectedKeywords:
+		return m.OldExpectedKeywords(ctx)
+	case groupstatusconfig.FieldIntervalSeconds:
+		return m.OldIntervalSeconds(ctx)
+	case groupstatusconfig.FieldTimeoutSeconds:
+		return m.OldTimeoutSeconds(ctx)
+	case groupstatusconfig.FieldSlowLatencyMs:
+		return m.OldSlowLatencyMs(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupStatusConfig field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusConfigMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusconfig.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case groupstatusconfig.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case groupstatusconfig.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case groupstatusconfig.FieldEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnabled(v)
+		return nil
+	case groupstatusconfig.FieldProbeModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProbeModel(v)
+		return nil
+	case groupstatusconfig.FieldProbePrompt:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProbePrompt(v)
+		return nil
+	case groupstatusconfig.FieldValidationMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidationMode(v)
+		return nil
+	case groupstatusconfig.FieldExpectedKeywords:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedKeywords(v)
+		return nil
+	case groupstatusconfig.FieldIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIntervalSeconds(v)
+		return nil
+	case groupstatusconfig.FieldTimeoutSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimeoutSeconds(v)
+		return nil
+	case groupstatusconfig.FieldSlowLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSlowLatencyMs(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusConfig field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupStatusConfigMutation) AddedFields() []string {
+	var fields []string
+	if m.addgroup_id != nil {
+		fields = append(fields, groupstatusconfig.FieldGroupID)
+	}
+	if m.addinterval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldIntervalSeconds)
+	}
+	if m.addtimeout_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldTimeoutSeconds)
+	}
+	if m.addslow_latency_ms != nil {
+		fields = append(fields, groupstatusconfig.FieldSlowLatencyMs)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupStatusConfigMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusconfig.FieldGroupID:
+		return m.AddedGroupID()
+	case groupstatusconfig.FieldIntervalSeconds:
+		return m.AddedIntervalSeconds()
+	case groupstatusconfig.FieldTimeoutSeconds:
+		return m.AddedTimeoutSeconds()
+	case groupstatusconfig.FieldSlowLatencyMs:
+		return m.AddedSlowLatencyMs()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusConfigMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusconfig.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case groupstatusconfig.FieldIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddIntervalSeconds(v)
+		return nil
+	case groupstatusconfig.FieldTimeoutSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTimeoutSeconds(v)
+		return nil
+	case groupstatusconfig.FieldSlowLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSlowLatencyMs(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusConfig numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupStatusConfigMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupStatusConfigMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupStatusConfigMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown GroupStatusConfig nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupStatusConfigMutation) ResetField(name string) error {
+	switch name {
+	case groupstatusconfig.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case groupstatusconfig.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case groupstatusconfig.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case groupstatusconfig.FieldEnabled:
+		m.ResetEnabled()
+		return nil
+	case groupstatusconfig.FieldProbeModel:
+		m.ResetProbeModel()
+		return nil
+	case groupstatusconfig.FieldProbePrompt:
+		m.ResetProbePrompt()
+		return nil
+	case groupstatusconfig.FieldValidationMode:
+		m.ResetValidationMode()
+		return nil
+	case groupstatusconfig.FieldExpectedKeywords:
+		m.ResetExpectedKeywords()
+		return nil
+	case groupstatusconfig.FieldIntervalSeconds:
+		m.ResetIntervalSeconds()
+		return nil
+	case groupstatusconfig.FieldTimeoutSeconds:
+		m.ResetTimeoutSeconds()
+		return nil
+	case groupstatusconfig.FieldSlowLatencyMs:
+		m.ResetSlowLatencyMs()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusConfig field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupStatusConfigMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupStatusConfigMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupStatusConfigMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupStatusConfigMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupStatusConfigMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupStatusConfigMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupStatusConfigMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusConfig unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupStatusConfigMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusConfig edge %s", name)
+}
+
+// GroupStatusEventMutation represents an operation that mutates the GroupStatusEvent nodes in the graph.
+type GroupStatusEventMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int64
+	group_id      *int64
+	addgroup_id   *int64
+	config_id     *int64
+	addconfig_id  *int64
+	event_type    *string
+	from_status   *string
+	to_status     *string
+	latency_ms    *int64
+	addlatency_ms *int64
+	http_code     *int
+	addhttp_code  *int
+	sub_status    *string
+	error_detail  *string
+	observed_at   *time.Time
+	created_at    *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*GroupStatusEvent, error)
+	predicates    []predicate.GroupStatusEvent
+}
+
+var _ ent.Mutation = (*GroupStatusEventMutation)(nil)
+
+// groupstatuseventOption allows management of the mutation configuration using functional options.
+type groupstatuseventOption func(*GroupStatusEventMutation)
+
+// newGroupStatusEventMutation creates new mutation for the GroupStatusEvent entity.
+func newGroupStatusEventMutation(c config, op Op, opts ...groupstatuseventOption) *GroupStatusEventMutation {
+	m := &GroupStatusEventMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupStatusEvent,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupStatusEventID sets the ID field of the mutation.
+func withGroupStatusEventID(id int64) groupstatuseventOption {
+	return func(m *GroupStatusEventMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupStatusEvent
+		)
+		m.oldValue = func(ctx context.Context) (*GroupStatusEvent, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupStatusEvent.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupStatusEvent sets the old GroupStatusEvent of the mutation.
+func withGroupStatusEvent(node *GroupStatusEvent) groupstatuseventOption {
+	return func(m *GroupStatusEventMutation) {
+		m.oldValue = func(context.Context) (*GroupStatusEvent, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupStatusEventMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupStatusEventMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupStatusEventMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupStatusEventMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupStatusEvent.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *GroupStatusEventMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *GroupStatusEventMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldGroupID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *GroupStatusEventMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *GroupStatusEventMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *GroupStatusEventMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+}
+
+// SetConfigID sets the "config_id" field.
+func (m *GroupStatusEventMutation) SetConfigID(i int64) {
+	m.config_id = &i
+	m.addconfig_id = nil
+}
+
+// ConfigID returns the value of the "config_id" field in the mutation.
+func (m *GroupStatusEventMutation) ConfigID() (r int64, exists bool) {
+	v := m.config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigID returns the old "config_id" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldConfigID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigID: %w", err)
+	}
+	return oldValue.ConfigID, nil
+}
+
+// AddConfigID adds i to the "config_id" field.
+func (m *GroupStatusEventMutation) AddConfigID(i int64) {
+	if m.addconfig_id != nil {
+		*m.addconfig_id += i
+	} else {
+		m.addconfig_id = &i
+	}
+}
+
+// AddedConfigID returns the value that was added to the "config_id" field in this mutation.
+func (m *GroupStatusEventMutation) AddedConfigID() (r int64, exists bool) {
+	v := m.addconfig_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConfigID resets all changes to the "config_id" field.
+func (m *GroupStatusEventMutation) ResetConfigID() {
+	m.config_id = nil
+	m.addconfig_id = nil
+}
+
+// SetEventType sets the "event_type" field.
+func (m *GroupStatusEventMutation) SetEventType(s string) {
+	m.event_type = &s
+}
+
+// EventType returns the value of the "event_type" field in the mutation.
+func (m *GroupStatusEventMutation) EventType() (r string, exists bool) {
+	v := m.event_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEventType returns the old "event_type" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldEventType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEventType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEventType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEventType: %w", err)
+	}
+	return oldValue.EventType, nil
+}
+
+// ResetEventType resets all changes to the "event_type" field.
+func (m *GroupStatusEventMutation) ResetEventType() {
+	m.event_type = nil
+}
+
+// SetFromStatus sets the "from_status" field.
+func (m *GroupStatusEventMutation) SetFromStatus(s string) {
+	m.from_status = &s
+}
+
+// FromStatus returns the value of the "from_status" field in the mutation.
+func (m *GroupStatusEventMutation) FromStatus() (r string, exists bool) {
+	v := m.from_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFromStatus returns the old "from_status" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldFromStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFromStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFromStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFromStatus: %w", err)
+	}
+	return oldValue.FromStatus, nil
+}
+
+// ResetFromStatus resets all changes to the "from_status" field.
+func (m *GroupStatusEventMutation) ResetFromStatus() {
+	m.from_status = nil
+}
+
+// SetToStatus sets the "to_status" field.
+func (m *GroupStatusEventMutation) SetToStatus(s string) {
+	m.to_status = &s
+}
+
+// ToStatus returns the value of the "to_status" field in the mutation.
+func (m *GroupStatusEventMutation) ToStatus() (r string, exists bool) {
+	v := m.to_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldToStatus returns the old "to_status" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldToStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldToStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldToStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldToStatus: %w", err)
+	}
+	return oldValue.ToStatus, nil
+}
+
+// ResetToStatus resets all changes to the "to_status" field.
+func (m *GroupStatusEventMutation) ResetToStatus() {
+	m.to_status = nil
+}
+
+// SetLatencyMs sets the "latency_ms" field.
+func (m *GroupStatusEventMutation) SetLatencyMs(i int64) {
+	m.latency_ms = &i
+	m.addlatency_ms = nil
+}
+
+// LatencyMs returns the value of the "latency_ms" field in the mutation.
+func (m *GroupStatusEventMutation) LatencyMs() (r int64, exists bool) {
+	v := m.latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatencyMs returns the old "latency_ms" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatencyMs: %w", err)
+	}
+	return oldValue.LatencyMs, nil
+}
+
+// AddLatencyMs adds i to the "latency_ms" field.
+func (m *GroupStatusEventMutation) AddLatencyMs(i int64) {
+	if m.addlatency_ms != nil {
+		*m.addlatency_ms += i
+	} else {
+		m.addlatency_ms = &i
+	}
+}
+
+// AddedLatencyMs returns the value that was added to the "latency_ms" field in this mutation.
+func (m *GroupStatusEventMutation) AddedLatencyMs() (r int64, exists bool) {
+	v := m.addlatency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatencyMs clears the value of the "latency_ms" field.
+func (m *GroupStatusEventMutation) ClearLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	m.clearedFields[groupstatusevent.FieldLatencyMs] = struct{}{}
+}
+
+// LatencyMsCleared returns if the "latency_ms" field was cleared in this mutation.
+func (m *GroupStatusEventMutation) LatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusevent.FieldLatencyMs]
+	return ok
+}
+
+// ResetLatencyMs resets all changes to the "latency_ms" field.
+func (m *GroupStatusEventMutation) ResetLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	delete(m.clearedFields, groupstatusevent.FieldLatencyMs)
+}
+
+// SetHTTPCode sets the "http_code" field.
+func (m *GroupStatusEventMutation) SetHTTPCode(i int) {
+	m.http_code = &i
+	m.addhttp_code = nil
+}
+
+// HTTPCode returns the value of the "http_code" field in the mutation.
+func (m *GroupStatusEventMutation) HTTPCode() (r int, exists bool) {
+	v := m.http_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHTTPCode returns the old "http_code" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldHTTPCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHTTPCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHTTPCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHTTPCode: %w", err)
+	}
+	return oldValue.HTTPCode, nil
+}
+
+// AddHTTPCode adds i to the "http_code" field.
+func (m *GroupStatusEventMutation) AddHTTPCode(i int) {
+	if m.addhttp_code != nil {
+		*m.addhttp_code += i
+	} else {
+		m.addhttp_code = &i
+	}
+}
+
+// AddedHTTPCode returns the value that was added to the "http_code" field in this mutation.
+func (m *GroupStatusEventMutation) AddedHTTPCode() (r int, exists bool) {
+	v := m.addhttp_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearHTTPCode clears the value of the "http_code" field.
+func (m *GroupStatusEventMutation) ClearHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	m.clearedFields[groupstatusevent.FieldHTTPCode] = struct{}{}
+}
+
+// HTTPCodeCleared returns if the "http_code" field was cleared in this mutation.
+func (m *GroupStatusEventMutation) HTTPCodeCleared() bool {
+	_, ok := m.clearedFields[groupstatusevent.FieldHTTPCode]
+	return ok
+}
+
+// ResetHTTPCode resets all changes to the "http_code" field.
+func (m *GroupStatusEventMutation) ResetHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	delete(m.clearedFields, groupstatusevent.FieldHTTPCode)
+}
+
+// SetSubStatus sets the "sub_status" field.
+func (m *GroupStatusEventMutation) SetSubStatus(s string) {
+	m.sub_status = &s
+}
+
+// SubStatus returns the value of the "sub_status" field in the mutation.
+func (m *GroupStatusEventMutation) SubStatus() (r string, exists bool) {
+	v := m.sub_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubStatus returns the old "sub_status" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldSubStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubStatus: %w", err)
+	}
+	return oldValue.SubStatus, nil
+}
+
+// ResetSubStatus resets all changes to the "sub_status" field.
+func (m *GroupStatusEventMutation) ResetSubStatus() {
+	m.sub_status = nil
+}
+
+// SetErrorDetail sets the "error_detail" field.
+func (m *GroupStatusEventMutation) SetErrorDetail(s string) {
+	m.error_detail = &s
+}
+
+// ErrorDetail returns the value of the "error_detail" field in the mutation.
+func (m *GroupStatusEventMutation) ErrorDetail() (r string, exists bool) {
+	v := m.error_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorDetail returns the old "error_detail" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldErrorDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorDetail: %w", err)
+	}
+	return oldValue.ErrorDetail, nil
+}
+
+// ClearErrorDetail clears the value of the "error_detail" field.
+func (m *GroupStatusEventMutation) ClearErrorDetail() {
+	m.error_detail = nil
+	m.clearedFields[groupstatusevent.FieldErrorDetail] = struct{}{}
+}
+
+// ErrorDetailCleared returns if the "error_detail" field was cleared in this mutation.
+func (m *GroupStatusEventMutation) ErrorDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusevent.FieldErrorDetail]
+	return ok
+}
+
+// ResetErrorDetail resets all changes to the "error_detail" field.
+func (m *GroupStatusEventMutation) ResetErrorDetail() {
+	m.error_detail = nil
+	delete(m.clearedFields, groupstatusevent.FieldErrorDetail)
+}
+
+// SetObservedAt sets the "observed_at" field.
+func (m *GroupStatusEventMutation) SetObservedAt(t time.Time) {
+	m.observed_at = &t
+}
+
+// ObservedAt returns the value of the "observed_at" field in the mutation.
+func (m *GroupStatusEventMutation) ObservedAt() (r time.Time, exists bool) {
+	v := m.observed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObservedAt returns the old "observed_at" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldObservedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObservedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObservedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObservedAt: %w", err)
+	}
+	return oldValue.ObservedAt, nil
+}
+
+// ResetObservedAt resets all changes to the "observed_at" field.
+func (m *GroupStatusEventMutation) ResetObservedAt() {
+	m.observed_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GroupStatusEventMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GroupStatusEventMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GroupStatusEvent entity.
+// If the GroupStatusEvent object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusEventMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GroupStatusEventMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// Where appends a list predicates to the GroupStatusEventMutation builder.
+func (m *GroupStatusEventMutation) Where(ps ...predicate.GroupStatusEvent) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupStatusEventMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupStatusEventMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupStatusEvent, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupStatusEventMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupStatusEventMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupStatusEvent).
+func (m *GroupStatusEventMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupStatusEventMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.group_id != nil {
+		fields = append(fields, groupstatusevent.FieldGroupID)
+	}
+	if m.config_id != nil {
+		fields = append(fields, groupstatusevent.FieldConfigID)
+	}
+	if m.event_type != nil {
+		fields = append(fields, groupstatusevent.FieldEventType)
+	}
+	if m.from_status != nil {
+		fields = append(fields, groupstatusevent.FieldFromStatus)
+	}
+	if m.to_status != nil {
+		fields = append(fields, groupstatusevent.FieldToStatus)
+	}
+	if m.latency_ms != nil {
+		fields = append(fields, groupstatusevent.FieldLatencyMs)
+	}
+	if m.http_code != nil {
+		fields = append(fields, groupstatusevent.FieldHTTPCode)
+	}
+	if m.sub_status != nil {
+		fields = append(fields, groupstatusevent.FieldSubStatus)
+	}
+	if m.error_detail != nil {
+		fields = append(fields, groupstatusevent.FieldErrorDetail)
+	}
+	if m.observed_at != nil {
+		fields = append(fields, groupstatusevent.FieldObservedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, groupstatusevent.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupStatusEventMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusevent.FieldGroupID:
+		return m.GroupID()
+	case groupstatusevent.FieldConfigID:
+		return m.ConfigID()
+	case groupstatusevent.FieldEventType:
+		return m.EventType()
+	case groupstatusevent.FieldFromStatus:
+		return m.FromStatus()
+	case groupstatusevent.FieldToStatus:
+		return m.ToStatus()
+	case groupstatusevent.FieldLatencyMs:
+		return m.LatencyMs()
+	case groupstatusevent.FieldHTTPCode:
+		return m.HTTPCode()
+	case groupstatusevent.FieldSubStatus:
+		return m.SubStatus()
+	case groupstatusevent.FieldErrorDetail:
+		return m.ErrorDetail()
+	case groupstatusevent.FieldObservedAt:
+		return m.ObservedAt()
+	case groupstatusevent.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupStatusEventMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupstatusevent.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case groupstatusevent.FieldConfigID:
+		return m.OldConfigID(ctx)
+	case groupstatusevent.FieldEventType:
+		return m.OldEventType(ctx)
+	case groupstatusevent.FieldFromStatus:
+		return m.OldFromStatus(ctx)
+	case groupstatusevent.FieldToStatus:
+		return m.OldToStatus(ctx)
+	case groupstatusevent.FieldLatencyMs:
+		return m.OldLatencyMs(ctx)
+	case groupstatusevent.FieldHTTPCode:
+		return m.OldHTTPCode(ctx)
+	case groupstatusevent.FieldSubStatus:
+		return m.OldSubStatus(ctx)
+	case groupstatusevent.FieldErrorDetail:
+		return m.OldErrorDetail(ctx)
+	case groupstatusevent.FieldObservedAt:
+		return m.OldObservedAt(ctx)
+	case groupstatusevent.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupStatusEvent field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusEventMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusevent.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case groupstatusevent.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigID(v)
+		return nil
+	case groupstatusevent.FieldEventType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEventType(v)
+		return nil
+	case groupstatusevent.FieldFromStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFromStatus(v)
+		return nil
+	case groupstatusevent.FieldToStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetToStatus(v)
+		return nil
+	case groupstatusevent.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatencyMs(v)
+		return nil
+	case groupstatusevent.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHTTPCode(v)
+		return nil
+	case groupstatusevent.FieldSubStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubStatus(v)
+		return nil
+	case groupstatusevent.FieldErrorDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorDetail(v)
+		return nil
+	case groupstatusevent.FieldObservedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObservedAt(v)
+		return nil
+	case groupstatusevent.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusEvent field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupStatusEventMutation) AddedFields() []string {
+	var fields []string
+	if m.addgroup_id != nil {
+		fields = append(fields, groupstatusevent.FieldGroupID)
+	}
+	if m.addconfig_id != nil {
+		fields = append(fields, groupstatusevent.FieldConfigID)
+	}
+	if m.addlatency_ms != nil {
+		fields = append(fields, groupstatusevent.FieldLatencyMs)
+	}
+	if m.addhttp_code != nil {
+		fields = append(fields, groupstatusevent.FieldHTTPCode)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupStatusEventMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusevent.FieldGroupID:
+		return m.AddedGroupID()
+	case groupstatusevent.FieldConfigID:
+		return m.AddedConfigID()
+	case groupstatusevent.FieldLatencyMs:
+		return m.AddedLatencyMs()
+	case groupstatusevent.FieldHTTPCode:
+		return m.AddedHTTPCode()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusEventMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusevent.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case groupstatusevent.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfigID(v)
+		return nil
+	case groupstatusevent.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatencyMs(v)
+		return nil
+	case groupstatusevent.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHTTPCode(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusEvent numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupStatusEventMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(groupstatusevent.FieldLatencyMs) {
+		fields = append(fields, groupstatusevent.FieldLatencyMs)
+	}
+	if m.FieldCleared(groupstatusevent.FieldHTTPCode) {
+		fields = append(fields, groupstatusevent.FieldHTTPCode)
+	}
+	if m.FieldCleared(groupstatusevent.FieldErrorDetail) {
+		fields = append(fields, groupstatusevent.FieldErrorDetail)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupStatusEventMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupStatusEventMutation) ClearField(name string) error {
+	switch name {
+	case groupstatusevent.FieldLatencyMs:
+		m.ClearLatencyMs()
+		return nil
+	case groupstatusevent.FieldHTTPCode:
+		m.ClearHTTPCode()
+		return nil
+	case groupstatusevent.FieldErrorDetail:
+		m.ClearErrorDetail()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusEvent nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupStatusEventMutation) ResetField(name string) error {
+	switch name {
+	case groupstatusevent.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case groupstatusevent.FieldConfigID:
+		m.ResetConfigID()
+		return nil
+	case groupstatusevent.FieldEventType:
+		m.ResetEventType()
+		return nil
+	case groupstatusevent.FieldFromStatus:
+		m.ResetFromStatus()
+		return nil
+	case groupstatusevent.FieldToStatus:
+		m.ResetToStatus()
+		return nil
+	case groupstatusevent.FieldLatencyMs:
+		m.ResetLatencyMs()
+		return nil
+	case groupstatusevent.FieldHTTPCode:
+		m.ResetHTTPCode()
+		return nil
+	case groupstatusevent.FieldSubStatus:
+		m.ResetSubStatus()
+		return nil
+	case groupstatusevent.FieldErrorDetail:
+		m.ResetErrorDetail()
+		return nil
+	case groupstatusevent.FieldObservedAt:
+		m.ResetObservedAt()
+		return nil
+	case groupstatusevent.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusEvent field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupStatusEventMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupStatusEventMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupStatusEventMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupStatusEventMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupStatusEventMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupStatusEventMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupStatusEventMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusEvent unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupStatusEventMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusEvent edge %s", name)
+}
+
+// GroupStatusRecordMutation represents an operation that mutates the GroupStatusRecord nodes in the graph.
+type GroupStatusRecordMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int64
+	group_id         *int64
+	addgroup_id      *int64
+	config_id        *int64
+	addconfig_id     *int64
+	status           *string
+	response_excerpt *string
+	latency_ms       *int64
+	addlatency_ms    *int64
+	http_code        *int
+	addhttp_code     *int
+	sub_status       *string
+	error_detail     *string
+	observed_at      *time.Time
+	created_at       *time.Time
+	clearedFields    map[string]struct{}
+	done             bool
+	oldValue         func(context.Context) (*GroupStatusRecord, error)
+	predicates       []predicate.GroupStatusRecord
+}
+
+var _ ent.Mutation = (*GroupStatusRecordMutation)(nil)
+
+// groupstatusrecordOption allows management of the mutation configuration using functional options.
+type groupstatusrecordOption func(*GroupStatusRecordMutation)
+
+// newGroupStatusRecordMutation creates new mutation for the GroupStatusRecord entity.
+func newGroupStatusRecordMutation(c config, op Op, opts ...groupstatusrecordOption) *GroupStatusRecordMutation {
+	m := &GroupStatusRecordMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupStatusRecord,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupStatusRecordID sets the ID field of the mutation.
+func withGroupStatusRecordID(id int64) groupstatusrecordOption {
+	return func(m *GroupStatusRecordMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupStatusRecord
+		)
+		m.oldValue = func(ctx context.Context) (*GroupStatusRecord, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupStatusRecord.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupStatusRecord sets the old GroupStatusRecord of the mutation.
+func withGroupStatusRecord(node *GroupStatusRecord) groupstatusrecordOption {
+	return func(m *GroupStatusRecordMutation) {
+		m.oldValue = func(context.Context) (*GroupStatusRecord, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupStatusRecordMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupStatusRecordMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupStatusRecordMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupStatusRecordMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupStatusRecord.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *GroupStatusRecordMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *GroupStatusRecordMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldGroupID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *GroupStatusRecordMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *GroupStatusRecordMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *GroupStatusRecordMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+}
+
+// SetConfigID sets the "config_id" field.
+func (m *GroupStatusRecordMutation) SetConfigID(i int64) {
+	m.config_id = &i
+	m.addconfig_id = nil
+}
+
+// ConfigID returns the value of the "config_id" field in the mutation.
+func (m *GroupStatusRecordMutation) ConfigID() (r int64, exists bool) {
+	v := m.config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigID returns the old "config_id" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldConfigID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigID: %w", err)
+	}
+	return oldValue.ConfigID, nil
+}
+
+// AddConfigID adds i to the "config_id" field.
+func (m *GroupStatusRecordMutation) AddConfigID(i int64) {
+	if m.addconfig_id != nil {
+		*m.addconfig_id += i
+	} else {
+		m.addconfig_id = &i
+	}
+}
+
+// AddedConfigID returns the value that was added to the "config_id" field in this mutation.
+func (m *GroupStatusRecordMutation) AddedConfigID() (r int64, exists bool) {
+	v := m.addconfig_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConfigID resets all changes to the "config_id" field.
+func (m *GroupStatusRecordMutation) ResetConfigID() {
+	m.config_id = nil
+	m.addconfig_id = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *GroupStatusRecordMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *GroupStatusRecordMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *GroupStatusRecordMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetResponseExcerpt sets the "response_excerpt" field.
+func (m *GroupStatusRecordMutation) SetResponseExcerpt(s string) {
+	m.response_excerpt = &s
+}
+
+// ResponseExcerpt returns the value of the "response_excerpt" field in the mutation.
+func (m *GroupStatusRecordMutation) ResponseExcerpt() (r string, exists bool) {
+	v := m.response_excerpt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResponseExcerpt returns the old "response_excerpt" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldResponseExcerpt(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResponseExcerpt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResponseExcerpt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResponseExcerpt: %w", err)
+	}
+	return oldValue.ResponseExcerpt, nil
+}
+
+// ClearResponseExcerpt clears the value of the "response_excerpt" field.
+func (m *GroupStatusRecordMutation) ClearResponseExcerpt() {
+	m.response_excerpt = nil
+	m.clearedFields[groupstatusrecord.FieldResponseExcerpt] = struct{}{}
+}
+
+// ResponseExcerptCleared returns if the "response_excerpt" field was cleared in this mutation.
+func (m *GroupStatusRecordMutation) ResponseExcerptCleared() bool {
+	_, ok := m.clearedFields[groupstatusrecord.FieldResponseExcerpt]
+	return ok
+}
+
+// ResetResponseExcerpt resets all changes to the "response_excerpt" field.
+func (m *GroupStatusRecordMutation) ResetResponseExcerpt() {
+	m.response_excerpt = nil
+	delete(m.clearedFields, groupstatusrecord.FieldResponseExcerpt)
+}
+
+// SetLatencyMs sets the "latency_ms" field.
+func (m *GroupStatusRecordMutation) SetLatencyMs(i int64) {
+	m.latency_ms = &i
+	m.addlatency_ms = nil
+}
+
+// LatencyMs returns the value of the "latency_ms" field in the mutation.
+func (m *GroupStatusRecordMutation) LatencyMs() (r int64, exists bool) {
+	v := m.latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatencyMs returns the old "latency_ms" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatencyMs: %w", err)
+	}
+	return oldValue.LatencyMs, nil
+}
+
+// AddLatencyMs adds i to the "latency_ms" field.
+func (m *GroupStatusRecordMutation) AddLatencyMs(i int64) {
+	if m.addlatency_ms != nil {
+		*m.addlatency_ms += i
+	} else {
+		m.addlatency_ms = &i
+	}
+}
+
+// AddedLatencyMs returns the value that was added to the "latency_ms" field in this mutation.
+func (m *GroupStatusRecordMutation) AddedLatencyMs() (r int64, exists bool) {
+	v := m.addlatency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatencyMs clears the value of the "latency_ms" field.
+func (m *GroupStatusRecordMutation) ClearLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	m.clearedFields[groupstatusrecord.FieldLatencyMs] = struct{}{}
+}
+
+// LatencyMsCleared returns if the "latency_ms" field was cleared in this mutation.
+func (m *GroupStatusRecordMutation) LatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusrecord.FieldLatencyMs]
+	return ok
+}
+
+// ResetLatencyMs resets all changes to the "latency_ms" field.
+func (m *GroupStatusRecordMutation) ResetLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	delete(m.clearedFields, groupstatusrecord.FieldLatencyMs)
+}
+
+// SetHTTPCode sets the "http_code" field.
+func (m *GroupStatusRecordMutation) SetHTTPCode(i int) {
+	m.http_code = &i
+	m.addhttp_code = nil
+}
+
+// HTTPCode returns the value of the "http_code" field in the mutation.
+func (m *GroupStatusRecordMutation) HTTPCode() (r int, exists bool) {
+	v := m.http_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHTTPCode returns the old "http_code" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldHTTPCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHTTPCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHTTPCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHTTPCode: %w", err)
+	}
+	return oldValue.HTTPCode, nil
+}
+
+// AddHTTPCode adds i to the "http_code" field.
+func (m *GroupStatusRecordMutation) AddHTTPCode(i int) {
+	if m.addhttp_code != nil {
+		*m.addhttp_code += i
+	} else {
+		m.addhttp_code = &i
+	}
+}
+
+// AddedHTTPCode returns the value that was added to the "http_code" field in this mutation.
+func (m *GroupStatusRecordMutation) AddedHTTPCode() (r int, exists bool) {
+	v := m.addhttp_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearHTTPCode clears the value of the "http_code" field.
+func (m *GroupStatusRecordMutation) ClearHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	m.clearedFields[groupstatusrecord.FieldHTTPCode] = struct{}{}
+}
+
+// HTTPCodeCleared returns if the "http_code" field was cleared in this mutation.
+func (m *GroupStatusRecordMutation) HTTPCodeCleared() bool {
+	_, ok := m.clearedFields[groupstatusrecord.FieldHTTPCode]
+	return ok
+}
+
+// ResetHTTPCode resets all changes to the "http_code" field.
+func (m *GroupStatusRecordMutation) ResetHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	delete(m.clearedFields, groupstatusrecord.FieldHTTPCode)
+}
+
+// SetSubStatus sets the "sub_status" field.
+func (m *GroupStatusRecordMutation) SetSubStatus(s string) {
+	m.sub_status = &s
+}
+
+// SubStatus returns the value of the "sub_status" field in the mutation.
+func (m *GroupStatusRecordMutation) SubStatus() (r string, exists bool) {
+	v := m.sub_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubStatus returns the old "sub_status" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldSubStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubStatus: %w", err)
+	}
+	return oldValue.SubStatus, nil
+}
+
+// ResetSubStatus resets all changes to the "sub_status" field.
+func (m *GroupStatusRecordMutation) ResetSubStatus() {
+	m.sub_status = nil
+}
+
+// SetErrorDetail sets the "error_detail" field.
+func (m *GroupStatusRecordMutation) SetErrorDetail(s string) {
+	m.error_detail = &s
+}
+
+// ErrorDetail returns the value of the "error_detail" field in the mutation.
+func (m *GroupStatusRecordMutation) ErrorDetail() (r string, exists bool) {
+	v := m.error_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorDetail returns the old "error_detail" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldErrorDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorDetail: %w", err)
+	}
+	return oldValue.ErrorDetail, nil
+}
+
+// ClearErrorDetail clears the value of the "error_detail" field.
+func (m *GroupStatusRecordMutation) ClearErrorDetail() {
+	m.error_detail = nil
+	m.clearedFields[groupstatusrecord.FieldErrorDetail] = struct{}{}
+}
+
+// ErrorDetailCleared returns if the "error_detail" field was cleared in this mutation.
+func (m *GroupStatusRecordMutation) ErrorDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusrecord.FieldErrorDetail]
+	return ok
+}
+
+// ResetErrorDetail resets all changes to the "error_detail" field.
+func (m *GroupStatusRecordMutation) ResetErrorDetail() {
+	m.error_detail = nil
+	delete(m.clearedFields, groupstatusrecord.FieldErrorDetail)
+}
+
+// SetObservedAt sets the "observed_at" field.
+func (m *GroupStatusRecordMutation) SetObservedAt(t time.Time) {
+	m.observed_at = &t
+}
+
+// ObservedAt returns the value of the "observed_at" field in the mutation.
+func (m *GroupStatusRecordMutation) ObservedAt() (r time.Time, exists bool) {
+	v := m.observed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObservedAt returns the old "observed_at" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldObservedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObservedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObservedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObservedAt: %w", err)
+	}
+	return oldValue.ObservedAt, nil
+}
+
+// ResetObservedAt resets all changes to the "observed_at" field.
+func (m *GroupStatusRecordMutation) ResetObservedAt() {
+	m.observed_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GroupStatusRecordMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GroupStatusRecordMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GroupStatusRecordMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// Where appends a list predicates to the GroupStatusRecordMutation builder.
+func (m *GroupStatusRecordMutation) Where(ps ...predicate.GroupStatusRecord) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupStatusRecordMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupStatusRecordMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupStatusRecord, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupStatusRecordMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupStatusRecordMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupStatusRecord).
+func (m *GroupStatusRecordMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupStatusRecordMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.group_id != nil {
+		fields = append(fields, groupstatusrecord.FieldGroupID)
+	}
+	if m.config_id != nil {
+		fields = append(fields, groupstatusrecord.FieldConfigID)
+	}
+	if m.status != nil {
+		fields = append(fields, groupstatusrecord.FieldStatus)
+	}
+	if m.response_excerpt != nil {
+		fields = append(fields, groupstatusrecord.FieldResponseExcerpt)
+	}
+	if m.latency_ms != nil {
+		fields = append(fields, groupstatusrecord.FieldLatencyMs)
+	}
+	if m.http_code != nil {
+		fields = append(fields, groupstatusrecord.FieldHTTPCode)
+	}
+	if m.sub_status != nil {
+		fields = append(fields, groupstatusrecord.FieldSubStatus)
+	}
+	if m.error_detail != nil {
+		fields = append(fields, groupstatusrecord.FieldErrorDetail)
+	}
+	if m.observed_at != nil {
+		fields = append(fields, groupstatusrecord.FieldObservedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, groupstatusrecord.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupStatusRecordMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusrecord.FieldGroupID:
+		return m.GroupID()
+	case groupstatusrecord.FieldConfigID:
+		return m.ConfigID()
+	case groupstatusrecord.FieldStatus:
+		return m.Status()
+	case groupstatusrecord.FieldResponseExcerpt:
+		return m.ResponseExcerpt()
+	case groupstatusrecord.FieldLatencyMs:
+		return m.LatencyMs()
+	case groupstatusrecord.FieldHTTPCode:
+		return m.HTTPCode()
+	case groupstatusrecord.FieldSubStatus:
+		return m.SubStatus()
+	case groupstatusrecord.FieldErrorDetail:
+		return m.ErrorDetail()
+	case groupstatusrecord.FieldObservedAt:
+		return m.ObservedAt()
+	case groupstatusrecord.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupStatusRecordMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupstatusrecord.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case groupstatusrecord.FieldConfigID:
+		return m.OldConfigID(ctx)
+	case groupstatusrecord.FieldStatus:
+		return m.OldStatus(ctx)
+	case groupstatusrecord.FieldResponseExcerpt:
+		return m.OldResponseExcerpt(ctx)
+	case groupstatusrecord.FieldLatencyMs:
+		return m.OldLatencyMs(ctx)
+	case groupstatusrecord.FieldHTTPCode:
+		return m.OldHTTPCode(ctx)
+	case groupstatusrecord.FieldSubStatus:
+		return m.OldSubStatus(ctx)
+	case groupstatusrecord.FieldErrorDetail:
+		return m.OldErrorDetail(ctx)
+	case groupstatusrecord.FieldObservedAt:
+		return m.OldObservedAt(ctx)
+	case groupstatusrecord.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupStatusRecord field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusRecordMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusrecord.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case groupstatusrecord.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigID(v)
+		return nil
+	case groupstatusrecord.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case groupstatusrecord.FieldResponseExcerpt:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResponseExcerpt(v)
+		return nil
+	case groupstatusrecord.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatencyMs(v)
+		return nil
+	case groupstatusrecord.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHTTPCode(v)
+		return nil
+	case groupstatusrecord.FieldSubStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubStatus(v)
+		return nil
+	case groupstatusrecord.FieldErrorDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorDetail(v)
+		return nil
+	case groupstatusrecord.FieldObservedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObservedAt(v)
+		return nil
+	case groupstatusrecord.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusRecord field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupStatusRecordMutation) AddedFields() []string {
+	var fields []string
+	if m.addgroup_id != nil {
+		fields = append(fields, groupstatusrecord.FieldGroupID)
+	}
+	if m.addconfig_id != nil {
+		fields = append(fields, groupstatusrecord.FieldConfigID)
+	}
+	if m.addlatency_ms != nil {
+		fields = append(fields, groupstatusrecord.FieldLatencyMs)
+	}
+	if m.addhttp_code != nil {
+		fields = append(fields, groupstatusrecord.FieldHTTPCode)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupStatusRecordMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusrecord.FieldGroupID:
+		return m.AddedGroupID()
+	case groupstatusrecord.FieldConfigID:
+		return m.AddedConfigID()
+	case groupstatusrecord.FieldLatencyMs:
+		return m.AddedLatencyMs()
+	case groupstatusrecord.FieldHTTPCode:
+		return m.AddedHTTPCode()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusRecordMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusrecord.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case groupstatusrecord.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfigID(v)
+		return nil
+	case groupstatusrecord.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatencyMs(v)
+		return nil
+	case groupstatusrecord.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHTTPCode(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusRecord numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupStatusRecordMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(groupstatusrecord.FieldResponseExcerpt) {
+		fields = append(fields, groupstatusrecord.FieldResponseExcerpt)
+	}
+	if m.FieldCleared(groupstatusrecord.FieldLatencyMs) {
+		fields = append(fields, groupstatusrecord.FieldLatencyMs)
+	}
+	if m.FieldCleared(groupstatusrecord.FieldHTTPCode) {
+		fields = append(fields, groupstatusrecord.FieldHTTPCode)
+	}
+	if m.FieldCleared(groupstatusrecord.FieldErrorDetail) {
+		fields = append(fields, groupstatusrecord.FieldErrorDetail)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupStatusRecordMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupStatusRecordMutation) ClearField(name string) error {
+	switch name {
+	case groupstatusrecord.FieldResponseExcerpt:
+		m.ClearResponseExcerpt()
+		return nil
+	case groupstatusrecord.FieldLatencyMs:
+		m.ClearLatencyMs()
+		return nil
+	case groupstatusrecord.FieldHTTPCode:
+		m.ClearHTTPCode()
+		return nil
+	case groupstatusrecord.FieldErrorDetail:
+		m.ClearErrorDetail()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusRecord nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupStatusRecordMutation) ResetField(name string) error {
+	switch name {
+	case groupstatusrecord.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case groupstatusrecord.FieldConfigID:
+		m.ResetConfigID()
+		return nil
+	case groupstatusrecord.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case groupstatusrecord.FieldResponseExcerpt:
+		m.ResetResponseExcerpt()
+		return nil
+	case groupstatusrecord.FieldLatencyMs:
+		m.ResetLatencyMs()
+		return nil
+	case groupstatusrecord.FieldHTTPCode:
+		m.ResetHTTPCode()
+		return nil
+	case groupstatusrecord.FieldSubStatus:
+		m.ResetSubStatus()
+		return nil
+	case groupstatusrecord.FieldErrorDetail:
+		m.ResetErrorDetail()
+		return nil
+	case groupstatusrecord.FieldObservedAt:
+		m.ResetObservedAt()
+		return nil
+	case groupstatusrecord.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusRecord field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupStatusRecordMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupStatusRecordMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupStatusRecordMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupStatusRecordMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupStatusRecordMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupStatusRecordMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupStatusRecordMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusRecord unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupStatusRecordMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusRecord edge %s", name)
+}
+
+// GroupStatusStateMutation represents an operation that mutates the GroupStatusState nodes in the graph.
+type GroupStatusStateMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int64
+	created_at              *time.Time
+	updated_at              *time.Time
+	group_id                *int64
+	addgroup_id             *int64
+	config_id               *int64
+	addconfig_id            *int64
+	latest_status           *string
+	stable_status           *string
+	response_excerpt        *string
+	latency_ms              *int64
+	addlatency_ms           *int64
+	http_code               *int
+	addhttp_code            *int
+	sub_status              *string
+	error_detail            *string
+	observed_at             *time.Time
+	consecutive_down        *int
+	addconsecutive_down     *int
+	consecutive_non_down    *int
+	addconsecutive_non_down *int
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*GroupStatusState, error)
+	predicates              []predicate.GroupStatusState
+}
+
+var _ ent.Mutation = (*GroupStatusStateMutation)(nil)
+
+// groupstatusstateOption allows management of the mutation configuration using functional options.
+type groupstatusstateOption func(*GroupStatusStateMutation)
+
+// newGroupStatusStateMutation creates new mutation for the GroupStatusState entity.
+func newGroupStatusStateMutation(c config, op Op, opts ...groupstatusstateOption) *GroupStatusStateMutation {
+	m := &GroupStatusStateMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupStatusState,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupStatusStateID sets the ID field of the mutation.
+func withGroupStatusStateID(id int64) groupstatusstateOption {
+	return func(m *GroupStatusStateMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupStatusState
+		)
+		m.oldValue = func(ctx context.Context) (*GroupStatusState, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupStatusState.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupStatusState sets the old GroupStatusState of the mutation.
+func withGroupStatusState(node *GroupStatusState) groupstatusstateOption {
+	return func(m *GroupStatusStateMutation) {
+		m.oldValue = func(context.Context) (*GroupStatusState, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupStatusStateMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupStatusStateMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupStatusStateMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupStatusStateMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupStatusState.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GroupStatusStateMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GroupStatusStateMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GroupStatusStateMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *GroupStatusStateMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *GroupStatusStateMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *GroupStatusStateMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *GroupStatusStateMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *GroupStatusStateMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldGroupID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *GroupStatusStateMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *GroupStatusStateMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *GroupStatusStateMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+}
+
+// SetConfigID sets the "config_id" field.
+func (m *GroupStatusStateMutation) SetConfigID(i int64) {
+	m.config_id = &i
+	m.addconfig_id = nil
+}
+
+// ConfigID returns the value of the "config_id" field in the mutation.
+func (m *GroupStatusStateMutation) ConfigID() (r int64, exists bool) {
+	v := m.config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigID returns the old "config_id" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldConfigID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigID: %w", err)
+	}
+	return oldValue.ConfigID, nil
+}
+
+// AddConfigID adds i to the "config_id" field.
+func (m *GroupStatusStateMutation) AddConfigID(i int64) {
+	if m.addconfig_id != nil {
+		*m.addconfig_id += i
+	} else {
+		m.addconfig_id = &i
+	}
+}
+
+// AddedConfigID returns the value that was added to the "config_id" field in this mutation.
+func (m *GroupStatusStateMutation) AddedConfigID() (r int64, exists bool) {
+	v := m.addconfig_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConfigID resets all changes to the "config_id" field.
+func (m *GroupStatusStateMutation) ResetConfigID() {
+	m.config_id = nil
+	m.addconfig_id = nil
+}
+
+// SetLatestStatus sets the "latest_status" field.
+func (m *GroupStatusStateMutation) SetLatestStatus(s string) {
+	m.latest_status = &s
+}
+
+// LatestStatus returns the value of the "latest_status" field in the mutation.
+func (m *GroupStatusStateMutation) LatestStatus() (r string, exists bool) {
+	v := m.latest_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatestStatus returns the old "latest_status" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldLatestStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatestStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatestStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatestStatus: %w", err)
+	}
+	return oldValue.LatestStatus, nil
+}
+
+// ResetLatestStatus resets all changes to the "latest_status" field.
+func (m *GroupStatusStateMutation) ResetLatestStatus() {
+	m.latest_status = nil
+}
+
+// SetStableStatus sets the "stable_status" field.
+func (m *GroupStatusStateMutation) SetStableStatus(s string) {
+	m.stable_status = &s
+}
+
+// StableStatus returns the value of the "stable_status" field in the mutation.
+func (m *GroupStatusStateMutation) StableStatus() (r string, exists bool) {
+	v := m.stable_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStableStatus returns the old "stable_status" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldStableStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStableStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStableStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStableStatus: %w", err)
+	}
+	return oldValue.StableStatus, nil
+}
+
+// ResetStableStatus resets all changes to the "stable_status" field.
+func (m *GroupStatusStateMutation) ResetStableStatus() {
+	m.stable_status = nil
+}
+
+// SetResponseExcerpt sets the "response_excerpt" field.
+func (m *GroupStatusStateMutation) SetResponseExcerpt(s string) {
+	m.response_excerpt = &s
+}
+
+// ResponseExcerpt returns the value of the "response_excerpt" field in the mutation.
+func (m *GroupStatusStateMutation) ResponseExcerpt() (r string, exists bool) {
+	v := m.response_excerpt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResponseExcerpt returns the old "response_excerpt" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldResponseExcerpt(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResponseExcerpt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResponseExcerpt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResponseExcerpt: %w", err)
+	}
+	return oldValue.ResponseExcerpt, nil
+}
+
+// ClearResponseExcerpt clears the value of the "response_excerpt" field.
+func (m *GroupStatusStateMutation) ClearResponseExcerpt() {
+	m.response_excerpt = nil
+	m.clearedFields[groupstatusstate.FieldResponseExcerpt] = struct{}{}
+}
+
+// ResponseExcerptCleared returns if the "response_excerpt" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) ResponseExcerptCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldResponseExcerpt]
+	return ok
+}
+
+// ResetResponseExcerpt resets all changes to the "response_excerpt" field.
+func (m *GroupStatusStateMutation) ResetResponseExcerpt() {
+	m.response_excerpt = nil
+	delete(m.clearedFields, groupstatusstate.FieldResponseExcerpt)
+}
+
+// SetLatencyMs sets the "latency_ms" field.
+func (m *GroupStatusStateMutation) SetLatencyMs(i int64) {
+	m.latency_ms = &i
+	m.addlatency_ms = nil
+}
+
+// LatencyMs returns the value of the "latency_ms" field in the mutation.
+func (m *GroupStatusStateMutation) LatencyMs() (r int64, exists bool) {
+	v := m.latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatencyMs returns the old "latency_ms" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatencyMs: %w", err)
+	}
+	return oldValue.LatencyMs, nil
+}
+
+// AddLatencyMs adds i to the "latency_ms" field.
+func (m *GroupStatusStateMutation) AddLatencyMs(i int64) {
+	if m.addlatency_ms != nil {
+		*m.addlatency_ms += i
+	} else {
+		m.addlatency_ms = &i
+	}
+}
+
+// AddedLatencyMs returns the value that was added to the "latency_ms" field in this mutation.
+func (m *GroupStatusStateMutation) AddedLatencyMs() (r int64, exists bool) {
+	v := m.addlatency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatencyMs clears the value of the "latency_ms" field.
+func (m *GroupStatusStateMutation) ClearLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	m.clearedFields[groupstatusstate.FieldLatencyMs] = struct{}{}
+}
+
+// LatencyMsCleared returns if the "latency_ms" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) LatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldLatencyMs]
+	return ok
+}
+
+// ResetLatencyMs resets all changes to the "latency_ms" field.
+func (m *GroupStatusStateMutation) ResetLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	delete(m.clearedFields, groupstatusstate.FieldLatencyMs)
+}
+
+// SetHTTPCode sets the "http_code" field.
+func (m *GroupStatusStateMutation) SetHTTPCode(i int) {
+	m.http_code = &i
+	m.addhttp_code = nil
+}
+
+// HTTPCode returns the value of the "http_code" field in the mutation.
+func (m *GroupStatusStateMutation) HTTPCode() (r int, exists bool) {
+	v := m.http_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHTTPCode returns the old "http_code" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldHTTPCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHTTPCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHTTPCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHTTPCode: %w", err)
+	}
+	return oldValue.HTTPCode, nil
+}
+
+// AddHTTPCode adds i to the "http_code" field.
+func (m *GroupStatusStateMutation) AddHTTPCode(i int) {
+	if m.addhttp_code != nil {
+		*m.addhttp_code += i
+	} else {
+		m.addhttp_code = &i
+	}
+}
+
+// AddedHTTPCode returns the value that was added to the "http_code" field in this mutation.
+func (m *GroupStatusStateMutation) AddedHTTPCode() (r int, exists bool) {
+	v := m.addhttp_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearHTTPCode clears the value of the "http_code" field.
+func (m *GroupStatusStateMutation) ClearHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	m.clearedFields[groupstatusstate.FieldHTTPCode] = struct{}{}
+}
+
+// HTTPCodeCleared returns if the "http_code" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) HTTPCodeCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldHTTPCode]
+	return ok
+}
+
+// ResetHTTPCode resets all changes to the "http_code" field.
+func (m *GroupStatusStateMutation) ResetHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	delete(m.clearedFields, groupstatusstate.FieldHTTPCode)
+}
+
+// SetSubStatus sets the "sub_status" field.
+func (m *GroupStatusStateMutation) SetSubStatus(s string) {
+	m.sub_status = &s
+}
+
+// SubStatus returns the value of the "sub_status" field in the mutation.
+func (m *GroupStatusStateMutation) SubStatus() (r string, exists bool) {
+	v := m.sub_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubStatus returns the old "sub_status" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSubStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubStatus: %w", err)
+	}
+	return oldValue.SubStatus, nil
+}
+
+// ResetSubStatus resets all changes to the "sub_status" field.
+func (m *GroupStatusStateMutation) ResetSubStatus() {
+	m.sub_status = nil
+}
+
+// SetErrorDetail sets the "error_detail" field.
+func (m *GroupStatusStateMutation) SetErrorDetail(s string) {
+	m.error_detail = &s
+}
+
+// ErrorDetail returns the value of the "error_detail" field in the mutation.
+func (m *GroupStatusStateMutation) ErrorDetail() (r string, exists bool) {
+	v := m.error_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorDetail returns the old "error_detail" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldErrorDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorDetail: %w", err)
+	}
+	return oldValue.ErrorDetail, nil
+}
+
+// ClearErrorDetail clears the value of the "error_detail" field.
+func (m *GroupStatusStateMutation) ClearErrorDetail() {
+	m.error_detail = nil
+	m.clearedFields[groupstatusstate.FieldErrorDetail] = struct{}{}
+}
+
+// ErrorDetailCleared returns if the "error_detail" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) ErrorDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldErrorDetail]
+	return ok
+}
+
+// ResetErrorDetail resets all changes to the "error_detail" field.
+func (m *GroupStatusStateMutation) ResetErrorDetail() {
+	m.error_detail = nil
+	delete(m.clearedFields, groupstatusstate.FieldErrorDetail)
+}
+
+// SetObservedAt sets the "observed_at" field.
+func (m *GroupStatusStateMutation) SetObservedAt(t time.Time) {
+	m.observed_at = &t
+}
+
+// ObservedAt returns the value of the "observed_at" field in the mutation.
+func (m *GroupStatusStateMutation) ObservedAt() (r time.Time, exists bool) {
+	v := m.observed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObservedAt returns the old "observed_at" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldObservedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObservedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObservedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObservedAt: %w", err)
+	}
+	return oldValue.ObservedAt, nil
+}
+
+// ClearObservedAt clears the value of the "observed_at" field.
+func (m *GroupStatusStateMutation) ClearObservedAt() {
+	m.observed_at = nil
+	m.clearedFields[groupstatusstate.FieldObservedAt] = struct{}{}
+}
+
+// ObservedAtCleared returns if the "observed_at" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) ObservedAtCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldObservedAt]
+	return ok
+}
+
+// ResetObservedAt resets all changes to the "observed_at" field.
+func (m *GroupStatusStateMutation) ResetObservedAt() {
+	m.observed_at = nil
+	delete(m.clearedFields, groupstatusstate.FieldObservedAt)
+}
+
+// SetConsecutiveDown sets the "consecutive_down" field.
+func (m *GroupStatusStateMutation) SetConsecutiveDown(i int) {
+	m.consecutive_down = &i
+	m.addconsecutive_down = nil
+}
+
+// ConsecutiveDown returns the value of the "consecutive_down" field in the mutation.
+func (m *GroupStatusStateMutation) ConsecutiveDown() (r int, exists bool) {
+	v := m.consecutive_down
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConsecutiveDown returns the old "consecutive_down" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldConsecutiveDown(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConsecutiveDown is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConsecutiveDown requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConsecutiveDown: %w", err)
+	}
+	return oldValue.ConsecutiveDown, nil
+}
+
+// AddConsecutiveDown adds i to the "consecutive_down" field.
+func (m *GroupStatusStateMutation) AddConsecutiveDown(i int) {
+	if m.addconsecutive_down != nil {
+		*m.addconsecutive_down += i
+	} else {
+		m.addconsecutive_down = &i
+	}
+}
+
+// AddedConsecutiveDown returns the value that was added to the "consecutive_down" field in this mutation.
+func (m *GroupStatusStateMutation) AddedConsecutiveDown() (r int, exists bool) {
+	v := m.addconsecutive_down
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConsecutiveDown resets all changes to the "consecutive_down" field.
+func (m *GroupStatusStateMutation) ResetConsecutiveDown() {
+	m.consecutive_down = nil
+	m.addconsecutive_down = nil
+}
+
+// SetConsecutiveNonDown sets the "consecutive_non_down" field.
+func (m *GroupStatusStateMutation) SetConsecutiveNonDown(i int) {
+	m.consecutive_non_down = &i
+	m.addconsecutive_non_down = nil
+}
+
+// ConsecutiveNonDown returns the value of the "consecutive_non_down" field in the mutation.
+func (m *GroupStatusStateMutation) ConsecutiveNonDown() (r int, exists bool) {
+	v := m.consecutive_non_down
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConsecutiveNonDown returns the old "consecutive_non_down" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldConsecutiveNonDown(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConsecutiveNonDown is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConsecutiveNonDown requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConsecutiveNonDown: %w", err)
+	}
+	return oldValue.ConsecutiveNonDown, nil
+}
+
+// AddConsecutiveNonDown adds i to the "consecutive_non_down" field.
+func (m *GroupStatusStateMutation) AddConsecutiveNonDown(i int) {
+	if m.addconsecutive_non_down != nil {
+		*m.addconsecutive_non_down += i
+	} else {
+		m.addconsecutive_non_down = &i
+	}
+}
+
+// AddedConsecutiveNonDown returns the value that was added to the "consecutive_non_down" field in this mutation.
+func (m *GroupStatusStateMutation) AddedConsecutiveNonDown() (r int, exists bool) {
+	v := m.addconsecutive_non_down
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConsecutiveNonDown resets all changes to the "consecutive_non_down" field.
+func (m *GroupStatusStateMutation) ResetConsecutiveNonDown() {
+	m.consecutive_non_down = nil
+	m.addconsecutive_non_down = nil
+}
+
+// Where appends a list predicates to the GroupStatusStateMutation builder.
+func (m *GroupStatusStateMutation) Where(ps ...predicate.GroupStatusState) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupStatusStateMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupStatusStateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupStatusState, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupStatusStateMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupStatusStateMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupStatusState).
+func (m *GroupStatusStateMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupStatusStateMutation) Fields() []string {
+	fields := make([]string, 0, 14)
+	if m.created_at != nil {
+		fields = append(fields, groupstatusstate.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, groupstatusstate.FieldUpdatedAt)
+	}
+	if m.group_id != nil {
+		fields = append(fields, groupstatusstate.FieldGroupID)
+	}
+	if m.config_id != nil {
+		fields = append(fields, groupstatusstate.FieldConfigID)
+	}
+	if m.latest_status != nil {
+		fields = append(fields, groupstatusstate.FieldLatestStatus)
+	}
+	if m.stable_status != nil {
+		fields = append(fields, groupstatusstate.FieldStableStatus)
+	}
+	if m.response_excerpt != nil {
+		fields = append(fields, groupstatusstate.FieldResponseExcerpt)
+	}
+	if m.latency_ms != nil {
+		fields = append(fields, groupstatusstate.FieldLatencyMs)
+	}
+	if m.http_code != nil {
+		fields = append(fields, groupstatusstate.FieldHTTPCode)
+	}
+	if m.sub_status != nil {
+		fields = append(fields, groupstatusstate.FieldSubStatus)
+	}
+	if m.error_detail != nil {
+		fields = append(fields, groupstatusstate.FieldErrorDetail)
+	}
+	if m.observed_at != nil {
+		fields = append(fields, groupstatusstate.FieldObservedAt)
+	}
+	if m.consecutive_down != nil {
+		fields = append(fields, groupstatusstate.FieldConsecutiveDown)
+	}
+	if m.consecutive_non_down != nil {
+		fields = append(fields, groupstatusstate.FieldConsecutiveNonDown)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupStatusStateMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusstate.FieldCreatedAt:
+		return m.CreatedAt()
+	case groupstatusstate.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case groupstatusstate.FieldGroupID:
+		return m.GroupID()
+	case groupstatusstate.FieldConfigID:
+		return m.ConfigID()
+	case groupstatusstate.FieldLatestStatus:
+		return m.LatestStatus()
+	case groupstatusstate.FieldStableStatus:
+		return m.StableStatus()
+	case groupstatusstate.FieldResponseExcerpt:
+		return m.ResponseExcerpt()
+	case groupstatusstate.FieldLatencyMs:
+		return m.LatencyMs()
+	case groupstatusstate.FieldHTTPCode:
+		return m.HTTPCode()
+	case groupstatusstate.FieldSubStatus:
+		return m.SubStatus()
+	case groupstatusstate.FieldErrorDetail:
+		return m.ErrorDetail()
+	case groupstatusstate.FieldObservedAt:
+		return m.ObservedAt()
+	case groupstatusstate.FieldConsecutiveDown:
+		return m.ConsecutiveDown()
+	case groupstatusstate.FieldConsecutiveNonDown:
+		return m.ConsecutiveNonDown()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupStatusStateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupstatusstate.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case groupstatusstate.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case groupstatusstate.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case groupstatusstate.FieldConfigID:
+		return m.OldConfigID(ctx)
+	case groupstatusstate.FieldLatestStatus:
+		return m.OldLatestStatus(ctx)
+	case groupstatusstate.FieldStableStatus:
+		return m.OldStableStatus(ctx)
+	case groupstatusstate.FieldResponseExcerpt:
+		return m.OldResponseExcerpt(ctx)
+	case groupstatusstate.FieldLatencyMs:
+		return m.OldLatencyMs(ctx)
+	case groupstatusstate.FieldHTTPCode:
+		return m.OldHTTPCode(ctx)
+	case groupstatusstate.FieldSubStatus:
+		return m.OldSubStatus(ctx)
+	case groupstatusstate.FieldErrorDetail:
+		return m.OldErrorDetail(ctx)
+	case groupstatusstate.FieldObservedAt:
+		return m.OldObservedAt(ctx)
+	case groupstatusstate.FieldConsecutiveDown:
+		return m.OldConsecutiveDown(ctx)
+	case groupstatusstate.FieldConsecutiveNonDown:
+		return m.OldConsecutiveNonDown(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupStatusState field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusStateMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusstate.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case groupstatusstate.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case groupstatusstate.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case groupstatusstate.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigID(v)
+		return nil
+	case groupstatusstate.FieldLatestStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatestStatus(v)
+		return nil
+	case groupstatusstate.FieldStableStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStableStatus(v)
+		return nil
+	case groupstatusstate.FieldResponseExcerpt:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResponseExcerpt(v)
+		return nil
+	case groupstatusstate.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatencyMs(v)
+		return nil
+	case groupstatusstate.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHTTPCode(v)
+		return nil
+	case groupstatusstate.FieldSubStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubStatus(v)
+		return nil
+	case groupstatusstate.FieldErrorDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorDetail(v)
+		return nil
+	case groupstatusstate.FieldObservedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObservedAt(v)
+		return nil
+	case groupstatusstate.FieldConsecutiveDown:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConsecutiveDown(v)
+		return nil
+	case groupstatusstate.FieldConsecutiveNonDown:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConsecutiveNonDown(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusState field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupStatusStateMutation) AddedFields() []string {
+	var fields []string
+	if m.addgroup_id != nil {
+		fields = append(fields, groupstatusstate.FieldGroupID)
+	}
+	if m.addconfig_id != nil {
+		fields = append(fields, groupstatusstate.FieldConfigID)
+	}
+	if m.addlatency_ms != nil {
+		fields = append(fields, groupstatusstate.FieldLatencyMs)
+	}
+	if m.addhttp_code != nil {
+		fields = append(fields, groupstatusstate.FieldHTTPCode)
+	}
+	if m.addconsecutive_down != nil {
+		fields = append(fields, groupstatusstate.FieldConsecutiveDown)
+	}
+	if m.addconsecutive_non_down != nil {
+		fields = append(fields, groupstatusstate.FieldConsecutiveNonDown)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupStatusStateMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusstate.FieldGroupID:
+		return m.AddedGroupID()
+	case groupstatusstate.FieldConfigID:
+		return m.AddedConfigID()
+	case groupstatusstate.FieldLatencyMs:
+		return m.AddedLatencyMs()
+	case groupstatusstate.FieldHTTPCode:
+		return m.AddedHTTPCode()
+	case groupstatusstate.FieldConsecutiveDown:
+		return m.AddedConsecutiveDown()
+	case groupstatusstate.FieldConsecutiveNonDown:
+		return m.AddedConsecutiveNonDown()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusStateMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusstate.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case groupstatusstate.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfigID(v)
+		return nil
+	case groupstatusstate.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatencyMs(v)
+		return nil
+	case groupstatusstate.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHTTPCode(v)
+		return nil
+	case groupstatusstate.FieldConsecutiveDown:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConsecutiveDown(v)
+		return nil
+	case groupstatusstate.FieldConsecutiveNonDown:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConsecutiveNonDown(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusState numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupStatusStateMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(groupstatusstate.FieldResponseExcerpt) {
+		fields = append(fields, groupstatusstate.FieldResponseExcerpt)
+	}
+	if m.FieldCleared(groupstatusstate.FieldLatencyMs) {
+		fields = append(fields, groupstatusstate.FieldLatencyMs)
+	}
+	if m.FieldCleared(groupstatusstate.FieldHTTPCode) {
+		fields = append(fields, groupstatusstate.FieldHTTPCode)
+	}
+	if m.FieldCleared(groupstatusstate.FieldErrorDetail) {
+		fields = append(fields, groupstatusstate.FieldErrorDetail)
+	}
+	if m.FieldCleared(groupstatusstate.FieldObservedAt) {
+		fields = append(fields, groupstatusstate.FieldObservedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupStatusStateMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupStatusStateMutation) ClearField(name string) error {
+	switch name {
+	case groupstatusstate.FieldResponseExcerpt:
+		m.ClearResponseExcerpt()
+		return nil
+	case groupstatusstate.FieldLatencyMs:
+		m.ClearLatencyMs()
+		return nil
+	case groupstatusstate.FieldHTTPCode:
+		m.ClearHTTPCode()
+		return nil
+	case groupstatusstate.FieldErrorDetail:
+		m.ClearErrorDetail()
+		return nil
+	case groupstatusstate.FieldObservedAt:
+		m.ClearObservedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusState nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupStatusStateMutation) ResetField(name string) error {
+	switch name {
+	case groupstatusstate.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case groupstatusstate.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case groupstatusstate.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case groupstatusstate.FieldConfigID:
+		m.ResetConfigID()
+		return nil
+	case groupstatusstate.FieldLatestStatus:
+		m.ResetLatestStatus()
+		return nil
+	case groupstatusstate.FieldStableStatus:
+		m.ResetStableStatus()
+		return nil
+	case groupstatusstate.FieldResponseExcerpt:
+		m.ResetResponseExcerpt()
+		return nil
+	case groupstatusstate.FieldLatencyMs:
+		m.ResetLatencyMs()
+		return nil
+	case groupstatusstate.FieldHTTPCode:
+		m.ResetHTTPCode()
+		return nil
+	case groupstatusstate.FieldSubStatus:
+		m.ResetSubStatus()
+		return nil
+	case groupstatusstate.FieldErrorDetail:
+		m.ResetErrorDetail()
+		return nil
+	case groupstatusstate.FieldObservedAt:
+		m.ResetObservedAt()
+		return nil
+	case groupstatusstate.FieldConsecutiveDown:
+		m.ResetConsecutiveDown()
+		return nil
+	case groupstatusstate.FieldConsecutiveNonDown:
+		m.ResetConsecutiveNonDown()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusState field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupStatusStateMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupStatusStateMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupStatusStateMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupStatusStateMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupStatusStateMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupStatusStateMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupStatusStateMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusState unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupStatusStateMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusState edge %s", name)
 }
 
 // IdempotencyRecordMutation represents an operation that mutates the IdempotencyRecord nodes in the graph.
@@ -23391,7 +27836,6 @@ func (m *UserMutation) OldReferralCode(ctx context.Context) (v string, err error
 func (m *UserMutation) ResetReferralCode() {
 	m.referral_code = nil
 }
-
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
 func (m *UserMutation) AddAPIKeyIDs(ids ...int64) {

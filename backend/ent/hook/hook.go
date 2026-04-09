@@ -93,6 +93,54 @@ func (f GroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupMutation", m)
 }
 
+// The GroupStatusConfigFunc type is an adapter to allow the use of ordinary
+// function as GroupStatusConfig mutator.
+type GroupStatusConfigFunc func(context.Context, *ent.GroupStatusConfigMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GroupStatusConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GroupStatusConfigMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupStatusConfigMutation", m)
+}
+
+// The GroupStatusEventFunc type is an adapter to allow the use of ordinary
+// function as GroupStatusEvent mutator.
+type GroupStatusEventFunc func(context.Context, *ent.GroupStatusEventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GroupStatusEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GroupStatusEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupStatusEventMutation", m)
+}
+
+// The GroupStatusRecordFunc type is an adapter to allow the use of ordinary
+// function as GroupStatusRecord mutator.
+type GroupStatusRecordFunc func(context.Context, *ent.GroupStatusRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GroupStatusRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GroupStatusRecordMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupStatusRecordMutation", m)
+}
+
+// The GroupStatusStateFunc type is an adapter to allow the use of ordinary
+// function as GroupStatusState mutator.
+type GroupStatusStateFunc func(context.Context, *ent.GroupStatusStateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GroupStatusStateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GroupStatusStateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupStatusStateMutation", m)
+}
+
 // The IdempotencyRecordFunc type is an adapter to allow the use of ordinary
 // function as IdempotencyRecord mutator.
 type IdempotencyRecordFunc func(context.Context, *ent.IdempotencyRecordMutation) (ent.Value, error)

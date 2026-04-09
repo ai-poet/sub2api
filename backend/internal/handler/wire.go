@@ -76,6 +76,18 @@ func ProvideSettingHandler(settingService *service.SettingService, buildInfo Bui
 	return NewSettingHandler(settingService, buildInfo.Version)
 }
 
+func ProvideAdminGroupHandler(
+	adminService service.AdminService,
+	dashboardService *service.DashboardService,
+	groupCapacityService *service.GroupCapacityService,
+	groupStatusService *service.GroupStatusService,
+	groupStatusProbeSvc *service.GroupStatusProbeService,
+) *admin.GroupHandler {
+	h := admin.NewGroupHandler(adminService, dashboardService, groupCapacityService)
+	h.SetGroupStatusServices(groupStatusService, groupStatusProbeSvc)
+	return h
+}
+
 // ProvideHandlers creates the Handlers struct
 func ProvideHandlers(
 	authHandler *AuthHandler,
@@ -92,6 +104,7 @@ func ProvideHandlers(
 	totpHandler *TotpHandler,
 	referralHandler *ReferralHandler,
 	modelMirrorHandler *ModelMirrorHandler,
+	groupStatusHandler *GroupStatusHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 ) *Handlers {
@@ -110,6 +123,7 @@ func ProvideHandlers(
 		Totp:          totpHandler,
 		Referral:      referralHandler,
 		ModelMirror:   modelMirrorHandler,
+		GroupStatus:   groupStatusHandler,
 	}
 }
 
@@ -128,12 +142,13 @@ var ProviderSet = wire.NewSet(
 	NewTotpHandler,
 	NewReferralHandler,
 	NewModelMirrorHandler,
+	NewGroupStatusHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers
 	admin.NewDashboardHandler,
 	admin.NewUserHandler,
-	admin.NewGroupHandler,
+	ProvideAdminGroupHandler,
 	admin.NewAccountHandler,
 	admin.NewAnnouncementHandler,
 	admin.NewDataManagementHandler,

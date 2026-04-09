@@ -54,6 +54,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		PurchaseSubscriptionOpenMode:     settings.PurchaseSubscriptionOpenMode,
 		CustomMenuItems:                  dto.ParseUserVisibleMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                  dto.ParseCustomEndpoints(settings.CustomEndpoints),
+		GroupStatusEnabled:               settings.GroupStatusEnabled,
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,
 		BackendModeEnabled:               settings.BackendModeEnabled,

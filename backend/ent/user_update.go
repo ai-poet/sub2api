@@ -257,7 +257,6 @@ func (_u *UserUpdate) SetNillableReferralCode(v *string) *UserUpdate {
 	return _u
 }
 
-
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdate) AddAPIKeyIDs(ids ...int64) *UserUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1551,7 +1550,6 @@ func (_u *UserUpdateOne) SetNillableReferralCode(v *string) *UserUpdateOne {
 	}
 	return _u
 }
-
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdateOne) AddAPIKeyIDs(ids ...int64) *UserUpdateOne {

@@ -44,6 +44,7 @@ type SystemSettings struct {
 	PurchaseSubscriptionOpenMode string // iframe or new_window
 	CustomMenuItems              string // JSON array of custom menu items
 	CustomEndpoints              string // JSON array of custom endpoints
+	GroupStatusEnabled           bool
 
 	DefaultConcurrency   int
 	DefaultBalance       float64
@@ -114,6 +115,7 @@ type PublicSettings struct {
 	PurchaseSubscriptionOpenMode string // iframe or new_window
 	CustomMenuItems              string // JSON array of custom menu items
 	CustomEndpoints              string // JSON array of custom endpoints
+	GroupStatusEnabled           bool
 
 	LinuxDoOAuthEnabled bool
 	ReferralEnabled     bool

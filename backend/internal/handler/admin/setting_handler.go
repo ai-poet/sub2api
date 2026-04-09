@@ -109,6 +109,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		PurchaseSubscriptionOpenMode:         settings.PurchaseSubscriptionOpenMode,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                      dto.ParseCustomEndpoints(settings.CustomEndpoints),
+		GroupStatusEnabled:                   settings.GroupStatusEnabled,
 		DefaultConcurrency:                   settings.DefaultConcurrency,
 		DefaultBalance:                       settings.DefaultBalance,
 		DefaultSubscriptions:                 defaultSubscriptions,
@@ -180,6 +181,7 @@ type UpdateSettingsRequest struct {
 	PurchaseSubscriptionOpenMode *string               `json:"purchase_subscription_open_mode"`
 	CustomMenuItems              *[]dto.CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints              *[]dto.CustomEndpoint `json:"custom_endpoints"`
+	GroupStatusEnabled           bool                  `json:"group_status_enabled"`
 
 	// 默认配置
 	DefaultConcurrency   int                              `json:"default_concurrency"`
@@ -581,6 +583,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionOpenMode:     purchaseOpenMode,
 		CustomMenuItems:                  customMenuJSON,
 		CustomEndpoints:                  customEndpointsJSON,
+		GroupStatusEnabled:               req.GroupStatusEnabled,
 		DefaultConcurrency:               req.DefaultConcurrency,
 		DefaultBalance:                   req.DefaultBalance,
 		DefaultSubscriptions:             defaultSubscriptions,
@@ -698,6 +701,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionOpenMode:         updatedSettings.PurchaseSubscriptionOpenMode,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
 		CustomEndpoints:                      dto.ParseCustomEndpoints(updatedSettings.CustomEndpoints),
+		GroupStatusEnabled:                   updatedSettings.GroupStatusEnabled,
 		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
 		DefaultBalance:                       updatedSettings.DefaultBalance,
 		DefaultSubscriptions:                 updatedDefaultSubscriptions,
@@ -903,6 +907,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.CustomMenuItems != after.CustomMenuItems {
 		changed = append(changed, "custom_menu_items")
+	}
+	if before.GroupStatusEnabled != after.GroupStatusEnabled {
+		changed = append(changed, "group_status_enabled")
 	}
 	if before.EnableFingerprintUnification != after.EnableFingerprintUnification {
 		changed = append(changed, "enable_fingerprint_unification")

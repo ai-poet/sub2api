@@ -66,6 +66,7 @@ type SystemSettings struct {
 	PurchaseSubscriptionOpenMode string           `json:"purchase_subscription_open_mode"` // iframe or new_window
 	CustomMenuItems              []CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints              []CustomEndpoint `json:"custom_endpoints"`
+	GroupStatusEnabled           bool             `json:"group_status_enabled"`
 
 	DefaultConcurrency   int                          `json:"default_concurrency"`
 	DefaultBalance       float64                      `json:"default_balance"`
@@ -132,6 +133,7 @@ type PublicSettings struct {
 	PurchaseSubscriptionOpenMode     string           `json:"purchase_subscription_open_mode"` // iframe or new_window
 	CustomMenuItems                  []CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints                  []CustomEndpoint `json:"custom_endpoints"`
+	GroupStatusEnabled               bool             `json:"group_status_enabled"`
 	LinuxDoOAuthEnabled              bool             `json:"linuxdo_oauth_enabled"`
 	ReferralEnabled                  bool             `json:"referral_enabled"`
 	BackendModeEnabled               bool             `json:"backend_mode_enabled"`

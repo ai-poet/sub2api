@@ -145,6 +145,7 @@ const (
 
 	// Claude Relay Inspector knowledge probe bank (JSON array)
 	SettingKeyModelMirrorKnowledgeProbes = "model_mirror_knowledge_probes"
+	SettingKeyGroupStatusEnabled         = "group_status_enabled"
 
 	// =========================
 	// Ops Monitoring (vNext)

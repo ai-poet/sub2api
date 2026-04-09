@@ -50,6 +50,7 @@ type Handlers struct {
 	Totp          *TotpHandler
 	Referral      *ReferralHandler
 	ModelMirror   *ModelMirrorHandler
+	GroupStatus   *GroupStatusHandler
 }
 
 // BuildInfo contains build-time information

@@ -47,6 +47,7 @@ type User struct {
 	TotpEnabledAt *time.Time `json:"totp_enabled_at,omitempty"`
 	// ReferralCode holds the value of the "referral_code" field.
 	ReferralCode string `json:"referral_code,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
 	selectValues sql.SelectValues

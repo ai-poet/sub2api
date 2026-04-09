@@ -338,6 +338,16 @@ func ProvideScheduledTestRunnerService(
 	return svc
 }
 
+func ProvideGroupStatusRunnerService(
+	repo GroupStatusRepository,
+	probeSvc *GroupStatusProbeService,
+	cfg *config.Config,
+) *GroupStatusRunnerService {
+	svc := NewGroupStatusRunnerService(repo, probeSvc, cfg)
+	svc.Start()
+	return svc
+}
+
 // ProvideOpsScheduledReportService creates and starts OpsScheduledReportService.
 func ProvideOpsScheduledReportService(
 	opsService *OpsService,
@@ -355,6 +365,10 @@ func ProvideOpsScheduledReportService(
 func ProvideAPIKeyAuthCacheInvalidator(apiKeyService *APIKeyService) APIKeyAuthCacheInvalidator {
 	// Start Pub/Sub subscriber for L1 cache invalidation across instances
 	apiKeyService.StartAuthCacheInvalidationSubscriber(context.Background())
+	return apiKeyService
+}
+
+func ProvideAvailableGroupReader(apiKeyService *APIKeyService) AvailableGroupReader {
 	return apiKeyService
 }
 
@@ -394,6 +408,7 @@ var ProviderSet = wire.NewSet(
 	NewAuthService,
 	NewUserService,
 	NewAPIKeyService,
+	ProvideAvailableGroupReader,
 	ProvideAPIKeyAuthCacheInvalidator,
 	NewGroupService,
 	NewAccountService,
@@ -408,6 +423,8 @@ var ProviderSet = wire.NewSet(
 	NewBillingCacheService,
 	NewAnnouncementService,
 	NewAdminService,
+	NewGroupStatusService,
+	NewGroupStatusProbeService,
 	ProvideReferralRewardRecordRepository,
 	NewGatewayService,
 	NewOpenAIGatewayService,
@@ -470,6 +487,7 @@ var ProviderSet = wire.NewSet(
 	ProvideIdempotencyCleanupService,
 	ProvideScheduledTestService,
 	ProvideScheduledTestRunnerService,
+	ProvideGroupStatusRunnerService,
 	NewGroupCapacityService,
 	NewChannelService,
 	NewModelPricingResolver,

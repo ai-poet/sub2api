@@ -225,7 +225,6 @@ func (_c *UserCreate) SetNillableReferralCode(v *string) *UserCreate {
 	return _c
 }
 
-
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *UserCreate) AddAPIKeyIDs(ids ...int64) *UserCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -1062,7 +1061,6 @@ func (u *UserUpsert) UpdateReferralCode() *UserUpsert {
 	return u
 }
 
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1338,7 +1336,6 @@ func (u *UserUpsertOne) UpdateReferralCode() *UserUpsertOne {
 		s.UpdateReferralCode()
 	})
 }
-
 
 // Exec executes the query.
 func (u *UserUpsertOne) Exec(ctx context.Context) error {
@@ -1781,7 +1778,6 @@ func (u *UserUpsertBulk) UpdateReferralCode() *UserUpsertBulk {
 		s.UpdateReferralCode()
 	})
 }
-
 
 // Exec executes the query.
 func (u *UserUpsertBulk) Exec(ctx context.Context) error {

@@ -110,6 +110,7 @@ export interface PublicSettings {
   purchase_subscription_open_mode: string // 'iframe' or 'new_window'
   custom_menu_items: CustomMenuItem[]
   custom_endpoints: CustomEndpoint[]
+  group_status_enabled: boolean
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
   backend_mode_enabled: boolean
@@ -420,6 +421,84 @@ export interface AdminGroup extends Group {
 
   // 分组排序
   sort_order: number
+}
+
+// ==================== Group Runtime Status Types ====================
+
+export type GroupRuntimeStatus = 'up' | 'degraded' | 'down'
+
+export type GroupStatusValidationMode = 'non_empty' | 'keywords_any' | 'keywords_all'
+
+export type GroupStatusEventType = 'up' | 'down'
+
+export interface GroupStatusConfig {
+  id: number
+  group_id: number
+  enabled: boolean
+  probe_model: string
+  probe_prompt: string
+  validation_mode: GroupStatusValidationMode
+  expected_keywords: string[]
+  interval_seconds: number
+  timeout_seconds: number
+  slow_latency_ms: number
+  created_at: string
+  updated_at: string
+}
+
+export interface GroupStatusSummary {
+  group_id: number
+  config_id: number
+  enabled: boolean
+  probe_model: string
+  latest_status: GroupRuntimeStatus | ''
+  stable_status: GroupRuntimeStatus | ''
+  response_excerpt: string
+  latency_ms: number | null
+  http_code: number | null
+  sub_status: string
+  error_detail: string
+  observed_at: string | null
+  consecutive_down: number
+  consecutive_non_down: number
+}
+
+export interface GroupStatusAdminView {
+  group: Group
+  config: GroupStatusConfig
+  summary: GroupStatusSummary
+}
+
+export interface GroupStatusHistoryBucket {
+  bucket_start: string
+  bucket_end: string
+  availability: number
+  avg_latency_ms: number | null
+  total_count: number
+  down_count: number
+  latest_status: GroupRuntimeStatus | ''
+}
+
+export interface GroupStatusEvent {
+  id: number
+  group_id: number
+  config_id: number
+  event_type: GroupStatusEventType
+  from_status: GroupRuntimeStatus | ''
+  to_status: GroupRuntimeStatus | ''
+  latency_ms: number | null
+  http_code: number | null
+  sub_status: string
+  error_detail: string
+  observed_at: string
+  created_at: string
+}
+
+export interface GroupStatusListItem {
+  group: Group
+  summary: GroupStatusSummary
+  availability_24h: number
+  availability_7d: number
 }
 
 export interface ApiKey {

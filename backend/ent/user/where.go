@@ -130,7 +130,6 @@ func ReferralCode(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldReferralCode, v))
 }
 
-
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -866,7 +865,6 @@ func TotpEnabledAtNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldTotpEnabledAt))
 }
 
-
 // ReferralCodeEQ applies the EQ predicate on the "referral_code" field.
 func ReferralCodeEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldReferralCode, v))
@@ -931,7 +929,6 @@ func ReferralCodeEqualFold(v string) predicate.User {
 func ReferralCodeContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldReferralCode, v))
 }
-
 
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.
 func HasAPIKeys() predicate.User {

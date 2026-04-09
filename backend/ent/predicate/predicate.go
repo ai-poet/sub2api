@@ -27,6 +27,18 @@ type ErrorPassthroughRule func(*sql.Selector)
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
 
+// GroupStatusConfig is the predicate function for groupstatusconfig builders.
+type GroupStatusConfig func(*sql.Selector)
+
+// GroupStatusEvent is the predicate function for groupstatusevent builders.
+type GroupStatusEvent func(*sql.Selector)
+
+// GroupStatusRecord is the predicate function for groupstatusrecord builders.
+type GroupStatusRecord func(*sql.Selector)
+
+// GroupStatusState is the predicate function for groupstatusstate builders.
+type GroupStatusState func(*sql.Selector)
+
 // IdempotencyRecord is the predicate function for idempotencyrecord builders.
 type IdempotencyRecord func(*sql.Selector)
 

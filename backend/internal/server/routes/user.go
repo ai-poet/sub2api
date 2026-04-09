@@ -103,5 +103,12 @@ func RegisterUserRoutes(
 		{
 			tools.POST("/model-mirror/verify", h.ModelMirror.Verify)
 		}
+
+		groupStatus := authenticated.Group("/group-status")
+		{
+			groupStatus.GET("", h.GroupStatus.List)
+			groupStatus.GET("/:groupId/history", h.GroupStatus.History)
+			groupStatus.GET("/:groupId/events", h.GroupStatus.Events)
+		}
 	}
 }

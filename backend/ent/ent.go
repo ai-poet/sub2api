@@ -19,6 +19,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
@@ -102,6 +106,10 @@ func checkColumn(t, c string) error {
 			announcementread.Table:        announcementread.ValidColumn,
 			errorpassthroughrule.Table:    errorpassthroughrule.ValidColumn,
 			group.Table:                   group.ValidColumn,
+			groupstatusconfig.Table:       groupstatusconfig.ValidColumn,
+			groupstatusevent.Table:        groupstatusevent.ValidColumn,
+			groupstatusrecord.Table:       groupstatusrecord.ValidColumn,
+			groupstatusstate.Table:        groupstatusstate.ValidColumn,
 			idempotencyrecord.Table:       idempotencyrecord.ValidColumn,
 			promocode.Table:               promocode.ValidColumn,
 			promocodeusage.Table:          promocodeusage.ValidColumn,

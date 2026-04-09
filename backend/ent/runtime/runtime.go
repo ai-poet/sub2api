@@ -12,6 +12,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
@@ -469,6 +473,116 @@ func init() {
 	group.DefaultDefaultMappedModel = groupDescDefaultMappedModel.Default.(string)
 	// group.DefaultMappedModelValidator is a validator for the "default_mapped_model" field. It is called by the builders before save.
 	group.DefaultMappedModelValidator = groupDescDefaultMappedModel.Validators[0].(func(string) error)
+	groupstatusconfigMixin := schema.GroupStatusConfig{}.Mixin()
+	groupstatusconfigMixinFields0 := groupstatusconfigMixin[0].Fields()
+	_ = groupstatusconfigMixinFields0
+	groupstatusconfigFields := schema.GroupStatusConfig{}.Fields()
+	_ = groupstatusconfigFields
+	// groupstatusconfigDescCreatedAt is the schema descriptor for created_at field.
+	groupstatusconfigDescCreatedAt := groupstatusconfigMixinFields0[0].Descriptor()
+	// groupstatusconfig.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupstatusconfig.DefaultCreatedAt = groupstatusconfigDescCreatedAt.Default.(func() time.Time)
+	// groupstatusconfigDescUpdatedAt is the schema descriptor for updated_at field.
+	groupstatusconfigDescUpdatedAt := groupstatusconfigMixinFields0[1].Descriptor()
+	// groupstatusconfig.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	groupstatusconfig.DefaultUpdatedAt = groupstatusconfigDescUpdatedAt.Default.(func() time.Time)
+	// groupstatusconfig.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	groupstatusconfig.UpdateDefaultUpdatedAt = groupstatusconfigDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// groupstatusconfigDescEnabled is the schema descriptor for enabled field.
+	groupstatusconfigDescEnabled := groupstatusconfigFields[1].Descriptor()
+	// groupstatusconfig.DefaultEnabled holds the default value on creation for the enabled field.
+	groupstatusconfig.DefaultEnabled = groupstatusconfigDescEnabled.Default.(bool)
+	// groupstatusconfigDescProbeModel is the schema descriptor for probe_model field.
+	groupstatusconfigDescProbeModel := groupstatusconfigFields[2].Descriptor()
+	// groupstatusconfig.DefaultProbeModel holds the default value on creation for the probe_model field.
+	groupstatusconfig.DefaultProbeModel = groupstatusconfigDescProbeModel.Default.(string)
+	// groupstatusconfigDescProbePrompt is the schema descriptor for probe_prompt field.
+	groupstatusconfigDescProbePrompt := groupstatusconfigFields[3].Descriptor()
+	// groupstatusconfig.DefaultProbePrompt holds the default value on creation for the probe_prompt field.
+	groupstatusconfig.DefaultProbePrompt = groupstatusconfigDescProbePrompt.Default.(string)
+	// groupstatusconfigDescValidationMode is the schema descriptor for validation_mode field.
+	groupstatusconfigDescValidationMode := groupstatusconfigFields[4].Descriptor()
+	// groupstatusconfig.DefaultValidationMode holds the default value on creation for the validation_mode field.
+	groupstatusconfig.DefaultValidationMode = groupstatusconfigDescValidationMode.Default.(string)
+	// groupstatusconfigDescExpectedKeywords is the schema descriptor for expected_keywords field.
+	groupstatusconfigDescExpectedKeywords := groupstatusconfigFields[5].Descriptor()
+	// groupstatusconfig.DefaultExpectedKeywords holds the default value on creation for the expected_keywords field.
+	groupstatusconfig.DefaultExpectedKeywords = groupstatusconfigDescExpectedKeywords.Default.([]string)
+	// groupstatusconfigDescIntervalSeconds is the schema descriptor for interval_seconds field.
+	groupstatusconfigDescIntervalSeconds := groupstatusconfigFields[6].Descriptor()
+	// groupstatusconfig.DefaultIntervalSeconds holds the default value on creation for the interval_seconds field.
+	groupstatusconfig.DefaultIntervalSeconds = groupstatusconfigDescIntervalSeconds.Default.(int)
+	// groupstatusconfigDescTimeoutSeconds is the schema descriptor for timeout_seconds field.
+	groupstatusconfigDescTimeoutSeconds := groupstatusconfigFields[7].Descriptor()
+	// groupstatusconfig.DefaultTimeoutSeconds holds the default value on creation for the timeout_seconds field.
+	groupstatusconfig.DefaultTimeoutSeconds = groupstatusconfigDescTimeoutSeconds.Default.(int)
+	// groupstatusconfigDescSlowLatencyMs is the schema descriptor for slow_latency_ms field.
+	groupstatusconfigDescSlowLatencyMs := groupstatusconfigFields[8].Descriptor()
+	// groupstatusconfig.DefaultSlowLatencyMs holds the default value on creation for the slow_latency_ms field.
+	groupstatusconfig.DefaultSlowLatencyMs = groupstatusconfigDescSlowLatencyMs.Default.(int64)
+	groupstatuseventFields := schema.GroupStatusEvent{}.Fields()
+	_ = groupstatuseventFields
+	// groupstatuseventDescFromStatus is the schema descriptor for from_status field.
+	groupstatuseventDescFromStatus := groupstatuseventFields[3].Descriptor()
+	// groupstatusevent.DefaultFromStatus holds the default value on creation for the from_status field.
+	groupstatusevent.DefaultFromStatus = groupstatuseventDescFromStatus.Default.(string)
+	// groupstatuseventDescToStatus is the schema descriptor for to_status field.
+	groupstatuseventDescToStatus := groupstatuseventFields[4].Descriptor()
+	// groupstatusevent.DefaultToStatus holds the default value on creation for the to_status field.
+	groupstatusevent.DefaultToStatus = groupstatuseventDescToStatus.Default.(string)
+	// groupstatuseventDescSubStatus is the schema descriptor for sub_status field.
+	groupstatuseventDescSubStatus := groupstatuseventFields[7].Descriptor()
+	// groupstatusevent.DefaultSubStatus holds the default value on creation for the sub_status field.
+	groupstatusevent.DefaultSubStatus = groupstatuseventDescSubStatus.Default.(string)
+	// groupstatuseventDescCreatedAt is the schema descriptor for created_at field.
+	groupstatuseventDescCreatedAt := groupstatuseventFields[10].Descriptor()
+	// groupstatusevent.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupstatusevent.DefaultCreatedAt = groupstatuseventDescCreatedAt.Default.(func() time.Time)
+	groupstatusrecordFields := schema.GroupStatusRecord{}.Fields()
+	_ = groupstatusrecordFields
+	// groupstatusrecordDescSubStatus is the schema descriptor for sub_status field.
+	groupstatusrecordDescSubStatus := groupstatusrecordFields[6].Descriptor()
+	// groupstatusrecord.DefaultSubStatus holds the default value on creation for the sub_status field.
+	groupstatusrecord.DefaultSubStatus = groupstatusrecordDescSubStatus.Default.(string)
+	// groupstatusrecordDescCreatedAt is the schema descriptor for created_at field.
+	groupstatusrecordDescCreatedAt := groupstatusrecordFields[9].Descriptor()
+	// groupstatusrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupstatusrecord.DefaultCreatedAt = groupstatusrecordDescCreatedAt.Default.(func() time.Time)
+	groupstatusstateMixin := schema.GroupStatusState{}.Mixin()
+	groupstatusstateMixinFields0 := groupstatusstateMixin[0].Fields()
+	_ = groupstatusstateMixinFields0
+	groupstatusstateFields := schema.GroupStatusState{}.Fields()
+	_ = groupstatusstateFields
+	// groupstatusstateDescCreatedAt is the schema descriptor for created_at field.
+	groupstatusstateDescCreatedAt := groupstatusstateMixinFields0[0].Descriptor()
+	// groupstatusstate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupstatusstate.DefaultCreatedAt = groupstatusstateDescCreatedAt.Default.(func() time.Time)
+	// groupstatusstateDescUpdatedAt is the schema descriptor for updated_at field.
+	groupstatusstateDescUpdatedAt := groupstatusstateMixinFields0[1].Descriptor()
+	// groupstatusstate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	groupstatusstate.DefaultUpdatedAt = groupstatusstateDescUpdatedAt.Default.(func() time.Time)
+	// groupstatusstate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	groupstatusstate.UpdateDefaultUpdatedAt = groupstatusstateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// groupstatusstateDescLatestStatus is the schema descriptor for latest_status field.
+	groupstatusstateDescLatestStatus := groupstatusstateFields[2].Descriptor()
+	// groupstatusstate.DefaultLatestStatus holds the default value on creation for the latest_status field.
+	groupstatusstate.DefaultLatestStatus = groupstatusstateDescLatestStatus.Default.(string)
+	// groupstatusstateDescStableStatus is the schema descriptor for stable_status field.
+	groupstatusstateDescStableStatus := groupstatusstateFields[3].Descriptor()
+	// groupstatusstate.DefaultStableStatus holds the default value on creation for the stable_status field.
+	groupstatusstate.DefaultStableStatus = groupstatusstateDescStableStatus.Default.(string)
+	// groupstatusstateDescSubStatus is the schema descriptor for sub_status field.
+	groupstatusstateDescSubStatus := groupstatusstateFields[7].Descriptor()
+	// groupstatusstate.DefaultSubStatus holds the default value on creation for the sub_status field.
+	groupstatusstate.DefaultSubStatus = groupstatusstateDescSubStatus.Default.(string)
+	// groupstatusstateDescConsecutiveDown is the schema descriptor for consecutive_down field.
+	groupstatusstateDescConsecutiveDown := groupstatusstateFields[10].Descriptor()
+	// groupstatusstate.DefaultConsecutiveDown holds the default value on creation for the consecutive_down field.
+	groupstatusstate.DefaultConsecutiveDown = groupstatusstateDescConsecutiveDown.Default.(int)
+	// groupstatusstateDescConsecutiveNonDown is the schema descriptor for consecutive_non_down field.
+	groupstatusstateDescConsecutiveNonDown := groupstatusstateFields[11].Descriptor()
+	// groupstatusstate.DefaultConsecutiveNonDown holds the default value on creation for the consecutive_non_down field.
+	groupstatusstate.DefaultConsecutiveNonDown = groupstatusstateDescConsecutiveNonDown.Default.(int)
 	idempotencyrecordMixin := schema.IdempotencyRecord{}.Mixin()
 	idempotencyrecordMixinFields0 := idempotencyrecordMixin[0].Fields()
 	_ = idempotencyrecordMixinFields0

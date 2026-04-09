@@ -15,6 +15,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
@@ -277,6 +281,114 @@ func (f TraverseGroup) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.GroupQuery", q)
+}
+
+// The GroupStatusConfigFunc type is an adapter to allow the use of ordinary function as a Querier.
+type GroupStatusConfigFunc func(context.Context, *ent.GroupStatusConfigQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f GroupStatusConfigFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.GroupStatusConfigQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusConfigQuery", q)
+}
+
+// The TraverseGroupStatusConfig type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseGroupStatusConfig func(context.Context, *ent.GroupStatusConfigQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseGroupStatusConfig) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseGroupStatusConfig) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.GroupStatusConfigQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusConfigQuery", q)
+}
+
+// The GroupStatusEventFunc type is an adapter to allow the use of ordinary function as a Querier.
+type GroupStatusEventFunc func(context.Context, *ent.GroupStatusEventQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f GroupStatusEventFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.GroupStatusEventQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusEventQuery", q)
+}
+
+// The TraverseGroupStatusEvent type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseGroupStatusEvent func(context.Context, *ent.GroupStatusEventQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseGroupStatusEvent) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseGroupStatusEvent) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.GroupStatusEventQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusEventQuery", q)
+}
+
+// The GroupStatusRecordFunc type is an adapter to allow the use of ordinary function as a Querier.
+type GroupStatusRecordFunc func(context.Context, *ent.GroupStatusRecordQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f GroupStatusRecordFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.GroupStatusRecordQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusRecordQuery", q)
+}
+
+// The TraverseGroupStatusRecord type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseGroupStatusRecord func(context.Context, *ent.GroupStatusRecordQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseGroupStatusRecord) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseGroupStatusRecord) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.GroupStatusRecordQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusRecordQuery", q)
+}
+
+// The GroupStatusStateFunc type is an adapter to allow the use of ordinary function as a Querier.
+type GroupStatusStateFunc func(context.Context, *ent.GroupStatusStateQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f GroupStatusStateFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.GroupStatusStateQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusStateQuery", q)
+}
+
+// The TraverseGroupStatusState type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseGroupStatusState func(context.Context, *ent.GroupStatusStateQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseGroupStatusState) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseGroupStatusState) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.GroupStatusStateQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusStateQuery", q)
 }
 
 // The IdempotencyRecordFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -728,6 +840,14 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ErrorPassthroughRuleQuery, predicate.ErrorPassthroughRule, errorpassthroughrule.OrderOption]{typ: ent.TypeErrorPassthroughRule, tq: q}, nil
 	case *ent.GroupQuery:
 		return &query[*ent.GroupQuery, predicate.Group, group.OrderOption]{typ: ent.TypeGroup, tq: q}, nil
+	case *ent.GroupStatusConfigQuery:
+		return &query[*ent.GroupStatusConfigQuery, predicate.GroupStatusConfig, groupstatusconfig.OrderOption]{typ: ent.TypeGroupStatusConfig, tq: q}, nil
+	case *ent.GroupStatusEventQuery:
+		return &query[*ent.GroupStatusEventQuery, predicate.GroupStatusEvent, groupstatusevent.OrderOption]{typ: ent.TypeGroupStatusEvent, tq: q}, nil
+	case *ent.GroupStatusRecordQuery:
+		return &query[*ent.GroupStatusRecordQuery, predicate.GroupStatusRecord, groupstatusrecord.OrderOption]{typ: ent.TypeGroupStatusRecord, tq: q}, nil
+	case *ent.GroupStatusStateQuery:
+		return &query[*ent.GroupStatusStateQuery, predicate.GroupStatusState, groupstatusstate.OrderOption]{typ: ent.TypeGroupStatusState, tq: q}, nil
 	case *ent.IdempotencyRecordQuery:
 		return &query[*ent.IdempotencyRecordQuery, predicate.IdempotencyRecord, idempotencyrecord.OrderOption]{typ: ent.TypeIdempotencyRecord, tq: q}, nil
 	case *ent.PromoCodeQuery:

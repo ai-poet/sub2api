@@ -22,6 +22,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
@@ -61,6 +65,14 @@ type Client struct {
 	ErrorPassthroughRule *ErrorPassthroughRuleClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// GroupStatusConfig is the client for interacting with the GroupStatusConfig builders.
+	GroupStatusConfig *GroupStatusConfigClient
+	// GroupStatusEvent is the client for interacting with the GroupStatusEvent builders.
+	GroupStatusEvent *GroupStatusEventClient
+	// GroupStatusRecord is the client for interacting with the GroupStatusRecord builders.
+	GroupStatusRecord *GroupStatusRecordClient
+	// GroupStatusState is the client for interacting with the GroupStatusState builders.
+	GroupStatusState *GroupStatusStateClient
 	// IdempotencyRecord is the client for interacting with the IdempotencyRecord builders.
 	IdempotencyRecord *IdempotencyRecordClient
 	// PromoCode is the client for interacting with the PromoCode builders.
@@ -111,6 +123,10 @@ func (c *Client) init() {
 	c.AnnouncementRead = NewAnnouncementReadClient(c.config)
 	c.ErrorPassthroughRule = NewErrorPassthroughRuleClient(c.config)
 	c.Group = NewGroupClient(c.config)
+	c.GroupStatusConfig = NewGroupStatusConfigClient(c.config)
+	c.GroupStatusEvent = NewGroupStatusEventClient(c.config)
+	c.GroupStatusRecord = NewGroupStatusRecordClient(c.config)
+	c.GroupStatusState = NewGroupStatusStateClient(c.config)
 	c.IdempotencyRecord = NewIdempotencyRecordClient(c.config)
 	c.PromoCode = NewPromoCodeClient(c.config)
 	c.PromoCodeUsage = NewPromoCodeUsageClient(c.config)
@@ -226,6 +242,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AnnouncementRead:        NewAnnouncementReadClient(cfg),
 		ErrorPassthroughRule:    NewErrorPassthroughRuleClient(cfg),
 		Group:                   NewGroupClient(cfg),
+		GroupStatusConfig:       NewGroupStatusConfigClient(cfg),
+		GroupStatusEvent:        NewGroupStatusEventClient(cfg),
+		GroupStatusRecord:       NewGroupStatusRecordClient(cfg),
+		GroupStatusState:        NewGroupStatusStateClient(cfg),
 		IdempotencyRecord:       NewIdempotencyRecordClient(cfg),
 		PromoCode:               NewPromoCodeClient(cfg),
 		PromoCodeUsage:          NewPromoCodeUsageClient(cfg),
@@ -268,6 +288,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AnnouncementRead:        NewAnnouncementReadClient(cfg),
 		ErrorPassthroughRule:    NewErrorPassthroughRuleClient(cfg),
 		Group:                   NewGroupClient(cfg),
+		GroupStatusConfig:       NewGroupStatusConfigClient(cfg),
+		GroupStatusEvent:        NewGroupStatusEventClient(cfg),
+		GroupStatusRecord:       NewGroupStatusRecordClient(cfg),
+		GroupStatusState:        NewGroupStatusStateClient(cfg),
 		IdempotencyRecord:       NewIdempotencyRecordClient(cfg),
 		PromoCode:               NewPromoCodeClient(cfg),
 		PromoCodeUsage:          NewPromoCodeUsageClient(cfg),
@@ -314,11 +338,12 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.Account, c.AccountGroup, c.Announcement, c.AnnouncementRead,
-		c.ErrorPassthroughRule, c.Group, c.IdempotencyRecord, c.PromoCode,
+		c.ErrorPassthroughRule, c.Group, c.GroupStatusConfig, c.GroupStatusEvent,
+		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord, c.PromoCode,
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
 		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserSubscription,
+		c.UserReferral, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -329,11 +354,12 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.Account, c.AccountGroup, c.Announcement, c.AnnouncementRead,
-		c.ErrorPassthroughRule, c.Group, c.IdempotencyRecord, c.PromoCode,
+		c.ErrorPassthroughRule, c.Group, c.GroupStatusConfig, c.GroupStatusEvent,
+		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord, c.PromoCode,
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
 		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserSubscription,
+		c.UserReferral, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -356,6 +382,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ErrorPassthroughRule.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
+	case *GroupStatusConfigMutation:
+		return c.GroupStatusConfig.mutate(ctx, m)
+	case *GroupStatusEventMutation:
+		return c.GroupStatusEvent.mutate(ctx, m)
+	case *GroupStatusRecordMutation:
+		return c.GroupStatusRecord.mutate(ctx, m)
+	case *GroupStatusStateMutation:
+		return c.GroupStatusState.mutate(ctx, m)
 	case *IdempotencyRecordMutation:
 		return c.IdempotencyRecord.mutate(ctx, m)
 	case *PromoCodeMutation:
@@ -1598,6 +1632,538 @@ func (c *GroupClient) mutate(ctx context.Context, m *GroupMutation) (Value, erro
 		return (&GroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Group mutation op: %q", m.Op())
+	}
+}
+
+// GroupStatusConfigClient is a client for the GroupStatusConfig schema.
+type GroupStatusConfigClient struct {
+	config
+}
+
+// NewGroupStatusConfigClient returns a client for the GroupStatusConfig from the given config.
+func NewGroupStatusConfigClient(c config) *GroupStatusConfigClient {
+	return &GroupStatusConfigClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupstatusconfig.Hooks(f(g(h())))`.
+func (c *GroupStatusConfigClient) Use(hooks ...Hook) {
+	c.hooks.GroupStatusConfig = append(c.hooks.GroupStatusConfig, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupstatusconfig.Intercept(f(g(h())))`.
+func (c *GroupStatusConfigClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupStatusConfig = append(c.inters.GroupStatusConfig, interceptors...)
+}
+
+// Create returns a builder for creating a GroupStatusConfig entity.
+func (c *GroupStatusConfigClient) Create() *GroupStatusConfigCreate {
+	mutation := newGroupStatusConfigMutation(c.config, OpCreate)
+	return &GroupStatusConfigCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupStatusConfig entities.
+func (c *GroupStatusConfigClient) CreateBulk(builders ...*GroupStatusConfigCreate) *GroupStatusConfigCreateBulk {
+	return &GroupStatusConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupStatusConfigClient) MapCreateBulk(slice any, setFunc func(*GroupStatusConfigCreate, int)) *GroupStatusConfigCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupStatusConfigCreateBulk{err: fmt.Errorf("calling to GroupStatusConfigClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupStatusConfigCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupStatusConfigCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupStatusConfig.
+func (c *GroupStatusConfigClient) Update() *GroupStatusConfigUpdate {
+	mutation := newGroupStatusConfigMutation(c.config, OpUpdate)
+	return &GroupStatusConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupStatusConfigClient) UpdateOne(_m *GroupStatusConfig) *GroupStatusConfigUpdateOne {
+	mutation := newGroupStatusConfigMutation(c.config, OpUpdateOne, withGroupStatusConfig(_m))
+	return &GroupStatusConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupStatusConfigClient) UpdateOneID(id int64) *GroupStatusConfigUpdateOne {
+	mutation := newGroupStatusConfigMutation(c.config, OpUpdateOne, withGroupStatusConfigID(id))
+	return &GroupStatusConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupStatusConfig.
+func (c *GroupStatusConfigClient) Delete() *GroupStatusConfigDelete {
+	mutation := newGroupStatusConfigMutation(c.config, OpDelete)
+	return &GroupStatusConfigDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupStatusConfigClient) DeleteOne(_m *GroupStatusConfig) *GroupStatusConfigDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupStatusConfigClient) DeleteOneID(id int64) *GroupStatusConfigDeleteOne {
+	builder := c.Delete().Where(groupstatusconfig.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupStatusConfigDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupStatusConfig.
+func (c *GroupStatusConfigClient) Query() *GroupStatusConfigQuery {
+	return &GroupStatusConfigQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupStatusConfig},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupStatusConfig entity by its id.
+func (c *GroupStatusConfigClient) Get(ctx context.Context, id int64) (*GroupStatusConfig, error) {
+	return c.Query().Where(groupstatusconfig.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupStatusConfigClient) GetX(ctx context.Context, id int64) *GroupStatusConfig {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GroupStatusConfigClient) Hooks() []Hook {
+	return c.hooks.GroupStatusConfig
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupStatusConfigClient) Interceptors() []Interceptor {
+	return c.inters.GroupStatusConfig
+}
+
+func (c *GroupStatusConfigClient) mutate(ctx context.Context, m *GroupStatusConfigMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupStatusConfigCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupStatusConfigUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupStatusConfigUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupStatusConfigDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupStatusConfig mutation op: %q", m.Op())
+	}
+}
+
+// GroupStatusEventClient is a client for the GroupStatusEvent schema.
+type GroupStatusEventClient struct {
+	config
+}
+
+// NewGroupStatusEventClient returns a client for the GroupStatusEvent from the given config.
+func NewGroupStatusEventClient(c config) *GroupStatusEventClient {
+	return &GroupStatusEventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupstatusevent.Hooks(f(g(h())))`.
+func (c *GroupStatusEventClient) Use(hooks ...Hook) {
+	c.hooks.GroupStatusEvent = append(c.hooks.GroupStatusEvent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupstatusevent.Intercept(f(g(h())))`.
+func (c *GroupStatusEventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupStatusEvent = append(c.inters.GroupStatusEvent, interceptors...)
+}
+
+// Create returns a builder for creating a GroupStatusEvent entity.
+func (c *GroupStatusEventClient) Create() *GroupStatusEventCreate {
+	mutation := newGroupStatusEventMutation(c.config, OpCreate)
+	return &GroupStatusEventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupStatusEvent entities.
+func (c *GroupStatusEventClient) CreateBulk(builders ...*GroupStatusEventCreate) *GroupStatusEventCreateBulk {
+	return &GroupStatusEventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupStatusEventClient) MapCreateBulk(slice any, setFunc func(*GroupStatusEventCreate, int)) *GroupStatusEventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupStatusEventCreateBulk{err: fmt.Errorf("calling to GroupStatusEventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupStatusEventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupStatusEventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupStatusEvent.
+func (c *GroupStatusEventClient) Update() *GroupStatusEventUpdate {
+	mutation := newGroupStatusEventMutation(c.config, OpUpdate)
+	return &GroupStatusEventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupStatusEventClient) UpdateOne(_m *GroupStatusEvent) *GroupStatusEventUpdateOne {
+	mutation := newGroupStatusEventMutation(c.config, OpUpdateOne, withGroupStatusEvent(_m))
+	return &GroupStatusEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupStatusEventClient) UpdateOneID(id int64) *GroupStatusEventUpdateOne {
+	mutation := newGroupStatusEventMutation(c.config, OpUpdateOne, withGroupStatusEventID(id))
+	return &GroupStatusEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupStatusEvent.
+func (c *GroupStatusEventClient) Delete() *GroupStatusEventDelete {
+	mutation := newGroupStatusEventMutation(c.config, OpDelete)
+	return &GroupStatusEventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupStatusEventClient) DeleteOne(_m *GroupStatusEvent) *GroupStatusEventDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupStatusEventClient) DeleteOneID(id int64) *GroupStatusEventDeleteOne {
+	builder := c.Delete().Where(groupstatusevent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupStatusEventDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupStatusEvent.
+func (c *GroupStatusEventClient) Query() *GroupStatusEventQuery {
+	return &GroupStatusEventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupStatusEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupStatusEvent entity by its id.
+func (c *GroupStatusEventClient) Get(ctx context.Context, id int64) (*GroupStatusEvent, error) {
+	return c.Query().Where(groupstatusevent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupStatusEventClient) GetX(ctx context.Context, id int64) *GroupStatusEvent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GroupStatusEventClient) Hooks() []Hook {
+	return c.hooks.GroupStatusEvent
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupStatusEventClient) Interceptors() []Interceptor {
+	return c.inters.GroupStatusEvent
+}
+
+func (c *GroupStatusEventClient) mutate(ctx context.Context, m *GroupStatusEventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupStatusEventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupStatusEventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupStatusEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupStatusEventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupStatusEvent mutation op: %q", m.Op())
+	}
+}
+
+// GroupStatusRecordClient is a client for the GroupStatusRecord schema.
+type GroupStatusRecordClient struct {
+	config
+}
+
+// NewGroupStatusRecordClient returns a client for the GroupStatusRecord from the given config.
+func NewGroupStatusRecordClient(c config) *GroupStatusRecordClient {
+	return &GroupStatusRecordClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupstatusrecord.Hooks(f(g(h())))`.
+func (c *GroupStatusRecordClient) Use(hooks ...Hook) {
+	c.hooks.GroupStatusRecord = append(c.hooks.GroupStatusRecord, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupstatusrecord.Intercept(f(g(h())))`.
+func (c *GroupStatusRecordClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupStatusRecord = append(c.inters.GroupStatusRecord, interceptors...)
+}
+
+// Create returns a builder for creating a GroupStatusRecord entity.
+func (c *GroupStatusRecordClient) Create() *GroupStatusRecordCreate {
+	mutation := newGroupStatusRecordMutation(c.config, OpCreate)
+	return &GroupStatusRecordCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupStatusRecord entities.
+func (c *GroupStatusRecordClient) CreateBulk(builders ...*GroupStatusRecordCreate) *GroupStatusRecordCreateBulk {
+	return &GroupStatusRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupStatusRecordClient) MapCreateBulk(slice any, setFunc func(*GroupStatusRecordCreate, int)) *GroupStatusRecordCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupStatusRecordCreateBulk{err: fmt.Errorf("calling to GroupStatusRecordClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupStatusRecordCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupStatusRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupStatusRecord.
+func (c *GroupStatusRecordClient) Update() *GroupStatusRecordUpdate {
+	mutation := newGroupStatusRecordMutation(c.config, OpUpdate)
+	return &GroupStatusRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupStatusRecordClient) UpdateOne(_m *GroupStatusRecord) *GroupStatusRecordUpdateOne {
+	mutation := newGroupStatusRecordMutation(c.config, OpUpdateOne, withGroupStatusRecord(_m))
+	return &GroupStatusRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupStatusRecordClient) UpdateOneID(id int64) *GroupStatusRecordUpdateOne {
+	mutation := newGroupStatusRecordMutation(c.config, OpUpdateOne, withGroupStatusRecordID(id))
+	return &GroupStatusRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupStatusRecord.
+func (c *GroupStatusRecordClient) Delete() *GroupStatusRecordDelete {
+	mutation := newGroupStatusRecordMutation(c.config, OpDelete)
+	return &GroupStatusRecordDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupStatusRecordClient) DeleteOne(_m *GroupStatusRecord) *GroupStatusRecordDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupStatusRecordClient) DeleteOneID(id int64) *GroupStatusRecordDeleteOne {
+	builder := c.Delete().Where(groupstatusrecord.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupStatusRecordDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupStatusRecord.
+func (c *GroupStatusRecordClient) Query() *GroupStatusRecordQuery {
+	return &GroupStatusRecordQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupStatusRecord},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupStatusRecord entity by its id.
+func (c *GroupStatusRecordClient) Get(ctx context.Context, id int64) (*GroupStatusRecord, error) {
+	return c.Query().Where(groupstatusrecord.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupStatusRecordClient) GetX(ctx context.Context, id int64) *GroupStatusRecord {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GroupStatusRecordClient) Hooks() []Hook {
+	return c.hooks.GroupStatusRecord
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupStatusRecordClient) Interceptors() []Interceptor {
+	return c.inters.GroupStatusRecord
+}
+
+func (c *GroupStatusRecordClient) mutate(ctx context.Context, m *GroupStatusRecordMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupStatusRecordCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupStatusRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupStatusRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupStatusRecordDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupStatusRecord mutation op: %q", m.Op())
+	}
+}
+
+// GroupStatusStateClient is a client for the GroupStatusState schema.
+type GroupStatusStateClient struct {
+	config
+}
+
+// NewGroupStatusStateClient returns a client for the GroupStatusState from the given config.
+func NewGroupStatusStateClient(c config) *GroupStatusStateClient {
+	return &GroupStatusStateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupstatusstate.Hooks(f(g(h())))`.
+func (c *GroupStatusStateClient) Use(hooks ...Hook) {
+	c.hooks.GroupStatusState = append(c.hooks.GroupStatusState, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupstatusstate.Intercept(f(g(h())))`.
+func (c *GroupStatusStateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupStatusState = append(c.inters.GroupStatusState, interceptors...)
+}
+
+// Create returns a builder for creating a GroupStatusState entity.
+func (c *GroupStatusStateClient) Create() *GroupStatusStateCreate {
+	mutation := newGroupStatusStateMutation(c.config, OpCreate)
+	return &GroupStatusStateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupStatusState entities.
+func (c *GroupStatusStateClient) CreateBulk(builders ...*GroupStatusStateCreate) *GroupStatusStateCreateBulk {
+	return &GroupStatusStateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupStatusStateClient) MapCreateBulk(slice any, setFunc func(*GroupStatusStateCreate, int)) *GroupStatusStateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupStatusStateCreateBulk{err: fmt.Errorf("calling to GroupStatusStateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupStatusStateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupStatusStateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupStatusState.
+func (c *GroupStatusStateClient) Update() *GroupStatusStateUpdate {
+	mutation := newGroupStatusStateMutation(c.config, OpUpdate)
+	return &GroupStatusStateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupStatusStateClient) UpdateOne(_m *GroupStatusState) *GroupStatusStateUpdateOne {
+	mutation := newGroupStatusStateMutation(c.config, OpUpdateOne, withGroupStatusState(_m))
+	return &GroupStatusStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupStatusStateClient) UpdateOneID(id int64) *GroupStatusStateUpdateOne {
+	mutation := newGroupStatusStateMutation(c.config, OpUpdateOne, withGroupStatusStateID(id))
+	return &GroupStatusStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupStatusState.
+func (c *GroupStatusStateClient) Delete() *GroupStatusStateDelete {
+	mutation := newGroupStatusStateMutation(c.config, OpDelete)
+	return &GroupStatusStateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupStatusStateClient) DeleteOne(_m *GroupStatusState) *GroupStatusStateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupStatusStateClient) DeleteOneID(id int64) *GroupStatusStateDeleteOne {
+	builder := c.Delete().Where(groupstatusstate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupStatusStateDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupStatusState.
+func (c *GroupStatusStateClient) Query() *GroupStatusStateQuery {
+	return &GroupStatusStateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupStatusState},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupStatusState entity by its id.
+func (c *GroupStatusStateClient) Get(ctx context.Context, id int64) (*GroupStatusState, error) {
+	return c.Query().Where(groupstatusstate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupStatusStateClient) GetX(ctx context.Context, id int64) *GroupStatusState {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GroupStatusStateClient) Hooks() []Hook {
+	return c.hooks.GroupStatusState
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupStatusStateClient) Interceptors() []Interceptor {
+	return c.inters.GroupStatusState
+}
+
+func (c *GroupStatusStateClient) mutate(ctx context.Context, m *GroupStatusStateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupStatusStateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupStatusStateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupStatusStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupStatusStateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupStatusState mutation op: %q", m.Op())
 	}
 }
 
@@ -4236,17 +4802,21 @@ func (c *UserSubscriptionClient) mutate(ctx context.Context, m *UserSubscription
 type (
 	hooks struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead,
-		ErrorPassthroughRule, Group, IdempotencyRecord, PromoCode, PromoCodeUsage,
-		Proxy, RedeemCode, SecuritySecret, Setting, TLSFingerprintProfile,
-		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
-		UserAttributeValue, UserReferral, UserSubscription []ent.Hook
+		ErrorPassthroughRule, Group, GroupStatusConfig, GroupStatusEvent,
+		GroupStatusRecord, GroupStatusState, IdempotencyRecord, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting,
+		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
+		UserAttributeDefinition, UserAttributeValue, UserReferral,
+		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead,
-		ErrorPassthroughRule, Group, IdempotencyRecord, PromoCode, PromoCodeUsage,
-		Proxy, RedeemCode, SecuritySecret, Setting, TLSFingerprintProfile,
-		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
-		UserAttributeValue, UserReferral, UserSubscription []ent.Interceptor
+		ErrorPassthroughRule, Group, GroupStatusConfig, GroupStatusEvent,
+		GroupStatusRecord, GroupStatusState, IdempotencyRecord, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting,
+		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
+		UserAttributeDefinition, UserAttributeValue, UserReferral,
+		UserSubscription []ent.Interceptor
 	}
 )
 

@@ -93,6 +93,7 @@ func provideCleanup(
 	antigravityOAuth *service.AntigravityOAuthService,
 	openAIGateway *service.OpenAIGatewayService,
 	scheduledTestRunner *service.ScheduledTestRunnerService,
+	groupStatusRunner *service.GroupStatusRunnerService,
 	backupSvc *service.BackupService,
 ) func() {
 	return func() {
@@ -215,6 +216,12 @@ func provideCleanup(
 			{"OpenAIWSPool", func() error {
 				if openAIGateway != nil {
 					openAIGateway.CloseOpenAIWSPool()
+				}
+				return nil
+			}},
+			{"GroupStatusRunnerService", func() error {
+				if groupStatusRunner != nil {
+					groupStatusRunner.Stop()
 				}
 				return nil
 			}},

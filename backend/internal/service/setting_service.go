@@ -163,6 +163,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyPurchaseSubscriptionOpenMode,
 		SettingKeyCustomMenuItems,
 		SettingKeyCustomEndpoints,
+		SettingKeyGroupStatusEnabled,
 		SettingKeyLinuxDoConnectEnabled,
 		SettingKeyReferralEnabled,
 		SettingKeyBackendModeEnabled,
@@ -210,6 +211,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		PurchaseSubscriptionOpenMode:     s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
+		GroupStatusEnabled:               settings[SettingKeyGroupStatusEnabled] == "true",
 		LinuxDoOAuthEnabled:              linuxDoEnabled,
 		ReferralEnabled:                  settings[SettingKeyReferralEnabled] == "true",
 		BackendModeEnabled:               settings[SettingKeyBackendModeEnabled] == "true",
@@ -259,6 +261,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PurchaseSubscriptionOpenMode     string          `json:"purchase_subscription_open_mode"`
 		CustomMenuItems                  json.RawMessage `json:"custom_menu_items"`
 		CustomEndpoints                  json.RawMessage `json:"custom_endpoints"`
+		GroupStatusEnabled               bool            `json:"group_status_enabled"`
 		LinuxDoOAuthEnabled              bool            `json:"linuxdo_oauth_enabled"`
 		ReferralEnabled                  bool            `json:"referral_enabled"`
 		BackendModeEnabled               bool            `json:"backend_mode_enabled"`
@@ -286,6 +289,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PurchaseSubscriptionOpenMode:     settings.PurchaseSubscriptionOpenMode,
 		CustomMenuItems:                  filterUserVisibleMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                  safeRawJSONArray(settings.CustomEndpoints),
+		GroupStatusEnabled:               settings.GroupStatusEnabled,
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,
 		BackendModeEnabled:               settings.BackendModeEnabled,
@@ -490,6 +494,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyPurchaseSubscriptionOpenMode] = s.getStringOrDefault(map[string]string{SettingKeyPurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode}, SettingKeyPurchaseSubscriptionOpenMode, "iframe")
 	updates[SettingKeyCustomMenuItems] = settings.CustomMenuItems
 	updates[SettingKeyCustomEndpoints] = settings.CustomEndpoints
+	updates[SettingKeyGroupStatusEnabled] = strconv.FormatBool(settings.GroupStatusEnabled)
 
 	// 默认配置
 	updates[SettingKeyDefaultConcurrency] = strconv.Itoa(settings.DefaultConcurrency)
@@ -614,6 +619,17 @@ func (s *SettingService) IsRegistrationEnabled(ctx context.Context) bool {
 		return false
 	}
 	return value == "true"
+}
+
+func (s *SettingService) IsGroupStatusEnabled(ctx context.Context) (bool, error) {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyGroupStatusEnabled)
+	if err != nil {
+		if errors.Is(err, ErrSettingNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return value == "true", nil
 }
 
 // IsBackendModeEnabled checks if backend mode is enabled
@@ -849,6 +865,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyPurchaseSubscriptionOpenMode:     "iframe",
 		SettingKeyCustomMenuItems:                  "[]",
 		SettingKeyCustomEndpoints:                  "[]",
+		SettingKeyGroupStatusEnabled:               "false",
 		SettingKeyDefaultConcurrency:               strconv.Itoa(s.cfg.Default.UserConcurrency),
 		SettingKeyDefaultBalance:                   strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
 		SettingKeyDefaultSubscriptions:             "[]",
@@ -916,6 +933,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		PurchaseSubscriptionOpenMode:     s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
+		GroupStatusEnabled:               settings[SettingKeyGroupStatusEnabled] == "true",
 		BackendModeEnabled:               settings[SettingKeyBackendModeEnabled] == "true",
 	}
 

@@ -446,6 +446,145 @@ var (
 			},
 		},
 	}
+	// GroupStatusConfigsColumns holds the columns for the "group_status_configs" table.
+	GroupStatusConfigsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "group_id", Type: field.TypeInt64, Unique: true},
+		{Name: "enabled", Type: field.TypeBool, Default: false},
+		{Name: "probe_model", Type: field.TypeString, Default: ""},
+		{Name: "probe_prompt", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "validation_mode", Type: field.TypeString, Default: "non_empty"},
+		{Name: "expected_keywords", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "interval_seconds", Type: field.TypeInt, Default: 60},
+		{Name: "timeout_seconds", Type: field.TypeInt, Default: 30},
+		{Name: "slow_latency_ms", Type: field.TypeInt64, Default: 15000},
+	}
+	// GroupStatusConfigsTable holds the schema information for the "group_status_configs" table.
+	GroupStatusConfigsTable = &schema.Table{
+		Name:       "group_status_configs",
+		Columns:    GroupStatusConfigsColumns,
+		PrimaryKey: []*schema.Column{GroupStatusConfigsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusconfig_group_id",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusConfigsColumns[3]},
+			},
+			{
+				Name:    "groupstatusconfig_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusConfigsColumns[4]},
+			},
+		},
+	}
+	// GroupStatusEventsColumns holds the columns for the "group_status_events" table.
+	GroupStatusEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "group_id", Type: field.TypeInt64},
+		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "from_status", Type: field.TypeString, Default: ""},
+		{Name: "to_status", Type: field.TypeString, Default: ""},
+		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "http_code", Type: field.TypeInt, Nullable: true},
+		{Name: "sub_status", Type: field.TypeString, Default: ""},
+		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "observed_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// GroupStatusEventsTable holds the schema information for the "group_status_events" table.
+	GroupStatusEventsTable = &schema.Table{
+		Name:       "group_status_events",
+		Columns:    GroupStatusEventsColumns,
+		PrimaryKey: []*schema.Column{GroupStatusEventsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusevent_group_id_observed_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusEventsColumns[1], GroupStatusEventsColumns[10]},
+			},
+			{
+				Name:    "groupstatusevent_config_id_observed_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusEventsColumns[2], GroupStatusEventsColumns[10]},
+			},
+			{
+				Name:    "groupstatusevent_event_type",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusEventsColumns[3]},
+			},
+		},
+	}
+	// GroupStatusRecordsColumns holds the columns for the "group_status_records" table.
+	GroupStatusRecordsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "group_id", Type: field.TypeInt64},
+		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "status", Type: field.TypeString},
+		{Name: "response_excerpt", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "http_code", Type: field.TypeInt, Nullable: true},
+		{Name: "sub_status", Type: field.TypeString, Default: ""},
+		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "observed_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// GroupStatusRecordsTable holds the schema information for the "group_status_records" table.
+	GroupStatusRecordsTable = &schema.Table{
+		Name:       "group_status_records",
+		Columns:    GroupStatusRecordsColumns,
+		PrimaryKey: []*schema.Column{GroupStatusRecordsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusrecord_group_id_observed_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusRecordsColumns[1], GroupStatusRecordsColumns[9]},
+			},
+			{
+				Name:    "groupstatusrecord_config_id_observed_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusRecordsColumns[2], GroupStatusRecordsColumns[9]},
+			},
+		},
+	}
+	// GroupStatusStatesColumns holds the columns for the "group_status_states" table.
+	GroupStatusStatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "group_id", Type: field.TypeInt64, Unique: true},
+		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "latest_status", Type: field.TypeString, Default: ""},
+		{Name: "stable_status", Type: field.TypeString, Default: ""},
+		{Name: "response_excerpt", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "http_code", Type: field.TypeInt, Nullable: true},
+		{Name: "sub_status", Type: field.TypeString, Default: ""},
+		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "observed_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "consecutive_down", Type: field.TypeInt, Default: 0},
+		{Name: "consecutive_non_down", Type: field.TypeInt, Default: 0},
+	}
+	// GroupStatusStatesTable holds the schema information for the "group_status_states" table.
+	GroupStatusStatesTable = &schema.Table{
+		Name:       "group_status_states",
+		Columns:    GroupStatusStatesColumns,
+		PrimaryKey: []*schema.Column{GroupStatusStatesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusstate_group_id",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusStatesColumns[3]},
+			},
+			{
+				Name:    "groupstatusstate_stable_status",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusStatesColumns[6]},
+			},
+		},
+	}
 	// IdempotencyRecordsColumns holds the columns for the "idempotency_records" table.
 	IdempotencyRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -1181,6 +1320,10 @@ var (
 		AnnouncementReadsTable,
 		ErrorPassthroughRulesTable,
 		GroupsTable,
+		GroupStatusConfigsTable,
+		GroupStatusEventsTable,
+		GroupStatusRecordsTable,
+		GroupStatusStatesTable,
 		IdempotencyRecordsTable,
 		PromoCodesTable,
 		PromoCodeUsagesTable,
@@ -1228,6 +1371,18 @@ func init() {
 	}
 	GroupsTable.Annotation = &entsql.Annotation{
 		Table: "groups",
+	}
+	GroupStatusConfigsTable.Annotation = &entsql.Annotation{
+		Table: "group_status_configs",
+	}
+	GroupStatusEventsTable.Annotation = &entsql.Annotation{
+		Table: "group_status_events",
+	}
+	GroupStatusRecordsTable.Annotation = &entsql.Annotation{
+		Table: "group_status_records",
+	}
+	GroupStatusStatesTable.Annotation = &entsql.Annotation{
+		Table: "group_status_states",
 	}
 	IdempotencyRecordsTable.Annotation = &entsql.Annotation{
 		Table: "idempotency_records",

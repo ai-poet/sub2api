@@ -9,7 +9,9 @@ import type {
   GroupPlatform,
   CreateGroupRequest,
   UpdateGroupRequest,
-  PaginatedResponse
+  PaginatedResponse,
+  GroupStatusAdminView,
+  GroupStatusSummary
 } from '@/types'
 
 /**
@@ -246,6 +248,41 @@ export async function getCapacitySummary(): Promise<
   return data
 }
 
+export async function getRuntimeStatus(id: number): Promise<GroupStatusAdminView> {
+  const { data } = await apiClient.get<GroupStatusAdminView>(`/admin/groups/${id}/runtime-status`)
+  return data
+}
+
+export async function updateRuntimeStatus(
+  id: number,
+  payload: {
+    enabled: boolean
+    probe_model: string
+    probe_prompt: string
+    validation_mode: 'non_empty' | 'keywords_any' | 'keywords_all'
+    expected_keywords: string[]
+    interval_seconds: number
+    timeout_seconds: number
+    slow_latency_ms: number
+  }
+): Promise<GroupStatusAdminView> {
+  const { data } = await apiClient.put<GroupStatusAdminView>(
+    `/admin/groups/${id}/runtime-status`,
+    payload
+  )
+  return data
+}
+
+export async function probeRuntimeStatus(id: number): Promise<GroupStatusAdminView> {
+  const { data } = await apiClient.post<GroupStatusAdminView>(`/admin/groups/${id}/runtime-status/probe`)
+  return data
+}
+
+export async function getRuntimeStatusSummary(): Promise<GroupStatusSummary[]> {
+  const { data } = await apiClient.get<GroupStatusSummary[]>('/admin/groups/runtime-status/summary')
+  return data
+}
+
 export const groupsAPI = {
   list,
   getAll,
@@ -262,7 +299,11 @@ export const groupsAPI = {
   batchSetGroupRateMultipliers,
   updateSortOrder,
   getUsageSummary,
-  getCapacitySummary
+  getCapacitySummary,
+  getRuntimeStatus,
+  updateRuntimeStatus,
+  probeRuntimeStatus,
+  getRuntimeStatusSummary
 }
 
 export default groupsAPI

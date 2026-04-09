@@ -28,6 +28,14 @@ type Tx struct {
 	ErrorPassthroughRule *ErrorPassthroughRuleClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// GroupStatusConfig is the client for interacting with the GroupStatusConfig builders.
+	GroupStatusConfig *GroupStatusConfigClient
+	// GroupStatusEvent is the client for interacting with the GroupStatusEvent builders.
+	GroupStatusEvent *GroupStatusEventClient
+	// GroupStatusRecord is the client for interacting with the GroupStatusRecord builders.
+	GroupStatusRecord *GroupStatusRecordClient
+	// GroupStatusState is the client for interacting with the GroupStatusState builders.
+	GroupStatusState *GroupStatusStateClient
 	// IdempotencyRecord is the client for interacting with the IdempotencyRecord builders.
 	IdempotencyRecord *IdempotencyRecordClient
 	// PromoCode is the client for interacting with the PromoCode builders.
@@ -198,6 +206,10 @@ func (tx *Tx) init() {
 	tx.AnnouncementRead = NewAnnouncementReadClient(tx.config)
 	tx.ErrorPassthroughRule = NewErrorPassthroughRuleClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
+	tx.GroupStatusConfig = NewGroupStatusConfigClient(tx.config)
+	tx.GroupStatusEvent = NewGroupStatusEventClient(tx.config)
+	tx.GroupStatusRecord = NewGroupStatusRecordClient(tx.config)
+	tx.GroupStatusState = NewGroupStatusStateClient(tx.config)
 	tx.IdempotencyRecord = NewIdempotencyRecordClient(tx.config)
 	tx.PromoCode = NewPromoCodeClient(tx.config)
 	tx.PromoCodeUsage = NewPromoCodeUsageClient(tx.config)

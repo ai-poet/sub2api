@@ -205,6 +205,31 @@
             </div>
           </template>
 
+          <template #cell-runtime_status="{ row }">
+            <div class="space-y-1 text-xs">
+              <template v-if="getRuntimeSummary(row.id)">
+                <span :class="['badge', getGroupRuntimeStatusBadgeClass(getRuntimeDisplayStatus(getRuntimeSummary(row.id)!))]">
+                  {{ getRuntimeStatusText(getRuntimeSummary(row.id)!) }}
+                </span>
+                <div
+                  v-if="getRuntimeSummary(row.id)!.observed_at"
+                  class="text-gray-500 dark:text-gray-400"
+                >
+                  {{ formatRelativeTime(getRuntimeSummary(row.id)!.observed_at) }}
+                </div>
+                <div
+                  v-if="getRuntimeSummary(row.id)!.latency_ms !== null"
+                  class="text-gray-500 dark:text-gray-400"
+                >
+                  {{ formatGroupRuntimeLatency(getRuntimeSummary(row.id)!.latency_ms) }}
+                </div>
+              </template>
+              <div v-else class="text-gray-400 dark:text-gray-500">
+                {{ runtimeStatusLoading ? t('common.loading') : t('admin.groups.runtimeStatus.notConfigured') }}
+              </div>
+            </div>
+          </template>
+
           <template #cell-status="{ value }">
             <span :class="['badge', value === 'active' ? 'badge-success' : 'badge-danger']">
               {{ t('admin.accounts.status.' + value) }}
@@ -226,6 +251,13 @@
               >
                 <Icon name="dollar" size="sm" />
                 <span class="text-xs">{{ t('admin.groups.rateMultipliers') }}</span>
+              </button>
+              <button
+                @click="handleRuntimeStatus(row)"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+              >
+                <Icon name="server" size="sm" />
+                <span class="text-xs">{{ t('admin.groups.runtimeStatus.action') }}</span>
               </button>
               <button
                 @click="handleDelete(row)"
@@ -1793,6 +1825,13 @@
       @close="showRateMultipliersModal = false"
       @success="loadGroups"
     />
+
+    <GroupRuntimeStatusDialog
+      :show="showRuntimeStatusDialog"
+      :group="runtimeStatusGroup"
+      @close="closeRuntimeStatusDialog"
+      @updated="loadRuntimeStatusSummary"
+    />
   </AppLayout>
 </template>
 
@@ -1802,7 +1841,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { adminAPI } from '@/api/admin'
-import type { AdminGroup, GroupPlatform, SubscriptionType } from '@/types'
+import type { AdminGroup, GroupPlatform, GroupStatusSummary, SubscriptionType } from '@/types'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -1815,11 +1854,18 @@ import Select from '@/components/common/Select.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import Icon from '@/components/icons/Icon.vue'
 import GroupRateMultipliersModal from '@/components/admin/group/GroupRateMultipliersModal.vue'
+import GroupRuntimeStatusDialog from '@/components/admin/group/GroupRuntimeStatusDialog.vue'
 import GroupCapacityBadge from '@/components/common/GroupCapacityBadge.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { createStableObjectKeyResolver } from '@/utils/stableObjectKey'
 import { useKeyedDebouncedSearch } from '@/composables/useKeyedDebouncedSearch'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
+import { formatRelativeTime } from '@/utils/format'
+import {
+  formatGroupRuntimeLatency,
+  getGroupRuntimeStatusBadgeClass,
+  normalizeGroupRuntimeStatus,
+} from '@/utils/groupStatus'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -1834,6 +1880,7 @@ const columns = computed<Column[]>(() => [
   { key: 'account_count', label: t('admin.groups.columns.accounts'), sortable: true },
   { key: 'capacity', label: t('admin.groups.columns.capacity'), sortable: false },
   { key: 'usage', label: t('admin.groups.columns.usage'), sortable: false },
+  { key: 'runtime_status', label: t('admin.groups.columns.runtimeStatus'), sortable: false },
   { key: 'status', label: t('admin.groups.columns.status'), sortable: true },
   { key: 'actions', label: t('admin.groups.columns.actions'), sortable: false }
 ])
@@ -1971,6 +2018,8 @@ const loading = ref(false)
 const usageMap = ref<Map<number, { today_cost: number; total_cost: number }>>(new Map())
 const usageLoading = ref(false)
 const capacityMap = ref<Map<number, { concurrencyUsed: number; concurrencyMax: number; sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>>(new Map())
+const runtimeStatusMap = ref<Map<number, GroupStatusSummary>>(new Map())
+const runtimeStatusLoading = ref(false)
 const searchQuery = ref('')
 const filters = reactive({
   platform: '',
@@ -1996,6 +2045,8 @@ const editingGroup = ref<AdminGroup | null>(null)
 const deletingGroup = ref<AdminGroup | null>(null)
 const showRateMultipliersModal = ref(false)
 const rateMultipliersGroup = ref<AdminGroup | null>(null)
+const showRuntimeStatusDialog = ref(false)
+const runtimeStatusGroup = ref<AdminGroup | null>(null)
 const sortableGroups = ref<AdminGroup[]>([])
 
 const createForm = reactive({
@@ -2305,6 +2356,7 @@ const loadGroups = async () => {
     pagination.pages = response.pages
     loadUsageSummary()
     loadCapacitySummary()
+    loadRuntimeStatusSummary()
   } catch (error: any) {
     if (signal.aborted || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
       return
@@ -2359,6 +2411,44 @@ const loadCapacitySummary = async () => {
   } catch (error) {
     console.error('Error loading group capacity summary:', error)
   }
+}
+
+const loadRuntimeStatusSummary = async () => {
+  runtimeStatusLoading.value = true
+  try {
+    const data = await adminAPI.groups.getRuntimeStatusSummary()
+    const map = new Map<number, GroupStatusSummary>()
+    for (const item of data) {
+      map.set(item.group_id, item)
+    }
+    runtimeStatusMap.value = map
+  } catch (error) {
+    console.error('Error loading group runtime status summary:', error)
+  } finally {
+    runtimeStatusLoading.value = false
+  }
+}
+
+const getRuntimeSummary = (groupId: number) => runtimeStatusMap.value.get(groupId)
+
+const getRuntimeDisplayStatus = (summary: GroupStatusSummary) => {
+  if (summary.stable_status) {
+    return normalizeGroupRuntimeStatus(summary.stable_status)
+  }
+  if (summary.latest_status) {
+    return normalizeGroupRuntimeStatus(summary.latest_status)
+  }
+  return 'unknown'
+}
+
+const getRuntimeStatusText = (summary: GroupStatusSummary) => {
+  if (!summary.enabled) {
+    return t('admin.groups.runtimeStatus.disabled')
+  }
+  if (!summary.observed_at) {
+    return t('admin.groups.runtimeStatus.waiting')
+  }
+  return t(`modelStatus.statuses.${getRuntimeDisplayStatus(summary)}`)
 }
 
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -2550,6 +2640,16 @@ const handleUpdateGroup = async () => {
 const handleRateMultipliers = (group: AdminGroup) => {
   rateMultipliersGroup.value = group
   showRateMultipliersModal.value = true
+}
+
+const handleRuntimeStatus = (group: AdminGroup) => {
+  runtimeStatusGroup.value = group
+  showRuntimeStatusDialog.value = true
+}
+
+const closeRuntimeStatusDialog = () => {
+  showRuntimeStatusDialog.value = false
+  runtimeStatusGroup.value = null
 }
 
 const handleDelete = (group: AdminGroup) => {
