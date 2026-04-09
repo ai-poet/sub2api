@@ -5223,21 +5223,11 @@ export default {
     title: '模型广场',
     description: '查看你当前真实可调用的分组模型卡片、官方参考价与实际扣费价对比',
     caption: '分组 x 模型定价卡',
-    intro: '每张卡代表一个你当前可用的“分组 + 模型”。页面优先展示最低实际扣费口径，默认按“比官方省得最多”排序。',
-    sortNotice: '节省比例优先按官方参考价与实付价比较；未接入支付换算时回退为美元余额扣费价。',
+    intro: '每张卡代表一个你当前可用的“分组 + 模型”。页面聚焦官方参考价与当前展示价的直观对比，默认按展示价从低到高排列。',
     lastUpdated: '最近更新',
     neverUpdated: '尚未加载',
     paymentNoticeTitle: '实付价未启用',
     paymentNoticeDescription: '未获取到支付换算配置，当前仅展示官方参考价和美元余额扣费价。',
-    summary: {
-      visibleCards: '当前可见卡片',
-      totalCards: '总计 {total} 张卡片',
-      lowestInput: '最低输入单价',
-      maxSavings: '最大节省比例',
-      noSavingsReference: '暂无可比较的官方参考价',
-      cachingCount: '支持缓存的卡片',
-      tokenAndNonToken: '{token} 张 Token 卡 / {nonToken} 张非 Token 卡'
-    },
     filters: {
       search: '搜索',
       searchPlaceholder: '搜索模型名、分组名或平台',
@@ -5245,12 +5235,10 @@ export default {
       allPlatforms: '全部平台',
       billingMode: '计费模式',
       allBillingModes: '全部模式',
-      onlySavings: '仅看可省钱',
       sortBy: '排序'
     },
     sorting: {
-      savingsDesc: '按省钱排序',
-      effectivePriceAsc: '按实际价格升序',
+      effectivePriceAsc: '按展示价升序',
       modelAsc: '按模型名称'
     },
     groupTabs: {
@@ -5265,7 +5253,7 @@ export default {
     loadFailedTitle: '模型广场加载失败',
     loadFailedDescription: '暂时无法获取模型卡片，请稍后刷新重试。',
     emptyTitle: '没有匹配的模型卡',
-    emptyDescription: '试试放宽筛选条件，或者关闭“仅看可省钱”。',
+    emptyDescription: '试试放宽筛选条件，或者切换其他分组查看。',
     billingMode: {
       token: 'Token',
       perRequest: '按次',
@@ -5279,12 +5267,6 @@ export default {
       litellm: 'LiteLLM 参考价',
       fallback: 'Fallback 参考价',
       none: '无参考价'
-    },
-    badges: {
-      noReference: '无官方参考',
-      sameAsOfficial: '与官方持平',
-      saving: '省 {percent}',
-      higherThanOfficial: '高于官方 {percent}'
     },
     groupRateLabel: '倍率 {rate}',
     peerGroupsLabel: '同模型共 {count} 个分组',

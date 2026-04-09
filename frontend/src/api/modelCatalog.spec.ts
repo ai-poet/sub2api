@@ -66,7 +66,7 @@ describe('modelCatalog helpers', () => {
     vi.unstubAllGlobals()
   })
 
-  it('filters items by keyword, platform, billing mode, and savings flag', () => {
+  it('filters items by keyword, group, platform, and billing mode', () => {
     const items = [
       createItem(),
       createItem({
@@ -129,24 +129,13 @@ describe('modelCatalog helpers', () => {
       groupId: 2,
       platform: 'anthropic',
       billingMode: 'token',
-      onlySavings: false,
     })
 
     expect(filtered).toHaveLength(1)
     expect(filtered[0].best_group.name).toBe('Beta')
-
-    const savingsOnly = filterModelCatalogItems(items, {
-      search: '',
-      groupId: null,
-      platform: 'all',
-      billingMode: 'all',
-      onlySavings: true,
-    })
-
-    expect(savingsOnly.map(item => item.model)).toEqual(['gpt-5.4', 'image-gen'])
   })
 
-  it('sorts by savings and effective price while keeping alphabetical fallback', () => {
+  it('sorts by effective price while keeping alphabetical fallback', () => {
     const items = [
       createItem({
         model: 'zeta',
@@ -208,12 +197,6 @@ describe('modelCatalog helpers', () => {
         },
       }),
     ]
-
-    expect(sortModelCatalogItems(items, 'savings_desc').map(item => item.model)).toEqual([
-      'alpha',
-      'zeta',
-      'omega',
-    ])
 
     expect(sortModelCatalogItems(items, 'effective_price_asc').map(item => item.model)).toEqual([
       'alpha',

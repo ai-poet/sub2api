@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 
 export type ModelCatalogBillingMode = 'token' | 'per_request' | 'image'
-export type ModelCatalogSortKey = 'savings_desc' | 'effective_price_asc' | 'model_asc'
+export type ModelCatalogSortKey = 'effective_price_asc' | 'model_asc'
 
 export interface ModelCatalogSummary {
   total_models: number
@@ -87,7 +87,6 @@ export interface ModelCatalogFilters {
   groupId: number | null
   platform: string
   billingMode: string
-  onlySavings: boolean
 }
 
 export interface PaymentConfigResult {
@@ -161,13 +160,6 @@ export function filterModelCatalogItems(
       return false
     }
 
-    if (filters.onlySavings) {
-      const savings = item.comparison.savings_percent
-      if (savings == null || savings <= 0) {
-        return false
-      }
-    }
-
     return true
   })
 }
@@ -193,11 +185,6 @@ export function compareModelCatalogItems(
 
   if (sortKey === 'model_asc') {
     return compareModelCatalogFallback(a, b)
-  }
-
-  const bySavings = compareNullableNumberDesc(a.comparison.savings_percent, b.comparison.savings_percent)
-  if (bySavings !== 0) {
-    return bySavings
   }
 
   const byEffective = compareNullableNumberAsc(getPrimaryEffectivePrice(a), getPrimaryEffectivePrice(b))
@@ -352,14 +339,6 @@ function compareNullableNumberAsc(a: number | null, b: number | null): number {
   if (b == null) return -1
   if (a === b) return 0
   return a - b
-}
-
-function compareNullableNumberDesc(a: number | null, b: number | null): number {
-  if (a == null && b == null) return 0
-  if (a == null) return 1
-  if (b == null) return -1
-  if (a === b) return 0
-  return b - a
 }
 
 function normalizeSearch(value: string | null | undefined): string {

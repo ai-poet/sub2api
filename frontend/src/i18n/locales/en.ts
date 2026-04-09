@@ -5059,21 +5059,11 @@ export default {
     title: 'Model Catalog',
     description: 'Compare the official reference price with your actual group-level charge for models you can truly access.',
     caption: 'Group x Model Price Cards',
-    intro: 'Each card represents one accessible "group + model" combination. Cards are sorted by savings first and focus on the lowest real charge for that specific group.',
-    sortNotice: 'Savings compare the official reference with the cash price first. If payment conversion is unavailable, the page falls back to the USD balance charge.',
+    intro: 'Each card represents one accessible "group + model" combination. The page focuses on a direct official-vs-displayed-price comparison and defaults to the lowest displayed price first.',
     lastUpdated: 'Last Updated',
     neverUpdated: 'Not loaded yet',
     paymentNoticeTitle: 'Cash price unavailable',
     paymentNoticeDescription: 'Payment conversion config could not be loaded. Showing only official price and USD balance charge.',
-    summary: {
-      visibleCards: 'Visible cards',
-      totalCards: '{total} cards in total',
-      lowestInput: 'Lowest input price',
-      maxSavings: 'Max savings',
-      noSavingsReference: 'No comparable official reference price yet',
-      cachingCount: 'Caching-enabled cards',
-      tokenAndNonToken: '{token} token cards / {nonToken} non-token cards'
-    },
     filters: {
       search: 'Search',
       searchPlaceholder: 'Search model, group, or platform',
@@ -5081,12 +5071,10 @@ export default {
       allPlatforms: 'All platforms',
       billingMode: 'Billing mode',
       allBillingModes: 'All billing modes',
-      onlySavings: 'Only cheaper than official',
       sortBy: 'Sort by'
     },
     sorting: {
-      savingsDesc: 'Savings first',
-      effectivePriceAsc: 'Lowest effective price',
+      effectivePriceAsc: 'Lowest displayed price',
       modelAsc: 'Model name'
     },
     groupTabs: {
@@ -5101,7 +5089,7 @@ export default {
     loadFailedTitle: 'Failed to load model catalog',
     loadFailedDescription: 'The catalog is temporarily unavailable. Refresh and try again.',
     emptyTitle: 'No matching cards',
-    emptyDescription: 'Try broader filters or disable "Only cheaper than official".',
+    emptyDescription: 'Try broader filters or switch to a different group.',
     billingMode: {
       token: 'Token',
       perRequest: 'Per request',
@@ -5115,12 +5103,6 @@ export default {
       litellm: 'LiteLLM reference',
       fallback: 'Fallback reference',
       none: 'No reference'
-    },
-    badges: {
-      noReference: 'No official reference',
-      sameAsOfficial: 'Same as official',
-      saving: 'Save {percent}',
-      higherThanOfficial: '{percent} above official'
     },
     groupRateLabel: 'Rate {rate}',
     peerGroupsLabel: '{count} groups carry this model',

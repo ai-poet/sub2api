@@ -10,9 +10,6 @@
           <p class="max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300">
             {{ t('modelCatalog.intro') }}
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            {{ t('modelCatalog.sortNotice') }}
-          </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
@@ -85,7 +82,7 @@
       </section>
 
       <section class="rounded-3xl border border-gray-200/80 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-dark-700 dark:bg-dark-900/80">
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.8fr))]">
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.8fr))]">
           <div>
             <label class="input-label">{{ t('modelCatalog.filters.search') }}</label>
             <SearchInput
@@ -115,21 +112,9 @@
             </select>
           </div>
 
-          <div class="flex items-end">
-            <label class="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50/90 px-4 py-3 text-sm font-medium text-gray-700 dark:border-dark-700 dark:bg-dark-800/80 dark:text-gray-200">
-              <input
-                v-model="onlySavings"
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span>{{ t('modelCatalog.filters.onlySavings') }}</span>
-            </label>
-          </div>
-
           <div>
             <label class="input-label">{{ t('modelCatalog.filters.sortBy') }}</label>
             <select v-model="sortBy" class="input">
-              <option value="savings_desc">{{ t('modelCatalog.sorting.savingsDesc') }}</option>
               <option value="effective_price_asc">{{ t('modelCatalog.sorting.effectivePriceAsc') }}</option>
               <option value="model_asc">{{ t('modelCatalog.sorting.modelAsc') }}</option>
             </select>
@@ -198,9 +183,6 @@
               </span>
             </div>
 
-            <span class="savings-pill" :class="getSavingsBadgeClass(item)">
-              {{ savingsBadgeText(item) }}
-            </span>
           </div>
 
           <div class="mt-4 flex items-start justify-between gap-4">
@@ -344,19 +326,13 @@
                     :key="`${other.group.id}-${item.model}`"
                     class="rounded-2xl border border-white/70 bg-white/80 p-3 dark:border-dark-700 dark:bg-dark-900/75"
                   >
-                    <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3">
                       <div>
                         <div class="font-medium text-gray-900 dark:text-white">{{ other.group.name }}</div>
                         <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           {{ t('modelCatalog.groupRateLabel', { rate: formatRate(other.group.rate_multiplier) }) }}
                         </div>
                       </div>
-                      <span
-                        class="savings-pill text-[11px]"
-                        :class="getPeerSavingsBadgeClass(getPeerDisplaySavingsPercent(item, other.effective_pricing_usd))"
-                      >
-                        {{ peerSavingsText(getPeerDisplaySavingsPercent(item, other.effective_pricing_usd)) }}
-                      </span>
                     </div>
 
                     <div class="mt-3 rounded-xl bg-gray-50 px-3 py-2 text-sm dark:bg-dark-800">
@@ -407,7 +383,6 @@ import {
   type ModelCatalogBillingMode,
   type ModelCatalogItem,
   type ModelCatalogPriceInterval,
-  type ModelCatalogPricing,
   type ModelCatalogSortKey,
 } from '@/api/modelCatalog'
 
@@ -449,8 +424,7 @@ const search = ref('')
 const selectedGroupId = ref<number | null>(null)
 const selectedPlatform = ref('all')
 const selectedBillingMode = ref('all')
-const onlySavings = ref(false)
-const sortBy = ref<ModelCatalogSortKey>('savings_desc')
+const sortBy = ref<ModelCatalogSortKey>('effective_price_asc')
 
 const groupTabs = computed<GroupTab[]>(() => {
   const counts = new Map<number, GroupTab>()
@@ -497,7 +471,6 @@ const filteredItems = computed(() =>
     groupId: selectedGroupId.value,
     platform: selectedPlatform.value,
     billingMode: selectedBillingMode.value,
-    onlySavings: onlySavings.value,
   }),
 )
 
@@ -768,13 +741,6 @@ function formatPrimaryDisplayPrice(item: ModelCatalogItem): string {
   return formatDisplayedCharge(balanceUsd, actualCny)
 }
 
-function formatPercent(value: number | null | undefined): string {
-  if (value == null || !Number.isFinite(value)) {
-    return '—'
-  }
-  return `${(value * 100).toFixed(Math.abs(value) >= 0.1 ? 1 : 2)}%`
-}
-
 function formatRate(value: number): string {
   return `${value.toFixed(value >= 1 ? 2 : 3)}x`
 }
@@ -802,68 +768,6 @@ function formatIntervalRange(interval: ModelCatalogPriceInterval): string {
   return `${formatThreshold(interval.min_tokens)} - ${formatThreshold(interval.max_tokens)}`
 }
 
-function getDisplaySavingsPercent(item: ModelCatalogItem): number | null {
-  const officialUsd = getPrimaryPrice(item.official_pricing, item.billing_mode)
-  const effectiveUsd = getPrimaryPrice(item.effective_pricing_usd, item.billing_mode)
-
-  if (balanceCreditCnyPerUsd.value != null) {
-    const officialCny = convertUsdAmountToCny(officialUsd, balanceCreditCnyPerUsd.value)
-    const actualCny = convertUsdAmountToCny(effectiveUsd, balanceCreditCnyPerUsd.value)
-    return calculateDisplaySavingsPercent(officialCny, actualCny)
-  }
-
-  return calculateDisplaySavingsPercent(officialUsd, effectiveUsd)
-}
-
-function getPeerDisplaySavingsPercent(
-  item: ModelCatalogItem,
-  effectivePricingUsd: ModelCatalogPricing,
-): number | null {
-  const officialUsd = getPrimaryPrice(item.official_pricing, item.billing_mode)
-  const effectiveUsd = getPrimaryPrice(effectivePricingUsd, item.billing_mode)
-
-  if (balanceCreditCnyPerUsd.value != null) {
-    const officialCny = convertUsdAmountToCny(officialUsd, balanceCreditCnyPerUsd.value)
-    const actualCny = convertUsdAmountToCny(effectiveUsd, balanceCreditCnyPerUsd.value)
-    return calculateDisplaySavingsPercent(officialCny, actualCny)
-  }
-
-  return calculateDisplaySavingsPercent(officialUsd, effectiveUsd)
-}
-
-function calculateDisplaySavingsPercent(official: number | null, actual: number | null): number | null {
-  if (official == null || actual == null || !Number.isFinite(official) || !Number.isFinite(actual) || official <= 0) {
-    return null
-  }
-
-  const savings = 1 - actual / official
-  if (savings <= 0) {
-    return 0
-  }
-  return savings
-}
-
-function savingsBadgeText(item: ModelCatalogItem): string {
-  const savings = getDisplaySavingsPercent(item)
-  if (savings == null) {
-    return t('modelCatalog.badges.noReference')
-  }
-  if (Math.abs(savings) < 1e-9) {
-    return t('modelCatalog.badges.sameAsOfficial')
-  }
-  return t('modelCatalog.badges.saving', { percent: formatPercent(savings) })
-}
-
-function peerSavingsText(savings: number | null): string {
-  if (savings == null) {
-    return t('modelCatalog.badges.noReference')
-  }
-  if (Math.abs(savings) < 1e-9) {
-    return t('modelCatalog.badges.sameAsOfficial')
-  }
-  return t('modelCatalog.badges.saving', { percent: formatPercent(savings) })
-}
-
 function getCardClass(item: ModelCatalogItem): string {
   if (item.billing_mode === 'image') {
     return 'model-card-image'
@@ -885,16 +789,6 @@ function getModeBadgeClass(mode: ModelCatalogBillingMode): string {
   if (mode === 'image') return 'mode-pill-image'
   if (mode === 'per_request') return 'mode-pill-request'
   return 'mode-pill-token'
-}
-
-function getSavingsBadgeClass(item: ModelCatalogItem): string {
-  return getPeerSavingsBadgeClass(getDisplaySavingsPercent(item))
-}
-
-function getPeerSavingsBadgeClass(savings: number | null): string {
-  if (savings == null) return 'savings-pill-neutral'
-  if (Math.abs(savings) < 1e-9) return 'savings-pill-neutral'
-  return 'savings-pill-positive'
 }
 
 function formatNumber(value: number): string {
@@ -936,7 +830,6 @@ function formatNumber(value: number): string {
 .platform-pill,
 .mode-pill,
 .group-pill,
-.savings-pill,
 .cap-badge {
   @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
 }
@@ -971,14 +864,6 @@ function formatNumber(value: number): string {
 
 .mode-pill-image {
   @apply bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300;
-}
-
-.savings-pill-positive {
-  @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300;
-}
-
-.savings-pill-neutral {
-  @apply bg-gray-100 text-gray-600 dark:bg-dark-800 dark:text-gray-300;
 }
 
 .group-tab {
