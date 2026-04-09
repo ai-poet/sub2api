@@ -50,6 +50,7 @@ type Handlers struct {
 	Totp          *TotpHandler
 	Referral      *ReferralHandler
 	ModelMirror   *ModelMirrorHandler
+	ModelCatalog  *ModelCatalogHandler
 	GroupStatus   *GroupStatusHandler
 }
 

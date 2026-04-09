@@ -487,6 +487,7 @@ export default {
     paymentManagement: 'Payment Management',
     referral: 'Referral',
     modelMirror: 'Claude Relay Inspector',
+    modelCatalog: 'Model Catalog',
     modelStatus: 'Model Status',
     docs: 'Docs',
     sora: 'Sora Studio'
@@ -5051,6 +5052,103 @@ export default {
     restartNow: 'Restart Now',
     restarting: 'Restarting...',
     retry: 'Retry'
+  },
+
+  // Recharge / Subscription Page
+  modelCatalog: {
+    title: 'Model Catalog',
+    description: 'Compare the official reference price with your actual group-level charge for models you can truly access.',
+    caption: 'Group x Model Price Cards',
+    intro: 'Each card represents one accessible "group + model" combination. Cards are sorted by savings first and focus on the lowest real charge for that specific group.',
+    sortNotice: 'Savings are always compared against the official USD reference price. CNY is only used to show the settlement-facing amount.',
+    lastUpdated: 'Last Updated',
+    neverUpdated: 'Not loaded yet',
+    paymentNoticeTitle: 'Cash price unavailable',
+    paymentNoticeDescription: 'Payment conversion config could not be loaded. Showing only official price and USD balance charge.',
+    summary: {
+      visibleCards: 'Visible cards',
+      totalCards: '{total} cards in total',
+      lowestInput: 'Lowest input price',
+      maxSavings: 'Max savings',
+      noSavingsReference: 'No comparable official reference price yet',
+      cachingCount: 'Caching-enabled cards',
+      tokenAndNonToken: '{token} token cards / {nonToken} non-token cards'
+    },
+    filters: {
+      search: 'Search',
+      searchPlaceholder: 'Search model, group, or platform',
+      platform: 'Platform',
+      allPlatforms: 'All platforms',
+      billingMode: 'Billing mode',
+      allBillingModes: 'All billing modes',
+      onlySavings: 'Only cheaper than official',
+      sortBy: 'Sort by'
+    },
+    sorting: {
+      savingsDesc: 'Savings first',
+      effectivePriceAsc: 'Lowest effective price',
+      modelAsc: 'Model name'
+    },
+    filterResult: 'Showing {visible} / {total} cards',
+    priceBasis: 'Official reference vs USD balance charge',
+    cnyRateReady: 'Cash conversion ready at ¥{rate} per $1 balance',
+    loadFailedTitle: 'Failed to load model catalog',
+    loadFailedDescription: 'The catalog is temporarily unavailable. Refresh and try again.',
+    emptyTitle: 'No matching cards',
+    emptyDescription: 'Try broader filters or disable "Only cheaper than official".',
+    billingMode: {
+      token: 'Token',
+      perRequest: 'Per request',
+      image: 'Per image'
+    },
+    rateSource: {
+      groupDefault: 'Group default multiplier',
+      userOverride: 'User override multiplier'
+    },
+    referenceSource: {
+      litellm: 'LiteLLM reference',
+      fallback: 'Fallback reference',
+      none: 'No reference'
+    },
+    badges: {
+      noReference: 'No official reference',
+      sameAsOfficial: 'Same as official',
+      saving: 'Save {percent}',
+      higherThanOfficial: '{percent} above official'
+    },
+    groupRateLabel: 'Rate {rate}',
+    peerGroupsLabel: '{count} groups carry this model',
+    primaryPrice: 'Primary price',
+    priceLabels: {
+      input: 'Input',
+      output: 'Output',
+      cacheWrite: 'Cache write',
+      cacheRead: 'Cache read',
+      perRequest: 'Per request',
+      perImage: 'Per image'
+    },
+    units: {
+      perMillionTokens: 'Per 1M tokens',
+      perRequest: 'Per request',
+      perImage: 'Per image'
+    },
+    priceColumns: {
+      official: 'Official',
+      balance: 'Balance',
+      cash: 'Cash'
+    },
+    capabilities: {
+      promptCaching: 'Prompt caching',
+      longContext: 'Long context @{threshold}',
+      tieredPricing: '{count} pricing tiers',
+      userRateOverride: 'User override'
+    },
+    expandDetails: 'Expand tiers and peer groups',
+    collapseDetails: 'Collapse details',
+    intervalSectionTitle: 'Channel tier pricing',
+    intervalDefaultLabel: 'Default tier',
+    otherGroupsTitle: 'Other accessible groups for this model',
+    peerEffectivePrice: 'Effective USD balance price'
   },
 
   // Recharge / Subscription Page

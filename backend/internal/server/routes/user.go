@@ -104,6 +104,11 @@ func RegisterUserRoutes(
 			tools.POST("/model-mirror/verify", h.ModelMirror.Verify)
 		}
 
+		models := authenticated.Group("/models")
+		{
+			models.GET("/catalog", h.ModelCatalog.List)
+		}
+
 		groupStatus := authenticated.Group("/group-status")
 		{
 			groupStatus.GET("", h.GroupStatus.List)

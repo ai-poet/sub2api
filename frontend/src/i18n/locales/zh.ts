@@ -487,6 +487,7 @@ export default {
     paymentManagement: '支付管理',
     referral: '推荐邀请',
     modelMirror: '模型照妖镜',
+    modelCatalog: '模型广场',
     modelStatus: '模型运行状态',
     docs: '文档',
     sora: 'Sora 创作'
@@ -5215,6 +5216,103 @@ export default {
     restartNow: '立即重启',
     restarting: '正在重启...',
     retry: '重试'
+  },
+
+  // Recharge / Subscription Page
+  modelCatalog: {
+    title: '模型广场',
+    description: '查看你当前真实可调用的分组模型卡片、官方参考价与实际扣费价对比',
+    caption: '分组 x 模型定价卡',
+    intro: '每张卡代表一个你当前可用的“分组 + 模型”。页面优先展示最低实际扣费口径，默认按“比官方省得最多”排序。',
+    sortNotice: '节省比例按官方参考价与平台余额扣费价比较，CNY 仅用于展示实付金额。',
+    lastUpdated: '最近更新',
+    neverUpdated: '尚未加载',
+    paymentNoticeTitle: '实付价未启用',
+    paymentNoticeDescription: '未获取到支付换算配置，当前仅展示官方参考价和美元余额扣费价。',
+    summary: {
+      visibleCards: '当前可见卡片',
+      totalCards: '总计 {total} 张卡片',
+      lowestInput: '最低输入单价',
+      maxSavings: '最大节省比例',
+      noSavingsReference: '暂无可比较的官方参考价',
+      cachingCount: '支持缓存的卡片',
+      tokenAndNonToken: '{token} 张 Token 卡 / {nonToken} 张非 Token 卡'
+    },
+    filters: {
+      search: '搜索',
+      searchPlaceholder: '搜索模型名、分组名或平台',
+      platform: '平台',
+      allPlatforms: '全部平台',
+      billingMode: '计费模式',
+      allBillingModes: '全部模式',
+      onlySavings: '仅看可省钱',
+      sortBy: '排序'
+    },
+    sorting: {
+      savingsDesc: '按省钱排序',
+      effectivePriceAsc: '按实际价格升序',
+      modelAsc: '按模型名称'
+    },
+    filterResult: '当前显示 {visible} / {total} 张卡',
+    priceBasis: '官方价 vs 美元余额扣费价',
+    cnyRateReady: '实付换算已接入 ¥{rate} / $1 余额',
+    loadFailedTitle: '模型广场加载失败',
+    loadFailedDescription: '暂时无法获取模型卡片，请稍后刷新重试。',
+    emptyTitle: '没有匹配的模型卡',
+    emptyDescription: '试试放宽筛选条件，或者关闭“仅看可省钱”。',
+    billingMode: {
+      token: 'Token',
+      perRequest: '按次',
+      image: '按张'
+    },
+    rateSource: {
+      groupDefault: '分组默认倍率',
+      userOverride: '用户专属倍率'
+    },
+    referenceSource: {
+      litellm: 'LiteLLM 参考价',
+      fallback: 'Fallback 参考价',
+      none: '无参考价'
+    },
+    badges: {
+      noReference: '无官方参考',
+      sameAsOfficial: '与官方持平',
+      saving: '省 {percent}',
+      higherThanOfficial: '高于官方 {percent}'
+    },
+    groupRateLabel: '倍率 {rate}',
+    peerGroupsLabel: '同模型共 {count} 个分组',
+    primaryPrice: '主展示价格',
+    priceLabels: {
+      input: '输入',
+      output: '输出',
+      cacheWrite: '缓存写入',
+      cacheRead: '缓存读取',
+      perRequest: '每次请求',
+      perImage: '每张图片'
+    },
+    units: {
+      perMillionTokens: '每百万 Tokens',
+      perRequest: '每次请求',
+      perImage: '每张图片'
+    },
+    priceColumns: {
+      official: '官方价',
+      balance: '余额价',
+      cash: '实付价'
+    },
+    capabilities: {
+      promptCaching: '支持提示缓存',
+      longContext: '长上下文倍率 @{threshold}',
+      tieredPricing: '{count} 档区间价',
+      userRateOverride: '专属倍率'
+    },
+    expandDetails: '展开分组与区间详情',
+    collapseDetails: '收起详情',
+    intervalSectionTitle: '渠道区间价',
+    intervalDefaultLabel: '默认档位',
+    otherGroupsTitle: '同模型其他可用分组',
+    peerEffectivePrice: '该分组实际余额价'
   },
 
   // Recharge / Subscription Page
