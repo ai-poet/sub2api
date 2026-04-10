@@ -5062,7 +5062,7 @@ export default {
     intro: 'Each card represents one accessible "group + model" combination. The page focuses on a direct official-vs-displayed-price comparison and defaults to the lowest displayed price first.',
     lastUpdated: 'Last Updated',
     neverUpdated: 'Not loaded yet',
-    paymentNoticeTitle: 'Cash price unavailable',
+    paymentNoticeTitle: 'Actual payment price unavailable',
     paymentNoticeDescription: 'Payment conversion config could not be loaded. Showing only official price and USD balance charge.',
     filters: {
       search: 'Search',
@@ -5084,8 +5084,8 @@ export default {
       currentGroup: 'Current group: {group}'
     },
     filterResult: 'Showing {visible} / {total} cards',
-    priceBasis: 'Official reference vs cash price (falls back to balance price)',
-    cnyRateReady: 'Cash conversion ready at ¥{rate} per $1 balance',
+    priceBasis: 'Official reference vs actual payment price (falls back to balance price)',
+    cnyRateReady: 'Payment conversion ready at ¥{rate} per $1 balance',
     loadFailedTitle: 'Failed to load model catalog',
     loadFailedDescription: 'The catalog is temporarily unavailable. Refresh and try again.',
     emptyTitle: 'No matching cards',
@@ -5123,7 +5123,7 @@ export default {
     priceColumns: {
       official: 'Official',
       balance: 'Balance',
-      cash: 'Cash'
+      cash: 'Actual paid'
     },
     capabilities: {
       promptCaching: 'Prompt caching',
