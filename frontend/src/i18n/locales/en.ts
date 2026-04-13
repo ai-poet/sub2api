@@ -51,8 +51,8 @@ export default {
     },
     pricing: {
       title: 'Metered Pricing',
-      subtitle: 'vs Official Claude Code / Codex',
-      highlight: '~10% of official cost',
+      subtitle: 'vs Official Claude Code / Codex API Services',
+      highlight: '~10% of official API service cost',
       description: 'Use a fraction of official pricing to power premium-model coding agents while keeping one gateway, one key, and one billing surface.',
       badge: 'Premium model access, without premium subscription overhead',
       barTitle: 'Connect premium model capability to your AI coding agent without carrying official subscription pricing',

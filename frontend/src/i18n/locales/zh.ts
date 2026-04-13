@@ -51,8 +51,8 @@ export default {
     },
     pricing: {
       title: '按量付费',
-      subtitle: '对比官方 Claude Code / Codex',
-      highlight: '约 1 折',
+      subtitle: '对比官方 Claude Code / Codex API 服务',
+      highlight: '约官方 API 服务 1 折',
       description: '用官方价格的一小部分，承接高级模型编码场景，同时保留统一入口、统一密钥和统一计费面。',
       badge: '高级模型能力，不必继续背负官方订阅价',
       barTitle: '把高级模型能力接进 AI coding agent，不必继续承担官方订阅价',
