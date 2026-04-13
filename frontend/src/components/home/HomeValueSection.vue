@@ -4,7 +4,7 @@
       <p class="text-[11px] uppercase tracking-[0.24em] text-[#7a7268] dark:text-white/42">
         {{ t('home.value.overline') }}
       </p>
-      <h2 class="mt-4 max-w-[16ch] text-4xl font-semibold leading-[1.02] tracking-[-0.06em] text-[#111111] dark:text-white md:text-5xl">
+      <h2 class="mt-4 max-w-[16ch] text-4xl font-semibold leading-[1.1] tracking-[-0.04em] text-[#111111] dark:text-white md:text-5xl [text-wrap:balance]">
         {{ t('home.value.title') }}
       </h2>
       <p class="mt-5 max-w-[48rem] text-lg leading-8 text-[#5f5850] dark:text-white/68">

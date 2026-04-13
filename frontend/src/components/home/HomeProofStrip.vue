@@ -8,7 +8,7 @@
           <div class="text-[11px] uppercase tracking-[0.24em] text-primary-300">
             {{ t('home.pricing.title') }}
           </div>
-          <h2 class="mt-4 max-w-[16ch] text-3xl font-semibold leading-[1.04] tracking-[-0.05em] md:text-4xl">
+          <h2 class="mt-4 max-w-[16ch] text-3xl font-semibold leading-[1.12] tracking-[-0.04em] md:text-4xl [text-wrap:balance]">
             {{ t('home.pricing.barTitle') }}
           </h2>
           <p class="mt-4 max-w-[42rem] text-base leading-7 text-white/68">

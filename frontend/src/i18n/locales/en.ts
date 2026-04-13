@@ -12,26 +12,40 @@ export default {
     goToDashboard: 'Go to Dashboard',
     headerTagline: 'AI Coding Agent Infrastructure',
     heroSubtitle: 'One gateway, metered billing, built for long-running coding agents',
-    heroDescription: 'Built for Claude Code, Codex CLI, Gemini CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
+    heroDescription: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
     hero: {
       badge: 'Premium models, without premium subscription pricing',
       titleLead: 'Give your',
       titleAccent: 'AI Coding Agent',
       titleTail: 'a cheaper premium-model backbone',
-      description: 'Built for Claude Code, Codex CLI, Gemini CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
+      description: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
       primaryNote: 'Stop carrying multiple subscriptions, scattered keys, and fragile single-account routing.',
       panel: {
-        overline: 'OPENAI-COMPATIBLE GATEWAY',
         title: 'A request layer shaped for daily coding agents',
-        subtitle: 'One endpoint to serve premium model access, quota control, and automatic failover for long-running coding flows.',
         requestLabel: 'request',
-        requestValue: 'POST /v1/chat/completions',
         modelLabel: 'models',
-        modelValue: 'Claude / GPT / Gemini / Codex',
         routeLabel: 'route',
-        routeValue: 'Multi-account failover + sticky sessions',
         billLabel: 'billing',
-        billValue: 'Metered usage with traceable details'
+        scenarios: {
+          completions: {
+            title: 'Compatible with common OpenAI chat/completions workflows',
+            subtitle: 'Keep the coding-agent integration shape you already use while moving models, quotas, and switching logic into one gateway layer.',
+            route: 'OpenAI-compatible + multi-account routing',
+            billing: 'Metered usage with unified billing'
+          },
+          responses: {
+            title: 'Not just completions. Responses and tool flows fit here too.',
+            subtitle: 'Better aligned with tool-enabled, long-running, agentic workloads than a single completion-only request surface.',
+            route: 'Responses / tools workflow',
+            billing: 'Request-level detail is traceable'
+          },
+          messages: {
+            title: 'Claude-style Messages requests can live in the same service layer',
+            subtitle: 'Keep Claude-native calling patterns while still getting unified billing, routing, and operational visibility.',
+            route: 'Claude-native + sticky sessions',
+            billing: 'Messages billing mapped into one surface'
+          }
+        }
       }
     },
     pricing: {
@@ -55,7 +69,7 @@ export default {
         economics: {
           eyebrow: '01 / Pricing',
           title: 'Cheaper access to premium models',
-          description: 'Bring Claude / GPT / Gemini / Codex class capability into common coding-agent workflows without buying each official subscription separately.'
+          description: 'Bring Claude / GPT / Codex class capability into common coding-agent workflows without buying each official subscription separately.'
         },
         reliability: {
           eyebrow: '02 / Reliability',

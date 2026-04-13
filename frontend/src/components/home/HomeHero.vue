@@ -7,11 +7,11 @@
           <span>{{ t('home.hero.badge') }}</span>
         </div>
 
-        <p class="home-font-serif mt-8 text-[clamp(3.4rem,10vw,7rem)] leading-[0.88] tracking-[-0.06em] text-[#111111] dark:text-white">
+        <p class="home-font-serif mt-8 text-[clamp(3.4rem,10vw,7rem)] leading-[0.94] tracking-[-0.05em] text-[#111111] dark:text-white [text-wrap:balance]">
           {{ siteName }}
         </p>
 
-        <h1 class="mt-6 max-w-[10.5ch] text-[clamp(2.8rem,7vw,5.6rem)] font-semibold leading-[0.95] tracking-[-0.06em] text-[#111111] dark:text-white">
+        <h1 class="mt-6 max-w-[11.5ch] text-[clamp(2.8rem,7vw,5.6rem)] font-semibold leading-[1.04] tracking-[-0.05em] text-[#111111] dark:text-white [text-wrap:balance]">
           <span class="block">{{ t('home.hero.titleLead') }}</span>
           <span class="block text-primary-700 dark:text-primary-300">{{ t('home.hero.titleAccent') }}</span>
           <span class="block">{{ t('home.hero.titleTail') }}</span>
@@ -83,7 +83,7 @@
                 <span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
               </div>
               <div class="text-[11px] uppercase tracking-[0.24em] text-white/45">
-                {{ t('home.hero.panel.overline') }}
+                {{ activeScenario.overline }}
               </div>
             </div>
 
@@ -91,30 +91,61 @@
               <p class="text-[12px] uppercase tracking-[0.22em] text-primary-300">
                 {{ t('home.hero.panel.title') }}
               </p>
-              <p class="mt-3 max-w-[28rem] text-base leading-7 text-white/72">
-                {{ t('home.hero.panel.subtitle') }}
-              </p>
+              <Transition name="terminal-fade" mode="out-in">
+                <div :key="activeScenario.id">
+                  <p class="mt-3 max-w-[28rem] text-base leading-7 text-white/88">
+                    {{ activeScenario.title }}
+                  </p>
+                  <p class="mt-2 max-w-[28rem] text-sm leading-6 text-white/60">
+                    {{ activeScenario.subtitle }}
+                  </p>
+                </div>
+              </Transition>
             </div>
           </div>
 
           <div class="relative px-6 py-6">
             <div class="overflow-hidden rounded-[24px] border border-white/8 bg-[#0d1014] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <div class="border-b border-white/8 bg-white/5 px-5 py-3 text-[12px] uppercase tracking-[0.2em] text-white/40">
-                agent-request.ts
+              <div class="flex items-center justify-between gap-3 border-b border-white/8 bg-white/5 px-5 py-3">
+                <div class="text-[12px] uppercase tracking-[0.2em] text-white/40">
+                  {{ activeScenario.file }}
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    v-for="scenario in panelScenarios"
+                    :key="scenario.id"
+                    type="button"
+                    class="h-2.5 rounded-full bg-white/15 transition"
+                    :class="scenario.id === activeScenario.id ? 'w-8 bg-primary-300' : 'w-2.5 hover:bg-white/30'"
+                    :aria-label="scenario.title"
+                    @click="setActiveScenario(panelScenarios.findIndex(item => item.id === scenario.id))"
+                  ></button>
+                </div>
               </div>
-              <div class="space-y-3 px-5 py-5 font-mono text-[13px] leading-6 text-white/88 md:text-[14px]">
-                <div class="text-[#6ee7cf]">const response = await client.chat.completions.create({`{`}</div>
-                <div class="pl-4 text-white/74">model: <span class="text-[#f9d98f]">"gpt-5.4"</span>,</div>
-                <div class="pl-4 text-white/74">metadata: <span class="text-[#f9d98f]">"coding-agent"</span>,</div>
-                <div class="pl-4 text-white/74">fallback: <span class="text-[#f9d98f]">"claude-sonnet-4.6"</span>,</div>
-                <div class="pl-4 text-white/74">billing_mode: <span class="text-[#f9d98f]">"metered"</span>,</div>
-                <div class="text-[#6ee7cf]">{`})`}</div>
-              </div>
+
+              <Transition name="terminal-fade" mode="out-in">
+                <div
+                  :key="activeScenario.id"
+                  class="space-y-3 px-5 py-5 font-mono text-[13px] leading-6 text-white/88 md:text-[14px]"
+                >
+                  <div
+                    v-for="line in activeScenario.codeLines.slice(0, -1)"
+                    :key="line.content"
+                    :class="line.className"
+                  >
+                    {{ line.content }}
+                  </div>
+                  <div :class="activeScenario.codeLines[activeScenario.codeLines.length - 1]?.className">
+                    {{ activeScenario.codeLines[activeScenario.codeLines.length - 1]?.content }}
+                    <span class="terminal-cursor ml-1 align-middle"></span>
+                  </div>
+                </div>
+              </Transition>
             </div>
 
             <div class="mt-5 grid gap-3 sm:grid-cols-2">
               <div
-                v-for="row in panelRows"
+                v-for="row in activeScenario.rows"
                 :key="row.label"
                 class="rounded-[22px] border border-white/8 bg-white/5 p-4 backdrop-blur"
               >
@@ -134,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 
@@ -152,18 +183,154 @@ const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : 
 const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
 const subtitleLine = computed(() => props.siteSubtitle.trim() || t('home.heroSubtitle'))
 
+const activeScenarioIndex = ref(0)
+let scenarioTimer: number | null = null
+
 const compatibilityChips = computed(() => [
   t('home.providers.claudeCode'),
   t('home.providers.codex'),
   t('home.providers.gpt'),
-  t('home.providers.gemini'),
   t('home.providers.openaiCompatible'),
 ])
 
-const panelRows = computed(() => [
-  { label: t('home.hero.panel.requestLabel'), value: t('home.hero.panel.requestValue') },
-  { label: t('home.hero.panel.modelLabel'), value: t('home.hero.panel.modelValue') },
-  { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.routeValue') },
-  { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.billValue') },
+const panelScenarios = computed(() => [
+  {
+    id: 'chat-completions',
+    overline: 'CHAT COMPLETIONS',
+    file: 'chat-completions.ts',
+    title: t('home.hero.panel.scenarios.completions.title'),
+    subtitle: t('home.hero.panel.scenarios.completions.subtitle'),
+    codeLines: [
+      { content: 'const response = await client.chat.completions.create({', className: 'text-[#6ee7cf]' },
+      { content: '  model: "gpt-5.4",', className: 'pl-4 text-white/74' },
+      { content: '  messages,', className: 'pl-4 text-white/74' },
+      { content: '  metadata: { surface: "coding-agent" },', className: 'pl-4 text-white/74' },
+      { content: '})', className: 'text-[#6ee7cf]' },
+    ],
+    rows: [
+      { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/chat/completions' },
+      { label: t('home.hero.panel.modelLabel'), value: 'GPT / Claude / Codex' },
+      { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.completions.route') },
+      { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.completions.billing') },
+    ],
+  },
+  {
+    id: 'responses',
+    overline: 'RESPONSES + TOOLS',
+    file: 'responses.ts',
+    title: t('home.hero.panel.scenarios.responses.title'),
+    subtitle: t('home.hero.panel.scenarios.responses.subtitle'),
+    codeLines: [
+      { content: 'const run = await client.responses.create({', className: 'text-[#6ee7cf]' },
+      { content: '  model: "claude-sonnet-4.6",', className: 'pl-4 text-white/74' },
+      { content: '  input,', className: 'pl-4 text-white/74' },
+      { content: '  tools: [{ type: "web_search_preview" }],', className: 'pl-4 text-white/74' },
+      { content: '})', className: 'text-[#6ee7cf]' },
+    ],
+    rows: [
+      { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/responses' },
+      { label: t('home.hero.panel.modelLabel'), value: 'GPT-5.4 / Claude 4.6 / Codex-class models' },
+      { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.responses.route') },
+      { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.responses.billing') },
+    ],
+  },
+  {
+    id: 'messages',
+    overline: 'CLAUDE MESSAGES',
+    file: 'messages.ts',
+    title: t('home.hero.panel.scenarios.messages.title'),
+    subtitle: t('home.hero.panel.scenarios.messages.subtitle'),
+    codeLines: [
+      { content: 'const reply = await anthropic.messages.create({', className: 'text-[#6ee7cf]' },
+      { content: '  model: "claude-sonnet-4.6",', className: 'pl-4 text-white/74' },
+      { content: '  max_tokens: 4096,', className: 'pl-4 text-white/74' },
+      { content: '  messages,', className: 'pl-4 text-white/74' },
+      { content: '})', className: 'text-[#6ee7cf]' },
+    ],
+    rows: [
+      { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/messages' },
+      { label: t('home.hero.panel.modelLabel'), value: 'Claude Sonnet / Claude Opus / mixed upstream' },
+      { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.messages.route') },
+      { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.messages.billing') },
+    ],
+  },
 ])
+
+const activeScenario = computed(() => panelScenarios.value[activeScenarioIndex.value] ?? panelScenarios.value[0])
+
+function clearScenarioTimer() {
+  if (scenarioTimer !== null && typeof window !== 'undefined') {
+    window.clearInterval(scenarioTimer)
+  }
+  scenarioTimer = null
+}
+
+function setActiveScenario(index: number) {
+  activeScenarioIndex.value = index
+}
+
+function startScenarioTimer() {
+  if (typeof window === 'undefined') return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  clearScenarioTimer()
+  scenarioTimer = window.setInterval(() => {
+    activeScenarioIndex.value = (activeScenarioIndex.value + 1) % panelScenarios.value.length
+  }, 4200)
+}
+
+onMounted(() => {
+  startScenarioTimer()
+})
+
+onBeforeUnmount(() => {
+  clearScenarioTimer()
+})
 </script>
+
+<style scoped>
+.terminal-cursor {
+  display: inline-block;
+  width: 0.65ch;
+  height: 1.1em;
+  border-radius: 2px;
+  background: #6ee7cf;
+  animation: terminal-cursor-blink 1s steps(1, end) infinite;
+}
+
+.terminal-fade-enter-active,
+.terminal-fade-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+
+.terminal-fade-enter-from,
+.terminal-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+@keyframes terminal-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-cursor {
+    animation: none;
+  }
+
+  .terminal-fade-enter-active,
+  .terminal-fade-leave-active {
+    transition: none;
+  }
+}
+</style>

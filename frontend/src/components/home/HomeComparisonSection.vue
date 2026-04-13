@@ -5,7 +5,7 @@
         <p class="text-[11px] uppercase tracking-[0.24em] text-[#7a7268] dark:text-white/42">
           {{ t('home.comparison.overline') }}
         </p>
-        <h2 class="mt-4 max-w-[17ch] text-3xl font-semibold leading-[1.04] tracking-[-0.05em] text-[#111111] dark:text-white md:text-4xl">
+        <h2 class="mt-4 max-w-[17ch] text-3xl font-semibold leading-[1.12] tracking-[-0.04em] text-[#111111] dark:text-white md:text-4xl [text-wrap:balance]">
           {{ t('home.comparison.title') }}
         </h2>
         <p class="mt-4 max-w-[42rem] text-base leading-7 text-[#5f5850] dark:text-white/68">

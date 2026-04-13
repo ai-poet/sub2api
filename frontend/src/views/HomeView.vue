@@ -28,7 +28,6 @@
 
     <HomeHeader
       :site-name="siteName"
-      :site-logo="siteLogo"
       :doc-url="docUrl"
       :is-dark="isDark"
       :is-authenticated="isAuthenticated"
@@ -98,7 +97,6 @@ const authStore = useAuthStore()
 const appStore = useAppStore()
 
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
-const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')

@@ -9,7 +9,7 @@
           <p class="text-[11px] uppercase tracking-[0.26em] text-primary-300">
             {{ t('home.cta.eyebrow') }}
           </p>
-          <h2 class="mt-5 max-w-[14ch] text-4xl font-semibold leading-[1.02] tracking-[-0.06em] md:text-5xl">
+          <h2 class="mt-5 max-w-[14ch] text-4xl font-semibold leading-[1.1] tracking-[-0.04em] md:text-5xl [text-wrap:balance]">
             {{ t('home.cta.title') }}
           </h2>
           <p class="mt-5 max-w-[44rem] text-lg leading-8 text-white/72">

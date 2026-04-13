@@ -4,9 +4,6 @@
       class="mx-auto flex max-w-[1380px] items-center justify-between gap-4 rounded-full border border-black/8 bg-[rgba(255,251,245,0.82)] px-4 py-3 shadow-[0_20px_80px_rgba(18,18,18,0.07)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(17,19,24,0.82)]"
     >
       <router-link to="/home" class="flex min-w-0 items-center gap-3">
-        <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-[0_10px_25px_rgba(15,15,15,0.12)] dark:bg-[#191d24]">
-          <img :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain p-1.5" />
-        </div>
         <div class="min-w-0">
           <div class="home-font-serif truncate text-2xl leading-none tracking-[-0.04em] text-[#111111] dark:text-white">
             {{ siteName }}
@@ -74,7 +71,6 @@ import Icon from '@/components/icons/Icon.vue'
 
 defineProps<{
   siteName: string
-  siteLogo: string
   docUrl: string
   isDark: boolean
   isAuthenticated: boolean

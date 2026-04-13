@@ -12,26 +12,40 @@ export default {
     goToDashboard: '进入控制台',
     headerTagline: 'AI Coding Agent 服务底层',
     heroSubtitle: '统一入口、按量计费、面向持续运行的编码代理',
-    heroDescription: '面向 Claude Code、Codex CLI、Gemini CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
+    heroDescription: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
     hero: {
       badge: '高级模型，不必继续按官方订阅价买单',
       titleLead: '让你的',
       titleAccent: 'AI Coding Agent',
       titleTail: '用更低成本跑上高级模型',
-      description: '面向 Claude Code、Codex CLI、Gemini CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
+      description: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
       primaryNote: '不用再同时扛多份订阅、分散密钥和单账号不稳定的风险。',
       panel: {
-        overline: 'OPENAI-COMPATIBLE GATEWAY',
         title: '为日常编码代理准备的请求层',
-        subtitle: '一个端点承接高级模型访问、额度控制和自动切换，更适合持续运行的编码工作流。',
         requestLabel: 'request',
-        requestValue: 'POST /v1/chat/completions',
         modelLabel: 'models',
-        modelValue: 'Claude / GPT / Gemini / Codex',
         routeLabel: 'route',
-        routeValue: '多账号自动切换 + 粘性会话',
         billLabel: 'billing',
-        billValue: '按量计费，细节可追踪'
+        scenarios: {
+          completions: {
+            title: '兼容常见 OpenAI Chat / Completions 工作流',
+            subtitle: '继续使用现有 coding agent 接入方式，同时把上游模型、额度和切换策略抽到统一网关层。',
+            route: 'OpenAI 兼容 + 多账号切换',
+            billing: '按量计费，统一账单'
+          },
+          responses: {
+            title: '不仅是 completions，也承接 Responses 与工具调用',
+            subtitle: '更适合需要工具、长链路和代理编排的工作流，而不是只处理单次文本补全。',
+            route: 'Responses / Tools 工作流',
+            billing: '请求级别明细可追踪'
+          },
+          messages: {
+            title: 'Claude Messages 风格请求也能放进同一层服务',
+            subtitle: '让 Claude 原生调用方式和统一计费、切换、观察能力并存，不必拆开运维。',
+            route: 'Claude Native + 粘性会话',
+            billing: '消息请求统一折算'
+          }
+        }
       }
     },
     pricing: {
@@ -55,7 +69,7 @@ export default {
         economics: {
           eyebrow: '01 / 价格',
           title: '廉价接入高级模型',
-          description: '把 Claude / GPT / Gemini / Codex 级能力放进常用 coding agent 工作流，不必再为每个官方订阅单独买单。'
+          description: '把 Claude / GPT / Codex 级能力放进常用 coding agent 工作流，不必再为每个官方订阅单独买单。'
         },
         reliability: {
           eyebrow: '02 / 稳定',
