@@ -22,28 +22,29 @@ export default {
       primaryNote: '不用再同时扛多份订阅、分散密钥和单账号不稳定的风险。',
       panel: {
         title: '为日常编码代理准备的请求层',
+        auto: '自动轮播',
         requestLabel: 'request',
         modelLabel: 'models',
         routeLabel: 'route',
         billLabel: 'billing',
         scenarios: {
           completions: {
-            title: '兼容常见 OpenAI Chat / Completions 工作流',
-            subtitle: '继续使用现有 coding agent 接入方式，同时把上游模型、额度和切换策略抽到统一网关层。',
-            route: 'OpenAI 兼容 + 多账号切换',
-            billing: '按量计费，统一账单'
+            title: '一个端点承接高级模型访问、额度控制和自动切换',
+            subtitle: '继续沿用常见 OpenAI Chat / Completions 接入方式，把模型、计费和切换逻辑收进同一层服务。',
+            route: '多账号自动切换 + 粘性会话',
+            billing: '按量计费，细节可追踪'
           },
           responses: {
-            title: '不仅是 completions，也承接 Responses 与工具调用',
-            subtitle: '更适合需要工具、长链路和代理编排的工作流，而不是只处理单次文本补全。',
-            route: 'Responses / Tools 工作流',
-            billing: '请求级别明细可追踪'
+            title: '不只 completions，也承接 Responses 与工具调用',
+            subtitle: '适合带工具、长链路和代理编排的工作流，不必为了不同接口拆成多套服务。',
+            route: '工具调用 + 长链路代理',
+            billing: '按量计费，细节可追踪'
           },
           messages: {
-            title: 'Claude Messages 风格请求也能放进同一层服务',
-            subtitle: '让 Claude 原生调用方式和统一计费、切换、观察能力并存，不必拆开运维。',
-            route: 'Claude Native + 粘性会话',
-            billing: '消息请求统一折算'
+            title: 'Claude Messages 请求也能并入同一层网关',
+            subtitle: '保留 Claude Native 习惯，同时复用统一额度、切换和账单能力。',
+            route: 'Claude Native + 统一网关',
+            billing: '按量计费，细节可追踪'
           }
         }
       }
@@ -63,8 +64,8 @@ export default {
     },
     value: {
       overline: '服务结构',
-      title: '这不是再包一层皮，而是更适合持续跑代理的商业底层',
-      description: 'Sub2API 同时解决价格、稳定性和可控性，适合把“高级模型 coding agent 服务”真正拿去推广。',
+      title: '把高级模型能力做成真正可交付的编码代理服务',
+      description: '把成本、稳定性和计费控制交给同一层服务，让高级模型更适合长期承接编码代理请求。',
       items: {
         economics: {
           eyebrow: '01 / 价格',
@@ -85,8 +86,8 @@ export default {
     },
     comparison: {
       overline: '服务定位',
-      title: '把“官方订阅工具”，换成更适合推广的服务化交付',
-      description: '首页只需要讲清三件事：更便宜、模型更全、持续跑代理时更稳。',
+      title: '比官方订阅更适合长期运行的编码代理',
+      description: '更轻的成本结构、更宽的模型覆盖和更稳的运行路径，让日常 agent 调用更容易持续。',
       headers: {
         feature: '对比项',
         official: '官方订阅',
@@ -112,7 +113,7 @@ export default {
     },
     providers: {
       title: '把高级模型与编码工作流放进同一层服务',
-      description: '这个首页强调的不是泛模型目录，而是更适合 AI coding agent 场景的服务供给。',
+      description: '围绕高频编码代理而不是通用模型陈列，保留主流调用方式与统一服务层。',
       supported: '已支持',
       claude: 'Claude',
       claudeCode: 'Claude Code',
@@ -123,8 +124,8 @@ export default {
     },
     trust: {
       overline: '兼容与可信度',
-      title: '为真正整天跑代码的工具链而做',
-      description: '无论你是自用代理还是对外提供 coding agent 服务，首页都应该传达“高级模型可以更便宜、更稳地被拿来跑 agent”。',
+      title: '为长时间运行的代码工作流准备的服务层',
+      description: '统一入口、自动切换、清晰计费与可追踪明细，让高级模型在日常编码代理里更稳、更省。',
       cards: {
         gateway: {
           title: '统一入口',
@@ -148,7 +149,7 @@ export default {
     cta: {
       eyebrow: 'READY TO CONVERT',
       title: '把高级模型接进你的下一个 AI coding agent',
-      description: '先用更低成本把服务说服力和可用性做起来，再决定是否扩大推广。',
+      description: '用一个统一端点承接高级模型请求、用量与切换逻辑，把更稳、更省的编码代理服务直接交付给用户。',
       button: '免费注册',
       stat: '统一入口 · 按量付费 · 面向推广'
     },

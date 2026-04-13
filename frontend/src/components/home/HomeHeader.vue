@@ -25,15 +25,6 @@
           {{ t('home.docs') }}
         </a>
 
-        <a
-          :href="githubUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hidden rounded-full px-3 py-2 text-sm font-medium text-[#5f5850] transition hover:bg-black/5 hover:text-[#111111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white xl:inline-flex"
-        >
-          GitHub
-        </a>
-
         <LocaleSwitcher />
 
         <button
@@ -76,7 +67,6 @@ defineProps<{
   isAuthenticated: boolean
   dashboardPath: string
   userInitial: string
-  githubUrl: string
 }>()
 
 defineEmits<{

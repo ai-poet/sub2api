@@ -33,13 +33,11 @@
       :is-authenticated="isAuthenticated"
       :dashboard-path="dashboardPath"
       :user-initial="userInitial"
-      :github-url="githubUrl"
       @toggle-theme="toggleTheme"
     />
 
     <main class="relative z-10">
       <HomeHero
-        :site-name="siteName"
         :site-subtitle="siteSubtitle"
         :doc-url="docUrl"
         :is-authenticated="isAuthenticated"
@@ -74,7 +72,6 @@
     <HomeFooter
       :site-name="siteName"
       :doc-url="docUrl"
-      :github-url="githubUrl"
       :current-year="currentYear"
     />
   </div>
@@ -107,8 +104,6 @@ const isHomeContentUrl = computed(() => {
 })
 
 const isDark = ref(document.documentElement.classList.contains('dark'))
-
-const githubUrl = 'https://github.com/Wei-Shaw/sub2api'
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)

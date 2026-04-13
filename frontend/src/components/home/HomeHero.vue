@@ -7,11 +7,7 @@
           <span>{{ t('home.hero.badge') }}</span>
         </div>
 
-        <p class="home-font-serif mt-8 text-[clamp(3.4rem,10vw,7rem)] leading-[0.94] tracking-[-0.05em] text-[#111111] dark:text-white [text-wrap:balance]">
-          {{ siteName }}
-        </p>
-
-        <h1 class="mt-6 max-w-[11.5ch] text-[clamp(2.8rem,7vw,5.6rem)] font-semibold leading-[1.04] tracking-[-0.05em] text-[#111111] dark:text-white [text-wrap:balance]">
+        <h1 class="mt-8 max-w-[11.5ch] text-[clamp(2.9rem,7vw,5.8rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-[#111111] dark:text-white [text-wrap:balance]">
           <span class="block">{{ t('home.hero.titleLead') }}</span>
           <span class="block text-primary-700 dark:text-primary-300">{{ t('home.hero.titleAccent') }}</span>
           <span class="block">{{ t('home.hero.titleTail') }}</span>
@@ -82,8 +78,9 @@
                 <span class="h-3 w-3 rounded-full bg-[#ffbd2f]"></span>
                 <span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
               </div>
-              <div class="text-[11px] uppercase tracking-[0.24em] text-white/45">
-                {{ activeScenario.overline }}
+              <div class="flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-white/45">
+                <span class="h-1.5 w-1.5 rounded-full bg-primary-300 shadow-[0_0_14px_rgba(103,232,218,0.85)]"></span>
+                <span>{{ t('home.hero.panel.auto') }}</span>
               </div>
             </div>
 
@@ -106,21 +103,29 @@
 
           <div class="relative px-6 py-6">
             <div class="overflow-hidden rounded-[24px] border border-white/8 bg-[#0d1014] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <div class="flex items-center justify-between gap-3 border-b border-white/8 bg-white/5 px-5 py-3">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 bg-white/5 px-5 py-3">
                 <div class="text-[12px] uppercase tracking-[0.2em] text-white/40">
                   {{ activeScenario.file }}
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                   <button
                     v-for="scenario in panelScenarios"
                     :key="scenario.id"
                     type="button"
-                    class="h-2.5 rounded-full bg-white/15 transition"
-                    :class="scenario.id === activeScenario.id ? 'w-8 bg-primary-300' : 'w-2.5 hover:bg-white/30'"
+                    class="rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] transition"
+                    :class="scenario.id === activeScenario.id
+                      ? 'border-primary-300/60 bg-primary-300/16 text-primary-200 shadow-[0_0_0_1px_rgba(103,232,218,0.08)]'
+                      : 'border-white/10 bg-white/5 text-white/46 hover:border-white/18 hover:text-white/74'"
                     :aria-label="scenario.title"
                     @click="setActiveScenario(panelScenarios.findIndex(item => item.id === scenario.id))"
-                  ></button>
+                  >
+                    {{ scenario.tabLabel }}
+                  </button>
                 </div>
+              </div>
+
+              <div class="h-[2px] w-full bg-white/6">
+                <div :key="activeScenario.id" class="animate-terminal-progress h-full bg-primary-300/90"></div>
               </div>
 
               <Transition name="terminal-fade" mode="out-in">
@@ -170,7 +175,6 @@ import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 
 const props = defineProps<{
-  siteName: string
   siteSubtitle: string
   docUrl: string
   isAuthenticated: boolean
@@ -196,47 +200,49 @@ const compatibilityChips = computed(() => [
 const panelScenarios = computed(() => [
   {
     id: 'chat-completions',
-    overline: 'CHAT COMPLETIONS',
-    file: 'chat-completions.ts',
+    tabLabel: 'Chat',
+    file: 'agent-request.ts',
     title: t('home.hero.panel.scenarios.completions.title'),
     subtitle: t('home.hero.panel.scenarios.completions.subtitle'),
     codeLines: [
       { content: 'const response = await client.chat.completions.create({', className: 'text-[#6ee7cf]' },
       { content: '  model: "gpt-5.4",', className: 'pl-4 text-white/74' },
-      { content: '  messages,', className: 'pl-4 text-white/74' },
-      { content: '  metadata: { surface: "coding-agent" },', className: 'pl-4 text-white/74' },
+      { content: '  metadata: "coding-agent",', className: 'pl-4 text-white/74' },
+      { content: '  fallback: "claude-sonnet-4.6",', className: 'pl-4 text-white/74' },
+      { content: '  billing_mode: "metered",', className: 'pl-4 text-white/74' },
       { content: '})', className: 'text-[#6ee7cf]' },
     ],
     rows: [
       { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/chat/completions' },
-      { label: t('home.hero.panel.modelLabel'), value: 'GPT / Claude / Codex' },
+      { label: t('home.hero.panel.modelLabel'), value: 'Claude / GPT / Codex' },
       { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.completions.route') },
       { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.completions.billing') },
     ],
   },
   {
     id: 'responses',
-    overline: 'RESPONSES + TOOLS',
+    tabLabel: 'Responses',
     file: 'responses.ts',
     title: t('home.hero.panel.scenarios.responses.title'),
     subtitle: t('home.hero.panel.scenarios.responses.subtitle'),
     codeLines: [
       { content: 'const run = await client.responses.create({', className: 'text-[#6ee7cf]' },
-      { content: '  model: "claude-sonnet-4.6",', className: 'pl-4 text-white/74' },
+      { content: '  model: "gpt-5.4",', className: 'pl-4 text-white/74' },
       { content: '  input,', className: 'pl-4 text-white/74' },
-      { content: '  tools: [{ type: "web_search_preview" }],', className: 'pl-4 text-white/74' },
+      { content: '  tools,', className: 'pl-4 text-white/74' },
+      { content: '  session_mode: "sticky",', className: 'pl-4 text-white/74' },
       { content: '})', className: 'text-[#6ee7cf]' },
     ],
     rows: [
       { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/responses' },
-      { label: t('home.hero.panel.modelLabel'), value: 'GPT-5.4 / Claude 4.6 / Codex-class models' },
+      { label: t('home.hero.panel.modelLabel'), value: 'Claude / GPT / Codex' },
       { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.responses.route') },
       { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.responses.billing') },
     ],
   },
   {
     id: 'messages',
-    overline: 'CLAUDE MESSAGES',
+    tabLabel: 'Messages',
     file: 'messages.ts',
     title: t('home.hero.panel.scenarios.messages.title'),
     subtitle: t('home.hero.panel.scenarios.messages.subtitle'),
@@ -245,11 +251,12 @@ const panelScenarios = computed(() => [
       { content: '  model: "claude-sonnet-4.6",', className: 'pl-4 text-white/74' },
       { content: '  max_tokens: 4096,', className: 'pl-4 text-white/74' },
       { content: '  messages,', className: 'pl-4 text-white/74' },
+      { content: '  billing_mode: "metered",', className: 'pl-4 text-white/74' },
       { content: '})', className: 'text-[#6ee7cf]' },
     ],
     rows: [
       { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/messages' },
-      { label: t('home.hero.panel.modelLabel'), value: 'Claude Sonnet / Claude Opus / mixed upstream' },
+      { label: t('home.hero.panel.modelLabel'), value: 'Claude / GPT / Codex' },
       { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.messages.route') },
       { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.messages.billing') },
     ],
@@ -267,16 +274,16 @@ function clearScenarioTimer() {
 
 function setActiveScenario(index: number) {
   activeScenarioIndex.value = index
+  startScenarioTimer()
 }
 
 function startScenarioTimer() {
   if (typeof window === 'undefined') return
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   clearScenarioTimer()
   scenarioTimer = window.setInterval(() => {
     activeScenarioIndex.value = (activeScenarioIndex.value + 1) % panelScenarios.value.length
-  }, 4200)
+  }, 4600)
 }
 
 onMounted(() => {
@@ -323,9 +330,28 @@ onBeforeUnmount(() => {
   }
 }
 
+@keyframes terminal-progress {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.animate-terminal-progress {
+  animation: terminal-progress 4.6s linear forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .terminal-cursor {
     animation: none;
+  }
+
+  .animate-terminal-progress {
+    animation: none;
+    width: 100%;
   }
 
   .terminal-fade-enter-active,

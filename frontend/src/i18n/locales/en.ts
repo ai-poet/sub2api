@@ -22,28 +22,29 @@ export default {
       primaryNote: 'Stop carrying multiple subscriptions, scattered keys, and fragile single-account routing.',
       panel: {
         title: 'A request layer shaped for daily coding agents',
+        auto: 'Auto Rotating',
         requestLabel: 'request',
         modelLabel: 'models',
         routeLabel: 'route',
         billLabel: 'billing',
         scenarios: {
           completions: {
-            title: 'Compatible with common OpenAI chat/completions workflows',
-            subtitle: 'Keep the coding-agent integration shape you already use while moving models, quotas, and switching logic into one gateway layer.',
-            route: 'OpenAI-compatible + multi-account routing',
-            billing: 'Metered usage with unified billing'
+            title: 'One endpoint for premium-model access, quota control, and automatic switching',
+            subtitle: 'Keep the familiar OpenAI chat/completions request shape while moving model access, billing, and failover into one service layer.',
+            route: 'Multi-account routing + sticky sessions',
+            billing: 'Metered billing with traceable detail'
           },
           responses: {
-            title: 'Not just completions. Responses and tool flows fit here too.',
-            subtitle: 'Better aligned with tool-enabled, long-running, agentic workloads than a single completion-only request surface.',
-            route: 'Responses / tools workflow',
-            billing: 'Request-level detail is traceable'
+            title: 'Not just completions. Responses and tool calls fit here too.',
+            subtitle: 'Built for tool-enabled, long-running, agentic workloads without splitting different request styles into separate services.',
+            route: 'Tool calls + long-running agent flows',
+            billing: 'Metered billing with traceable detail'
           },
           messages: {
-            title: 'Claude-style Messages requests can live in the same service layer',
-            subtitle: 'Keep Claude-native calling patterns while still getting unified billing, routing, and operational visibility.',
-            route: 'Claude-native + sticky sessions',
-            billing: 'Messages billing mapped into one surface'
+            title: 'Claude Messages requests can stay inside the same gateway layer',
+            subtitle: 'Keep Claude-native calling patterns while reusing unified quotas, routing, and billing.',
+            route: 'Claude-native + unified gateway',
+            billing: 'Metered billing with traceable detail'
           }
         }
       }
@@ -63,8 +64,8 @@ export default {
     },
     value: {
       overline: 'Service Structure',
-      title: 'This is not another wrapper. It is a better commercial layer for continuously running agents.',
-      description: 'Sub2API brings pricing, stability, and control back to a level that can actually be promoted, sold, and operated.',
+      title: 'Turn premium-model access into a coding-agent service you can actually deliver',
+      description: 'Bring cost, stability, and billing control into one gateway layer so long-running coding agents stay usable and commercially viable.',
       items: {
         economics: {
           eyebrow: '01 / Pricing',
@@ -85,8 +86,8 @@ export default {
     },
     comparison: {
       overline: 'Positioning',
-      title: 'Turn subscription-first tools into a service offering that is easier to promote',
-      description: 'The homepage only needs three clear differences to convert: cost, model coverage, and runtime stability.',
+      title: 'A better runtime surface than official subscriptions for persistent coding agents',
+      description: 'Lower cost structure, broader model coverage, and steadier routing make day-to-day agent traffic easier to sustain.',
       headers: {
         feature: 'Comparison',
         official: 'Official Subscriptions',
@@ -112,7 +113,7 @@ export default {
     },
     providers: {
       title: 'Premium models and coding workflows under one service layer',
-      description: 'The offer is built around coding-agent demand, not around a generic model directory.',
+      description: 'Built around high-frequency coding agents instead of a generic model catalog, while keeping familiar request shapes intact.',
       supported: 'Supported',
       claude: 'Claude',
       claudeCode: 'Claude Code',
@@ -123,8 +124,8 @@ export default {
     },
     trust: {
       overline: 'Compatibility & Trust',
-      title: 'Built for the stacks that run code all day',
-      description: 'Whether you run internal agents or sell coding-agent access externally, the page should clearly signal that premium model access can be cheaper and steadier here.',
+      title: 'A service layer built for code workflows that stay on all day',
+      description: 'One endpoint, automatic switching, clear billing, and traceable usage make premium models cheaper and steadier in real coding-agent traffic.',
       cards: {
         gateway: {
           title: 'Unified entry point',
@@ -148,7 +149,7 @@ export default {
     cta: {
       eyebrow: 'READY TO SHIP',
       title: 'Give your next AI coding agent a cheaper premium-model runtime',
-      description: 'Start with a landing page and service promise strong enough to sell the offer, then scale the rollout after the economics make sense.',
+      description: 'Put premium model access, usage control, and routing behind one endpoint, then deliver a coding-agent service that is easier to keep running.',
       button: 'Sign Up Free',
       stat: 'One gateway · Metered billing · Built for promotion'
     },

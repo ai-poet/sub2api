@@ -12,23 +12,14 @@
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-4 md:gap-6">
+      <div v-if="docUrl" class="flex flex-wrap items-center gap-4 md:gap-6">
         <a
-          v-if="docUrl"
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
           class="transition hover:text-[#111111] dark:hover:text-white"
         >
           {{ t('home.docs') }}
-        </a>
-        <a
-          :href="githubUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="transition hover:text-[#111111] dark:hover:text-white"
-        >
-          GitHub
         </a>
       </div>
     </div>
@@ -41,7 +32,6 @@ import { useI18n } from 'vue-i18n'
 defineProps<{
   siteName: string
   docUrl: string
-  githubUrl: string
   currentYear: number
 }>()
 
