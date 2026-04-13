@@ -33,8 +33,8 @@ ENV PATH=${PNPM_HOME}:${PATH}
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-# Install dependencies first (better caching)
-COPY --link frontend/package.json frontend/pnpm-lock.yaml ./
+# Install dependencies first (better caching; .npmrc affects resolution / script policy)
+COPY --link frontend/package.json frontend/pnpm-lock.yaml frontend/.npmrc ./
 RUN --mount=type=cache,id=sub2api-frontend-pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
     pnpm install --frozen-lockfile
