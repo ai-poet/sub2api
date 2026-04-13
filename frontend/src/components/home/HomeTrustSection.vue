@@ -12,8 +12,8 @@
       </p>
     </div>
 
-    <div class="mt-10 overflow-hidden rounded-full border border-black/8 bg-white/65 py-3 shadow-[0_20px_60px_rgba(15,15,15,0.04)] backdrop-blur dark:border-white/10 dark:bg-white/5">
-      <div class="animate-home-marquee flex w-max gap-3 whitespace-nowrap px-4">
+    <div class="mt-10 rounded-[28px] border border-black/8 bg-white/65 py-3 shadow-[0_20px_60px_rgba(15,15,15,0.04)] backdrop-blur dark:border-white/10 dark:bg-white/5">
+      <div class="flex flex-wrap items-center justify-center gap-3 px-4">
         <span
           v-for="(item, index) in marqueeItems"
           :key="`${item}-${index}`"
@@ -52,7 +52,7 @@ import Icon from '@/components/icons/Icon.vue'
 const { t } = useI18n()
 
 const marqueeItems = computed(() => {
-  const base = [
+  return [
     t('home.providers.claudeCode'),
     t('home.providers.codex'),
     t('home.providers.gpt'),
@@ -61,8 +61,6 @@ const marqueeItems = computed(() => {
     t('home.trust.trackers.billing'),
     t('home.trust.trackers.visibility'),
   ]
-
-  return [...base, ...base]
 })
 
 const cards = computed(() => [

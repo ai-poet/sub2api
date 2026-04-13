@@ -12,13 +12,13 @@ export default {
     goToDashboard: '进入控制台',
     headerTagline: 'AI Coding Agent 服务底层',
     heroSubtitle: '统一入口、按量计费、面向持续运行的编码代理',
-    heroDescription: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
+    heroDescription: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本使用基于高级模型的 AI coding agent 服务。',
     hero: {
       badge: '高级模型，不必继续按官方订阅价买单',
       titleLead: '让你的',
       titleAccent: 'AI Coding Agent',
       titleTail: '用更低成本跑上高级模型',
-      description: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
+      description: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本使用基于高级模型的 AI coding agent 服务。',
       primaryNote: '不用再同时扛多份订阅、分散密钥和单账号不稳定的风险。',
       panel: {
         title: '为日常编码代理准备的请求层',
