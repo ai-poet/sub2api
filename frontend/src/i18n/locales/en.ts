@@ -460,6 +460,7 @@ export default {
     dashboard: 'Dashboard',
     announcements: 'Announcements',
     apiKeys: 'API Keys',
+    integrationGuide: 'Integration Guide',
     usage: 'Usage',
     redeem: 'Redeem',
     profile: 'Profile',
@@ -666,6 +667,30 @@ export default {
   // Groups (shared)
   groups: {
     subscription: 'Sub'
+  },
+
+  integrationGuide: {
+    title: 'Integration Guide',
+    description: 'Browse platform-specific client setup and copy ready-to-use configs',
+    caption: 'Multi-platform setup',
+    intro: 'This page organizes the common client setup flows by platform. Each platform can pick one of your existing API keys and render copy-ready configuration snippets immediately.',
+    bindingNote: 'Each API key is bound to one group platform and cannot be reused across every platform. Platforms without an available key stay visible in example mode until you create a matching key.',
+    liveBadge: 'Live Config',
+    exampleBadge: 'Example Mode',
+    keyLabel: 'Current API Key',
+    selectKey: 'Select an API key for this platform',
+    keyHelp: 'A real key is already injected into the snippets and can be copied directly.',
+    noKeysForPlatform: 'No API key is currently available for this platform.',
+    exampleOption: 'Show example config',
+    exampleDescription: 'The snippets below are placeholders. Once you create a key for this platform, this panel will switch to live config automatically.',
+    failedToLoadKeys: 'Failed to load API keys for the integration guide',
+    failedToLoadSettings: 'Failed to load public settings for the integration guide',
+    platforms: {
+      anthropic: 'Anthropic',
+      openai: 'OpenAI',
+      gemini: 'Gemini',
+      antigravity: 'Antigravity'
+    }
   },
 
   // API Keys

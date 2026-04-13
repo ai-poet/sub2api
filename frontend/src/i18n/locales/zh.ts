@@ -460,6 +460,7 @@ export default {
     dashboard: '仪表盘',
     announcements: '公告',
     apiKeys: 'API 密钥',
+    integrationGuide: '使用教程',
     usage: '使用记录',
     redeem: '兑换',
     profile: '个人资料',
@@ -666,6 +667,30 @@ export default {
   // Groups (shared)
   groups: {
     subscription: '订阅'
+  },
+
+  integrationGuide: {
+    title: '使用教程',
+    description: '按平台查看客户端接入方式，并直接复制可用配置',
+    caption: '多平台接入教程',
+    intro: '这里会按平台整理常见客户端的接入方式。每个平台都可以单独选择一个已有 API Key，页面会直接生成可复制的配置内容。',
+    bindingNote: '一个 API Key 绑定一个分组平台，不能直接通用于所有平台。没有可用密钥的平台会显示示例配置，等你创建对应平台的密钥后即可直接使用。',
+    liveBadge: '真实配置',
+    exampleBadge: '示例模式',
+    keyLabel: '当前 API Key',
+    selectKey: '选择此平台的 API Key',
+    keyHelp: '已自动填入真实密钥，可直接复制使用。',
+    noKeysForPlatform: '当前平台还没有可用 API Key。',
+    exampleOption: '显示示例配置',
+    exampleDescription: '当前展示的是占位示例。创建并分配对应平台的密钥后，这里会自动切换为真实配置。',
+    failedToLoadKeys: '加载使用教程所需的 API 密钥失败',
+    failedToLoadSettings: '加载使用教程所需的公共设置失败',
+    platforms: {
+      anthropic: 'Anthropic',
+      openai: 'OpenAI',
+      gemini: 'Gemini',
+      antigravity: 'Antigravity'
+    }
   },
 
   // API Keys

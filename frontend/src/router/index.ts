@@ -139,6 +139,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/integration-guide',
+    name: 'IntegrationGuide',
+    component: () => import('@/views/user/IntegrationGuideView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Integration Guide',
+      titleKey: 'integrationGuide.title',
+      descriptionKey: 'integrationGuide.description'
+    }
+  },
+  {
     path: '/usage',
     name: 'Usage',
     component: () => import('@/views/user/UsageView.vue'),

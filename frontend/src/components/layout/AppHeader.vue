@@ -122,6 +122,11 @@
                   {{ t('nav.apiKeys') }}
                 </router-link>
 
+                <router-link to="/integration-guide" @click="closeDropdown" class="dropdown-item">
+                  <Icon name="book" size="sm" />
+                  {{ t('nav.integrationGuide') }}
+                </router-link>
+
                 <a
                   v-if="authStore.isAdmin"
                   href="https://github.com/Wei-Shaw/sub2api"
