@@ -40,9 +40,9 @@ vi.mock('vue-i18n', async () => {
   }
 })
 
-function createApiKey(platform: 'openai' | 'gemini' | 'anthropic', status: 'active' | 'inactive' = 'active') {
+function createApiKey(platform: 'openai' | 'anthropic', status: 'active' | 'inactive' = 'active') {
   return {
-    id: platform === 'openai' ? 1 : platform === 'gemini' ? 2 : 3,
+    id: platform === 'openai' ? 1 : 2,
     key: `sk-${platform}-test`,
     name: `${platform}-key`,
     status,
@@ -61,11 +61,10 @@ describe('IntegrationGuideView', () => {
     list.mockResolvedValue({
       items: [
         createApiKey('openai'),
-        createApiKey('gemini'),
         createApiKey('anthropic', 'inactive'),
         { id: 3, key: 'sk-no-group', name: 'ungrouped' }
       ],
-      total: 4,
+      total: 3,
       pages: 1
     })
 
@@ -100,9 +99,7 @@ describe('IntegrationGuideView', () => {
     const panels = wrapper.findAll('.guide-panel-stub').map((node) => node.text())
     expect(panels).toEqual([
       'anthropic|0|https://api.example.com/v1',
-      'openai|1|https://api.example.com/v1',
-      'gemini|1|https://api.example.com/v1',
-      'antigravity|0|https://api.example.com/v1'
+      'openai|1|https://api.example.com/v1'
     ])
   })
 })

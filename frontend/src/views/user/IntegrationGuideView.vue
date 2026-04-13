@@ -60,7 +60,7 @@ const appStore = useAppStore()
 const loading = ref(true)
 const apiKeys = ref<ApiKey[]>([])
 const publicSettings = ref<PublicSettings | null>(null)
-const platforms: GroupPlatform[] = ['anthropic', 'openai', 'gemini', 'antigravity']
+const platforms: GroupPlatform[] = ['anthropic', 'openai']
 
 const baseUrl = computed(() => publicSettings.value?.api_base_url || window.location.origin)
 

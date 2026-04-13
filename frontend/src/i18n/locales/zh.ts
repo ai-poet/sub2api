@@ -687,9 +687,7 @@ export default {
     failedToLoadSettings: '加载使用教程所需的公共设置失败',
     platforms: {
       anthropic: 'Anthropic',
-      openai: 'OpenAI',
-      gemini: 'Gemini',
-      antigravity: 'Antigravity'
+      openai: 'OpenAI'
     }
   },
 

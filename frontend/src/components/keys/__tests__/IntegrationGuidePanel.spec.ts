@@ -14,22 +14,15 @@ const messages: Record<string, string> = {
   'integrationGuide.exampleOption': 'Show example config',
   'integrationGuide.exampleDescription': 'Example snippet mode',
   'integrationGuide.platforms.openai': 'OpenAI',
-  'integrationGuide.platforms.gemini': 'Gemini',
+  'integrationGuide.platforms.anthropic': 'Anthropic',
   'keys.useKeyModal.description': 'Claude Code environment variables',
   'keys.useKeyModal.note': 'Claude note',
   'keys.useKeyModal.openai.description': 'Codex CLI config directory',
   'keys.useKeyModal.openai.note': 'OpenAI note',
   'keys.useKeyModal.openai.noteWindows': 'OpenAI Windows note',
   'keys.useKeyModal.openai.configTomlHint': 'config.toml should stay at the top',
-  'keys.useKeyModal.gemini.description': 'Gemini CLI environment variables',
-  'keys.useKeyModal.gemini.note': 'Gemini note',
-  'keys.useKeyModal.gemini.modelComment': 'If you have Gemini 3 access, you can use: gemini-3-pro-preview',
-  'keys.useKeyModal.antigravity.description': 'Antigravity setup',
-  'keys.useKeyModal.antigravity.claudeNote': 'Antigravity Claude note',
-  'keys.useKeyModal.antigravity.geminiNote': 'Antigravity Gemini note',
   'keys.useKeyModal.opencode.hint': 'OpenCode config path',
   'keys.useKeyModal.cliTabs.claudeCode': 'Claude Code',
-  'keys.useKeyModal.cliTabs.geminiCli': 'Gemini CLI',
   'keys.useKeyModal.cliTabs.codexCli': 'Codex CLI',
   'keys.useKeyModal.cliTabs.codexCliWs': 'Codex CLI (WebSocket)',
   'keys.useKeyModal.cliTabs.opencode': 'OpenCode',
@@ -117,9 +110,9 @@ describe('IntegrationGuidePanel', () => {
   it('shows example mode placeholders when no key exists for the platform', () => {
     const wrapper = mount(IntegrationGuidePanel, {
       props: {
-        platform: 'gemini',
+        platform: 'anthropic',
         apiKeys: [],
-        baseUrl: 'https://example.com/v1beta'
+        baseUrl: 'https://example.com/v1'
       },
       global: {
         stubs: {
@@ -245,14 +238,14 @@ describe('IntegrationGuidePanel', () => {
   it('copies the currently visible snippet', async () => {
     const wrapper = mount(IntegrationGuidePanel, {
       props: {
-        platform: 'gemini',
+        platform: 'anthropic',
         apiKeys: [createApiKey({
           group: {
             ...(createApiKey().group as Record<string, unknown>),
-            platform: 'gemini'
+            platform: 'anthropic'
           }
         }) as any],
-        baseUrl: 'https://example.com/v1beta'
+        baseUrl: 'https://example.com/v1'
       },
       global: {
         stubs: {
@@ -269,9 +262,9 @@ describe('IntegrationGuidePanel', () => {
     await flushPromises()
 
     expect(copyToClipboard).toHaveBeenCalledWith(
-      `export GOOGLE_GEMINI_BASE_URL="https://example.com/v1beta"
-export GEMINI_API_KEY="sk-live-example-1234567890"
-export GEMINI_MODEL="gemini-2.0-flash"  # If you have Gemini 3 access, you can use: gemini-3-pro-preview`,
+      `export ANTHROPIC_BASE_URL="https://example.com/v1"
+export ANTHROPIC_AUTH_TOKEN="sk-live-example-1234567890"
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`,
       'Copied!'
     )
   })

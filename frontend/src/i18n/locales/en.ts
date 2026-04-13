@@ -687,9 +687,7 @@ export default {
     failedToLoadSettings: 'Failed to load public settings for the integration guide',
     platforms: {
       anthropic: 'Anthropic',
-      openai: 'OpenAI',
-      gemini: 'Gemini',
-      antigravity: 'Antigravity'
+      openai: 'OpenAI'
     }
   },
 
