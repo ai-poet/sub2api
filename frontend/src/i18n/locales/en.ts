@@ -12,13 +12,13 @@ export default {
     goToDashboard: 'Go to Dashboard',
     headerTagline: 'AI Coding Agent Infrastructure',
     heroSubtitle: 'One gateway, metered billing, built for long-running coding agents',
-    heroDescription: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
+    heroDescription: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so teams can use AI coding agent services with lower premium-model cost.',
     hero: {
       badge: 'Premium models, without premium subscription pricing',
       titleLead: 'Give your',
       titleAccent: 'AI Coding Agent',
       titleTail: 'a cheaper premium-model backbone',
-      description: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
+      description: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so teams can use AI coding agent services with lower premium-model cost.',
       primaryNote: 'Stop carrying multiple subscriptions, scattered keys, and fragile single-account routing.',
       panel: {
         title: 'A request layer shaped for daily coding agents',
