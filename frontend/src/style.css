@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -87,6 +89,14 @@
   }
   .dark .table-wrapper::-webkit-scrollbar-thumb {
     @apply rounded-full bg-gray-500/70;
+  }
+
+  .home-font-sans {
+    font-family: 'Manrope', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  }
+
+  .home-font-serif {
+    font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
   }
 }
 
@@ -753,5 +763,71 @@
 
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .home-grid-pattern {
+    background-image:
+      linear-gradient(rgba(17, 17, 17, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(17, 17, 17, 0.045) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .dark .home-grid-pattern {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  }
+
+  .animate-home-float {
+    animation: home-float 6s ease-in-out infinite;
+  }
+
+  .animate-home-glow {
+    animation: home-glow 7s ease-in-out infinite alternate;
+  }
+
+  .animate-home-marquee {
+    animation: home-marquee 26s linear infinite;
+  }
+}
+
+@keyframes home-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes home-glow {
+  0% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes home-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-home-float,
+  .animate-home-glow,
+  .animate-home-marquee {
+    animation: none !important;
   }
 }

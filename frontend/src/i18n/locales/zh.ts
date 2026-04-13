@@ -10,59 +10,69 @@ export default {
     login: '登录',
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
-    // 新增：面向用户的价值主张
-    heroSubtitle: '一个密钥，畅用多个 AI 模型',
-    heroDescription: '无需管理多个订阅账号，一站式接入 Claude、GPT、Gemini 等主流 AI 服务',
+    headerTagline: 'AI Coding Agent 服务底层',
+    heroSubtitle: '统一入口、按量计费、面向持续运行的编码代理',
+    heroDescription: '面向 Claude Code、Codex CLI、Gemini CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
+    hero: {
+      badge: '高级模型，不必继续按官方订阅价买单',
+      titleLead: '让你的',
+      titleAccent: 'AI Coding Agent',
+      titleTail: '用更低成本跑上高级模型',
+      description: '面向 Claude Code、Codex CLI、Gemini CLI 与 OpenAI 兼容工作流，让你用更低成本交付基于高级模型的 AI coding agent 服务。',
+      primaryNote: '不用再同时扛多份订阅、分散密钥和单账号不稳定的风险。',
+      panel: {
+        overline: 'OPENAI-COMPATIBLE GATEWAY',
+        title: '为日常编码代理准备的请求层',
+        subtitle: '一个端点承接高级模型访问、额度控制和自动切换，更适合持续运行的编码工作流。',
+        requestLabel: 'request',
+        requestValue: 'POST /v1/chat/completions',
+        modelLabel: 'models',
+        modelValue: 'Claude / GPT / Gemini / Codex',
+        routeLabel: 'route',
+        routeValue: '多账号自动切换 + 粘性会话',
+        billLabel: 'billing',
+        billValue: '按量计费，细节可追踪'
+      }
+    },
     pricing: {
       title: '按量付费',
       subtitle: '对比官方 Claude Code / Codex',
       highlight: '约 1 折',
-      description: '仅需官方价格的 1 折左右，极致性价比',
-      badge: '约官方 1 折'
+      description: '用官方价格的一小部分，承接高级模型编码场景，同时保留统一入口、统一密钥和统一计费面。',
+      badge: '高级模型能力，不必继续背负官方订阅价',
+      barTitle: '把高级模型能力接进 AI coding agent，不必继续承担官方订阅价',
+      points: {
+        metered: '按实际运行计费',
+        routing: '多账号自动切换',
+        visibility: '统一用量可见'
+      }
     },
-    tags: {
-      subscriptionToApi: '订阅转 API',
-      stickySession: '会话保持',
-      realtimeBilling: '按量计费'
-    },
-    // 用户痛点区块
-    painPoints: {
-      title: '你是否也遇到这些问题？',
+    value: {
+      overline: '服务结构',
+      title: '这不是再包一层皮，而是更适合持续跑代理的商业底层',
+      description: 'Sub2API 同时解决价格、稳定性和可控性，适合把“高级模型 coding agent 服务”真正拿去推广。',
       items: {
-        expensive: {
-          title: '订阅费用高',
-          desc: '每个 AI 服务都要单独订阅，每月支出越来越多'
+        economics: {
+          eyebrow: '01 / 价格',
+          title: '廉价接入高级模型',
+          description: '把 Claude / GPT / Gemini / Codex 级能力放进常用 coding agent 工作流，不必再为每个官方订阅单独买单。'
         },
-        complex: {
-          title: '多账号难管理',
-          desc: '不同平台的账号、密钥分散各处，管理起来很麻烦'
+        reliability: {
+          eyebrow: '02 / 稳定',
+          title: '为持续运行准备的稳定性',
+          description: '多账号池、粘性会话与自动切换，减少单账号限流或波动对编码链路的影响。'
         },
-        unstable: {
-          title: '服务不稳定',
-          desc: '单一账号容易触发限制，影响正常使用'
-        },
-        noControl: {
-          title: '用量无法控制',
-          desc: '不知道钱花在哪了，也无法限制团队成员的使用'
+        control: {
+          eyebrow: '03 / 可控',
+          title: '统一计费、额度与明细',
+          description: '一个 API Key 进来，一套额度、账单和使用明细出去，更适合个人转化，也更适合团队推广。'
         }
       }
     },
-    // 解决方案区块
-    solutions: {
-      title: '我们帮你解决',
-      subtitle: '简单三步，开始省心使用 AI'
-    },
-    features: {
-      unifiedGateway: '一键接入',
-      unifiedGatewayDesc: '获取一个 API 密钥，即可调用所有已接入的 AI 模型，无需分别申请。',
-      multiAccount: '稳定可靠',
-      multiAccountDesc: '智能调度多个上游账号，自动切换和负载均衡，告别频繁报错。',
-      balanceQuota: '用多少付多少',
-      balanceQuotaDesc: '按实际使用量计费，支持设置配额上限，团队用量一目了然。'
-    },
-    // 优势对比
     comparison: {
-      title: '为什么选择我们？',
+      overline: '服务定位',
+      title: '把“官方订阅工具”，换成更适合推广的服务化交付',
+      description: '首页只需要讲清三件事：更便宜、模型更全、持续跑代理时更稳。',
       headers: {
         feature: '对比项',
         official: '官方订阅',
@@ -79,38 +89,54 @@ export default {
           official: '单一服务商',
           us: '多模型随意切换'
         },
-        management: {
-          feature: '账号管理',
-          official: '每个服务单独管理',
-          us: '统一密钥，一站管理'
-        },
         stability: {
-          feature: '服务稳定性',
+          feature: '运行稳定性',
           official: '单账号易触发限制',
           us: '多账号池，自动切换'
-        },
-        control: {
-          feature: '用量控制',
-          official: '无法限制',
-          us: '可设配额、查明细'
         }
       }
     },
     providers: {
-      title: '已支持的 AI 模型',
-      description: '一个 API，多种选择',
+      title: '把高级模型与编码工作流放进同一层服务',
+      description: '这个首页强调的不是泛模型目录，而是更适合 AI coding agent 场景的服务供给。',
       supported: '已支持',
-      soon: '即将推出',
       claude: 'Claude',
+      claudeCode: 'Claude Code',
+      gpt: 'GPT',
+      codex: 'Codex',
       gemini: 'Gemini',
-      antigravity: 'Antigravity',
-      more: '更多'
+      openaiCompatible: 'OpenAI 兼容'
     },
-    // CTA 区块
+    trust: {
+      overline: '兼容与可信度',
+      title: '为真正整天跑代码的工具链而做',
+      description: '无论你是自用代理还是对外提供 coding agent 服务，首页都应该传达“高级模型可以更便宜、更稳地被拿来跑 agent”。',
+      cards: {
+        gateway: {
+          title: '统一入口',
+          description: '一个兼容 OpenAI 风格的入口承接主流高级模型，降低接入与推广门槛。'
+        },
+        resilience: {
+          title: '稳定切换',
+          description: '当单个上游限制、波动或短时异常出现时，平台负责承担切换与缓冲。'
+        },
+        visibility: {
+          title: '成本可视',
+          description: '用量、额度与账单颗粒度更适合长期跑 agent，而不是继续依赖黑盒订阅。'
+        }
+      },
+      trackers: {
+        routing: '粘性会话',
+        billing: '按量计费',
+        visibility: '用量明细'
+      }
+    },
     cta: {
-      title: '准备好开始了吗？',
-      description: '注册即可获得免费试用额度，体验一站式 AI 服务',
-      button: '免费注册'
+      eyebrow: 'READY TO CONVERT',
+      title: '把高级模型接进你的下一个 AI coding agent',
+      description: '先用更低成本把服务说服力和可用性做起来，再决定是否扩大推广。',
+      button: '免费注册',
+      stat: '统一入口 · 按量付费 · 面向推广'
     },
     footer: {
       allRightsReserved: '保留所有权利。'

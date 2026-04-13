@@ -10,59 +10,69 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
-    // User-focused value proposition
-    heroSubtitle: 'One Key, All AI Models',
-    heroDescription: 'No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key',
+    headerTagline: 'AI Coding Agent Infrastructure',
+    heroSubtitle: 'One gateway, metered billing, built for long-running coding agents',
+    heroDescription: 'Built for Claude Code, Codex CLI, Gemini CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
+    hero: {
+      badge: 'Premium models, without premium subscription pricing',
+      titleLead: 'Give your',
+      titleAccent: 'AI Coding Agent',
+      titleTail: 'a cheaper premium-model backbone',
+      description: 'Built for Claude Code, Codex CLI, Gemini CLI, and OpenAI-compatible workflows so teams can ship AI coding agent services with lower premium-model cost.',
+      primaryNote: 'Stop carrying multiple subscriptions, scattered keys, and fragile single-account routing.',
+      panel: {
+        overline: 'OPENAI-COMPATIBLE GATEWAY',
+        title: 'A request layer shaped for daily coding agents',
+        subtitle: 'One endpoint to serve premium model access, quota control, and automatic failover for long-running coding flows.',
+        requestLabel: 'request',
+        requestValue: 'POST /v1/chat/completions',
+        modelLabel: 'models',
+        modelValue: 'Claude / GPT / Gemini / Codex',
+        routeLabel: 'route',
+        routeValue: 'Multi-account failover + sticky sessions',
+        billLabel: 'billing',
+        billValue: 'Metered usage with traceable details'
+      }
+    },
     pricing: {
-      title: 'Pay-As-You-Go',
+      title: 'Metered Pricing',
       subtitle: 'vs Official Claude Code / Codex',
-      highlight: '~90% Off',
-      description: 'Just a fraction of official API pricing',
-      badge: '~10% of Official Price'
+      highlight: '~10% of official cost',
+      description: 'Use a fraction of official pricing to power premium-model coding agents while keeping one gateway, one key, and one billing surface.',
+      badge: 'Premium model access, without premium subscription overhead',
+      barTitle: 'Connect premium model capability to your AI coding agent without carrying official subscription pricing',
+      points: {
+        metered: 'Pay only for what runs',
+        routing: 'Multi-account auto routing',
+        visibility: 'Unified usage visibility'
+      }
     },
-    tags: {
-      subscriptionToApi: 'Subscription to API',
-      stickySession: 'Session Persistence',
-      realtimeBilling: 'Pay As You Go'
-    },
-    // Pain points section
-    painPoints: {
-      title: 'Sound Familiar?',
+    value: {
+      overline: 'Service Structure',
+      title: 'This is not another wrapper. It is a better commercial layer for continuously running agents.',
+      description: 'Sub2API brings pricing, stability, and control back to a level that can actually be promoted, sold, and operated.',
       items: {
-        expensive: {
-          title: 'High Subscription Costs',
-          desc: 'Paying for multiple AI subscriptions that add up every month'
+        economics: {
+          eyebrow: '01 / Pricing',
+          title: 'Cheaper access to premium models',
+          description: 'Bring Claude / GPT / Gemini / Codex class capability into common coding-agent workflows without buying each official subscription separately.'
         },
-        complex: {
-          title: 'Account Chaos',
-          desc: 'Managing scattered accounts and API keys across different platforms'
+        reliability: {
+          eyebrow: '02 / Reliability',
+          title: 'Stability for long-running agents',
+          description: 'Multi-account pools, sticky sessions, and automatic failover reduce the impact of single-account limits and upstream volatility.'
         },
-        unstable: {
-          title: 'Service Interruptions',
-          desc: 'Single accounts hitting rate limits and disrupting your workflow'
-        },
-        noControl: {
-          title: 'No Usage Control',
-          desc: "Can't track where your money goes or limit team member usage"
+        control: {
+          eyebrow: '03 / Control',
+          title: 'Unified billing, quotas, and detail',
+          description: 'One API key in, one set of quotas, bills, and usage detail out. Easier for personal onboarding and easier to promote to teams.'
         }
       }
     },
-    // Solutions section
-    solutions: {
-      title: 'We Solve These Problems',
-      subtitle: 'Three simple steps to stress-free AI access'
-    },
-    features: {
-      unifiedGateway: 'One-Click Access',
-      unifiedGatewayDesc: 'Get a single API key to call all connected AI models. No separate applications needed.',
-      multiAccount: 'Always Reliable',
-      multiAccountDesc: 'Smart routing across multiple upstream accounts with automatic failover. Say goodbye to errors.',
-      balanceQuota: 'Pay What You Use',
-      balanceQuotaDesc: 'Usage-based billing with quota limits. Full visibility into team consumption.'
-    },
-    // Comparison section
     comparison: {
-      title: 'Why Choose Us?',
+      overline: 'Positioning',
+      title: 'Turn subscription-first tools into a service offering that is easier to promote',
+      description: 'The homepage only needs three clear differences to convert: cost, model coverage, and runtime stability.',
       headers: {
         feature: 'Comparison',
         official: 'Official Subscriptions',
@@ -79,38 +89,54 @@ export default {
           official: 'Single provider only',
           us: 'Switch between models freely'
         },
-        management: {
-          feature: 'Account Management',
-          official: 'Manage each service separately',
-          us: 'Unified key, one dashboard'
-        },
         stability: {
-          feature: 'Stability',
+          feature: 'Runtime Stability',
           official: 'Single account rate limits',
           us: 'Multi-account pool, auto-failover'
-        },
-        control: {
-          feature: 'Usage Control',
-          official: 'Not available',
-          us: 'Quotas & detailed analytics'
         }
       }
     },
     providers: {
-      title: 'Supported AI Models',
-      description: 'One API, Multiple Choices',
+      title: 'Premium models and coding workflows under one service layer',
+      description: 'The offer is built around coding-agent demand, not around a generic model directory.',
       supported: 'Supported',
-      soon: 'Soon',
       claude: 'Claude',
+      claudeCode: 'Claude Code',
+      gpt: 'GPT',
+      codex: 'Codex',
       gemini: 'Gemini',
-      antigravity: 'Antigravity',
-      more: 'More'
+      openaiCompatible: 'OpenAI-Compatible'
     },
-    // CTA section
+    trust: {
+      overline: 'Compatibility & Trust',
+      title: 'Built for the stacks that run code all day',
+      description: 'Whether you run internal agents or sell coding-agent access externally, the page should clearly signal that premium model access can be cheaper and steadier here.',
+      cards: {
+        gateway: {
+          title: 'Unified entry point',
+          description: 'A single OpenAI-style gateway serves mainstream premium models, lowering integration and promotion friction.'
+        },
+        resilience: {
+          title: 'Resilient switching',
+          description: 'When one upstream hits limits, jitters, or short-lived failures, the platform absorbs the switching overhead.'
+        },
+        visibility: {
+          title: 'Visible cost surface',
+          description: 'Usage, quotas, and bills are shaped for long-running agents instead of staying trapped inside black-box subscriptions.'
+        }
+      },
+      trackers: {
+        routing: 'Sticky sessions',
+        billing: 'Metered billing',
+        visibility: 'Usage detail'
+      }
+    },
     cta: {
-      title: 'Ready to Get Started?',
-      description: 'Sign up now and get free trial credits to experience seamless AI access',
-      button: 'Sign Up Free'
+      eyebrow: 'READY TO SHIP',
+      title: 'Give your next AI coding agent a cheaper premium-model runtime',
+      description: 'Start with a landing page and service promise strong enough to sell the offer, then scale the rollout after the economics make sense.',
+      button: 'Sign Up Free',
+      stat: 'One gateway · Metered billing · Built for promotion'
     },
     footer: {
       allRightsReserved: 'All rights reserved.'
