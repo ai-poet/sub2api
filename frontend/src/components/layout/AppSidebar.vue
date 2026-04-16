@@ -17,8 +17,6 @@
           <span class="text-lg font-bold text-gray-900 dark:text-white">
             {{ siteName }}
           </span>
-          <!-- Version Badge -->
-          <VersionBadge :version="siteVersion" />
         </div>
       </transition>
     </div>
@@ -203,7 +201,6 @@ import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAdminSettingsStore, useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
-import VersionBadge from '@/components/common/VersionBadge.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
 import { buildStandaloneUrl } from '@/utils/embedded-url'
 
@@ -232,7 +229,6 @@ const isDark = ref(document.documentElement.classList.contains('dark'))
 // Site settings from appStore (cached, no flicker)
 const siteName = computed(() => appStore.siteName)
 const siteLogo = computed(() => appStore.siteLogo)
-const siteVersion = computed(() => appStore.siteVersion)
 const settingsLoaded = computed(() => appStore.publicSettingsLoaded)
 
 function getCurrentThemeMode(): 'light' | 'dark' {
