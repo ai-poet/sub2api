@@ -771,7 +771,7 @@
 
         </div><!-- /Tab: Gateway -->
 
-        <!-- Tab: Security — Registration, Turnstile, LinuxDo -->
+        <!-- Tab: Security — Registration, Turnstile, LinuxDo, GitHub -->
         <div v-show="activeTab === 'security'" class="space-y-6">
         <!-- Registration Settings -->
         <div class="card">
@@ -1124,7 +1124,107 @@
             </div>
           </div>
         </div>
-        </div><!-- /Tab: Security — Registration, Turnstile, LinuxDo -->
+
+        <!-- GitHub OAuth 登录 -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.github.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.github.description') }}
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">{{
+                  t('admin.settings.github.enable')
+                }}</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.github.enableHint') }}
+                </p>
+              </div>
+              <Toggle v-model="form.github_oauth_enabled" />
+            </div>
+
+            <div
+              v-if="form.github_oauth_enabled"
+              class="border-t border-gray-100 pt-4 dark:border-dark-700"
+            >
+              <div class="grid grid-cols-1 gap-6">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.github.clientId') }}
+                  </label>
+                  <input
+                    v-model="form.github_oauth_client_id"
+                    type="text"
+                    class="input font-mono text-sm"
+                    :placeholder="t('admin.settings.github.clientIdPlaceholder')"
+                  />
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.github.clientIdHint') }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.github.clientSecret') }}
+                  </label>
+                  <input
+                    v-model="form.github_oauth_client_secret"
+                    type="password"
+                    class="input font-mono text-sm"
+                    :placeholder="
+                      form.github_oauth_client_secret_configured
+                        ? t('admin.settings.github.clientSecretConfiguredPlaceholder')
+                        : t('admin.settings.github.clientSecretPlaceholder')
+                    "
+                  />
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{
+                      form.github_oauth_client_secret_configured
+                        ? t('admin.settings.github.clientSecretConfiguredHint')
+                        : t('admin.settings.github.clientSecretHint')
+                    }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ t('admin.settings.github.redirectUrl') }}
+                  </label>
+                  <input
+                    v-model="form.github_oauth_redirect_url"
+                    type="url"
+                    class="input font-mono text-sm"
+                    :placeholder="t('admin.settings.github.redirectUrlPlaceholder')"
+                  />
+                  <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm w-fit"
+                      @click="setAndCopyGitHubRedirectUrl"
+                    >
+                      {{ t('admin.settings.github.quickSetCopy') }}
+                    </button>
+                    <code
+                      v-if="githubRedirectUrlSuggestion"
+                      class="select-all break-all rounded bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300"
+                    >
+                      {{ githubRedirectUrlSuggestion }}
+                    </code>
+                  </div>
+                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.settings.github.redirectUrlHint') }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /Tab: Security — Registration, Turnstile, LinuxDo, GitHub -->
 
         <!-- Tab: Users -->
         <div v-show="activeTab === 'users'" class="space-y-6">
@@ -2389,6 +2489,7 @@ type SettingsForm = SystemSettings & {
   smtp_password: string
   turnstile_secret_key: string
   linuxdo_connect_client_secret: string
+  github_oauth_client_secret: string
 }
 
 const form = reactive<SettingsForm>({
@@ -2438,6 +2539,11 @@ const form = reactive<SettingsForm>({
   linuxdo_connect_client_secret: '',
   linuxdo_connect_client_secret_configured: false,
   linuxdo_connect_redirect_url: '',
+  github_oauth_enabled: false,
+  github_oauth_client_id: '',
+  github_oauth_client_secret: '',
+  github_oauth_client_secret_configured: false,
+  github_oauth_redirect_url: '',
   // Model fallback
   enable_model_fallback: false,
   fallback_model_anthropic: 'claude-3-5-sonnet-20241022',
@@ -2557,6 +2663,21 @@ async function setAndCopyLinuxdoRedirectUrl() {
 
   form.linuxdo_connect_redirect_url = url
   await copyToClipboard(url, t('admin.settings.linuxdo.redirectUrlSetAndCopied'))
+}
+
+const githubRedirectUrlSuggestion = computed(() => {
+  if (typeof window === 'undefined') return ''
+  const origin =
+    window.location.origin || `${window.location.protocol}//${window.location.host}`
+  return `${origin}/api/v1/auth/oauth/github/callback`
+})
+
+async function setAndCopyGitHubRedirectUrl() {
+  const url = githubRedirectUrlSuggestion.value
+  if (!url) return
+
+  form.github_oauth_redirect_url = url
+  await copyToClipboard(url, t('admin.settings.github.redirectUrlSetAndCopied'))
 }
 
 // Custom menu item management
@@ -2682,6 +2803,7 @@ async function loadSettings() {
     smtpPasswordManuallyEdited.value = false
     form.turnstile_secret_key = ''
     form.linuxdo_connect_client_secret = ''
+    form.github_oauth_client_secret = ''
   } catch (error: any) {
     loadFailed.value = true
     appStore.showError(
@@ -2809,6 +2931,10 @@ async function saveSettings() {
       linuxdo_connect_client_id: form.linuxdo_connect_client_id,
       linuxdo_connect_client_secret: form.linuxdo_connect_client_secret || undefined,
       linuxdo_connect_redirect_url: form.linuxdo_connect_redirect_url,
+      github_oauth_enabled: form.github_oauth_enabled,
+      github_oauth_client_id: form.github_oauth_client_id,
+      github_oauth_client_secret: form.github_oauth_client_secret || undefined,
+      github_oauth_redirect_url: form.github_oauth_redirect_url,
       enable_model_fallback: form.enable_model_fallback,
       fallback_model_anthropic: form.fallback_model_anthropic,
       fallback_model_openai: form.fallback_model_openai,
@@ -2851,6 +2977,7 @@ async function saveSettings() {
     smtpPasswordManuallyEdited.value = false
     form.turnstile_secret_key = ''
     form.linuxdo_connect_client_secret = ''
+    form.github_oauth_client_secret = ''
     // Refresh cached settings so sidebar/header update immediately
     await appStore.fetchPublicSettings(true)
     await adminSettingsStore.fetch(true)

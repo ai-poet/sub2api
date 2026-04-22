@@ -293,6 +293,8 @@ export const useAppStore = defineStore('app', () => {
   function applySettings(config: PublicSettings): void {
     const normalizedConfig: PublicSettings = {
       ...config,
+      linuxdo_oauth_enabled: config.linuxdo_oauth_enabled ?? false,
+      github_oauth_enabled: config.github_oauth_enabled ?? false,
       group_status_enabled: config.group_status_enabled ?? false,
       purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
         config.purchase_subscription_open_mode
@@ -317,7 +319,7 @@ export const useAppStore = defineStore('app', () => {
     // Check for injected config from server (eliminates flash)
     if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__) {
       applySettings(window.__APP_CONFIG__)
-      return window.__APP_CONFIG__
+      return cachedPublicSettings.value ? { ...cachedPublicSettings.value } : null
     }
 
     // Return cached data if available and not forcing refresh
@@ -348,6 +350,7 @@ export const useAppStore = defineStore('app', () => {
         custom_menu_items: [],
         custom_endpoints: [],
         linuxdo_oauth_enabled: false,
+        github_oauth_enabled: false,
         referral_enabled: false,
         purchase_subscription_open_mode: 'iframe',
         backend_mode_enabled: false,

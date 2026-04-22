@@ -4544,6 +4544,26 @@ export default {
         quickSetCopy: 'Generate & Copy (current site)',
         redirectUrlSetAndCopied: 'Redirect URL generated and copied to clipboard'
       },
+      github: {
+        title: 'GitHub Login',
+        description: 'Configure GitHub OAuth for Sub2API end-user login',
+        enable: 'Enable GitHub Login',
+        enableHint: 'Show GitHub login on the login/register pages',
+        clientId: 'Client ID',
+        clientIdPlaceholder: 'Iv1.1234567890abcdef',
+        clientIdHint: 'Get this from GitHub Developer Settings',
+        clientSecret: 'Client Secret',
+        clientSecretPlaceholder: '********',
+        clientSecretHint: 'Used by backend to exchange tokens (keep it secret)',
+        clientSecretConfiguredPlaceholder: '********',
+        clientSecretConfiguredHint: 'Secret configured. Leave empty to keep the current value.',
+        redirectUrl: 'Redirect URL',
+        redirectUrlPlaceholder: 'https://your-domain.com/api/v1/auth/oauth/github/callback',
+        redirectUrlHint:
+          'Must match the callback URL configured in your GitHub OAuth App (must be an absolute http(s) URL)',
+        quickSetCopy: 'Generate & Copy (current site)',
+        redirectUrlSetAndCopied: 'Redirect URL generated and copied to clipboard'
+      },
       defaults: {
         title: 'Default User Settings',
         description: 'Default values for new users',

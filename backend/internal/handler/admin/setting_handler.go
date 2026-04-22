@@ -172,10 +172,10 @@ type UpdateSettingsRequest struct {
 	LinuxDoConnectRedirectURL  string `json:"linuxdo_connect_redirect_url"`
 
 	// GitHub OAuth 登录
-	GitHubOAuthEnabled      bool   `json:"github_oauth_enabled"`
-	GitHubOAuthClientID     string `json:"github_oauth_client_id"`
-	GitHubOAuthClientSecret string `json:"github_oauth_client_secret"`
-	GitHubOAuthRedirectURL  string `json:"github_oauth_redirect_url"`
+	GitHubOAuthEnabled      *bool   `json:"github_oauth_enabled"`
+	GitHubOAuthClientID     *string `json:"github_oauth_client_id"`
+	GitHubOAuthClientSecret *string `json:"github_oauth_client_secret"`
+	GitHubOAuthRedirectURL  *string `json:"github_oauth_redirect_url"`
 
 	// OEM设置
 	SiteName                     string                `json:"site_name"`
@@ -340,32 +340,47 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		}
 	}
 
-	// GitHub OAuth 参数验证
-	if req.GitHubOAuthEnabled {
-		req.GitHubOAuthClientID = strings.TrimSpace(req.GitHubOAuthClientID)
-		req.GitHubOAuthClientSecret = strings.TrimSpace(req.GitHubOAuthClientSecret)
-		req.GitHubOAuthRedirectURL = strings.TrimSpace(req.GitHubOAuthRedirectURL)
+	githubOAuthEnabled := previousSettings.GitHubOAuthEnabled
+	if req.GitHubOAuthEnabled != nil {
+		githubOAuthEnabled = *req.GitHubOAuthEnabled
+	}
 
-		if req.GitHubOAuthClientID == "" {
+	githubOAuthClientID := strings.TrimSpace(previousSettings.GitHubOAuthClientID)
+	if req.GitHubOAuthClientID != nil {
+		githubOAuthClientID = strings.TrimSpace(*req.GitHubOAuthClientID)
+	}
+
+	githubOAuthClientSecret := strings.TrimSpace(previousSettings.GitHubOAuthClientSecret)
+	if req.GitHubOAuthClientSecret != nil {
+		githubOAuthClientSecret = strings.TrimSpace(*req.GitHubOAuthClientSecret)
+	}
+
+	githubOAuthRedirectURL := strings.TrimSpace(previousSettings.GitHubOAuthRedirectURL)
+	if req.GitHubOAuthRedirectURL != nil {
+		githubOAuthRedirectURL = strings.TrimSpace(*req.GitHubOAuthRedirectURL)
+	}
+
+	// GitHub OAuth 参数验证
+	if githubOAuthEnabled {
+		if githubOAuthClientID == "" {
 			response.BadRequest(c, "GitHub Client ID is required when enabled")
 			return
 		}
-		if req.GitHubOAuthRedirectURL == "" {
+		if githubOAuthRedirectURL == "" {
 			response.BadRequest(c, "GitHub Redirect URL is required when enabled")
 			return
 		}
-		if err := config.ValidateAbsoluteHTTPURL(req.GitHubOAuthRedirectURL); err != nil {
+		if err := config.ValidateAbsoluteHTTPURL(githubOAuthRedirectURL); err != nil {
 			response.BadRequest(c, "GitHub Redirect URL must be an absolute http(s) URL")
 			return
 		}
 
 		// 如果未提供 client_secret，则保留现有值（如有）。
-		if req.GitHubOAuthClientSecret == "" {
-			if previousSettings.GitHubOAuthClientSecret == "" {
+		if githubOAuthClientSecret == "" {
+			if strings.TrimSpace(previousSettings.GitHubOAuthClientSecret) == "" {
 				response.BadRequest(c, "GitHub Client Secret is required when enabled")
 				return
 			}
-			req.GitHubOAuthClientSecret = previousSettings.GitHubOAuthClientSecret
 		}
 	}
 
@@ -609,10 +624,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		LinuxDoConnectClientID:           req.LinuxDoConnectClientID,
 		LinuxDoConnectClientSecret:       req.LinuxDoConnectClientSecret,
 		LinuxDoConnectRedirectURL:        req.LinuxDoConnectRedirectURL,
-		GitHubOAuthEnabled:               req.GitHubOAuthEnabled,
-		GitHubOAuthClientID:              req.GitHubOAuthClientID,
-		GitHubOAuthClientSecret:          req.GitHubOAuthClientSecret,
-		GitHubOAuthRedirectURL:           req.GitHubOAuthRedirectURL,
+		GitHubOAuthEnabled:               githubOAuthEnabled,
+		GitHubOAuthClientID:              githubOAuthClientID,
+		GitHubOAuthClientSecret:          githubOAuthClientSecret,
+		GitHubOAuthRedirectURL:           githubOAuthRedirectURL,
 		SiteName:                         req.SiteName,
 		SiteLogo:                         req.SiteLogo,
 		SiteSubtitle:                     req.SiteSubtitle,
