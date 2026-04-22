@@ -10,21 +10,21 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          {{ t('privacy.backHome') }}
+          {{ t('home.privacy.backHome') }}
         </RouterLink>
-        <span class="text-sm font-medium text-[#111] dark:text-white">{{ t('privacy.title') }}</span>
+        <span class="text-sm font-medium text-[#111] dark:text-white">{{ t('home.privacy.title') }}</span>
       </div>
     </div>
 
     <!-- Content -->
     <article class="mx-auto max-w-[860px] px-6 py-14">
       <h1 class="text-3xl font-semibold tracking-[-0.03em] text-[#111] dark:text-white">
-        {{ t('privacy.title') }}
+        {{ t('home.privacy.title') }}
       </h1>
-      <p class="mt-2 text-sm text-[#999] dark:text-white/38">{{ t('privacy.lastUpdated') }}</p>
+      <p class="mt-2 text-sm text-[#999] dark:text-white/38">{{ t('home.privacy.lastUpdated') }}</p>
 
       <p class="mt-6 text-base leading-8 text-[#5f5850] dark:text-white/65">
-        {{ t('privacy.intro') }}
+        {{ t('home.privacy.intro') }}
       </p>
 
       <div class="mt-10 space-y-10">
@@ -48,8 +48,8 @@
             <path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2zm3.7 6.3-4.5 4.5a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 1 1 1.06-1.06l1.47 1.47 3.97-3.97a.75.75 0 1 1 1.06 1.06z" fill="currentColor"/>
           </svg>
           <div>
-            <p class="font-semibold text-emerald-800 dark:text-emerald-300">{{ t('privacy.pledge.title') }}</p>
-            <p class="mt-1 text-sm leading-6 text-emerald-700 dark:text-emerald-400">{{ t('privacy.pledge.body') }}</p>
+            <p class="font-semibold text-emerald-800 dark:text-emerald-300">{{ t('home.privacy.pledge.title') }}</p>
+            <p class="mt-1 text-sm leading-6 text-emerald-700 dark:text-emerald-400">{{ t('home.privacy.pledge.body') }}</p>
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@
       <!-- Contact -->
       <div class="mt-10 border-t border-black/8 pt-8 dark:border-white/10">
         <p class="text-sm leading-7 text-[#999] dark:text-white/38">
-          {{ t('privacy.contact') }}
+          {{ t('home.privacy.contact') }}
         </p>
       </div>
     </article>
@@ -75,67 +75,67 @@ const isChinese = computed(() => locale.value === 'zh')
 const sections = computed(() => [
   {
     id: 'collection',
-    title: t('privacy.sections.collection.title'),
-    paragraphs: [t('privacy.sections.collection.p1')],
+    title: t('home.privacy.sections.collection.title'),
+    paragraphs: [t('home.privacy.sections.collection.p1')],
     items: [
-      t('privacy.sections.collection.i1'),
-      t('privacy.sections.collection.i2'),
-      t('privacy.sections.collection.i3'),
-      t('privacy.sections.collection.i4'),
+      t('home.privacy.sections.collection.i1'),
+      t('home.privacy.sections.collection.i2'),
+      t('home.privacy.sections.collection.i3'),
+      t('home.privacy.sections.collection.i4'),
     ],
   },
   {
     id: 'use',
-    title: t('privacy.sections.use.title'),
-    paragraphs: [t('privacy.sections.use.p1')],
+    title: t('home.privacy.sections.use.title'),
+    paragraphs: [t('home.privacy.sections.use.p1')],
     items: [
-      t('privacy.sections.use.i1'),
-      t('privacy.sections.use.i2'),
-      t('privacy.sections.use.i3'),
-      t('privacy.sections.use.i4'),
+      t('home.privacy.sections.use.i1'),
+      t('home.privacy.sections.use.i2'),
+      t('home.privacy.sections.use.i3'),
+      t('home.privacy.sections.use.i4'),
     ],
   },
   {
     id: 'code',
-    title: t('privacy.sections.code.title'),
+    title: t('home.privacy.sections.code.title'),
     paragraphs: [
-      t('privacy.sections.code.p1'),
-      t('privacy.sections.code.p2'),
+      t('home.privacy.sections.code.p1'),
+      t('home.privacy.sections.code.p2'),
     ],
   },
   {
     id: 'apikey',
-    title: t('privacy.sections.apikey.title'),
-    paragraphs: [t('privacy.sections.apikey.p1')],
+    title: t('home.privacy.sections.apikey.title'),
+    paragraphs: [t('home.privacy.sections.apikey.p1')],
   },
   {
     id: 'third',
-    title: t('privacy.sections.third.title'),
-    paragraphs: [t('privacy.sections.third.p1')],
+    title: t('home.privacy.sections.third.title'),
+    paragraphs: [t('home.privacy.sections.third.p1')],
     items: [
-      t('privacy.sections.third.i1'),
-      t('privacy.sections.third.i2'),
+      t('home.privacy.sections.third.i1'),
+      t('home.privacy.sections.third.i2'),
     ],
   },
   {
     id: 'retention',
-    title: t('privacy.sections.retention.title'),
-    paragraphs: [t('privacy.sections.retention.p1')],
+    title: t('home.privacy.sections.retention.title'),
+    paragraphs: [t('home.privacy.sections.retention.p1')],
   },
   {
     id: 'rights',
-    title: t('privacy.sections.rights.title'),
-    paragraphs: [t('privacy.sections.rights.p1')],
+    title: t('home.privacy.sections.rights.title'),
+    paragraphs: [t('home.privacy.sections.rights.p1')],
     items: [
-      t('privacy.sections.rights.i1'),
-      t('privacy.sections.rights.i2'),
-      t('privacy.sections.rights.i3'),
+      t('home.privacy.sections.rights.i1'),
+      t('home.privacy.sections.rights.i2'),
+      t('home.privacy.sections.rights.i3'),
     ],
   },
   {
     id: 'changes',
-    title: t('privacy.sections.changes.title'),
-    paragraphs: [t('privacy.sections.changes.p1')],
+    title: t('home.privacy.sections.changes.title'),
+    paragraphs: [t('home.privacy.sections.changes.p1')],
   },
 ])
 </script>
