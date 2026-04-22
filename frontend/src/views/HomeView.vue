@@ -11,19 +11,10 @@
 
   <div
     v-else
-    class="home-font-sans relative min-h-screen overflow-hidden bg-[#f5efe6] text-[#161616] dark:bg-[#0f1114] dark:text-[#f3f1ed]"
+    class="home-font-sans relative min-h-screen overflow-hidden bg-[#f8fafb] text-[#161616] dark:bg-[#0f1114] dark:text-[#f3f1ed]"
   >
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div class="home-grid-pattern absolute inset-0 opacity-50 dark:opacity-[0.16]"></div>
-      <div
-        class="animate-home-glow absolute left-[-10%] top-[-13rem] h-[30rem] w-[30rem] rounded-full bg-[#d8c6ab]/45 blur-3xl dark:bg-[#132f35]/45"
-      ></div>
-      <div
-        class="absolute right-[-6%] top-[10rem] h-[24rem] w-[24rem] rounded-full bg-primary-200/55 blur-3xl dark:bg-primary-900/20"
-      ></div>
-      <div
-        class="absolute bottom-[-10rem] left-[16%] h-[24rem] w-[24rem] rounded-full bg-white/60 blur-3xl dark:bg-[#1f2630]/70"
-      ></div>
+      <div class="home-grid-pattern absolute inset-0 opacity-[0.25] dark:opacity-[0.16]"></div>
     </div>
 
     <HomeHeader
@@ -52,12 +43,23 @@
         <HomeValueSection />
       </HomeReveal>
 
-      <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
+      <HomeReveal id="pricing" class="px-4 py-8 md:px-6 md:py-12">
+        <HomePricingSection />
+      </HomeReveal>
+
+      <HomeReveal class="px-4 pb-8 md:px-6">
         <HomeComparisonSection />
       </HomeReveal>
 
       <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
         <HomeTrustSection />
+      </HomeReveal>
+
+      <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
+        <HomeDownloadSection
+          :is-authenticated="isAuthenticated"
+          :dashboard-path="dashboardPath"
+        />
       </HomeReveal>
 
       <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
@@ -81,6 +83,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
+import HomeDownloadSection from '@/components/home/HomeDownloadSection.vue'
+import HomePricingSection from '@/components/home/HomePricingSection.vue'
 import HomeFinalCta from '@/components/home/HomeFinalCta.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'
 import HomeHeader from '@/components/home/HomeHeader.vue'
@@ -93,7 +97,7 @@ import HomeValueSection from '@/components/home/HomeValueSection.vue'
 const authStore = useAuthStore()
 const appStore = useAppStore()
 
-const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
+const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'CheapRouter')
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')

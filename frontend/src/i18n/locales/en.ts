@@ -13,13 +13,26 @@ export default {
     headerTagline: 'AI Coding Agent Infrastructure',
     heroSubtitle: 'One gateway, metered billing, built for long-running coding agents',
     heroDescription: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so you can use AI coding agent services with lower premium-model cost.',
+    navModels: 'Models',
+    navPricing: 'Pricing',
     hero: {
-      badge: 'Premium models, without premium subscription pricing',
-      titleLead: 'Give your',
-      titleAccent: 'AI Coding Agent',
-      titleTail: 'a cheaper premium-model backbone',
-      description: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so you can use AI coding agent services with lower premium-model cost.',
-      primaryNote: 'Stop carrying multiple subscriptions, scattered keys, and fragile single-account routing.',
+      badge: '~10% of official Claude Code / Codex subscription cost',
+      titleLead: 'Claude Code too expensive?',
+      titleAccent: 'Same official API, 10× cheaper',
+      titleTail: 'No monthly fee, pay per token',
+      description: 'Connect Claude Sonnet, GPT-5.4, and Codex-grade models to your coding workflow. No minimum spend, no lock-in. Pay only for tokens used — usage visible in real time.',
+      primaryNote: 'Metered billing · No minimum spend · Cancel anytime',
+      tags: {
+        coding: 'AI Coding',
+        agent: 'Coding Agent',
+        tools: 'Claude Code / Codex',
+      },
+      stats: {
+        savings: 'Max savings',
+        models: 'Models available',
+        minCost: 'Minimum spend',
+      },
+      perToken: 'per M tokens',
       panel: {
         title: 'A request layer shaped for daily coding agents',
         auto: 'Auto Rotating',
@@ -61,6 +74,23 @@ export default {
         routing: 'Multi-account auto routing',
         visibility: 'Unified usage visibility'
       }
+    },
+    proofStrip: {
+      overline: 'Platform Features',
+    },
+    download: {
+      badge: 'Coming Soon',
+      comingSoon: 'Coming Soon',
+      title: 'Desktop Client: one-click setup',
+      description: 'Automatically configure Claude Code / Codex CLI API access after installation — no manual environment variables or config files.',
+      privacyCode: 'Your code is never stored or used for model training',
+      privacyKey: 'API Keys are stored locally only, never uploaded',
+      cta: 'Sign up for early access',
+      platforms: {
+        mac: { sub: 'Apple Silicon & Intel' },
+        windows: { sub: 'x64 / ARM64' },
+        linux: { sub: '.deb / .rpm / AppImage' },
+      },
     },
     value: {
       overline: 'Service Structure',
@@ -110,6 +140,26 @@ export default {
           us: 'Multi-account pool, auto-failover'
         }
       }
+    },
+    pricingTable: {
+      overline: 'Actual Pricing',
+      title: 'Pay only for what you use',
+      description: 'Input prices below are in ¥ per million tokens, based on our ¥0.70/$ credit rate — compared to official API prices converted at market exchange rate.',
+      badge: 'Save up to',
+      badgeValue: '~97%',
+      tabs: {
+        all: 'All',
+        other: 'Other',
+      },
+      col: {
+        model: 'Model',
+        officialInput: 'Official Input ($/M)',
+        ourInput: 'Our Price ($/M)',
+        officialOutput: 'Official Output ($/M)',
+        savings: 'Savings',
+      },
+      modelsCount: 'models',
+      note: 'USD prices above are actual costs (official USD × 0.25 group multiplier × ¥0.70/$1 credit rate ÷ 7). Claude models via GLM group; Codex/GPT via Codex group (0.80×). Billed at actual usage.',
     },
     providers: {
       title: 'Premium models and coding workflows under one service layer',
@@ -353,8 +403,8 @@ export default {
 
   // Setup Wizard
   setup: {
-    title: 'Sub2API Setup',
-    description: 'Configure your Sub2API instance',
+    title: 'CheapRouter Setup',
+    description: 'Configure your CheapRouter instance',
     database: {
       title: 'Database Configuration',
       description: 'Connect to your PostgreSQL database',
@@ -4512,7 +4562,7 @@ export default {
         secretKeyConfiguredHint: 'Secret key configured. Leave empty to keep the current value.'      },
       linuxdo: {
         title: 'LinuxDo Connect Login',
-        description: 'Configure LinuxDo Connect OAuth for Sub2API end-user login',
+        description: 'Configure LinuxDo Connect OAuth for CheapRouter end-user login',
         enable: 'Enable LinuxDo Login',
         enableHint: 'Show LinuxDo login on the login/register pages',
         clientId: 'Client ID',
@@ -4603,7 +4653,7 @@ export default {
         groupStatusEnabledDescription:
           'When enabled, regular users can see the "Model Status" menu and use the corresponding runtime status APIs.',
         siteName: 'Site Name',
-        siteNamePlaceholder: 'Sub2API',
+        siteNamePlaceholder: 'CheapRouter',
         siteNameHint: 'Displayed in emails and page titles',
         siteSubtitle: 'Site Subtitle',
         siteSubtitlePlaceholder: 'Subscription to API Conversion Platform',
@@ -4707,7 +4757,7 @@ export default {
         fromEmail: 'From Email',
         fromEmailPlaceholder: "noreply{'@'}example.com",
         fromName: 'From Name',
-        fromNamePlaceholder: 'Sub2API',
+        fromNamePlaceholder: 'CheapRouter',
         useTls: 'Use TLS',
         useTlsHint: 'Enable TLS encryption for SMTP connection'
       },
@@ -5293,14 +5343,14 @@ export default {
     // Admin tour steps
     admin: {
       welcome: {
-        title: '👋 Welcome to Sub2API',
-        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">Sub2API is a powerful AI service gateway platform that helps you easily manage and distribute AI services.</p><p style="margin-bottom: 12px;"><b>🎯 Core Features:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>📦 <b>Group Management</b> - Create service tiers (VIP, Free Trial, etc.)</li><li>🔗 <b>Account Pool</b> - Connect multiple upstream AI service accounts</li><li>🔑 <b>Key Distribution</b> - Generate independent API Keys for users</li><li>💰 <b>Billing Control</b> - Flexible rate and quota management</li></ul><p style="color: #10b981; font-weight: 600;">Let\'s complete the initial setup in 3 minutes →</p></div>',
+        title: '👋 Welcome to CheapRouter',
+        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">CheapRouter is a powerful AI service gateway platform that helps you easily manage and distribute AI services.</p><p style="margin-bottom: 12px;"><b>🎯 Core Features:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>📦 <b>Group Management</b> - Create service tiers (VIP, Free Trial, etc.)</li><li>🔗 <b>Account Pool</b> - Connect multiple upstream AI service accounts</li><li>🔑 <b>Key Distribution</b> - Generate independent API Keys for users</li><li>💰 <b>Billing Control</b> - Flexible rate and quota management</li></ul><p style="color: #10b981; font-weight: 600;">Let\'s complete the initial setup in 3 minutes →</p></div>',
         nextBtn: 'Start Setup 🚀',
         prevBtn: 'Skip'
       },
       groupManage: {
         title: '📦 Step 1: Group Management',
-        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;"><b>What is a Group?</b></p><p style="margin-bottom: 12px;">Groups are the core concept of Sub2API, like a "service package":</p><ul style="margin-left: 20px; margin-bottom: 12px; font-size: 13px;"><li>🎯 Each group can contain multiple upstream accounts</li><li>💰 Each group has independent billing multiplier</li><li>👥 Can be set as public or exclusive</li></ul><p style="margin-top: 12px; padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Example:</b> You can create "VIP Premium" (high rate) and "Free Trial" (low rate) groups</p><p style="margin-top: 16px; color: #10b981; font-weight: 600;">👉 Click "Group Management" on the left sidebar</p></div>'
+        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;"><b>What is a Group?</b></p><p style="margin-bottom: 12px;">Groups are the core concept of CheapRouter, like a "service package":</p><ul style="margin-left: 20px; margin-bottom: 12px; font-size: 13px;"><li>🎯 Each group can contain multiple upstream accounts</li><li>💰 Each group has independent billing multiplier</li><li>👥 Can be set as public or exclusive</li></ul><p style="margin-top: 12px; padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Example:</b> You can create "VIP Premium" (high rate) and "Free Trial" (low rate) groups</p><p style="margin-top: 16px; color: #10b981; font-weight: 600;">👉 Click "Group Management" on the left sidebar</p></div>'
       },
       createGroup: {
         title: '➕ Create New Group',
@@ -5393,8 +5443,8 @@ export default {
     // User tour steps
     user: {
       welcome: {
-        title: '👋 Welcome to Sub2API',
-        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">Hello! Welcome to the Sub2API AI service platform.</p><p style="margin-bottom: 12px;"><b>🎯 Quick Start:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 Create API Key</li><li>📋 Copy key to your application</li><li>🚀 Start using AI services</li></ul><p style="color: #10b981; font-weight: 600;">Just 1 minute, let\'s get started →</p></div>',
+        title: '👋 Welcome to CheapRouter',
+        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">Hello! Welcome to the CheapRouter AI service platform.</p><p style="margin-bottom: 12px;"><b>🎯 Quick Start:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 Create API Key</li><li>📋 Copy key to your application</li><li>🚀 Start using AI services</li></ul><p style="color: #10b981; font-weight: 600;">Just 1 minute, let\'s get started →</p></div>',
         nextBtn: 'Start 🚀',
         prevBtn: 'Skip'
       },
