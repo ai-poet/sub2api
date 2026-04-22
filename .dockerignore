@@ -80,3 +80,7 @@ deploy/redis_data/
 .claude/
 issues/
 CLAUDE.md
+
+# Git submodules (not needed in image)
+paseo/
+.gitmodules
