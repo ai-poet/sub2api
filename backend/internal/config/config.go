@@ -2191,7 +2191,11 @@ func ValidateAbsoluteHTTPURL(raw string) error {
 	return nil
 }
 
-// ValidateFrontendRedirectURL 验证前端重定向 URL（可以是绝对 URL 或相对路径）
+// ValidateFrontendRedirectURL 验证前端重定向 URL。
+// 允许三类地址：
+// 1. 站内相对路径，如 /auth/github/callback
+// 2. 绝对 http(s) URL
+// 3. 应用自定义协议 deep link，如 paseo://auth/callback
 func ValidateFrontendRedirectURL(raw string) error {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
@@ -2213,14 +2217,17 @@ func ValidateFrontendRedirectURL(raw string) error {
 	if !u.IsAbs() {
 		return fmt.Errorf("must be absolute http(s) url or relative path")
 	}
-	if !isHTTPScheme(u.Scheme) {
-		return fmt.Errorf("unsupported scheme: %s", u.Scheme)
-	}
 	if strings.TrimSpace(u.Host) == "" {
 		return fmt.Errorf("missing host")
 	}
+	if u.User != nil {
+		return fmt.Errorf("must not include userinfo")
+	}
 	if u.Fragment != "" {
 		return fmt.Errorf("must not include fragment")
+	}
+	if isHTTPScheme(u.Scheme) {
+		return nil
 	}
 	return nil
 }
