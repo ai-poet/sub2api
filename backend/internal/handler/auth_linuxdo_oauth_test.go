@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
 
@@ -105,4 +109,36 @@ func TestParseLinuxDoTokenResponseForm(t *testing.T) {
 func TestSingleLineStripsWhitespace(t *testing.T) {
 	require.Equal(t, "hello world", singleLine("hello\r\nworld"))
 	require.Equal(t, "", singleLine("\n\t\r"))
+}
+
+func TestRedirectWithFragmentAllowsCustomScheme(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+
+	fragment := url.Values{}
+	fragment.Set("access_token", "token")
+	redirectWithFragment(c, "paseo://auth/callback", fragment)
+
+	require.Equal(t, http.StatusFound, recorder.Code)
+	require.Equal(t, "no-store", recorder.Header().Get("Cache-Control"))
+	require.Equal(t, "no-cache", recorder.Header().Get("Pragma"))
+	require.Contains(t, recorder.Header().Get("Location"), "paseo://auth/callback#access_token=token")
+}
+
+func TestRedirectWithFragmentRejectsInvalidFrontendCallback(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+
+	fragment := url.Values{}
+	fragment.Set("error", "invalid_callback")
+	redirectWithFragment(c, "mailto:user@example.com", fragment)
+
+	require.Equal(t, http.StatusFound, recorder.Code)
+	require.Equal(t, linuxDoOAuthDefaultRedirectTo, recorder.Header().Get("Location"))
 }

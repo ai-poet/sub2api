@@ -458,13 +458,15 @@ func redirectOAuthError(c *gin.Context, frontendCallback string, code string, me
 }
 
 func redirectWithFragment(c *gin.Context, frontendCallback string, fragment url.Values) {
-	u, err := url.Parse(frontendCallback)
-	if err != nil {
+	if err := config.ValidateFrontendRedirectURL(frontendCallback); err != nil {
 		// 兜底：尽力跳转到默认页面，避免卡死在回调页。
 		c.Redirect(http.StatusFound, linuxDoOAuthDefaultRedirectTo)
 		return
 	}
-	if u.Scheme != "" && !strings.EqualFold(u.Scheme, "http") && !strings.EqualFold(u.Scheme, "https") {
+
+	u, err := url.Parse(frontendCallback)
+	if err != nil {
+		// 兜底：尽力跳转到默认页面，避免卡死在回调页。
 		c.Redirect(http.StatusFound, linuxDoOAuthDefaultRedirectTo)
 		return
 	}
