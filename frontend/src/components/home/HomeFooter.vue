@@ -28,6 +28,12 @@
         >
           {{ t('home.footer.privacy') }}
         </RouterLink>
+        <RouterLink
+          to="/terms"
+          class="transition hover:text-[#111111] dark:hover:text-white"
+        >
+          {{ t('home.footer.terms') }}
+        </RouterLink>
       </div>
     </div>
   </footer>

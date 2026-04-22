@@ -205,7 +205,8 @@ export default {
     },
     footer: {
       allRightsReserved: 'All rights reserved.',
-      privacy: 'Privacy Policy'
+      privacy: 'Privacy Policy',
+      terms: 'Terms of Service'
     },
     privacy: {
       title: 'Privacy Policy',
@@ -265,6 +266,61 @@ export default {
         },
       },
       contact: 'If you have any questions about this Privacy Policy, please contact us through the support channel in the platform.',
+    },
+    terms: {
+      title: 'Terms of Service',
+      lastUpdated: 'Last updated: April 2026',
+      intro: 'Welcome to CheapRouter. Please read these Terms of Service carefully before using our platform. By registering or using the service, you agree to be bound by these terms.',
+      sections: {
+        eligibility: {
+          title: '1. Eligibility',
+          p1: 'This service is available to individuals with full legal capacity and legally registered business entities. Users under 18 must have parental or guardian consent. By using this service you represent and warrant that you have the authority to accept these terms.',
+        },
+        account: {
+          title: '2. Account Responsibilities',
+          p1: 'You are fully responsible for the security of your account and all activity that occurs under it:',
+          i1: 'Keep your login credentials and API keys safe — do not share them with others',
+          i2: 'Notify us immediately if you detect unauthorized access or account anomalies',
+          i3: 'Transferring, selling, or sharing accounts is prohibited',
+        },
+        service: {
+          title: '3. Service Description',
+          p1: 'CheapRouter is an AI API aggregation proxy that forwards your requests to official providers such as Anthropic and OpenAI. We are not responsible for the availability, response quality, or content of upstream providers.',
+          p2: 'We reserve the right to modify, suspend, or terminate the service with advance notice. Service interruptions caused by upstream provider outages, maintenance, or force majeure events are outside our responsibility.',
+        },
+        billing: {
+          title: '4. Billing & Refunds',
+          p1: 'This platform operates on a prepaid credit model:',
+          i1: 'Credits are non-refundable once purchased — top up only what you need',
+          i2: 'Token consumption is deducted in real time based on platform records',
+          i3: 'Abnormal charges caused by platform errors may be investigated and compensated upon request',
+        },
+        prohibited: {
+          title: '5. Prohibited Uses',
+          p1: 'When using this service, you must not:',
+          i1: 'Use the platform to generate illegal, harmful, discriminatory, or infringing content',
+          i2: 'Attempt to reverse-engineer, bypass, or abuse the platform\'s rate limits or security mechanisms',
+          i3: 'Resell, distribute, or use API keys for unauthorized commercial proxy services',
+          i4: 'Violate the usage policies of upstream model providers (Anthropic, OpenAI, etc.)',
+        },
+        ip: {
+          title: '6. Intellectual Property',
+          p1: 'The platform\'s interface, codebase, and branding are the intellectual property of CheapRouter. Ownership of content generated via the API is governed by the upstream provider\'s policies — we make no claim over generated output.',
+        },
+        disclaimer: {
+          title: '7. Disclaimer of Warranties',
+          p1: 'This service is provided "as is" without any express or implied warranties. To the maximum extent permitted by law, CheapRouter is not liable for any indirect, incidental, special, or consequential damages, including but not limited to lost profits, data loss, or business interruption.',
+        },
+        termination: {
+          title: '8. Account Termination',
+          p1: 'We reserve the right to suspend or terminate accounts that violate these terms, without prior notice. You may also delete your account at any time from account settings. Remaining balance is non-refundable upon termination.',
+        },
+        changes: {
+          title: '9. Changes to Terms',
+          p1: 'We may update these terms from time to time. Material changes will be communicated in advance via in-app notice or email. Continued use of the service constitutes acceptance of the updated terms.',
+        },
+      },
+      contact: 'If you have any questions about these Terms of Service, please contact us through the support channel in the platform.',
     }
   },
 
