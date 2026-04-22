@@ -165,6 +165,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyCustomEndpoints,
 		SettingKeyGroupStatusEnabled,
 		SettingKeyLinuxDoConnectEnabled,
+		SettingKeyGitHubOAuthEnabled,
 		SettingKeyReferralEnabled,
 		SettingKeyBackendModeEnabled,
 	}
@@ -179,6 +180,13 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		linuxDoEnabled = raw == "true"
 	} else {
 		linuxDoEnabled = s.cfg != nil && s.cfg.LinuxDo.Enabled
+	}
+
+	githubEnabled := false
+	if raw, ok := settings[SettingKeyGitHubOAuthEnabled]; ok {
+		githubEnabled = raw == "true"
+	} else {
+		githubEnabled = s.cfg != nil && s.cfg.GitHub.Enabled
 	}
 
 	// Password reset requires email verification to be enabled
@@ -213,6 +221,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
 		GroupStatusEnabled:               settings[SettingKeyGroupStatusEnabled] == "true",
 		LinuxDoOAuthEnabled:              linuxDoEnabled,
+		GitHubOAuthEnabled:               githubEnabled,
 		ReferralEnabled:                  settings[SettingKeyReferralEnabled] == "true",
 		BackendModeEnabled:               settings[SettingKeyBackendModeEnabled] == "true",
 	}, nil
@@ -263,6 +272,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		CustomEndpoints                  json.RawMessage `json:"custom_endpoints"`
 		GroupStatusEnabled               bool            `json:"group_status_enabled"`
 		LinuxDoOAuthEnabled              bool            `json:"linuxdo_oauth_enabled"`
+		GitHubOAuthEnabled               bool            `json:"github_oauth_enabled"`
 		ReferralEnabled                  bool            `json:"referral_enabled"`
 		BackendModeEnabled               bool            `json:"backend_mode_enabled"`
 		Version                          string          `json:"version,omitempty"`
@@ -291,6 +301,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		CustomEndpoints:                  safeRawJSONArray(settings.CustomEndpoints),
 		GroupStatusEnabled:               settings.GroupStatusEnabled,
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
+		GitHubOAuthEnabled:               settings.GitHubOAuthEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,
 		BackendModeEnabled:               settings.BackendModeEnabled,
 		Version:                          s.version,
@@ -481,6 +492,14 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyLinuxDoConnectRedirectURL] = settings.LinuxDoConnectRedirectURL
 	if settings.LinuxDoConnectClientSecret != "" {
 		updates[SettingKeyLinuxDoConnectClientSecret] = settings.LinuxDoConnectClientSecret
+	}
+
+	// GitHub OAuth 登录
+	updates[SettingKeyGitHubOAuthEnabled] = strconv.FormatBool(settings.GitHubOAuthEnabled)
+	updates[SettingKeyGitHubOAuthClientID] = settings.GitHubOAuthClientID
+	updates[SettingKeyGitHubOAuthRedirectURL] = settings.GitHubOAuthRedirectURL
+	if settings.GitHubOAuthClientSecret != "" {
+		updates[SettingKeyGitHubOAuthClientSecret] = settings.GitHubOAuthClientSecret
 	}
 
 	// OEM设置
@@ -997,6 +1016,38 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	}
 	result.LinuxDoConnectClientSecretConfigured = result.LinuxDoConnectClientSecret != ""
 
+	// GitHub OAuth 设置：
+	// - 兼容 config.yaml/env（避免老部署因为未迁移到数据库设置而被意外关闭）
+	// - 支持在后台"系统设置"中覆盖并持久化（存储于 DB）
+	githubBase := config.GitHubOAuthConfig{}
+	if s.cfg != nil {
+		githubBase = s.cfg.GitHub
+	}
+
+	if raw, ok := settings[SettingKeyGitHubOAuthEnabled]; ok {
+		result.GitHubOAuthEnabled = raw == "true"
+	} else {
+		result.GitHubOAuthEnabled = githubBase.Enabled
+	}
+
+	if v, ok := settings[SettingKeyGitHubOAuthClientID]; ok && strings.TrimSpace(v) != "" {
+		result.GitHubOAuthClientID = strings.TrimSpace(v)
+	} else {
+		result.GitHubOAuthClientID = strings.TrimSpace(githubBase.ClientID)
+	}
+
+	if v, ok := settings[SettingKeyGitHubOAuthRedirectURL]; ok && strings.TrimSpace(v) != "" {
+		result.GitHubOAuthRedirectURL = strings.TrimSpace(v)
+	} else {
+		result.GitHubOAuthRedirectURL = strings.TrimSpace(githubBase.RedirectURL)
+	}
+
+	result.GitHubOAuthClientSecret = strings.TrimSpace(settings[SettingKeyGitHubOAuthClientSecret])
+	if result.GitHubOAuthClientSecret == "" {
+		result.GitHubOAuthClientSecret = strings.TrimSpace(githubBase.ClientSecret)
+	}
+	result.GitHubOAuthClientSecretConfigured = result.GitHubOAuthClientSecret != ""
+
 	// Model fallback settings
 	result.EnableModelFallback = settings[SettingKeyEnableModelFallback] == "true"
 	result.FallbackModelAnthropic = s.getStringOrDefault(settings, SettingKeyFallbackModelAnthropic, "claude-3-5-sonnet-20241022")
@@ -1322,6 +1373,70 @@ func (s *SettingService) GetLinuxDoConnectOAuthConfig(ctx context.Context) (conf
 		}
 	default:
 		return config.LinuxDoConnectConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "oauth token_auth_method invalid")
+	}
+
+	return effective, nil
+}
+
+// GetGitHubOAuthConfig 返回用于登录的"最终生效" GitHub OAuth 配置。
+//
+// 优先级：
+// - 若对应系统设置键存在，则覆盖 config.yaml/env 的值
+// - 否则回退到 config.yaml/env 的值
+func (s *SettingService) GetGitHubOAuthConfig(ctx context.Context) (config.GitHubOAuthConfig, error) {
+	if s == nil || s.cfg == nil {
+		return config.GitHubOAuthConfig{}, infraerrors.ServiceUnavailable("CONFIG_NOT_READY", "config not loaded")
+	}
+
+	effective := s.cfg.GitHub
+
+	keys := []string{
+		SettingKeyGitHubOAuthEnabled,
+		SettingKeyGitHubOAuthClientID,
+		SettingKeyGitHubOAuthClientSecret,
+		SettingKeyGitHubOAuthRedirectURL,
+	}
+	settings, err := s.settingRepo.GetMultiple(ctx, keys)
+	if err != nil {
+		return config.GitHubOAuthConfig{}, fmt.Errorf("get github oauth settings: %w", err)
+	}
+
+	if raw, ok := settings[SettingKeyGitHubOAuthEnabled]; ok {
+		effective.Enabled = raw == "true"
+	}
+	if v, ok := settings[SettingKeyGitHubOAuthClientID]; ok && strings.TrimSpace(v) != "" {
+		effective.ClientID = strings.TrimSpace(v)
+	}
+	if v, ok := settings[SettingKeyGitHubOAuthClientSecret]; ok && strings.TrimSpace(v) != "" {
+		effective.ClientSecret = strings.TrimSpace(v)
+	}
+	if v, ok := settings[SettingKeyGitHubOAuthRedirectURL]; ok && strings.TrimSpace(v) != "" {
+		effective.RedirectURL = strings.TrimSpace(v)
+	}
+
+	if !effective.Enabled {
+		return config.GitHubOAuthConfig{}, infraerrors.NotFound("OAUTH_DISABLED", "github oauth login is disabled")
+	}
+
+	// 基础健壮性校验
+	if strings.TrimSpace(effective.ClientID) == "" {
+		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth client id not configured")
+	}
+	if strings.TrimSpace(effective.ClientSecret) == "" {
+		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth client secret not configured")
+	}
+	if strings.TrimSpace(effective.RedirectURL) == "" {
+		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth redirect url not configured")
+	}
+	if strings.TrimSpace(effective.FrontendRedirectURL) == "" {
+		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth frontend redirect url not configured")
+	}
+
+	if err := config.ValidateAbsoluteHTTPURL(effective.RedirectURL); err != nil {
+		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth redirect url invalid")
+	}
+	if err := config.ValidateFrontendRedirectURL(effective.FrontendRedirectURL); err != nil {
+		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth frontend redirect url invalid")
 	}
 
 	return effective, nil

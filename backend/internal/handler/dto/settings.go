@@ -53,6 +53,11 @@ type SystemSettings struct {
 	LinuxDoConnectClientSecretConfigured bool   `json:"linuxdo_connect_client_secret_configured"`
 	LinuxDoConnectRedirectURL            string `json:"linuxdo_connect_redirect_url"`
 
+	GitHubOAuthEnabled                bool   `json:"github_oauth_enabled"`
+	GitHubOAuthClientID               string `json:"github_oauth_client_id"`
+	GitHubOAuthClientSecretConfigured bool   `json:"github_oauth_client_secret_configured"`
+	GitHubOAuthRedirectURL            string `json:"github_oauth_redirect_url"`
+
 	SiteName                     string           `json:"site_name"`
 	SiteLogo                     string           `json:"site_logo"`
 	SiteSubtitle                 string           `json:"site_subtitle"`
@@ -135,6 +140,7 @@ type PublicSettings struct {
 	CustomEndpoints                  []CustomEndpoint `json:"custom_endpoints"`
 	GroupStatusEnabled               bool             `json:"group_status_enabled"`
 	LinuxDoOAuthEnabled              bool             `json:"linuxdo_oauth_enabled"`
+	GitHubOAuthEnabled               bool             `json:"github_oauth_enabled"`
 	ReferralEnabled                  bool             `json:"referral_enabled"`
 	BackendModeEnabled               bool             `json:"backend_mode_enabled"`
 	Version                          string           `json:"version"`

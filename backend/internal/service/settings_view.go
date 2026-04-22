@@ -31,6 +31,13 @@ type SystemSettings struct {
 	LinuxDoConnectClientSecretConfigured bool
 	LinuxDoConnectRedirectURL            string
 
+	// GitHub OAuth 登录
+	GitHubOAuthEnabled                bool
+	GitHubOAuthClientID               string
+	GitHubOAuthClientSecret           string
+	GitHubOAuthClientSecretConfigured bool
+	GitHubOAuthRedirectURL            string
+
 	SiteName                     string
 	SiteLogo                     string
 	SiteSubtitle                 string
@@ -118,6 +125,7 @@ type PublicSettings struct {
 	GroupStatusEnabled           bool
 
 	LinuxDoOAuthEnabled bool
+	GitHubOAuthEnabled  bool
 	ReferralEnabled     bool
 	BackendModeEnabled  bool
 	Version             string

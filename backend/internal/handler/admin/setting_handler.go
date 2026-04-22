@@ -96,6 +96,10 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		LinuxDoConnectClientID:               settings.LinuxDoConnectClientID,
 		LinuxDoConnectClientSecretConfigured: settings.LinuxDoConnectClientSecretConfigured,
 		LinuxDoConnectRedirectURL:            settings.LinuxDoConnectRedirectURL,
+		GitHubOAuthEnabled:                   settings.GitHubOAuthEnabled,
+		GitHubOAuthClientID:                  settings.GitHubOAuthClientID,
+		GitHubOAuthClientSecretConfigured:    settings.GitHubOAuthClientSecretConfigured,
+		GitHubOAuthRedirectURL:               settings.GitHubOAuthRedirectURL,
 		SiteName:                             settings.SiteName,
 		SiteLogo:                             settings.SiteLogo,
 		SiteSubtitle:                         settings.SiteSubtitle,
@@ -166,6 +170,12 @@ type UpdateSettingsRequest struct {
 	LinuxDoConnectClientID     string `json:"linuxdo_connect_client_id"`
 	LinuxDoConnectClientSecret string `json:"linuxdo_connect_client_secret"`
 	LinuxDoConnectRedirectURL  string `json:"linuxdo_connect_redirect_url"`
+
+	// GitHub OAuth 登录
+	GitHubOAuthEnabled      bool   `json:"github_oauth_enabled"`
+	GitHubOAuthClientID     string `json:"github_oauth_client_id"`
+	GitHubOAuthClientSecret string `json:"github_oauth_client_secret"`
+	GitHubOAuthRedirectURL  string `json:"github_oauth_redirect_url"`
 
 	// OEM设置
 	SiteName                     string                `json:"site_name"`
@@ -327,6 +337,35 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 				return
 			}
 			req.LinuxDoConnectClientSecret = previousSettings.LinuxDoConnectClientSecret
+		}
+	}
+
+	// GitHub OAuth 参数验证
+	if req.GitHubOAuthEnabled {
+		req.GitHubOAuthClientID = strings.TrimSpace(req.GitHubOAuthClientID)
+		req.GitHubOAuthClientSecret = strings.TrimSpace(req.GitHubOAuthClientSecret)
+		req.GitHubOAuthRedirectURL = strings.TrimSpace(req.GitHubOAuthRedirectURL)
+
+		if req.GitHubOAuthClientID == "" {
+			response.BadRequest(c, "GitHub Client ID is required when enabled")
+			return
+		}
+		if req.GitHubOAuthRedirectURL == "" {
+			response.BadRequest(c, "GitHub Redirect URL is required when enabled")
+			return
+		}
+		if err := config.ValidateAbsoluteHTTPURL(req.GitHubOAuthRedirectURL); err != nil {
+			response.BadRequest(c, "GitHub Redirect URL must be an absolute http(s) URL")
+			return
+		}
+
+		// 如果未提供 client_secret，则保留现有值（如有）。
+		if req.GitHubOAuthClientSecret == "" {
+			if previousSettings.GitHubOAuthClientSecret == "" {
+				response.BadRequest(c, "GitHub Client Secret is required when enabled")
+				return
+			}
+			req.GitHubOAuthClientSecret = previousSettings.GitHubOAuthClientSecret
 		}
 	}
 
@@ -570,6 +609,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		LinuxDoConnectClientID:           req.LinuxDoConnectClientID,
 		LinuxDoConnectClientSecret:       req.LinuxDoConnectClientSecret,
 		LinuxDoConnectRedirectURL:        req.LinuxDoConnectRedirectURL,
+		GitHubOAuthEnabled:               req.GitHubOAuthEnabled,
+		GitHubOAuthClientID:              req.GitHubOAuthClientID,
+		GitHubOAuthClientSecret:          req.GitHubOAuthClientSecret,
+		GitHubOAuthRedirectURL:           req.GitHubOAuthRedirectURL,
 		SiteName:                         req.SiteName,
 		SiteLogo:                         req.SiteLogo,
 		SiteSubtitle:                     req.SiteSubtitle,
@@ -688,6 +731,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		LinuxDoConnectClientID:               updatedSettings.LinuxDoConnectClientID,
 		LinuxDoConnectClientSecretConfigured: updatedSettings.LinuxDoConnectClientSecretConfigured,
 		LinuxDoConnectRedirectURL:            updatedSettings.LinuxDoConnectRedirectURL,
+		GitHubOAuthEnabled:                   updatedSettings.GitHubOAuthEnabled,
+		GitHubOAuthClientID:                  updatedSettings.GitHubOAuthClientID,
+		GitHubOAuthClientSecretConfigured:    updatedSettings.GitHubOAuthClientSecretConfigured,
+		GitHubOAuthRedirectURL:               updatedSettings.GitHubOAuthRedirectURL,
 		SiteName:                             updatedSettings.SiteName,
 		SiteLogo:                             updatedSettings.SiteLogo,
 		SiteSubtitle:                         updatedSettings.SiteSubtitle,

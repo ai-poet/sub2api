@@ -70,6 +70,14 @@ func RegisterAuthRoutes(
 			}),
 			h.Auth.CompleteLinuxDoOAuthRegistration,
 		)
+		auth.GET("/oauth/github/start", h.Auth.GitHubOAuthStart)
+		auth.GET("/oauth/github/callback", h.Auth.GitHubOAuthCallback)
+		auth.POST("/oauth/github/complete-registration",
+			rateLimiter.LimitWithOptions("oauth-github-complete", 10, time.Minute, middleware.RateLimitOptions{
+				FailureMode: middleware.RateLimitFailClose,
+			}),
+			h.Auth.CompleteGitHubOAuthRegistration,
+		)
 	}
 
 	// 公开设置（无需认证）
