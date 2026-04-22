@@ -357,6 +357,28 @@ export async function completeLinuxDoOAuthRegistration(
   return data
 }
 
+/**
+ * Complete GitHub OAuth registration with invitation code
+ * @param pendingOAuthToken - Short-lived JWT from the OAuth callback
+ * @param invitationCode - Invitation code entered by the user
+ * @returns Token pair on success
+ */
+export async function completeGitHubOAuthRegistration(
+  pendingOAuthToken: string,
+  invitationCode: string
+): Promise<{ access_token: string; refresh_token: string; expires_in: number; token_type: string }> {
+  const { data } = await apiClient.post<{
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    token_type: string
+  }>('/auth/oauth/github/complete-registration', {
+    pending_oauth_token: pendingOAuthToken,
+    invitation_code: invitationCode
+  })
+  return data
+}
+
 export const authAPI = {
   login,
   login2FA,
@@ -380,7 +402,8 @@ export const authAPI = {
   resetPassword,
   refreshToken,
   revokeAllSessions,
-  completeLinuxDoOAuthRegistration
+  completeLinuxDoOAuthRegistration,
+  completeGitHubOAuthRegistration
 }
 
 export default authAPI

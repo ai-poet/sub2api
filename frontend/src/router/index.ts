@@ -82,6 +82,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/auth/github/callback',
+    name: 'GitHubOAuthCallback',
+    component: () => import('@/views/auth/GitHubCallbackView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'GitHub OAuth Callback'
+    }
+  },
+  {
     path: '/forgot-password',
     name: 'ForgotPassword',
     component: () => import('@/views/auth/ForgotPasswordView.vue'),
