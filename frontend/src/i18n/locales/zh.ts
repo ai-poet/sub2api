@@ -13,13 +13,26 @@ export default {
     headerTagline: 'AI Coding Agent 服务底层',
     heroSubtitle: '统一入口、按量计费、面向持续运行的编码代理',
     heroDescription: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本使用基于高级模型的 AI coding agent 服务。',
+    navModels: '模型广场',
+    navPricing: '定价',
     hero: {
-      badge: '高级模型，不必继续按官方订阅价买单',
-      titleLead: '让你的',
-      titleAccent: 'AI Coding Agent',
-      titleTail: '用更低成本跑上高级模型',
-      description: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本使用基于高级模型的 AI coding agent 服务。',
-      primaryNote: '不用再同时扛多份订阅、分散密钥和单账号不稳定的风险。',
+      badge: '对比官方 Claude Code / Codex 订阅 · 约 1 折成本',
+      titleLead: 'Claude Code 订阅太贵？',
+      titleAccent: '直调官方 API，价格 1 折',
+      titleTail: '零月费，用多少付多少',
+      description: '把 Claude Sonnet、GPT-5.4、Codex 接进你的编码工作流，无起步费，无锁定。Token 用多少付多少，账单实时可查。',
+      primaryNote: '按实际运行计费 · 无最低消费 · 随时可停',
+      tags: {
+        coding: 'AI 编码',
+        agent: 'Coding Agent',
+        tools: 'Claude Code / Codex',
+      },
+      stats: {
+        savings: '最高节省',
+        models: '可用模型',
+        minCost: '最低消费',
+      },
+      perToken: '每百万 token',
       panel: {
         title: '为日常编码代理准备的请求层',
         auto: '自动轮播',
@@ -62,25 +75,42 @@ export default {
         visibility: '统一用量可见'
       }
     },
+    proofStrip: {
+      overline: '平台优势',
+    },
+    download: {
+      badge: '即将推出',
+      comingSoon: '即将推出',
+      title: '客户端：一键配置，30 秒接入',
+      description: '下载后自动完成 Claude Code / Codex CLI 的 API 接入配置，无需手动设置环境变量或编辑配置文件。',
+      privacyCode: '代码内容不被保存，不用于模型训练',
+      privacyKey: 'API Key 仅存储在本地，不上传服务器',
+      cta: '注册账号，优先获取下载资格',
+      platforms: {
+        mac: { sub: 'Apple Silicon & Intel' },
+        windows: { sub: 'x64 / ARM64' },
+        linux: { sub: '.deb / .rpm / AppImage' },
+      },
+    },
     value: {
-      overline: '服务结构',
-      title: '把高级模型能力做成真正可交付的编码代理服务',
-      description: '把成本、稳定性和计费控制交给同一层服务，让高级模型更适合长期承接编码代理请求。',
+      overline: '为什么选 CheapRouter',
+      title: '不换工具，只换账单',
+      description: 'Claude Code、Codex CLI 原路接入，不改工作流，不绑套餐。Claude / GPT / Codex 全系模型，token 用多少付多少，月账单直降 90%+。',
       items: {
         economics: {
-          eyebrow: '01 / 价格',
-          title: '廉价接入高级模型',
-          description: '把 Claude / GPT / Codex 级能力放进常用 coding agent 工作流，不必再为每个官方订阅单独买单。'
+          eyebrow: '01 / 成本',
+          title: '官方 1 折，没有月费',
+          description: 'Claude Sonnet ¥0.525 / 百万 token（官方 $3.00），Opus、GPT-5.4 同比例折扣，最高节省 97%，零订阅费，零起步费。'
         },
         reliability: {
           eyebrow: '02 / 稳定',
-          title: '为持续运行准备的稳定性',
-          description: '多账号池、粘性会话与自动切换，减少单账号限流或波动对编码链路的影响。'
+          title: '专为 agent 长跑设计',
+          description: '多账号池自动调度，单账号限流自动切换，不中断 agent 连续请求，编码链路始终在线。'
         },
         control: {
-          eyebrow: '03 / 可控',
-          title: '统一计费、额度与明细',
-          description: '一个 API Key 进来，一套额度、账单和使用明细出去，更适合个人转化，也更适合团队推广。'
+          eyebrow: '03 / 透明',
+          title: '每笔 token 账单都能查',
+          description: '实时明细精确到每次请求，一个 key 接入所有模型，随充随用，无隐藏费用，无最低消费。'
         }
       }
     },
@@ -110,6 +140,26 @@ export default {
           us: '多账号池，自动切换'
         }
       }
+    },
+    pricingTable: {
+      overline: '实际定价',
+      title: '按量付费，透明定价',
+      description: '以下为输入 token 参考价（¥/百万 token），基于平台 ¥0.70/$ 信用兑换率，对比官方 API 按市场汇率折算价。',
+      badge: '最高节省',
+      badgeValue: '约 97%',
+      tabs: {
+        all: '全部',
+        other: '其他',
+      },
+      col: {
+        model: '模型',
+        officialInput: '官方输入价（$/M）',
+        ourInput: '本平台（¥/M）',
+        officialOutput: '官方输出价（$/M）',
+        savings: '节省',
+      },
+      modelsCount: '个模型',
+      note: '以上为输入 token 参考价，Claude 模型走 GLM 分组（0.25 倍率），Codex/GPT 模型走 Codex 分组（0.80 倍率），平台信用兑换率 ¥0.70/$1。实际按用量计费。',
     },
     providers: {
       title: '把高级模型与编码工作流放进同一层服务',
@@ -353,8 +403,8 @@ export default {
 
   // Setup Wizard
   setup: {
-    title: 'Sub2API 安装向导',
-    description: '配置您的 Sub2API 实例',
+    title: 'CheapRouter 安装向导',
+    description: '配置您的 CheapRouter 实例',
     database: {
       title: '数据库配置',
       description: '连接到您的 PostgreSQL 数据库',
@@ -4679,7 +4729,7 @@ export default {
       },
       linuxdo: {
         title: 'LinuxDo Connect 登录',
-        description: '配置 LinuxDo Connect OAuth，用于 Sub2API 用户登录',
+        description: '配置 LinuxDo Connect OAuth，用于 CheapRouter 用户登录',
         enable: '启用 LinuxDo 登录',
         enableHint: '在登录/注册页面显示 LinuxDo 登录入口',
         clientId: 'Client ID',
@@ -4767,7 +4817,7 @@ export default {
           '开启后，普通用户侧边栏会显示“模型运行状态”菜单，并开放对应用户接口。',
         siteName: '站点名称',
         siteNameHint: '显示在邮件和页面标题中',
-        siteNamePlaceholder: 'Sub2API',
+        siteNamePlaceholder: 'CheapRouter',
         siteSubtitle: '站点副标题',
         siteSubtitleHint: '显示在登录和注册页面',
         siteSubtitlePlaceholder: '订阅转 API 转换平台',
@@ -4872,7 +4922,7 @@ export default {
         fromEmail: '发件人邮箱',
         fromEmailPlaceholder: "noreply{'@'}example.com",
         fromName: '发件人名称',
-        fromNamePlaceholder: 'Sub2API',
+        fromNamePlaceholder: 'CheapRouter',
         useTls: '使用 TLS',
         useTlsHint: '为 SMTP 连接启用 TLS 加密'
       },
@@ -5455,16 +5505,16 @@ export default {
     // Admin tour steps
     admin: {
       welcome: {
-        title: '👋 欢迎使用 Sub2API',
+        title: '👋 欢迎使用 CheapRouter',
         description:
-          '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">Sub2API 是一个强大的 AI 服务中转平台，让您轻松管理和分发 AI 服务。</p><p style="margin-bottom: 12px;"><b>🎯 核心功能：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>📦 <b>分组管理</b> - 创建不同的服务套餐（VIP、免费试用等）</li><li>🔗 <b>账号池</b> - 连接多个上游 AI 服务商账号</li><li>🔑 <b>密钥分发</b> - 为用户生成独立的 API Key</li><li>💰 <b>计费管理</b> - 灵活的费率和配额控制</li></ul><p style="color: #10b981; font-weight: 600;">接下来，我们将用 3 分钟带您完成首次配置 →</p></div>',
+          '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">CheapRouter 是一个强大的 AI 服务中转平台，让您轻松管理和分发 AI 服务。</p><p style="margin-bottom: 12px;"><b>🎯 核心功能：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>📦 <b>分组管理</b> - 创建不同的服务套餐（VIP、免费试用等）</li><li>🔗 <b>账号池</b> - 连接多个上游 AI 服务商账号</li><li>🔑 <b>密钥分发</b> - 为用户生成独立的 API Key</li><li>💰 <b>计费管理</b> - 灵活的费率和配额控制</li></ul><p style="color: #10b981; font-weight: 600;">接下来，我们将用 3 分钟带您完成首次配置 →</p></div>',
         nextBtn: '开始配置 🚀',
         prevBtn: '跳过'
       },
       groupManage: {
         title: '📦 第一步：分组管理',
         description:
-          '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;"><b>什么是分组？</b></p><p style="margin-bottom: 12px;">分组是 Sub2API 的核心概念，它就像一个"服务套餐"：</p><ul style="margin-left: 20px; margin-bottom: 12px; font-size: 13px;"><li>🎯 每个分组可以包含多个上游账号</li><li>💰 每个分组有独立的计费倍率</li><li>👥 可以设置为公开或专属分组</li></ul><p style="margin-top: 12px; padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 示例：</b>您可以创建"VIP专线"（高倍率）和"免费试用"（低倍率）两个分组</p><p style="margin-top: 16px; color: #10b981; font-weight: 600;">👉 点击左侧的"分组管理"开始</p></div>'
+          '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;"><b>什么是分组？</b></p><p style="margin-bottom: 12px;">分组是 CheapRouter 的核心概念，它就像一个"服务套餐"：</p><ul style="margin-left: 20px; margin-bottom: 12px; font-size: 13px;"><li>🎯 每个分组可以包含多个上游账号</li><li>💰 每个分组有独立的计费倍率</li><li>👥 可以设置为公开或专属分组</li></ul><p style="margin-top: 12px; padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 示例：</b>您可以创建"VIP专线"（高倍率）和"免费试用"（低倍率）两个分组</p><p style="margin-top: 16px; color: #10b981; font-weight: 600;">👉 点击左侧的"分组管理"开始</p></div>'
       },
       createGroup: {
         title: '➕ 创建新分组',
@@ -5576,9 +5626,9 @@ export default {
     // User tour steps
     user: {
       welcome: {
-        title: '👋 欢迎使用 Sub2API',
+        title: '👋 欢迎使用 CheapRouter',
         description:
-          '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">您好！欢迎来到 Sub2API AI 服务平台。</p><p style="margin-bottom: 12px;"><b>🎯 快速开始：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 创建 API 密钥</li><li>📋 复制密钥到您的应用</li><li>🚀 开始使用 AI 服务</li></ul><p style="color: #10b981; font-weight: 600;">只需 1 分钟，让我们开始吧 →</p></div>',
+          '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">您好！欢迎来到 CheapRouter AI 服务平台。</p><p style="margin-bottom: 12px;"><b>🎯 快速开始：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 创建 API 密钥</li><li>📋 复制密钥到您的应用</li><li>🚀 开始使用 AI 服务</li></ul><p style="color: #10b981; font-weight: 600;">只需 1 分钟，让我们开始吧 →</p></div>',
         nextBtn: '开始 🚀',
         prevBtn: '跳过'
       },

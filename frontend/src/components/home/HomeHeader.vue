@@ -1,35 +1,48 @@
 <template>
   <header class="sticky top-0 z-40 px-4 pt-4 md:px-6">
     <nav
-      class="mx-auto flex max-w-[1380px] items-center justify-between gap-4 rounded-full border border-black/8 bg-[rgba(255,251,245,0.82)] px-4 py-3 shadow-[0_20px_80px_rgba(18,18,18,0.07)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(17,19,24,0.82)]"
+      class="mx-auto flex max-w-[1380px] items-center justify-between gap-4 rounded-full border border-black/10 bg-white/90 px-5 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(17,19,24,0.88)]"
     >
-      <router-link to="/home" class="flex min-w-0 items-center gap-3">
-        <div class="min-w-0">
-          <div class="home-font-serif truncate text-2xl leading-none tracking-[-0.04em] text-[#111111] dark:text-white">
-            {{ siteName }}
-          </div>
-          <div class="hidden text-[11px] uppercase tracking-[0.24em] text-[#6c665d] dark:text-white/55 md:block">
-            {{ t('home.headerTagline') }}
-          </div>
+      <!-- Logo -->
+      <router-link to="/home" class="flex min-w-0 items-center gap-2.5">
+        <div class="home-font-serif truncate text-[1.35rem] font-black leading-none tracking-[-0.04em] text-[#111] dark:text-white">
+          {{ siteName }}
         </div>
       </router-link>
 
-      <div class="flex items-center gap-2 md:gap-3">
+      <!-- Nav links (desktop) -->
+      <div class="hidden items-center gap-1 lg:flex">
         <a
           v-if="docUrl"
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="hidden rounded-full px-3 py-2 text-sm font-medium text-[#5f5850] transition hover:bg-black/5 hover:text-[#111111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white lg:inline-flex"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
         >
           {{ t('home.docs') }}
         </a>
+        <router-link
+          to="/models"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+        >
+          {{ t('home.navModels') }}
+        </router-link>
+        <a
+          href="#pricing"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          @click.prevent="scrollTo('pricing')"
+        >
+          {{ t('home.navPricing') }}
+        </a>
+      </div>
 
+      <!-- Right actions -->
+      <div class="flex items-center gap-2">
         <LocaleSwitcher />
 
         <button
           type="button"
-          class="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#5f5850] transition hover:bg-black/5 hover:text-[#111111] dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#777] transition hover:bg-black/5 hover:text-[#111] dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
           :title="isDark ? t('home.switchToLight') : t('home.switchToDark')"
           @click="$emit('toggleTheme')"
         >
@@ -38,16 +51,16 @@
         </button>
 
         <router-link
-          :to="isAuthenticated ? dashboardPath : '/login'"
-          class="inline-flex items-center gap-2 rounded-full bg-[#141518] px-4 py-2 text-sm font-semibold text-white transition hover:translate-y-[-1px] hover:bg-black dark:bg-white dark:text-[#0f1114] dark:hover:bg-[#e9e7e3]"
+          :to="isAuthenticated ? dashboardPath : '/register'"
+          class="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-2 text-[13.5px] font-semibold text-white transition hover:-translate-y-[1px] hover:bg-primary-700 active:translate-y-0 dark:bg-primary-500 dark:hover:bg-primary-400"
         >
           <span
             v-if="isAuthenticated && userInitial"
-            class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[11px] dark:bg-black/10"
+            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px]"
           >
             {{ userInitial }}
           </span>
-          <span>{{ isAuthenticated ? t('home.dashboard') : t('home.login') }}</span>
+          <span>{{ isAuthenticated ? t('home.dashboard') : t('home.cta.button') }}</span>
           <Icon name="arrowRight" size="sm" />
         </router-link>
       </div>
@@ -74,4 +87,8 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
+
+function scrollTo(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+}
 </script>

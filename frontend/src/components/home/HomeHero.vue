@@ -1,30 +1,35 @@
 <template>
-  <section class="px-4 pb-16 pt-10 md:px-6 md:pb-20 md:pt-16">
-    <div class="mx-auto grid max-w-[1380px] gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(460px,0.95fr)] lg:items-end">
-      <div class="max-w-[760px]">
-        <div class="inline-flex items-center gap-2 rounded-full border border-black/8 bg-white/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#5f5850] shadow-[0_12px_40px_rgba(20,20,20,0.06)] backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-white/65">
-          <Icon name="sparkles" size="sm" class="text-primary-600 dark:text-primary-300" />
-          <span>{{ t('home.hero.badge') }}</span>
+  <section class="relative overflow-hidden bg-white px-4 pb-16 pt-12 md:px-6 md:pb-20 md:pt-16 dark:bg-[#0f1114]">
+
+    <div class="mx-auto grid max-w-[1380px] gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(460px,0.9fr)] lg:items-center">
+
+      <!-- ===== Left: Copy ===== -->
+      <div class="relative max-w-[700px]">
+
+        <!-- Category tag pills -->
+        <div class="flex flex-wrap gap-2">
+          <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50">{{ t('home.hero.tags.coding') }}</span>
+          <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50">{{ t('home.hero.tags.agent') }}</span>
+          <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50">{{ t('home.hero.tags.tools') }}</span>
         </div>
 
-        <h1 class="mt-8 max-w-[11.5ch] text-[clamp(2.9rem,7vw,5.8rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-[#111111] dark:text-white [text-wrap:balance]">
-          <span class="block">{{ t('home.hero.titleLead') }}</span>
-          <span class="block text-primary-700 dark:text-primary-300">{{ t('home.hero.titleAccent') }}</span>
-          <span class="block">{{ t('home.hero.titleTail') }}</span>
+        <!-- Headline -->
+        <h1 class="mt-7 text-[clamp(2.6rem,6vw,5rem)] font-black leading-[1.05] tracking-[-0.04em] [text-wrap:balance]">
+          <span class="block text-[#111] dark:text-white">{{ t('home.hero.titleLead') }}</span>
+          <span class="block text-primary-600 dark:text-primary-400">{{ t('home.hero.titleAccent') }}</span>
+          <span class="block text-[#111] dark:text-white">{{ t('home.hero.titleTail') }}</span>
         </h1>
 
-        <p class="mt-6 max-w-[38rem] text-lg leading-8 text-[#5c554d] dark:text-white/72">
+        <!-- Description -->
+        <p class="mt-6 max-w-[38rem] text-lg leading-8 text-gray-500 dark:text-white/60">
           {{ t('home.hero.description') }}
         </p>
 
-        <p class="mt-4 text-[12px] uppercase tracking-[0.22em] text-[#837a6f] dark:text-white/45">
-          {{ subtitleLine }}
-        </p>
-
-        <div class="mt-10 flex flex-col gap-3 sm:flex-row">
+        <!-- CTAs -->
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
           <router-link
             :to="primaryTo"
-            class="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[#121316] px-6 text-[15px] font-semibold text-white transition hover:translate-y-[-1px] hover:bg-black dark:bg-white dark:text-[#111318] dark:hover:bg-[#ece9e5]"
+            class="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
           >
             <span>{{ primaryLabel }}</span>
             <Icon name="arrowRight" size="sm" />
@@ -35,142 +40,135 @@
             :href="docUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-black/10 bg-white/70 px-6 text-[15px] font-semibold text-[#111111] transition hover:translate-y-[-1px] hover:bg-white dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            class="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
-            <span>{{ t('home.docs') }}</span>
+            <span>{{ t('home.viewDocs') }}</span>
             <Icon name="externalLink" size="sm" />
           </a>
           <router-link
             v-else
             to="/login"
-            class="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-black/10 bg-white/70 px-6 text-[15px] font-semibold text-[#111111] transition hover:translate-y-[-1px] hover:bg-white dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            class="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
             <span>{{ t('home.login') }}</span>
             <Icon name="arrowRight" size="sm" />
           </router-link>
         </div>
 
-        <p class="mt-4 text-sm leading-6 text-[#6d655b] dark:text-white/58">
+        <!-- Note -->
+        <p class="mt-3 text-sm text-gray-400 dark:text-white/35">
           {{ t('home.hero.primaryNote') }}
         </p>
 
-        <div class="mt-10 flex flex-wrap gap-3">
-          <span
-            v-for="chip in compatibilityChips"
-            :key="chip"
-            class="inline-flex items-center rounded-full border border-black/10 bg-white/65 px-4 py-2 text-sm font-medium text-[#3d372f] shadow-[0_10px_30px_rgba(15,15,15,0.05)] backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-white/72"
-          >
-            {{ chip }}
-          </span>
+        <!-- Stats strip -->
+        <div class="mt-10 grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100 pt-8 dark:divide-white/8 dark:border-white/8">
+          <div class="pr-5">
+            <div class="text-[2.4rem] font-black leading-none tracking-tight text-[#111] dark:text-white">
+              97<span class="text-primary-600 dark:text-primary-400">%</span>
+            </div>
+            <div class="mt-2 text-sm leading-5 text-gray-400 dark:text-white/50">{{ t('home.hero.stats.savings') }}</div>
+          </div>
+          <div class="px-5">
+            <div class="text-[2.4rem] font-black leading-none tracking-tight text-[#111] dark:text-white">
+              14<span class="text-primary-600 dark:text-primary-400">+</span>
+            </div>
+            <div class="mt-2 text-sm leading-5 text-gray-400 dark:text-white/50">{{ t('home.hero.stats.models') }}</div>
+          </div>
+          <div class="pl-5">
+            <div class="text-[2.4rem] font-black leading-none tracking-tight text-[#111] dark:text-white">
+              ¥<span>0</span>
+            </div>
+            <div class="mt-2 text-sm leading-5 text-gray-400 dark:text-white/50">{{ t('home.hero.stats.minCost') }}</div>
+          </div>
         </div>
       </div>
 
-      <div class="relative lg:pb-4">
-        <div class="pointer-events-none absolute inset-x-10 top-[-2rem] h-32 rounded-full bg-primary-300/30 blur-3xl dark:bg-primary-500/15"></div>
+      <!-- ===== Right: Scrolling Price Cards ===== -->
+      <div class="relative hidden lg:block">
         <div
-          class="animate-home-float relative overflow-hidden rounded-[34px] border border-black/10 bg-[#15171c] text-white shadow-[0_30px_120px_rgba(15,15,15,0.18)] dark:border-white/10"
+          class="card-columns-container"
+          style="height: 560px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);"
         >
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,212,191,0.24),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_30%)]"></div>
-          <div class="relative border-b border-white/10 px-6 py-5">
-            <div class="flex items-center justify-between gap-4">
-              <div class="flex items-center gap-2">
-                <span class="h-3 w-3 rounded-full bg-[#ff7a59]"></span>
-                <span class="h-3 w-3 rounded-full bg-[#ffbd2f]"></span>
-                <span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
-              </div>
-              <div class="flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-white/45">
-                <span class="h-1.5 w-1.5 rounded-full bg-primary-300 shadow-[0_0_14px_rgba(103,232,218,0.85)]"></span>
-                <span>{{ t('home.hero.panel.auto') }}</span>
-              </div>
-            </div>
-
-            <div class="mt-8">
-              <p class="text-[12px] uppercase tracking-[0.22em] text-primary-300">
-                {{ t('home.hero.panel.title') }}
-              </p>
-              <Transition name="terminal-fade" mode="out-in">
-                <div :key="activeScenario.id">
-                  <p class="mt-3 max-w-[28rem] text-base leading-7 text-white/88">
-                    {{ activeScenario.title }}
-                  </p>
-                  <p class="mt-2 max-w-[28rem] text-sm leading-6 text-white/60">
-                    {{ activeScenario.subtitle }}
-                  </p>
-                </div>
-              </Transition>
-            </div>
-          </div>
-
-          <div class="relative px-6 py-6">
-            <div class="overflow-hidden rounded-[24px] border border-white/8 bg-[#0d1014] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 bg-white/5 px-5 py-3">
-                <div class="text-[12px] uppercase tracking-[0.2em] text-white/40">
-                  {{ activeScenario.file }}
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="scenario in panelScenarios"
-                    :key="scenario.id"
-                    type="button"
-                    class="rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] transition"
-                    :class="scenario.id === activeScenario.id
-                      ? 'border-primary-300/60 bg-primary-300/16 text-primary-200 shadow-[0_0_0_1px_rgba(103,232,218,0.08)]'
-                      : 'border-white/10 bg-white/5 text-white/46 hover:border-white/18 hover:text-white/74'"
-                    :aria-label="scenario.title"
-                    @click="setActiveScenario(panelScenarios.findIndex(item => item.id === scenario.id))"
-                  >
-                    {{ scenario.tabLabel }}
-                  </button>
-                </div>
-              </div>
-
-              <div class="h-[2px] w-full bg-white/6">
-                <div :key="activeScenario.id" class="animate-terminal-progress h-full bg-primary-300/90"></div>
-              </div>
-
-              <Transition name="terminal-fade" mode="out-in">
-                <div
-                  :key="activeScenario.id"
-                  class="space-y-3 px-5 py-5 font-mono text-[13px] leading-6 text-white/88 md:text-[14px]"
-                >
-                  <div
-                    v-for="line in activeScenario.codeLines.slice(0, -1)"
-                    :key="line.content"
-                    :class="line.className"
-                  >
-                    {{ line.content }}
+          <div class="flex gap-4">
+            <!-- Column 1: scrolls UP -->
+            <div class="card-col flex w-[220px] flex-none flex-col gap-4 scroll-up">
+              <template v-for="_ in 2" :key="_">
+                <div v-for="card in col1Cards" :key="card.id + _" class="price-card">
+                  <div class="card-model-name">{{ card.name }}</div>
+                  <div class="card-model-id">{{ card.id }}</div>
+                  <div class="card-price-row">
+                    <span class="card-price-teal">{{ card.price }}</span>
+                    <span class="card-price-strike">{{ card.original }}</span>
+                    <span class="card-savings-badge">{{ card.savings }}</span>
                   </div>
-                  <div :class="activeScenario.codeLines[activeScenario.codeLines.length - 1]?.className">
-                    {{ activeScenario.codeLines[activeScenario.codeLines.length - 1]?.content }}
-                    <span class="terminal-cursor ml-1 align-middle"></span>
-                  </div>
+                  <div class="card-per-token">{{ t('home.hero.perToken') }}</div>
                 </div>
-              </Transition>
+              </template>
             </div>
 
-            <div class="mt-5 grid gap-3 sm:grid-cols-2">
-              <div
-                v-for="row in activeScenario.rows"
-                :key="row.label"
-                class="rounded-[22px] border border-white/8 bg-white/5 p-4 backdrop-blur"
-              >
-                <div class="text-[11px] uppercase tracking-[0.2em] text-white/42">
-                  {{ row.label }}
+            <!-- Column 2: scrolls DOWN, offset start -->
+            <div class="card-col flex w-[220px] flex-none flex-col gap-4 scroll-down" style="margin-top: -160px;">
+              <template v-for="_ in 2" :key="_">
+                <div v-for="card in col2Cards" :key="card.id + _" class="price-card">
+                  <div class="card-model-name">{{ card.name }}</div>
+                  <div class="card-model-id">{{ card.id }}</div>
+                  <div class="card-price-row">
+                    <span class="card-price-teal">{{ card.price }}</span>
+                    <span class="card-price-strike">{{ card.original }}</span>
+                    <span class="card-savings-badge">{{ card.savings }}</span>
+                  </div>
+                  <div class="card-per-token">{{ t('home.hero.perToken') }}</div>
                 </div>
-                <div class="mt-2 text-sm leading-6 text-white/88">
-                  {{ row.value }}
-                </div>
-              </div>
+              </template>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- ===== Model Name Ticker ===== -->
+    <div class="mt-16 border-y border-gray-100 py-6 dark:border-white/8">
+      <!-- Row 1: scrolls left -->
+      <div class="ticker-row overflow-hidden">
+        <div class="ticker-track marquee-left flex gap-8 whitespace-nowrap">
+          <span v-for="_ in 2" :key="_" class="ticker-inner flex gap-8">
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">claude-haiku-4-5-20251001</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">Claude Sonnet 4.6</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">gpt-5.4</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">Claude Opus 4.6</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">gpt-5.3-codex</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+          </span>
+        </div>
+      </div>
+      <!-- Row 2: scrolls right -->
+      <div class="ticker-row mt-3 overflow-hidden">
+        <div class="ticker-track marquee-right flex gap-8 whitespace-nowrap">
+          <span v-for="_ in 2" :key="_" class="ticker-inner flex gap-8">
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">claude-sonnet-4-5-20250929</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">Claude Opus 4.7</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">gpt-5.2</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">claude-opus-4-5-20251101</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">GPT-5.3 Codex</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 
@@ -181,182 +179,156 @@ const props = defineProps<{
   dashboardPath: string
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+const isChinese = computed(() => locale.value === 'zh')
 
 const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/register'))
 const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
-const subtitleLine = computed(() => props.siteSubtitle.trim() || t('home.heroSubtitle'))
 
-const activeScenarioIndex = ref(0)
-let scenarioTimer: number | null = null
+// priceCny: ¥/M tokens (GLM group, 0.25× × ¥0.70/$1)  priceUsd: actual $/M (÷7)
+const rawCol1 = [
+  { name: 'Claude Haiku 4.5',  id: 'claude-haiku-4-5-20251001',  priceCny: '¥0.175', priceUsd: '$0.025', original: '$1.00', savings: '-97%' },
+  { name: 'Claude Sonnet 4.6', id: 'claude-sonnet-4-6',           priceCny: '¥0.525', priceUsd: '$0.075', original: '$3.00', savings: '-97%' },
+  { name: 'Claude Opus 4.6',   id: 'claude-opus-4-6',             priceCny: '¥0.875', priceUsd: '$0.125', original: '$5.00', savings: '-97%' },
+  { name: 'GPT-5.4',           id: 'gpt-5.4',                     priceCny: '¥1.400', priceUsd: '$0.200', original: '$2.50', savings: '-92%' },
+  { name: 'GPT-5.3 Codex',     id: 'gpt-5.3-codex',               priceCny: '¥0.980', priceUsd: '$0.140', original: '$1.75', savings: '-92%' },
+]
 
-const compatibilityChips = computed(() => [
-  t('home.providers.claudeCode'),
-  t('home.providers.codex'),
-  t('home.providers.gpt'),
-  t('home.providers.openaiCompatible'),
-])
+const rawCol2 = [
+  { name: 'Claude Sonnet 4.5', id: 'claude-sonnet-4-5-20250929',  priceCny: '¥0.525', priceUsd: '$0.075', original: '$3.00', savings: '-97%' },
+  { name: 'Claude Opus 4.5',   id: 'claude-opus-4-5-20251101',    priceCny: '¥0.875', priceUsd: '$0.125', original: '$5.00', savings: '-97%' },
+  { name: 'Claude Opus 4.7',   id: 'claude-opus-4-7',             priceCny: '¥0.875', priceUsd: '$0.125', original: '$5.00', savings: '-97%' },
+  { name: 'GPT-5.2',           id: 'gpt-5.2',                     priceCny: '¥0.980', priceUsd: '$0.140', original: '$1.75', savings: '-92%' },
+]
 
-const panelScenarios = computed(() => [
-  {
-    id: 'chat-completions',
-    tabLabel: 'Chat',
-    file: 'agent-request.ts',
-    title: t('home.hero.panel.scenarios.completions.title'),
-    subtitle: t('home.hero.panel.scenarios.completions.subtitle'),
-    codeLines: [
-      { content: 'const response = await client.chat.completions.create({', className: 'text-[#6ee7cf]' },
-      { content: '  model: "gpt-5.4",', className: 'pl-4 text-white/74' },
-      { content: '  metadata: "coding-agent",', className: 'pl-4 text-white/74' },
-      { content: '  fallback: "claude-sonnet-4.6",', className: 'pl-4 text-white/74' },
-      { content: '  billing_mode: "metered",', className: 'pl-4 text-white/74' },
-      { content: '})', className: 'text-[#6ee7cf]' },
-    ],
-    rows: [
-      { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/chat/completions' },
-      { label: t('home.hero.panel.modelLabel'), value: 'Claude / GPT / Codex' },
-      { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.completions.route') },
-      { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.completions.billing') },
-    ],
-  },
-  {
-    id: 'responses',
-    tabLabel: 'Responses',
-    file: 'responses.ts',
-    title: t('home.hero.panel.scenarios.responses.title'),
-    subtitle: t('home.hero.panel.scenarios.responses.subtitle'),
-    codeLines: [
-      { content: 'const run = await client.responses.create({', className: 'text-[#6ee7cf]' },
-      { content: '  model: "gpt-5.4",', className: 'pl-4 text-white/74' },
-      { content: '  input,', className: 'pl-4 text-white/74' },
-      { content: '  tools,', className: 'pl-4 text-white/74' },
-      { content: '  session_mode: "sticky",', className: 'pl-4 text-white/74' },
-      { content: '})', className: 'text-[#6ee7cf]' },
-    ],
-    rows: [
-      { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/responses' },
-      { label: t('home.hero.panel.modelLabel'), value: 'Claude / GPT / Codex' },
-      { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.responses.route') },
-      { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.responses.billing') },
-    ],
-  },
-  {
-    id: 'messages',
-    tabLabel: 'Messages',
-    file: 'messages.ts',
-    title: t('home.hero.panel.scenarios.messages.title'),
-    subtitle: t('home.hero.panel.scenarios.messages.subtitle'),
-    codeLines: [
-      { content: 'const reply = await anthropic.messages.create({', className: 'text-[#6ee7cf]' },
-      { content: '  model: "claude-sonnet-4.6",', className: 'pl-4 text-white/74' },
-      { content: '  max_tokens: 4096,', className: 'pl-4 text-white/74' },
-      { content: '  messages,', className: 'pl-4 text-white/74' },
-      { content: '  billing_mode: "metered",', className: 'pl-4 text-white/74' },
-      { content: '})', className: 'text-[#6ee7cf]' },
-    ],
-    rows: [
-      { label: t('home.hero.panel.requestLabel'), value: 'POST /v1/messages' },
-      { label: t('home.hero.panel.modelLabel'), value: 'Claude / GPT / Codex' },
-      { label: t('home.hero.panel.routeLabel'), value: t('home.hero.panel.scenarios.messages.route') },
-      { label: t('home.hero.panel.billLabel'), value: t('home.hero.panel.scenarios.messages.billing') },
-    ],
-  },
-])
-
-const activeScenario = computed(() => panelScenarios.value[activeScenarioIndex.value] ?? panelScenarios.value[0])
-
-function clearScenarioTimer() {
-  if (scenarioTimer !== null && typeof window !== 'undefined') {
-    window.clearInterval(scenarioTimer)
-  }
-  scenarioTimer = null
-}
-
-function setActiveScenario(index: number) {
-  activeScenarioIndex.value = index
-  startScenarioTimer()
-}
-
-function startScenarioTimer() {
-  if (typeof window === 'undefined') return
-
-  clearScenarioTimer()
-  scenarioTimer = window.setInterval(() => {
-    activeScenarioIndex.value = (activeScenarioIndex.value + 1) % panelScenarios.value.length
-  }, 4600)
-}
-
-onMounted(() => {
-  startScenarioTimer()
-})
-
-onBeforeUnmount(() => {
-  clearScenarioTimer()
-})
+const col1Cards = computed(() =>
+  rawCol1.map(c => ({ ...c, price: isChinese.value ? c.priceCny : c.priceUsd })),
+)
+const col2Cards = computed(() =>
+  rawCol2.map(c => ({ ...c, price: isChinese.value ? c.priceCny : c.priceUsd })),
+)
 </script>
 
 <style scoped>
-.terminal-cursor {
-  display: inline-block;
-  width: 0.65ch;
-  height: 1.1em;
-  border-radius: 2px;
-  background: #6ee7cf;
-  animation: terminal-cursor-blink 1s steps(1, end) infinite;
+/* ─── Price Cards ─────────────────────────────────── */
+.price-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
+  padding: 14px 16px;
+  width: 220px;
+  flex-shrink: 0;
 }
 
-.terminal-fade-enter-active,
-.terminal-fade-leave-active {
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
+:global(.dark) .price-card {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
 }
 
-.terminal-fade-enter-from,
-.terminal-fade-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
+.card-model-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-@keyframes terminal-cursor-blink {
-  0%,
-  49% {
-    opacity: 1;
-  }
-
-  50%,
-  100% {
-    opacity: 0;
-  }
+:global(.dark) .card-model-name {
+  color: rgba(255,255,255,0.9);
 }
 
-@keyframes terminal-progress {
-  from {
-    width: 0;
-  }
-
-  to {
-    width: 100%;
-  }
+.card-model-id {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.animate-terminal-progress {
-  animation: terminal-progress 4.6s linear forwards;
+.card-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
 }
 
+.card-price-teal {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0d9488;
+  letter-spacing: -0.02em;
+}
+
+.card-price-strike {
+  font-size: 12px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.card-savings-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.card-per-token {
+  font-size: 10px;
+  color: #d1d5db;
+  margin-top: 4px;
+}
+
+/* ─── Scroll Animations ───────────────────────────── */
+.scroll-up {
+  animation: scroll-up 22s linear infinite;
+}
+
+.scroll-down {
+  animation: scroll-down 22s linear infinite;
+}
+
+@keyframes scroll-up {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes scroll-down {
+  0%   { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+
+/* ─── Ticker ──────────────────────────────────────── */
+.marquee-left {
+  animation: marquee-left 30s linear infinite;
+}
+
+.marquee-right {
+  animation: marquee-right 30s linear infinite;
+}
+
+@keyframes marquee-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* ─── Reduced Motion ──────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .terminal-cursor {
+  .scroll-up,
+  .scroll-down,
+  .marquee-left,
+  .marquee-right {
     animation: none;
-  }
-
-  .animate-terminal-progress {
-    animation: none;
-    width: 100%;
-  }
-
-  .terminal-fade-enter-active,
-  .terminal-fade-leave-active {
-    transition: none;
   }
 }
 </style>
