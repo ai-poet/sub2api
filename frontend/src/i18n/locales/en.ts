@@ -204,7 +204,67 @@ export default {
       stat: 'One gateway · Metered billing · Built for promotion'
     },
     footer: {
-      allRightsReserved: 'All rights reserved.'
+      allRightsReserved: 'All rights reserved.',
+      privacy: 'Privacy Policy'
+    },
+    privacy: {
+      title: 'Privacy Policy',
+      backHome: 'Back to home',
+      lastUpdated: 'Last updated: April 2026',
+      intro: 'This Privacy Policy explains how CheapRouter ("we", "us") collects, uses, and protects your information when you use our platform. We are committed to protecting your privacy, especially your code and prompt content.',
+      pledge: {
+        title: 'Your code and prompts are never stored or used for training',
+        body: 'All code, prompts, and conversation content you send through CheapRouter is forwarded directly to the official upstream API. We do not store, log, or analyze request content, and we never use it for model training or any other purpose.',
+      },
+      sections: {
+        collection: {
+          title: '1. Information We Collect',
+          p1: 'We collect only the minimum information necessary to provide our service:',
+          i1: 'Account information: email address provided at registration',
+          i2: 'Usage records: token counts, request counts, model type (no request content)',
+          i3: 'Payment information: top-up amounts and transaction records (no card numbers or sensitive financial data)',
+          i4: 'Log information: IP address and request timestamps for security and troubleshooting',
+        },
+        use: {
+          title: '2. How We Use Your Information',
+          p1: 'Collected information is used only for the following purposes:',
+          i1: 'Providing and maintaining the API proxy service',
+          i2: 'Calculating token usage and generating billing records',
+          i3: 'Sending service notifications (e.g. low balance alerts)',
+          i4: 'Ensuring account security and preventing abuse',
+        },
+        code: {
+          title: '3. Code & Prompt Protection',
+          p1: 'All request content you send via the API — including code, prompts, and conversation messages — is forwarded transparently to the official Anthropic and OpenAI APIs. CheapRouter does not persist or store request content.',
+          p2: 'We will never use your code or prompts to train, fine-tune, or evaluate any machine learning model, and we will not share this content with third parties.',
+        },
+        apikey: {
+          title: '4. API Key Security',
+          p1: 'API keys you generate on this platform are stored encrypted at rest. Upstream API credentials used to call model providers are managed centrally by the platform and are never exposed to users. Keep your CheapRouter API key safe — if you suspect compromise, reset it immediately in the dashboard.',
+        },
+        third: {
+          title: '5. Third-Party Services',
+          p1: 'We forward API requests to the following third-party providers, each with their own privacy policies:',
+          i1: 'Anthropic (Claude model family)',
+          i2: 'OpenAI (GPT / Codex model family)',
+        },
+        retention: {
+          title: '6. Data Retention',
+          p1: 'Account information is retained until you delete your account. Usage records (token counts and timestamps — no content) are retained for 90 days for billing reconciliation. You may request account deletion and removal of associated data at any time from account settings.',
+        },
+        rights: {
+          title: '7. Your Rights',
+          p1: 'You have the following rights over your personal data:',
+          i1: 'Access: view the data we hold about you',
+          i2: 'Correction: update inaccurate account information',
+          i3: 'Deletion: request account closure and removal of your data',
+        },
+        changes: {
+          title: '8. Policy Changes',
+          p1: 'If we make material changes to this policy, we will notify you via in-app notice or email in advance. Continued use of the service constitutes acceptance of the updated policy.',
+        },
+      },
+      contact: 'If you have any questions about this Privacy Policy, please contact us through the support channel in the platform.',
     }
   },
 

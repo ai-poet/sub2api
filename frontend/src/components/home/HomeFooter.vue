@@ -12,8 +12,9 @@
         </p>
       </div>
 
-      <div v-if="docUrl" class="flex flex-wrap items-center gap-4 md:gap-6">
+      <div class="flex flex-wrap items-center gap-4 md:gap-6">
         <a
+          v-if="docUrl"
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -21,6 +22,12 @@
         >
           {{ t('home.docs') }}
         </a>
+        <RouterLink
+          to="/privacy"
+          class="transition hover:text-[#111111] dark:hover:text-white"
+        >
+          {{ t('home.footer.privacy') }}
+        </RouterLink>
       </div>
     </div>
   </footer>
