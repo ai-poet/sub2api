@@ -131,7 +131,7 @@
       <!-- Row 1: scrolls left -->
       <div class="ticker-row overflow-hidden">
         <div class="ticker-track marquee-left flex gap-8 whitespace-nowrap">
-          <span v-for="_ in 2" :key="_" class="ticker-inner flex gap-8">
+          <span v-for="_ in 4" :key="_" class="ticker-inner flex gap-8">
             <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">claude-haiku-4-5-20251001</span>
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
             <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">Claude Sonnet 4.6</span>
@@ -148,7 +148,7 @@
       <!-- Row 2: scrolls right -->
       <div class="ticker-row mt-3 overflow-hidden">
         <div class="ticker-track marquee-right flex gap-8 whitespace-nowrap">
-          <span v-for="_ in 2" :key="_" class="ticker-inner flex gap-8">
+          <span v-for="_ in 4" :key="_" class="ticker-inner flex gap-8">
             <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">claude-sonnet-4-5-20250929</span>
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
             <span class="ticker-item font-mono text-sm text-gray-400 dark:text-white/30">Claude Opus 4.7</span>
@@ -314,11 +314,11 @@ const col2Cards = computed(() =>
 
 @keyframes marquee-left {
   0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-25%); }
 }
 
 @keyframes marquee-right {
-  0%   { transform: translateX(-50%); }
+  0%   { transform: translateX(-25%); }
   100% { transform: translateX(0); }
 }
 
