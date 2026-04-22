@@ -112,6 +112,7 @@ export interface PublicSettings {
   custom_endpoints: CustomEndpoint[]
   group_status_enabled: boolean
   linuxdo_oauth_enabled: boolean
+  github_oauth_enabled: boolean
   referral_enabled: boolean
   backend_mode_enabled: boolean
   version: string
