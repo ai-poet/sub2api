@@ -65,6 +65,7 @@ type Config struct {
 	JWT                     JWTConfig                     `mapstructure:"jwt"`
 	Totp                    TotpConfig                    `mapstructure:"totp"`
 	LinuxDo                 LinuxDoConnectConfig          `mapstructure:"linuxdo_connect"`
+	GitHub                  GitHubOAuthConfig             `mapstructure:"github_oauth"`
 	Default                 DefaultConfig                 `mapstructure:"default"`
 	RateLimit               RateLimitConfig               `mapstructure:"rate_limit"`
 	Pricing                 PricingConfig                 `mapstructure:"pricing"`
@@ -162,6 +163,14 @@ type IdempotencyConfig struct {
 	CleanupIntervalSeconds int `mapstructure:"cleanup_interval_seconds"`
 	// CleanupBatchSize 每次清理的最大记录数。
 	CleanupBatchSize int `mapstructure:"cleanup_batch_size"`
+}
+
+type GitHubOAuthConfig struct {
+	Enabled             bool   `mapstructure:"enabled"`
+	ClientID            string `mapstructure:"client_id"`
+	ClientSecret        string `mapstructure:"client_secret"`
+	RedirectURL         string `mapstructure:"redirect_url"`          // 后端回调地址
+	FrontendRedirectURL string `mapstructure:"frontend_redirect_url"` // 前端接收 token 的路由（默认：/auth/github/callback）
 }
 
 type LinuxDoConnectConfig struct {
@@ -968,6 +977,10 @@ func load(allowMissingJWTSecret bool) (*Config, error) {
 	cfg.LinuxDo.UserInfoEmailPath = strings.TrimSpace(cfg.LinuxDo.UserInfoEmailPath)
 	cfg.LinuxDo.UserInfoIDPath = strings.TrimSpace(cfg.LinuxDo.UserInfoIDPath)
 	cfg.LinuxDo.UserInfoUsernamePath = strings.TrimSpace(cfg.LinuxDo.UserInfoUsernamePath)
+	cfg.GitHub.ClientID = strings.TrimSpace(cfg.GitHub.ClientID)
+	cfg.GitHub.ClientSecret = strings.TrimSpace(cfg.GitHub.ClientSecret)
+	cfg.GitHub.RedirectURL = strings.TrimSpace(cfg.GitHub.RedirectURL)
+	cfg.GitHub.FrontendRedirectURL = strings.TrimSpace(cfg.GitHub.FrontendRedirectURL)
 	cfg.Dashboard.KeyPrefix = strings.TrimSpace(cfg.Dashboard.KeyPrefix)
 	cfg.CORS.AllowedOrigins = normalizeStringSlice(cfg.CORS.AllowedOrigins)
 	cfg.Security.ResponseHeaders.AdditionalAllowed = normalizeStringSlice(cfg.Security.ResponseHeaders.AdditionalAllowed)
@@ -1137,6 +1150,13 @@ func setDefaults() {
 	viper.SetDefault("linuxdo_connect.userinfo_email_path", "")
 	viper.SetDefault("linuxdo_connect.userinfo_id_path", "")
 	viper.SetDefault("linuxdo_connect.userinfo_username_path", "")
+
+	// GitHub OAuth 登录
+	viper.SetDefault("github_oauth.enabled", false)
+	viper.SetDefault("github_oauth.client_id", "")
+	viper.SetDefault("github_oauth.client_secret", "")
+	viper.SetDefault("github_oauth.redirect_url", "")
+	viper.SetDefault("github_oauth.frontend_redirect_url", "/auth/github/callback")
 
 	// Database
 	viper.SetDefault("database.host", "localhost")
@@ -1571,6 +1591,27 @@ func (c *Config) Validate() error {
 		warnIfInsecureURL("linuxdo_connect.userinfo_url", c.LinuxDo.UserInfoURL)
 		warnIfInsecureURL("linuxdo_connect.redirect_url", c.LinuxDo.RedirectURL)
 		warnIfInsecureURL("linuxdo_connect.frontend_redirect_url", c.LinuxDo.FrontendRedirectURL)
+	}
+	if c.GitHub.Enabled {
+		if strings.TrimSpace(c.GitHub.ClientID) == "" {
+			return fmt.Errorf("github_oauth.client_id is required when github_oauth.enabled=true")
+		}
+		if strings.TrimSpace(c.GitHub.ClientSecret) == "" {
+			return fmt.Errorf("github_oauth.client_secret is required when github_oauth.enabled=true")
+		}
+		if strings.TrimSpace(c.GitHub.RedirectURL) == "" {
+			return fmt.Errorf("github_oauth.redirect_url is required when github_oauth.enabled=true")
+		}
+		if strings.TrimSpace(c.GitHub.FrontendRedirectURL) == "" {
+			return fmt.Errorf("github_oauth.frontend_redirect_url is required when github_oauth.enabled=true")
+		}
+		if err := ValidateAbsoluteHTTPURL(c.GitHub.RedirectURL); err != nil {
+			return fmt.Errorf("github_oauth.redirect_url invalid: %w", err)
+		}
+		if err := ValidateFrontendRedirectURL(c.GitHub.FrontendRedirectURL); err != nil {
+			return fmt.Errorf("github_oauth.frontend_redirect_url invalid: %w", err)
+		}
+		warnIfInsecureURL("github_oauth.redirect_url", c.GitHub.RedirectURL)
 	}
 	if c.Billing.CircuitBreaker.Enabled {
 		if c.Billing.CircuitBreaker.FailureThreshold <= 0 {

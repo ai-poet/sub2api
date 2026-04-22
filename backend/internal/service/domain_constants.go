@@ -72,6 +72,9 @@ const (
 // LinuxDoConnectSyntheticEmailDomain 是 LinuxDo Connect 用户的合成邮箱后缀（RFC 保留域名）。
 const LinuxDoConnectSyntheticEmailDomain = "@linuxdo-connect.invalid"
 
+// GitHubOAuthSyntheticEmailDomain 是 GitHub OAuth 用户的合成邮箱后缀（RFC 保留域名）。
+const GitHubOAuthSyntheticEmailDomain = "@github-oauth.invalid"
+
 // Setting keys
 const (
 	// 注册设置
@@ -105,6 +108,12 @@ const (
 	SettingKeyLinuxDoConnectClientID     = "linuxdo_connect_client_id"
 	SettingKeyLinuxDoConnectClientSecret = "linuxdo_connect_client_secret"
 	SettingKeyLinuxDoConnectRedirectURL  = "linuxdo_connect_redirect_url"
+
+	// GitHub OAuth 登录设置
+	SettingKeyGitHubOAuthEnabled      = "github_oauth_enabled"
+	SettingKeyGitHubOAuthClientID     = "github_oauth_client_id"
+	SettingKeyGitHubOAuthClientSecret = "github_oauth_client_secret"
+	SettingKeyGitHubOAuthRedirectURL  = "github_oauth_redirect_url"
 
 	// OEM设置
 	SettingKeySiteName                     = "site_name"                       // 网站名称

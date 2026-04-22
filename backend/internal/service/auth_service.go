@@ -851,7 +851,8 @@ func randomHexString(byteLength int) (string, error) {
 
 func isReservedEmail(email string) bool {
 	normalized := strings.ToLower(strings.TrimSpace(email))
-	return strings.HasSuffix(normalized, LinuxDoConnectSyntheticEmailDomain)
+	return strings.HasSuffix(normalized, LinuxDoConnectSyntheticEmailDomain) ||
+		strings.HasSuffix(normalized, GitHubOAuthSyntheticEmailDomain)
 }
 
 // GenerateToken 生成JWT access token

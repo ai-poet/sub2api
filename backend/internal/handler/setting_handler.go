@@ -56,6 +56,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		CustomEndpoints:                  dto.ParseCustomEndpoints(settings.CustomEndpoints),
 		GroupStatusEnabled:               settings.GroupStatusEnabled,
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
+		GitHubOAuthEnabled:               settings.GitHubOAuthEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,
 		BackendModeEnabled:               settings.BackendModeEnabled,
 		Version:                          h.version,
