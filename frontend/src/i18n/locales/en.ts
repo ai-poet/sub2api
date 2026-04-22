@@ -93,24 +93,24 @@ export default {
       },
     },
     value: {
-      overline: 'Service Structure',
-      title: 'Turn premium-model access into a coding-agent service you can actually deliver',
-      description: 'Bring cost, stability, and billing control into one gateway layer so long-running coding agents stay usable and commercially viable.',
+      overline: 'Why CheapRouter',
+      title: 'Same tools. One-tenth the cost.',
+      description: 'Drop into Claude Code, Codex CLI, or any OpenAI-compatible client unchanged. No subscription, no minimum spend — Claude, GPT, and Codex models billed per token, 90%+ cheaper.',
       items: {
         economics: {
-          eyebrow: '01 / Pricing',
-          title: 'Cheaper access to premium models',
-          description: 'Bring Claude / GPT / Codex class capability into common coding-agent workflows without buying each official subscription separately.'
+          eyebrow: '01 / Cost',
+          title: '10× cheaper, no monthly fee',
+          description: 'Claude Sonnet at $0.075/M tokens vs the official $3.00. Opus, GPT-5.4, Codex all similarly discounted — up to 97% off, zero subscription fee.'
         },
         reliability: {
           eyebrow: '02 / Reliability',
-          title: 'Stability for long-running agents',
-          description: 'Multi-account pools, sticky sessions, and automatic failover reduce the impact of single-account limits and upstream volatility.'
+          title: 'Built for always-on coding agents',
+          description: 'Account pool with automatic failover. When one slot hits rate limits, traffic shifts instantly — your agent keeps running without interruption.'
         },
         control: {
-          eyebrow: '03 / Control',
-          title: 'Unified billing, quotas, and detail',
-          description: 'One API key in, one set of quotas, bills, and usage detail out. Easier for personal onboarding and easier to promote to teams.'
+          eyebrow: '03 / Transparency',
+          title: 'Every token, fully accounted for',
+          description: 'Real-time billing down to each request. One API key covers all models — top up anytime, no hidden fees, no minimum spend.'
         }
       }
     },

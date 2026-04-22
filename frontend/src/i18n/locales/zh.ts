@@ -93,24 +93,24 @@ export default {
       },
     },
     value: {
-      overline: '服务结构',
-      title: '把高级模型能力做成真正可交付的编码代理服务',
-      description: '把成本、稳定性和计费控制交给同一层服务，让高级模型更适合长期承接编码代理请求。',
+      overline: '为什么选 CheapRouter',
+      title: '不换工具，只换账单',
+      description: 'Claude Code、Codex CLI 原路接入，不改工作流，不绑套餐。Claude / GPT / Codex 全系模型，token 用多少付多少，月账单直降 90%+。',
       items: {
         economics: {
-          eyebrow: '01 / 价格',
-          title: '廉价接入高级模型',
-          description: '把 Claude / GPT / Codex 级能力放进常用 coding agent 工作流，不必再为每个官方订阅单独买单。'
+          eyebrow: '01 / 成本',
+          title: '官方 1 折，没有月费',
+          description: 'Claude Sonnet ¥0.525 / 百万 token（官方 $3.00），Opus、GPT-5.4 同比例折扣，最高节省 97%，零订阅费，零起步费。'
         },
         reliability: {
           eyebrow: '02 / 稳定',
-          title: '为持续运行准备的稳定性',
-          description: '多账号池、粘性会话与自动切换，减少单账号限流或波动对编码链路的影响。'
+          title: '专为 agent 长跑设计',
+          description: '多账号池自动调度，单账号限流自动切换，不中断 agent 连续请求，编码链路始终在线。'
         },
         control: {
-          eyebrow: '03 / 可控',
-          title: '统一计费、额度与明细',
-          description: '一个 API Key 进来，一套额度、账单和使用明细出去，更适合个人转化，也更适合团队推广。'
+          eyebrow: '03 / 透明',
+          title: '每笔 token 账单都能查',
+          description: '实时明细精确到每次请求，一个 key 接入所有模型，随充随用，无隐藏费用，无最低消费。'
         }
       }
     },
