@@ -91,6 +91,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/auth/paseo',
+    name: 'PaseoAuthBridge',
+    component: () => import('@/views/auth/PaseoBridgeView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Paseo Login'
+    }
+  },
+  {
     path: '/forgot-password',
     name: 'ForgotPassword',
     component: () => import('@/views/auth/ForgotPasswordView.vue'),
