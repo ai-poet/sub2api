@@ -5,6 +5,8 @@ import {
   OAUTH_RETURN_PATH_STORAGE_KEY,
   readStoredOAuthReturnPath,
   rememberOAuthReturnPath,
+  rememberPaseoBridgeTargetIfApplicable,
+  getPendingPaseoBridgeRoute,
 } from '../auth-redirect'
 
 describe('auth-redirect', () => {
@@ -31,5 +33,15 @@ describe('auth-redirect', () => {
   it('readStoredOAuthReturnPath drops invalid JSON', () => {
     sessionStorage.setItem(OAUTH_RETURN_PATH_STORAGE_KEY, 'not-json')
     expect(readStoredOAuthReturnPath()).toBeUndefined()
+  })
+
+  it('rememberPaseoBridgeTargetIfApplicable only stores /auth/paseo', () => {
+    rememberPaseoBridgeTargetIfApplicable('/dashboard')
+    expect(readStoredOAuthReturnPath()).toBeUndefined()
+    rememberPaseoBridgeTargetIfApplicable('/auth/paseo?endpoint=https%3A%2F%2Fx')
+    expect(getPendingPaseoBridgeRoute()).toEqual({
+      path: '/auth/paseo',
+      query: { endpoint: 'https://x' },
+    })
   })
 })

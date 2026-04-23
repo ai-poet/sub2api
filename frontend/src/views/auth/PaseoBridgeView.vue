@@ -41,7 +41,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { AuthLayout } from '@/components/layout'
 import { keysAPI } from '@/api'
 import { getAuthToken, getRefreshToken, getTokenExpiresAt } from '@/api/auth'
-import { rememberOAuthReturnPath } from '@/utils/auth-redirect'
+import { clearStoredOAuthReturnPath, rememberOAuthReturnPath } from '@/utils/auth-redirect'
 import { buildPaseoCallbackUrl, normalizePaseoEndpoint } from './paseo-bridge'
 
 const route = useRoute()
@@ -106,6 +106,7 @@ onMounted(async () => {
     })
 
     statusMessage.value = 'Opening Paseo...'
+    clearStoredOAuthReturnPath()
     window.location.href = callbackUrl.value
   } catch (error: unknown) {
     errorMessage.value =

@@ -76,6 +76,7 @@ import {
   clearStoredOAuthReturnPath,
   normalizeOAuthRedirectParam,
   parseAppInternalRedirect,
+  rememberPaseoBridgeTargetIfApplicable,
 } from '@/utils/auth-redirect'
 import { sanitizeOAuthFrontendRedirect } from '@/utils/oauth-redirect-sanitize'
 
@@ -120,8 +121,12 @@ async function handleSubmitInvitation() {
     }
     await authStore.setToken(tokenData.access_token)
     appStore.showSuccess(t('auth.loginSuccess'))
-    clearStoredOAuthReturnPath()
-    await router.replace(parseAppInternalRedirect(sanitizeOAuthFrontendRedirect(redirectTo.value)))
+    const target = sanitizeOAuthFrontendRedirect(redirectTo.value)
+    rememberPaseoBridgeTargetIfApplicable(target)
+    if (!target.startsWith('/auth/paseo')) {
+      clearStoredOAuthReturnPath()
+    }
+    await router.replace(parseAppInternalRedirect(target))
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { message?: string } } }
     invitationError.value =
@@ -140,6 +145,7 @@ onMounted(async () => {
   const redirect = sanitizeOAuthFrontendRedirect(
     params.get('redirect') || normalizeOAuthRedirectParam(route.query.redirect) || '/dashboard',
   )
+  rememberPaseoBridgeTargetIfApplicable(redirect)
   const error = params.get('error')
   const errorDesc = params.get('error_description') || params.get('error_message') || ''
 
@@ -183,7 +189,9 @@ onMounted(async () => {
 
     await authStore.setToken(token)
     appStore.showSuccess(t('auth.loginSuccess'))
-    clearStoredOAuthReturnPath()
+    if (!redirect.startsWith('/auth/paseo')) {
+      clearStoredOAuthReturnPath()
+    }
     await router.replace(parseAppInternalRedirect(redirect))
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { detail?: string } } }

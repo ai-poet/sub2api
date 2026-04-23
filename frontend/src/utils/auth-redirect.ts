@@ -55,6 +55,44 @@ export function clearStoredOAuthReturnPath(): void {
   }
 }
 
+/** Persist Paseo handoff target so we can recover if OAuth or other flows drop the query redirect. */
+export function rememberPaseoBridgeTargetIfApplicable(fullPath: string | null | undefined): void {
+  if (fullPath == null || typeof fullPath !== 'string') {
+    return
+  }
+  const trimmed = fullPath.trim()
+  if (!trimmed.startsWith('/')) {
+    return
+  }
+  let pathname: string
+  try {
+    pathname = new URL(trimmed, 'http://localhost').pathname
+  } catch {
+    return
+  }
+  if (pathname === '/auth/paseo') {
+    rememberOAuthReturnPath(trimmed)
+  }
+}
+
+/**
+ * If sessionStorage holds a pending `/auth/paseo?...` target, return it for router navigation.
+ */
+export function getPendingPaseoBridgeRoute(): {
+  path: string
+  query?: Record<string, string>
+} | null {
+  const raw = readStoredOAuthReturnPath()
+  if (!raw) {
+    return null
+  }
+  const loc = parseAppInternalRedirect(raw)
+  if (loc.path !== '/auth/paseo') {
+    return null
+  }
+  return loc
+}
+
 /**
  * Target path for OAuth /start?redirect= — query param wins, then recent Paseo-bridge session backup.
  */

@@ -190,7 +190,11 @@ import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { getPublicSettings, isTotp2FARequired } from '@/api/auth'
-import { normalizeOAuthRedirectParam, parseAppInternalRedirect } from '@/utils/auth-redirect'
+import {
+  normalizeOAuthRedirectParam,
+  parseAppInternalRedirect,
+  rememberPaseoBridgeTargetIfApplicable,
+} from '@/utils/auth-redirect'
 import type { TotpLoginResponse } from '@/types'
 
 const { t } = useI18n()
@@ -258,6 +262,9 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }
+
+  const loginRedirect = normalizeOAuthRedirectParam(router.currentRoute.value.query.redirect)
+  rememberPaseoBridgeTargetIfApplicable(loginRedirect ?? '')
 })
 
 // ==================== Turnstile Handlers ====================
@@ -351,6 +358,7 @@ async function handleLogin(): Promise<void> {
     // Redirect to dashboard or intended route
     const redirectTo =
       normalizeOAuthRedirectParam(router.currentRoute.value.query.redirect) ?? '/dashboard'
+    rememberPaseoBridgeTargetIfApplicable(redirectTo)
     await router.push(parseAppInternalRedirect(redirectTo))
   } catch (error: unknown) {
     // Reset Turnstile on error
@@ -394,6 +402,7 @@ async function handle2FAVerify(code: string): Promise<void> {
     // Redirect to dashboard or intended route
     const redirectTo =
       normalizeOAuthRedirectParam(router.currentRoute.value.query.redirect) ?? '/dashboard'
+    rememberPaseoBridgeTargetIfApplicable(redirectTo)
     await router.push(parseAppInternalRedirect(redirectTo))
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { message?: string } } }
