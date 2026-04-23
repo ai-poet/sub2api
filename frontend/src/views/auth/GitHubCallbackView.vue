@@ -72,6 +72,7 @@ import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { completeGitHubOAuthRegistration } from '@/api/auth'
+import { sanitizeOAuthFrontendRedirect } from '@/utils/oauth-redirect-sanitize'
 
 const route = useRoute()
 const router = useRouter()
@@ -96,15 +97,6 @@ function parseFragmentParams(): URLSearchParams {
   return new URLSearchParams(hash)
 }
 
-function sanitizeRedirectPath(path: string | null | undefined): string {
-  if (!path) return '/dashboard'
-  if (!path.startsWith('/')) return '/dashboard'
-  if (path.startsWith('//')) return '/dashboard'
-  if (path.includes('://')) return '/dashboard'
-  if (path.includes('\n') || path.includes('\r')) return '/dashboard'
-  return path
-}
-
 async function handleSubmitInvitation() {
   invitationError.value = ''
   if (!invitationCode.value.trim()) return
@@ -123,7 +115,7 @@ async function handleSubmitInvitation() {
     }
     await authStore.setToken(tokenData.access_token)
     appStore.showSuccess(t('auth.loginSuccess'))
-    await router.replace(redirectTo.value)
+    await router.replace(sanitizeOAuthFrontendRedirect(redirectTo.value))
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { message?: string } } }
     invitationError.value =
@@ -139,8 +131,8 @@ onMounted(async () => {
   const token = params.get('access_token') || ''
   const refreshToken = params.get('refresh_token') || ''
   const expiresInStr = params.get('expires_in') || ''
-  const redirect = sanitizeRedirectPath(
-    params.get('redirect') || (route.query.redirect as string | undefined) || '/dashboard'
+  const redirect = sanitizeOAuthFrontendRedirect(
+    params.get('redirect') || (route.query.redirect as string | undefined) || '/dashboard',
   )
   const error = params.get('error')
   const errorDesc = params.get('error_description') || params.get('error_message') || ''
@@ -148,7 +140,7 @@ onMounted(async () => {
   if (error) {
     if (error === 'invitation_required') {
       pendingOAuthToken.value = params.get('pending_oauth_token') || ''
-      redirectTo.value = sanitizeRedirectPath(params.get('redirect'))
+      redirectTo.value = sanitizeOAuthFrontendRedirect(params.get('redirect'))
       if (!pendingOAuthToken.value) {
         errorMessage.value = t('auth.github.invalidPendingToken')
         appStore.showError(errorMessage.value)
