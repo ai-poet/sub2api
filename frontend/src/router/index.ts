@@ -510,7 +510,16 @@ let authInitialized = false
 const navigationLoading = useNavigationLoadingState()
 // 延迟初始化预加载，传入 router 实例
 let routePrefetch: ReturnType<typeof useRoutePrefetch> | null = null
-const BACKEND_MODE_ALLOWED_PATHS = ['/login', '/key-usage', '/setup']
+/** Public paths for unauthenticated users when backend-only mode is enabled. */
+const BACKEND_MODE_ALLOWED_PATHS = [
+  '/login',
+  '/key-usage',
+  '/setup',
+  '/auth/callback',
+  '/auth/github/callback',
+  '/auth/linuxdo/callback',
+  '/auth/paseo',
+]
 
 router.beforeEach((to, _from, next) => {
   // 开始导航加载状态
@@ -565,7 +574,7 @@ router.beforeEach((to, _from, next) => {
     if (appStore.backendModeEnabled && !authStore.isAuthenticated) {
       const isAllowed = BACKEND_MODE_ALLOWED_PATHS.some((p) => to.path === p || to.path.startsWith(p))
       if (!isAllowed) {
-        next('/login')
+        next({ path: '/login', query: { redirect: to.fullPath } })
         return
       }
     }

@@ -41,6 +41,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { AuthLayout } from '@/components/layout'
 import { keysAPI } from '@/api'
 import { getAuthToken, getRefreshToken, getTokenExpiresAt } from '@/api/auth'
+import { rememberOAuthReturnPath } from '@/utils/auth-redirect'
 import { buildPaseoCallbackUrl, normalizePaseoEndpoint } from './paseo-bridge'
 
 const route = useRoute()
@@ -71,6 +72,7 @@ onMounted(async () => {
   try {
     const accessToken = getAuthToken()
     if (!accessToken) {
+      rememberOAuthReturnPath(route.fullPath)
       await router.replace({
         path: '/login',
         query: { redirect: route.fullPath },

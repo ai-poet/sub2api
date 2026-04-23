@@ -190,6 +190,7 @@ import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { getPublicSettings, isTotp2FARequired } from '@/api/auth'
+import { normalizeOAuthRedirectParam, parseAppInternalRedirect } from '@/utils/auth-redirect'
 import type { TotpLoginResponse } from '@/types'
 
 const { t } = useI18n()
@@ -348,8 +349,9 @@ async function handleLogin(): Promise<void> {
     appStore.showSuccess(t('auth.loginSuccess'))
 
     // Redirect to dashboard or intended route
-    const redirectTo = (router.currentRoute.value.query.redirect as string) || '/dashboard'
-    await router.push(redirectTo)
+    const redirectTo =
+      normalizeOAuthRedirectParam(router.currentRoute.value.query.redirect) ?? '/dashboard'
+    await router.push(parseAppInternalRedirect(redirectTo))
   } catch (error: unknown) {
     // Reset Turnstile on error
     if (turnstileRef.value) {
@@ -390,8 +392,9 @@ async function handle2FAVerify(code: string): Promise<void> {
     appStore.showSuccess(t('auth.loginSuccess'))
 
     // Redirect to dashboard or intended route
-    const redirectTo = (router.currentRoute.value.query.redirect as string) || '/dashboard'
-    await router.push(redirectTo)
+    const redirectTo =
+      normalizeOAuthRedirectParam(router.currentRoute.value.query.redirect) ?? '/dashboard'
+    await router.push(parseAppInternalRedirect(redirectTo))
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { message?: string } } }
     const message = err.response?.data?.message || err.message || t('profile.totp.loginFailed')

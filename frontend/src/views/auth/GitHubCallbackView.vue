@@ -72,6 +72,11 @@ import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { completeGitHubOAuthRegistration } from '@/api/auth'
+import {
+  clearStoredOAuthReturnPath,
+  normalizeOAuthRedirectParam,
+  parseAppInternalRedirect,
+} from '@/utils/auth-redirect'
 import { sanitizeOAuthFrontendRedirect } from '@/utils/oauth-redirect-sanitize'
 
 const route = useRoute()
@@ -115,7 +120,8 @@ async function handleSubmitInvitation() {
     }
     await authStore.setToken(tokenData.access_token)
     appStore.showSuccess(t('auth.loginSuccess'))
-    await router.replace(sanitizeOAuthFrontendRedirect(redirectTo.value))
+    clearStoredOAuthReturnPath()
+    await router.replace(parseAppInternalRedirect(sanitizeOAuthFrontendRedirect(redirectTo.value)))
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { message?: string } } }
     invitationError.value =
@@ -132,7 +138,7 @@ onMounted(async () => {
   const refreshToken = params.get('refresh_token') || ''
   const expiresInStr = params.get('expires_in') || ''
   const redirect = sanitizeOAuthFrontendRedirect(
-    params.get('redirect') || (route.query.redirect as string | undefined) || '/dashboard',
+    params.get('redirect') || normalizeOAuthRedirectParam(route.query.redirect) || '/dashboard',
   )
   const error = params.get('error')
   const errorDesc = params.get('error_description') || params.get('error_message') || ''
@@ -177,7 +183,8 @@ onMounted(async () => {
 
     await authStore.setToken(token)
     appStore.showSuccess(t('auth.loginSuccess'))
-    await router.replace(redirect)
+    clearStoredOAuthReturnPath()
+    await router.replace(parseAppInternalRedirect(redirect))
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { detail?: string } } }
     errorMessage.value = err.response?.data?.detail || err.message || t('auth.loginFailed')
