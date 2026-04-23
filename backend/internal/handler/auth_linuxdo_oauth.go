@@ -611,7 +611,13 @@ func sanitizeFrontendRedirectPath(path string) string {
 	if strings.HasPrefix(path, "//") {
 		return ""
 	}
-	if strings.Contains(path, "://") {
+	// 只检查路径部分（? 之前）是否包含 ://，query 参数中的 https:// 是合法的
+	// 例如 /auth/paseo?endpoint=https://example.com 应该被允许
+	pathOnly := path
+	if idx := strings.IndexByte(path, '?'); idx >= 0 {
+		pathOnly = path[:idx]
+	}
+	if strings.Contains(pathOnly, "://") {
 		return ""
 	}
 	if strings.ContainsAny(path, "\r\n") {
