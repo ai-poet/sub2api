@@ -469,7 +469,7 @@ gateway:
 
 `config.yaml` 还支持以下安全相关配置：
 
-- `cors.allowed_origins` 配置 CORS 白名单
+- `cors.allowed_origins` 配置 CORS 白名单（若使用 Paseo 桌面端内置托管控制台，需包含开发态 `http://localhost:8081`、`http://127.0.0.1:8081` 与正式包 `paseo://app`；见 `deploy/config.example.yaml`）
 - `security.url_allowlist` 配置上游/价格数据/CRS 主机白名单
 - `security.url_allowlist.enabled` 可关闭 URL 校验（慎用）
 - `security.url_allowlist.allow_insecure_http` 关闭校验时允许 HTTP URL

@@ -444,6 +444,10 @@ func writeConfigFile(cfg *SetupConfig) error {
 			Secret     string `yaml:"secret"`
 			ExpireHour int    `yaml:"expire_hour"`
 		} `yaml:"jwt"`
+		CORS struct {
+			AllowedOrigins   []string `yaml:"allowed_origins"`
+			AllowCredentials bool     `yaml:"allow_credentials"`
+		} `yaml:"cors"`
 		Default struct {
 			UserConcurrency int     `yaml:"user_concurrency"`
 			UserBalance     float64 `yaml:"user_balance"`
@@ -465,6 +469,13 @@ func writeConfigFile(cfg *SetupConfig) error {
 		}{
 			Secret:     cfg.JWT.Secret,
 			ExpireHour: cfg.JWT.ExpireHour,
+		},
+		CORS: struct {
+			AllowedOrigins   []string `yaml:"allowed_origins"`
+			AllowCredentials bool     `yaml:"allow_credentials"`
+		}{
+			AllowedOrigins:   append([]string(nil), config.DefaultCORSAllowedOrigins...),
+			AllowCredentials: true,
 		},
 		Default: struct {
 			UserConcurrency int     `yaml:"user_concurrency"`

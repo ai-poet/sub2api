@@ -249,6 +249,14 @@ type CORSConfig struct {
 	AllowCredentials bool     `mapstructure:"allow_credentials"`
 }
 
+// DefaultCORSAllowedOrigins is applied when cors.allowed_origins is omitted from config.yaml
+// (Paseo Desktop managed UI: Expo dev and packaged app Origins).
+var DefaultCORSAllowedOrigins = []string{
+	"http://localhost:8081",
+	"http://127.0.0.1:8081",
+	"paseo://app",
+}
+
 type SecurityConfig struct {
 	URLAllowlist    URLAllowlistConfig   `mapstructure:"url_allowlist"`
 	ResponseHeaders ResponseHeaderConfig `mapstructure:"response_headers"`
@@ -1094,8 +1102,8 @@ func setDefaults() {
 	viper.SetDefault("log.sampling.initial", 100)
 	viper.SetDefault("log.sampling.thereafter", 100)
 
-	// CORS
-	viper.SetDefault("cors.allowed_origins", []string{})
+	// CORS (explicit cors.allowed_origins: [] in yaml still overrides to empty)
+	viper.SetDefault("cors.allowed_origins", DefaultCORSAllowedOrigins)
 	viper.SetDefault("cors.allow_credentials", true)
 
 	// Security

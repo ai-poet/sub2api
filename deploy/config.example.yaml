@@ -69,11 +69,23 @@ run_mode: "standard"
 # =============================================================================
 # CORS Configuration
 # 跨域资源共享 (CORS) 配置
+# Default allowlist when this block is omitted matches internal/config.DefaultCORSAllowedOrigins.
 # =============================================================================
 cors:
-  # Allowed origins list. Leave empty to disable cross-origin requests.
-  # 允许的来源列表。留空则禁用跨域请求。
-  allowed_origins: []
+  # Allowed origins (exact match on the browser/Electron `Origin` header).
+  # 允许的来源（与浏览器或 Electron 发送的 `Origin` 请求头完全一致）。
+  #
+  # Paseo Desktop 内置托管控制台：渲染进程用 fetch 调用本 API，须把客户端 origin 列入白名单，否则预检失败（如 dev 下 Origin 为 http://localhost:8081）。
+  # - 开发：Expo / Metro 默认端口 8081；若使用 EXPO_DEV_URL，请把对应 origin 一并加入。
+  # - 正式安装包：主窗口加载 `paseo://app/`，Origin 一般为 `paseo://app`。
+  #
+  # 其他 Web 控制台、自建前端域名请按需追加（例如 https://your-admin.example.com）。
+  # Leave empty to reject cross-origin browser requests (API key / server-to-server 不受影响).
+  # 留空则拒绝浏览器跨域请求（API Key / 服务端调用不受影响）。
+  allowed_origins:
+    - "http://localhost:8081"
+    - "http://127.0.0.1:8081"
+    - "paseo://app"
   # Allow credentials (cookies/authorization headers). Cannot be used with "*".
   # 允许携带凭证（cookies/授权头）。不能与 "*" 通配符同时使用。
   allow_credentials: true
