@@ -73,7 +73,7 @@ import Icon from '@/components/icons/Icon.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { completeLinuxDoOAuthRegistration } from '@/api/auth'
 import {
-  clearStoredOAuthReturnPath,
+  clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect,
   normalizeOAuthRedirectParam,
   parseAppInternalRedirect,
   rememberPaseoBridgeTargetIfApplicable,
@@ -124,9 +124,7 @@ async function handleSubmitInvitation() {
     appStore.showSuccess(t('auth.loginSuccess'))
     const target = sanitizeOAuthFrontendRedirect(redirectTo.value)
     rememberPaseoBridgeTargetIfApplicable(target)
-    if (!target.startsWith('/auth/paseo')) {
-      clearStoredOAuthReturnPath()
-    }
+    clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect(target)
     await router.replace(parseAppInternalRedirect(target))
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { message?: string } } }
@@ -191,9 +189,7 @@ onMounted(async () => {
 
     await authStore.setToken(token)
     appStore.showSuccess(t('auth.loginSuccess'))
-    if (!redirect.startsWith('/auth/paseo')) {
-      clearStoredOAuthReturnPath()
-    }
+    clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect(redirect)
     await router.replace(parseAppInternalRedirect(redirect))
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { detail?: string } } }

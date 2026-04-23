@@ -7,6 +7,7 @@ import {
   rememberOAuthReturnPath,
   rememberPaseoBridgeTargetIfApplicable,
   getPendingPaseoBridgeRoute,
+  clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect,
 } from '../auth-redirect'
 
 describe('auth-redirect', () => {
@@ -43,5 +44,17 @@ describe('auth-redirect', () => {
       path: '/auth/paseo',
       query: { endpoint: 'https://x' },
     })
+  })
+
+  it('clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect keeps Paseo when OAuth says /dashboard', () => {
+    rememberPaseoBridgeTargetIfApplicable('/auth/paseo?endpoint=x')
+    clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect('/dashboard')
+    expect(readStoredOAuthReturnPath()).toBe('/auth/paseo?endpoint=x')
+  })
+
+  it('clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect clears on concrete other path', () => {
+    rememberPaseoBridgeTargetIfApplicable('/auth/paseo?endpoint=x')
+    clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect('/keys')
+    expect(readStoredOAuthReturnPath()).toBeUndefined()
   })
 })

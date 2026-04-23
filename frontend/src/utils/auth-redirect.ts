@@ -55,6 +55,22 @@ export function clearStoredOAuthReturnPath(): void {
   }
 }
 
+/**
+ * OAuth 回调里的 redirect 经常是服务端默认的 `/dashboard`，但用户可能先在登录页写入了
+ * `/auth/paseo`（sessionStorage）。此时不能 clear，否则路由守卫无法把用户拉回 Paseo 桥。
+ * 仅在回调明确指向其它具体路径（如 /keys）时再清掉 pending。
+ */
+export function clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect(redirectFromCallback: string): void {
+  const r = redirectFromCallback.trim()
+  if (r.startsWith('/auth/paseo')) {
+    return
+  }
+  if (r === '/dashboard' || r === '/admin/dashboard') {
+    return
+  }
+  clearStoredOAuthReturnPath()
+}
+
 /** Persist Paseo handoff target so we can recover if OAuth or other flows drop the query redirect. */
 export function rememberPaseoBridgeTargetIfApplicable(fullPath: string | null | undefined): void {
   if (fullPath == null || typeof fullPath !== 'string') {
