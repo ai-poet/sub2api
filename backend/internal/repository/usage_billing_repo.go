@@ -287,7 +287,14 @@ func incrementUsageBillingAccountQuota(ctx context.Context, tx *sql.Tx, accountI
 		return err
 	}
 
-	var state service.AccountQuotaState
+	var state struct {
+		TotalUsed   float64
+		TotalLimit  float64
+		DailyUsed   float64
+		DailyLimit  float64
+		WeeklyUsed  float64
+		WeeklyLimit float64
+	}
 	if rows.Next() {
 		if err := rows.Scan(
 			&state.TotalUsed, &state.TotalLimit,

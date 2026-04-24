@@ -3947,11 +3947,13 @@ func extractOpenAIUsageFromJSONBytes(body []byte) (OpenAIUsage, bool) {
 		"usage.input_tokens",
 		"usage.output_tokens",
 		"usage.input_tokens_details.cached_tokens",
+		"usage.output_tokens_details.image_tokens",
 	)
 	return OpenAIUsage{
 		InputTokens:          int(values[0].Int()),
 		OutputTokens:         int(values[1].Int()),
 		CacheReadInputTokens: int(values[2].Int()),
+		ImageOutputTokens:    int(values[3].Int()),
 	}, true
 }
 

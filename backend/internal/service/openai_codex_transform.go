@@ -79,6 +79,7 @@ type codexTransformResult struct {
 const (
 	codexImageGenerationBridgeMarker = "<sub2api-codex-image-generation>"
 	codexImageGenerationBridgeText   = codexImageGenerationBridgeMarker + "\nWhen the user asks for raster image generation or editing, use the OpenAI Responses native `image_generation` tool attached to this request. The local Codex client may not expose an `image_gen` namespace, but that does not mean image generation is unavailable. Do not ask the user to switch to CLI fallback solely because `image_gen` is absent.\n</sub2api-codex-image-generation>"
+	openAIImagesResponsesMainModel  = "gpt-5.4-mini"
 )
 
 func applyCodexOAuthTransform(reqBody map[string]any, isCodexCLI bool, isCompact bool) codexTransformResult {
@@ -286,6 +287,19 @@ func normalizeCodexModel(model string) string {
 	}
 
 	return "gpt-5.1"
+}
+
+func firstNonEmptyString(values ...any) string {
+	for _, value := range values {
+		if s, ok := value.(string); ok && strings.TrimSpace(s) != "" {
+			return strings.TrimSpace(s)
+		}
+	}
+	return ""
+}
+
+func isOpenAIImageGenerationModel(model string) bool {
+	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(model)), "gpt-image-")
 }
 
 func hasOpenAIImageGenerationTool(reqBody map[string]any) bool {
