@@ -3,6 +3,8 @@ export interface PaseoCallbackPayload {
   refreshToken: string
   expiresAt: number
   apiKey: string
+  claudeApiKey?: string | null
+  codexApiKey?: string | null
   endpoint: string
 }
 
@@ -27,6 +29,12 @@ export function buildPaseoCallbackUrl(
   params.set('refresh_token', payload.refreshToken)
   params.set('expires_in', String(resolveExpiresInSeconds(payload.expiresAt, options?.now)))
   params.set('api_key', payload.apiKey)
+  if (payload.claudeApiKey?.trim()) {
+    params.set('claude_api_key', payload.claudeApiKey.trim())
+  }
+  if (payload.codexApiKey?.trim()) {
+    params.set('codex_api_key', payload.codexApiKey.trim())
+  }
   params.set('endpoint', normalizePaseoEndpoint(payload.endpoint))
 
   return `${options?.callbackBase ?? 'paseo://auth/callback'}#${params.toString()}`

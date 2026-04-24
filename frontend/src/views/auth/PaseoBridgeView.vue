@@ -39,10 +39,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { AuthLayout } from '@/components/layout'
-import { keysAPI } from '@/api'
+import { keysAPI, userGroupsAPI } from '@/api'
 import { getAuthToken, getRefreshToken, getTokenExpiresAt } from '@/api/auth'
 import { clearStoredOAuthReturnPath, rememberOAuthReturnPath } from '@/utils/auth-redirect'
 import { buildPaseoCallbackUrl, normalizePaseoEndpoint } from './paseo-bridge'
+import type { ApiKey, Group, GroupPlatform } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -57,15 +58,96 @@ const endpoint = computed(() => {
   return normalizePaseoEndpoint(routeEndpoint || fallbackOrigin)
 })
 
-async function ensureApiKey(): Promise<string> {
-  const existing = await keysAPI.list(1, 1)
-  const currentKey = existing.items?.[0]?.key?.trim()
-  if (currentKey) {
-    return currentKey
+type PaseoScopedPlatform = Extract<GroupPlatform, 'anthropic' | 'openai'>
+
+interface PaseoPreparedKeys {
+  apiKey: string
+  claudeApiKey: string | null
+  codexApiKey: string | null
+}
+
+function isRouteReadyApiKey(apiKey: ApiKey, platform: PaseoScopedPlatform): boolean {
+  return (
+    apiKey.status === 'active' &&
+    apiKey.group?.status === 'active' &&
+    apiKey.group.platform === platform
+  )
+}
+
+function pickExistingRouteKey(apiKeys: ApiKey[], platform: PaseoScopedPlatform): ApiKey | null {
+  return apiKeys.find((apiKey) => isRouteReadyApiKey(apiKey, platform)) ?? null
+}
+
+function pickCreatableGroup(groups: Group[], platform: PaseoScopedPlatform): Group | null {
+  return groups.find((group) => group.status === 'active' && group.platform === platform) ?? null
+}
+
+async function loadAllApiKeys(): Promise<ApiKey[]> {
+  const pageSize = 100
+  let page = 1
+  let pages = 1
+  const items: ApiKey[] = []
+
+  while (page <= pages) {
+    const response = await keysAPI.list(page, pageSize)
+    items.push(...response.items)
+    pages = response.pages || 1
+    page += 1
   }
 
-  const created = await keysAPI.create('Paseo Desktop')
-  return created.key.trim()
+  return items
+}
+
+function pickPrimaryApiKey(
+  apiKeys: ApiKey[],
+  scoped: { claude: ApiKey | null; codex: ApiKey | null }
+): string | null {
+  const fallback =
+    scoped.claude?.key?.trim() ||
+    scoped.codex?.key?.trim() ||
+    apiKeys.find((apiKey) => apiKey.status === 'active')?.key?.trim() ||
+    apiKeys[0]?.key?.trim() ||
+    null
+  return fallback && fallback.length > 0 ? fallback : null
+}
+
+async function ensurePaseoKeys(): Promise<PaseoPreparedKeys> {
+  const apiKeys = await loadAllApiKeys()
+  let claudeKey = pickExistingRouteKey(apiKeys, 'anthropic')
+  let codexKey = pickExistingRouteKey(apiKeys, 'openai')
+
+  if (!claudeKey || !codexKey) {
+    const availableGroups = await userGroupsAPI.getAvailable()
+
+    if (!claudeKey) {
+      const group = pickCreatableGroup(availableGroups, 'anthropic')
+      if (group) {
+        claudeKey = await keysAPI.create('Paseo Desktop (Claude Code)', group.id)
+      }
+    }
+
+    if (!codexKey) {
+      const group = pickCreatableGroup(availableGroups, 'openai')
+      if (group) {
+        codexKey = await keysAPI.create('Paseo Desktop (Codex)', group.id)
+      }
+    }
+  }
+
+  let primaryApiKey = pickPrimaryApiKey(apiKeys, {
+    claude: claudeKey,
+    codex: codexKey
+  })
+  if (!primaryApiKey) {
+    const created = await keysAPI.create('Paseo Desktop')
+    primaryApiKey = created.key.trim()
+  }
+
+  return {
+    apiKey: primaryApiKey,
+    claudeApiKey: claudeKey?.key?.trim() || null,
+    codexApiKey: codexKey?.key?.trim() || null
+  }
 }
 
 onMounted(async () => {
@@ -80,8 +162,8 @@ onMounted(async () => {
       return
     }
 
-    statusMessage.value = 'Creating or loading your API key...'
-    const apiKey = await ensureApiKey()
+    statusMessage.value = 'Preparing Claude Code and Codex routes...'
+    const preparedKeys = await ensurePaseoKeys()
 
     const nextAccessToken = getAuthToken()
     const refreshToken = getRefreshToken()
@@ -92,7 +174,7 @@ onMounted(async () => {
       !refreshToken ||
       expiresAt === null ||
       !Number.isFinite(expiresAt) ||
-      !apiKey
+      !preparedKeys.apiKey
     ) {
       throw new Error('Missing token or API key state after browser login.')
     }
@@ -101,7 +183,9 @@ onMounted(async () => {
       accessToken: nextAccessToken,
       refreshToken,
       expiresAt,
-      apiKey,
+      apiKey: preparedKeys.apiKey,
+      claudeApiKey: preparedKeys.claudeApiKey,
+      codexApiKey: preparedKeys.codexApiKey,
       endpoint: endpoint.value,
     })
 
