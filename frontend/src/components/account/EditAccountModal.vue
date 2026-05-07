@@ -2758,13 +2758,12 @@ const handleSubmit = async () => {
       }
 
       // Handle API key
+      // 后端响应已脱敏：currentCredentials 不会再包含 api_key 原文。
+      // 用户填入新值则覆盖；留空且后端已存在旧 key（看 credentials_status）则不带 api_key 字段，
+      // 由后端合并保留；两者都无才报错。
       if (editApiKey.value.trim()) {
-        // User provided a new API key
         newCredentials.api_key = editApiKey.value.trim()
-      } else if (currentCredentials.api_key) {
-        // Preserve existing api_key
-        newCredentials.api_key = currentCredentials.api_key
-      } else {
+      } else if (!props.account.credentials_status?.has_api_key) {
         appStore.showError(t('admin.accounts.apiKeyIsRequired'))
         return
       }
