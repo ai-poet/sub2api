@@ -88,32 +88,13 @@
 
       <!-- ===== Right: Product Screenshot ===== -->
       <div class="relative hidden lg:block">
-        <div class="relative overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_20px_60px_rgba(0,0,0,0.12)] dark:border-white/10 dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
-          <!-- Browser chrome -->
-          <div class="flex items-center gap-2 border-b border-gray-100 bg-gray-50/80 px-4 py-2.5 dark:border-white/8 dark:bg-white/[0.03]">
-            <div class="flex gap-1.5">
-              <span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/70"></span>
-              <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]/70"></span>
-              <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]/70"></span>
-            </div>
-            <div class="ml-3 flex flex-1 items-center justify-center rounded-md border border-gray-200/60 bg-white px-3 py-0.5 text-[11px] text-gray-400 dark:border-white/8 dark:bg-white/[0.04] dark:text-white/25">
-              cheaprouter.cloud
-            </div>
-          </div>
-          <!-- Screenshot -->
-          <div class="relative bg-[#0d0d0f]">
-            <img
-              src="/product.png"
-              alt="CheapRouter Client"
-              class="w-full"
-              loading="eager"
-            />
-          </div>
-        </div>
-        <!-- Floating badge -->
-        <div class="absolute -bottom-3 -right-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2.5 shadow-lg dark:border-primary-800/50 dark:bg-primary-900/40">
-          <div class="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-600 dark:text-primary-400">{{ t('home.hero.badgeDiscount') }}</div>
-          <div class="text-xl font-black tracking-tight text-primary-700 dark:text-primary-300">off</div>
+        <div class="relative overflow-hidden rounded-[28px] border border-gray-200/60 shadow-[0_24px_72px_rgba(0,0,0,0.14)] dark:border-white/10 dark:shadow-[0_24px_72px_rgba(0,0,0,0.45)]">
+          <img
+            src="/product.png"
+            alt="CheapRouter Client"
+            class="w-full"
+            loading="eager"
+          />
         </div>
       </div>
     </div>
