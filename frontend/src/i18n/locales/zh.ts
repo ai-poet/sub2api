@@ -10,33 +10,33 @@ export default {
     login: '登录',
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
-    headerTagline: 'Claude Code / Codex Agent 工作台',
-    heroSubtitle: '一键接入、充值、路由、用量与本机 agents 放在一起',
-    heroDescription: 'Agent 工作台是主线，一键接入、充值、价格和用量只是入口。',
+    headerTagline: 'Claude Code / Codex 一键接入',
+    heroSubtitle: '一键接入、按量充值、用量看得见',
+    heroDescription: 'Claude Code 和 Codex 用同一个账户跑，开通快、价格友好、出错有解释。',
     navModels: '模型',
     navPricing: '价格',
     hero: {
-      badge: 'Claude Code / Codex Agent 工作台',
-      titleLeadPrimary: 'Agent',
-      titleLeadSecondary: '聚合工作台',
-      titleAccent: '一键接入',
-      titleTail: 'Claude / Codex',
-      description: '充值、路由、用量和本机 agents 放到同一个工作台里，让每一笔花费都回到正在运行的 workspace 和 agent session。',
-      primaryNote: '一键配置 · 充值便利 · 消费透明 · 跨设备控制',
+      badge: 'Claude Code / Codex 一键接入',
+      titleLeadPrimary: 'Claude Code',
+      titleLeadSecondary: '和 Codex',
+      titleAccent: '一个工作台',
+      titleTail: '就够了',
+      description: '一键接入、按量充值、看清每一笔花费。Claude Code 和 Codex 用同一个账户、同一个余额、同一个用量面板，不用再为两套 key、两套 endpoint、两套账单头疼。',
+      primaryNote: '一键接入 · 充值便利 · 消费透明 · 价格有竞争力',
       tags: {
-        coding: '聚合工作台',
-        agent: '跨设备控制',
-        tools: 'Claude Code / Codex',
+        coding: 'Claude Code',
+        agent: 'Codex',
+        tools: '多账号 · 多模型',
       },
       stats: {
-        setupValue: '1步',
-        savings: '自动配置本地 CLI',
-        routesValue: '2路',
-        models: 'Claude / Codex 分路',
-        workspaceValue: '1台',
-        minCost: '统一 agent 工作台',
+        setupValue: '1 步',
+        savings: '自动写好本地 CLI 配置',
+        routesValue: '2 路',
+        models: 'Claude / Codex 各管各的 key',
+        workspaceValue: '1 处',
+        minCost: '余额、用量、故障原因都在这里',
       },
-      perToken: '有效成本示例 / M tokens',
+      perToken: '参考价格示意 / M tokens',
       panel: {
         title: '为日常编码代理准备的请求层',
         auto: '自动轮播',
@@ -69,14 +69,14 @@ export default {
     pricing: {
       title: '按量付费',
       subtitle: '对比官方 Claude Code / Codex API 服务',
-      highlight: '约官方 API 服务 1 折',
-      description: '用官方价格的一小部分，承接高级模型编码场景，同时保留统一入口、统一密钥和统一计费面。',
-      badge: '高级模型能力，不必继续背负官方订阅价',
-      barTitle: '价格和充值是入口，真正留下来的是 agent 工作流控制',
+      highlight: '价格比官方 API 友好得多',
+      description: '用比官方更友好的价格跑高级模型，一个入口管 Claude Code 和 Codex，余额不限期，用多少扣多少。',
+      badge: '高级模型能力，不再被官方订阅价绑住',
+      barTitle: '按量计费，余额长期有效',
       points: {
-        metered: '按实际运行计费',
-        routing: '多账号自动切换',
-        visibility: '统一用量可见'
+        metered: '按 token 实扣，用多少花多少',
+        routing: '多账号自动切换，单个 key 故障不影响整体可用',
+        visibility: '5h / 1d / 7d 用量窗口看得见'
       }
     },
     proofStrip: {
@@ -85,10 +85,10 @@ export default {
     download: {
       badge: '客户端能力',
       comingSoon: '敬请期待',
-      title: '客户端下载即将开放',
-      description: '客户端下载区先放出来。安装后会自动配置 Claude Code / Codex CLI，按 Claude 与 Codex scope 创建或复用 key，不覆盖已有 route。',
-      privacyCode: '本机 agents、workspaces、worktrees 与 cloud route 状态放在一个视图里',
-      privacyKey: '桌面、Web、移动端都能继续查看运行态、消费和故障原因',
+      title: '客户端即将开放下载',
+      description: '桌面客户端会承担"自动配置 Claude Code / Codex 本地 CLI、按 scope 创建或复用 key、不覆盖已有 route"这一步；安装后无需手工编辑配置文件。Web 控制台和移动端会同步登场，让你在多台设备之间继续看到当前 route 和消费。',
+      privacyCode: '自动写入 ~/.claude 和 ~/.codex 配置，已有 route 不被覆盖',
+      privacyKey: '桌面、Web、移动端共享一份用量与故障视图',
       cta: '敬请期待',
       platforms: {
         mac: { sub: 'Apple Silicon 与 Intel' },
@@ -97,58 +97,58 @@ export default {
       },
     },
     value: {
-      overline: '为什么是 CheapRouter Cloud',
-      title: '从第一天就把 Agent 工作台放在主叙事里',
-      description: 'cheaprouter cloud 的机会在交叉处：比中转平台更贴近 Claude Code / Codex 的真实本地使用，比本地 switcher 更完整地覆盖充值和消费可视化，比 Cursor 类产品更尊重已有的本地 agent 工作流。',
+      overline: '为什么选 CheapRouter',
+      title: '让 Claude Code 和 Codex 跑起来这件事，更省心',
+      description: '不是再做一个 IDE，也不是又一个中转 API。CheapRouter 把"开通账户、充值、配置本地 CLI、看用量、看故障"这些散落的事，合成一条顺手的路径。',
       items: {
         economics: {
-          eyebrow: '01 / 本地场景',
-          title: '更贴近真实 Claude Code / Codex 使用',
-          description: '自动配置只是入口，核心是把 route、key、quota 和错误原因放回本机正在运行的 agents、workspaces、worktrees。'
+          eyebrow: '01 / 接入快',
+          title: '一键写好本地配置',
+          description: '注册登录后自动生成 Claude Code 和 Codex 各自的 key，并写入对应的本地配置文件，不会覆盖你已有的 route。'
         },
         reliability: {
-          eyebrow: '02 / 消费闭环',
-          title: '比 switcher 多了充值和消费可视化',
-          description: 'Claude route、Codex route 分 scope 管理，一个余额视图看 quota、rate limit、时间窗口和有效成本，不再靠脚本拼账单。'
+          eyebrow: '02 / 花费看得见',
+          title: '一个余额面板看清两路消费',
+          description: 'Claude 和 Codex 分别消耗了多少 token、剩多少额度、当前限速窗口怎么用，都在同一处展示，不用再在多个平台之间切。'
         },
         control: {
-          eyebrow: '03 / 工作台',
-          title: '尊重用户已有的本地 agent 工作流',
-          description: '不是替换 IDE，也不是把用户锁进新环境，而是让桌面、Web、手机都能继续控制已经在本机运行的 agent session。'
+          eyebrow: '03 / 出错有解释',
+          title: '不只是给你一条报错',
+          description: '是余额不足、quota 用完、被限速、key 不匹配、上游不可用，还是协议不兼容 — 每种情况给出对应提示，不让你猜。'
         }
       }
     },
     comparison: {
-      overline: '服务定位',
-      title: '机会就在三类产品的交叉处',
-      description: '一键接入、充值、价格和用量不是五个散点，而是一条通向 agent 聚合工作台的完整链路。',
+      overline: '换个角度看',
+      title: '你可能正在用这些方式之一',
+      description: 'CheapRouter 的目标不是替代它们，而是把"开通、充值、配置、看用量、看故障"这条链路一次跑通，少几次手工切换、少几个隔离账单。',
       headers: {
-        feature: '对比项',
-        official: '常见方案',
-        us: 'CheapRouter Cloud'
+        feature: '你正在用的方式',
+        official: '常见做法的盲点',
+        us: 'CheapRouter 怎么做'
       },
       items: {
         pricing: {
-          feature: '对中转平台',
-          official: '能做充值、路由和 dashboard，但通常不了解本机正在跑的 agent',
-          us: '把 Claude Code / Codex route、spend、workspace 和 agent session 放在一起'
+          feature: '官方账号 + 手工配置',
+          official: '每个工具一个账号，多账号、多 key、多账单，需要自己维护本地 ~/.claude 与 ~/.codex 配置',
+          us: '一个账户开通后，自动写入两套 CLI 配置，可分 scope 复用 key，余额跨工具共用'
         },
         models: {
-          feature: '对本地 switcher',
-          official: '能切 endpoint/key，但通常没有充值、余额、quota 和分路用量',
-          us: '自动配置本地 CLI，同时覆盖充值、分路消费、rate limit 和 route health'
+          feature: '本地切换脚本 / 多 endpoint',
+          official: '能切 endpoint 和 key，但不知道余额还剩多少、当前 quota / rate limit 是什么状态',
+          us: '切换之后，余额、quota、5h / 1d / 7d 用量窗口和 group 健康度直接展示'
         },
         stability: {
-          feature: '对 AI coding 产品',
-          official: '省事但常把用户带进新的 IDE 或云端工作流',
-          us: '尊重已有本地工作流，用桌面 / Web / 手机控制本机 agents 和跨设备状态'
+          feature: '多平台中转 API',
+          official: '充值便宜，但出问题时很难判断是余额、限速、key、上游、还是协议兼容问题',
+          us: '把这几类故障原因显式分开，告诉你哪一步坏了、要怎么处理'
         }
       }
     },
     pricingTable: {
-      overline: '有效成本示例',
-      title: '按实际使用计费，让 agent 成本看得见',
-      description: '价格区展示的是 route 有效成本示例，用来帮助你理解预算结构；实际扣费以控制台当前模型、group 和 route 策略为准。',
+      overline: '参考价格',
+      title: '按量付费，比官方 API 友好得多',
+      description: '下表为常用编码模型在 CheapRouter 的参考价格示意，对比官方公开 API 单价。实际扣费以控制台展示的当前 group / route 价格为准；同模型在不同 group 上的价格可能不同。',
       badge: '目标',
       badgeValue: '总成本更低',
       tabs: {
@@ -157,13 +157,13 @@ export default {
       },
       col: {
         model: '模型',
-        officialInput: '参考输入 ($/M)',
-        ourInput: '有效成本示例',
-        officialOutput: '参考输出 ($/M)',
-        savings: '成本差异',
+        officialInput: '官方输入价 ($/M)',
+        ourInput: '参考有效价',
+        officialOutput: '官方输出价 ($/M)',
+        savings: '参考差异',
       },
       modelsCount: '个模型',
-      note: '这里不承诺“全网最低价”。CheapRouter 更关注可用、透明和可解释的总成本：充值入口、分路用量、quota、rate limit、route health 与 agent 工作流放到一起。',
+      note: '这里不承诺"全网最低价"。CheapRouter 关注的是总成本：充值入口、按量计费、分路用量、quota 与限速可见、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。',
     },
     providers: {
       title: '把高级模型与本机编码工作流放进同一层服务',
@@ -177,35 +177,35 @@ export default {
       openaiCompatible: 'OpenAI 兼容'
     },
     trust: {
-      overline: '透明与可信',
-      title: '知道为什么不能用，也知道钱花在哪',
-      description: '余额、quota、rate limit、key、endpoint、group 健康度和协议兼容问题，都应该在 agent 工作流里被解释清楚。',
+      overline: '用得放心',
+      title: '钱花在哪、为什么不能用，都看得见',
+      description: '中转服务最常见的问题是不透明：余额不知道还剩多少、报错不知道哪里坏。CheapRouter 把这些信息显式做出来，让你不用猜。',
       cards: {
         gateway: {
-          title: '分 scope route',
-          description: 'Claude Code 与 Codex 可分别创建、复用和查看 route，避免一把 key 覆盖所有本地工具。'
+          title: '每一条 route 单独算账',
+          description: 'Claude Code 和 Codex 各用各的 key，不会互相覆盖；每条 route 的本期消耗、5h / 1d / 7d 用量窗口、剩余额度都独立展示。'
         },
         resilience: {
-          title: 'route health',
-          description: '展示 group runtime status、availability、latency 和 price multiplier，让故障不再只剩一条报错。'
+          title: '上游不健康，提前知道',
+          description: '每个上游 group 的可用性、平均延迟、价格倍率都摆在台面上，出问题时知道是哪一路出了问题，可以手动切换或等自动切换。'
         },
         visibility: {
-          title: '消费可视',
-          description: 'API key quota、quota used、5h / 1d / 7d 用量窗口和分路消费都能回到当前 agent 场景。'
+          title: '报错带原因，不只是状态码',
+          description: '余额不足、quota 用尽、被限速、key 不匹配、route 不匹配、上游不可用、协议不兼容 — 七类常见故障对应明确提示，不用对着一条 500 抓瞎。'
         }
       },
       trackers: {
-        routing: '分路 route',
-        billing: '充值余额',
-        visibility: 'agent 用量'
+        routing: '按量计费',
+        billing: '余额长期有效',
+        visibility: '多账号切换'
       }
     },
     cta: {
-      eyebrow: 'AGENT CONTROL PLANE',
-      title: '把 Claude Code / Codex 接进同一个工作台',
-      description: '从一键接入、充值、价格、消费控制开始，逐步把 provider、route、usage、permission、session 和 workspace 统一起来。',
+      eyebrow: '开始使用',
+      title: 'Claude Code 和 Codex，一次配齐',
+      description: '注册账户、充值、自动写入本地 CLI 配置 — 三步之后就能开始跑。控制台里随时看清楚每一笔 token 花在哪条 route 上。',
       button: '开始配置',
-      stat: '一键接入 · 充值便利 · 消费透明 · Agent 工作台'
+      stat: '一键接入 · 按量计费 · 用量透明 · 价格友好'
     },
     footer: {
       allRightsReserved: '保留所有权利。',

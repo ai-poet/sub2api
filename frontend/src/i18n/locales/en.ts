@@ -10,33 +10,33 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
-    headerTagline: 'Claude Code / Codex agent workspace',
-    heroSubtitle: 'One-click setup, top-up, routing, usage, and local agents in one place',
-    heroDescription: 'The agent workspace is the story. Setup, top-up, price, and usage are the entry points.',
+    headerTagline: 'One-click Claude Code / Codex',
+    heroSubtitle: 'One-click setup, pay-as-you-go top-up, visible usage',
+    heroDescription: 'Run Claude Code and Codex on the same account — fast onboarding, friendly pricing, and clear failure reasons.',
     navModels: 'Models',
     navPricing: 'Pricing',
     hero: {
-      badge: 'Claude Code / Codex agent workspace',
-      titleLeadPrimary: 'Agent',
-      titleLeadSecondary: 'workspace',
-      titleAccent: 'connected in one click',
-      titleTail: 'for Claude / Codex',
-      description: 'Top-up, routing, usage, and local agents live in the same workspace, so every dollar maps back to the workspace and agent session doing the work.',
-      primaryNote: 'One-click setup · easy top-up · clear spend · cross-device control',
+      badge: 'One-click Claude Code / Codex',
+      titleLeadPrimary: 'Claude Code',
+      titleLeadSecondary: 'and Codex,',
+      titleAccent: 'one workspace',
+      titleTail: 'is enough',
+      description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Run Claude Code and Codex on a single account, balance, and usage panel — no more juggling two keys, two endpoints, and two bills.',
+      primaryNote: 'One-click setup · easy top-up · clear spend · friendly pricing',
       tags: {
-        coding: 'Agent hub',
-        agent: 'Cross-device control',
-        tools: 'Claude Code / Codex',
+        coding: 'Claude Code',
+        agent: 'Codex',
+        tools: 'Multi-account · Multi-model',
       },
       stats: {
-        setupValue: '1-step',
-        savings: 'Local CLI auto-setup',
+        setupValue: '1 step',
+        savings: 'Local CLI configured automatically',
         routesValue: '2 routes',
-        models: 'Claude / Codex routes',
-        workspaceValue: '1 hub',
-        minCost: 'Unified agent workspace',
+        models: 'Claude / Codex each with their own key',
+        workspaceValue: '1 place',
+        minCost: 'Balance, usage, and failure reasons all here',
       },
-      perToken: 'effective-cost example / M tokens',
+      perToken: 'reference price example / M tokens',
       panel: {
         title: 'A request layer shaped for daily coding agents',
         auto: 'Auto Rotating',
@@ -69,14 +69,14 @@ export default {
     pricing: {
       title: 'Metered Pricing',
       subtitle: 'vs Official Claude Code / Codex API Services',
-      highlight: '~10% of official API service cost',
-      description: 'Use a fraction of official pricing to power premium-model coding agents while keeping one gateway, one key, and one billing surface.',
-      badge: 'Premium model access, without premium subscription overhead',
-      barTitle: 'Price and top-up are the entry. Agent workflow control is what keeps users.',
+      highlight: 'Friendlier than the official API',
+      description: 'Run premium models at a friendlier price than the official API, with one entry point for both Claude Code and Codex. Balance never expires — pay only for what you use.',
+      badge: 'Premium model access without the premium subscription',
+      barTitle: 'Pay-as-you-go, balance never expires',
       points: {
-        metered: 'Pay only for what runs',
-        routing: 'Multi-account auto routing',
-        visibility: 'Unified usage visibility'
+        metered: 'Token-level metering — pay only for what runs',
+        routing: 'Multi-account auto-switching — a single key failing does not break the whole route',
+        visibility: '5h / 1d / 7d usage windows visible'
       }
     },
     proofStrip: {
@@ -85,10 +85,10 @@ export default {
     download: {
       badge: 'Client workflow',
       comingSoon: 'Coming soon',
-      title: 'Client downloads are coming soon',
-      description: 'The download section is visible now. After install, CheapRouter will configure Claude Code / Codex CLI access, create or reuse scoped keys, and avoid overwriting existing routes.',
-      privacyCode: 'Local agents, workspaces, worktrees, and cloud route status in one view',
-      privacyKey: 'Desktop, Web, and mobile can keep watching runtime state, spend, and failure reasons',
+      title: 'Desktop client coming soon',
+      description: 'The desktop client will handle "auto-configure Claude Code / Codex CLI, create or reuse scoped keys, never overwrite existing routes" — install and skip the manual config-file editing. Web console and mobile will land alongside it, so you can keep watching the current route and spend across devices.',
+      privacyCode: 'Auto-writes ~/.claude and ~/.codex configs without overwriting existing routes',
+      privacyKey: 'Desktop, Web, and mobile share the same usage and failure view',
       cta: 'Coming soon',
       platforms: {
         mac: { sub: 'Apple Silicon & Intel' },
@@ -97,58 +97,58 @@ export default {
       },
     },
     value: {
-      overline: 'Why CheapRouter Cloud',
-      title: 'Make the agent workspace the first story, not phase two.',
-      description: 'CheapRouter Cloud sits at the intersection: closer to real Claude Code / Codex local use than relays, more complete on top-up and spend visibility than switchers, and more respectful of existing local agent workflows than packaged AI coding products.',
+      overline: 'Why CheapRouter',
+      title: 'The boring parts of running Claude Code and Codex, made easy',
+      description: 'Not another IDE, and not just another relay API. CheapRouter pulls together the scattered chores — sign up, top up, configure local CLIs, watch usage, debug failures — into one smooth path.',
       items: {
         economics: {
-          eyebrow: '01 / Local context',
-          title: 'Closer to real Claude Code / Codex usage',
-          description: 'Auto-setup is only the entry. The point is to put route, key, quota, and failure reasons back around local agents, workspaces, and worktrees.'
+          eyebrow: '01 / Fast onboarding',
+          title: 'Local config, written for you',
+          description: 'After sign-up, scoped keys for Claude Code and Codex are generated automatically and written into the matching local config files — without overwriting your existing routes.'
         },
         reliability: {
-          eyebrow: '02 / Spend loop',
-          title: 'More complete than a switcher',
-          description: 'Claude and Codex routes are scoped separately, with one balance view for quota, rate limits, usage windows, and effective cost.'
+          eyebrow: '02 / Spend you can see',
+          title: 'One balance panel for both routes',
+          description: 'How many tokens Claude and Codex have used, how much quota is left, what the current rate-limit window looks like — all in one place, no more switching between platforms.'
         },
         control: {
-          eyebrow: '03 / Workspace',
-          title: 'Respect existing local agent workflows',
-          description: 'CheapRouter does not replace the IDE or force a new cloud workspace. Desktop, Web, and mobile control the agent sessions already running locally.'
+          eyebrow: '03 / Failures with a reason',
+          title: 'More than just an error code',
+          description: 'Out of balance, quota used up, rate-limited, key mismatch, upstream group down, or protocol incompatible — each gets a specific message, so you do not have to guess.'
         }
       }
     },
     comparison: {
-      overline: 'Positioning',
-      title: 'The opportunity is at the intersection of three product types',
-      description: 'One-click setup, top-up, price, and usage are not separate claims. They are the path into an agent aggregation workspace.',
+      overline: 'A different angle',
+      title: 'You are probably already using one of these',
+      description: 'CheapRouter is not here to replace them. It just runs the "open an account → top up → configure → watch usage → debug failures" path end-to-end, with fewer manual switches and fewer separate bills.',
       headers: {
-        feature: 'Comparison',
-        official: 'Common path',
-        us: 'CheapRouter Cloud'
+        feature: 'How you do it today',
+        official: 'Where it falls short',
+        us: 'How CheapRouter handles it'
       },
       items: {
         pricing: {
-          feature: 'Vs relays',
-          official: 'Can offer top-up, routing, and dashboards, but rarely understand local running agents',
-          us: 'Claude Code / Codex routes, spend, workspaces, and agent sessions in one view'
+          feature: 'Official accounts + manual config',
+          official: 'One account per tool — multiple accounts, multiple keys, multiple bills, and you maintain ~/.claude and ~/.codex by hand',
+          us: 'One account, both CLI configs written automatically, scoped keys can be reused, balance shared across tools'
         },
         models: {
-          feature: 'Vs switchers',
-          official: 'Can switch endpoint/key, but usually lack top-up, balance, quota, and route-level usage',
-          us: 'Local CLI auto-setup plus top-up, route spend, rate limits, and route health'
+          feature: 'Local switcher / multi-endpoint scripts',
+          official: 'Can swap endpoint and key, but cannot tell you the remaining balance, current quota, or rate-limit state',
+          us: 'After a switch, balance, quota, 5h / 1d / 7d usage windows, and group health are all visible'
         },
         stability: {
-          feature: 'Vs AI coding products',
-          official: 'Convenient, but often moves users into a new IDE or cloud workflow',
-          us: 'Keeps the existing local workflow and controls local agents across desktop, Web, and mobile'
+          feature: 'Multi-platform relay APIs',
+          official: 'Cheap to top up, but when something breaks it is hard to tell whether it is balance, rate limits, key, upstream, or protocol incompatibility',
+          us: 'These failure types are surfaced separately — you see which step broke and what to do next'
         }
       }
     },
     pricingTable: {
-      overline: 'Effective-cost examples',
-      title: 'Pay for actual usage and keep agent cost visible',
-      description: 'This section shows example effective route costs to help with budgeting. Actual billing follows the current model, group, and route policy in the dashboard.',
+      overline: 'Reference pricing',
+      title: 'Pay-as-you-go, friendlier than the official API',
+      description: 'The table below shows reference price examples for common coding models on CheapRouter, compared with public official API rates. Actual billing follows the current group / route price shown in your dashboard; the same model may price differently across groups.',
       badge: 'Goal',
       badgeValue: 'Lower total cost',
       tabs: {
@@ -157,13 +157,13 @@ export default {
       },
       col: {
         model: 'Model',
-        officialInput: 'Reference input ($/M)',
-        ourInput: 'Effective example',
-        officialOutput: 'Reference output ($/M)',
-        savings: 'Cost delta',
+        officialInput: 'Official input ($/M)',
+        ourInput: 'Reference effective',
+        officialOutput: 'Official output ($/M)',
+        savings: 'Reference delta',
       },
       modelsCount: 'models',
-      note: 'This is not an “absolute lowest price” promise. CheapRouter focuses on usable, transparent, and explainable total cost: top-up, route-level usage, quota, rate limits, route health, and agent workflow in one place.',
+      note: 'No "absolute lowest price" promise here. CheapRouter focuses on total cost: a single top-up entry, true pay-as-you-go metering, route-level usage, visible quota and rate limits, and clear failure reasons — so AI coding stays affordable, observable, and debuggable over the long run.',
     },
     providers: {
       title: 'Premium models and local coding workflows under one service layer',
@@ -177,35 +177,35 @@ export default {
       openaiCompatible: 'OpenAI-Compatible'
     },
     trust: {
-      overline: 'Transparency & trust',
-      title: 'Know why it cannot run and where the money went',
-      description: 'Balance, quota, rate limits, keys, endpoints, group health, and protocol compatibility should be explained inside the agent workflow.',
+      overline: 'Run with confidence',
+      title: 'See where the money goes and why it cannot run',
+      description: 'The biggest pain with relay services is opacity — you do not know how much balance is left, and you do not know what broke. CheapRouter makes those two things explicit so you do not have to guess.',
       cards: {
         gateway: {
-          title: 'Scoped routes',
-          description: 'Claude Code and Codex routes can be created, reused, and inspected separately instead of pushing every local tool through one key.'
+          title: 'Each route billed on its own',
+          description: 'Claude Code and Codex use their own keys without overwriting each other. Per-route current spend, 5h / 1d / 7d usage windows, and remaining quota are tracked separately.'
         },
         resilience: {
-          title: 'Route health',
-          description: 'Group runtime status, availability, latency, and price multiplier turn upstream failures into explainable product states.'
+          title: 'Upstream issues, surfaced early',
+          description: 'Each upstream group exposes availability, average latency, and price multiplier — so when something breaks you know which route is affected and can switch manually or wait for auto-failover.'
         },
         visibility: {
-          title: 'Visible spend',
-          description: 'API key quota, quota used, 5h / 1d / 7d usage windows, and route spend map back to the agent context.'
+          title: 'Errors come with reasons, not just status codes',
+          description: 'Out of balance, quota exhausted, rate-limited, key mismatch, route mismatch, upstream down, or protocol incompatibility — each of these seven common failures gets a specific message so you are not staring at a bare 500.'
         }
       },
       trackers: {
-        routing: 'Scoped routes',
-        billing: 'Top-up balance',
-        visibility: 'Agent usage'
+        routing: 'Pay-as-you-go',
+        billing: 'Balance never expires',
+        visibility: 'Multi-account switching'
       }
     },
     cta: {
-      eyebrow: 'AGENT CONTROL PLANE',
-      title: 'Put Claude Code / Codex into one workspace',
-      description: 'Start with one-click access, top-up, pricing, and spend control, then unify provider, route, usage, permission, session, and workspace control.',
+      eyebrow: 'GET STARTED',
+      title: 'Claude Code and Codex, set up in one go',
+      description: 'Sign up, top up, and let CheapRouter write your local CLI configs — three steps and you are running. The dashboard shows exactly which route every token is billed against.',
       button: 'Start setup',
-      stat: 'One-click access · top-up · visible spend · agent workspace'
+      stat: 'One-click setup · pay-as-you-go · visible usage · friendly pricing'
     },
     footer: {
       allRightsReserved: 'All rights reserved.',
