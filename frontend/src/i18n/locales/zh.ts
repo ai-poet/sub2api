@@ -166,7 +166,6 @@ export default {
       description: 'Claude Code、Codex、GPT-5.5 等主流编码模型，比官方 API 便宜很多。一个账户、一份余额，用多少扣多少，余额长期有效。',
       badge: '目标',
       badgeValue: '总成本更低',
-      compareNote: '相对官方 API 单价',
       cards: {
         claude: {
           tag: 'Claude 系列',

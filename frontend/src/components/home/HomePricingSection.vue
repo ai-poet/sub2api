@@ -41,13 +41,7 @@
               </span>
             </div>
 
-            <div class="mt-5 flex items-baseline gap-2">
-              <span class="text-[clamp(2rem,4vw,2.8rem)] font-black leading-none tracking-[-0.04em] text-primary-600 dark:text-primary-400">
-                {{ card.discount }}
-              </span>
-            </div>
-
-            <h3 class="mt-6 text-lg font-semibold tracking-tight text-[#111] dark:text-white">
+            <h3 class="mt-5 text-lg font-semibold tracking-tight text-[#111] dark:text-white">
               {{ card.title }}
             </h3>
             <p class="mt-2 text-sm leading-6 text-[#5f5850] dark:text-white/65">
@@ -85,7 +79,6 @@ const cards = computed(() => [
   {
     key: 'claude',
     tag: t('home.pricingTable.cards.claude.tag'),
-    discount: 'off',
     title: t('home.pricingTable.cards.claude.title'),
     description: t('home.pricingTable.cards.claude.description'),
     models: ['Claude Sonnet 4.6', 'Claude Opus 4.7', 'Claude Haiku 4.5'],
@@ -93,7 +86,6 @@ const cards = computed(() => [
   {
     key: 'codex',
     tag: t('home.pricingTable.cards.codex.tag'),
-    discount: 'off',
     title: t('home.pricingTable.cards.codex.title'),
     description: t('home.pricingTable.cards.codex.description'),
     models: ['GPT-5.5', 'GPT-5.5 Codex', 'GPT-5.4', 'GPT-5.3 Codex'],
@@ -101,7 +93,6 @@ const cards = computed(() => [
   {
     key: 'compatible',
     tag: t('home.pricingTable.cards.compatible.tag'),
-    discount: 'off',
     title: t('home.pricingTable.cards.compatible.title'),
     description: t('home.pricingTable.cards.compatible.description'),
     models: [t('home.providers.openaiCompatible'), 'Gemini', 'GLM', 'Qwen'],

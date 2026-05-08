@@ -166,7 +166,6 @@ export default {
       description: 'Premium coding models — Claude Code, Codex, and GPT-5.5 — at much better prices than official API rates. One account, one balance, pay for what you use, balance never expires.',
       badge: 'Goal',
       badgeValue: 'Lower total cost',
-      compareNote: 'vs official API rate',
       cards: {
         claude: {
           tag: 'Claude family',
