@@ -208,7 +208,123 @@ export default {
       stat: 'One-click access · top-up · visible spend · agent workspace'
     },
     footer: {
-      allRightsReserved: 'All rights reserved.'
+      allRightsReserved: 'All rights reserved.',
+      privacy: 'Privacy Policy',
+      terms: 'Terms of Service'
+    },
+    privacy: {
+      title: 'Privacy Policy',
+      backHome: 'Back to home',
+      lastUpdated: 'Last updated: April 2026',
+      intro: 'This Privacy Policy explains how CheapRouter ("we", "us") collects, uses, and protects your information when you use our platform. We are committed to protecting your privacy, especially your code and prompt content.',
+      pledge: {
+        title: 'Your code and prompts are never stored or used for training',
+        body: 'All code, prompts, and conversation content you send through CheapRouter is forwarded directly to the official upstream API. We do not store, log, or analyze request content, and we never use it for model training or any other purpose.',
+      },
+      sections: {
+        collection: {
+          title: '1. Information We Collect',
+          p1: 'We collect only the minimum information necessary to provide our service:',
+          i1: 'Account information: email address provided at registration',
+          i2: 'Usage records: token counts, request counts, model type (no request content)',
+          i3: 'Payment information: top-up amounts and transaction records (no card numbers or sensitive financial data)',
+          i4: 'Log information: IP address and request timestamps for security and troubleshooting',
+        },
+        use: {
+          title: '2. How We Use Your Information',
+          p1: 'Collected information is used only for the following purposes:',
+          i1: 'Providing and maintaining the API proxy service',
+          i2: 'Calculating token usage and generating billing records',
+          i3: 'Sending service notifications (e.g. low balance alerts)',
+          i4: 'Ensuring account security and preventing abuse',
+        },
+        code: {
+          title: '3. Code & Prompt Protection',
+          p1: 'All request content you send via the API, including code, prompts, and conversation messages, is forwarded transparently to the official Anthropic and OpenAI APIs. CheapRouter does not persist or store request content.',
+          p2: 'We will never use your code or prompts to train, fine-tune, or evaluate any machine learning model, and we will not share this content with third parties.',
+        },
+        apikey: {
+          title: '4. API Key Security',
+          p1: 'API keys you generate on this platform are stored encrypted at rest. Upstream API credentials used to call model providers are managed centrally by the platform and are never exposed to users. Keep your CheapRouter API key safe. If you suspect compromise, reset it immediately in the dashboard.',
+        },
+        third: {
+          title: '5. Third-Party Services',
+          p1: 'We forward API requests to the following third-party providers, each with their own privacy policies:',
+          i1: 'Anthropic (Claude model family)',
+          i2: 'OpenAI (GPT / Codex model family)',
+        },
+        retention: {
+          title: '6. Data Retention',
+          p1: 'Account information is retained until you delete your account. Usage records (token counts and timestamps, no content) are retained for 90 days for billing reconciliation. You may request account deletion and removal of associated data at any time from account settings.',
+        },
+        rights: {
+          title: '7. Your Rights',
+          p1: 'You have the following rights over your personal data:',
+          i1: 'Access: view the data we hold about you',
+          i2: 'Correction: update inaccurate account information',
+          i3: 'Deletion: request account closure and removal of your data',
+        },
+        changes: {
+          title: '8. Policy Changes',
+          p1: 'If we make material changes to this policy, we will notify you via in-app notice or email in advance. Continued use of the service constitutes acceptance of the updated policy.',
+        },
+      },
+      contact: 'If you have any questions about this Privacy Policy, please contact us through the support channel in the platform.',
+    },
+    terms: {
+      title: 'Terms of Service',
+      lastUpdated: 'Last updated: April 2026',
+      intro: 'Welcome to CheapRouter. Please read these Terms of Service carefully before using our platform. By registering or using the service, you agree to be bound by these terms.',
+      sections: {
+        eligibility: {
+          title: '1. Eligibility',
+          p1: 'This service is available to individuals with full legal capacity and legally registered business entities. Users under 18 must have parental or guardian consent. By using this service you represent and warrant that you have the authority to accept these terms.',
+        },
+        account: {
+          title: '2. Account Responsibilities',
+          p1: 'You are fully responsible for the security of your account and all activity that occurs under it:',
+          i1: 'Keep your login credentials and API keys safe. Do not share them with others',
+          i2: 'Notify us immediately if you detect unauthorized access or account anomalies',
+          i3: 'Transferring, selling, or sharing accounts is prohibited',
+        },
+        service: {
+          title: '3. Service Description',
+          p1: 'CheapRouter is an AI API aggregation proxy that forwards your requests to official providers such as Anthropic and OpenAI. We are not responsible for the availability, response quality, or content of upstream providers.',
+          p2: 'We reserve the right to modify, suspend, or terminate the service with advance notice. Service interruptions caused by upstream provider outages, maintenance, or force majeure events are outside our responsibility.',
+        },
+        billing: {
+          title: '4. Billing & Refunds',
+          p1: 'This platform operates on a prepaid credit model:',
+          i1: 'Credits are non-refundable once purchased. Top up only what you need',
+          i2: 'Token consumption is deducted in real time based on platform records',
+          i3: 'Abnormal charges caused by platform errors may be investigated and compensated upon request',
+        },
+        prohibited: {
+          title: '5. Prohibited Uses',
+          p1: 'When using this service, you must not:',
+          i1: 'Use the platform to generate illegal, harmful, discriminatory, or infringing content',
+          i2: 'Attempt to reverse-engineer, bypass, or abuse the platform rate limits or security mechanisms',
+          i3: 'Resell, distribute, or use API keys for unauthorized commercial proxy services',
+          i4: 'Violate the usage policies of upstream model providers (Anthropic, OpenAI, etc.)',
+        },
+        ip: {
+          title: '6. Intellectual Property',
+          p1: 'The platform interface, codebase, and branding are the intellectual property of CheapRouter. Ownership of content generated via the API is governed by the upstream provider policies. We make no claim over generated output.',
+        },
+        disclaimer: {
+          title: '7. Disclaimer of Warranties',
+          p1: 'This service is provided "as is" without any express or implied warranties. To the maximum extent permitted by law, CheapRouter is not liable for any indirect, incidental, special, or consequential damages, including but not limited to lost profits, data loss, or business interruption.',
+        },
+        termination: {
+          title: '8. Account Termination',
+          p1: 'We reserve the right to suspend or terminate accounts that violate these terms, without prior notice. You may also delete your account at any time from account settings. Remaining balance is non-refundable upon termination.',
+        },
+        changes: {
+          title: '9. Changes to Terms',
+          p1: 'We may update these terms from time to time. Material changes will be communicated in advance via in-app notice or email. Continued use of the service constitutes acceptance of the updated terms.',
+        },
+      },
+      contact: 'If you have any questions about these Terms of Service, please contact us through the support channel in the platform.',
     }
   },
 
