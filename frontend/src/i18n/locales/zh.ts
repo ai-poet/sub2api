@@ -162,7 +162,7 @@ export default {
     },
     pricingTable: {
       overline: '价格优势',
-      title: '主流编码模型，最高 90% off',
+      title: '主流编码模型，价格比官方友好得多',
       description: 'Claude Code、Codex、GPT-5.5 等主流编码模型，比官方 API 便宜很多。一个账户、一份余额，用多少扣多少，余额长期有效。',
       badge: '目标',
       badgeValue: '总成本更低',
@@ -226,7 +226,7 @@ export default {
       title: 'Claude Code 和 Codex，一次配齐',
       description: '注册账户、充值、自动配置好本地工具 — 三步之后就能开始跑。Claude 全系、Codex 与 GPT-5.5 都在同一个余额下，控制台里随时看清楚每一笔花费走的是哪条线路。',
       button: '开始配置',
-      stat: '一键接入 · 按量计费 · 用量透明 · 最高 90% off'
+      stat: '一键接入 · 按量计费 · 用量透明 · 价格友好'
     },
     footer: {
       allRightsReserved: '保留所有权利。',

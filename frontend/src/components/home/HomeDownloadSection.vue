@@ -42,7 +42,7 @@
             <button
               type="button"
               disabled
-              class="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-6 py-3 text-sm font-semibold text-gray-500 dark:border-white/10 dark:bg-white/8 dark:text-white/45"
+              class="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-6 py-3 text-sm font-semibold text-gray-500 dark:border-white/15 dark:bg-white/10 dark:text-white/70"
             >
               <span>{{ t('home.download.cta') }}</span>
               <Icon name="lock" size="sm" />

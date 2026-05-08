@@ -162,7 +162,7 @@ export default {
     },
     pricingTable: {
       overline: 'Pricing advantage',
-      title: 'Up to 90% off mainstream coding models',
+      title: 'Mainstream coding models at friendlier prices than the official API',
       description: 'Premium coding models — Claude Code, Codex, and GPT-5.5 — at much better prices than official API rates. One account, one balance, pay for what you use, balance never expires.',
       badge: 'Goal',
       badgeValue: 'Lower total cost',
@@ -226,7 +226,7 @@ export default {
       title: 'Claude Code and Codex, set up in one go',
       description: 'Sign up, top up, and let CheapRouter configure your local tools — three steps and you are running. The full Claude family, Codex, and GPT-5.5 share the same balance, and the dashboard shows exactly which line every charge is billed against.',
       button: 'Start setup',
-      stat: 'One-click setup · pay-as-you-go · visible usage · up to 90% off'
+      stat: 'One-click setup · pay-as-you-go · visible usage · friendly pricing'
     },
     footer: {
       allRightsReserved: 'All rights reserved.',
