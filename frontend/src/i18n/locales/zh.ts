@@ -21,7 +21,7 @@ export default {
       titleLeadSecondary: '和 Codex',
       titleAccent: '一个工作台',
       titleTail: '就够了',
-      description: '一键接入、按量充值、看清每一笔花费。Claude Code 和 Codex 用同一个账户、同一个余额、同一个用量面板，不用再为两套 key、两套 endpoint、两套账单头疼。',
+      description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex CLI 与 GPT-5.5 系列共用一个账户、一份余额、一个用量面板，不用再为两套 key、两套 endpoint、两套账单头疼。',
       primaryNote: '一键接入 · 充值便利 · 消费透明 · 价格有竞争力',
       tags: {
         coding: 'Claude Code',
@@ -146,24 +146,30 @@ export default {
       }
     },
     pricingTable: {
-      overline: '参考价格',
-      title: '按量付费，比官方 API 友好得多',
-      description: '下表为常用编码模型在 CheapRouter 的参考价格示意，对比官方公开 API 单价。实际扣费以控制台展示的当前 group / route 价格为准；同模型在不同 group 上的价格可能不同。',
+      overline: '价格优势',
+      title: '主流编码模型，最高 90% off',
+      description: 'Claude Code、Codex、GPT-5.5 系列等高级编码模型，相对官方公开 API 单价大幅折扣。一个账户、一份余额，按 token 实扣，余额长期有效。',
       badge: '目标',
       badgeValue: '总成本更低',
-      tabs: {
-        all: '全部',
-        other: '其它',
+      compareNote: '相对官方 API 单价',
+      cards: {
+        claude: {
+          tag: 'Claude 系列',
+          title: 'Claude Code 主力',
+          description: 'Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5 全系覆盖，长链路编码、重构、审查任务直接交给 Claude Code，单条 route 单独算账。',
+        },
+        codex: {
+          tag: 'Codex / GPT 系列',
+          title: 'Codex CLI 与 GPT-5.5 都在这',
+          description: '新一代 GPT-5.5 与 GPT-5.4 / GPT-5.3 Codex 同步可用，本地 Codex CLI 自动接入，无需手工改 ~/.codex 配置。',
+        },
+        compatible: {
+          tag: 'OpenAI 兼容 · 多家',
+          title: '其它兼容模型也在同一个网关',
+          description: 'Gemini、GLM、Qwen 等 OpenAI 兼容模型同入口接入，价格统一以控制台 group 当前价为准，故障原因同样可解释。',
+        },
       },
-      col: {
-        model: '模型',
-        officialInput: '官方输入价 ($/M)',
-        ourInput: '参考有效价',
-        officialOutput: '官方输出价 ($/M)',
-        savings: '参考差异',
-      },
-      modelsCount: '个模型',
-      note: '这里不承诺"全网最低价"。CheapRouter 关注的是总成本：充值入口、按量计费、分路用量、quota 与限速可见、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。',
+      note: '这里不承诺"全网最低价"。CheapRouter 关注的是总成本：充值入口、按量计费、分路用量、quota 与限速可见、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。具体折扣比率随上游 group 与模型变动，最终扣费以控制台展示价格为准。',
     },
     providers: {
       title: '把高级模型与本机编码工作流放进同一层服务',
@@ -203,9 +209,9 @@ export default {
     cta: {
       eyebrow: '开始使用',
       title: 'Claude Code 和 Codex，一次配齐',
-      description: '注册账户、充值、自动写入本地 CLI 配置 — 三步之后就能开始跑。控制台里随时看清楚每一笔 token 花在哪条 route 上。',
+      description: '注册账户、充值、自动写入本地 CLI 配置 — 三步之后就能开始跑。Claude 全系、Codex CLI 与 GPT-5.5 都在同一个余额下，控制台里随时看清楚每一笔 token 花在哪条 route 上。',
       button: '开始配置',
-      stat: '一键接入 · 按量计费 · 用量透明 · 价格友好'
+      stat: '一键接入 · 按量计费 · 用量透明 · 最高 90% off'
     },
     footer: {
       allRightsReserved: '保留所有权利。',

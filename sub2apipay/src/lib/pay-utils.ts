@@ -232,6 +232,17 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
     chartBar: { light: 'bg-purple-500', dark: 'bg-purple-400' },
     buttonClass: 'bg-[#635bff] hover:bg-[#5249d9] active:bg-[#4840c4]',
   },
+  [PAYMENT_TYPE.BANK]: {
+    label: '银行卡转账',
+    provider: 'Bank Transfer',
+    color: '#D4A574',
+    selectedBorder: 'border-amber-400',
+    selectedBg: 'bg-amber-50',
+    selectedBgDark: 'bg-amber-950',
+    iconBg: 'bg-[#D4A574]',
+    chartBar: { light: 'bg-amber-500', dark: 'bg-amber-400' },
+    buttonClass: 'bg-[#D4A574] hover:bg-[#c49a6c] active:bg-[#b48b60]',
+  },
 };
 
 const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider: string; sublabel?: string }>> = {
@@ -244,6 +255,7 @@ const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider:
     [PAYMENT_TYPE.USDT_POLYGON]: { label: 'USDT', provider: '易支付', sublabel: 'Polygon' },
     [PAYMENT_TYPE.USDC_SOLANA]: { label: 'USDC', provider: '易支付', sublabel: 'Solana' },
     [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
+    [PAYMENT_TYPE.BANK]: { label: '银行卡转账', provider: 'Bank Transfer' },
   },
   en: {
     [PAYMENT_TYPE.ALIPAY]: { label: 'Alipay', provider: 'EasyPay' },
@@ -254,6 +266,7 @@ const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider:
     [PAYMENT_TYPE.USDT_POLYGON]: { label: 'USDT', provider: 'EasyPay', sublabel: 'Polygon' },
     [PAYMENT_TYPE.USDC_SOLANA]: { label: 'USDC', provider: 'EasyPay', sublabel: 'Solana' },
     [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
+    [PAYMENT_TYPE.BANK]: { label: 'Bank Transfer', provider: 'Bank Transfer' },
   },
 };
 
@@ -294,6 +307,7 @@ export function getPaymentIconType(type: string): string {
   if (type.startsWith(PAYMENT_PREFIX.USDT)) return PAYMENT_PREFIX.USDT;
   if (type.startsWith(PAYMENT_PREFIX.USDC)) return PAYMENT_PREFIX.USDC;
   if (type.startsWith(PAYMENT_PREFIX.STRIPE)) return PAYMENT_PREFIX.STRIPE;
+  if (type.startsWith(PAYMENT_PREFIX.BANK)) return PAYMENT_PREFIX.BANK;
   return type;
 }
 

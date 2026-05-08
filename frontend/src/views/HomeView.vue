@@ -35,6 +35,10 @@
         :dashboard-path="dashboardPath"
       />
 
+      <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
+        <HomeDownloadSection />
+      </HomeReveal>
+
       <HomeReveal class="px-4 pb-8 md:px-6">
         <HomeProofStrip />
       </HomeReveal>
@@ -53,10 +57,6 @@
 
       <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
         <HomeTrustSection />
-      </HomeReveal>
-
-      <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
-        <HomeDownloadSection />
       </HomeReveal>
 
       <HomeReveal class="px-4 py-8 md:px-6 md:py-12">

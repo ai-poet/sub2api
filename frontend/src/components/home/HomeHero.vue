@@ -143,6 +143,8 @@
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
             <span class="ticker-item font-mono text-xs text-gray-400 dark:text-white/30 sm:text-sm">Claude Opus 4.6</span>
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-xs text-gray-400 dark:text-white/30 sm:text-sm">gpt-5.5</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
             <span class="ticker-item font-mono text-xs text-gray-400 dark:text-white/30 sm:text-sm">gpt-5.3-codex</span>
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
           </span>
@@ -159,6 +161,8 @@
             <span class="ticker-item font-mono text-xs text-gray-400 dark:text-white/30 sm:text-sm">gpt-5.2</span>
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
             <span class="ticker-item font-mono text-xs text-gray-400 dark:text-white/30 sm:text-sm">claude-opus-4-5-20251101</span>
+            <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
+            <span class="ticker-item font-mono text-xs text-gray-400 dark:text-white/30 sm:text-sm">GPT-5.5</span>
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>
             <span class="ticker-item font-mono text-xs text-gray-400 dark:text-white/30 sm:text-sm">GPT-5.3 Codex</span>
             <span class="ticker-sep font-mono text-sm text-gray-300 dark:text-white/20">·</span>

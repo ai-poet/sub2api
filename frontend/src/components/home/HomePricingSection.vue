@@ -24,97 +24,55 @@
         </div>
       </div>
 
-      <!-- Tab filter -->
-      <div class="mt-8 flex flex-wrap gap-2">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          type="button"
-          class="rounded-full px-4 py-1.5 text-sm font-medium transition"
-          :class="
-            activeTab === tab.key
-              ? 'bg-[#111] text-white dark:bg-white dark:text-[#111]'
-              : 'border border-black/12 text-[#666] hover:border-black/20 hover:text-[#111] dark:border-white/15 dark:text-white/52 dark:hover:border-white/30 dark:hover:text-white'
-          "
-          @click="activeTab = tab.key"
+      <!-- Discount cards -->
+      <div class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <article
+          v-for="card in cards"
+          :key="card.key"
+          class="relative overflow-hidden rounded-[26px] border border-black/8 bg-white p-6 shadow-[0_2px_20px_rgba(0,0,0,0.04)] transition hover:-translate-y-[2px] hover:shadow-[0_18px_48px_rgba(13,148,136,0.12)] dark:border-white/10 dark:bg-white/[0.03]"
         >
-          {{ tab.label }}
-        </button>
-      </div>
+          <!-- Decorative gradient -->
+          <div class="pointer-events-none absolute right-[-3rem] top-[-3rem] h-32 w-32 rounded-full bg-primary-500/10 blur-3xl"></div>
 
-      <!-- Table -->
-      <div class="mt-5 overflow-hidden rounded-[22px] border border-black/8 dark:border-white/10">
-        <!-- Header row -->
-        <div class="hidden grid-cols-[minmax(0,2fr)_120px_120px_120px_100px] bg-[#16181d] px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/60 md:grid">
-          <div>{{ t('home.pricingTable.col.model') }}</div>
-          <div class="text-right">{{ t('home.pricingTable.col.officialInput') }}</div>
-          <div class="text-right">{{ t('home.pricingTable.col.ourInput') }}</div>
-          <div class="text-right">{{ t('home.pricingTable.col.officialOutput') }}</div>
-          <div class="text-center">{{ t('home.pricingTable.col.savings') }}</div>
-        </div>
-
-        <div class="divide-y divide-black/6 bg-white dark:divide-white/8 dark:bg-[#14181f]">
-          <template v-for="group in filteredGroups" :key="group.platform">
-            <!-- Platform group header -->
-            <div class="flex items-center gap-3 bg-[#f8f6f3]/80 px-6 py-2.5 dark:bg-white/3">
-              <span class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8b8378] dark:text-white/38">
-                {{ group.platform }}
-              </span>
-              <span class="rounded-full bg-black/6 px-2 py-0.5 text-[10px] text-[#666] dark:bg-white/10 dark:text-white/38">
-                {{ group.models.length }} {{ t('home.pricingTable.modelsCount') }}
+          <div class="relative">
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-[#111] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white dark:bg-white dark:text-[#111]">
+                {{ card.tag }}
               </span>
             </div>
 
-            <!-- Model rows -->
-            <div
-              v-for="model in group.models"
-              :key="model.id"
-              class="grid gap-y-2 px-5 py-4 transition-colors hover:bg-black/[0.018] md:grid-cols-[minmax(0,2fr)_120px_120px_120px_100px] md:items-center md:px-6 dark:hover:bg-white/[0.02]"
-            >
-              <!-- Model name + tags -->
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="font-medium text-[#111] dark:text-white">{{ model.name }}</span>
-                <span
-                  v-if="model.tag"
-                  class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  :class="tagClass(model.tag)"
-                >
-                  {{ model.tag }}
-                </span>
-                <span class="hidden text-xs text-[#aaa] dark:text-white/28 md:inline">{{ model.id }}</span>
-              </div>
-
-              <!-- Official input price -->
-              <div class="flex items-center justify-between md:block md:text-right">
-                <span class="text-xs text-[#aaa] dark:text-white/28 md:hidden">{{ t('home.pricingTable.col.officialInput') }}</span>
-                <span class="text-sm text-[#888] line-through dark:text-white/38">${{ model.officialInput }}</span>
-              </div>
-
-              <!-- Our input price -->
-              <div class="flex items-center justify-between md:block md:text-right">
-                <span class="text-xs text-[#aaa] dark:text-white/28 md:hidden">{{ t('home.pricingTable.col.ourInput') }}</span>
-                <span class="text-sm font-semibold text-primary-700 dark:text-primary-300">{{ isChinese ? '¥' : '$' }}{{ isChinese ? model.ourInput : model.ourInputUsd }}</span>
-              </div>
-
-              <!-- Official output price -->
-              <div class="flex items-center justify-between md:block md:text-right">
-                <span class="text-xs text-[#aaa] dark:text-white/28 md:hidden">{{ t('home.pricingTable.col.officialOutput') }}</span>
-                <span class="text-sm text-[#888] line-through dark:text-white/38">${{ model.officialOutput }}</span>
-              </div>
-
-              <!-- Savings badge -->
-              <div class="flex justify-start md:justify-center">
-                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                  -{{ model.savings }}%
-                </span>
-              </div>
+            <div class="mt-5 flex items-baseline gap-2">
+              <span class="text-[clamp(2.4rem,5vw,3.4rem)] font-black leading-none tracking-[-0.04em] text-primary-600 dark:text-primary-400">
+                {{ card.discount }}
+              </span>
+              <span class="text-base font-semibold uppercase tracking-[0.14em] text-primary-600 dark:text-primary-400">off</span>
             </div>
-          </template>
-        </div>
+            <div class="mt-1 text-xs text-[#9b948b] dark:text-white/35">
+              {{ t('home.pricingTable.compareNote') }}
+            </div>
+
+            <h3 class="mt-6 text-lg font-semibold tracking-tight text-[#111] dark:text-white">
+              {{ card.title }}
+            </h3>
+            <p class="mt-2 text-sm leading-6 text-[#5f5850] dark:text-white/65">
+              {{ card.description }}
+            </p>
+
+            <div class="mt-5 flex flex-wrap gap-2">
+              <span
+                v-for="model in card.models"
+                :key="model"
+                class="rounded-full border border-black/8 bg-[#f7f3ee] px-2.5 py-1 text-xs text-[#3d362e] dark:border-white/10 dark:bg-white/5 dark:text-white/70"
+              >
+                {{ model }}
+              </span>
+            </div>
+          </div>
+        </article>
       </div>
 
       <!-- Footer note -->
-      <p class="mt-4 text-[12px] leading-6 text-[#999] dark:text-white/30">
+      <p class="mt-6 text-[12px] leading-6 text-[#999] dark:text-white/30">
         {{ t('home.pricingTable.note') }}
       </p>
     </div>
@@ -122,145 +80,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
-const isChinese = computed(() => locale.value === 'zh')
-
-const activeTab = ref('all')
-
-const tabs = computed(() => [
-  { key: 'all', label: t('home.pricingTable.tabs.all') },
-  { key: 'claude', label: 'Claude' },
-  { key: 'openai', label: 'Codex / GPT' },
+const cards = computed(() => [
+  {
+    key: 'claude',
+    tag: t('home.pricingTable.cards.claude.tag'),
+    discount: '90% off',
+    title: t('home.pricingTable.cards.claude.title'),
+    description: t('home.pricingTable.cards.claude.description'),
+    models: ['Claude Sonnet 4.6', 'Claude Opus 4.7', 'Claude Haiku 4.5'],
+  },
+  {
+    key: 'codex',
+    tag: t('home.pricingTable.cards.codex.tag'),
+    discount: '85% off',
+    title: t('home.pricingTable.cards.codex.title'),
+    description: t('home.pricingTable.cards.codex.description'),
+    models: ['GPT-5.5', 'GPT-5.5 Codex', 'GPT-5.4', 'GPT-5.3 Codex'],
+  },
+  {
+    key: 'compatible',
+    tag: t('home.pricingTable.cards.compatible.tag'),
+    discount: '80% off',
+    title: t('home.pricingTable.cards.compatible.title'),
+    description: t('home.pricingTable.cards.compatible.description'),
+    models: [t('home.providers.openaiCompatible'), 'Gemini', 'GLM', 'Qwen'],
+  },
 ])
-
-// GLM分组 (0.25× multiplier, ¥0.70/$1 platform rate → actual CNY = official_USD × 0.25 × 0.70)
-// ourInput: CNY per M tokens  ourInputUsd: actual USD per M tokens (ourInput ÷ 7)
-const allGroups = [
-  {
-    platform: 'Claude',
-    tab: 'claude',
-    models: [
-      {
-        id: 'claude-haiku-4-5-20251001',
-        name: 'Claude Haiku 4.5',
-        tag: 'fast',
-        officialInput: '1.00',
-        officialOutput: '5.00',
-        ourInput: '0.175',
-        ourInputUsd: '0.025',
-        savings: 97,
-      },
-      {
-        id: 'claude-sonnet-4-5-20250929',
-        name: 'Claude Sonnet 4.5',
-        tag: null,
-        officialInput: '3.00',
-        officialOutput: '15.00',
-        ourInput: '0.525',
-        ourInputUsd: '0.075',
-        savings: 97,
-      },
-      {
-        id: 'claude-sonnet-4-6',
-        name: 'Claude Sonnet 4.6',
-        tag: 'coding',
-        officialInput: '3.00',
-        officialOutput: '15.00',
-        ourInput: '0.525',
-        ourInputUsd: '0.075',
-        savings: 97,
-      },
-      {
-        id: 'claude-opus-4-5-20251101',
-        name: 'Claude Opus 4.5',
-        tag: null,
-        officialInput: '5.00',
-        officialOutput: '25.00',
-        ourInput: '0.875',
-        ourInputUsd: '0.125',
-        savings: 97,
-      },
-      {
-        id: 'claude-opus-4-6',
-        name: 'Claude Opus 4.6',
-        tag: 'flagship',
-        officialInput: '5.00',
-        officialOutput: '25.00',
-        ourInput: '0.875',
-        ourInputUsd: '0.125',
-        savings: 97,
-      },
-      {
-        id: 'claude-opus-4-7',
-        name: 'Claude Opus 4.7',
-        tag: 'new',
-        officialInput: '5.00',
-        officialOutput: '25.00',
-        ourInput: '0.875',
-        ourInputUsd: '0.125',
-        savings: 97,
-      },
-    ],
-  },
-  {
-    platform: 'Codex / GPT',
-    tab: 'openai',
-    models: [
-      {
-        id: 'gpt-5.4',
-        name: 'GPT-5.4',
-        tag: 'flagship',
-        officialInput: '2.50',
-        officialOutput: '15.00',
-        ourInput: '1.400',
-        ourInputUsd: '0.200',
-        savings: 92,
-      },
-      {
-        id: 'gpt-5.3-codex',
-        name: 'GPT-5.3 Codex',
-        tag: 'coding',
-        officialInput: '1.75',
-        officialOutput: '14.00',
-        ourInput: '0.980',
-        ourInputUsd: '0.140',
-        savings: 92,
-      },
-      {
-        id: 'gpt-5.2',
-        name: 'GPT-5.2',
-        tag: null,
-        officialInput: '1.75',
-        officialOutput: '14.00',
-        ourInput: '0.980',
-        ourInputUsd: '0.140',
-        savings: 92,
-      },
-    ],
-  },
-]
-
-const filteredGroups = computed(() => {
-  if (activeTab.value === 'all') return allGroups
-  return allGroups.filter(g => g.tab === activeTab.value)
-})
-
-function tagClass(tag: string | null) {
-  switch (tag) {
-    case 'flagship':
-      return 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-    case 'coding':
-      return 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-    case 'fast':
-      return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-    case 'new':
-      return 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-    default:
-      return 'bg-[#f0ede8] text-[#666] dark:bg-white/8 dark:text-white/40'
-  }
-}
 </script>

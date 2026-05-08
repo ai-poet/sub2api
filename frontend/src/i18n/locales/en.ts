@@ -21,7 +21,7 @@ export default {
       titleLeadSecondary: 'and Codex,',
       titleAccent: 'one workspace',
       titleTail: 'is enough',
-      description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Run Claude Code and Codex on a single account, balance, and usage panel — no more juggling two keys, two endpoints, and two bills.',
+      description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Claude Code, Codex CLI, and the GPT-5.5 family share a single account, balance, and usage panel — no more juggling two keys, two endpoints, and two bills.',
       primaryNote: 'One-click setup · easy top-up · clear spend · friendly pricing',
       tags: {
         coding: 'Claude Code',
@@ -146,24 +146,30 @@ export default {
       }
     },
     pricingTable: {
-      overline: 'Reference pricing',
-      title: 'Pay-as-you-go, friendlier than the official API',
-      description: 'The table below shows reference price examples for common coding models on CheapRouter, compared with public official API rates. Actual billing follows the current group / route price shown in your dashboard; the same model may price differently across groups.',
+      overline: 'Pricing advantage',
+      title: 'Up to 90% off mainstream coding models',
+      description: 'Premium coding models — Claude Code, Codex, the GPT-5.5 family — at substantial discounts versus public official API rates. One account, one balance, true token-level metering, balance never expires.',
       badge: 'Goal',
       badgeValue: 'Lower total cost',
-      tabs: {
-        all: 'All',
-        other: 'Other',
+      compareNote: 'vs official API rate',
+      cards: {
+        claude: {
+          tag: 'Claude family',
+          title: 'For heavy Claude Code work',
+          description: 'Full coverage of Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5. Long-context coding, refactors, and reviews stay on Claude Code with each route billed on its own.',
+        },
+        codex: {
+          tag: 'Codex / GPT family',
+          title: 'Codex CLI and GPT-5.5, both here',
+          description: 'New GPT-5.5 available alongside GPT-5.4 and GPT-5.3 Codex. Local Codex CLI is auto-wired — no manual edits to ~/.codex.',
+        },
+        compatible: {
+          tag: 'OpenAI-compatible · others',
+          title: 'Other compatible models, same gateway',
+          description: 'Gemini, GLM, Qwen and more OpenAI-compatible models share the entry; pricing follows the current group price in your dashboard, with the same explainable failure reasons.',
+        },
       },
-      col: {
-        model: 'Model',
-        officialInput: 'Official input ($/M)',
-        ourInput: 'Reference effective',
-        officialOutput: 'Official output ($/M)',
-        savings: 'Reference delta',
-      },
-      modelsCount: 'models',
-      note: 'No "absolute lowest price" promise here. CheapRouter focuses on total cost: a single top-up entry, true pay-as-you-go metering, route-level usage, visible quota and rate limits, and clear failure reasons — so AI coding stays affordable, observable, and debuggable over the long run.',
+      note: 'No "absolute lowest price" promise here. CheapRouter focuses on total cost: a single top-up entry, true pay-as-you-go metering, route-level usage, visible quota and rate limits, and clear failure reasons. The exact discount varies by upstream group and model — final billing follows the price shown in your dashboard.',
     },
     providers: {
       title: 'Premium models and local coding workflows under one service layer',
@@ -203,9 +209,9 @@ export default {
     cta: {
       eyebrow: 'GET STARTED',
       title: 'Claude Code and Codex, set up in one go',
-      description: 'Sign up, top up, and let CheapRouter write your local CLI configs — three steps and you are running. The dashboard shows exactly which route every token is billed against.',
+      description: 'Sign up, top up, and let CheapRouter write your local CLI configs — three steps and you are running. The full Claude family, Codex CLI, and GPT-5.5 share the same balance, and the dashboard shows exactly which route every token is billed against.',
       button: 'Start setup',
-      stat: 'One-click setup · pay-as-you-go · visible usage · friendly pricing'
+      stat: 'One-click setup · pay-as-you-go · visible usage · up to 90% off'
     },
     footer: {
       allRightsReserved: 'All rights reserved.',

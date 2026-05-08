@@ -17,13 +17,14 @@ const ROUTING_QUERY_KEYS = new Set(['inst']);
 export class EasyPayProvider implements PaymentProvider {
   readonly name: string;
   readonly providerKey = 'easypay';
-  readonly supportedTypes: PaymentType[] = ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana'];
+  readonly supportedTypes: PaymentType[] = ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana', 'bank'];
   readonly defaultLimits = {
     alipay: { singleMax: 1000, dailyMax: 10000 },
     wxpay: { singleMax: 1000, dailyMax: 10000 },
     'usdt.plasma': { singleMax: 1000, dailyMax: 10000 },
     'usdt.polygon': { singleMax: 1000, dailyMax: 10000 },
     'usdc.solana': { singleMax: 1000, dailyMax: 10000 },
+    bank: { singleMax: 1000, dailyMax: 10000 },
   };
   readonly instanceId?: string;
   private instanceConfig?: Record<string, string>;

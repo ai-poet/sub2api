@@ -46,6 +46,7 @@ export const PAYMENT_TYPE = {
   USDT_POLYGON: 'usdt.polygon',
   USDC_SOLANA: 'usdc.solana',
   STRIPE: 'stripe',
+  BANK: 'bank',
 } as const;
 
 /** 支付方式前缀（用于 startsWith 判断） */
@@ -55,7 +56,13 @@ export const PAYMENT_PREFIX = {
   USDT: 'usdt',
   USDC: 'usdc',
   STRIPE: 'stripe',
+  BANK: 'bank',
 } as const;
 
 /** 需要页面跳转（而非二维码）的支付方式 */
-export const REDIRECT_PAYMENT_TYPES = new Set<string>([PAYMENT_TYPE.ALIPAY_DIRECT]);
+export const REDIRECT_PAYMENT_TYPES = new Set<string>([
+  PAYMENT_TYPE.ALIPAY_DIRECT,
+  PAYMENT_TYPE.ALIPAY,
+  PAYMENT_TYPE.WXPAY,
+  PAYMENT_TYPE.BANK,
+]);

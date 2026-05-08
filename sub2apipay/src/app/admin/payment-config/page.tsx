@@ -162,6 +162,7 @@ const PAYMENT_TYPE_LABELS: Record<string, { zh: string; en: string }> = {
   'usdt.polygon': { zh: 'USDT (Polygon)', en: 'USDT (Polygon)' },
   'usdc.solana': { zh: 'USDC (Solana)', en: 'USDC (Solana)' },
   stripe: { zh: 'Stripe', en: 'Stripe' },
+  bank: { zh: '银行卡转账', en: 'Bank Transfer' },
 };
 
 const PROVIDER_LABELS: Record<string, { zh: string; en: string }> = {
@@ -172,7 +173,7 @@ const PROVIDER_LABELS: Record<string, { zh: string; en: string }> = {
 };
 
 const PROVIDER_SUPPORTED_TYPES: Record<string, string[]> = {
-  easypay: ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana'],
+  easypay: ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana', 'bank'],
   alipay: ['alipay_direct'],
   wxpay: ['wxpay_direct'],
   stripe: ['stripe'],
