@@ -61,10 +61,6 @@
         </article>
       </div>
 
-      <!-- Footer note -->
-      <p class="mt-6 text-[12px] leading-6 text-[#999] dark:text-white/30">
-        {{ t('home.pricingTable.note') }}
-      </p>
     </div>
   </section>
 </template>

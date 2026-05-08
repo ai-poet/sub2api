@@ -94,7 +94,7 @@ export default {
         crossDevice: '跨设备同步',
       },
       caption: '客户端界面预览 — 实际功能以上线版本为准',
-      cta: '抢先体验',
+      cta: '敬请期待',
       ctaNote: '客户端即将开放下载，注册后可第一时间获取通知',
     },
     download: {
@@ -127,16 +127,16 @@ export default {
           description: 'Claude 和 Codex 各自用了多少、还剩多少额度、当前限速状态如何，都在同一处展示，不用再在多个平台之间切。'
         },
         control: {
-          eyebrow: '03 / 出错有解释',
-          title: '不只是给你一条报错',
-          description: '余额不足、额度用完、被限速、密钥不匹配、服务商不可用、协议不兼容 — 每种情况都给出明确提示，不用你猜。'
+          eyebrow: '03 / all in one',
+          title: '使用我们的服务有 SLA 保障',
+          description: '全线服务可用性、响应速度、定价策略统一管理。出问题时不抓瞎，自动切换到可用线路，或给出明确的恢复建议。'
         }
       }
     },
     comparison: {
       overline: '换个角度看',
       title: '你可能正在用这些方式之一',
-      description: 'CheapRouter 的目标不是替代它们，而是把"开通、充值、配置、看用量、看故障"这条链路一次跑通，少几次手工切换、少几个隔离账单。',
+      description: '',
       headers: {
         feature: '你正在用的方式',
         official: '常见做法的盲点',
@@ -154,9 +154,9 @@ export default {
           us: '切换之后，余额、额度、近 5 小时 / 1 天 / 7 天用量和线路健康度直接展示'
         },
         stability: {
-          feature: '多平台 API 中转',
-          official: '充值便宜，但出问题时很难判断是余额、限速、密钥、服务商、还是协议兼容问题',
-          us: '把这几类故障原因分开显示，告诉你哪一步坏了、要怎么处理'
+          feature: '工作流',
+          official: 'Cursor、Windsurf 等云端 IDE 需要你把代码上传到它们的服务器',
+          us: '比 Cursor、Windsurf 更尊重你本地的 Claude Code 和 Codex 工作流，MCP、Skill 和 Workflow 无需额外配置'
         }
       }
     },
@@ -210,8 +210,8 @@ export default {
           description: '每个服务商的可用状态、响应速度、价格都摆在台面上，出问题时不抓瞎，知道该切到另一条线路还是等自动恢复。'
         },
         visibility: {
-          title: '报错带原因，不只是数字',
-          description: '余额不足、额度用完、被限速、密钥不匹配、线路不匹配、服务商不可用、协议不兼容 — 七类常见故障都给出明确提示，不用对着一个错误码发呆。'
+          title: 'all in one',
+          description: '使用我们的服务有 SLA 保障。'
         }
       },
       trackers: {

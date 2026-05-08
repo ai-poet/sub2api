@@ -94,7 +94,7 @@ export default {
         crossDevice: 'Cross-device sync',
       },
       caption: 'Client interface preview — actual features subject to release version',
-      cta: 'Join early access',
+      cta: 'Coming soon',
       ctaNote: 'Desktop client coming soon. Register to be notified first.',
     },
     download: {
@@ -127,16 +127,16 @@ export default {
           description: 'How much Claude and Codex have used, how much credit is left, what the current speed limit looks like — all in one place, no more switching between platforms.'
         },
         control: {
-          eyebrow: '03 / Failures with a reason',
-          title: 'More than just an error code',
-          description: 'Out of balance, credit used up, speed-limited, config mismatch, provider down, or protocol incompatible — each gets a specific message, so you do not have to guess.'
+          eyebrow: '03 / All in one',
+          title: 'SLA-backed service you can rely on',
+          description: 'Service availability, response speed, and pricing strategy are managed uniformly across all lines. When issues occur, you are not left guessing — traffic automatically switches to healthy routes, or you get clear recovery guidance.'
         }
       }
     },
     comparison: {
       overline: 'A different angle',
       title: 'You are probably already using one of these',
-      description: 'CheapRouter is not here to replace them. It just runs the "open an account → top up → configure → watch usage → debug failures" path end-to-end, with fewer manual switches and fewer separate bills.',
+      description: '',
       headers: {
         feature: 'How you do it today',
         official: 'Where it falls short',
@@ -154,9 +154,9 @@ export default {
           us: 'After a switch, balance, credit, recent usage, and provider health are all visible'
         },
         stability: {
-          feature: 'Multi-platform relay services',
-          official: 'Cheap to top up, but when something breaks it is hard to tell whether it is balance, speed limits, config, provider, or protocol issue',
-          us: 'These failure types are surfaced separately — you see which step broke and what to do next'
+          feature: 'Workflow',
+          official: 'Cursor and Windsurf require uploading your code to their servers',
+          us: 'Unlike Cursor or Windsurf, we respect your local Claude Code and Codex workflow — MCP, Skill, and Workflow require no extra configuration'
         }
       }
     },
