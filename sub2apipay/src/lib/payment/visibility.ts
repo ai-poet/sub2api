@@ -29,10 +29,13 @@ function getProviderKeyForType(type: string): string | undefined {
 }
 
 function filterEasyPayTypesByLocale(types: string[], locale: Locale): string[] {
-  const allowFiat = locale === 'zh';
+  const isZh = locale === 'zh';
   return types.filter((type) => {
-    if (EASY_PAY_FIAT_TYPES.has(type)) return allowFiat;
-    if (EASY_PAY_CRYPTO_TYPES.has(type)) return !allowFiat;
+    // 中文场景：只保留微信、支付宝
+    // 英文场景：只保留 bank
+    if (EASY_PAY_FIAT_TYPES.has(type)) return isZh;
+    if (EASY_PAY_CRYPTO_TYPES.has(type)) return false;
+    if (type === 'bank') return !isZh;
     return true;
   });
 }
