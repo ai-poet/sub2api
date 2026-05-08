@@ -86,45 +86,34 @@
         </div>
       </div>
 
-      <!-- ===== Right: Scrolling Price Cards ===== -->
+      <!-- ===== Right: Product Screenshot ===== -->
       <div class="relative hidden lg:block">
-        <div
-          class="card-columns-container"
-          style="height: 560px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);"
-        >
-          <div class="flex gap-4">
-            <!-- Column 1: scrolls UP -->
-            <div class="card-col flex w-[220px] flex-none flex-col gap-4 scroll-up">
-              <template v-for="_ in 2" :key="_">
-                <div v-for="card in col1Cards" :key="card.id + _" class="price-card">
-                  <div class="card-model-name">{{ card.name }}</div>
-                  <div class="card-model-id">{{ card.id }}</div>
-                  <div class="card-price-row">
-                    <span class="card-price-teal">{{ card.price }}</span>
-                    <span class="card-price-strike">{{ card.original }}</span>
-                    <span class="card-savings-badge">{{ card.savings }}</span>
-                  </div>
-                  <div class="card-per-token">{{ t('home.hero.perToken') }}</div>
-                </div>
-              </template>
+        <div class="relative overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_20px_60px_rgba(0,0,0,0.12)] dark:border-white/10 dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+          <!-- Browser chrome -->
+          <div class="flex items-center gap-2 border-b border-gray-100 bg-gray-50/80 px-4 py-2.5 dark:border-white/8 dark:bg-white/[0.03]">
+            <div class="flex gap-1.5">
+              <span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/70"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]/70"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]/70"></span>
             </div>
-
-            <!-- Column 2: scrolls DOWN, offset start -->
-            <div class="card-col flex w-[220px] flex-none flex-col gap-4 scroll-down" style="margin-top: -160px;">
-              <template v-for="_ in 2" :key="_">
-                <div v-for="card in col2Cards" :key="card.id + _" class="price-card">
-                  <div class="card-model-name">{{ card.name }}</div>
-                  <div class="card-model-id">{{ card.id }}</div>
-                  <div class="card-price-row">
-                    <span class="card-price-teal">{{ card.price }}</span>
-                    <span class="card-price-strike">{{ card.original }}</span>
-                    <span class="card-savings-badge">{{ card.savings }}</span>
-                  </div>
-                  <div class="card-per-token">{{ t('home.hero.perToken') }}</div>
-                </div>
-              </template>
+            <div class="ml-3 flex flex-1 items-center justify-center rounded-md border border-gray-200/60 bg-white px-3 py-0.5 text-[11px] text-gray-400 dark:border-white/8 dark:bg-white/[0.04] dark:text-white/25">
+              cheaprouter.cloud
             </div>
           </div>
+          <!-- Screenshot -->
+          <div class="relative bg-[#0d0d0f]">
+            <img
+              src="/product.png"
+              alt="CheapRouter Client"
+              class="w-full"
+              loading="eager"
+            />
+          </div>
+        </div>
+        <!-- Floating discount badge -->
+        <div class="absolute -bottom-3 -right-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2.5 shadow-lg dark:border-primary-800/50 dark:bg-primary-900/40">
+          <div class="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-600 dark:text-primary-400">{{ t('home.hero.badgeDiscount') }}</div>
+          <div class="text-xl font-black tracking-tight text-primary-700 dark:text-primary-300">90% off</div>
         </div>
       </div>
     </div>
@@ -186,130 +175,13 @@ const props = defineProps<{
   dashboardPath: string
 }>()
 
-const { t, locale } = useI18n()
-
-const isChinese = computed(() => locale.value === 'zh')
+const { t } = useI18n()
 
 const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/register'))
 const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
-
-// Effective-cost examples shown for product positioning; actual billing follows live route pricing.
-const rawCol1 = [
-  { name: 'Claude Haiku 4.5',  id: 'claude-haiku-4-5-20251001',  priceCny: '¥0.175', priceUsd: '$0.025', original: '$1.00', savings: '-97%' },
-  { name: 'Claude Sonnet 4.6', id: 'claude-sonnet-4-6',           priceCny: '¥0.525', priceUsd: '$0.075', original: '$3.00', savings: '-97%' },
-  { name: 'Claude Opus 4.6',   id: 'claude-opus-4-6',             priceCny: '¥0.875', priceUsd: '$0.125', original: '$5.00', savings: '-97%' },
-  { name: 'GPT-5.4',           id: 'gpt-5.4',                     priceCny: '¥1.400', priceUsd: '$0.200', original: '$2.50', savings: '-92%' },
-  { name: 'GPT-5.3 Codex',     id: 'gpt-5.3-codex',               priceCny: '¥0.980', priceUsd: '$0.140', original: '$1.75', savings: '-92%' },
-]
-
-const rawCol2 = [
-  { name: 'Claude Sonnet 4.5', id: 'claude-sonnet-4-5-20250929',  priceCny: '¥0.525', priceUsd: '$0.075', original: '$3.00', savings: '-97%' },
-  { name: 'Claude Opus 4.5',   id: 'claude-opus-4-5-20251101',    priceCny: '¥0.875', priceUsd: '$0.125', original: '$5.00', savings: '-97%' },
-  { name: 'Claude Opus 4.7',   id: 'claude-opus-4-7',             priceCny: '¥0.875', priceUsd: '$0.125', original: '$5.00', savings: '-97%' },
-  { name: 'GPT-5.2',           id: 'gpt-5.2',                     priceCny: '¥0.980', priceUsd: '$0.140', original: '$1.75', savings: '-92%' },
-]
-
-const col1Cards = computed(() =>
-  rawCol1.map(c => ({ ...c, price: isChinese.value ? c.priceCny : c.priceUsd })),
-)
-const col2Cards = computed(() =>
-  rawCol2.map(c => ({ ...c, price: isChinese.value ? c.priceCny : c.priceUsd })),
-)
 </script>
 
 <style scoped>
-/* ─── Price Cards ─────────────────────────────────── */
-.price-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
-  padding: 14px 16px;
-  width: 220px;
-  flex-shrink: 0;
-}
-
-:global(.dark) .price-card {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.1);
-}
-
-.card-model-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-:global(.dark) .card-model-name {
-  color: rgba(255,255,255,0.9);
-}
-
-.card-model-id {
-  font-size: 11px;
-  color: #9ca3af;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.card-price-teal {
-  font-size: 20px;
-  font-weight: 700;
-  color: #0d9488;
-  letter-spacing: -0.02em;
-}
-
-.card-price-strike {
-  font-size: 12px;
-  color: #9ca3af;
-  text-decoration: line-through;
-}
-
-.card-savings-badge {
-  font-size: 11px;
-  font-weight: 700;
-  color: #16a34a;
-  background: #dcfce7;
-  border-radius: 6px;
-  padding: 1px 6px;
-}
-
-.card-per-token {
-  font-size: 10px;
-  color: #d1d5db;
-  margin-top: 4px;
-}
-
-/* ─── Scroll Animations ───────────────────────────── */
-.scroll-up {
-  animation: scroll-up 22s linear infinite;
-}
-
-.scroll-down {
-  animation: scroll-down 22s linear infinite;
-}
-
-@keyframes scroll-up {
-  0%   { transform: translateY(0); }
-  100% { transform: translateY(-50%); }
-}
-
-@keyframes scroll-down {
-  0%   { transform: translateY(-50%); }
-  100% { transform: translateY(0); }
-}
-
 /* ─── Ticker ──────────────────────────────────────── */
 .marquee-left {
   animation: marquee-left 30s linear infinite;
@@ -331,8 +203,6 @@ const col2Cards = computed(() =>
 
 /* ─── Reduced Motion ──────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .scroll-up,
-  .scroll-down,
   .marquee-left,
   .marquee-right {
     animation: none;

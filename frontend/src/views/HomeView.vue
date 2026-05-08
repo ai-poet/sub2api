@@ -39,6 +39,10 @@
         <HomeDownloadSection />
       </HomeReveal>
 
+      <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
+        <HomeClientShowcase />
+      </HomeReveal>
+
       <HomeReveal class="px-4 pb-8 md:px-6">
         <HomeProofStrip />
       </HomeReveal>
@@ -79,6 +83,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
+import HomeClientShowcase from '@/components/home/HomeClientShowcase.vue'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
 import HomeDownloadSection from '@/components/home/HomeDownloadSection.vue'
 import HomePricingSection from '@/components/home/HomePricingSection.vue'

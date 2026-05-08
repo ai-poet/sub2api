@@ -21,8 +21,9 @@ export default {
       titleLeadSecondary: 'and Codex,',
       titleAccent: 'one workspace',
       titleTail: 'is enough',
-      description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Claude Code, Codex CLI, and the GPT-5.5 family share a single account, balance, and usage panel — no more juggling two keys, two endpoints, and two bills.',
+      description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Claude Code, Codex, and GPT-5.5 share one account, one balance, and one usage panel — no more juggling two configs, two addresses, and two bills.',
       primaryNote: 'One-click setup · easy top-up · clear spend · friendly pricing',
+      badgeDiscount: 'vs official API',
       tags: {
         coding: 'Claude Code',
         agent: 'Codex',
@@ -30,38 +31,38 @@ export default {
       },
       stats: {
         setupValue: '1 step',
-        savings: 'Local CLI configured automatically',
-        routesValue: '2 routes',
-        models: 'Claude / Codex each with their own key',
+        savings: 'Local tools configured automatically',
+        routesValue: '2 setups',
+        models: 'Claude / Codex managed separately',
         workspaceValue: '1 place',
         minCost: 'Balance, usage, and failure reasons all here',
       },
-      perToken: 'reference price example / M tokens',
+      perToken: 'reference price',
       panel: {
-        title: 'A request layer shaped for daily coding agents',
+        title: 'One entry point for daily coding',
         auto: 'Auto Rotating',
         requestLabel: 'request',
         modelLabel: 'models',
-        routeLabel: 'route',
+        routeLabel: 'line',
         billLabel: 'billing',
         scenarios: {
           completions: {
-            title: 'One endpoint for premium-model access, quota control, and automatic switching',
-            subtitle: 'Keep the familiar OpenAI chat/completions request shape while moving model access, billing, and failover into one service layer.',
-            route: 'Multi-account routing + sticky sessions',
-            billing: 'Metered billing with traceable detail'
+            title: 'One entry for premium models, usage control, and auto-switching',
+            subtitle: 'Keep the familiar OpenAI chat style while moving model access, billing, and switching into one place.',
+            route: 'Multi-account auto-switching',
+            billing: 'Pay for what you use, traceable'
           },
           responses: {
-            title: 'Not just completions. Responses and tool calls fit here too.',
-            subtitle: 'Built for tool-enabled, long-running, agentic workloads without splitting different request styles into separate services.',
-            route: 'Tool calls + long-running agent flows',
-            billing: 'Metered billing with traceable detail'
+            title: 'Not just chat. Tool calls and long tasks fit here too.',
+            subtitle: 'Built for tool-enabled, long-running workloads without splitting different styles into separate services.',
+            route: 'Tool calls + long-running tasks',
+            billing: 'Pay for what you use, traceable'
           },
           messages: {
-            title: 'Claude Messages requests can stay inside the same gateway layer',
-            subtitle: 'Keep Claude-native calling patterns while reusing unified quotas, routing, and billing.',
-            route: 'Claude-native + unified gateway',
-            billing: 'Metered billing with traceable detail'
+            title: 'Claude conversations stay inside the same entry',
+            subtitle: 'Keep Claude-native patterns while reusing unified usage limits, switching, and billing.',
+            route: 'Claude-native + unified entry',
+            billing: 'Pay for what you use, traceable'
           }
         }
       }
@@ -82,13 +83,27 @@ export default {
     proofStrip: {
       overline: 'Platform capabilities',
     },
+    clientShowcase: {
+      badge: 'Client preview',
+      title: 'One desktop app for Claude Code and Codex',
+      description: 'Dark theme, three-pane layout, built-in terminal. Workspaces and tasks on the left, Claude Code / Codex conversations and code in the center, file changes and spend tracking on the right. Everything in one window, no context switching.',
+      pills: {
+        darkMode: 'Dark theme',
+        workspace: 'Workspace management',
+        terminal: 'Built-in terminal',
+        crossDevice: 'Cross-device sync',
+      },
+      caption: 'Client interface preview — actual features subject to release version',
+      cta: 'Join early access',
+      ctaNote: 'Desktop client coming soon. Register to be notified first.',
+    },
     download: {
       badge: 'Client workflow',
       comingSoon: 'Coming soon',
       title: 'Desktop client coming soon',
-      description: 'The desktop client will handle "auto-configure Claude Code / Codex CLI, create or reuse scoped keys, never overwrite existing routes" — install and skip the manual config-file editing. Web console and mobile will land alongside it, so you can keep watching the current route and spend across devices.',
-      privacyCode: 'Auto-writes ~/.claude and ~/.codex configs without overwriting existing routes',
-      privacyKey: 'Desktop, Web, and mobile share the same usage and failure view',
+      description: 'Install the desktop client and it configures Claude Code and Codex for you, creating or reusing the right settings without overwriting what you already have. Web console and mobile will land alongside it, so you can check current status and spend from any device.',
+      privacyCode: 'Auto-writes local config files without overwriting existing settings',
+      privacyKey: 'Desktop, Web, and mobile share the same usage and failure info',
       cta: 'Coming soon',
       platforms: {
         mac: { sub: 'Apple Silicon & Intel' },
@@ -99,22 +114,22 @@ export default {
     value: {
       overline: 'Why CheapRouter',
       title: 'The boring parts of running Claude Code and Codex, made easy',
-      description: 'Not another IDE, and not just another relay API. CheapRouter pulls together the scattered chores — sign up, top up, configure local CLIs, watch usage, debug failures — into one smooth path.',
+      description: 'Not another IDE, and not just another relay service. CheapRouter pulls together the scattered chores — sign up, top up, configure local tools, watch usage, debug failures — into one smooth path.',
       items: {
         economics: {
           eyebrow: '01 / Fast onboarding',
           title: 'Local config, written for you',
-          description: 'After sign-up, scoped keys for Claude Code and Codex are generated automatically and written into the matching local config files — without overwriting your existing routes.'
+          description: 'After sign-up, CheapRouter configures Claude Code and Codex automatically — without overwriting your existing settings.'
         },
         reliability: {
           eyebrow: '02 / Spend you can see',
-          title: 'One balance panel for both routes',
-          description: 'How many tokens Claude and Codex have used, how much quota is left, what the current rate-limit window looks like — all in one place, no more switching between platforms.'
+          title: 'One balance panel for both tools',
+          description: 'How much Claude and Codex have used, how much credit is left, what the current speed limit looks like — all in one place, no more switching between platforms.'
         },
         control: {
           eyebrow: '03 / Failures with a reason',
           title: 'More than just an error code',
-          description: 'Out of balance, quota used up, rate-limited, key mismatch, upstream group down, or protocol incompatible — each gets a specific message, so you do not have to guess.'
+          description: 'Out of balance, credit used up, speed-limited, config mismatch, provider down, or protocol incompatible — each gets a specific message, so you do not have to guess.'
         }
       }
     },
@@ -130,17 +145,17 @@ export default {
       items: {
         pricing: {
           feature: 'Official accounts + manual config',
-          official: 'One account per tool — multiple accounts, multiple keys, multiple bills, and you maintain ~/.claude and ~/.codex by hand',
-          us: 'One account, both CLI configs written automatically, scoped keys can be reused, balance shared across tools'
+          official: 'One account per tool — multiple accounts, multiple configs, multiple bills, and you maintain everything by hand',
+          us: 'One account, both tools configured automatically, settings can be reused, balance shared across tools'
         },
         models: {
-          feature: 'Local switcher / multi-endpoint scripts',
-          official: 'Can swap endpoint and key, but cannot tell you the remaining balance, current quota, or rate-limit state',
-          us: 'After a switch, balance, quota, 5h / 1d / 7d usage windows, and group health are all visible'
+          feature: 'Local switcher scripts',
+          official: 'Can swap addresses, but cannot tell you the remaining balance, current credit, or speed-limit state',
+          us: 'After a switch, balance, credit, recent usage, and provider health are all visible'
         },
         stability: {
-          feature: 'Multi-platform relay APIs',
-          official: 'Cheap to top up, but when something breaks it is hard to tell whether it is balance, rate limits, key, upstream, or protocol incompatibility',
+          feature: 'Multi-platform relay services',
+          official: 'Cheap to top up, but when something breaks it is hard to tell whether it is balance, speed limits, config, provider, or protocol issue',
           us: 'These failure types are surfaced separately — you see which step broke and what to do next'
         }
       }
@@ -148,7 +163,7 @@ export default {
     pricingTable: {
       overline: 'Pricing advantage',
       title: 'Up to 90% off mainstream coding models',
-      description: 'Premium coding models — Claude Code, Codex, the GPT-5.5 family — at substantial discounts versus public official API rates. One account, one balance, true token-level metering, balance never expires.',
+      description: 'Premium coding models — Claude Code, Codex, and GPT-5.5 — at much better prices than official API rates. One account, one balance, pay for what you use, balance never expires.',
       badge: 'Goal',
       badgeValue: 'Lower total cost',
       compareNote: 'vs official API rate',
@@ -156,20 +171,20 @@ export default {
         claude: {
           tag: 'Claude family',
           title: 'For heavy Claude Code work',
-          description: 'Full coverage of Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5. Long-context coding, refactors, and reviews stay on Claude Code with each route billed on its own.',
+          description: 'Full coverage of Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5. Daily coding, refactors, and reviews on Claude Code, with each line billed separately.',
         },
         codex: {
           tag: 'Codex / GPT family',
-          title: 'Codex CLI and GPT-5.5, both here',
-          description: 'New GPT-5.5 available alongside GPT-5.4 and GPT-5.3 Codex. Local Codex CLI is auto-wired — no manual edits to ~/.codex.',
+          title: 'Codex and GPT-5.5, both here',
+          description: 'New GPT-5.5 available alongside GPT-5.4 and GPT-5.3 Codex. Local Codex is configured automatically — no manual edits needed.',
         },
         compatible: {
           tag: 'OpenAI-compatible · others',
           title: 'Other compatible models, same gateway',
-          description: 'Gemini, GLM, Qwen and more OpenAI-compatible models share the entry; pricing follows the current group price in your dashboard, with the same explainable failure reasons.',
+          description: 'Gemini, GLM, Qwen and more compatible models share the same entry; pricing follows what you see in your dashboard, with clear failure messages too.',
         },
       },
-      note: 'No "absolute lowest price" promise here. CheapRouter focuses on total cost: a single top-up entry, true pay-as-you-go metering, route-level usage, visible quota and rate limits, and clear failure reasons. The exact discount varies by upstream group and model — final billing follows the price shown in your dashboard.',
+      note: 'No "absolute lowest price" promise here. CheapRouter focuses on total cost: one place to top up, pay for what you use, usage tracked per line, visible credit and speed limits, and clear failure reasons. Discounts vary by provider and model — final billing follows the price shown in your dashboard.',
     },
     providers: {
       title: 'Premium models and local coding workflows under one service layer',
@@ -188,16 +203,16 @@ export default {
       description: 'The biggest pain with relay services is opacity — you do not know how much balance is left, and you do not know what broke. CheapRouter makes those two things explicit so you do not have to guess.',
       cards: {
         gateway: {
-          title: 'Each route billed on its own',
-          description: 'Claude Code and Codex use their own keys without overwriting each other. Per-route current spend, 5h / 1d / 7d usage windows, and remaining quota are tracked separately.'
+          title: 'Each line billed separately',
+          description: 'Claude Code and Codex use their own settings without overwriting each other. Per-line current spend, recent usage, and remaining credit are tracked separately.'
         },
         resilience: {
-          title: 'Upstream issues, surfaced early',
-          description: 'Each upstream group exposes availability, average latency, and price multiplier — so when something breaks you know which route is affected and can switch manually or wait for auto-failover.'
+          title: 'Provider issues, surfaced early',
+          description: 'Each provider shows availability, response speed, and pricing — so when something breaks you know which line is affected and can switch manually or wait for auto-recovery.'
         },
         visibility: {
-          title: 'Errors come with reasons, not just status codes',
-          description: 'Out of balance, quota exhausted, rate-limited, key mismatch, route mismatch, upstream down, or protocol incompatibility — each of these seven common failures gets a specific message so you are not staring at a bare 500.'
+          title: 'Errors come with reasons, not just numbers',
+          description: 'Out of balance, credit exhausted, speed-limited, config mismatch, line mismatch, provider down, or protocol incompatibility — each of these seven common failures gets a specific message so you are not staring at a bare error code.'
         }
       },
       trackers: {
@@ -209,7 +224,7 @@ export default {
     cta: {
       eyebrow: 'GET STARTED',
       title: 'Claude Code and Codex, set up in one go',
-      description: 'Sign up, top up, and let CheapRouter write your local CLI configs — three steps and you are running. The full Claude family, Codex CLI, and GPT-5.5 share the same balance, and the dashboard shows exactly which route every token is billed against.',
+      description: 'Sign up, top up, and let CheapRouter configure your local tools — three steps and you are running. The full Claude family, Codex, and GPT-5.5 share the same balance, and the dashboard shows exactly which line every charge is billed against.',
       button: 'Start setup',
       stat: 'One-click setup · pay-as-you-go · visible usage · up to 90% off'
     },

@@ -21,8 +21,9 @@ export default {
       titleLeadSecondary: '和 Codex',
       titleAccent: '一个工作台',
       titleTail: '就够了',
-      description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex CLI 与 GPT-5.5 系列共用一个账户、一份余额、一个用量面板，不用再为两套 key、两套 endpoint、两套账单头疼。',
+      description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。',
       primaryNote: '一键接入 · 充值便利 · 消费透明 · 价格有竞争力',
+      badgeDiscount: '比官方 API',
       tags: {
         coding: 'Claude Code',
         agent: 'Codex',
@@ -30,38 +31,38 @@ export default {
       },
       stats: {
         setupValue: '1 步',
-        savings: '自动写好本地 CLI 配置',
-        routesValue: '2 路',
-        models: 'Claude / Codex 各管各的 key',
+        savings: '自动配置本地工具',
+        routesValue: '2 套',
+        models: 'Claude / Codex 分开管理',
         workspaceValue: '1 处',
         minCost: '余额、用量、故障原因都在这里',
       },
-      perToken: '参考价格示意 / M tokens',
+      perToken: '参考价格示意',
       panel: {
-        title: '为日常编码代理准备的请求层',
+        title: '为日常编码准备的统一入口',
         auto: '自动轮播',
-        requestLabel: 'request',
-        modelLabel: 'models',
-        routeLabel: 'route',
-        billLabel: 'billing',
+        requestLabel: '请求',
+        modelLabel: '模型',
+        routeLabel: '线路',
+        billLabel: '计费',
         scenarios: {
           completions: {
-            title: '一个端点承接高级模型访问、额度控制和自动切换',
-            subtitle: '继续沿用常见 OpenAI Chat / Completions 接入方式，把模型、计费和切换逻辑收进同一层服务。',
-            route: '多账号自动切换 + 粘性会话',
-            billing: '按量计费，细节可追踪'
+            title: '一个入口搞定高级模型访问、额度控制和自动切换',
+            subtitle: '继续沿用常见 OpenAI 对话方式，把模型选择、计费和线路切换放到同一层。',
+            route: '多账号自动切换',
+            billing: '按量计费，花多少算多少'
           },
           responses: {
-            title: '不只 completions，也承接 Responses 与工具调用',
-            subtitle: '适合带工具、长链路和代理编排的工作流，不必为了不同接口拆成多套服务。',
-            route: '工具调用 + 长链路代理',
-            billing: '按量计费，细节可追踪'
+            title: '不只对话，也支持工具调用和长链路任务',
+            subtitle: '适合带工具、多步骤的复杂工作流，不用为了不同接口拆成多套服务。',
+            route: '工具调用 + 长链路任务',
+            billing: '按量计费，花多少算多少'
           },
           messages: {
-            title: 'Claude Messages 请求也能并入同一层网关',
-            subtitle: '保留 Claude Native 习惯，同时复用统一额度、切换和账单能力。',
-            route: 'Claude Native + 统一网关',
-            billing: '按量计费，细节可追踪'
+            title: 'Claude 对话也能走同一个入口',
+            subtitle: '保留 Claude 原生习惯，同时复用统一额度、线路切换和账单能力。',
+            route: 'Claude 原生 + 统一入口',
+            billing: '按量计费，花多少算多少'
           }
         }
       }
@@ -74,21 +75,35 @@ export default {
       badge: '高级模型能力，不再被官方订阅价绑住',
       barTitle: '按量计费，余额长期有效',
       points: {
-        metered: '按 token 实扣，用多少花多少',
-        routing: '多账号自动切换，单个 key 故障不影响整体可用',
-        visibility: '5h / 1d / 7d 用量窗口看得见'
+        metered: '用多少扣多少，没有最低消费',
+        routing: '多账号自动切换，一条线路故障自动换另一条',
+        visibility: '近 5 小时 / 1 天 / 7 天的用量一目了然'
       }
     },
     proofStrip: {
       overline: '平台能力',
     },
+    clientShowcase: {
+      badge: '客户端预览',
+      title: '一个桌面端，把 Claude Code 和 Codex 管起来',
+      description: '深色主题、三栏布局、自带终端。左侧管理工作区和任务列表，中间是 Claude Code / Codex 的对话与代码，右侧跟踪文件变更和消费情况。不用切窗口，所有事在一个界面里完成。',
+      pills: {
+        darkMode: '深色主题',
+        workspace: 'Workspace 管理',
+        terminal: '内置终端',
+        crossDevice: '跨设备同步',
+      },
+      caption: '客户端界面预览 — 实际功能以上线版本为准',
+      cta: '抢先体验',
+      ctaNote: '客户端即将开放下载，注册后可第一时间获取通知',
+    },
     download: {
       badge: '客户端能力',
       comingSoon: '敬请期待',
       title: '客户端即将开放下载',
-      description: '桌面客户端会承担"自动配置 Claude Code / Codex 本地 CLI、按 scope 创建或复用 key、不覆盖已有 route"这一步；安装后无需手工编辑配置文件。Web 控制台和移动端会同步登场，让你在多台设备之间继续看到当前 route 和消费。',
-      privacyCode: '自动写入 ~/.claude 和 ~/.codex 配置，已有 route 不被覆盖',
-      privacyKey: '桌面、Web、移动端共享一份用量与故障视图',
+      description: '桌面客户端安装后自动帮你配置好 Claude Code 和 Codex，创建或复用对应的密钥，不会覆盖你已有的设置。Web 控制台和移动端也会同步上线，让你在任何设备上都能看到当前线路和消费情况。',
+      privacyCode: '自动写入本地配置文件，已有设置不会被覆盖',
+      privacyKey: '桌面、Web、移动端共享一份用量和故障信息',
       cta: '敬请期待',
       platforms: {
         mac: { sub: 'Apple Silicon 与 Intel' },
@@ -99,22 +114,22 @@ export default {
     value: {
       overline: '为什么选 CheapRouter',
       title: '让 Claude Code 和 Codex 跑起来这件事，更省心',
-      description: '不是再做一个 IDE，也不是又一个中转 API。CheapRouter 把"开通账户、充值、配置本地 CLI、看用量、看故障"这些散落的事，合成一条顺手的路径。',
+      description: '不是再做一个 IDE，也不是又一个 API 中转站。CheapRouter 把开通账户、充值、配置工具、看用量、查故障这些散落的事，合成一条顺手的路径。',
       items: {
         economics: {
           eyebrow: '01 / 接入快',
           title: '一键写好本地配置',
-          description: '注册登录后自动生成 Claude Code 和 Codex 各自的 key，并写入对应的本地配置文件，不会覆盖你已有的 route。'
+          description: '注册登录后自动帮你配置好 Claude Code 和 Codex，不会覆盖你已有的设置。'
         },
         reliability: {
           eyebrow: '02 / 花费看得见',
           title: '一个余额面板看清两路消费',
-          description: 'Claude 和 Codex 分别消耗了多少 token、剩多少额度、当前限速窗口怎么用，都在同一处展示，不用再在多个平台之间切。'
+          description: 'Claude 和 Codex 各自用了多少、还剩多少额度、当前限速状态如何，都在同一处展示，不用再在多个平台之间切。'
         },
         control: {
           eyebrow: '03 / 出错有解释',
           title: '不只是给你一条报错',
-          description: '是余额不足、quota 用完、被限速、key 不匹配、上游不可用，还是协议不兼容 — 每种情况给出对应提示，不让你猜。'
+          description: '余额不足、额度用完、被限速、密钥不匹配、服务商不可用、协议不兼容 — 每种情况都给出明确提示，不用你猜。'
         }
       }
     },
@@ -130,25 +145,25 @@ export default {
       items: {
         pricing: {
           feature: '官方账号 + 手工配置',
-          official: '每个工具一个账号，多账号、多 key、多账单，需要自己维护本地 ~/.claude 与 ~/.codex 配置',
-          us: '一个账户开通后，自动写入两套 CLI 配置，可分 scope 复用 key，余额跨工具共用'
+          official: '每个工具一个账号，多套配置、多份账单，需要自己手动维护本地设置',
+          us: '一个账户开通后，自动配置好两套工具，余额跨工具共用'
         },
         models: {
-          feature: '本地切换脚本 / 多 endpoint',
-          official: '能切 endpoint 和 key，但不知道余额还剩多少、当前 quota / rate limit 是什么状态',
-          us: '切换之后，余额、quota、5h / 1d / 7d 用量窗口和 group 健康度直接展示'
+          feature: '本地切换脚本',
+          official: '能切换接口地址，但不知道余额还剩多少、当前额度或限速是什么状态',
+          us: '切换之后，余额、额度、近 5 小时 / 1 天 / 7 天用量和线路健康度直接展示'
         },
         stability: {
-          feature: '多平台中转 API',
-          official: '充值便宜，但出问题时很难判断是余额、限速、key、上游、还是协议兼容问题',
-          us: '把这几类故障原因显式分开，告诉你哪一步坏了、要怎么处理'
+          feature: '多平台 API 中转',
+          official: '充值便宜，但出问题时很难判断是余额、限速、密钥、服务商、还是协议兼容问题',
+          us: '把这几类故障原因分开显示，告诉你哪一步坏了、要怎么处理'
         }
       }
     },
     pricingTable: {
       overline: '价格优势',
       title: '主流编码模型，最高 90% off',
-      description: 'Claude Code、Codex、GPT-5.5 系列等高级编码模型，相对官方公开 API 单价大幅折扣。一个账户、一份余额，按 token 实扣，余额长期有效。',
+      description: 'Claude Code、Codex、GPT-5.5 等主流编码模型，比官方 API 便宜很多。一个账户、一份余额，用多少扣多少，余额长期有效。',
       badge: '目标',
       badgeValue: '总成本更低',
       compareNote: '相对官方 API 单价',
@@ -156,20 +171,20 @@ export default {
         claude: {
           tag: 'Claude 系列',
           title: 'Claude Code 主力',
-          description: 'Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5 全系覆盖，长链路编码、重构、审查任务直接交给 Claude Code，单条 route 单独算账。',
+          description: 'Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5 全系覆盖，日常编码、重构、审查交给 Claude Code，每条线路的消费单独计算。',
         },
         codex: {
           tag: 'Codex / GPT 系列',
           title: 'Codex CLI 与 GPT-5.5 都在这',
-          description: '新一代 GPT-5.5 与 GPT-5.4 / GPT-5.3 Codex 同步可用，本地 Codex CLI 自动接入，无需手工改 ~/.codex 配置。',
+          description: 'GPT-5.5 与 GPT-5.4 / GPT-5.3 Codex 同步可用，本地 Codex 自动配置好，不用手动改设置。',
         },
         compatible: {
           tag: 'OpenAI 兼容 · 多家',
           title: '其它兼容模型也在同一个网关',
-          description: 'Gemini、GLM、Qwen 等 OpenAI 兼容模型同入口接入，价格统一以控制台 group 当前价为准，故障原因同样可解释。',
+          description: 'Gemini、GLM、Qwen 等兼容模型同一个入口接入，价格以控制台当前显示为准，故障原因同样清楚明了。',
         },
       },
-      note: '这里不承诺"全网最低价"。CheapRouter 关注的是总成本：充值入口、按量计费、分路用量、quota 与限速可见、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。具体折扣比率随上游 group 与模型变动，最终扣费以控制台展示价格为准。',
+      note: '不承诺"全网最低价"。CheapRouter 关注的是总成本：一个充值入口、用多少扣多少、各线路用量分开看、额度和限速状态一目了然、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。具体折扣随服务商和模型变动，最终扣费以控制台显示价格为准。',
     },
     providers: {
       title: '把高级模型与本机编码工作流放进同一层服务',
@@ -188,16 +203,16 @@ export default {
       description: '中转服务最常见的问题是不透明：余额不知道还剩多少、报错不知道哪里坏。CheapRouter 把这些信息显式做出来，让你不用猜。',
       cards: {
         gateway: {
-          title: '每一条 route 单独算账',
-          description: 'Claude Code 和 Codex 各用各的 key，不会互相覆盖；每条 route 的本期消耗、5h / 1d / 7d 用量窗口、剩余额度都独立展示。'
+          title: '每条线路分开算',
+          description: 'Claude Code 和 Codex 各用各的配置，不会互相覆盖；每条线路的消费、近 5 小时 / 1 天 / 7 天用量、剩余额度都独立展示。'
         },
         resilience: {
-          title: '上游不健康，提前知道',
-          description: '每个上游 group 的可用性、平均延迟、价格倍率都摆在台面上，出问题时知道是哪一路出了问题，可以手动切换或等自动切换。'
+          title: '服务商出问题，提前知道',
+          description: '每个服务商的可用状态、响应速度、价格都摆在台面上，出问题时不抓瞎，知道该切到另一条线路还是等自动恢复。'
         },
         visibility: {
-          title: '报错带原因，不只是状态码',
-          description: '余额不足、quota 用尽、被限速、key 不匹配、route 不匹配、上游不可用、协议不兼容 — 七类常见故障对应明确提示，不用对着一条 500 抓瞎。'
+          title: '报错带原因，不只是数字',
+          description: '余额不足、额度用完、被限速、密钥不匹配、线路不匹配、服务商不可用、协议不兼容 — 七类常见故障都给出明确提示，不用对着一个错误码发呆。'
         }
       },
       trackers: {
@@ -209,7 +224,7 @@ export default {
     cta: {
       eyebrow: '开始使用',
       title: 'Claude Code 和 Codex，一次配齐',
-      description: '注册账户、充值、自动写入本地 CLI 配置 — 三步之后就能开始跑。Claude 全系、Codex CLI 与 GPT-5.5 都在同一个余额下，控制台里随时看清楚每一笔 token 花在哪条 route 上。',
+      description: '注册账户、充值、自动配置好本地工具 — 三步之后就能开始跑。Claude 全系、Codex 与 GPT-5.5 都在同一个余额下，控制台里随时看清楚每一笔花费走的是哪条线路。',
       button: '开始配置',
       stat: '一键接入 · 按量计费 · 用量透明 · 最高 90% off'
     },
