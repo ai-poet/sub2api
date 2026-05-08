@@ -110,10 +110,10 @@
             />
           </div>
         </div>
-        <!-- Floating discount badge -->
+        <!-- Floating badge -->
         <div class="absolute -bottom-3 -right-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2.5 shadow-lg dark:border-primary-800/50 dark:bg-primary-900/40">
           <div class="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-600 dark:text-primary-400">{{ t('home.hero.badgeDiscount') }}</div>
-          <div class="text-xl font-black tracking-tight text-primary-700 dark:text-primary-300">90% off</div>
+          <div class="text-xl font-black tracking-tight text-primary-700 dark:text-primary-300">off</div>
         </div>
       </div>
     </div>
@@ -177,7 +177,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/register'))
+const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
 const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
 </script>
 

@@ -67,6 +67,6 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/register'))
+const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
 const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
 </script>
