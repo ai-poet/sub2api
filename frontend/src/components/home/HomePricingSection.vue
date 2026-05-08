@@ -84,7 +84,7 @@ const cards = computed(() => [
     tag: t('home.pricingTable.cards.codex.tag'),
     title: t('home.pricingTable.cards.codex.title'),
     description: t('home.pricingTable.cards.codex.description'),
-    models: ['GPT-5.5', 'GPT-5.5 Codex', 'GPT-5.4', 'GPT-5.3 Codex'],
+    models: ['GPT-5.5', 'GPT-5.4', 'GPT-5.3 Codex'],
   },
   {
     key: 'compatible',
