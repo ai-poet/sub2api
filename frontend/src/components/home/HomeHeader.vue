@@ -51,7 +51,7 @@
         </button>
 
         <router-link
-          :to="isAuthenticated ? dashboardPath : '/register'"
+          :to="isAuthenticated ? dashboardPath : '/login'"
           class="hidden h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-primary-600 px-4 text-[13.5px] font-semibold text-white transition hover:-translate-y-[1px] hover:bg-primary-700 active:translate-y-0 dark:bg-primary-500 dark:hover:bg-primary-400 sm:inline-flex"
         >
           <span

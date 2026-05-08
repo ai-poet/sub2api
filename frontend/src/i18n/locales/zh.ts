@@ -21,7 +21,7 @@ export default {
       titleLeadSecondary: '和 Codex',
       titleAccent: '一个工作台',
       titleTail: '就够了',
-      description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。',
+      description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。',
       primaryNote: '一键接入 · 充值便利 · 消费透明 · 价格有竞争力',
       badgeDiscount: '比官方 API',
       tags: {
@@ -101,7 +101,7 @@ export default {
       badge: '客户端能力',
       comingSoon: '敬请期待',
       title: '客户端即将开放下载',
-      description: '桌面客户端安装后自动帮你配置好 Claude Code 和 Codex，创建或复用对应的密钥，不会覆盖你已有的设置。Web 控制台和移动端也会同步上线，让你在任何设备上都能看到当前线路和消费情况。',
+      description: '桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。创建或复用对应的密钥，不会覆盖你已有的设置。Web 控制台和移动端也会同步上线，让你在任何设备上都能看到当前线路和消费情况。',
       privacyCode: '自动写入本地配置文件，已有设置不会被覆盖',
       privacyKey: '桌面、Web、移动端共享一份用量和故障信息',
       cta: '敬请期待',
@@ -119,7 +119,7 @@ export default {
         economics: {
           eyebrow: '01 / 接入快',
           title: '一键写好本地配置',
-          description: '注册登录后自动帮你配置好 Claude Code 和 Codex，不会覆盖你已有的设置。'
+          description: '桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置，不会覆盖你已有的设置。'
         },
         reliability: {
           eyebrow: '02 / 花费看得见',

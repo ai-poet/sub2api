@@ -21,7 +21,7 @@ export default {
       titleLeadSecondary: 'and Codex,',
       titleAccent: 'one workspace',
       titleTail: 'is enough',
-      description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Claude Code, Codex, and GPT-5.5 share one account, one balance, and one usage panel — no more juggling two configs, two addresses, and two bills.',
+      description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Claude Code, Codex, and GPT-5.5 share one account, one balance, and one usage panel — no more juggling two configs, two addresses, and two bills. After signing up on the desktop app, Claude Code and Codex are configured for you automatically — no more copy-pasting JSON configs.',
       primaryNote: 'One-click setup · easy top-up · clear spend · friendly pricing',
       badgeDiscount: 'vs official API',
       tags: {
@@ -101,7 +101,7 @@ export default {
       badge: 'Client workflow',
       comingSoon: 'Coming soon',
       title: 'Desktop client coming soon',
-      description: 'Install the desktop client and it configures Claude Code and Codex for you, creating or reusing the right settings without overwriting what you already have. Web console and mobile will land alongside it, so you can check current status and spend from any device.',
+      description: 'After signing up on the desktop app, Claude Code and Codex are configured for you automatically — no more copy-pasting JSON configs. Settings are created or reused without overwriting what you already have. Web console and mobile will land alongside it, so you can check current status and spend from any device.',
       privacyCode: 'Auto-writes local config files without overwriting existing settings',
       privacyKey: 'Desktop, Web, and mobile share the same usage and failure info',
       cta: 'Coming soon',
@@ -119,7 +119,7 @@ export default {
         economics: {
           eyebrow: '01 / Fast onboarding',
           title: 'Local config, written for you',
-          description: 'After sign-up, CheapRouter configures Claude Code and Codex automatically — without overwriting your existing settings.'
+          description: 'After signing up on the desktop app, Claude Code and Codex are configured for you automatically — no more copy-pasting JSON configs, without overwriting your existing settings.'
         },
         reliability: {
           eyebrow: '02 / Spend you can see',
