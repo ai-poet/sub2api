@@ -1,5 +1,53 @@
 # AGENTS.md
 
+## Project Overview
+
+sub2api 是一个 AI 模型网关服务，统一代理 OpenAI、Claude、Codex 等多种 AI 模型 API，附带用户管理、订阅计费和管理后台。
+
+## Repository Structure
+
+```
+backend/       — Go 后端服务（API 网关核心）
+frontend/      — Vue 3 管理前端
+sub2apipay/    — Next.js 支付服务
+client/        — Paseo 客户端子模块
+deploy/        — Docker 部署配置
+tools/         — 辅助工具
+```
+
+## Key Technologies
+
+- **Backend**: Go 1.26, Gin, Ent ORM, PostgreSQL, Redis, Wire DI
+- **Frontend**: Vue 3, Vite, TypeScript, Pinia, pnpm
+- **Payment**: Next.js, Prisma, Stripe, pnpm
+- **Deploy**: Docker Compose, Caddy
+
+## Build & Test
+
+```bash
+# Backend
+cd backend && make build
+cd backend && make test
+cd backend && make generate
+
+# Frontend
+cd frontend && pnpm dev
+cd frontend && pnpm build
+cd frontend && pnpm lint
+cd frontend && pnpm typecheck
+
+# Payment
+cd sub2apipay && pnpm dev
+cd sub2apipay && pnpm test
+```
+
+## Coding Standards
+
+- Go: 标准项目布局，业务逻辑在 `backend/internal/`，使用 Ent schema 管理数据模型
+- Vue: Composition API + `<script setup>` + TypeScript
+- Commits: Conventional Commits（feat/fix/chore/refactor/docs）
+- 数据库变更通过 Ent schema，运行 `make generate` 生成代码
+
 ## Repository Rules
 
 - When resolving conflicts against upstream, never merge upstream payment-related code into this project.

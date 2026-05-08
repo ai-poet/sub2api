@@ -1,11 +1,11 @@
 <template>
   <header class="sticky top-0 z-40 px-4 pt-4 md:px-6">
     <nav
-      class="mx-auto flex max-w-[1380px] items-center justify-between gap-4 rounded-full border border-black/10 bg-white/90 px-5 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(17,19,24,0.88)]"
+      class="mx-auto flex max-w-[1380px] items-center justify-between gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(17,19,24,0.88)] sm:gap-4 sm:px-5"
     >
       <!-- Logo -->
-      <router-link to="/home" class="flex min-w-0 items-center gap-2.5">
-        <div class="home-font-serif truncate text-[1.35rem] font-black leading-none tracking-[-0.04em] text-[#111] dark:text-white">
+      <router-link to="/home" class="flex min-w-0 flex-1 items-center gap-2.5 lg:flex-none">
+        <div class="home-font-serif truncate text-[1.2rem] font-black leading-none tracking-[-0.04em] text-[#111] dark:text-white sm:text-[1.35rem]">
           {{ siteName }}
         </div>
       </router-link>
@@ -52,7 +52,7 @@
 
         <router-link
           :to="isAuthenticated ? dashboardPath : '/register'"
-          class="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-2 text-[13.5px] font-semibold text-white transition hover:-translate-y-[1px] hover:bg-primary-700 active:translate-y-0 dark:bg-primary-500 dark:hover:bg-primary-400"
+          class="hidden h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-primary-600 px-4 text-[13.5px] font-semibold text-white transition hover:-translate-y-[1px] hover:bg-primary-700 active:translate-y-0 dark:bg-primary-500 dark:hover:bg-primary-400 sm:inline-flex"
         >
           <span
             v-if="isAuthenticated && userInitial"
@@ -61,7 +61,7 @@
             {{ userInitial }}
           </span>
           <span>{{ isAuthenticated ? t('home.dashboard') : t('home.cta.button') }}</span>
-          <Icon name="arrowRight" size="sm" />
+          <Icon name="arrowRight" size="sm" class="hidden sm:block" />
         </router-link>
       </div>
     </nav>

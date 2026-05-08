@@ -421,7 +421,7 @@ default:
 
 `config.yaml` では追加のセキュリティ関連オプションも利用できます:
 
-- `cors.allowed_origins` - CORS 許可リスト
+- `cors.allowed_origins` - CORS 許可リスト（Paseo デスクトップのマネージド UI 用に、開発時 `http://localhost:8081` / `http://127.0.0.1:8081` と本番 `paseo://app` を含める。`deploy/config.example.yaml` 参照）
 - `security.url_allowlist` - 上流/価格/CRS ホストの許可リスト
 - `security.url_allowlist.enabled` - URL バリデーションの無効化（注意して使用）
 - `security.url_allowlist.allow_insecure_http` - バリデーション無効時に HTTP URL を許可

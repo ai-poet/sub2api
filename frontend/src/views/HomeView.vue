@@ -56,10 +56,7 @@
       </HomeReveal>
 
       <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
-        <HomeDownloadSection
-          :is-authenticated="isAuthenticated"
-          :dashboard-path="dashboardPath"
-        />
+        <HomeDownloadSection />
       </HomeReveal>
 
       <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
@@ -80,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
 import HomeDownloadSection from '@/components/home/HomeDownloadSection.vue'
@@ -96,8 +93,13 @@ import HomeValueSection from '@/components/home/HomeValueSection.vue'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
+const homeDocumentTitle = 'CheapRouter - Claude Code / Codex Agent 工作台'
+let titleSyncTimer: number | undefined
 
-const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'CheapRouter')
+const siteName = computed(() => {
+  const configuredName = appStore.cachedPublicSettings?.site_name?.trim() || appStore.siteName.trim()
+  return configuredName && configuredName !== 'Sub2API' ? configuredName : 'CheapRouter'
+})
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
@@ -118,6 +120,19 @@ const userInitial = computed(() => {
   return user.email.charAt(0).toUpperCase()
 })
 
+function applyHomeDocumentTitle() {
+  document.title = homeDocumentTitle
+}
+
+watch(
+  [siteName, () => appStore.publicSettingsLoaded],
+  () => {
+    applyHomeDocumentTitle()
+    window.setTimeout(applyHomeDocumentTitle)
+  },
+  { immediate: true, flush: 'post' },
+)
+
 const currentYear = computed(() => new Date().getFullYear())
 
 function syncThemeState() {
@@ -136,6 +151,22 @@ onMounted(() => {
 
   if (!appStore.publicSettingsLoaded) {
     appStore.fetchPublicSettings()
+  }
+
+  window.setTimeout(applyHomeDocumentTitle)
+  titleSyncTimer = window.setInterval(applyHomeDocumentTitle, 250)
+  window.setTimeout(() => {
+    if (titleSyncTimer) {
+      window.clearInterval(titleSyncTimer)
+      titleSyncTimer = undefined
+    }
+  }, 3000)
+})
+
+onBeforeUnmount(() => {
+  if (titleSyncTimer) {
+    window.clearInterval(titleSyncTimer)
+    titleSyncTimer = undefined
   }
 })
 </script>

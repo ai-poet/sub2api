@@ -37,24 +37,25 @@
             </div>
           </div>
 
-          <!-- Notify CTA -->
+          <!-- Disabled download CTA -->
           <div class="mt-8">
-            <router-link
-              :to="isAuthenticated ? dashboardPath : '/register'"
-              class="inline-flex items-center gap-2 rounded-full bg-[#111] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
+            <button
+              type="button"
+              disabled
+              class="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-6 py-3 text-sm font-semibold text-gray-500 dark:border-white/10 dark:bg-white/8 dark:text-white/45"
             >
               <span>{{ t('home.download.cta') }}</span>
-              <Icon name="arrowRight" size="sm" />
-            </router-link>
+              <Icon name="lock" size="sm" />
+            </button>
           </div>
         </div>
 
         <!-- Right: platform cards -->
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid gap-3 sm:grid-cols-3">
           <div
             v-for="platform in platforms"
             :key="platform.id"
-            class="group flex cursor-default flex-col rounded-2xl border border-gray-100 bg-gray-50/60 p-5 dark:border-white/8 dark:bg-white/[0.03]"
+            class="group flex cursor-default flex-col rounded-2xl border border-gray-100 bg-gray-50/60 p-4 dark:border-white/8 dark:bg-white/[0.03] sm:p-5"
           >
             <!-- Platform icon -->
             <div
@@ -70,7 +71,7 @@
             <div class="mt-0.5 text-xs text-gray-400 dark:text-white/30">{{ platform.sub }}</div>
 
             <div class="mt-4">
-              <span class="inline-flex items-center gap-1 rounded-full bg-gray-200/80 px-2.5 py-1 text-[11px] font-medium text-gray-500 dark:bg-white/10 dark:text-white/40">
+              <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                 {{ t('home.download.comingSoon') }}
               </span>
             </div>
@@ -85,11 +86,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
-
-defineProps<{
-  isAuthenticated: boolean
-  dashboardPath: string
-}>()
 
 const { t } = useI18n()
 

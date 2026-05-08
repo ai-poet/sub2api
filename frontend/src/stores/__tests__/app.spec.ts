@@ -285,6 +285,19 @@ describe('useAppStore', () => {
       expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('iframe')
     })
 
+    it('注入配置缺失 GitHub OAuth 开关时默认 false', () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = {
+        site_name: 'TestSite',
+      }
+
+      const store = useAppStore()
+      const result = store.initFromInjectedConfig()
+
+      expect(result).toBe(true)
+      expect(store.cachedPublicSettings?.github_oauth_enabled).toBe(false)
+    })
+
     it('注入配置为 legacy current_tab 时归一化为 iframe', () => {
       const windowAny = window as any
       windowAny.__APP_CONFIG__ = {

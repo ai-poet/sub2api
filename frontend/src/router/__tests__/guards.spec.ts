@@ -77,9 +77,17 @@ function simulateGuard(
       return authState.isAdmin ? '/admin/dashboard' : '/dashboard'
     }
     if (authState.backendModeEnabled && !authState.isAuthenticated) {
-      const allowed = ['/login', '/key-usage', '/setup']
+      const allowed = [
+        '/login',
+        '/key-usage',
+        '/setup',
+        '/auth/callback',
+        '/auth/github/callback',
+        '/auth/linuxdo/callback',
+        '/auth/paseo',
+      ]
       if (!allowed.some((path) => toPath === path || toPath.startsWith(path))) {
-        return '/login'
+        return `/login?redirect=${encodeURIComponent(toPath)}`
       }
     }
     return null // 允许通过
@@ -114,7 +122,15 @@ function simulateGuard(
     if (authState.isAuthenticated && authState.isAdmin) {
       return null
     }
-    const allowed = ['/login', '/key-usage', '/setup']
+    const allowed = [
+      '/login',
+      '/key-usage',
+      '/setup',
+      '/auth/callback',
+      '/auth/github/callback',
+      '/auth/linuxdo/callback',
+      '/auth/paseo',
+    ]
     if (!allowed.some((path) => toPath === path || toPath.startsWith(path))) {
       return '/login'
     }
@@ -304,7 +320,7 @@ describe('路由守卫逻辑', () => {
         backendModeEnabled: true,
       }
       const redirect = simulateGuard('/home', { requiresAuth: false }, authState)
-      expect(redirect).toBe('/login')
+      expect(redirect).toBe('/login?redirect=%2Fhome')
     })
 
     it('unauthenticated: /login is allowed', () => {

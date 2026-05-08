@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -39,6 +40,13 @@ const (
 	gitHubUserEmailsURL = "https://api.github.com/user/emails"
 	gitHubOAuthScopes   = "read:user user:email"
 )
+
+// gitHubOAuthStatePayload binds CSRF nonce and post-login redirect in one cookie so the
+// redirect cannot be lost if a second HttpOnly cookie is dropped by the browser or proxy.
+type gitHubOAuthStatePayload struct {
+	N string `json:"n"`
+	R string `json:"r"`
+}
 
 type gitHubTokenResponse struct {
 	AccessToken string `json:"access_token"`
@@ -102,7 +110,7 @@ func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) {
 		return
 	}
 
-	state, err := oauth.GenerateState()
+	nonce, err := oauth.GenerateState()
 	if err != nil {
 		response.ErrorFrom(c, infraerrors.InternalServer("OAUTH_STATE_GEN_FAILED", "failed to generate oauth state").WithCause(err))
 		return
@@ -113,9 +121,14 @@ func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) {
 		redirectTo = gitHubOAuthDefaultRedirectTo
 	}
 
+	payloadJSON, err := json.Marshal(gitHubOAuthStatePayload{N: nonce, R: redirectTo})
+	if err != nil {
+		response.ErrorFrom(c, infraerrors.InternalServer("OAUTH_STATE_GEN_FAILED", "failed to encode oauth state").WithCause(err))
+		return
+	}
+
 	secureCookie := isRequestHTTPS(c)
-	setGitHubCookie(c, gitHubOAuthStateCookieName, encodeCookieValue(state), gitHubOAuthCookieMaxAgeSec, secureCookie)
-	setGitHubCookie(c, gitHubOAuthRedirectCookie, encodeCookieValue(redirectTo), gitHubOAuthCookieMaxAgeSec, secureCookie)
+	setGitHubCookie(c, gitHubOAuthStateCookieName, encodeCookieValue(string(payloadJSON)), gitHubOAuthCookieMaxAgeSec, secureCookie)
 
 	redirectURI := strings.TrimSpace(cfg.RedirectURL)
 	if redirectURI == "" {
@@ -123,7 +136,7 @@ func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) {
 		return
 	}
 
-	authURL, err := buildGitHubAuthorizeURL(cfg, state, redirectURI)
+	authURL, err := buildGitHubAuthorizeURL(cfg, nonce, redirectURI)
 	if err != nil {
 		response.ErrorFrom(c, infraerrors.InternalServer("OAUTH_BUILD_URL_FAILED", "failed to build oauth authorization url").WithCause(err))
 		return
@@ -165,16 +178,33 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 		clearGitHubCookie(c, gitHubOAuthRedirectCookie, secureCookie)
 	}()
 
-	expectedState, err := readCookieDecoded(c, gitHubOAuthStateCookieName)
-	if err != nil || expectedState == "" || state != expectedState {
+	rawStateCookie, err := readCookieDecoded(c, gitHubOAuthStateCookieName)
+	if err != nil || rawStateCookie == "" {
 		redirectOAuthError(c, frontendCallback, "invalid_state", "invalid oauth state", "")
 		return
 	}
 
-	redirectTo, _ := readCookieDecoded(c, gitHubOAuthRedirectCookie)
-	redirectTo = sanitizeFrontendRedirectPath(redirectTo)
-	if redirectTo == "" {
-		redirectTo = gitHubOAuthDefaultRedirectTo
+	var redirectTo string
+	var payload gitHubOAuthStatePayload
+	if err := json.Unmarshal([]byte(rawStateCookie), &payload); err == nil && payload.N != "" {
+		if state != payload.N {
+			redirectOAuthError(c, frontendCallback, "invalid_state", "invalid oauth state", "")
+			return
+		}
+		redirectTo = sanitizeFrontendRedirectPath(payload.R)
+		if redirectTo == "" {
+			redirectTo = gitHubOAuthDefaultRedirectTo
+		}
+	} else if state == rawStateCookie {
+		// Legacy: state cookie held only the nonce; redirect lived in github_oauth_redirect.
+		legacyRedirect, _ := readCookieDecoded(c, gitHubOAuthRedirectCookie)
+		redirectTo = sanitizeFrontendRedirectPath(legacyRedirect)
+		if redirectTo == "" {
+			redirectTo = gitHubOAuthDefaultRedirectTo
+		}
+	} else {
+		redirectOAuthError(c, frontendCallback, "invalid_state", "invalid oauth state", "")
+		return
 	}
 
 	redirectURI := strings.TrimSpace(cfg.RedirectURL)

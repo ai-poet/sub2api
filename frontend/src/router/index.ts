@@ -1,15 +1,21 @@
 /**
- * Vue Router configuration for CheapRouter frontend
+ * Vue Router configuration for Sub2API frontend
  * Defines all application routes with lazy loading and navigation guards
  */
 
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import {
+  createRouter,
+  createWebHistory,
+  type NavigationGuardNext,
+  type RouteRecordRaw,
+} from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useAdminSettingsStore } from '@/stores/adminSettings'
 import { useNavigationLoadingState } from '@/composables/useNavigationLoading'
 import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
 import { resolveDocumentTitle } from './title'
+import { getPendingPaseoBridgeRoute } from '@/utils/auth-redirect'
 
 /**
  * Route definitions with lazy loading
@@ -34,24 +40,6 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: false,
       title: 'Home'
-    }
-  },
-  {
-    path: '/privacy',
-    name: 'Privacy',
-    component: () => import('@/views/PrivacyPolicyView.vue'),
-    meta: {
-      requiresAuth: false,
-      title: 'Privacy Policy'
-    }
-  },
-  {
-    path: '/terms',
-    name: 'Terms',
-    component: () => import('@/views/TermsOfServiceView.vue'),
-    meta: {
-      requiresAuth: false,
-      title: 'Terms of Service'
     }
   },
   {
@@ -106,6 +94,15 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: false,
       title: 'GitHub OAuth Callback'
+    }
+  },
+  {
+    path: '/auth/paseo',
+    name: 'PaseoAuthBridge',
+    component: () => import('@/views/auth/PaseoBridgeView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Paseo Login'
     }
   },
   {
@@ -519,7 +516,28 @@ let authInitialized = false
 const navigationLoading = useNavigationLoadingState()
 // 延迟初始化预加载，传入 router 实例
 let routePrefetch: ReturnType<typeof useRoutePrefetch> | null = null
-const BACKEND_MODE_ALLOWED_PATHS = ['/login', '/key-usage', '/setup']
+/** Public paths for unauthenticated users when backend-only mode is enabled. */
+const BACKEND_MODE_ALLOWED_PATHS = [
+  '/login',
+  '/key-usage',
+  '/setup',
+  '/auth/callback',
+  '/auth/github/callback',
+  '/auth/linuxdo/callback',
+  '/auth/paseo',
+]
+
+function nextDashboardRespectingPaseoPending(
+  next: NavigationGuardNext,
+  target: '/dashboard' | '/admin/dashboard',
+) {
+  const paseoLoc = getPendingPaseoBridgeRoute()
+  if (paseoLoc) {
+    next(paseoLoc)
+    return
+  }
+  next(target)
+}
 
 router.beforeEach((to, _from, next) => {
   // 开始导航加载状态
@@ -543,7 +561,7 @@ router.beforeEach((to, _from, next) => {
     const menuItem = publicItems.find((item) => item.id === id)
       ?? (authStore.isAdmin ? adminSettingsStore.customMenuItems.find((item) => item.id === id) : undefined)
     if (menuItem?.label) {
-      const siteName = appStore.siteName || 'CheapRouter'
+      const siteName = appStore.siteName || 'Sub2API'
       document.title = `${menuItem.label} - ${siteName}`
     } else {
       document.title = resolveDocumentTitle(to.meta.title, appStore.siteName, to.meta.titleKey as string)
@@ -567,14 +585,17 @@ router.beforeEach((to, _from, next) => {
         return
       }
       // Admin users go to admin dashboard, regular users go to user dashboard
-      next(authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
+      nextDashboardRespectingPaseoPending(
+        next,
+        authStore.isAdmin ? '/admin/dashboard' : '/dashboard',
+      )
       return
     }
     // Backend mode: block public pages for unauthenticated users (except login, key-usage, setup)
     if (appStore.backendModeEnabled && !authStore.isAuthenticated) {
       const isAllowed = BACKEND_MODE_ALLOWED_PATHS.some((p) => to.path === p || to.path.startsWith(p))
       if (!isAllowed) {
-        next('/login')
+        next({ path: '/login', query: { redirect: to.fullPath } })
         return
       }
     }
@@ -595,7 +616,7 @@ router.beforeEach((to, _from, next) => {
   // Check admin requirement
   if (requiresAdmin && !authStore.isAdmin) {
     // User is authenticated but not admin, redirect to user dashboard
-    next('/dashboard')
+    nextDashboardRespectingPaseoPending(next, '/dashboard')
     return
   }
 
@@ -611,7 +632,10 @@ router.beforeEach((to, _from, next) => {
 
     if (restrictedPaths.some((path) => to.path.startsWith(path))) {
       // 简易模式下访问受限页面,重定向到仪表板
-      next(authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
+      nextDashboardRespectingPaseoPending(
+        next,
+        authStore.isAdmin ? '/admin/dashboard' : '/dashboard',
+      )
       return
     }
   }
@@ -629,7 +653,18 @@ router.beforeEach((to, _from, next) => {
     }
   }
 
-  // All checks passed, allow navigation
+  // All checks passed, allow navigation — unless a Paseo desktop handoff is still pending
+  if (
+    authStore.isAuthenticated &&
+    (to.path === '/dashboard' || to.path === '/admin/dashboard')
+  ) {
+    const paseoLoc = getPendingPaseoBridgeRoute()
+    if (paseoLoc) {
+      next(paseoLoc)
+      return
+    }
+  }
+
   next()
 })
 

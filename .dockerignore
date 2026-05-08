@@ -82,5 +82,5 @@ issues/
 CLAUDE.md
 
 # Git submodules (not needed in image)
-paseo/
+client/
 .gitmodules

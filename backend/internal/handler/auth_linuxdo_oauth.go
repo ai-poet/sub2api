@@ -458,13 +458,15 @@ func redirectOAuthError(c *gin.Context, frontendCallback string, code string, me
 }
 
 func redirectWithFragment(c *gin.Context, frontendCallback string, fragment url.Values) {
-	u, err := url.Parse(frontendCallback)
-	if err != nil {
+	if err := config.ValidateFrontendRedirectURL(frontendCallback); err != nil {
 		// 兜底：尽力跳转到默认页面，避免卡死在回调页。
 		c.Redirect(http.StatusFound, linuxDoOAuthDefaultRedirectTo)
 		return
 	}
-	if u.Scheme != "" && !strings.EqualFold(u.Scheme, "http") && !strings.EqualFold(u.Scheme, "https") {
+
+	u, err := url.Parse(frontendCallback)
+	if err != nil {
+		// 兜底：尽力跳转到默认页面，避免卡死在回调页。
 		c.Redirect(http.StatusFound, linuxDoOAuthDefaultRedirectTo)
 		return
 	}
@@ -609,7 +611,13 @@ func sanitizeFrontendRedirectPath(path string) string {
 	if strings.HasPrefix(path, "//") {
 		return ""
 	}
-	if strings.Contains(path, "://") {
+	// 只检查路径部分（? 之前）是否包含 ://，query 参数中的 https:// 是合法的
+	// 例如 /auth/paseo?endpoint=https://example.com 应该被允许
+	pathOnly := path
+	if idx := strings.IndexByte(path, '?'); idx >= 0 {
+		pathOnly = path[:idx]
+	}
+	if strings.Contains(pathOnly, "://") {
 		return ""
 	}
 	if strings.ContainsAny(path, "\r\n") {

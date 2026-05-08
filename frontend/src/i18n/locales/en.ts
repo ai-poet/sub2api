@@ -10,29 +10,33 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
-    headerTagline: 'AI Coding Agent Infrastructure',
-    heroSubtitle: 'One gateway, metered billing, built for long-running coding agents',
-    heroDescription: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so you can use AI coding agent services with lower premium-model cost.',
+    headerTagline: 'Claude Code / Codex agent workspace',
+    heroSubtitle: 'One-click setup, top-up, routing, usage, and local agents in one place',
+    heroDescription: 'The agent workspace is the story. Setup, top-up, price, and usage are the entry points.',
     navModels: 'Models',
     navPricing: 'Pricing',
     hero: {
-      badge: '~10% of official Claude Code / Codex subscription cost',
-      titleLead: 'Claude Code too expensive?',
-      titleAccent: 'Same official API, 10× cheaper',
-      titleTail: 'No monthly fee, pay per token',
-      description: 'Connect Claude Sonnet, GPT-5.4, and Codex-grade models to your coding workflow. No minimum spend, no lock-in. Pay only for tokens used — usage visible in real time.',
-      primaryNote: 'Metered billing · No minimum spend · Cancel anytime',
+      badge: 'Claude Code / Codex agent workspace',
+      titleLeadPrimary: 'Agent',
+      titleLeadSecondary: 'workspace',
+      titleAccent: 'connected in one click',
+      titleTail: 'for Claude / Codex',
+      description: 'Top-up, routing, usage, and local agents live in the same workspace, so every dollar maps back to the workspace and agent session doing the work.',
+      primaryNote: 'One-click setup · easy top-up · clear spend · cross-device control',
       tags: {
-        coding: 'AI Coding',
-        agent: 'Coding Agent',
+        coding: 'Agent hub',
+        agent: 'Cross-device control',
         tools: 'Claude Code / Codex',
       },
       stats: {
-        savings: 'Max savings',
-        models: 'Models available',
-        minCost: 'Minimum spend',
+        setupValue: '1-step',
+        savings: 'Local CLI auto-setup',
+        routesValue: '2 routes',
+        models: 'Claude / Codex routes',
+        workspaceValue: '1 hub',
+        minCost: 'Unified agent workspace',
       },
-      perToken: 'per M tokens',
+      perToken: 'effective-cost example / M tokens',
       panel: {
         title: 'A request layer shaped for daily coding agents',
         auto: 'Auto Rotating',
@@ -68,7 +72,7 @@ export default {
       highlight: '~10% of official API service cost',
       description: 'Use a fraction of official pricing to power premium-model coding agents while keeping one gateway, one key, and one billing surface.',
       badge: 'Premium model access, without premium subscription overhead',
-      barTitle: 'Connect premium model capability to your AI coding agent without carrying official subscription pricing',
+      barTitle: 'Price and top-up are the entry. Agent workflow control is what keeps users.',
       points: {
         metered: 'Pay only for what runs',
         routing: 'Multi-account auto routing',
@@ -76,16 +80,16 @@ export default {
       }
     },
     proofStrip: {
-      overline: 'Platform Features',
+      overline: 'Platform capabilities',
     },
     download: {
-      badge: 'Coming Soon',
-      comingSoon: 'Coming Soon',
-      title: 'Desktop Client: one-click setup',
-      description: 'Automatically configure Claude Code / Codex CLI API access after installation — no manual environment variables or config files.',
-      privacyCode: 'Your code is never stored or used for model training',
-      privacyKey: 'API Keys are stored locally only, never uploaded',
-      cta: 'Sign up for early access',
+      badge: 'Client workflow',
+      comingSoon: 'Coming soon',
+      title: 'Client downloads are coming soon',
+      description: 'The download section is visible now. After install, CheapRouter will configure Claude Code / Codex CLI access, create or reuse scoped keys, and avoid overwriting existing routes.',
+      privacyCode: 'Local agents, workspaces, worktrees, and cloud route status in one view',
+      privacyKey: 'Desktop, Web, and mobile can keep watching runtime state, spend, and failure reasons',
+      cta: 'Coming soon',
       platforms: {
         mac: { sub: 'Apple Silicon & Intel' },
         windows: { sub: 'x64 / ARM64' },
@@ -93,77 +97,77 @@ export default {
       },
     },
     value: {
-      overline: 'Why CheapRouter',
-      title: 'Same tools. One-tenth the cost.',
-      description: 'Drop into Claude Code, Codex CLI, or any OpenAI-compatible client unchanged. No subscription, no minimum spend — Claude, GPT, and Codex models billed per token, 90%+ cheaper.',
+      overline: 'Why CheapRouter Cloud',
+      title: 'Make the agent workspace the first story, not phase two.',
+      description: 'CheapRouter Cloud sits at the intersection: closer to real Claude Code / Codex local use than relays, more complete on top-up and spend visibility than switchers, and more respectful of existing local agent workflows than packaged AI coding products.',
       items: {
         economics: {
-          eyebrow: '01 / Cost',
-          title: '10× cheaper, no monthly fee',
-          description: 'Claude Sonnet at $0.075/M tokens vs the official $3.00. Opus, GPT-5.4, Codex all similarly discounted — up to 97% off, zero subscription fee.'
+          eyebrow: '01 / Local context',
+          title: 'Closer to real Claude Code / Codex usage',
+          description: 'Auto-setup is only the entry. The point is to put route, key, quota, and failure reasons back around local agents, workspaces, and worktrees.'
         },
         reliability: {
-          eyebrow: '02 / Reliability',
-          title: 'Built for always-on coding agents',
-          description: 'Account pool with automatic failover. When one slot hits rate limits, traffic shifts instantly — your agent keeps running without interruption.'
+          eyebrow: '02 / Spend loop',
+          title: 'More complete than a switcher',
+          description: 'Claude and Codex routes are scoped separately, with one balance view for quota, rate limits, usage windows, and effective cost.'
         },
         control: {
-          eyebrow: '03 / Transparency',
-          title: 'Every token, fully accounted for',
-          description: 'Real-time billing down to each request. One API key covers all models — top up anytime, no hidden fees, no minimum spend.'
+          eyebrow: '03 / Workspace',
+          title: 'Respect existing local agent workflows',
+          description: 'CheapRouter does not replace the IDE or force a new cloud workspace. Desktop, Web, and mobile control the agent sessions already running locally.'
         }
       }
     },
     comparison: {
       overline: 'Positioning',
-      title: 'A better runtime surface than official subscriptions for persistent coding agents',
-      description: 'Lower cost structure, broader model coverage, and steadier routing make day-to-day agent traffic easier to sustain.',
+      title: 'The opportunity is at the intersection of three product types',
+      description: 'One-click setup, top-up, price, and usage are not separate claims. They are the path into an agent aggregation workspace.',
       headers: {
         feature: 'Comparison',
-        official: 'Official Subscriptions',
-        us: 'Our Platform'
+        official: 'Common path',
+        us: 'CheapRouter Cloud'
       },
       items: {
         pricing: {
-          feature: 'Pricing',
-          official: 'Fixed monthly fee, pay even if unused',
-          us: 'Pay only for what you use'
+          feature: 'Vs relays',
+          official: 'Can offer top-up, routing, and dashboards, but rarely understand local running agents',
+          us: 'Claude Code / Codex routes, spend, workspaces, and agent sessions in one view'
         },
         models: {
-          feature: 'Model Selection',
-          official: 'Single provider only',
-          us: 'Switch between models freely'
+          feature: 'Vs switchers',
+          official: 'Can switch endpoint/key, but usually lack top-up, balance, quota, and route-level usage',
+          us: 'Local CLI auto-setup plus top-up, route spend, rate limits, and route health'
         },
         stability: {
-          feature: 'Runtime Stability',
-          official: 'Single account rate limits',
-          us: 'Multi-account pool, auto-failover'
+          feature: 'Vs AI coding products',
+          official: 'Convenient, but often moves users into a new IDE or cloud workflow',
+          us: 'Keeps the existing local workflow and controls local agents across desktop, Web, and mobile'
         }
       }
     },
     pricingTable: {
-      overline: 'Actual Pricing',
-      title: 'Pay only for what you use',
-      description: 'Input prices below are in ¥ per million tokens, based on our ¥0.70/$ credit rate — compared to official API prices converted at market exchange rate.',
-      badge: 'Save up to',
-      badgeValue: '~97%',
+      overline: 'Effective-cost examples',
+      title: 'Pay for actual usage and keep agent cost visible',
+      description: 'This section shows example effective route costs to help with budgeting. Actual billing follows the current model, group, and route policy in the dashboard.',
+      badge: 'Goal',
+      badgeValue: 'Lower total cost',
       tabs: {
         all: 'All',
         other: 'Other',
       },
       col: {
         model: 'Model',
-        officialInput: 'Official Input ($/M)',
-        ourInput: 'Our Price ($/M)',
-        officialOutput: 'Official Output ($/M)',
-        savings: 'Savings',
+        officialInput: 'Reference input ($/M)',
+        ourInput: 'Effective example',
+        officialOutput: 'Reference output ($/M)',
+        savings: 'Cost delta',
       },
       modelsCount: 'models',
-      note: 'USD prices above are actual costs (official USD × 0.25 group multiplier × ¥0.70/$1 credit rate ÷ 7). Claude models via GLM group; Codex/GPT via Codex group (0.80×). Billed at actual usage.',
+      note: 'This is not an “absolute lowest price” promise. CheapRouter focuses on usable, transparent, and explainable total cost: top-up, route-level usage, quota, rate limits, route health, and agent workflow in one place.',
     },
     providers: {
-      title: 'Premium models and coding workflows under one service layer',
-      description: 'Built around high-frequency coding agents instead of a generic model catalog, while keeping familiar request shapes intact.',
+      title: 'Premium models and local coding workflows under one service layer',
+      description: 'Built around high-frequency coding agents rather than a generic model catalog, while keeping Claude Code, Codex, and OpenAI-compatible request shapes.',
       supported: 'Supported',
       claude: 'Claude',
       claudeCode: 'Claude Code',
@@ -173,154 +177,38 @@ export default {
       openaiCompatible: 'OpenAI-Compatible'
     },
     trust: {
-      overline: 'Compatibility & Trust',
-      title: 'A service layer built for code workflows that stay on all day',
-      description: 'One endpoint, automatic switching, clear billing, and traceable usage make premium models cheaper and steadier in real coding-agent traffic.',
+      overline: 'Transparency & trust',
+      title: 'Know why it cannot run and where the money went',
+      description: 'Balance, quota, rate limits, keys, endpoints, group health, and protocol compatibility should be explained inside the agent workflow.',
       cards: {
         gateway: {
-          title: 'Unified entry point',
-          description: 'A single OpenAI-style gateway serves mainstream premium models, lowering integration and promotion friction.'
+          title: 'Scoped routes',
+          description: 'Claude Code and Codex routes can be created, reused, and inspected separately instead of pushing every local tool through one key.'
         },
         resilience: {
-          title: 'Resilient switching',
-          description: 'When one upstream hits limits, jitters, or short-lived failures, the platform absorbs the switching overhead.'
+          title: 'Route health',
+          description: 'Group runtime status, availability, latency, and price multiplier turn upstream failures into explainable product states.'
         },
         visibility: {
-          title: 'Visible cost surface',
-          description: 'Usage, quotas, and bills are shaped for long-running agents instead of staying trapped inside black-box subscriptions.'
+          title: 'Visible spend',
+          description: 'API key quota, quota used, 5h / 1d / 7d usage windows, and route spend map back to the agent context.'
         }
       },
       trackers: {
-        routing: 'Sticky sessions',
-        billing: 'Metered billing',
-        visibility: 'Usage detail'
+        routing: 'Scoped routes',
+        billing: 'Top-up balance',
+        visibility: 'Agent usage'
       }
     },
     cta: {
-      eyebrow: 'READY TO SHIP',
-      title: 'Give your next AI coding agent a cheaper premium-model runtime',
-      description: 'Put premium model access, usage control, and routing behind one endpoint, then deliver a coding-agent service that is easier to keep running.',
-      button: 'Sign Up Free',
-      stat: 'One gateway · Metered billing · Built for promotion'
+      eyebrow: 'AGENT CONTROL PLANE',
+      title: 'Put Claude Code / Codex into one workspace',
+      description: 'Start with one-click access, top-up, pricing, and spend control, then unify provider, route, usage, permission, session, and workspace control.',
+      button: 'Start setup',
+      stat: 'One-click access · top-up · visible spend · agent workspace'
     },
     footer: {
-      allRightsReserved: 'All rights reserved.',
-      privacy: 'Privacy Policy',
-      terms: 'Terms of Service'
-    },
-    privacy: {
-      title: 'Privacy Policy',
-      backHome: 'Back to home',
-      lastUpdated: 'Last updated: April 2026',
-      intro: 'This Privacy Policy explains how CheapRouter ("we", "us") collects, uses, and protects your information when you use our platform. We are committed to protecting your privacy, especially your code and prompt content.',
-      pledge: {
-        title: 'Your code and prompts are never stored or used for training',
-        body: 'All code, prompts, and conversation content you send through CheapRouter is forwarded directly to the official upstream API. We do not store, log, or analyze request content, and we never use it for model training or any other purpose.',
-      },
-      sections: {
-        collection: {
-          title: '1. Information We Collect',
-          p1: 'We collect only the minimum information necessary to provide our service:',
-          i1: 'Account information: email address provided at registration',
-          i2: 'Usage records: token counts, request counts, model type (no request content)',
-          i3: 'Payment information: top-up amounts and transaction records (no card numbers or sensitive financial data)',
-          i4: 'Log information: IP address and request timestamps for security and troubleshooting',
-        },
-        use: {
-          title: '2. How We Use Your Information',
-          p1: 'Collected information is used only for the following purposes:',
-          i1: 'Providing and maintaining the API proxy service',
-          i2: 'Calculating token usage and generating billing records',
-          i3: 'Sending service notifications (e.g. low balance alerts)',
-          i4: 'Ensuring account security and preventing abuse',
-        },
-        code: {
-          title: '3. Code & Prompt Protection',
-          p1: 'All request content you send via the API — including code, prompts, and conversation messages — is forwarded transparently to the official Anthropic and OpenAI APIs. CheapRouter does not persist or store request content.',
-          p2: 'We will never use your code or prompts to train, fine-tune, or evaluate any machine learning model, and we will not share this content with third parties.',
-        },
-        apikey: {
-          title: '4. API Key Security',
-          p1: 'API keys you generate on this platform are stored encrypted at rest. Upstream API credentials used to call model providers are managed centrally by the platform and are never exposed to users. Keep your CheapRouter API key safe — if you suspect compromise, reset it immediately in the dashboard.',
-        },
-        third: {
-          title: '5. Third-Party Services',
-          p1: 'We forward API requests to the following third-party providers, each with their own privacy policies:',
-          i1: 'Anthropic (Claude model family)',
-          i2: 'OpenAI (GPT / Codex model family)',
-        },
-        retention: {
-          title: '6. Data Retention',
-          p1: 'Account information is retained until you delete your account. Usage records (token counts and timestamps — no content) are retained for 90 days for billing reconciliation. You may request account deletion and removal of associated data at any time from account settings.',
-        },
-        rights: {
-          title: '7. Your Rights',
-          p1: 'You have the following rights over your personal data:',
-          i1: 'Access: view the data we hold about you',
-          i2: 'Correction: update inaccurate account information',
-          i3: 'Deletion: request account closure and removal of your data',
-        },
-        changes: {
-          title: '8. Policy Changes',
-          p1: 'If we make material changes to this policy, we will notify you via in-app notice or email in advance. Continued use of the service constitutes acceptance of the updated policy.',
-        },
-      },
-      contact: 'If you have any questions about this Privacy Policy, please contact us through the support channel in the platform.',
-    },
-    terms: {
-      title: 'Terms of Service',
-      lastUpdated: 'Last updated: April 2026',
-      intro: 'Welcome to CheapRouter. Please read these Terms of Service carefully before using our platform. By registering or using the service, you agree to be bound by these terms.',
-      sections: {
-        eligibility: {
-          title: '1. Eligibility',
-          p1: 'This service is available to individuals with full legal capacity and legally registered business entities. Users under 18 must have parental or guardian consent. By using this service you represent and warrant that you have the authority to accept these terms.',
-        },
-        account: {
-          title: '2. Account Responsibilities',
-          p1: 'You are fully responsible for the security of your account and all activity that occurs under it:',
-          i1: 'Keep your login credentials and API keys safe — do not share them with others',
-          i2: 'Notify us immediately if you detect unauthorized access or account anomalies',
-          i3: 'Transferring, selling, or sharing accounts is prohibited',
-        },
-        service: {
-          title: '3. Service Description',
-          p1: 'CheapRouter is an AI API aggregation proxy that forwards your requests to official providers such as Anthropic and OpenAI. We are not responsible for the availability, response quality, or content of upstream providers.',
-          p2: 'We reserve the right to modify, suspend, or terminate the service with advance notice. Service interruptions caused by upstream provider outages, maintenance, or force majeure events are outside our responsibility.',
-        },
-        billing: {
-          title: '4. Billing & Refunds',
-          p1: 'This platform operates on a prepaid credit model:',
-          i1: 'Credits are non-refundable once purchased — top up only what you need',
-          i2: 'Token consumption is deducted in real time based on platform records',
-          i3: 'Abnormal charges caused by platform errors may be investigated and compensated upon request',
-        },
-        prohibited: {
-          title: '5. Prohibited Uses',
-          p1: 'When using this service, you must not:',
-          i1: 'Use the platform to generate illegal, harmful, discriminatory, or infringing content',
-          i2: 'Attempt to reverse-engineer, bypass, or abuse the platform\'s rate limits or security mechanisms',
-          i3: 'Resell, distribute, or use API keys for unauthorized commercial proxy services',
-          i4: 'Violate the usage policies of upstream model providers (Anthropic, OpenAI, etc.)',
-        },
-        ip: {
-          title: '6. Intellectual Property',
-          p1: 'The platform\'s interface, codebase, and branding are the intellectual property of CheapRouter. Ownership of content generated via the API is governed by the upstream provider\'s policies — we make no claim over generated output.',
-        },
-        disclaimer: {
-          title: '7. Disclaimer of Warranties',
-          p1: 'This service is provided "as is" without any express or implied warranties. To the maximum extent permitted by law, CheapRouter is not liable for any indirect, incidental, special, or consequential damages, including but not limited to lost profits, data loss, or business interruption.',
-        },
-        termination: {
-          title: '8. Account Termination',
-          p1: 'We reserve the right to suspend or terminate accounts that violate these terms, without prior notice. You may also delete your account at any time from account settings. Remaining balance is non-refundable upon termination.',
-        },
-        changes: {
-          title: '9. Changes to Terms',
-          p1: 'We may update these terms from time to time. Material changes will be communicated in advance via in-app notice or email. Continued use of the service constitutes acceptance of the updated terms.',
-        },
-      },
-      contact: 'If you have any questions about these Terms of Service, please contact us through the support channel in the platform.',
+      allRightsReserved: 'All rights reserved.'
     }
   },
 
@@ -519,8 +407,8 @@ export default {
 
   // Setup Wizard
   setup: {
-    title: 'CheapRouter Setup',
-    description: 'Configure your CheapRouter instance',
+    title: 'Sub2API Setup',
+    description: 'Configure your Sub2API instance',
     database: {
       title: 'Database Configuration',
       description: 'Connect to your PostgreSQL database',
@@ -2498,6 +2386,8 @@ export default {
         rateLimited: 'Rate Limited',
         overloaded: 'Overloaded',
         tempUnschedulable: 'Temp Unschedulable',
+        quotaExceeded: 'Quota Exceeded',
+        unschedulable: 'Unschedulable',
         rateLimitedUntil: 'Rate limited and removed from scheduling. Auto resumes at {time}',
         rateLimitedAutoResume: 'Auto resumes in {time}',
         modelRateLimitedUntil: '{model} rate limited until {time}',
@@ -4692,7 +4582,7 @@ export default {
         secretKeyConfiguredHint: 'Secret key configured. Leave empty to keep the current value.'      },
       linuxdo: {
         title: 'LinuxDo Connect Login',
-        description: 'Configure LinuxDo Connect OAuth for CheapRouter end-user login',
+        description: 'Configure LinuxDo Connect OAuth for Sub2API end-user login',
         enable: 'Enable LinuxDo Login',
         enableHint: 'Show LinuxDo login on the login/register pages',
         clientId: 'Client ID',
@@ -4707,6 +4597,26 @@ export default {
         redirectUrlPlaceholder: 'https://your-domain.com/api/v1/auth/oauth/linuxdo/callback',
         redirectUrlHint:
           'Must match the redirect URL configured in Connect.Linux.Do (must be an absolute http(s) URL)',
+        quickSetCopy: 'Generate & Copy (current site)',
+        redirectUrlSetAndCopied: 'Redirect URL generated and copied to clipboard'
+      },
+      github: {
+        title: 'GitHub Login',
+        description: 'Configure GitHub OAuth for Sub2API end-user login',
+        enable: 'Enable GitHub Login',
+        enableHint: 'Show GitHub login on the login/register pages',
+        clientId: 'Client ID',
+        clientIdPlaceholder: 'Iv1.1234567890abcdef',
+        clientIdHint: 'Get this from GitHub Developer Settings',
+        clientSecret: 'Client Secret',
+        clientSecretPlaceholder: '********',
+        clientSecretHint: 'Used by backend to exchange tokens (keep it secret)',
+        clientSecretConfiguredPlaceholder: '********',
+        clientSecretConfiguredHint: 'Secret configured. Leave empty to keep the current value.',
+        redirectUrl: 'Redirect URL',
+        redirectUrlPlaceholder: 'https://your-domain.com/api/v1/auth/oauth/github/callback',
+        redirectUrlHint:
+          'Must match the callback URL configured in your GitHub OAuth App (must be an absolute http(s) URL)',
         quickSetCopy: 'Generate & Copy (current site)',
         redirectUrlSetAndCopied: 'Redirect URL generated and copied to clipboard'
       },
@@ -4783,7 +4693,7 @@ export default {
         groupStatusEnabledDescription:
           'When enabled, regular users can see the "Model Status" menu and use the corresponding runtime status APIs.',
         siteName: 'Site Name',
-        siteNamePlaceholder: 'CheapRouter',
+        siteNamePlaceholder: 'Sub2API',
         siteNameHint: 'Displayed in emails and page titles',
         siteSubtitle: 'Site Subtitle',
         siteSubtitlePlaceholder: 'Subscription to API Conversion Platform',
@@ -4887,7 +4797,7 @@ export default {
         fromEmail: 'From Email',
         fromEmailPlaceholder: "noreply{'@'}example.com",
         fromName: 'From Name',
-        fromNamePlaceholder: 'CheapRouter',
+        fromNamePlaceholder: 'Sub2API',
         useTls: 'Use TLS',
         useTlsHint: 'Enable TLS encryption for SMTP connection'
       },
@@ -5473,14 +5383,14 @@ export default {
     // Admin tour steps
     admin: {
       welcome: {
-        title: '👋 Welcome to CheapRouter',
-        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">CheapRouter is a powerful AI service gateway platform that helps you easily manage and distribute AI services.</p><p style="margin-bottom: 12px;"><b>🎯 Core Features:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>📦 <b>Group Management</b> - Create service tiers (VIP, Free Trial, etc.)</li><li>🔗 <b>Account Pool</b> - Connect multiple upstream AI service accounts</li><li>🔑 <b>Key Distribution</b> - Generate independent API Keys for users</li><li>💰 <b>Billing Control</b> - Flexible rate and quota management</li></ul><p style="color: #10b981; font-weight: 600;">Let\'s complete the initial setup in 3 minutes →</p></div>',
+        title: '👋 Welcome to Sub2API',
+        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">Sub2API is a powerful AI service gateway platform that helps you easily manage and distribute AI services.</p><p style="margin-bottom: 12px;"><b>🎯 Core Features:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>📦 <b>Group Management</b> - Create service tiers (VIP, Free Trial, etc.)</li><li>🔗 <b>Account Pool</b> - Connect multiple upstream AI service accounts</li><li>🔑 <b>Key Distribution</b> - Generate independent API Keys for users</li><li>💰 <b>Billing Control</b> - Flexible rate and quota management</li></ul><p style="color: #10b981; font-weight: 600;">Let\'s complete the initial setup in 3 minutes →</p></div>',
         nextBtn: 'Start Setup 🚀',
         prevBtn: 'Skip'
       },
       groupManage: {
         title: '📦 Step 1: Group Management',
-        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;"><b>What is a Group?</b></p><p style="margin-bottom: 12px;">Groups are the core concept of CheapRouter, like a "service package":</p><ul style="margin-left: 20px; margin-bottom: 12px; font-size: 13px;"><li>🎯 Each group can contain multiple upstream accounts</li><li>💰 Each group has independent billing multiplier</li><li>👥 Can be set as public or exclusive</li></ul><p style="margin-top: 12px; padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Example:</b> You can create "VIP Premium" (high rate) and "Free Trial" (low rate) groups</p><p style="margin-top: 16px; color: #10b981; font-weight: 600;">👉 Click "Group Management" on the left sidebar</p></div>'
+        description: '<div style="line-height: 1.7;"><p style="margin-bottom: 12px;"><b>What is a Group?</b></p><p style="margin-bottom: 12px;">Groups are the core concept of Sub2API, like a "service package":</p><ul style="margin-left: 20px; margin-bottom: 12px; font-size: 13px;"><li>🎯 Each group can contain multiple upstream accounts</li><li>💰 Each group has independent billing multiplier</li><li>👥 Can be set as public or exclusive</li></ul><p style="margin-top: 12px; padding: 8px 12px; background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;"><b>💡 Example:</b> You can create "VIP Premium" (high rate) and "Free Trial" (low rate) groups</p><p style="margin-top: 16px; color: #10b981; font-weight: 600;">👉 Click "Group Management" on the left sidebar</p></div>'
       },
       createGroup: {
         title: '➕ Create New Group',
@@ -5573,8 +5483,8 @@ export default {
     // User tour steps
     user: {
       welcome: {
-        title: '👋 Welcome to CheapRouter',
-        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">Hello! Welcome to the CheapRouter AI service platform.</p><p style="margin-bottom: 12px;"><b>🎯 Quick Start:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 Create API Key</li><li>📋 Copy key to your application</li><li>🚀 Start using AI services</li></ul><p style="color: #10b981; font-weight: 600;">Just 1 minute, let\'s get started →</p></div>',
+        title: '👋 Welcome to Sub2API',
+        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">Hello! Welcome to the Sub2API AI service platform.</p><p style="margin-bottom: 12px;"><b>🎯 Quick Start:</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 Create API Key</li><li>📋 Copy key to your application</li><li>🚀 Start using AI services</li></ul><p style="color: #10b981; font-weight: 600;">Just 1 minute, let\'s get started →</p></div>',
         nextBtn: 'Start 🚀',
         prevBtn: 'Skip'
       },

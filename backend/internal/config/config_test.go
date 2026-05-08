@@ -677,6 +677,9 @@ func TestValidateFrontendRedirectURL(t *testing.T) {
 	if err := ValidateFrontendRedirectURL("https://example.com/auth"); err != nil {
 		t.Fatalf("ValidateFrontendRedirectURL absolute error: %v", err)
 	}
+	if err := ValidateFrontendRedirectURL("paseo://auth/callback"); err != nil {
+		t.Fatalf("ValidateFrontendRedirectURL custom scheme error: %v", err)
+	}
 	if err := ValidateFrontendRedirectURL("example.com/path"); err == nil {
 		t.Fatalf("ValidateFrontendRedirectURL should reject non-absolute url")
 	}
@@ -766,6 +769,25 @@ func TestValidateConfigWithLinuxDoEnabled(t *testing.T) {
 	cfg.LinuxDo.RedirectURL = "https://example.com/api/v1/auth/oauth/linuxdo/callback"
 	cfg.LinuxDo.FrontendRedirectURL = "/auth/linuxdo/callback"
 	cfg.LinuxDo.TokenAuthMethod = "client_secret_post"
+
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("Validate() unexpected error: %v", err)
+	}
+}
+
+func TestValidateConfigWithGitHubEnabledAllowsCustomFrontendRedirectURL(t *testing.T) {
+	resetViperWithJWTSecret(t)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error: %v", err)
+	}
+
+	cfg.GitHub.Enabled = true
+	cfg.GitHub.ClientID = "github-client"
+	cfg.GitHub.ClientSecret = "github-secret"
+	cfg.GitHub.RedirectURL = "https://example.com/api/v1/auth/oauth/github/callback"
+	cfg.GitHub.FrontendRedirectURL = "paseo://auth/callback"
 
 	if err := cfg.Validate(); err != nil {
 		t.Fatalf("Validate() unexpected error: %v", err)

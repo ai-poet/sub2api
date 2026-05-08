@@ -52,6 +52,11 @@ const (
 	ConnectionPoolIsolationAccountProxy = "account_proxy"
 )
 
+// DefaultUpstreamResponseReadMaxBytes 上游非流式响应体的默认读取上限。
+// 128 MB 可容纳 2-3 张 4K PNG（base64 膨胀 33%，单张 4K PNG 最坏约 67MB base64）。
+// 可通过 gateway.upstream_response_read_max_bytes 配置项覆盖。
+const DefaultUpstreamResponseReadMaxBytes int64 = 128 * 1024 * 1024
+
 type Config struct {
 	Server                  ServerConfig                  `mapstructure:"server"`
 	Log                     LogConfig                     `mapstructure:"log"`
@@ -247,6 +252,14 @@ type H2CConfig struct {
 type CORSConfig struct {
 	AllowedOrigins   []string `mapstructure:"allowed_origins"`
 	AllowCredentials bool     `mapstructure:"allow_credentials"`
+}
+
+// DefaultCORSAllowedOrigins is applied when cors.allowed_origins is omitted from config.yaml
+// (Paseo Desktop managed UI: Expo dev and packaged app Origins).
+var DefaultCORSAllowedOrigins = []string{
+	"http://localhost:8081",
+	"http://127.0.0.1:8081",
+	"paseo://app",
 }
 
 type SecurityConfig struct {
@@ -1094,8 +1107,8 @@ func setDefaults() {
 	viper.SetDefault("log.sampling.initial", 100)
 	viper.SetDefault("log.sampling.thereafter", 100)
 
-	// CORS
-	viper.SetDefault("cors.allowed_origins", []string{})
+	// CORS (explicit cors.allowed_origins: [] in yaml still overrides to empty)
+	viper.SetDefault("cors.allowed_origins", DefaultCORSAllowedOrigins)
 	viper.SetDefault("cors.allow_credentials", true)
 
 	// Security
@@ -1339,7 +1352,7 @@ func setDefaults() {
 	viper.SetDefault("gateway.antigravity_fallback_cooldown_minutes", 1)
 	viper.SetDefault("gateway.antigravity_extra_retries", 10)
 	viper.SetDefault("gateway.max_body_size", int64(256*1024*1024))
-	viper.SetDefault("gateway.upstream_response_read_max_bytes", int64(8*1024*1024))
+	viper.SetDefault("gateway.upstream_response_read_max_bytes", DefaultUpstreamResponseReadMaxBytes)
 	viper.SetDefault("gateway.proxy_probe_response_read_max_bytes", int64(1024*1024))
 	viper.SetDefault("gateway.gemini_debug_response_headers", false)
 	viper.SetDefault("gateway.connection_pool_isolation", ConnectionPoolIsolationAccountProxy)
@@ -2191,7 +2204,11 @@ func ValidateAbsoluteHTTPURL(raw string) error {
 	return nil
 }
 
-// ValidateFrontendRedirectURL 验证前端重定向 URL（可以是绝对 URL 或相对路径）
+// ValidateFrontendRedirectURL 验证前端重定向 URL。
+// 允许三类地址：
+// 1. 站内相对路径，如 /auth/github/callback
+// 2. 绝对 http(s) URL
+// 3. 应用自定义协议 deep link，如 paseo://auth/callback
 func ValidateFrontendRedirectURL(raw string) error {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
@@ -2213,14 +2230,17 @@ func ValidateFrontendRedirectURL(raw string) error {
 	if !u.IsAbs() {
 		return fmt.Errorf("must be absolute http(s) url or relative path")
 	}
-	if !isHTTPScheme(u.Scheme) {
-		return fmt.Errorf("unsupported scheme: %s", u.Scheme)
-	}
 	if strings.TrimSpace(u.Host) == "" {
 		return fmt.Errorf("missing host")
 	}
+	if u.User != nil {
+		return fmt.Errorf("must not include userinfo")
+	}
 	if u.Fragment != "" {
 		return fmt.Errorf("must not include fragment")
+	}
+	if isHTTPScheme(u.Scheme) {
+		return nil
 	}
 	return nil
 }

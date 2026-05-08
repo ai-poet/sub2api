@@ -24,7 +24,7 @@ export const useAppStore = defineStore('app', () => {
   // Public settings cache state
   const publicSettingsLoaded = ref<boolean>(false)
   const publicSettingsLoading = ref<boolean>(false)
-  const siteName = ref<string>('CheapRouter')
+  const siteName = ref<string>('Sub2API')
   const siteLogo = ref<string>('')
   const siteVersion = ref<string>('')
   const contactInfo = ref<string>('')
@@ -293,6 +293,8 @@ export const useAppStore = defineStore('app', () => {
   function applySettings(config: PublicSettings): void {
     const normalizedConfig: PublicSettings = {
       ...config,
+      linuxdo_oauth_enabled: config.linuxdo_oauth_enabled ?? false,
+      github_oauth_enabled: config.github_oauth_enabled ?? false,
       group_status_enabled: config.group_status_enabled ?? false,
       purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
         config.purchase_subscription_open_mode
@@ -300,7 +302,7 @@ export const useAppStore = defineStore('app', () => {
     }
 
     cachedPublicSettings.value = normalizedConfig
-    siteName.value = normalizedConfig.site_name || 'CheapRouter'
+    siteName.value = normalizedConfig.site_name || 'Sub2API'
     siteLogo.value = normalizedConfig.site_logo || ''
     siteVersion.value = normalizedConfig.version || ''
     contactInfo.value = normalizedConfig.contact_info || ''
@@ -317,7 +319,7 @@ export const useAppStore = defineStore('app', () => {
     // Check for injected config from server (eliminates flash)
     if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__) {
       applySettings(window.__APP_CONFIG__)
-      return window.__APP_CONFIG__
+      return cachedPublicSettings.value ? { ...cachedPublicSettings.value } : null
     }
 
     // Return cached data if available and not forcing refresh
