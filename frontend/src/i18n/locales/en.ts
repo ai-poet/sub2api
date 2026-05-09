@@ -98,13 +98,14 @@ export default {
       ctaNote: 'Desktop client coming soon. Register to be notified first.',
     },
     download: {
-      badge: 'Client workflow',
+      badge: 'Desktop client',
       comingSoon: 'Coming soon',
-      title: 'Desktop client coming soon',
-      description: 'After signing up on the desktop app, Claude Code and Codex are configured for you automatically — no more copy-pasting JSON configs. Settings are created or reused without overwriting what you already have. Web console and mobile will land alongside it, so you can check current status and spend from any device.',
+      title: 'Download the CheapRouter desktop client',
+      description: 'Install the desktop app to configure Claude Code and Codex automatically, reuse existing local settings safely, and keep usage status in one place.',
       privacyCode: 'Auto-writes local config files without overwriting existing settings',
       privacyKey: 'Desktop, Web, and mobile share the same usage and failure info',
-      cta: 'Coming soon',
+      cta: 'Download',
+      recommended: 'Recommended for this device',
       platforms: {
         mac: { sub: 'Apple Silicon & Intel' },
         windows: { sub: 'x64 / ARM64' },
@@ -4670,6 +4671,7 @@ export default {
       description: 'Manage registration, email verification, default values, and SMTP settings',
       tabs: {
         general: 'General',
+        client: 'Client',
         security: 'Security',
         users: 'Users',
         gateway: 'Gateway',
@@ -4869,6 +4871,17 @@ export default {
         homeContentIframeWarning: '⚠️ iframe mode note: Some websites have X-Frame-Options or CSP security policies that prevent embedding in iframes. If the page appears blank or shows an error, please verify the target website allows embedding, or consider using HTML mode to build your own content.',
         hideCcsImportButton: 'Hide CCS Import Button',
         hideCcsImportButtonHint: 'When enabled, the "Import to CCS" button will be hidden on the API Keys page'
+      },
+      clientDownloads: {
+        title: 'Client Downloads',
+        description: 'Paste public download links for the Windows and macOS desktop clients shown on the default home page.',
+        windowsUrl: 'Windows Download URL',
+        windowsUrlPlaceholder: 'https://example.com/cheaprouter-windows.exe',
+        windowsUrlHint: 'Leave empty to hide the Windows download button.',
+        macosUrl: 'macOS Download URL',
+        macosUrlPlaceholder: 'https://example.com/cheaprouter-macos.dmg',
+        macosUrlHint: 'Leave empty to hide the macOS download button.',
+        publicHint: 'Use public http(s) links from object storage, a CDN, or your release host. Custom home page content remains fully controlled by your own HTML or URL.'
       },
       purchase: {
         title: 'Recharge / Subscription Page',

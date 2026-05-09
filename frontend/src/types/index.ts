@@ -108,6 +108,8 @@ export interface PublicSettings {
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
   purchase_subscription_open_mode: string // 'iframe' or 'new_window'
+  client_download_windows_url: string
+  client_download_macos_url: string
   custom_menu_items: CustomMenuItem[]
   custom_endpoints: CustomEndpoint[]
   group_status_enabled: boolean

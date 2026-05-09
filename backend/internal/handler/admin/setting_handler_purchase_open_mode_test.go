@@ -160,3 +160,74 @@ func TestSettingHandler_UpdateSettings_PurchaseOpenMode_RejectsInvalidValue(t *t
 	require.Equal(t, http.StatusBadRequest, recorder.Code)
 	require.Contains(t, recorder.Body.String(), "Purchase Subscription open mode")
 }
+
+func TestSettingHandler_UpdateSettings_ClientDownloadURLs_TrimsAndPersists(t *testing.T) {
+	repo := &settingRepoForPurchaseOpenModeTest{values: map[string]string{}}
+	router := setupSettingHandlerForPurchaseOpenModeTest(repo)
+
+	body := []byte(`{
+		"client_download_windows_url": " https://downloads.example.com/cheaprouter-setup.exe ",
+		"client_download_macos_url": " https://downloads.example.com/cheaprouter.dmg "
+	}`)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPut, "/api/v1/admin/settings", bytes.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(recorder, request)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	var response struct {
+		Code int `json:"code"`
+		Data struct {
+			ClientDownloadWindowsURL string `json:"client_download_windows_url"`
+			ClientDownloadMacOSURL   string `json:"client_download_macos_url"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+	require.Equal(t, 0, response.Code)
+	require.Equal(t, "https://downloads.example.com/cheaprouter-setup.exe", response.Data.ClientDownloadWindowsURL)
+	require.Equal(t, "https://downloads.example.com/cheaprouter.dmg", response.Data.ClientDownloadMacOSURL)
+	require.Equal(t, "https://downloads.example.com/cheaprouter-setup.exe", repo.values[service.SettingKeyClientDownloadWindowsURL])
+	require.Equal(t, "https://downloads.example.com/cheaprouter.dmg", repo.values[service.SettingKeyClientDownloadMacOSURL])
+}
+
+func TestSettingHandler_UpdateSettings_ClientDownloadURLs_AllowsClearing(t *testing.T) {
+	repo := &settingRepoForPurchaseOpenModeTest{values: map[string]string{
+		service.SettingKeyClientDownloadWindowsURL: "https://downloads.example.com/old-windows.exe",
+		service.SettingKeyClientDownloadMacOSURL:   "https://downloads.example.com/old-macos.dmg",
+	}}
+	router := setupSettingHandlerForPurchaseOpenModeTest(repo)
+
+	body := []byte(`{
+		"client_download_windows_url": "",
+		"client_download_macos_url": ""
+	}`)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPut, "/api/v1/admin/settings", bytes.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(recorder, request)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Equal(t, "", repo.values[service.SettingKeyClientDownloadWindowsURL])
+	require.Equal(t, "", repo.values[service.SettingKeyClientDownloadMacOSURL])
+}
+
+func TestSettingHandler_UpdateSettings_ClientDownloadURLs_RejectsInvalidURL(t *testing.T) {
+	repo := &settingRepoForPurchaseOpenModeTest{values: map[string]string{}}
+	router := setupSettingHandlerForPurchaseOpenModeTest(repo)
+
+	body := []byte(`{
+		"client_download_windows_url": "ftp://downloads.example.com/cheaprouter.exe",
+		"client_download_macos_url": "https://downloads.example.com/cheaprouter.dmg"
+	}`)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPut, "/api/v1/admin/settings", bytes.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(recorder, request)
+
+	require.Equal(t, http.StatusBadRequest, recorder.Code)
+	require.Contains(t, recorder.Body.String(), "Windows client download URL")
+}

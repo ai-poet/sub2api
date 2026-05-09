@@ -161,6 +161,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyPurchaseSubscriptionEnabled,
 		SettingKeyPurchaseSubscriptionURL,
 		SettingKeyPurchaseSubscriptionOpenMode,
+		SettingKeyClientDownloadWindowsURL,
+		SettingKeyClientDownloadMacOSURL,
 		SettingKeyCustomMenuItems,
 		SettingKeyCustomEndpoints,
 		SettingKeyGroupStatusEnabled,
@@ -217,6 +219,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		PurchaseSubscriptionOpenMode:     s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
+		ClientDownloadWindowsURL:         strings.TrimSpace(settings[SettingKeyClientDownloadWindowsURL]),
+		ClientDownloadMacOSURL:           strings.TrimSpace(settings[SettingKeyClientDownloadMacOSURL]),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
 		GroupStatusEnabled:               settings[SettingKeyGroupStatusEnabled] == "true",
@@ -268,6 +272,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PurchaseSubscriptionEnabled      bool            `json:"purchase_subscription_enabled"`
 		PurchaseSubscriptionURL          string          `json:"purchase_subscription_url,omitempty"`
 		PurchaseSubscriptionOpenMode     string          `json:"purchase_subscription_open_mode"`
+		ClientDownloadWindowsURL         string          `json:"client_download_windows_url,omitempty"`
+		ClientDownloadMacOSURL           string          `json:"client_download_macos_url,omitempty"`
 		CustomMenuItems                  json.RawMessage `json:"custom_menu_items"`
 		CustomEndpoints                  json.RawMessage `json:"custom_endpoints"`
 		GroupStatusEnabled               bool            `json:"group_status_enabled"`
@@ -297,6 +303,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
 		PurchaseSubscriptionOpenMode:     settings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:         settings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:           settings.ClientDownloadMacOSURL,
 		CustomMenuItems:                  filterUserVisibleMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                  safeRawJSONArray(settings.CustomEndpoints),
 		GroupStatusEnabled:               settings.GroupStatusEnabled,
@@ -514,6 +522,8 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyPurchaseSubscriptionEnabled] = strconv.FormatBool(settings.PurchaseSubscriptionEnabled)
 	updates[SettingKeyPurchaseSubscriptionURL] = strings.TrimSpace(settings.PurchaseSubscriptionURL)
 	updates[SettingKeyPurchaseSubscriptionOpenMode] = s.getStringOrDefault(map[string]string{SettingKeyPurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode}, SettingKeyPurchaseSubscriptionOpenMode, "iframe")
+	updates[SettingKeyClientDownloadWindowsURL] = strings.TrimSpace(settings.ClientDownloadWindowsURL)
+	updates[SettingKeyClientDownloadMacOSURL] = strings.TrimSpace(settings.ClientDownloadMacOSURL)
 	updates[SettingKeyCustomMenuItems] = settings.CustomMenuItems
 	updates[SettingKeyCustomEndpoints] = settings.CustomEndpoints
 	updates[SettingKeyGroupStatusEnabled] = strconv.FormatBool(settings.GroupStatusEnabled)
@@ -885,6 +895,8 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyPurchaseSubscriptionEnabled:      "false",
 		SettingKeyPurchaseSubscriptionURL:          "",
 		SettingKeyPurchaseSubscriptionOpenMode:     "iframe",
+		SettingKeyClientDownloadWindowsURL:         "",
+		SettingKeyClientDownloadMacOSURL:           "",
 		SettingKeyCustomMenuItems:                  "[]",
 		SettingKeyCustomEndpoints:                  "[]",
 		SettingKeyGroupStatusEnabled:               "false",
@@ -953,6 +965,8 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		PurchaseSubscriptionOpenMode:     s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
+		ClientDownloadWindowsURL:         strings.TrimSpace(settings[SettingKeyClientDownloadWindowsURL]),
+		ClientDownloadMacOSURL:           strings.TrimSpace(settings[SettingKeyClientDownloadMacOSURL]),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
 		GroupStatusEnabled:               settings[SettingKeyGroupStatusEnabled] == "true",

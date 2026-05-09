@@ -69,6 +69,8 @@ type SystemSettings struct {
 	PurchaseSubscriptionEnabled  bool             `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL      string           `json:"purchase_subscription_url"`
 	PurchaseSubscriptionOpenMode string           `json:"purchase_subscription_open_mode"` // iframe or new_window
+	ClientDownloadWindowsURL     string           `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       string           `json:"client_download_macos_url"`
 	CustomMenuItems              []CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints              []CustomEndpoint `json:"custom_endpoints"`
 	GroupStatusEnabled           bool             `json:"group_status_enabled"`
@@ -136,6 +138,8 @@ type PublicSettings struct {
 	PurchaseSubscriptionEnabled      bool             `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL          string           `json:"purchase_subscription_url"`
 	PurchaseSubscriptionOpenMode     string           `json:"purchase_subscription_open_mode"` // iframe or new_window
+	ClientDownloadWindowsURL         string           `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL           string           `json:"client_download_macos_url"`
 	CustomMenuItems                  []CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints                  []CustomEndpoint `json:"custom_endpoints"`
 	GroupStatusEnabled               bool             `json:"group_status_enabled"`

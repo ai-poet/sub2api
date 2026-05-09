@@ -2093,6 +2093,59 @@
 
         </div><!-- /Tab: General -->
 
+        <!-- Tab: Client -->
+        <div v-show="activeTab === 'client'" class="space-y-6">
+          <div class="card">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                {{ t('admin.settings.clientDownloads.title') }}
+              </h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ t('admin.settings.clientDownloads.description') }}
+              </p>
+            </div>
+            <div class="space-y-6 p-6">
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.settings.clientDownloads.windowsUrl') }}
+                </label>
+                <input
+                  v-model="form.client_download_windows_url"
+                  data-test="client-download-windows-url"
+                  type="url"
+                  class="input font-mono text-sm"
+                  :placeholder="t('admin.settings.clientDownloads.windowsUrlPlaceholder')"
+                />
+                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.clientDownloads.windowsUrlHint') }}
+                </p>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.settings.clientDownloads.macosUrl') }}
+                </label>
+                <input
+                  v-model="form.client_download_macos_url"
+                  data-test="client-download-macos-url"
+                  type="url"
+                  class="input font-mono text-sm"
+                  :placeholder="t('admin.settings.clientDownloads.macosUrlPlaceholder')"
+                />
+                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.clientDownloads.macosUrlHint') }}
+                </p>
+              </div>
+
+              <div
+                class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300"
+              >
+                {{ t('admin.settings.clientDownloads.publicHint') }}
+              </div>
+            </div>
+          </div>
+        </div><!-- /Tab: Client -->
+
         <!-- Tab: Email -->
         <div v-show="activeTab === 'email'" class="space-y-6">
         <!-- Email disabled hint - show when email_verify_enabled is off -->
@@ -2389,10 +2442,11 @@ const { t } = useI18n()
 const appStore = useAppStore()
 const adminSettingsStore = useAdminSettingsStore()
 
-type SettingsTab = 'general' | 'security' | 'users' | 'gateway' | 'email' | 'backup'
+type SettingsTab = 'general' | 'client' | 'security' | 'users' | 'gateway' | 'email' | 'backup'
 const activeTab = ref<SettingsTab>('general')
 const settingsTabs = [
   { key: 'general'  as SettingsTab, icon: 'home'   as const },
+  { key: 'client'   as SettingsTab, icon: 'download' as const },
   { key: 'security' as SettingsTab, icon: 'shield' as const },
   { key: 'users'    as SettingsTab, icon: 'user'   as const },
   { key: 'gateway'  as SettingsTab, icon: 'server' as const },
@@ -2516,6 +2570,8 @@ const form = reactive<SettingsForm>({
   purchase_subscription_enabled: false,
   purchase_subscription_url: '',
   purchase_subscription_open_mode: 'iframe',
+  client_download_windows_url: '',
+  client_download_macos_url: '',
   group_status_enabled: false,
   custom_menu_items: [] as Array<{id: string; label: string; icon_svg: string; url: string; visibility: 'user' | 'admin'; sort_order: number}>,
   custom_endpoints: [] as Array<{name: string; endpoint: string; description: string}>,
@@ -2885,6 +2941,12 @@ async function saveSettings() {
     if (!isValidHttpUrl(form.purchase_subscription_url)) {
       form.purchase_subscription_url = ''
     }
+    if (!isValidHttpUrl(form.client_download_windows_url)) {
+      form.client_download_windows_url = ''
+    }
+    if (!isValidHttpUrl(form.client_download_macos_url)) {
+      form.client_download_macos_url = ''
+    }
 
     const payload: UpdateSettingsRequest = {
       registration_enabled: form.registration_enabled,
@@ -2914,6 +2976,8 @@ async function saveSettings() {
       purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
         form.purchase_subscription_open_mode
       ),
+      client_download_windows_url: form.client_download_windows_url,
+      client_download_macos_url: form.client_download_macos_url,
       custom_menu_items: form.custom_menu_items,
       custom_endpoints: form.custom_endpoints,
       frontend_url: form.frontend_url,

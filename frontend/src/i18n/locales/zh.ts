@@ -98,13 +98,14 @@ export default {
       ctaNote: '客户端即将开放下载，注册后可第一时间获取通知',
     },
     download: {
-      badge: '客户端能力',
+      badge: '客户端下载',
       comingSoon: '敬请期待',
-      title: '客户端即将开放下载',
-      description: '桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。创建或复用对应的密钥，不会覆盖你已有的设置。Web 控制台和移动端也会同步上线，让你在任何设备上都能看到当前线路和消费情况。',
+      title: '下载 CheapRouter 桌面客户端',
+      description: '安装桌面端后自动帮你配置 Claude Code 和 Codex，安全复用已有本地设置，并把用量和状态集中在一个入口。',
       privacyCode: '自动写入本地配置文件，已有设置不会被覆盖',
       privacyKey: '桌面、Web、移动端共享一份用量和故障信息',
-      cta: '敬请期待',
+      cta: '下载',
+      recommended: '推荐用于当前设备',
       platforms: {
         mac: { sub: 'Apple Silicon 与 Intel' },
         windows: { sub: 'x64 / ARM64' },
@@ -4836,6 +4837,7 @@ export default {
       description: '管理注册、邮箱验证、默认值和 SMTP 设置',
       tabs: {
         general: '通用设置',
+        client: '客户端',
         security: '安全与认证',
         users: '用户默认值',
         gateway: '网关服务',
@@ -5033,6 +5035,17 @@ export default {
           '⚠️ iframe 模式提示：部分网站设置了 X-Frame-Options 或 CSP 安全策略，禁止被嵌入到 iframe 中。如果页面显示空白或报错，请确认目标网站允许被嵌入，或考虑使用 HTML 模式自行构建页面内容。',
         hideCcsImportButton: '隐藏 CCS 导入按钮',
         hideCcsImportButtonHint: '启用后将在 API Keys 页面隐藏"导入 CCS"按钮'
+      },
+      clientDownloads: {
+        title: '客户端下载',
+        description: '填写 Windows 和 macOS 桌面客户端的公开下载链接，默认首页会展示下载入口。',
+        windowsUrl: 'Windows 下载链接',
+        windowsUrlPlaceholder: 'https://example.com/cheaprouter-windows.exe',
+        windowsUrlHint: '留空则隐藏 Windows 下载按钮。',
+        macosUrl: 'macOS 下载链接',
+        macosUrlPlaceholder: 'https://example.com/cheaprouter-macos.dmg',
+        macosUrlHint: '留空则隐藏 macOS 下载按钮。',
+        publicHint: '请使用对象存储、CDN 或发布平台提供的公开 http(s) 链接。自定义首页内容仍完全由你填写的 HTML 或 URL 控制。'
       },
       purchase: {
         title: '充值/订阅页面',

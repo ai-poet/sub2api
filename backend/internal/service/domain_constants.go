@@ -127,6 +127,8 @@ const (
 	SettingKeyPurchaseSubscriptionEnabled  = "purchase_subscription_enabled"   // 是否展示购买订阅页面入口
 	SettingKeyPurchaseSubscriptionURL      = "purchase_subscription_url"       // 购买订阅页面 URL
 	SettingKeyPurchaseSubscriptionOpenMode = "purchase_subscription_open_mode" // 购买订阅页面打开方式：iframe（内嵌）或 new_window（新窗口）
+	SettingKeyClientDownloadWindowsURL     = "client_download_windows_url"     // Windows 客户端下载链接
+	SettingKeyClientDownloadMacOSURL       = "client_download_macos_url"       // macOS 客户端下载链接
 	SettingKeyCustomMenuItems              = "custom_menu_items"               // 自定义菜单项（JSON 数组）
 	SettingKeyCustomEndpoints              = "custom_endpoints"                // 自定义端点列表（JSON 数组）
 

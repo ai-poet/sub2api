@@ -258,6 +258,8 @@ describe('useAppStore', () => {
         contact_info: 'test@test.com',
         api_base_url: 'https://api.test.com',
         doc_url: 'https://docs.test.com',
+        client_download_windows_url: 'https://downloads.test.com/windows.exe',
+        client_download_macos_url: 'https://downloads.test.com/macos.dmg',
         purchase_subscription_open_mode: 'new_window',
       }
 
@@ -268,8 +270,24 @@ describe('useAppStore', () => {
       expect(store.siteName).toBe('TestSite')
       expect(store.siteLogo).toBe('/logo.png')
       expect(store.siteVersion).toBe('1.0.0')
+      expect(store.cachedPublicSettings?.client_download_windows_url).toBe('https://downloads.test.com/windows.exe')
+      expect(store.cachedPublicSettings?.client_download_macos_url).toBe('https://downloads.test.com/macos.dmg')
       expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('new_window')
       expect(store.publicSettingsLoaded).toBe(true)
+    })
+
+    it('注入配置缺失客户端下载链接时默认空字符串', () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = {
+        site_name: 'TestSite',
+      }
+
+      const store = useAppStore()
+      const result = store.initFromInjectedConfig()
+
+      expect(result).toBe(true)
+      expect(store.cachedPublicSettings?.client_download_windows_url).toBe('')
+      expect(store.cachedPublicSettings?.client_download_macos_url).toBe('')
     })
 
     it('注入配置缺失打开方式时默认 iframe', () => {

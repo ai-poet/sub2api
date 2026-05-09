@@ -39,6 +39,13 @@
         <HomeProofStrip />
       </HomeReveal>
 
+      <HomeReveal v-if="hasClientDownloads" class="px-4 py-8 md:px-6 md:py-12">
+        <HomeDownloadSection
+          :windows-url="clientDownloadWindowsUrl"
+          :macos-url="clientDownloadMacOSUrl"
+        />
+      </HomeReveal>
+
       <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
         <HomeValueSection />
       </HomeReveal>
@@ -76,6 +83,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
+import HomeDownloadSection from '@/components/home/HomeDownloadSection.vue'
 import HomePricingSection from '@/components/home/HomePricingSection.vue'
 import HomeFinalCta from '@/components/home/HomeFinalCta.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'
@@ -98,6 +106,15 @@ const siteName = computed(() => {
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
+const clientDownloadWindowsUrl = computed(
+  () => appStore.cachedPublicSettings?.client_download_windows_url?.trim() || ''
+)
+const clientDownloadMacOSUrl = computed(
+  () => appStore.cachedPublicSettings?.client_download_macos_url?.trim() || ''
+)
+const hasClientDownloads = computed(
+  () => Boolean(clientDownloadWindowsUrl.value) || Boolean(clientDownloadMacOSUrl.value)
+)
 
 const isHomeContentUrl = computed(() => {
   const content = homeContent.value.trim()

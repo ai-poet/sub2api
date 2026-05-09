@@ -296,6 +296,8 @@ export const useAppStore = defineStore('app', () => {
       linuxdo_oauth_enabled: config.linuxdo_oauth_enabled ?? false,
       github_oauth_enabled: config.github_oauth_enabled ?? false,
       group_status_enabled: config.group_status_enabled ?? false,
+      client_download_windows_url: config.client_download_windows_url || '',
+      client_download_macos_url: config.client_download_macos_url || '',
       purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
         config.purchase_subscription_open_mode
       )
@@ -346,6 +348,8 @@ export const useAppStore = defineStore('app', () => {
         hide_ccs_import_button: false,
         purchase_subscription_enabled: false,
         purchase_subscription_url: '',
+        client_download_windows_url: '',
+        client_download_macos_url: '',
         group_status_enabled: false,
         custom_menu_items: [],
         custom_endpoints: [],
