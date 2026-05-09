@@ -87,13 +87,30 @@
 
       <!-- CTA row -->
       <div class="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-        <router-link to="/register" class="inline-flex h-12 items-center gap-2 rounded-full bg-[#111] px-6 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]">
+        <a
+          v-if="preferredClientDownload"
+          :href="preferredClientDownload.url"
+          :data-platform="preferredClientDownload.id"
+          data-test="client-showcase-download"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex h-12 items-center gap-2 rounded-full bg-[#111] px-6 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
+        >
+          <span>{{ t('home.clientShowcase.downloadCta', { platform: preferredClientDownload.name }) }}</span>
+          <Icon name="download" size="sm" />
+        </a>
+        <router-link
+          v-else
+          to="/register"
+          data-test="client-showcase-register"
+          class="inline-flex h-12 items-center gap-2 rounded-full bg-[#111] px-6 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
+        >
           <span>{{ t('home.clientShowcase.cta') }}</span>
           <Icon name="arrowRight" size="sm" />
         </router-link>
 
         <p class="text-sm text-gray-400 dark:text-white/35">
-          {{ t('home.clientShowcase.ctaNote') }}
+          {{ preferredClientDownload ? t('home.clientShowcase.downloadNote') : t('home.clientShowcase.ctaNote') }}
         </p>
       </div>
     </div>
@@ -105,18 +122,35 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
+import {
+  detectPreferredClientPlatform,
+  getClientDownloadOptions,
+} from '@/utils/clientDownloads'
 
 const props = defineProps<{
   siteSubtitle: string
   docUrl: string
   isAuthenticated: boolean
   dashboardPath: string
+  windowsUrl?: string
+  macosUrl?: string
 }>()
 
 const { t } = useI18n()
 
 const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
 const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
+const preferredClientPlatform = computed(() => detectPreferredClientPlatform())
+const clientDownloadOptions = computed(() =>
+  getClientDownloadOptions(
+    {
+      windowsUrl: props.windowsUrl,
+      macosUrl: props.macosUrl,
+    },
+    preferredClientPlatform.value,
+  ),
+)
+const preferredClientDownload = computed(() => clientDownloadOptions.value[0])
 
 const pills = computed(() => [
   t('home.clientShowcase.pills.darkMode'),

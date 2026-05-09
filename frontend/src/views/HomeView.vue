@@ -33,6 +33,8 @@
         :doc-url="docUrl"
         :is-authenticated="isAuthenticated"
         :dashboard-path="dashboardPath"
+        :windows-url="clientDownloadWindowsUrl"
+        :macos-url="clientDownloadMacOSUrl"
       />
 
       <HomeReveal class="px-4 pb-8 md:px-6">

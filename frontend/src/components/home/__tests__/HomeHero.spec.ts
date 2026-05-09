@@ -1,0 +1,114 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import HomeHero from '../HomeHero.vue'
+
+const translations: Record<string, string> = {
+  'home.hero.tags.coding': 'Coding',
+  'home.hero.tags.agent': 'Agent',
+  'home.hero.tags.tools': 'Tools',
+  'home.hero.titleLeadPrimary': 'Claude Code',
+  'home.hero.titleLeadSecondary': 'and Codex',
+  'home.hero.titleAccent': 'in one gateway',
+  'home.hero.titleTail': 'with metered billing',
+  'home.hero.primaryNote': 'Use one key everywhere.',
+  'home.cta.button': 'Start',
+  'home.goToDashboard': 'Dashboard',
+  'home.viewDocs': 'Docs',
+  'home.login': 'Login',
+  'home.clientShowcase.title': 'One desktop app for Claude Code and Codex',
+  'home.clientShowcase.description': 'Manage clients in one desktop app.',
+  'home.clientShowcase.pills.darkMode': 'Dark theme',
+  'home.clientShowcase.pills.workspace': 'Workspace management',
+  'home.clientShowcase.pills.terminal': 'Built-in terminal',
+  'home.clientShowcase.pills.crossDevice': 'Cross-device sync',
+  'home.clientShowcase.caption': 'Client preview',
+  'home.clientShowcase.cta': 'Get notified',
+  'home.clientShowcase.ctaNote': 'Register to get client updates.',
+  'home.clientShowcase.downloadCta': 'Download {platform}',
+  'home.clientShowcase.downloadNote': 'Desktop client downloads are available now.',
+}
+
+vi.mock('vue-i18n', async () => {
+  const actual = await vi.importActual<typeof import('vue-i18n')>('vue-i18n')
+  return {
+    ...actual,
+    useI18n: () => ({
+      t: (key: string, params?: Record<string, string>) => {
+        const message = translations[key] || key
+        return Object.entries(params || {}).reduce(
+          (result, [name, value]) => result.replace(`{${name}}`, value),
+          message,
+        )
+      },
+    }),
+  }
+})
+
+function setPlatform(platform: string, userAgent = '') {
+  Object.defineProperty(window.navigator, 'userAgentData', {
+    configurable: true,
+    value: { platform },
+  })
+  Object.defineProperty(window.navigator, 'platform', {
+    configurable: true,
+    value: platform,
+  })
+  Object.defineProperty(window.navigator, 'userAgent', {
+    configurable: true,
+    value: userAgent || platform,
+  })
+}
+
+function mountHero(props: Partial<InstanceType<typeof HomeHero>['$props']> = {}) {
+  return mount(HomeHero, {
+    props: {
+      siteSubtitle: '',
+      docUrl: '',
+      isAuthenticated: false,
+      dashboardPath: '/dashboard',
+      windowsUrl: '',
+      macosUrl: '',
+      ...props,
+    },
+    global: {
+      stubs: {
+        Icon: true,
+        RouterLink: {
+          props: ['to'],
+          template: '<a :href="to"><slot /></a>',
+        },
+      },
+    },
+  })
+}
+
+describe('HomeHero', () => {
+  beforeEach(() => {
+    setPlatform('Linux')
+  })
+
+  it('uses the preferred platform download link in the client preview CTA', () => {
+    setPlatform('macOS')
+
+    const wrapper = mountHero({
+      windowsUrl: 'https://downloads.example.com/windows.exe',
+      macosUrl: 'https://downloads.example.com/macos.dmg',
+    })
+
+    const downloadLink = wrapper.find('[data-test="client-showcase-download"]')
+    expect(downloadLink.exists()).toBe(true)
+    expect(downloadLink.attributes('href')).toBe('https://downloads.example.com/macos.dmg')
+    expect(downloadLink.attributes('data-platform')).toBe('macos')
+    expect(downloadLink.text()).toContain('Download macOS')
+    expect(wrapper.text()).not.toContain('敬请期待')
+    expect(wrapper.text()).not.toContain('Coming soon')
+  })
+
+  it('falls back to the registration CTA when no client download is configured', () => {
+    const wrapper = mountHero()
+
+    expect(wrapper.find('[data-test="client-showcase-download"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="client-showcase-register"]').attributes('href')).toBe('/register')
+    expect(wrapper.text()).toContain('Get notified')
+  })
+})
