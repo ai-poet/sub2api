@@ -86,12 +86,12 @@ export default {
     clientShowcase: {
       badge: 'Client preview',
       title: 'One desktop app for Claude Code and Codex',
-      description: 'Dark theme, three-pane layout, built-in terminal. Workspaces and tasks on the left, Claude Code / Codex conversations and code in the center, file changes and spend tracking on the right. Everything in one window, no context switching.',
+      description: 'Dark theme, three-pane layout, built-in terminal. Workspaces and tasks on the left, Claude Code / Codex conversations and code in the center, file changes and spend tracking on the right. Run multiple agent tasks in parallel across workspaces without switching windows.',
       pills: {
         darkMode: 'Dark theme',
         workspace: 'Workspace management',
         terminal: 'Built-in terminal',
-        crossDevice: 'Cross-device sync',
+        parallel: 'Parallel agents',
       },
       caption: 'Client interface preview — actual features subject to release version',
       cta: 'Get client updates',

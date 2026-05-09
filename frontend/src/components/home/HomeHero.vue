@@ -156,6 +156,6 @@ const pills = computed(() => [
   t('home.clientShowcase.pills.darkMode'),
   t('home.clientShowcase.pills.workspace'),
   t('home.clientShowcase.pills.terminal'),
-  t('home.clientShowcase.pills.crossDevice'),
+  t('home.clientShowcase.pills.parallel'),
 ])
 </script>

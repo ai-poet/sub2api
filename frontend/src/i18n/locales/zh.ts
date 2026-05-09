@@ -86,12 +86,12 @@ export default {
     clientShowcase: {
       badge: '客户端预览',
       title: '一个桌面端，把 Claude Code 和 Codex 管起来',
-      description: '深色主题、三栏布局、自带终端。左侧管理工作区和任务列表，中间是 Claude Code / Codex 的对话与代码，右侧跟踪文件变更和消费情况。不用切窗口，所有事在一个界面里完成。',
+      description: '深色主题、三栏布局、自带终端。左侧管理工作区和任务列表，中间是 Claude Code / Codex 的对话与代码，右侧跟踪文件变更和消费情况。支持并行多开多个任务，让不同工作区里的 agent 同时跑起来，不用切窗口，所有事在一个界面里完成。',
       pills: {
         darkMode: '深色主题',
         workspace: 'Workspace 管理',
         terminal: '内置终端',
-        crossDevice: '跨设备同步',
+        parallel: '并行多开',
       },
       caption: '客户端界面预览 — 实际功能以上线版本为准',
       cta: '注册获取通知',

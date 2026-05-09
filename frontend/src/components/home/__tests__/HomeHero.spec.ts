@@ -16,11 +16,12 @@ const translations: Record<string, string> = {
   'home.viewDocs': 'Docs',
   'home.login': 'Login',
   'home.clientShowcase.title': 'One desktop app for Claude Code and Codex',
-  'home.clientShowcase.description': 'Manage clients in one desktop app.',
+  'home.clientShowcase.description':
+    'Run multiple agent tasks in parallel across workspaces without switching windows.',
   'home.clientShowcase.pills.darkMode': 'Dark theme',
   'home.clientShowcase.pills.workspace': 'Workspace management',
   'home.clientShowcase.pills.terminal': 'Built-in terminal',
-  'home.clientShowcase.pills.crossDevice': 'Cross-device sync',
+  'home.clientShowcase.pills.parallel': 'Parallel agents',
   'home.clientShowcase.caption': 'Client preview',
   'home.clientShowcase.cta': 'Get notified',
   'home.clientShowcase.ctaNote': 'Register to get client updates.',
@@ -110,5 +111,13 @@ describe('HomeHero', () => {
     expect(wrapper.find('[data-test="client-showcase-download"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="client-showcase-register"]').attributes('href')).toBe('/register')
     expect(wrapper.text()).toContain('Get notified')
+  })
+
+  it('highlights parallel agent runs in the client preview copy and pills', () => {
+    const wrapper = mountHero()
+
+    expect(wrapper.text()).toContain('Run multiple agent tasks in parallel')
+    expect(wrapper.text()).toContain('Parallel agents')
+    expect(wrapper.text()).not.toContain('Cross-device sync')
   })
 })
