@@ -468,6 +468,8 @@ func TestAPIContracts(t *testing.T) {
 					service.SettingKeyAPIBaseURL:   "https://api.example.com",
 					service.SettingKeyContactInfo:  "support",
 					service.SettingKeyDocURL:       "https://docs.example.com",
+					"client_download_windows_url": "https://downloads.example.com/sub2api.exe",
+					"client_download_macos_url":   "https://downloads.example.com/sub2api.dmg",
 
 					service.SettingKeyDefaultConcurrency: "5",
 					service.SettingKeyDefaultBalance:     "1.25",
@@ -532,6 +534,8 @@ func TestAPIContracts(t *testing.T) {
 					"hide_ccs_import_button": false,
 					"purchase_subscription_enabled": false,
 					"purchase_subscription_url": "",
+					"client_download_windows_url": "https://downloads.example.com/sub2api.exe",
+					"client_download_macos_url": "https://downloads.example.com/sub2api.dmg",
 					"min_claude_code_version": "",
 					"max_claude_code_version": "",
 					"allow_ungrouped_key_scheduling": false,

@@ -13,6 +13,23 @@ export default {
     headerTagline: 'AI Coding Agent Infrastructure',
     heroSubtitle: 'One gateway, metered billing, built for long-running coding agents',
     heroDescription: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so you can use AI coding agent services with lower premium-model cost.',
+    download: {
+      badge: 'Desktop client',
+      title: 'Download the desktop client',
+      description: 'Use the desktop client to manage Claude Code, Codex, and OpenAI-compatible access from one configured workspace.',
+      privacyCode: 'Download links are configured by the site administrator and can point to your release host or CDN.',
+      privacyKey: 'API keys stay managed by this platform; the client only uses the connection details you authorize.',
+      recommended: 'Recommended',
+      cta: 'Download',
+      platforms: {
+        windows: {
+          sub: 'Windows 10/11'
+        },
+        mac: {
+          sub: 'Apple Silicon and Intel'
+        }
+      }
+    },
     hero: {
       badge: 'Premium models, without premium subscription pricing',
       titleLead: 'Give your',
@@ -4480,6 +4497,7 @@ export default {
       description: 'Manage registration, email verification, default values, and SMTP settings',
       tabs: {
         general: 'General',
+        client: 'Client',
         security: 'Security',
         users: 'Users',
         gateway: 'Gateway',
@@ -4696,6 +4714,19 @@ export default {
           '⚠️ iframe note: Some websites block embedding via X-Frame-Options or CSP (frame-ancestors). If the page is blank, provide an "Open in new tab" alternative.',
         integrationDoc: 'Payment Integration Docs',
         integrationDocHint: 'Covers endpoint specs, idempotency semantics, and code samples'
+      },
+      clientDownloads: {
+        title: 'Client Downloads',
+        description:
+          'Set public Windows and macOS desktop client download links. The default home page shows a download entry when at least one link is configured.',
+        windowsUrl: 'Windows Download URL',
+        windowsUrlPlaceholder: 'https://downloads.example.com/sub2api-windows.exe',
+        windowsUrlHint: 'Leave empty to hide the Windows download button.',
+        macosUrl: 'macOS Download URL',
+        macosUrlPlaceholder: 'https://downloads.example.com/sub2api-macos.dmg',
+        macosUrlHint: 'Leave empty to hide the macOS download button.',
+        publicHint:
+          'Use a public http(s) link from object storage, a CDN, or a release platform. Custom home page content still fully controls the home page when configured.'
       },
       soraClient: {
         title: 'Sora Client',

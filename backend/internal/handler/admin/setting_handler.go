@@ -111,6 +111,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		PurchaseSubscriptionEnabled:          settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              settings.PurchaseSubscriptionURL,
 		PurchaseSubscriptionOpenMode:         settings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:             settings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:               settings.ClientDownloadMacOSURL,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                      dto.ParseCustomEndpoints(settings.CustomEndpoints),
 		GroupStatusEnabled:                   settings.GroupStatusEnabled,
@@ -189,6 +191,8 @@ type UpdateSettingsRequest struct {
 	PurchaseSubscriptionEnabled  *bool                 `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL      *string               `json:"purchase_subscription_url"`
 	PurchaseSubscriptionOpenMode *string               `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL     *string               `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       *string               `json:"client_download_macos_url"`
 	CustomMenuItems              *[]dto.CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints              *[]dto.CustomEndpoint `json:"custom_endpoints"`
 	GroupStatusEnabled           bool                  `json:"group_status_enabled"`
@@ -408,6 +412,27 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	if purchaseURL != "" {
 		if err := config.ValidateAbsoluteHTTPURL(purchaseURL); err != nil {
 			response.BadRequest(c, "Purchase Subscription URL must be an absolute http(s) URL")
+			return
+		}
+	}
+
+	clientDownloadWindowsURL := previousSettings.ClientDownloadWindowsURL
+	if req.ClientDownloadWindowsURL != nil {
+		clientDownloadWindowsURL = strings.TrimSpace(*req.ClientDownloadWindowsURL)
+	}
+	if clientDownloadWindowsURL != "" {
+		if err := config.ValidateAbsoluteHTTPURL(clientDownloadWindowsURL); err != nil {
+			response.BadRequest(c, "Windows client download URL must be an absolute http(s) URL")
+			return
+		}
+	}
+	clientDownloadMacOSURL := previousSettings.ClientDownloadMacOSURL
+	if req.ClientDownloadMacOSURL != nil {
+		clientDownloadMacOSURL = strings.TrimSpace(*req.ClientDownloadMacOSURL)
+	}
+	if clientDownloadMacOSURL != "" {
+		if err := config.ValidateAbsoluteHTTPURL(clientDownloadMacOSURL); err != nil {
+			response.BadRequest(c, "macOS client download URL must be an absolute http(s) URL")
 			return
 		}
 	}
@@ -639,6 +664,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionEnabled:      purchaseEnabled,
 		PurchaseSubscriptionURL:          purchaseURL,
 		PurchaseSubscriptionOpenMode:     purchaseOpenMode,
+		ClientDownloadWindowsURL:         clientDownloadWindowsURL,
+		ClientDownloadMacOSURL:           clientDownloadMacOSURL,
 		CustomMenuItems:                  customMenuJSON,
 		CustomEndpoints:                  customEndpointsJSON,
 		GroupStatusEnabled:               req.GroupStatusEnabled,
@@ -761,6 +788,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionEnabled:          updatedSettings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              updatedSettings.PurchaseSubscriptionURL,
 		PurchaseSubscriptionOpenMode:         updatedSettings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:             updatedSettings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:               updatedSettings.ClientDownloadMacOSURL,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
 		CustomEndpoints:                      dto.ParseCustomEndpoints(updatedSettings.CustomEndpoints),
 		GroupStatusEnabled:                   updatedSettings.GroupStatusEnabled,
@@ -903,6 +932,12 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.PurchaseSubscriptionOpenMode != after.PurchaseSubscriptionOpenMode {
 		changed = append(changed, "purchase_subscription_open_mode")
+	}
+	if before.ClientDownloadWindowsURL != after.ClientDownloadWindowsURL {
+		changed = append(changed, "client_download_windows_url")
+	}
+	if before.ClientDownloadMacOSURL != after.ClientDownloadMacOSURL {
+		changed = append(changed, "client_download_macos_url")
 	}
 	if before.DefaultConcurrency != after.DefaultConcurrency {
 		changed = append(changed, "default_concurrency")

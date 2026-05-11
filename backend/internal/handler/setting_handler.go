@@ -52,6 +52,8 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
 		PurchaseSubscriptionOpenMode:     settings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:         settings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:           settings.ClientDownloadMacOSURL,
 		CustomMenuItems:                  dto.ParseUserVisibleMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                  dto.ParseCustomEndpoints(settings.CustomEndpoints),
 		GroupStatusEnabled:               settings.GroupStatusEnabled,

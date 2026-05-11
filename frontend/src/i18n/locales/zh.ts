@@ -13,6 +13,23 @@ export default {
     headerTagline: 'AI Coding Agent 服务底层',
     heroSubtitle: '统一入口、按量计费、面向持续运行的编码代理',
     heroDescription: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本使用基于高级模型的 AI coding agent 服务。',
+    download: {
+      badge: '桌面客户端',
+      title: '下载桌面客户端',
+      description: '使用桌面客户端集中管理 Claude Code、Codex 和 OpenAI 兼容接入，按你的站点配置快速开始。',
+      privacyCode: '下载链接由站点管理员配置，可指向你的发布平台或 CDN。',
+      privacyKey: 'API Key 仍由你在本平台管理，客户端只使用你授权的连接信息。',
+      recommended: '推荐',
+      cta: '下载',
+      platforms: {
+        windows: {
+          sub: 'Windows 10/11'
+        },
+        mac: {
+          sub: 'Apple Silicon 与 Intel'
+        }
+      }
+    },
     hero: {
       badge: '高级模型，不必继续按官方订阅价买单',
       titleLead: '让你的',
@@ -4646,6 +4663,7 @@ export default {
       description: '管理注册、邮箱验证、默认值和 SMTP 设置',
       tabs: {
         general: '通用设置',
+        client: '客户端',
         security: '安全与认证',
         users: '用户默认值',
         gateway: '网关服务',
@@ -4860,6 +4878,19 @@ export default {
           '⚠️ iframe 提示：部分网站会通过 X-Frame-Options 或 CSP（frame-ancestors）禁止被 iframe 嵌入，出现空白时可引导用户使用”新窗口打开”。',
         integrationDoc: '支付集成文档',
         integrationDocHint: '包含接口说明、幂等语义及示例代码'
+      },
+      clientDownloads: {
+        title: '客户端下载',
+        description:
+          '填写 Windows 和 macOS 桌面客户端的公开下载链接，默认首页会在已配置链接时展示下载入口。',
+        windowsUrl: 'Windows 下载链接',
+        windowsUrlPlaceholder: 'https://downloads.example.com/sub2api-windows.exe',
+        windowsUrlHint: '留空则隐藏 Windows 下载按钮。',
+        macosUrl: 'macOS 下载链接',
+        macosUrlPlaceholder: 'https://downloads.example.com/sub2api-macos.dmg',
+        macosUrlHint: '留空则隐藏 macOS 下载按钮。',
+        publicHint:
+          '请使用对象存储、CDN 或发布平台提供的公开 http(s) 链接。自定义首页内容仍完全由你填写的 HTML 或 URL 控制。'
       },
       soraClient: {
         title: 'Sora 客户端',

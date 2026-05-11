@@ -49,6 +49,8 @@ type SystemSettings struct {
 	PurchaseSubscriptionEnabled  bool
 	PurchaseSubscriptionURL      string
 	PurchaseSubscriptionOpenMode string // iframe or new_window
+	ClientDownloadWindowsURL     string
+	ClientDownloadMacOSURL       string
 	CustomMenuItems              string // JSON array of custom menu items
 	CustomEndpoints              string // JSON array of custom endpoints
 	GroupStatusEnabled           bool
@@ -120,6 +122,8 @@ type PublicSettings struct {
 	PurchaseSubscriptionEnabled  bool
 	PurchaseSubscriptionURL      string
 	PurchaseSubscriptionOpenMode string // iframe or new_window
+	ClientDownloadWindowsURL     string
+	ClientDownloadMacOSURL       string
 	CustomMenuItems              string // JSON array of custom menu items
 	CustomEndpoints              string // JSON array of custom endpoints
 	GroupStatusEnabled           bool

@@ -272,6 +272,26 @@ describe('useAppStore', () => {
       expect(store.publicSettingsLoaded).toBe(true)
     })
 
+    it('保留注入配置中的客户端下载链接', () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = {
+        site_name: 'TestSite',
+        client_download_windows_url: 'https://downloads.example.com/windows.exe',
+        client_download_macos_url: 'https://downloads.example.com/macos.dmg',
+      }
+
+      const store = useAppStore()
+      const result = store.initFromInjectedConfig()
+
+      expect(result).toBe(true)
+      expect(store.cachedPublicSettings?.client_download_windows_url).toBe(
+        'https://downloads.example.com/windows.exe'
+      )
+      expect(store.cachedPublicSettings?.client_download_macos_url).toBe(
+        'https://downloads.example.com/macos.dmg'
+      )
+    })
+
     it('注入配置缺失打开方式时默认 iframe', () => {
       const windowAny = window as any
       windowAny.__APP_CONFIG__ = {

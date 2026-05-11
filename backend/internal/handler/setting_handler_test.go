@@ -99,3 +99,39 @@ func TestSettingHandler_GetPublicSettings_IncludesReferralEnabled(t *testing.T) 
 	require.Equal(t, 0, response.Code)
 	require.True(t, response.Data.ReferralEnabled)
 }
+
+func TestSettingHandler_GetPublicSettings_IncludesClientDownloadURLs(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	settingRepo := &stubSettingRepoForPublicSettings{
+		values: map[string]string{
+			"client_download_windows_url": "https://downloads.example.com/sub2api-windows.exe",
+			"client_download_macos_url":   "https://downloads.example.com/sub2api-macos.dmg",
+		},
+	}
+
+	settingService := service.NewSettingService(settingRepo, nil)
+	settingHandler := NewSettingHandler(settingService, "v1.0.0")
+
+	router := gin.New()
+	router.GET("/api/v1/settings/public", settingHandler.GetPublicSettings)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/settings/public", nil)
+	router.ServeHTTP(recorder, request)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	var response struct {
+		Code int `json:"code"`
+		Data struct {
+			ClientDownloadWindowsURL string `json:"client_download_windows_url"`
+			ClientDownloadMacOSURL   string `json:"client_download_macos_url"`
+		} `json:"data"`
+	}
+
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+	require.Equal(t, 0, response.Code)
+	require.Equal(t, "https://downloads.example.com/sub2api-windows.exe", response.Data.ClientDownloadWindowsURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-macos.dmg", response.Data.ClientDownloadMacOSURL)
+}

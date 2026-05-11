@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
@@ -61,4 +62,59 @@ func TestSettingService_GetPublicSettings_ExposesRegistrationEmailSuffixWhitelis
 	settings, err := svc.GetPublicSettings(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, []string{"@example.com", "@foo.bar"}, settings.RegistrationEmailSuffixWhitelist)
+}
+
+func TestSettingService_GetPublicSettings_ExposesClientDownloadURLs(t *testing.T) {
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			"client_download_windows_url": " https://downloads.example.com/sub2api-win.exe ",
+			"client_download_macos_url":   "https://downloads.example.com/sub2api-mac.dmg",
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, "https://downloads.example.com/sub2api-win.exe", settings.ClientDownloadWindowsURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-mac.dmg", settings.ClientDownloadMacOSURL)
+}
+
+func TestSettingService_GetPublicSettingsForInjection_IncludesClientDownloadURLs(t *testing.T) {
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			"client_download_windows_url": "https://downloads.example.com/windows.exe",
+			"client_download_macos_url":   "https://downloads.example.com/macos.dmg",
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	payload, err := svc.GetPublicSettingsForInjection(context.Background())
+	require.NoError(t, err)
+
+	encoded, err := json.Marshal(payload)
+	require.NoError(t, err)
+	require.JSONEq(t, `{
+		"registration_enabled": false,
+		"email_verify_enabled": false,
+		"registration_email_suffix_whitelist": [],
+		"promo_code_enabled": true,
+		"password_reset_enabled": false,
+		"invitation_code_enabled": false,
+		"totp_enabled": false,
+		"turnstile_enabled": false,
+		"site_name": "Sub2API",
+		"site_subtitle": "Subscription to API Conversion Platform",
+		"hide_ccs_import_button": false,
+		"purchase_subscription_enabled": false,
+		"purchase_subscription_open_mode": "iframe",
+		"custom_menu_items": [],
+		"custom_endpoints": [],
+		"group_status_enabled": false,
+		"linuxdo_oauth_enabled": false,
+		"github_oauth_enabled": false,
+		"referral_enabled": false,
+		"backend_mode_enabled": false,
+		"client_download_windows_url": "https://downloads.example.com/windows.exe",
+		"client_download_macos_url": "https://downloads.example.com/macos.dmg"
+	}`, string(encoded))
 }
