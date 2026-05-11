@@ -16,9 +16,11 @@ export default {
     download: {
       badge: '桌面客户端',
       title: '下载桌面客户端',
-      description: '使用桌面客户端集中管理 Claude Code、Codex 和 OpenAI 兼容接入，按你的站点配置快速开始。',
-      privacyCode: '下载链接由站点管理员配置，可指向你的发布平台或 CDN。',
+      description: '在桌面端集中管理 Claude Code、Codex 和 OpenAI 兼容接入，登录后即可按账户权限快速开始。',
+      privacyCode: '下载后使用你的账户和 API Key 连接服务，无需在多个工具里反复配置。',
       privacyKey: 'API Key 仍由你在本平台管理，客户端只使用你授权的连接信息。',
+      screenshotAlt: '桌面客户端界面截图',
+      screenshotCaption: '桌面客户端预览，实际功能以当前服务开通能力和客户端版本为准。',
       recommended: '推荐',
       cta: '下载',
       platforms: {
@@ -81,8 +83,8 @@ export default {
     },
     value: {
       overline: '服务结构',
-      title: '把高级模型能力做成真正可交付的编码代理服务',
-      description: '把成本、稳定性和计费控制交给同一层服务，让高级模型更适合长期承接编码代理请求。',
+      title: '把高级模型能力接进你的日常编码工作流',
+      description: '成本、稳定性和计费都收在同一个入口里，让你更轻松地持续使用编码代理。',
       items: {
         economics: {
           eyebrow: '01 / 价格',
@@ -97,7 +99,7 @@ export default {
         control: {
           eyebrow: '03 / 可控',
           title: '统一计费、额度与明细',
-          description: '一个 API Key 进来，一套额度、账单和使用明细出去，更适合个人转化，也更适合团队推广。'
+          description: '一个 API Key 承接常用工具，一套额度、账单和使用明细，个人和团队都更容易管理。'
         }
       }
     },
@@ -146,7 +148,7 @@ export default {
       cards: {
         gateway: {
           title: '统一入口',
-          description: '一个兼容 OpenAI 风格的入口承接主流高级模型，降低接入与推广门槛。'
+          description: '一个兼容 OpenAI 风格的入口承接主流高级模型，减少在不同工具之间来回配置的成本。'
         },
         resilience: {
           title: '稳定切换',
@@ -164,11 +166,11 @@ export default {
       }
     },
     cta: {
-      eyebrow: 'READY TO CONVERT',
+      eyebrow: 'READY TO START',
       title: '把高级模型接进你的下一个 AI coding agent',
-      description: '用一个统一端点承接高级模型请求、用量与切换逻辑，把更稳、更省的编码代理服务直接交付给用户。',
+      description: '用一个统一端点承接高级模型请求、用量与切换逻辑，让你的编码代理更稳、更省。',
       button: '免费注册',
-      stat: '统一入口 · 按量付费 · 面向推广'
+      stat: '统一入口 · 按量付费 · 面向日常开发'
     },
     footer: {
       allRightsReserved: '保留所有权利。'

@@ -44,15 +44,15 @@
         :dashboard-path="dashboardPath"
       />
 
-      <HomeReveal class="px-4 pb-8 md:px-6">
-        <HomeProofStrip />
-      </HomeReveal>
-
-      <HomeReveal v-if="hasClientDownloads" class="px-4 py-8 md:px-6 md:py-12">
+      <HomeReveal v-if="hasClientDownloads" class="px-4 pb-8 pt-2 md:px-6 md:pb-12 md:pt-3">
         <HomeDownloadSection
           :windows-url="clientDownloadWindowsUrl"
           :macos-url="clientDownloadMacOSUrl"
         />
+      </HomeReveal>
+
+      <HomeReveal class="px-4 pb-8 md:px-6">
+        <HomeProofStrip />
       </HomeReveal>
 
       <HomeReveal class="px-4 py-12 md:px-6 md:py-16">

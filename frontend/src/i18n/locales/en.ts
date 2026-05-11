@@ -16,9 +16,11 @@ export default {
     download: {
       badge: 'Desktop client',
       title: 'Download the desktop client',
-      description: 'Use the desktop client to manage Claude Code, Codex, and OpenAI-compatible access from one configured workspace.',
-      privacyCode: 'Download links are configured by the site administrator and can point to your release host or CDN.',
+      description: 'Manage Claude Code, Codex, and OpenAI-compatible access from the desktop, then start quickly with your account permissions.',
+      privacyCode: 'Connect with your account and API key after download, without repeating setup across every tool.',
       privacyKey: 'API keys stay managed by this platform; the client only uses the connection details you authorize.',
+      screenshotAlt: 'Desktop client interface screenshot',
+      screenshotCaption: 'Desktop client preview. Actual features depend on the enabled service capabilities and client version.',
       recommended: 'Recommended',
       cta: 'Download',
       platforms: {
@@ -81,8 +83,8 @@ export default {
     },
     value: {
       overline: 'Service Structure',
-      title: 'Turn premium-model access into a coding-agent service you can actually deliver',
-      description: 'Bring cost, stability, and billing control into one gateway layer so long-running coding agents stay usable and commercially viable.',
+      title: 'Bring premium models into your daily coding workflow',
+      description: 'Keep cost, stability, and billing control in one entry point so your coding agents stay easier to run every day.',
       items: {
         economics: {
           eyebrow: '01 / Pricing',
@@ -97,7 +99,7 @@ export default {
         control: {
           eyebrow: '03 / Control',
           title: 'Unified billing, quotas, and detail',
-          description: 'One API key in, one set of quotas, bills, and usage detail out. Easier for personal onboarding and easier to promote to teams.'
+          description: 'One API key for common tools, one set of quotas, bills, and usage detail. Easier to manage for individuals and teams.'
         }
       }
     },
@@ -146,7 +148,7 @@ export default {
       cards: {
         gateway: {
           title: 'Unified entry point',
-          description: 'A single OpenAI-style gateway serves mainstream premium models, lowering integration and promotion friction.'
+          description: 'A single OpenAI-style gateway serves mainstream premium models, reducing repeated setup across different tools.'
         },
         resilience: {
           title: 'Resilient switching',
@@ -164,11 +166,11 @@ export default {
       }
     },
     cta: {
-      eyebrow: 'READY TO SHIP',
+      eyebrow: 'READY TO START',
       title: 'Give your next AI coding agent a cheaper premium-model runtime',
-      description: 'Put premium model access, usage control, and routing behind one endpoint, then deliver a coding-agent service that is easier to keep running.',
+      description: 'Put premium model access, usage control, and routing behind one endpoint so your coding agents run steadier and cheaper.',
       button: 'Sign Up Free',
-      stat: 'One gateway · Metered billing · Built for promotion'
+      stat: 'One gateway · Metered billing · Built for daily development'
     },
     footer: {
       allRightsReserved: 'All rights reserved.'
