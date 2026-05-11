@@ -16,13 +16,20 @@ export default {
     download: {
       badge: 'Desktop client',
       title: 'Download the desktop client',
-      description: 'Manage Claude Code, Codex, and OpenAI-compatible access from the desktop, then start quickly with your account permissions.',
+      description: 'Manage Claude Code, Codex, and OpenAI-compatible access from the desktop. Run multiple agents across multiple workspaces in parallel, then start quickly with your account permissions.',
       privacyCode: 'Connect with your account and API key after download, without repeating setup across every tool.',
       privacyKey: 'API keys stay managed by this platform; the client only uses the connection details you authorize.',
+      parallelAgents: 'Run parallel agent tasks across workspaces without switching windows all day.',
       screenshotAlt: 'Desktop client interface screenshot',
       screenshotCaption: 'Desktop client preview. Actual features depend on the enabled service capabilities and client version.',
       recommended: 'Recommended',
       cta: 'Download',
+      pills: {
+        workspace: 'Workspace management',
+        terminal: 'Built-in terminal',
+        parallel: 'Parallel agents',
+        tracking: 'Changes and usage tracking'
+      },
       platforms: {
         windows: {
           sub: 'Windows 10/11'
@@ -91,13 +98,18 @@ export default {
           title: 'Cheaper access to premium models',
           description: 'Bring Claude / GPT / Codex class capability into common coding-agent workflows without buying each official subscription separately.'
         },
+        parallel: {
+          eyebrow: '02 / Parallel',
+          title: 'Run multiple agents at once',
+          description: 'Manage multiple workspaces and tasks in the client so Claude Code, Codex, and other agents can keep working side by side.'
+        },
         reliability: {
-          eyebrow: '02 / Reliability',
+          eyebrow: '03 / Reliability',
           title: 'Stability for long-running agents',
           description: 'Multi-account pools, sticky sessions, and automatic failover reduce the impact of single-account limits and upstream volatility.'
         },
         control: {
-          eyebrow: '03 / Control',
+          eyebrow: '04 / Control',
           title: 'Unified billing, quotas, and detail',
           description: 'One API key for common tools, one set of quotas, bills, and usage detail. Easier to manage for individuals and teams.'
         }

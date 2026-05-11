@@ -16,13 +16,20 @@ export default {
     download: {
       badge: '桌面客户端',
       title: '下载桌面客户端',
-      description: '在桌面端集中管理 Claude Code、Codex 和 OpenAI 兼容接入，登录后即可按账户权限快速开始。',
+      description: '在桌面端集中管理 Claude Code、Codex 和 OpenAI 兼容接入。多个工作区、多个 agent 可以并行跑，登录后即可按账户权限快速开始。',
       privacyCode: '下载后使用你的账户和 API Key 连接服务，无需在多个工具里反复配置。',
       privacyKey: 'API Key 仍由你在本平台管理，客户端只使用你授权的连接信息。',
+      parallelAgents: '支持多工作区并行多开，让不同 agent 同时跑任务，不用来回切窗口。',
       screenshotAlt: '桌面客户端界面截图',
       screenshotCaption: '桌面客户端预览，实际功能以当前服务开通能力和客户端版本为准。',
       recommended: '推荐',
       cta: '下载',
+      pills: {
+        workspace: 'Workspace 管理',
+        terminal: '内置终端',
+        parallel: '并行多开',
+        tracking: '变更与用量跟踪'
+      },
       platforms: {
         windows: {
           sub: 'Windows 10/11'
@@ -91,13 +98,18 @@ export default {
           title: '廉价接入高级模型',
           description: '把 Claude / GPT / Codex 级能力放进常用 coding agent 工作流，不必再为每个官方订阅单独买单。'
         },
+        parallel: {
+          eyebrow: '02 / 并行',
+          title: '多个 agent 同时跑',
+          description: '在客户端里管理多个工作区和任务，让 Claude Code、Codex 等 agent 并行推进，不必盯着一个窗口等待。'
+        },
         reliability: {
-          eyebrow: '02 / 稳定',
+          eyebrow: '03 / 稳定',
           title: '为持续运行准备的稳定性',
           description: '多账号池、粘性会话与自动切换，减少单账号限流或波动对编码链路的影响。'
         },
         control: {
-          eyebrow: '03 / 可控',
+          eyebrow: '04 / 可控',
           title: '统一计费、额度与明细',
           description: '一个 API Key 承接常用工具，一套额度、账单和使用明细，个人和团队都更容易管理。'
         }

@@ -22,6 +22,16 @@
             {{ t('home.download.description') }}
           </p>
 
+          <div class="mt-5 flex flex-wrap gap-2">
+            <span
+              v-for="pill in featurePills"
+              :key="pill"
+              class="rounded-full border border-gray-200 bg-white/70 px-3.5 py-1.5 text-sm text-gray-600 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/70"
+            >
+              {{ pill }}
+            </span>
+          </div>
+
           <div class="mt-6 flex flex-col gap-3">
             <div class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-white/60">
               <span
@@ -38,6 +48,14 @@
                 <Icon name="sync" size="sm" />
               </span>
               {{ t('home.download.privacyKey') }}
+            </div>
+            <div class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-white/60">
+              <span
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
+              >
+                <Icon name="terminal" size="sm" />
+              </span>
+              {{ t('home.download.parallelAgents') }}
             </div>
           </div>
 
@@ -140,6 +158,13 @@ const platformIcons: Record<ClientDownloadPlatform, string> = {
 }
 
 const preferredPlatform = computed(() => detectPreferredClientPlatform())
+
+const featurePills = computed(() => [
+  t('home.download.pills.workspace'),
+  t('home.download.pills.terminal'),
+  t('home.download.pills.parallel'),
+  t('home.download.pills.tracking'),
+])
 
 const downloadOptions = computed<DownloadOption[]>(() =>
   getClientDownloadOptions(

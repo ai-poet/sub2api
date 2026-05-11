@@ -12,7 +12,7 @@
       </p>
     </div>
 
-    <div class="mt-14 grid gap-10 border-t border-black/10 pt-8 dark:border-white/10 lg:grid-cols-3 lg:gap-8">
+    <div class="mt-14 grid gap-10 border-t border-black/10 pt-8 dark:border-white/10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
       <article
         v-for="item in valueItems"
         :key="item.title"
@@ -51,6 +51,12 @@ const valueItems = computed(() => [
     title: t('home.value.items.economics.title'),
     description: t('home.value.items.economics.description'),
     icon: 'dollar' as const,
+  },
+  {
+    eyebrow: t('home.value.items.parallel.eyebrow'),
+    title: t('home.value.items.parallel.title'),
+    description: t('home.value.items.parallel.description'),
+    icon: 'terminal' as const,
   },
   {
     eyebrow: t('home.value.items.reliability.eyebrow'),
