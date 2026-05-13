@@ -24,10 +24,7 @@ const translations: Record<string, string> = {
   'home.clientShowcase.pills.terminal': 'Built-in terminal',
   'home.clientShowcase.pills.parallel': 'Parallel agents',
   'home.clientShowcase.caption': 'Client preview',
-  'home.clientShowcase.cta': 'Get notified',
-  'home.clientShowcase.ctaNote': 'Register to get client updates.',
   'home.clientShowcase.downloadCta': 'Download {platform}',
-  'home.clientShowcase.downloadNote': 'Desktop client downloads are available now.',
 }
 
 vi.mock('vue-i18n', async () => {
@@ -89,23 +86,6 @@ describe('HomeHero', () => {
     setPlatform('Linux')
   })
 
-  it('uses the preferred platform download link in the client preview CTA', () => {
-    setPlatform('macOS')
-
-    const wrapper = mountHero({
-      windowsUrl: 'https://downloads.example.com/windows.exe',
-      macosUrl: 'https://downloads.example.com/macos.dmg',
-    })
-
-    const downloadLink = wrapper.find('[data-test="client-showcase-download"]')
-    expect(downloadLink.exists()).toBe(true)
-    expect(downloadLink.attributes('href')).toBe('https://downloads.example.com/macos.dmg')
-    expect(downloadLink.attributes('data-platform')).toBe('macos')
-    expect(downloadLink.text()).toContain('Download macOS')
-    expect(wrapper.text()).not.toContain('敬请期待')
-    expect(wrapper.text()).not.toContain('Coming soon')
-  })
-
   it('moves desktop download links into the primary hero CTA row', () => {
     setPlatform('Windows')
 
@@ -130,9 +110,8 @@ describe('HomeHero', () => {
     const wrapper = mountHero()
 
     expect(wrapper.find('[data-test="hero-primary-fallback"]').attributes('href')).toBe('/login')
-    expect(wrapper.find('[data-test="client-showcase-download"]').exists()).toBe(false)
-    expect(wrapper.find('[data-test="client-showcase-register"]').attributes('href')).toBe('/register')
-    expect(wrapper.text()).toContain('Get notified')
+    expect(wrapper.find('[data-test="hero-primary-download"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="hero-platform-download"]').exists()).toBe(false)
   })
 
   it('highlights parallel agent runs in the client preview copy and pills', () => {

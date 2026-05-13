@@ -105,34 +105,6 @@
         {{ t('home.clientShowcase.caption') }}
       </p>
 
-      <!-- CTA row -->
-      <div class="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-        <a
-          v-if="preferredClientDownload"
-          :href="preferredClientDownload.url"
-          :data-platform="preferredClientDownload.id"
-          data-test="client-showcase-download"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex h-12 items-center gap-2 rounded-full bg-[#111] px-6 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
-        >
-          <span>{{ t('home.clientShowcase.downloadCta', { platform: preferredClientDownload.name }) }}</span>
-          <Icon name="download" size="sm" />
-        </a>
-        <router-link
-          v-else
-          to="/register"
-          data-test="client-showcase-register"
-          class="inline-flex h-12 items-center gap-2 rounded-full bg-[#111] px-6 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
-        >
-          <span>{{ t('home.clientShowcase.cta') }}</span>
-          <Icon name="arrowRight" size="sm" />
-        </router-link>
-
-        <p class="text-sm text-gray-400 dark:text-white/35">
-          {{ preferredClientDownload ? t('home.clientShowcase.downloadNote') : t('home.clientShowcase.ctaNote') }}
-        </p>
-      </div>
     </div>
 
   </section>
@@ -172,7 +144,6 @@ const clientDownloadOptions = computed(() =>
     preferredClientPlatform.value,
   ),
 )
-const preferredClientDownload = computed(() => clientDownloadOptions.value[0])
 
 const pills = computed(() => [
   t('home.clientShowcase.pills.darkMode'),

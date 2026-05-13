@@ -87,7 +87,7 @@ export default {
     clientShowcase: {
       badge: '客户端预览',
       title: '自动下载配置Claude Code和Codex· 国内下载即用',
-      description: 'Worktree并行工作 · Claude 和 Codex 同屏使用 · 文件变更追踪 · 消费透明',
+      description: '多个Agent通过Worktree并行工作 · Claude 和 Codex 同屏使用 · 文件变更追踪 · 消费透明',
       pills: {
         darkMode: '深色主题',
         workspace: 'Workspace 管理',
