@@ -10,67 +10,60 @@ export default {
     login: '登录',
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
-    headerTagline: 'AI Coding Agent 服务底层',
-    heroSubtitle: '统一入口、按量计费、面向持续运行的编码代理',
-    heroDescription: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本使用基于高级模型的 AI coding agent 服务。',
-    download: {
-      badge: '桌面客户端',
-      title: '下载桌面客户端',
-      description: '在桌面端集中管理 Claude Code、Codex 和 OpenAI 兼容接入。多个工作区、多个 agent 可以并行跑，登录后即可按账户权限快速开始。',
-      privacyCode: '下载后使用你的账户和 API Key 连接服务，无需在多个工具里反复配置。',
-      privacyKey: 'API Key 仍由你在本平台管理，客户端只使用你授权的连接信息。',
-      parallelAgents: '支持多工作区并行多开，让不同 agent 同时跑任务，不用来回切窗口。',
-      screenshotAlt: '桌面客户端界面截图',
-      screenshotCaption: '桌面客户端预览，实际功能以当前服务开通能力和客户端版本为准。',
-      recommended: '推荐',
-      cta: '下载',
-      pills: {
-        workspace: 'Workspace 管理',
-        terminal: '内置终端',
-        parallel: '并行多开',
-        tracking: '变更与用量跟踪'
-      },
-      platforms: {
-        windows: {
-          sub: 'Windows 10/11'
-        },
-        mac: {
-          sub: 'Apple Silicon 与 Intel'
-        }
-      }
-    },
+    headerTagline: 'Claude Code / Codex 一键接入',
+    heroSubtitle: '一键接入、按量充值、用量看得见',
+    heroDescription: 'Claude Code 和 Codex 用同一个账户跑，开通快、价格友好、出错有解释。',
+    navModels: '模型',
+    navPricing: '价格',
     hero: {
-      badge: '高级模型，不必继续按官方订阅价买单',
-      titleLead: '让你的',
-      titleAccent: 'AI Coding Agent',
-      titleTail: '用更低成本跑上高级模型',
-      description: '面向 Claude Code、Codex CLI 与 OpenAI 兼容工作流，让你用更低成本使用基于高级模型的 AI coding agent 服务。',
-      primaryNote: '不用再同时扛多份订阅、分散密钥和单账号不稳定的风险。',
+      badge: 'Claude Code / Codex 一键接入',
+      titleLeadPrimary: 'Claude Code 和 Codex',
+      titleLeadSecondary: '零门槛使用',
+      titleAccent: '',
+      titleTail: '',
+      description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。',
+      primaryNote: '一个桌面端集中使用Claude Code和Codex',
+      downloadPrimary: '立即下载',
+      badgeDiscount: '比官方 API',
+      tags: {
+        coding: 'Claude Code',
+        agent: 'Codex',
+        tools: '多账号 · 多模型',
+      },
+      stats: {
+        setupValue: '1 步',
+        savings: '自动配置本地工具',
+        routesValue: '2 套',
+        models: 'Claude / Codex 分开管理',
+        workspaceValue: '1 处',
+        minCost: '余额、用量、故障原因都在这里',
+      },
+      perToken: '参考价格示意',
       panel: {
-        title: '为日常编码代理准备的请求层',
+        title: '为日常编码准备的统一入口',
         auto: '自动轮播',
-        requestLabel: 'request',
-        modelLabel: 'models',
-        routeLabel: 'route',
-        billLabel: 'billing',
+        requestLabel: '请求',
+        modelLabel: '模型',
+        routeLabel: '线路',
+        billLabel: '计费',
         scenarios: {
           completions: {
-            title: '一个端点承接高级模型访问、额度控制和自动切换',
-            subtitle: '继续沿用常见 OpenAI Chat / Completions 接入方式，把模型、计费和切换逻辑收进同一层服务。',
-            route: '多账号自动切换 + 粘性会话',
-            billing: '按量计费，细节可追踪'
+            title: '一个入口搞定高级模型访问、额度控制和自动切换',
+            subtitle: '继续沿用常见 OpenAI 对话方式，把模型选择、计费和线路切换放到同一层。',
+            route: '多账号自动切换',
+            billing: '按量计费，花多少算多少'
           },
           responses: {
-            title: '不只 completions，也承接 Responses 与工具调用',
-            subtitle: '适合带工具、长链路和代理编排的工作流，不必为了不同接口拆成多套服务。',
-            route: '工具调用 + 长链路代理',
-            billing: '按量计费，细节可追踪'
+            title: '不只对话，也支持工具调用和长链路任务',
+            subtitle: '适合带工具、多步骤的复杂工作流，不用为了不同接口拆成多套服务。',
+            route: '工具调用 + 长链路任务',
+            billing: '按量计费，花多少算多少'
           },
           messages: {
-            title: 'Claude Messages 请求也能并入同一层网关',
-            subtitle: '保留 Claude Native 习惯，同时复用统一额度、切换和账单能力。',
-            route: 'Claude Native + 统一网关',
-            billing: '按量计费，细节可追踪'
+            title: 'Claude 对话也能走同一个入口',
+            subtitle: '保留 Claude 原生习惯，同时复用统一额度、线路切换和账单能力。',
+            route: 'Claude 原生 + 统一入口',
+            billing: '按量计费，花多少算多少'
           }
         }
       }
@@ -78,73 +71,126 @@ export default {
     pricing: {
       title: '按量付费',
       subtitle: '对比官方 Claude Code / Codex API 服务',
-      highlight: '约官方 API 服务 1 折',
-      description: '用官方价格的一小部分，承接高级模型编码场景，同时保留统一入口、统一密钥和统一计费面。',
-      badge: '高级模型能力，不必继续背负官方订阅价',
-      barTitle: '把高级模型能力接进 AI coding agent，不必继续承担官方订阅价',
+      highlight: '价格比官方 API 友好得多',
+      description: '用比官方更友好的价格跑高级模型，一个入口管 Claude Code 和 Codex，余额不限期，用多少扣多少。',
+      badge: '高级模型能力，不再被官方订阅价绑住',
+      barTitle: '按量计费，余额长期有效',
       points: {
-        metered: '按实际运行计费',
-        routing: '多账号自动切换',
-        visibility: '统一用量可见'
+        metered: '用多少扣多少，没有最低消费',
+        routing: '多账号自动切换，一条线路故障自动换另一条',
+        visibility: '近 5 小时 / 1 天 / 7 天的用量一目了然'
       }
     },
+    proofStrip: {
+      overline: '平台能力',
+    },
+    clientShowcase: {
+      badge: '客户端预览',
+      title: '自动下载配置Claude Code和Codex· 国内下载即用',
+      description: '多个Agent通过Worktree并行工作 · Claude 和 Codex 同屏使用 · 文件变更追踪 · 消费透明',
+      pills: {
+        darkMode: '深色主题',
+        workspace: 'Workspace 管理',
+        terminal: '内置终端',
+        parallel: '并行多开',
+      },
+      caption: '客户端界面预览 — 实际功能以上线版本为准',
+      cta: '注册获取通知',
+      ctaNote: '注册后可第一时间获取客户端更新',
+      downloadCta: '下载 {platform} 客户端',
+      downloadNote: '桌面客户端下载已开放，请选择适合当前设备的安装包',
+    },
+    download: {
+      badge: '客户端下载',
+      title: '下载桌面客户端',
+      description: '安装桌面端后自动帮你配置 Claude Code 和 Codex，安全复用已有本地设置，并把用量和状态集中在一个入口。',
+      privacyCode: '自动写入本地配置文件，已有设置不会被覆盖',
+      privacyKey: '桌面、Web、移动端共享一份用量和故障信息',
+      cta: '下载',
+      recommended: '推荐用于当前设备',
+      platforms: {
+        mac: { sub: 'Apple Silicon 与 Intel' },
+        windows: { sub: 'x64 / ARM64' },
+        linux: { sub: '.deb / .rpm / AppImage' },
+      },
+    },
     value: {
-      overline: '服务结构',
-      title: '把高级模型能力接进你的日常编码工作流',
-      description: '成本、稳定性和计费都收在同一个入口里，让你更轻松地持续使用编码代理。',
+      overline: '为什么选择我们',
+      title: '让 Claude Code 和 Codex 跑起来这件事，更省心',
+      description: '不是再做一个 IDE，也不是又一个 API 中转站。把开通账户、充值、配置工具、看用量、查故障这些散落的事，合成一条顺手的路径。',
       items: {
         economics: {
-          eyebrow: '01 / 价格',
-          title: '廉价接入高级模型',
-          description: '把 Claude / GPT / Codex 级能力放进常用 coding agent 工作流，不必再为每个官方订阅单独买单。'
-        },
-        parallel: {
-          eyebrow: '02 / 并行',
-          title: '多个 agent 同时跑',
-          description: '在客户端里管理多个工作区和任务，让 Claude Code、Codex 等 agent 并行推进，不必盯着一个窗口等待。'
+          eyebrow: '01 / 接入快',
+          title: '一键写好本地配置',
+          description: '桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置，不会覆盖你已有的设置。'
         },
         reliability: {
-          eyebrow: '03 / 稳定',
-          title: '为持续运行准备的稳定性',
-          description: '多账号池、粘性会话与自动切换，减少单账号限流或波动对编码链路的影响。'
+          eyebrow: '02 / 花费看得见',
+          title: '一个余额面板看清两路消费',
+          description: 'Claude 和 Codex 各自用了多少、还剩多少额度、当前限速状态如何，都在同一处展示，不用再在多个平台之间切。'
         },
         control: {
-          eyebrow: '04 / 可控',
-          title: '统一计费、额度与明细',
-          description: '一个 API Key 承接常用工具，一套额度、账单和使用明细，个人和团队都更容易管理。'
+          eyebrow: '03 / all in one',
+          title: '使用我们的服务有 SLA 保障',
+          description: '全线服务可用性、响应速度、定价策略统一管理。出问题时不抓瞎，自动切换到可用线路，或给出明确的恢复建议。'
         }
       }
     },
     comparison: {
-      overline: '服务定位',
-      title: '比官方订阅更适合长期运行的编码代理',
-      description: '更轻的成本结构、更宽的模型覆盖和更稳的运行路径，让日常 agent 调用更容易持续。',
+      overline: '换个角度看',
+      title: '你可能正在用这些方式之一',
+      description: '',
       headers: {
-        feature: '对比项',
-        official: '官方订阅',
-        us: '本平台'
+        feature: '你正在用的方式',
+        official: '常见做法的盲点',
+        us: '我们怎么做'
       },
       items: {
         pricing: {
-          feature: '付费方式',
-          official: '固定月费，用不完也付',
-          us: '按量付费，用多少付多少'
+          feature: '官方账号 + 手工配置',
+          official: '每个工具一个账号，多套配置、多份账单，需要自己手动维护本地设置',
+          us: '一个账户开通后，自动配置好两套工具，余额跨工具共用'
         },
         models: {
-          feature: '模型选择',
-          official: '单一服务商',
-          us: '多模型随意切换'
+          feature: '本地切换脚本',
+          official: '能切换接口地址，但不知道余额还剩多少、当前额度或限速是什么状态',
+          us: '切换之后，余额、额度、近 5 小时 / 1 天 / 7 天用量和线路健康度直接展示'
         },
         stability: {
-          feature: '运行稳定性',
-          official: '单账号易触发限制',
-          us: '多账号池，自动切换'
+          feature: '工作流',
+          official: 'Cursor、Windsurf 等云端 IDE 需要你把代码上传到它们的服务器',
+          us: '比 Cursor、Windsurf 更尊重你本地的 Claude Code 和 Codex 工作流，MCP、Skill 和 Workflow 无需额外配置'
         }
       }
     },
+    pricingTable: {
+      overline: '价格优势',
+      title: '主流编码模型，价格比官方友好得多',
+      description: 'Claude Code、Codex、GPT-5.5 等主流编码模型，比官方 API 便宜很多。一个账户、一份余额，用多少扣多少，余额长期有效。',
+      badge: '目标',
+      badgeValue: '总成本更低',
+      cards: {
+        claude: {
+          tag: 'Claude 系列',
+          title: 'Claude Code 主力',
+          description: 'Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5 全系覆盖，日常编码、重构、审查交给 Claude Code，每条线路的消费单独计算。',
+        },
+        codex: {
+          tag: 'Codex / GPT 系列',
+          title: 'Codex CLI 与 GPT-5.5 都在这',
+          description: 'GPT-5.5 与 GPT-5.4 / GPT-5.3 Codex 同步可用，本地 Codex 自动配置好，不用手动改设置。',
+        },
+        compatible: {
+          tag: 'OpenAI 兼容 · 多家',
+          title: '其它兼容模型也在同一个网关',
+          description: 'Gemini、GLM、Qwen 等兼容模型同一个入口接入，价格以控制台当前显示为准，故障原因同样清楚明了。',
+        },
+      },
+      note: '不承诺"全网最低价"。我们关注的是总成本：一个充值入口、用多少扣多少、各线路用量分开看、额度和限速状态一目了然、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。具体折扣随服务商和模型变动，最终扣费以控制台显示价格为准。',
+    },
     providers: {
-      title: '把高级模型与编码工作流放进同一层服务',
-      description: '围绕高频编码代理而不是通用模型陈列，保留主流调用方式与统一服务层。',
+      title: '把高级模型与本机编码工作流放进同一层服务',
+      description: '围绕高频 coding agents 而不是通用模型陈列，保留 Claude Code、Codex 和 OpenAI 兼容调用方式。',
       supported: '已支持',
       claude: 'Claude',
       claudeCode: 'Claude Code',
@@ -154,21 +200,21 @@ export default {
       openaiCompatible: 'OpenAI 兼容'
     },
     trust: {
-      overline: '兼容与可信度',
-      title: '为长时间运行的代码工作流准备的服务层',
-      description: '统一入口、自动切换、清晰计费与可追踪明细，让高级模型在日常编码代理里更稳、更省。',
+      overline: '用得放心',
+      title: '钱花在哪、为什么不能用，都看得见',
+      description: '中转服务最常见的问题是不透明：余额不知道还剩多少、报错不知道哪里坏。我们把这些信息显式做出来，让你不用猜。',
       cards: {
         gateway: {
-          title: '统一入口',
-          description: '一个兼容 OpenAI 风格的入口承接主流高级模型，减少在不同工具之间来回配置的成本。'
+          title: '每条线路分开算',
+          description: '每条线路单独计费，避免一条故障拖垮整体账单。'
         },
         resilience: {
           title: '稳定切换',
           description: '当单个上游限制、波动或短时异常出现时，平台负责承担切换与缓冲。'
         },
         visibility: {
-          title: '成本可视',
-          description: '用量、额度与账单颗粒度更适合长期跑 agent，而不是继续依赖黑盒订阅。'
+          title: '故障原因看得见',
+          description: '出错时给出清晰原因和恢复建议，而不是黑盒报错。'
         }
       },
       trackers: {
@@ -179,8 +225,8 @@ export default {
     },
     cta: {
       eyebrow: 'READY TO START',
-      title: '把高级模型接进你的下一个 AI coding agent',
-      description: '用一个统一端点承接高级模型请求、用量与切换逻辑，让你的编码代理更稳、更省。',
+      title: '把 Claude Code 和 Codex 一次性接入',
+      description: '一个账户、一份余额、一个面板。注册后即可在桌面端自动完成本地配置。',
       button: '免费注册',
       stat: '统一入口 · 按量付费 · 面向日常开发'
     },

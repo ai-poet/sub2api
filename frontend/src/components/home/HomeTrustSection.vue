@@ -36,9 +36,6 @@
         <h3 class="mt-6 text-2xl font-semibold tracking-[-0.04em] text-[#111111] dark:text-white">
           {{ card.title }}
         </h3>
-        <p class="mt-4 text-base leading-7 text-[#5f5850] dark:text-white/65">
-          {{ card.description }}
-        </p>
       </article>
     </div>
   </section>

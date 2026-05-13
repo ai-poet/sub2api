@@ -66,10 +66,6 @@ describe('HomeDownloadSection', () => {
     expect(links[0].attributes('data-platform')).toBe('windows')
     expect(links[0].attributes('href')).toBe('https://downloads.example.com/windows.exe')
     expect(links[1].attributes('data-platform')).toBe('macos')
-    expect(wrapper.find('img[src="/product.png"]').exists()).toBe(true)
-    expect(wrapper.find('img[src="/product.png"]').attributes('alt')).toBe(
-      'home.download.screenshotAlt',
-    )
   })
 
   it('shows both platform downloads and prioritizes macOS for macOS browsers', () => {

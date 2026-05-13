@@ -1,36 +1,26 @@
 <template>
   <section v-if="downloadOptions.length > 0" class="mx-auto max-w-[1380px]">
     <div
-      class="overflow-hidden rounded-[28px] border border-gray-200 bg-white/86 p-5 shadow-[0_24px_80px_rgba(24,22,18,0.10)] backdrop-blur dark:border-white/10 dark:bg-white/[0.04] md:p-8"
+      class="rounded-[34px] border border-gray-100 bg-white p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] dark:border-white/8 dark:bg-white/[0.03] md:p-10"
     >
-      <div class="grid gap-8 lg:grid-cols-[minmax(0,0.58fr)_minmax(0,1.42fr)] lg:items-center">
-        <div class="lg:pr-2">
+      <div class="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center">
+        <div>
           <div
-            class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-700/40 dark:bg-emerald-900/20 dark:text-emerald-300"
+            class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-700/40 dark:bg-emerald-900/20 dark:text-emerald-300"
           >
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
             {{ t('home.download.badge') }}
           </div>
 
           <h2
-            class="mt-4 max-w-[18ch] text-3xl font-semibold leading-[1.12] text-[#111] dark:text-white md:text-4xl [text-wrap:balance]"
+            class="mt-4 max-w-[22ch] text-3xl font-semibold leading-[1.15] text-[#111] dark:text-white md:text-4xl [text-wrap:balance]"
           >
             {{ t('home.download.title') }}
           </h2>
 
-          <p class="mt-3 max-w-[42rem] text-base leading-7 text-gray-600 dark:text-white/60">
+          <p class="mt-3 max-w-[42rem] text-base leading-7 text-gray-500 dark:text-white/55">
             {{ t('home.download.description') }}
           </p>
-
-          <div class="mt-5 flex flex-wrap gap-2">
-            <span
-              v-for="pill in featurePills"
-              :key="pill"
-              class="rounded-full border border-gray-200 bg-white/70 px-3.5 py-1.5 text-sm text-gray-600 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/70"
-            >
-              {{ pill }}
-            </span>
-          </div>
 
           <div class="mt-6 flex flex-col gap-3">
             <div class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-white/60">
@@ -49,76 +39,49 @@
               </span>
               {{ t('home.download.privacyKey') }}
             </div>
-            <div class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-white/60">
-              <span
-                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-              >
-                <Icon name="terminal" size="sm" />
-              </span>
-              {{ t('home.download.parallelAgents') }}
-            </div>
-          </div>
-
-          <div class="mt-7 grid gap-3">
-            <a
-              v-for="option in downloadOptions"
-              :key="option.id"
-              :href="option.url"
-              :data-platform="option.id"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="group flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50/75 p-4 transition hover:-translate-y-0.5 hover:border-primary-200 hover:bg-white hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-primary-400/40 dark:hover:bg-white/[0.07]"
-            >
-              <span class="flex min-w-0 items-center gap-4">
-                <span
-                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-gray-800 shadow-sm ring-1 ring-gray-100 dark:bg-white/8 dark:text-white dark:ring-white/10"
-                >
-                  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path :d="option.iconPath" />
-                  </svg>
-                </span>
-                <span class="min-w-0">
-                  <span class="flex flex-wrap items-center gap-2">
-                    <span class="font-semibold text-gray-900 dark:text-white">{{ option.name }}</span>
-                    <span
-                      v-if="option.id === preferredPlatform"
-                      class="rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-semibold text-primary-700 dark:bg-primary-900/35 dark:text-primary-300"
-                    >
-                      {{ t('home.download.recommended') }}
-                    </span>
-                  </span>
-                  <span class="mt-1 block text-sm text-gray-500 dark:text-white/45">
-                    {{ option.sub }}
-                  </span>
-                </span>
-              </span>
-              <span
-                class="inline-flex shrink-0 items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-primary-600 dark:bg-white dark:text-gray-950 dark:group-hover:bg-primary-300"
-              >
-                {{ t('home.download.cta') }}
-                <Icon name="download" size="sm" />
-              </span>
-            </a>
           </div>
         </div>
 
-        <div class="relative">
-          <div
-            class="pointer-events-none absolute inset-x-8 top-[-2.5rem] h-40 rounded-full bg-primary-300/30 blur-3xl dark:bg-primary-500/15"
-          ></div>
-          <figure
-            class="animate-home-float relative overflow-hidden rounded-[24px] border border-black/10 bg-[#111318] shadow-[0_34px_100px_rgba(15,15,15,0.20)] dark:border-white/10"
+        <div class="grid gap-3">
+          <a
+            v-for="option in downloadOptions"
+            :key="option.id"
+            :href="option.url"
+            :data-platform="option.id"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 transition hover:-translate-y-0.5 hover:border-primary-200 hover:bg-white hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-white/[0.03] dark:hover:border-primary-400/40 dark:hover:bg-white/[0.06] sm:p-5"
           >
-            <img
-              src="/product.png"
-              :alt="t('home.download.screenshotAlt')"
-              class="block w-full"
-              loading="lazy"
-            />
-          </figure>
-          <p class="mt-3 text-center text-xs text-gray-400 dark:text-white/30">
-            {{ t('home.download.screenshotCaption') }}
-          </p>
+            <span class="flex min-w-0 items-center gap-4">
+              <span
+                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-800 shadow-sm ring-1 ring-gray-100 dark:bg-white/8 dark:text-white dark:ring-white/10"
+              >
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path :d="option.iconPath" />
+                </svg>
+              </span>
+              <span class="min-w-0">
+                <span class="flex flex-wrap items-center gap-2">
+                  <span class="font-semibold text-gray-900 dark:text-white">{{ option.name }}</span>
+                  <span
+                    v-if="option.id === preferredPlatform"
+                    class="rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-semibold text-primary-700 dark:bg-primary-900/35 dark:text-primary-300"
+                  >
+                    {{ t('home.download.recommended') }}
+                  </span>
+                </span>
+                <span class="mt-1 block text-sm text-gray-500 dark:text-white/45">
+                  {{ option.sub }}
+                </span>
+              </span>
+            </span>
+            <span
+              class="inline-flex shrink-0 items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-primary-600 dark:bg-white dark:text-gray-950 dark:group-hover:bg-primary-300"
+            >
+              {{ t('home.download.cta') }}
+              <Icon name="download" size="sm" />
+            </span>
+          </a>
         </div>
       </div>
     </div>
@@ -159,15 +122,8 @@ const platformIcons: Record<ClientDownloadPlatform, string> = {
 
 const preferredPlatform = computed(() => detectPreferredClientPlatform())
 
-const featurePills = computed(() => [
-  t('home.download.pills.workspace'),
-  t('home.download.pills.terminal'),
-  t('home.download.pills.parallel'),
-  t('home.download.pills.tracking'),
-])
-
-const downloadOptions = computed<DownloadOption[]>(() =>
-  getClientDownloadOptions(
+const configuredOptions = computed<DownloadOption[]>(() => {
+  return getClientDownloadOptions(
     {
       windowsUrl: props.windowsUrl,
       macosUrl: props.macosUrl,
@@ -181,6 +137,8 @@ const downloadOptions = computed<DownloadOption[]>(() =>
         : 'home.download.platforms.mac.sub',
     ),
     iconPath: platformIcons[option.id],
-  })),
-)
+  }))
+})
+
+const downloadOptions = computed(() => configuredOptions.value)
 </script>

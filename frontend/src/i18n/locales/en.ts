@@ -10,44 +10,37 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
-    headerTagline: 'AI Coding Agent Infrastructure',
-    heroSubtitle: 'One gateway, metered billing, built for long-running coding agents',
-    heroDescription: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so you can use AI coding agent services with lower premium-model cost.',
-    download: {
-      badge: 'Desktop client',
-      title: 'Download the desktop client',
-      description: 'Manage Claude Code, Codex, and OpenAI-compatible access from the desktop. Run multiple agents across multiple workspaces in parallel, then start quickly with your account permissions.',
-      privacyCode: 'Connect with your account and API key after download, without repeating setup across every tool.',
-      privacyKey: 'API keys stay managed by this platform; the client only uses the connection details you authorize.',
-      parallelAgents: 'Run parallel agent tasks across workspaces without switching windows all day.',
-      screenshotAlt: 'Desktop client interface screenshot',
-      screenshotCaption: 'Desktop client preview. Actual features depend on the enabled service capabilities and client version.',
-      recommended: 'Recommended',
-      cta: 'Download',
-      pills: {
-        workspace: 'Workspace management',
-        terminal: 'Built-in terminal',
-        parallel: 'Parallel agents',
-        tracking: 'Changes and usage tracking'
-      },
-      platforms: {
-        windows: {
-          sub: 'Windows 10/11'
-        },
-        mac: {
-          sub: 'Apple Silicon and Intel'
-        }
-      }
-    },
+    headerTagline: 'One-click access to Claude Code / Codex',
+    heroSubtitle: 'One-click setup, pay-as-you-go, see every spend',
+    heroDescription: 'Run Claude Code and Codex with one account: quick to start, friendly pricing, clear error reasons.',
+    navModels: 'Models',
+    navPricing: 'Pricing',
     hero: {
-      badge: 'Premium models, without premium subscription pricing',
-      titleLead: 'Give your',
-      titleAccent: 'AI Coding Agent',
-      titleTail: 'a cheaper premium-model backbone',
-      description: 'Built for Claude Code, Codex CLI, and OpenAI-compatible workflows so you can use AI coding agent services with lower premium-model cost.',
-      primaryNote: 'Stop carrying multiple subscriptions, scattered keys, and fragile single-account routing.',
+      badge: 'One-click access to Claude Code / Codex',
+      titleLeadPrimary: 'Claude Code and Codex',
+      titleLeadSecondary: 'zero-friction access',
+      titleAccent: '',
+      titleTail: '',
+      description: 'One-click access, pay-as-you-go top-ups, clear visibility into every spend. Claude Code, Codex, and GPT-5.5 share one account, one balance, one usage panel — no more juggling two configs, two endpoints, two bills. The desktop client auto-configures Claude Code and Codex on sign-in, so you skip the JSON copy-paste.',
+      primaryNote: 'One desktop client for both Claude Code and Codex',
+      downloadPrimary: 'Download now',
+      badgeDiscount: 'vs official API',
+      tags: {
+        coding: 'Claude Code',
+        agent: 'Codex',
+        tools: 'Multi-account · Multi-model',
+      },
+      stats: {
+        setupValue: '1 step',
+        savings: 'Auto-configure local tools',
+        routesValue: '2 surfaces',
+        models: 'Manage Claude / Codex separately',
+        workspaceValue: '1 place',
+        minCost: 'Balance, usage, failure reasons — all here',
+      },
+      perToken: 'Reference pricing',
       panel: {
-        title: 'A request layer shaped for daily coding agents',
+        title: 'A unified entry shaped for daily coding',
         auto: 'Auto Rotating',
         requestLabel: 'request',
         modelLabel: 'models',
@@ -55,96 +48,149 @@ export default {
         billLabel: 'billing',
         scenarios: {
           completions: {
-            title: 'One endpoint for premium-model access, quota control, and automatic switching',
-            subtitle: 'Keep the familiar OpenAI chat/completions request shape while moving model access, billing, and failover into one service layer.',
-            route: 'Multi-account routing + sticky sessions',
-            billing: 'Metered billing with traceable detail'
+            title: 'One entry for premium-model access, quota control, and automatic switching',
+            subtitle: 'Keep the familiar OpenAI chat shape while moving model selection, billing, and route switching into one layer.',
+            route: 'Multi-account auto routing',
+            billing: 'Pay only for what you use'
           },
           responses: {
-            title: 'Not just completions. Responses and tool calls fit here too.',
-            subtitle: 'Built for tool-enabled, long-running, agentic workloads without splitting different request styles into separate services.',
-            route: 'Tool calls + long-running agent flows',
-            billing: 'Metered billing with traceable detail'
+            title: 'Not just chat — tool calls and long-running tasks fit here too',
+            subtitle: 'Built for tool-enabled, multi-step workflows without splitting into separate services.',
+            route: 'Tool calls + long-running tasks',
+            billing: 'Pay only for what you use'
           },
           messages: {
-            title: 'Claude Messages requests can stay inside the same gateway layer',
-            subtitle: 'Keep Claude-native calling patterns while reusing unified quotas, routing, and billing.',
-            route: 'Claude-native + unified gateway',
-            billing: 'Metered billing with traceable detail'
+            title: 'Claude requests can stay inside the same entry',
+            subtitle: 'Keep Claude-native habits while reusing unified quotas, routing, and billing.',
+            route: 'Claude-native + unified entry',
+            billing: 'Pay only for what you use'
           }
         }
       }
     },
     pricing: {
-      title: 'Metered Pricing',
+      title: 'Pay as you go',
       subtitle: 'vs Official Claude Code / Codex API Services',
-      highlight: '~10% of official API service cost',
-      description: 'Use a fraction of official pricing to power premium-model coding agents while keeping one gateway, one key, and one billing surface.',
-      badge: 'Premium model access, without premium subscription overhead',
-      barTitle: 'Connect premium model capability to your AI coding agent without carrying official subscription pricing',
+      highlight: 'Far friendlier pricing than the official API',
+      description: 'Run premium models at friendlier prices than the official APIs. One entry covers Claude Code and Codex, balance never expires, you pay only for what you use.',
+      badge: 'Premium model access, no longer bound to subscription pricing',
+      barTitle: 'Pay-as-you-go billing, balance never expires',
       points: {
-        metered: 'Pay only for what runs',
-        routing: 'Multi-account auto routing',
-        visibility: 'Unified usage visibility'
+        metered: 'Pay only for what you use — no minimum',
+        routing: 'Multi-account auto routing — one route fails, another takes over',
+        visibility: 'Usage over the last 5h / 1d / 7d at a glance'
       }
     },
+    proofStrip: {
+      overline: 'Platform capabilities',
+    },
+    clientShowcase: {
+      badge: 'Client preview',
+      title: 'Auto download & configure Claude Code and Codex · Ready to use',
+      description: 'Run multiple agents in parallel via Worktree · Use Claude and Codex side by side · File-change tracking · Transparent spend',
+      pills: {
+        darkMode: 'Dark mode',
+        workspace: 'Workspace management',
+        terminal: 'Built-in terminal',
+        parallel: 'Parallel agents',
+      },
+      caption: 'Client preview — actual features may vary by release version',
+      cta: 'Sign up for updates',
+      ctaNote: 'Get notified the moment new client builds drop',
+      downloadCta: 'Download for {platform}',
+      downloadNote: 'Desktop client downloads are available — pick the build for your device',
+    },
+    download: {
+      badge: 'Client download',
+      title: 'Download the desktop client',
+      description: 'The desktop client auto-configures Claude Code and Codex, safely reuses existing local settings, and brings usage and status into one place.',
+      privacyCode: 'Auto-writes local config files without overwriting existing settings',
+      privacyKey: 'Desktop, Web, and mobile share one usage and failure feed',
+      cta: 'Download',
+      recommended: 'Recommended for this device',
+      platforms: {
+        mac: { sub: 'Apple Silicon and Intel' },
+        windows: { sub: 'x64 / ARM64' },
+        linux: { sub: '.deb / .rpm / AppImage' },
+      },
+    },
     value: {
-      overline: 'Service Structure',
-      title: 'Bring premium models into your daily coding workflow',
-      description: 'Keep cost, stability, and billing control in one entry point so your coding agents stay easier to run every day.',
+      overline: 'Why pick us',
+      title: 'Make running Claude Code and Codex feel effortless',
+      description: 'Not another IDE. Not another API relay. We stitch sign-up, top-up, tool configuration, usage visibility, and failure diagnosis into one smooth path.',
       items: {
         economics: {
-          eyebrow: '01 / Pricing',
-          title: 'Cheaper access to premium models',
-          description: 'Bring Claude / GPT / Codex class capability into common coding-agent workflows without buying each official subscription separately.'
-        },
-        parallel: {
-          eyebrow: '02 / Parallel',
-          title: 'Run multiple agents at once',
-          description: 'Manage multiple workspaces and tasks in the client so Claude Code, Codex, and other agents can keep working side by side.'
+          eyebrow: '01 / Fast setup',
+          title: 'One-tap local configuration',
+          description: 'Sign in on the desktop client and it configures Claude Code and Codex for you — no manual JSON edits, and existing settings stay intact.'
         },
         reliability: {
-          eyebrow: '03 / Reliability',
-          title: 'Stability for long-running agents',
-          description: 'Multi-account pools, sticky sessions, and automatic failover reduce the impact of single-account limits and upstream volatility.'
+          eyebrow: '02 / Clear spend',
+          title: 'One balance panel covers both surfaces',
+          description: 'How much each of Claude and Codex used, how much quota is left, current rate-limit status — all on one screen, no more hopping between platforms.'
         },
         control: {
-          eyebrow: '04 / Control',
-          title: 'Unified billing, quotas, and detail',
-          description: 'One API key for common tools, one set of quotas, bills, and usage detail. Easier to manage for individuals and teams.'
+          eyebrow: '03 / All in one',
+          title: 'SLA-backed service',
+          description: 'Availability, latency, and pricing are managed end to end. When something breaks, the platform auto-fails over or gives clear recovery guidance.'
         }
       }
     },
     comparison: {
-      overline: 'Positioning',
-      title: 'A better runtime surface than official subscriptions for persistent coding agents',
-      description: 'Lower cost structure, broader model coverage, and steadier routing make day-to-day agent traffic easier to sustain.',
+      overline: 'A different angle',
+      title: 'You may already be using one of these',
+      description: '',
       headers: {
-        feature: 'Comparison',
-        official: 'Official Subscriptions',
-        us: 'Our Platform'
+        feature: 'How you handle it today',
+        official: 'Common blind spots',
+        us: 'How we do it'
       },
       items: {
         pricing: {
-          feature: 'Pricing',
-          official: 'Fixed monthly fee, pay even if unused',
-          us: 'Pay only for what you use'
+          feature: 'Official accounts + manual config',
+          official: 'One account per tool, multiple configs and bills, local settings to maintain by hand',
+          us: 'One account covers both tools after sign-up, balance is shared'
         },
         models: {
-          feature: 'Model Selection',
-          official: 'Single provider only',
-          us: 'Switch between models freely'
+          feature: 'Local switching scripts',
+          official: 'You can switch endpoints, but you have no idea about balance, quota, or current rate limits',
+          us: 'After switching, balance, quota, recent 5h / 1d / 7d usage, and route health are visible'
         },
         stability: {
-          feature: 'Runtime Stability',
-          official: 'Single account rate limits',
-          us: 'Multi-account pool, auto-failover'
+          feature: 'Workflow',
+          official: 'Cursor, Windsurf and similar cloud IDEs require uploading code to their servers',
+          us: 'Respects your local Claude Code and Codex workflow — MCP, Skills, and Workflows work out of the box'
         }
       }
     },
+    pricingTable: {
+      overline: 'Pricing edge',
+      title: 'Friendlier prices than the official APIs for mainstream coding models',
+      description: 'Claude Code, Codex, GPT-5.5, and other mainstream coding models — far cheaper than official APIs. One account, one balance, pay only for what you use, balance never expires.',
+      badge: 'Goal',
+      badgeValue: 'Lower total cost',
+      cards: {
+        claude: {
+          tag: 'Claude family',
+          title: 'Claude Code mainstay',
+          description: 'Claude Sonnet 4.6 / Opus 4.7 / Haiku 4.5 — daily coding, refactors, reviews via Claude Code, with per-route spend.',
+        },
+        codex: {
+          tag: 'Codex / GPT family',
+          title: 'Codex CLI and GPT-5.5 together',
+          description: 'GPT-5.5 alongside GPT-5.4 / GPT-5.3 Codex, local Codex auto-configured — no manual setting changes.',
+        },
+        compatible: {
+          tag: 'OpenAI-compatible · many',
+          title: 'Other compatible models, same gateway',
+          description: 'Gemini, GLM, Qwen and other compatible models share the same entry, prices reflect the console, failures explained.',
+        },
+      },
+      note: 'We do not claim "lowest price anywhere." We focus on total cost: one top-up, pay-as-you-go, per-route usage breakdown, quota and rate-limit status at a glance, clear failure reasons — so AI coding stays sustainable, observable, and diagnosable over the long run. Specific discounts vary by provider and model, and final billing follows the console price.',
+    },
     providers: {
-      title: 'Premium models and coding workflows under one service layer',
-      description: 'Built around high-frequency coding agents instead of a generic model catalog, while keeping familiar request shapes intact.',
+      title: 'Premium models and your local coding workflow in one service layer',
+      description: 'Built around frequent coding agents rather than a generic model catalog, while keeping Claude Code, Codex, and OpenAI-compatible call shapes intact.',
       supported: 'Supported',
       claude: 'Claude',
       claudeCode: 'Claude Code',
@@ -154,21 +200,21 @@ export default {
       openaiCompatible: 'OpenAI-Compatible'
     },
     trust: {
-      overline: 'Compatibility & Trust',
-      title: 'A service layer built for code workflows that stay on all day',
-      description: 'One endpoint, automatic switching, clear billing, and traceable usage make premium models cheaper and steadier in real coding-agent traffic.',
+      overline: 'Use with confidence',
+      title: 'See where every dollar goes and why things break',
+      description: 'The most common pain with relay services is opacity: no idea about balance, no idea why a call fails. We surface these facts so you do not have to guess.',
       cards: {
         gateway: {
-          title: 'Unified entry point',
-          description: 'A single OpenAI-style gateway serves mainstream premium models, reducing repeated setup across different tools.'
+          title: 'Per-route accounting',
+          description: 'Each route is billed independently so one failure does not poison the entire bill.'
         },
         resilience: {
           title: 'Resilient switching',
           description: 'When one upstream hits limits, jitters, or short-lived failures, the platform absorbs the switching overhead.'
         },
         visibility: {
-          title: 'Visible cost surface',
-          description: 'Usage, quotas, and bills are shaped for long-running agents instead of staying trapped inside black-box subscriptions.'
+          title: 'Failures explained',
+          description: 'Clear failure reasons and recovery guidance — no black-box errors.'
         }
       },
       trackers: {
@@ -179,8 +225,8 @@ export default {
     },
     cta: {
       eyebrow: 'READY TO START',
-      title: 'Give your next AI coding agent a cheaper premium-model runtime',
-      description: 'Put premium model access, usage control, and routing behind one endpoint so your coding agents run steadier and cheaper.',
+      title: 'Connect Claude Code and Codex in one go',
+      description: 'One account, one balance, one panel. Sign up and the desktop client takes care of local configuration for you.',
       button: 'Sign Up Free',
       stat: 'One gateway · Metered billing · Built for daily development'
     },
