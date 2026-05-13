@@ -16,14 +16,34 @@
           <span class="block sm:inline">{{ t('home.hero.titleLeadPrimary') }}</span>
           <span class="block sm:ml-[0.18em] sm:inline">{{ t('home.hero.titleLeadSecondary') }}</span>
         </span>
-        <span class="block text-primary-600 dark:text-primary-400">{{ t('home.hero.titleAccent') }}</span>
-        <span class="block text-[#111] dark:text-white">{{ t('home.hero.titleTail') }}</span>
+        <span v-if="titleAccent" class="block text-primary-600 dark:text-primary-400">{{ titleAccent }}</span>
+        <span v-if="titleTail" class="block text-[#111] dark:text-white">{{ titleTail }}</span>
       </h1>
 
       <!-- CTAs -->
       <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+        <a
+          v-for="(option, index) in clientDownloadOptions"
+          :key="option.id"
+          :href="option.url"
+          :data-platform="option.id"
+          :data-test="index === 0 ? 'hero-primary-download' : 'hero-platform-download'"
+          target="_blank"
+          rel="noopener noreferrer"
+          :class="[
+            'inline-flex h-14 w-full items-center justify-center gap-2 rounded-full px-8 text-[15px] transition hover:-translate-y-[1px] active:translate-y-0 sm:w-auto',
+            index === 0
+              ? 'bg-[#111] font-bold text-white hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]'
+              : 'border border-gray-200 bg-white font-semibold text-[#111] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10',
+          ]"
+        >
+          <span>{{ index === 0 ? t('home.hero.downloadPrimary') : t('home.clientShowcase.downloadCta', { platform: option.name }) }}</span>
+          <Icon name="download" size="sm" />
+        </a>
         <router-link
+          v-if="clientDownloadOptions.length === 0"
           :to="primaryTo"
+          data-test="hero-primary-fallback"
           class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
         >
           <span>{{ primaryLabel }}</span>
@@ -31,7 +51,7 @@
         </router-link>
 
         <a
-          v-if="docUrl"
+          v-if="clientDownloadOptions.length === 0 && docUrl"
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -41,7 +61,7 @@
           <Icon name="externalLink" size="sm" />
         </a>
         <router-link
-          v-else
+          v-else-if="clientDownloadOptions.length === 0"
           to="/login"
           class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
         >
@@ -140,6 +160,8 @@ const { t } = useI18n()
 
 const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
 const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
+const titleAccent = computed(() => t('home.hero.titleAccent').trim())
+const titleTail = computed(() => t('home.hero.titleTail').trim())
 const preferredClientPlatform = computed(() => detectPreferredClientPlatform())
 const clientDownloadOptions = computed(() =>
   getClientDownloadOptions(

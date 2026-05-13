@@ -17,12 +17,13 @@ export default {
     navPricing: '价格',
     hero: {
       badge: 'Claude Code / Codex 一键接入',
-      titleLeadPrimary: 'Claude Code',
-      titleLeadSecondary: '和 Codex',
-      titleAccent: '一个工作台',
-      titleTail: '就够了',
+      titleLeadPrimary: 'Claude Code 和 Codex',
+      titleLeadSecondary: '零门槛使用',
+      titleAccent: '',
+      titleTail: '',
       description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。',
-      primaryNote: '一键接入 · 充值便利 · 消费透明 · 价格有竞争力',
+      primaryNote: '一个桌面端集中使用Claude Code和Codex',
+      downloadPrimary: '立即下载',
       badgeDiscount: '比官方 API',
       tags: {
         coding: 'Claude Code',
@@ -85,8 +86,8 @@ export default {
     },
     clientShowcase: {
       badge: '客户端预览',
-      title: '一个桌面端，把 Claude Code 和 Codex 管起来',
-      description: '深色主题、三栏布局、自带终端。左侧管理工作区和任务列表，中间是 Claude Code / Codex 的对话与代码，右侧跟踪文件变更和消费情况。支持并行多开多个任务，让不同工作区里的 agent 同时跑起来，不用切窗口，所有事在一个界面里完成。',
+      title: '自动下载配置Claude Code和Codex· 国内下载即用',
+      description: 'Worktree并行工作 · Claude 和 Codex 同屏使用 · 文件变更追踪 · 消费透明',
       pills: {
         darkMode: '深色主题',
         workspace: 'Workspace 管理',

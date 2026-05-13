@@ -11,6 +11,7 @@ const translations: Record<string, string> = {
   'home.hero.titleAccent': 'in one gateway',
   'home.hero.titleTail': 'with metered billing',
   'home.hero.primaryNote': 'Use one key everywhere.',
+  'home.hero.downloadPrimary': 'Download now',
   'home.cta.button': 'Start',
   'home.goToDashboard': 'Dashboard',
   'home.viewDocs': 'Docs',
@@ -105,9 +106,30 @@ describe('HomeHero', () => {
     expect(wrapper.text()).not.toContain('Coming soon')
   })
 
+  it('moves desktop download links into the primary hero CTA row', () => {
+    setPlatform('Windows')
+
+    const wrapper = mountHero({
+      windowsUrl: 'https://downloads.example.com/windows.exe',
+      macosUrl: 'https://downloads.example.com/macos.dmg',
+    })
+
+    const downloadLink = wrapper.find('[data-test="hero-primary-download"]')
+    expect(downloadLink.exists()).toBe(true)
+    expect(downloadLink.attributes('href')).toBe('https://downloads.example.com/windows.exe')
+    expect(downloadLink.attributes('data-platform')).toBe('windows')
+    expect(downloadLink.text()).toContain('Download now')
+    const platformDownloads = wrapper.findAll('[data-test="hero-platform-download"]')
+    expect(platformDownloads).toHaveLength(1)
+    expect(platformDownloads[0].attributes('href')).toBe('https://downloads.example.com/macos.dmg')
+    expect(platformDownloads[0].text()).toContain('Download macOS')
+    expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
+  })
+
   it('falls back to the registration CTA when no client download is configured', () => {
     const wrapper = mountHero()
 
+    expect(wrapper.find('[data-test="hero-primary-fallback"]').attributes('href')).toBe('/login')
     expect(wrapper.find('[data-test="client-showcase-download"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="client-showcase-register"]').attributes('href')).toBe('/register')
     expect(wrapper.text()).toContain('Get notified')

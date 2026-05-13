@@ -23,6 +23,7 @@ export default {
       titleTail: 'is enough',
       description: 'One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Claude Code, Codex, and GPT-5.5 share one account, one balance, and one usage panel — no more juggling two configs, two addresses, and two bills. After signing up on the desktop app, Claude Code and Codex are configured for you automatically — no more copy-pasting JSON configs.',
       primaryNote: 'One-click setup · easy top-up · clear spend · friendly pricing',
+      downloadPrimary: 'Download now',
       badgeDiscount: 'vs official API',
       tags: {
         coding: 'Claude Code',
