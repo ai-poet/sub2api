@@ -187,13 +187,19 @@ function getStatusConfig(
     : { label: '支付异常', color: isDark ? 'text-red-400' : 'text-red-600', icon: '✗', message: '请联系管理员处理。' };
 }
 
+// 兜底：上游支付渠道（如易支付）把 return_url 里的 `&` HTML 转义成了 `&amp;`，
+// 导致紧跟在被转义 `&` 之后的参数名变成 `amp;xxx`。优先取正常名，再回退到 `amp;` 前缀名。
+function getParam(searchParams: URLSearchParams, key: string): string | null {
+  return searchParams.get(key) ?? searchParams.get(`amp;${key}`);
+}
+
 function ResultContent() {
   const searchParams = useSearchParams();
-  const outTradeNo = searchParams.get('out_trade_no') || searchParams.get('order_id');
-  const accessToken = searchParams.get('access_token');
-  const isPopup = searchParams.get('popup') === '1';
-  const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
-  const locale = resolveLocale(searchParams.get('lang'));
+  const outTradeNo = getParam(searchParams, 'out_trade_no') || getParam(searchParams, 'order_id');
+  const accessToken = getParam(searchParams, 'access_token');
+  const isPopup = getParam(searchParams, 'popup') === '1';
+  const theme = getParam(searchParams, 'theme') === 'dark' ? 'dark' : 'light';
+  const locale = resolveLocale(getParam(searchParams, 'lang'));
   const isDark = theme === 'dark';
 
   const text = {
@@ -325,8 +331,8 @@ function ResultContent() {
 
 function ResultPageFallback() {
   const searchParams = useSearchParams();
-  const locale = resolveLocale(searchParams.get('lang'));
-  const isDark = searchParams.get('theme') === 'dark';
+  const locale = resolveLocale(getParam(searchParams, 'lang'));
+  const isDark = getParam(searchParams, 'theme') === 'dark';
 
   return (
     <div className={`flex min-h-screen items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
