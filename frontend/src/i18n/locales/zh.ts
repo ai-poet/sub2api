@@ -10,6 +10,7 @@ export default {
     login: '登录',
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
+    loginConsole: '登录控制台',
     headerTagline: 'Claude Code / Codex 一键接入',
     heroSubtitle: '一键接入、按量充值、用量看得见',
     heroDescription: 'Claude Code 和 Codex 用同一个账户跑，开通快、价格友好、出错有解释。',

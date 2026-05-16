@@ -10,6 +10,7 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
+    loginConsole: 'Sign in to dashboard',
     headerTagline: 'One-click access to Claude Code / Codex',
     heroSubtitle: 'One-click setup, pay-as-you-go, see every spend',
     heroDescription: 'Run Claude Code and Codex with one account: quick to start, friendly pricing, clear error reasons.',

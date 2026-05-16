@@ -60,7 +60,7 @@
           >
             {{ userInitial }}
           </span>
-          <span>{{ isAuthenticated ? t('home.dashboard') : t('home.cta.button') }}</span>
+          <span>{{ isAuthenticated ? t('home.dashboard') : t('home.loginConsole') }}</span>
           <Icon name="arrowRight" size="sm" class="hidden sm:block" />
         </router-link>
       </div>
