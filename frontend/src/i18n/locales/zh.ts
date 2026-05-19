@@ -25,6 +25,7 @@ export default {
       description: '一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。',
       primaryNote: '一个桌面端集中使用Claude Code和Codex',
       downloadPrimary: '立即下载',
+      connectApi: '接入API',
       badgeDiscount: '比官方 API',
       tags: {
         coding: 'Claude Code',
