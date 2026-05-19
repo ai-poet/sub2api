@@ -25,6 +25,7 @@ export default {
       description: 'One-click access, pay-as-you-go top-ups, clear visibility into every spend. Claude Code, Codex, and GPT-5.5 share one account, one balance, one usage panel — no more juggling two configs, two endpoints, two bills. The desktop client auto-configures Claude Code and Codex on sign-in, so you skip the JSON copy-paste.',
       primaryNote: 'One desktop client for both Claude Code and Codex',
       downloadPrimary: 'Download now',
+      connectApi: 'Connect API',
       badgeDiscount: 'vs official API',
       tags: {
         coding: 'Claude Code',

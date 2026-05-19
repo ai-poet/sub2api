@@ -41,6 +41,15 @@
           <Icon name="download" size="sm" />
         </a>
         <router-link
+          v-if="clientDownloadOptions.length > 0"
+          :to="dashboardPath"
+          data-test="hero-connect-api"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 active:translate-y-0 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
+        >
+          <span>{{ t('home.hero.connectApi') }}</span>
+          <Icon name="arrowRight" size="sm" />
+        </router-link>
+        <router-link
           v-if="clientDownloadOptions.length === 0"
           :to="primaryTo"
           data-test="hero-primary-fallback"
