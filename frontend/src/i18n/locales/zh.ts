@@ -2372,6 +2372,8 @@ export default {
         defaultPerRequestPrice: '默认单次价格（未命中层级时使用）',
         defaultImagePrice: '默认图片价格（未命中层级时使用）',
         platformConfig: '平台配置',
+        bedrockCCCompat: 'Bedrock CC 兼容',
+        bedrockCCCompatHint: '⚠️ 开启后，该渠道下 Bedrock 账号的请求将进行 Claude Code 兼容处理（thinking 类型转换、tool_use ID 清理）',
         basicSettings: '基础设置',
         addPlatform: '添加平台',
         noPlatforms: '点击"添加平台"开始配置渠道',

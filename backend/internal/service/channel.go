@@ -179,6 +179,19 @@ func (c *Channel) Clone() *Channel {
 	return &cp
 }
 
+// IsBedrockCCCompatEnabled 返回该渠道是否为指定平台启用了 Bedrock CC 兼容模式。
+func (c *Channel) IsBedrockCCCompatEnabled(platform string) bool {
+	if c == nil || c.FeaturesConfig == nil {
+		return false
+	}
+	bcc, ok := c.FeaturesConfig[featureKeyBedrockCCCompat].(map[string]any)
+	if !ok {
+		return false
+	}
+	enabled, ok := bcc[platform].(bool)
+	return ok && enabled
+}
+
 // ValidateIntervals 校验区间列表的合法性。
 // 规则：MinTokens >= 0；MaxTokens 若非 nil 则 > 0 且 > MinTokens；
 // 所有价格字段 >= 0；区间按 MinTokens 排序后无重叠（(min, max] 语义）；
