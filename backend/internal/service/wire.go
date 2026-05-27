@@ -494,4 +494,6 @@ var ProviderSet = wire.NewSet(
 	NewChannelService,
 	NewModelPricingResolver,
 	NewModelCatalogService,
+	wire.Bind(new(modelCatalogAccessService), new(*APIKeyService)),
+	wire.Bind(new(modelCatalogModelsService), new(*GatewayService)),
 )

@@ -18,10 +18,12 @@ import (
 )
 
 type GroupStatusProbeService struct {
-	repo           GroupStatusRepository
-	groupRepo      GroupRepository
-	scheduler      *SchedulerSnapshotService
-	accountTestSvc *AccountTestService
+	repo             GroupStatusRepository
+	groupRepo        GroupRepository
+	scheduler        *SchedulerSnapshotService
+	accountTestSvc   *AccountTestService
+	gatewaySvc       *GatewayService
+	openAIGatewaySvc *OpenAIGatewayService
 }
 
 func NewGroupStatusProbeService(
@@ -29,13 +31,24 @@ func NewGroupStatusProbeService(
 	groupRepo GroupRepository,
 	scheduler *SchedulerSnapshotService,
 	accountTestSvc *AccountTestService,
+	gatewaySvc *GatewayService,
+	openAIGatewaySvc *OpenAIGatewayService,
 ) *GroupStatusProbeService {
 	return &GroupStatusProbeService{
-		repo:           repo,
-		groupRepo:      groupRepo,
-		scheduler:      scheduler,
-		accountTestSvc: accountTestSvc,
+		repo:             repo,
+		groupRepo:        groupRepo,
+		scheduler:        scheduler,
+		accountTestSvc:   accountTestSvc,
+		gatewaySvc:       gatewaySvc,
+		openAIGatewaySvc: openAIGatewaySvc,
 	}
+}
+
+type groupStatusProbeAttempt struct {
+	Account  *Account
+	WaitPlan *AccountWaitPlan
+	Acquired bool
+	Reason   string
 }
 
 func (s *GroupStatusProbeService) ProbeGroupNow(ctx context.Context, groupID int64) (*GroupStatusProbeExecution, error) {
@@ -85,60 +98,134 @@ func (s *GroupStatusProbeService) executeProbe(ctx context.Context, group *Group
 		return nil, err
 	}
 
-	account, selectErr := s.selectAccount(ctx, group)
-	if selectErr != nil {
-		now := time.Now()
-		result := &GroupStatusProbeResult{
-			GroupID:     group.ID,
-			ConfigID:    cfg.ID,
-			Status:      GroupRuntimeStatusDown,
-			SubStatus:   "no_schedulable_account",
-			ErrorDetail: selectErr.Error(),
-			ObservedAt:  now,
+	excludedIDs := make(map[int64]struct{})
+	maxAttempts := s.maxProbeAttempts(group)
+	var (
+		firstFailureDetail string
+		lastFailureResult  *GroupStatusProbeResult
+		lastAccount        *Account
+	)
+
+	for attemptNo := 0; attemptNo < maxAttempts; attemptNo++ {
+		attempt, selectErr := s.selectProbeAttempt(ctx, group, cfg, excludedIDs)
+		if selectErr != nil {
+			if lastFailureResult != nil {
+				lastFailureResult.SubStatus = "failover_exhausted"
+				lastFailureResult.ErrorDetail = mergeProbeErrorDetails(firstFailureDetail, selectErr.Error())
+				return s.saveProbeExecution(ctx, group, cfg, lastAccount, lastFailureResult)
+			}
+			result := s.newProbeSelectionFailureResult(group, cfg, selectErr, firstFailureDetail)
+			return s.saveProbeExecution(ctx, group, cfg, nil, result)
 		}
-		state, event, err := s.repo.SaveProbeResult(ctx, result)
+		if attempt == nil || attempt.Account == nil {
+			result := s.newProbeSelectionFailureResult(group, cfg, errors.New("no schedulable account available"), firstFailureDetail)
+			return s.saveProbeExecution(ctx, group, cfg, nil, result)
+		}
+
+		account := attempt.Account
+		if attempt.WaitPlan != nil && !attempt.Acquired {
+			result := s.newProbeQueueingResult(group, cfg, account, attempt)
+			return s.saveProbeExecution(ctx, group, cfg, account, result)
+		}
+
+		timeoutCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.TimeoutSeconds)*time.Second)
+		rawResult, err := s.executeAccountProbe(timeoutCtx, account, cfg)
+		cancel()
+		if err != nil {
+			logger.LegacyPrintf("service.group_status_probe", "[GroupStatusProbe] execute group=%d account=%d err=%v", group.ID, account.ID, err)
+		}
+		rawResult.GroupID = group.ID
+		rawResult.ConfigID = cfg.ID
+		if rawResult.ObservedAt.IsZero() {
+			rawResult.ObservedAt = time.Now()
+		}
+		finalizeProbeResult(rawResult, cfg)
+
+		if rawResult.Status != GroupRuntimeStatusDown {
+			if firstFailureDetail != "" {
+				rawResult.Status = GroupRuntimeStatusDegraded
+				rawResult.SubStatus = "failover_recovered"
+				rawResult.ErrorDetail = mergeProbeErrorDetails(firstFailureDetail, rawResult.ErrorDetail)
+			}
+			return s.saveProbeExecution(ctx, group, cfg, account, rawResult)
+		}
+
+		lastFailureResult = rawResult
+		lastAccount = account
+		if firstFailureDetail == "" {
+			firstFailureDetail = probeAttemptFailureSummary(account, rawResult)
+		}
+
+		if !s.shouldProbeFailover(account, rawResult) {
+			return s.saveProbeExecution(ctx, group, cfg, account, rawResult)
+		}
+		excludedIDs[account.ID] = struct{}{}
+	}
+
+	if lastFailureResult == nil {
+		lastFailureResult = s.newProbeSelectionFailureResult(group, cfg, errors.New("no schedulable account available"), firstFailureDetail)
+	} else if firstFailureDetail != "" {
+		lastFailureResult.SubStatus = "failover_exhausted"
+		lastFailureResult.ErrorDetail = mergeProbeErrorDetails(firstFailureDetail, lastFailureResult.ErrorDetail)
+	}
+	return s.saveProbeExecution(ctx, group, cfg, lastAccount, lastFailureResult)
+}
+
+func (s *GroupStatusProbeService) selectProbeAttempt(ctx context.Context, group *Group, cfg *GroupStatusConfig, excludedIDs map[int64]struct{}) (*groupStatusProbeAttempt, error) {
+	if group == nil || cfg == nil {
+		return nil, ErrGroupStatusInvalidConfig
+	}
+	if excludedIDs == nil {
+		excludedIDs = make(map[int64]struct{})
+	}
+
+	maxSkips := s.maxProbeAttempts(group) + len(excludedIDs) + 8
+	for i := 0; i < maxSkips; i++ {
+		selection, reason, err := s.selectProbeAttemptWithRealScheduler(ctx, group, cfg, excludedIDs)
 		if err != nil {
 			return nil, err
 		}
-		return &GroupStatusProbeExecution{
-			Group:  group,
-			Config: cfg,
-			Result: result,
-			State:  state,
-			Event:  event,
+		if selection == nil || selection.Account == nil {
+			return nil, ErrNoAvailableAccounts
+		}
+
+		if selection.Acquired && selection.ReleaseFunc != nil {
+			selection.ReleaseFunc()
+		}
+
+		if s.probeAccountBlockedByGroupRules(group, selection.Account) {
+			excludedIDs[selection.Account.ID] = struct{}{}
+			continue
+		}
+
+		return &groupStatusProbeAttempt{
+			Account:  selection.Account,
+			WaitPlan: selection.WaitPlan,
+			Acquired: false,
+			Reason:   reason,
 		}, nil
 	}
-
-	timeoutCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.TimeoutSeconds)*time.Second)
-	defer cancel()
-
-	rawResult, err := s.executeAccountProbe(timeoutCtx, account, cfg)
-	if err != nil {
-		logger.LegacyPrintf("service.group_status_probe", "[GroupStatusProbe] execute group=%d account=%d err=%v", group.ID, account.ID, err)
-	}
-	rawResult.GroupID = group.ID
-	rawResult.ConfigID = cfg.ID
-	if rawResult.ObservedAt.IsZero() {
-		rawResult.ObservedAt = time.Now()
-	}
-	finalizeProbeResult(rawResult, cfg)
-
-	state, event, saveErr := s.repo.SaveProbeResult(ctx, rawResult)
-	if saveErr != nil {
-		return nil, saveErr
-	}
-
-	return &GroupStatusProbeExecution{
-		Group:   group,
-		Config:  cfg,
-		Account: account,
-		Result:  rawResult,
-		State:   state,
-		Event:   event,
-	}, nil
+	return nil, ErrNoAvailableAccounts
 }
 
-func (s *GroupStatusProbeService) selectAccount(ctx context.Context, group *Group) (*Account, error) {
+func (s *GroupStatusProbeService) selectProbeAttemptWithRealScheduler(ctx context.Context, group *Group, cfg *GroupStatusConfig, excludedIDs map[int64]struct{}) (*AccountSelectionResult, string, error) {
+	groupID := group.ID
+	if group.Platform == PlatformOpenAI && s.openAIGatewaySvc != nil {
+		selection, err := s.openAIGatewaySvc.SelectAccountWithLoadAwareness(ctx, &groupID, "", cfg.ProbeModel, excludedIDs)
+		return selection, "openai_gateway", err
+	}
+	if s.gatewaySvc != nil {
+		if group != nil {
+			ctx = s.gatewaySvc.withGroupContext(ctx, group)
+		}
+		selection, err := s.gatewaySvc.SelectAccountWithLoadAwareness(ctx, &groupID, "", cfg.ProbeModel, excludedIDs, "", 0)
+		return selection, "gateway", err
+	}
+	selection, err := s.selectProbeAttemptFromSnapshot(ctx, group, cfg, excludedIDs)
+	return selection, "scheduler_snapshot", err
+}
+
+func (s *GroupStatusProbeService) selectProbeAttemptFromSnapshot(ctx context.Context, group *Group, cfg *GroupStatusConfig, excludedIDs map[int64]struct{}) (*AccountSelectionResult, error) {
 	if s.scheduler == nil {
 		return nil, errors.New("scheduler snapshot service is not configured")
 	}
@@ -149,15 +236,189 @@ func (s *GroupStatusProbeService) selectAccount(ctx context.Context, group *Grou
 	}
 	for i := range accounts {
 		account := accounts[i]
-		if group.RequireOAuthOnly && account.Type == AccountTypeAPIKey {
+		if _, excluded := excludedIDs[account.ID]; excluded {
 			continue
 		}
-		if group.RequirePrivacySet && !account.IsPrivacySet() {
+		if !account.IsSchedulable() {
 			continue
 		}
-		return &account, nil
+		if s.probeAccountBlockedByGroupRules(group, &account) {
+			continue
+		}
+		if account.Platform == PlatformAntigravity && group.Platform != PlatformAntigravity && !account.IsMixedSchedulingEnabled() {
+			continue
+		}
+		if cfg.ProbeModel != "" && !account.IsModelSupported(cfg.ProbeModel) {
+			continue
+		}
+		if cfg.ProbeModel != "" && account.GetRateLimitRemainingTimeWithContext(ctx, cfg.ProbeModel) > 0 {
+			continue
+		}
+		return &AccountSelectionResult{Account: &account}, nil
 	}
-	return nil, errors.New("no schedulable account available")
+	return nil, ErrNoAvailableAccounts
+}
+
+func (s *GroupStatusProbeService) probeAccountBlockedByGroupRules(group *Group, account *Account) bool {
+	if group == nil || account == nil {
+		return true
+	}
+	if group.RequireOAuthOnly && account.Type == AccountTypeAPIKey {
+		return true
+	}
+	if group.RequirePrivacySet && !account.IsPrivacySet() {
+		return true
+	}
+	return false
+}
+
+func (s *GroupStatusProbeService) maxProbeAttempts(group *Group) int {
+	switches := 10
+	if s.gatewaySvc != nil && s.gatewaySvc.cfg != nil && s.gatewaySvc.cfg.Gateway.MaxAccountSwitches > 0 {
+		switches = s.gatewaySvc.cfg.Gateway.MaxAccountSwitches
+	}
+	if group != nil && group.Platform == PlatformOpenAI && s.openAIGatewaySvc != nil && s.openAIGatewaySvc.cfg != nil && s.openAIGatewaySvc.cfg.Gateway.MaxAccountSwitches > 0 {
+		switches = s.openAIGatewaySvc.cfg.Gateway.MaxAccountSwitches
+	}
+	if group != nil && group.Platform == PlatformGemini && s.gatewaySvc != nil && s.gatewaySvc.cfg != nil && s.gatewaySvc.cfg.Gateway.MaxAccountSwitchesGemini > 0 {
+		switches = s.gatewaySvc.cfg.Gateway.MaxAccountSwitchesGemini
+	}
+	if switches < 0 {
+		switches = 0
+	}
+	return switches + 1
+}
+
+func (s *GroupStatusProbeService) newProbeSelectionFailureResult(group *Group, cfg *GroupStatusConfig, selectErr error, firstFailureDetail string) *GroupStatusProbeResult {
+	detail := ""
+	if selectErr != nil {
+		detail = selectErr.Error()
+	}
+	if firstFailureDetail != "" {
+		detail = mergeProbeErrorDetails(firstFailureDetail, detail)
+	}
+	return &GroupStatusProbeResult{
+		GroupID:     group.ID,
+		ConfigID:    cfg.ID,
+		Status:      GroupRuntimeStatusDown,
+		SubStatus:   "no_schedulable_account",
+		ErrorDetail: detail,
+		ObservedAt:  time.Now(),
+	}
+}
+
+func (s *GroupStatusProbeService) newProbeQueueingResult(group *Group, cfg *GroupStatusConfig, account *Account, attempt *groupStatusProbeAttempt) *GroupStatusProbeResult {
+	detail := fmt.Sprintf("selected account %d would wait for an account concurrency slot", account.ID)
+	if attempt != nil && attempt.WaitPlan != nil {
+		detail = fmt.Sprintf("%s (max_concurrency=%d max_waiting=%d timeout=%s)",
+			detail,
+			attempt.WaitPlan.MaxConcurrency,
+			attempt.WaitPlan.MaxWaiting,
+			attempt.WaitPlan.Timeout,
+		)
+	}
+	return &GroupStatusProbeResult{
+		GroupID:     group.ID,
+		ConfigID:    cfg.ID,
+		Status:      GroupRuntimeStatusDegraded,
+		SubStatus:   "queueing",
+		ErrorDetail: detail,
+		ObservedAt:  time.Now(),
+	}
+}
+
+func (s *GroupStatusProbeService) saveProbeExecution(ctx context.Context, group *Group, cfg *GroupStatusConfig, account *Account, result *GroupStatusProbeResult) (*GroupStatusProbeExecution, error) {
+	if result == nil {
+		result = s.newProbeSelectionFailureResult(group, cfg, errors.New("empty probe result"), "")
+	}
+	result.GroupID = group.ID
+	result.ConfigID = cfg.ID
+	if result.ObservedAt.IsZero() {
+		result.ObservedAt = time.Now()
+	}
+	finalizeProbeResult(result, cfg)
+
+	state, event, err := s.repo.SaveProbeResult(ctx, result)
+	if err != nil {
+		return nil, err
+	}
+	return &GroupStatusProbeExecution{
+		Group:   group,
+		Config:  cfg,
+		Account: account,
+		Result:  result,
+		State:   state,
+		Event:   event,
+	}, nil
+}
+
+func (s *GroupStatusProbeService) shouldProbeFailover(account *Account, result *GroupStatusProbeResult) bool {
+	if result == nil || result.HTTPCode == nil {
+		return false
+	}
+	statusCode := *result.HTTPCode
+	if account != nil && account.Platform == PlatformOpenAI {
+		if s.openAIGatewaySvc != nil {
+			return s.openAIGatewaySvc.shouldFailoverUpstreamError(statusCode)
+		}
+		return shouldOpenAIProbeFailoverStatus(statusCode)
+	}
+	if s.gatewaySvc != nil {
+		return s.gatewaySvc.shouldFailoverUpstreamError(statusCode)
+	}
+	return shouldGatewayProbeFailoverStatus(statusCode)
+}
+
+func shouldOpenAIProbeFailoverStatus(statusCode int) bool {
+	switch statusCode {
+	case http.StatusUnauthorized, http.StatusPaymentRequired, http.StatusForbidden, http.StatusTooManyRequests, 529:
+		return true
+	default:
+		return statusCode >= 500
+	}
+}
+
+func shouldGatewayProbeFailoverStatus(statusCode int) bool {
+	switch statusCode {
+	case http.StatusUnauthorized, http.StatusForbidden, http.StatusTooManyRequests, 529:
+		return true
+	default:
+		return statusCode >= 500
+	}
+}
+
+func probeAttemptFailureSummary(account *Account, result *GroupStatusProbeResult) string {
+	parts := make([]string, 0, 4)
+	if account != nil {
+		parts = append(parts, fmt.Sprintf("account %d", account.ID))
+	}
+	if result != nil {
+		if result.HTTPCode != nil {
+			parts = append(parts, fmt.Sprintf("http %d", *result.HTTPCode))
+		}
+		if result.SubStatus != "" {
+			parts = append(parts, result.SubStatus)
+		}
+		if result.ErrorDetail != "" {
+			parts = append(parts, result.ErrorDetail)
+		}
+	}
+	return truncateProbeText(strings.Join(parts, ": "))
+}
+
+func mergeProbeErrorDetails(firstFailureDetail, lastDetail string) string {
+	firstFailureDetail = strings.TrimSpace(firstFailureDetail)
+	lastDetail = strings.TrimSpace(lastDetail)
+	switch {
+	case firstFailureDetail == "":
+		return truncateProbeText(lastDetail)
+	case lastDetail == "":
+		return truncateProbeText("first failure: " + firstFailureDetail)
+	case strings.Contains(lastDetail, firstFailureDetail):
+		return truncateProbeText(lastDetail)
+	default:
+		return truncateProbeText("first failure: " + firstFailureDetail + "; last detail: " + lastDetail)
+	}
 }
 
 func (s *GroupStatusProbeService) executeAccountProbe(ctx context.Context, account *Account, cfg *GroupStatusConfig) (*GroupStatusProbeResult, error) {
