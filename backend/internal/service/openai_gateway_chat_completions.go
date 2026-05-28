@@ -59,7 +59,6 @@ func (s *OpenAIGatewayService) ForwardAsChatCompletions(
 	}
 	originalModel := chatReq.Model
 	clientStream := chatReq.Stream
-	includeUsage := chatReq.StreamOptions != nil && chatReq.StreamOptions.IncludeUsage
 
 	// 2. Resolve model mapping early so compat prompt_cache_key injection can
 	// derive a stable seed from the final upstream model family.
@@ -252,7 +251,7 @@ func (s *OpenAIGatewayService) ForwardAsChatCompletions(
 	var result *OpenAIForwardResult
 	var handleErr error
 	if clientStream {
-		result, handleErr = s.handleChatStreamingResponse(resp, c, originalModel, billingModel, upstreamModel, includeUsage, startTime)
+		result, handleErr = s.handleChatStreamingResponse(resp, c, originalModel, billingModel, upstreamModel, startTime)
 	} else {
 		result, handleErr = s.handleChatBufferedStreamingResponse(resp, c, originalModel, billingModel, upstreamModel, startTime)
 	}
@@ -376,14 +375,14 @@ func (s *OpenAIGatewayService) handleChatBufferedStreamingResponse(
 			event.Type == "response.incomplete" || event.Type == "response.failed") &&
 			event.Response != nil {
 			finalResponse = event.Response
+			if event.Usage != nil {
+				usage = copyOpenAIUsageFromResponsesUsage(event.Usage)
+				if finalResponse.Usage == nil {
+					finalResponse.Usage = event.Usage
+				}
+			}
 			if event.Response.Usage != nil {
-				usage = OpenAIUsage{
-					InputTokens:  event.Response.Usage.InputTokens,
-					OutputTokens: event.Response.Usage.OutputTokens,
-				}
-				if event.Response.Usage.InputTokensDetails != nil {
-					usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
-				}
+				usage = copyOpenAIUsageFromResponsesUsage(event.Response.Usage)
 			}
 		}
 	}
@@ -394,14 +393,14 @@ func (s *OpenAIGatewayService) handleChatBufferedStreamingResponse(
 			acc.ProcessEvent(&event)
 			if isOpenAICompatResponsesTerminalEvent(event.Type) && event.Response != nil {
 				finalResponse = event.Response
+				if event.Usage != nil {
+					usage = copyOpenAIUsageFromResponsesUsage(event.Usage)
+					if finalResponse.Usage == nil {
+						finalResponse.Usage = event.Usage
+					}
+				}
 				if event.Response.Usage != nil {
-					usage = OpenAIUsage{
-						InputTokens:  event.Response.Usage.InputTokens,
-						OutputTokens: event.Response.Usage.OutputTokens,
-					}
-					if event.Response.Usage.InputTokensDetails != nil {
-						usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
-					}
+					usage = copyOpenAIUsageFromResponsesUsage(event.Response.Usage)
 				}
 			}
 		}
@@ -451,7 +450,6 @@ func (s *OpenAIGatewayService) handleChatStreamingResponse(
 	originalModel string,
 	billingModel string,
 	upstreamModel string,
-	includeUsage bool,
 	startTime time.Time,
 ) (*OpenAIForwardResult, error) {
 	requestID := resp.Header.Get("x-request-id")
@@ -467,7 +465,7 @@ func (s *OpenAIGatewayService) handleChatStreamingResponse(
 
 	state := apicompat.NewResponsesEventToChatState()
 	state.Model = originalModel
-	state.IncludeUsage = includeUsage
+	state.IncludeUsage = true
 
 	var usage OpenAIUsage
 	var firstTokenMs *int
@@ -509,15 +507,15 @@ func (s *OpenAIGatewayService) handleChatStreamingResponse(
 			return false
 		}
 
-		// Extract usage from completion events
-		if (event.Type == "response.completed" || event.Type == "response.incomplete" || event.Type == "response.failed") &&
-			event.Response != nil && event.Response.Usage != nil {
-			usage = OpenAIUsage{
-				InputTokens:  event.Response.Usage.InputTokens,
-				OutputTokens: event.Response.Usage.OutputTokens,
+		if isOpenAICompatResponsesTerminalEvent(event.Type) {
+			if event.Usage != nil {
+				usage = copyOpenAIUsageFromResponsesUsage(event.Usage)
+				if event.Response != nil && event.Response.Usage == nil {
+					event.Response.Usage = event.Usage
+				}
 			}
-			if event.Response.Usage.InputTokensDetails != nil {
-				usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
+			if event.Response != nil && event.Response.Usage != nil {
+				usage = copyOpenAIUsageFromResponsesUsage(event.Response.Usage)
 			}
 		}
 

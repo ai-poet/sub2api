@@ -84,15 +84,23 @@ func ResponsesToAnthropic(resp *ResponsesResponse, model string) *AnthropicRespo
 	out.StopReason = responsesStatusToAnthropicStopReason(resp.Status, resp.IncompleteDetails, blocks)
 
 	if resp.Usage != nil {
-		out.Usage = AnthropicUsage{
-			InputTokens:  resp.Usage.InputTokens,
-			OutputTokens: resp.Usage.OutputTokens,
-		}
-		if resp.Usage.InputTokensDetails != nil {
-			out.Usage.CacheReadInputTokens = resp.Usage.InputTokensDetails.CachedTokens
-		}
+		out.Usage = anthropicUsageFromResponsesUsage(resp.Usage)
 	}
 
+	return out
+}
+
+func anthropicUsageFromResponsesUsage(usage *ResponsesUsage) AnthropicUsage {
+	if usage == nil {
+		return AnthropicUsage{}
+	}
+	out := AnthropicUsage{
+		InputTokens:  usage.InputTokens,
+		OutputTokens: usage.OutputTokens,
+	}
+	if usage.InputTokensDetails != nil {
+		out.CacheReadInputTokens = usage.InputTokensDetails.CachedTokens
+	}
 	return out
 }
 
@@ -172,7 +180,7 @@ func ResponsesEventToAnthropicEvents(
 		return resToAnthHandleReasoningDelta(evt, state)
 	case "response.reasoning_summary_text.done":
 		return resToAnthHandleBlockDone(state)
-	case "response.completed", "response.incomplete", "response.failed":
+	case "response.completed", "response.done", "response.incomplete", "response.failed":
 		return resToAnthHandleCompleted(evt, state)
 	default:
 		return nil
@@ -464,13 +472,18 @@ func resToAnthHandleCompleted(evt *ResponsesStreamEvent, state *ResponsesEventTo
 	events = append(events, closeCurrentBlock(state)...)
 
 	stopReason := "end_turn"
+	if evt.Usage != nil {
+		usage := anthropicUsageFromResponsesUsage(evt.Usage)
+		state.InputTokens = usage.InputTokens
+		state.OutputTokens = usage.OutputTokens
+		state.CacheReadInputTokens = usage.CacheReadInputTokens
+	}
 	if evt.Response != nil {
 		if evt.Response.Usage != nil {
-			state.InputTokens = evt.Response.Usage.InputTokens
-			state.OutputTokens = evt.Response.Usage.OutputTokens
-			if evt.Response.Usage.InputTokensDetails != nil {
-				state.CacheReadInputTokens = evt.Response.Usage.InputTokensDetails.CachedTokens
-			}
+			usage := anthropicUsageFromResponsesUsage(evt.Response.Usage)
+			state.InputTokens = usage.InputTokens
+			state.OutputTokens = usage.OutputTokens
+			state.CacheReadInputTokens = usage.CacheReadInputTokens
 		}
 		switch evt.Response.Status {
 		case "incomplete":
