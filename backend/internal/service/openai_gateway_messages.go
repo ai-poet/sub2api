@@ -275,14 +275,19 @@ func (s *OpenAIGatewayService) handleAnthropicBufferedStreamingResponse(
 	var finalResponse *apicompat.ResponsesResponse
 	var usage OpenAIUsage
 	acc := apicompat.NewBufferedResponseAccumulator()
+	var parser openAICompatSSEFrameParser
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if !strings.HasPrefix(line, "data: ") || line == "data: [DONE]" {
+		if isOpenAICompatDoneSentinelLine(line) {
 			continue
 		}
-		payload := line[6:]
+		frame, ok := parser.AddLine(line)
+		if !ok {
+			continue
+		}
+		payload := openAICompatPayloadWithEventType(frame.Data, frame.EventType)
 
 		var event apicompat.ResponsesStreamEvent
 		if err := json.Unmarshal([]byte(payload), &event); err != nil {
@@ -308,6 +313,25 @@ func (s *OpenAIGatewayService) handleAnthropicBufferedStreamingResponse(
 				}
 				if event.Response.Usage.InputTokensDetails != nil {
 					usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
+				}
+			}
+		}
+	}
+	if frame, ok := parser.Finish(); ok {
+		payload := openAICompatPayloadWithEventType(frame.Data, frame.EventType)
+		var event apicompat.ResponsesStreamEvent
+		if err := json.Unmarshal([]byte(payload), &event); err == nil {
+			acc.ProcessEvent(&event)
+			if isOpenAICompatResponsesTerminalEvent(event.Type) && event.Response != nil {
+				finalResponse = event.Response
+				if event.Response.Usage != nil {
+					usage = OpenAIUsage{
+						InputTokens:  event.Response.Usage.InputTokens,
+						OutputTokens: event.Response.Usage.OutputTokens,
+					}
+					if event.Response.Usage.InputTokensDetails != nil {
+						usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
+					}
 				}
 			}
 		}
@@ -478,6 +502,13 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 			)
 		}
 	}
+	missingTerminalErr := func() (*OpenAIForwardResult, error) {
+		return resultWithUsage(), fmt.Errorf("stream usage incomplete: missing terminal event")
+	}
+	processFrame := func(frame openAICompatSSEFrame) bool {
+		payload := openAICompatPayloadWithEventType(frame.Data, frame.EventType)
+		return processDataLine(payload)
+	}
 
 	// ── Determine keepalive interval ──
 	keepaliveInterval := time.Duration(0)
@@ -487,17 +518,33 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 
 	// ── No keepalive: fast synchronous path (no goroutine overhead) ──
 	if keepaliveInterval <= 0 {
+		var parser openAICompatSSEFrameParser
 		for scanner.Scan() {
 			line := scanner.Text()
-			if !strings.HasPrefix(line, "data: ") || line == "data: [DONE]" {
+			if isOpenAICompatDoneSentinelLine(line) {
+				return missingTerminalErr()
+			}
+			frame, ok := parser.AddLine(line)
+			if !ok {
 				continue
 			}
-			if processDataLine(line[6:]) {
-				return resultWithUsage(), nil
+			if processFrame(frame) {
+				return finalizeStream()
 			}
 		}
-		handleScanErr(scanner.Err())
-		return finalizeStream()
+		if err := scanner.Err(); err != nil {
+			handleScanErr(err)
+			return resultWithUsage(), fmt.Errorf("stream usage incomplete: %w", err)
+		}
+		if frame, ok := parser.Finish(); ok {
+			if strings.TrimSpace(frame.Data) == "[DONE]" {
+				return missingTerminalErr()
+			}
+			if processFrame(frame) {
+				return finalizeStream()
+			}
+		}
+		return missingTerminalErr()
 	}
 
 	// ── With keepalive: goroutine + channel + select ──
@@ -531,25 +578,38 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 	keepaliveTicker := time.NewTicker(keepaliveInterval)
 	defer keepaliveTicker.Stop()
 	lastDataAt := time.Now()
+	var parser openAICompatSSEFrameParser
 
 	for {
 		select {
 		case ev, ok := <-events:
 			if !ok {
 				// Upstream closed
-				return finalizeStream()
+				if frame, ok := parser.Finish(); ok {
+					if strings.TrimSpace(frame.Data) == "[DONE]" {
+						return missingTerminalErr()
+					}
+					if processFrame(frame) {
+						return finalizeStream()
+					}
+				}
+				return missingTerminalErr()
 			}
 			if ev.err != nil {
 				handleScanErr(ev.err)
-				return finalizeStream()
+				return resultWithUsage(), fmt.Errorf("stream usage incomplete: %w", ev.err)
 			}
 			lastDataAt = time.Now()
 			line := ev.line
-			if !strings.HasPrefix(line, "data: ") || line == "data: [DONE]" {
+			if isOpenAICompatDoneSentinelLine(line) {
+				return missingTerminalErr()
+			}
+			frame, ok := parser.AddLine(line)
+			if !ok {
 				continue
 			}
-			if processDataLine(line[6:]) {
-				return resultWithUsage(), nil
+			if processFrame(frame) {
+				return finalizeStream()
 			}
 
 		case <-keepaliveTicker.C:
