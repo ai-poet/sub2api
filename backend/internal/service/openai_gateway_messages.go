@@ -306,14 +306,14 @@ func (s *OpenAIGatewayService) handleAnthropicBufferedStreamingResponse(
 			event.Type == "response.incomplete" || event.Type == "response.failed") &&
 			event.Response != nil {
 			finalResponse = event.Response
+			if event.Usage != nil {
+				usage = copyOpenAIUsageFromResponsesUsage(event.Usage)
+				if finalResponse.Usage == nil {
+					finalResponse.Usage = event.Usage
+				}
+			}
 			if event.Response.Usage != nil {
-				usage = OpenAIUsage{
-					InputTokens:  event.Response.Usage.InputTokens,
-					OutputTokens: event.Response.Usage.OutputTokens,
-				}
-				if event.Response.Usage.InputTokensDetails != nil {
-					usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
-				}
+				usage = copyOpenAIUsageFromResponsesUsage(event.Response.Usage)
 			}
 		}
 	}
@@ -324,14 +324,14 @@ func (s *OpenAIGatewayService) handleAnthropicBufferedStreamingResponse(
 			acc.ProcessEvent(&event)
 			if isOpenAICompatResponsesTerminalEvent(event.Type) && event.Response != nil {
 				finalResponse = event.Response
+				if event.Usage != nil {
+					usage = copyOpenAIUsageFromResponsesUsage(event.Usage)
+					if finalResponse.Usage == nil {
+						finalResponse.Usage = event.Usage
+					}
+				}
 				if event.Response.Usage != nil {
-					usage = OpenAIUsage{
-						InputTokens:  event.Response.Usage.InputTokens,
-						OutputTokens: event.Response.Usage.OutputTokens,
-					}
-					if event.Response.Usage.InputTokensDetails != nil {
-						usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
-					}
+					usage = copyOpenAIUsageFromResponsesUsage(event.Response.Usage)
 				}
 			}
 		}
@@ -442,15 +442,15 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 			return false
 		}
 
-		// Extract usage from completion events
-		if (event.Type == "response.completed" || event.Type == "response.incomplete" || event.Type == "response.failed") &&
-			event.Response != nil && event.Response.Usage != nil {
-			usage = OpenAIUsage{
-				InputTokens:  event.Response.Usage.InputTokens,
-				OutputTokens: event.Response.Usage.OutputTokens,
+		if isOpenAICompatResponsesTerminalEvent(event.Type) {
+			if event.Usage != nil {
+				usage = copyOpenAIUsageFromResponsesUsage(event.Usage)
+				if event.Response != nil && event.Response.Usage == nil {
+					event.Response.Usage = event.Usage
+				}
 			}
-			if event.Response.Usage.InputTokensDetails != nil {
-				usage.CacheReadInputTokens = event.Response.Usage.InputTokensDetails.CachedTokens
+			if event.Response != nil && event.Response.Usage != nil {
+				usage = copyOpenAIUsageFromResponsesUsage(event.Response.Usage)
 			}
 		}
 

@@ -343,6 +343,29 @@ func TestStreamingTextOnly(t *testing.T) {
 	assert.Equal(t, "message_stop", events[1].Type)
 }
 
+func TestResponsesEventToAnthropicEvents_CompletedWithTopLevelUsage(t *testing.T) {
+	state := NewResponsesEventToAnthropicState()
+
+	events := ResponsesEventToAnthropicEvents(&ResponsesStreamEvent{
+		Type: "response.done",
+		Usage: &ResponsesUsage{
+			InputTokens:  20,
+			OutputTokens: 6,
+			InputTokensDetails: &ResponsesInputTokensDetails{
+				CachedTokens: 8,
+			},
+		},
+	}, state)
+
+	require.Len(t, events, 2)
+	assert.Equal(t, "message_delta", events[0].Type)
+	require.NotNil(t, events[0].Usage)
+	assert.Equal(t, 20, events[0].Usage.InputTokens)
+	assert.Equal(t, 6, events[0].Usage.OutputTokens)
+	assert.Equal(t, 8, events[0].Usage.CacheReadInputTokens)
+	assert.Equal(t, "message_stop", events[1].Type)
+}
+
 func TestStreamingToolCall(t *testing.T) {
 	state := NewResponsesEventToAnthropicState()
 

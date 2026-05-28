@@ -753,6 +753,31 @@ func TestResponsesEventToChatChunks_Completed(t *testing.T) {
 	assert.Equal(t, 30, chunks[1].Usage.PromptTokensDetails.CachedTokens)
 }
 
+func TestResponsesEventToChatChunks_CompletedWithTopLevelUsage(t *testing.T) {
+	state := NewResponsesEventToChatState()
+	state.Model = "gpt-4o"
+	state.IncludeUsage = true
+
+	chunks := ResponsesEventToChatChunks(&ResponsesStreamEvent{
+		Type: "response.done",
+		Usage: &ResponsesUsage{
+			InputTokens:  12,
+			OutputTokens: 4,
+			InputTokensDetails: &ResponsesInputTokensDetails{
+				CachedTokens: 7,
+			},
+		},
+	}, state)
+
+	require.Len(t, chunks, 2)
+	require.NotNil(t, chunks[1].Usage)
+	assert.Equal(t, 12, chunks[1].Usage.PromptTokens)
+	assert.Equal(t, 4, chunks[1].Usage.CompletionTokens)
+	assert.Equal(t, 16, chunks[1].Usage.TotalTokens)
+	require.NotNil(t, chunks[1].Usage.PromptTokensDetails)
+	assert.Equal(t, 7, chunks[1].Usage.PromptTokensDetails.CachedTokens)
+}
+
 func TestResponsesEventToChatChunks_CompletedWithToolCalls(t *testing.T) {
 	state := NewResponsesEventToChatState()
 	state.Model = "gpt-4o"
