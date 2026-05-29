@@ -309,7 +309,7 @@ export default function PaymentForm({
           return <div className={['text-xs', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>{msg}</div>;
         })()}
 
-      {enabledPaymentTypes.length > 1 && (
+      {enabledPaymentTypes.length > 0 && (
         <div>
           <label className={['mb-2 block text-sm font-medium', dark ? 'text-slate-200' : 'text-gray-700'].join(' ')}>
             {locale === 'en' ? 'Payment Method' : '支付方式'}
