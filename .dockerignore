@@ -81,6 +81,5 @@ deploy/redis_data/
 issues/
 CLAUDE.md
 
-# Git submodules (not needed in image)
+# Local client checkout (not needed in image)
 client/
-.gitmodules
