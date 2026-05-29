@@ -2176,8 +2176,6 @@ export default {
         defaultPerRequestPrice: 'Default per-request price (fallback when no tier matches)',
         defaultImagePrice: 'Default image price (fallback when no tier matches)',
         platformConfig: 'Platform Configuration',
-        bedrockCCCompat: 'Bedrock CC Compatibility',
-        bedrockCCCompatHint: '⚠️ When enabled, requests to Bedrock accounts in this channel will be transformed for Claude Code compatibility (thinking type conversion, tool_use ID sanitization).',
         basicSettings: 'Basic Settings',
         addPlatform: 'Add Platform',
         noPlatforms: 'Click "Add Platform" to start configuring the channel',
