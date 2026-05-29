@@ -298,21 +298,6 @@
               </div>
             </div>
 
-            <!-- Bedrock CC Compatibility (Anthropic only) -->
-            <div v-if="section.platform === 'anthropic'" class="border-t border-gray-200 pt-3 dark:border-dark-600">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <label class="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {{ t('admin.channels.form.bedrockCCCompat') }}
-                  </label>
-                  <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">
-                    {{ t('admin.channels.form.bedrockCCCompatHint') }}
-                  </p>
-                </div>
-                <Toggle v-model="section.bedrock_cc_compat" />
-              </div>
-            </div>
-
             <!-- Model Mapping -->
             <div>
               <div class="mb-1 flex items-center justify-between">
@@ -461,7 +446,6 @@ interface PlatformSection {
   group_ids: number[]
   model_mapping: Record<string, string>
   model_pricing: PricingFormEntry[]
-  bedrock_cc_compat: boolean
 }
 
 // ── Table columns ──
@@ -569,8 +553,7 @@ function addPlatformSection(platform: GroupPlatform) {
     collapsed: false,
     group_ids: [],
     model_mapping: {},
-    model_pricing: [],
-    bedrock_cc_compat: false,
+    model_pricing: []
   })
 }
 
@@ -684,13 +667,10 @@ function renameMappingKey(sectionIdx: number, oldKey: string, newKey: string) {
 }
 
 // ── Form ↔ API conversion ──
-function formToAPI(): { group_ids: number[], model_pricing: ChannelModelPricing[], model_mapping: Record<string, Record<string, string>>, features_config: Record<string, unknown> } {
+function formToAPI(): { group_ids: number[], model_pricing: ChannelModelPricing[], model_mapping: Record<string, Record<string, string>> } {
   const group_ids: number[] = []
   const model_pricing: ChannelModelPricing[] = []
   const model_mapping: Record<string, Record<string, string>> = {}
-  const featuresConfig: Record<string, unknown> = editingChannel.value?.features_config
-    ? { ...editingChannel.value.features_config }
-    : {}
 
   for (const section of form.platforms) {
     if (!section.enabled) continue
@@ -719,20 +699,7 @@ function formToAPI(): { group_ids: number[], model_pricing: ChannelModelPricing[
     }
   }
 
-  const bedrockCCCompat: Record<string, boolean> = {}
-  for (const section of form.platforms) {
-    if (!section.enabled) continue
-    if (section.platform === 'anthropic') {
-      bedrockCCCompat[section.platform] = !!section.bedrock_cc_compat
-    }
-  }
-  if (Object.keys(bedrockCCCompat).length > 0) {
-    featuresConfig.bedrock_cc_compat = bedrockCCCompat
-  } else {
-    delete featuresConfig.bedrock_cc_compat
-  }
-
-  return { group_ids, model_pricing, model_mapping, features_config: featuresConfig }
+  return { group_ids, model_pricing, model_mapping }
 }
 
 function apiToForm(channel: Channel): PlatformSection[] {
@@ -776,18 +743,13 @@ function apiToForm(channel: Channel): PlatformSection[] {
         intervals: apiIntervalsToForm(p.intervals || [])
       } as PricingFormEntry))
 
-    const fc = channel.features_config
-    const bedrockCCCompat = fc?.bedrock_cc_compat as Record<string, boolean> | undefined
-    const bedrockCCCompatEnabled = bedrockCCCompat?.[platform] === true
-
     sections.push({
       platform,
       enabled: true,
       collapsed: false,
       group_ids: groupIds,
       model_mapping: { ...mapping },
-      model_pricing: pricing,
-      bedrock_cc_compat: bedrockCCCompatEnabled,
+      model_pricing: pricing
     })
   }
 
