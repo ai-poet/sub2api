@@ -62,5 +62,12 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		ReferralEnabled:                  settings.ReferralEnabled,
 		BackendModeEnabled:               settings.BackendModeEnabled,
 		Version:                          h.version,
+		ClientChangelogEntries: func() []dto.ClientChangelogEntry {
+			entries := make([]dto.ClientChangelogEntry, len(settings.ClientChangelogEntries))
+			for i, e := range settings.ClientChangelogEntries {
+				entries[i] = dto.ClientChangelogEntry(e)
+			}
+			return entries
+		}(),
 	})
 }

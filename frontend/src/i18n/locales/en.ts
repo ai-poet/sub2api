@@ -16,6 +16,7 @@ export default {
     heroDescription: 'Run Claude Code and Codex with one account: quick to start, friendly pricing, clear error reasons.',
     navModels: 'Models',
     navPricing: 'Pricing',
+    navChangelog: 'Changelog',
     hero: {
       badge: 'One-click access to Claude Code / Codex',
       titleLeadPrimary: 'Claude Code and Codex',
@@ -235,6 +236,14 @@ export default {
     footer: {
       allRightsReserved: 'All rights reserved.'
     }
+  },
+
+  // Changelog Page
+  changelog: {
+    title: 'Changelog',
+    subtitle: 'Track what\'s new and what\'s changed.',
+    emptyTitle: 'No updates yet',
+    emptyDesc: 'Check back later for the latest changes and improvements.'
   },
 
   // Key Usage Query Page
@@ -4789,6 +4798,25 @@ export default {
         macosUrlHint: 'Leave empty to hide the macOS download button.',
         publicHint:
           'Use a public http(s) link from object storage, a CDN, or a release platform. Custom home page content still fully controls the home page when configured.'
+      },
+      changelog: {
+        title: 'Changelog',
+        description: 'Manage client version changelog entries. Enabled entries will be shown on the /changelog page.',
+        addEntry: 'Add Entry',
+        version: 'Version',
+        versionPlaceholder: 'e.g. 1.0.0',
+        publishedAt: 'Published Date',
+        titleLabel: 'Title',
+        titlePlaceholder: 'Update title',
+        items: 'Items',
+        itemPlaceholder: 'Supports Markdown',
+        addItem: 'Add Item',
+        enabled: 'Enabled',
+        delete: 'Delete',
+        deleteConfirm: 'Are you sure you want to delete this entry?',
+        emptyHint: 'No changelog entries yet. Click "Add Entry" to create one.',
+        preview: 'Preview',
+        edit: 'Edit'
       },
       soraClient: {
         title: 'Sora Client',

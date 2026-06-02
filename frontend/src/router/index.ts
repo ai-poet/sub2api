@@ -132,6 +132,16 @@ const routes: RouteRecordRaw[] = [
       title: 'Key Usage',
     }
   },
+  {
+    path: '/changelog',
+    name: 'Changelog',
+    component: () => import('@/views/ChangelogView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Changelog',
+      titleKey: 'changelog.title'
+    }
+  },
 
   // ==================== User Routes ====================
   {

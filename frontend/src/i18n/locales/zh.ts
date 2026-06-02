@@ -16,6 +16,7 @@ export default {
     heroDescription: 'Claude Code 和 Codex 用同一个账户跑，开通快、价格友好、出错有解释。',
     navModels: '模型',
     navPricing: '价格',
+    navChangelog: '更新日志',
     hero: {
       badge: 'Claude Code / Codex 一键接入',
       titleLeadPrimary: 'Claude Code 和 Codex',
@@ -235,6 +236,14 @@ export default {
     footer: {
       allRightsReserved: '保留所有权利。'
     }
+  },
+
+  // Changelog Page
+  changelog: {
+    title: '更新日志',
+    subtitle: '追踪最新变化与改进。',
+    emptyTitle: '暂无更新',
+    emptyDesc: '稍后回来看看最新的变化与改进。'
   },
 
   // Key Usage Query Page
@@ -4953,6 +4962,25 @@ export default {
         macosUrlHint: '留空则隐藏 macOS 下载按钮。',
         publicHint:
           '请使用对象存储、CDN 或发布平台提供的公开 http(s) 链接。自定义首页内容仍完全由你填写的 HTML 或 URL 控制。'
+      },
+      changelog: {
+        title: '更新日志',
+        description: '管理客户端版本更新日志条目，启用后将在 /changelog 页面展示。',
+        addEntry: '新增日志',
+        version: '版本号',
+        versionPlaceholder: '如 1.0.0',
+        publishedAt: '发布日期',
+        titleLabel: '标题',
+        titlePlaceholder: '本次更新标题',
+        items: '更新点',
+        itemPlaceholder: '支持 Markdown 语法',
+        addItem: '添加更新点',
+        enabled: '启用',
+        delete: '删除',
+        deleteConfirm: '确定删除这条日志吗？',
+        emptyHint: '暂无日志条目，点击「新增日志」添加。',
+        preview: '预览',
+        edit: '编辑'
       },
       soraClient: {
         title: 'Sora 客户端',

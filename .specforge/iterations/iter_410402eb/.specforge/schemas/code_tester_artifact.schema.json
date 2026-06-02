@@ -1,0 +1,140 @@
+{
+  "$defs": {
+    "ArtifactFile": {
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ],
+      "title": "ArtifactFile",
+      "type": "object"
+    },
+    "Defect": {
+      "properties": {
+        "severity": {
+          "default": "P1",
+          "enum": [
+            "P0",
+            "P1",
+            "P2"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "enum": [
+                "coder",
+                "code_tester",
+                "test_planner",
+                "prd_planner"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "Defect",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "verify_report": {
+      "title": "Verify Report",
+      "type": "string"
+    },
+    "passed": {
+      "title": "Passed",
+      "type": "boolean"
+    },
+    "failure_notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Notes"
+    },
+    "defects": {
+      "items": {
+        "$ref": "#/$defs/Defect"
+      },
+      "title": "Defects",
+      "type": "array"
+    },
+    "ux_notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Ux Notes",
+      "type": "array"
+    },
+    "delivery_recommendations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Delivery Recommendations",
+      "type": "array"
+    },
+    "adversarial_tests": {
+      "items": {
+        "$ref": "#/$defs/ArtifactFile"
+      },
+      "title": "Adversarial Tests",
+      "type": "array"
+    },
+    "test_files": {
+      "items": {
+        "$ref": "#/$defs/ArtifactFile"
+      },
+      "title": "Test Files",
+      "type": "array"
+    }
+  },
+  "required": [
+    "verify_report",
+    "passed"
+  ],
+  "title": "CodeTesterArtifact",
+  "type": "object"
+}

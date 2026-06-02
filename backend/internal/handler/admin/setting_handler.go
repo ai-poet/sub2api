@@ -138,6 +138,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		EnableFingerprintUnification:         settings.EnableFingerprintUnification,
 		EnableMetadataPassthrough:            settings.EnableMetadataPassthrough,
 		EnableCCHSigning:                     settings.EnableCCHSigning,
+		ClientChangelogEntries:               dto.ParseClientChangelogEntries(settings.ClientChangelogEntries),
 	})
 }
 
@@ -233,6 +234,9 @@ type UpdateSettingsRequest struct {
 	EnableFingerprintUnification *bool `json:"enable_fingerprint_unification"`
 	EnableMetadataPassthrough    *bool `json:"enable_metadata_passthrough"`
 	EnableCCHSigning             *bool `json:"enable_cch_signing"`
+
+	// Client changelog entries
+	ClientChangelogEntries *[]service.ClientChangelogEntry `json:"client_changelog_entries"`
 }
 
 // UpdateSettings 更新系统设置
@@ -626,6 +630,26 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		modelMirrorKnowledgeProbes = validatedProbes
 	}
 
+	// Validate and normalize changelog entries
+	var changelogEntries []service.ClientChangelogEntry
+	if previousSettings.ClientChangelogEntries != "" {
+		if err := json.Unmarshal([]byte(previousSettings.ClientChangelogEntries), &changelogEntries); err != nil {
+			changelogEntries = []service.ClientChangelogEntry{}
+		}
+	}
+	if req.ClientChangelogEntries != nil {
+		changelogEntries = *req.ClientChangelogEntries
+		if err := service.ValidateChangelogEntries(changelogEntries); err != nil {
+			response.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+	changelogJSON, err := json.Marshal(changelogEntries)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "failed to serialize changelog entries")
+		return
+	}
+
 	settings := &service.SystemSettings{
 		RegistrationEnabled:              req.RegistrationEnabled,
 		EmailVerifyEnabled:               req.EmailVerifyEnabled,
@@ -726,6 +750,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.EnableCCHSigning
 		}(),
+		ClientChangelogEntries: string(changelogJSON),
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {
@@ -815,6 +840,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		EnableFingerprintUnification:         updatedSettings.EnableFingerprintUnification,
 		EnableMetadataPassthrough:            updatedSettings.EnableMetadataPassthrough,
 		EnableCCHSigning:                     updatedSettings.EnableCCHSigning,
+		ClientChangelogEntries:               dto.ParseClientChangelogEntries(updatedSettings.ClientChangelogEntries),
 	})
 }
 
@@ -1016,6 +1042,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.EnableCCHSigning != after.EnableCCHSigning {
 		changed = append(changed, "enable_cch_signing")
+	}
+	if before.ClientChangelogEntries != after.ClientChangelogEntries {
+		changed = append(changed, "client_changelog_entries")
 	}
 	return changed
 }

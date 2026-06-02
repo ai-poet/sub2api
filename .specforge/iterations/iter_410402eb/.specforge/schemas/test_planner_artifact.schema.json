@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "testing_plan": {
+      "title": "Testing Plan",
+      "type": "string"
+    }
+  },
+  "required": [
+    "testing_plan"
+  ],
+  "title": "TestPlannerArtifact",
+  "type": "object"
+}

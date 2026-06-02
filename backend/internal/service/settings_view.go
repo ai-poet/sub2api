@@ -93,6 +93,9 @@ type SystemSettings struct {
 	EnableFingerprintUnification bool // 是否统一 OAuth 账号的指纹头（默认 true）
 	EnableMetadataPassthrough    bool // 是否透传客户端原始 metadata（默认 false）
 	EnableCCHSigning             bool // 是否对 billing header cch 进行签名（默认 false）
+
+	// Client changelog entries (raw JSON string)
+	ClientChangelogEntries string
 }
 
 type DefaultSubscriptionSetting struct {
@@ -133,6 +136,18 @@ type PublicSettings struct {
 	ReferralEnabled     bool
 	BackendModeEnabled  bool
 	Version             string
+
+	// Client changelog entries (filtered, sorted for public view)
+	ClientChangelogEntries []ClientChangelogEntry
+}
+
+// ClientChangelogEntry represents a single changelog entry for the client app.
+type ClientChangelogEntry struct {
+	Version     string   `json:"version"`
+	PublishedAt string   `json:"published_at"`
+	Title       string   `json:"title"`
+	Items       []string `json:"items"`
+	Enabled     bool     `json:"enabled"`
 }
 
 // StreamTimeoutSettings 流超时处理配置（仅控制超时后的处理方式，超时判定由网关配置控制）

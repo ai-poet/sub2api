@@ -250,6 +250,9 @@ const (
 	SettingKeyEnableMetadataPassthrough = "enable_metadata_passthrough"
 	// SettingKeyEnableCCHSigning 是否对 billing header 中的 cch 进行 xxHash64 签名（默认 false）
 	SettingKeyEnableCCHSigning = "enable_cch_signing"
+
+	// SettingKeyClientChangelogEntries 客户端更新日志条目（JSON 数组）
+	SettingKeyClientChangelogEntries = "client_changelog_entries"
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

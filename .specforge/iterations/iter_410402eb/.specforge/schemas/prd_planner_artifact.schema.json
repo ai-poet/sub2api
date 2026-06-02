@@ -1,0 +1,48 @@
+{
+  "$defs": {
+    "ContextManifestEntry": {
+      "properties": {
+        "file": {
+          "minLength": 1,
+          "title": "File",
+          "type": "string"
+        },
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "title": "ContextManifestEntry",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "prd": {
+      "title": "Prd",
+      "type": "string"
+    },
+    "context_for_coder": {
+      "items": {
+        "$ref": "#/$defs/ContextManifestEntry"
+      },
+      "title": "Context For Coder",
+      "type": "array"
+    },
+    "context_for_tester": {
+      "items": {
+        "$ref": "#/$defs/ContextManifestEntry"
+      },
+      "title": "Context For Tester",
+      "type": "array"
+    }
+  },
+  "required": [
+    "prd"
+  ],
+  "title": "PrdPlannerArtifact",
+  "type": "object"
+}

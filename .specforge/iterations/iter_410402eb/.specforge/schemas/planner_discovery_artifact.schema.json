@@ -1,0 +1,64 @@
+{
+  "properties": {
+    "status": {
+      "enum": [
+        "ask",
+        "ready"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "complexity": {
+      "default": "moderate",
+      "enum": [
+        "trivial",
+        "simple",
+        "moderate",
+        "complex"
+      ],
+      "title": "Complexity",
+      "type": "string"
+    },
+    "question": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Question"
+    },
+    "options": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Options",
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "requirements_brief": {
+      "default": "",
+      "title": "Requirements Brief",
+      "type": "string"
+    },
+    "rationale": {
+      "default": "",
+      "title": "Rationale",
+      "type": "string"
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "title": "PlannerDiscoveryArtifact",
+  "type": "object"
+}
