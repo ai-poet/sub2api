@@ -24,6 +24,15 @@ type CustomEndpoint struct {
 	Description string `json:"description"`
 }
 
+// ClientChangelogEntry represents a single changelog entry for the client app.
+type ClientChangelogEntry struct {
+	Version     string   `json:"version"`
+	PublishedAt string   `json:"published_at"`
+	Title       string   `json:"title"`
+	Items       []string `json:"items"`
+	Enabled     bool     `json:"enabled"`
+}
+
 // SystemSettings represents the admin settings API response payload.
 type SystemSettings struct {
 	RegistrationEnabled              bool     `json:"registration_enabled"`
@@ -110,6 +119,9 @@ type SystemSettings struct {
 	EnableFingerprintUnification bool `json:"enable_fingerprint_unification"`
 	EnableMetadataPassthrough    bool `json:"enable_metadata_passthrough"`
 	EnableCCHSigning             bool `json:"enable_cch_signing"`
+
+	// Client changelog entries
+	ClientChangelogEntries []ClientChangelogEntry `json:"client_changelog_entries"`
 }
 
 type DefaultSubscriptionSetting struct {
@@ -148,6 +160,9 @@ type PublicSettings struct {
 	ReferralEnabled                  bool             `json:"referral_enabled"`
 	BackendModeEnabled               bool             `json:"backend_mode_enabled"`
 	Version                          string           `json:"version"`
+
+	// Client changelog entries (public view: filtered to enabled only)
+	ClientChangelogEntries []ClientChangelogEntry `json:"client_changelog_entries"`
 }
 
 // OverloadCooldownSettings 529过载冷却配置 DTO
@@ -228,4 +243,18 @@ func ParseCustomEndpoints(raw string) []CustomEndpoint {
 		return []CustomEndpoint{}
 	}
 	return items
+}
+
+// ParseClientChangelogEntries parses a JSON string into a slice of ClientChangelogEntry.
+// Returns empty slice on empty/invalid input.
+func ParseClientChangelogEntries(raw string) []ClientChangelogEntry {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || raw == "[]" {
+		return []ClientChangelogEntry{}
+	}
+	var entries []ClientChangelogEntry
+	if err := json.Unmarshal([]byte(raw), &entries); err != nil {
+		return []ClientChangelogEntry{}
+	}
+	return entries
 }

@@ -30,10 +30,16 @@
         <a
           href="#pricing"
           class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
-          @click.prevent="scrollTo('pricing')"
+          @click.prevent="navigateToPricing"
         >
           {{ t('home.navPricing') }}
         </a>
+        <router-link
+          to="/changelog"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+        >
+          {{ t('home.navChangelog') }}
+        </router-link>
       </div>
 
       <!-- Right actions -->
@@ -69,6 +75,8 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -87,8 +95,24 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+}
+
+function navigateToPricing() {
+  const currentPath = router.currentRoute.value.path
+  if (currentPath === '/home') {
+    scrollTo('pricing')
+  } else {
+    router.push('/home').then(() => {
+      nextTick(() => {
+        setTimeout(() => {
+          document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      })
+    })
+  }
 }
 </script>

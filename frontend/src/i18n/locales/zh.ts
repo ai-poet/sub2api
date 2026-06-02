@@ -16,6 +16,7 @@ export default {
     heroDescription: 'Claude Code 和 Codex 用同一个账户跑，开通快、价格友好、出错有解释。',
     navModels: '模型',
     navPricing: '价格',
+    navChangelog: '更新日志',
     hero: {
       badge: 'Claude Code / Codex 一键接入',
       titleLeadPrimary: 'Claude Code 和 Codex',
@@ -351,6 +352,14 @@ export default {
       },
       contact: '如对本服务条款有任何疑问，请通过平台内的客服渠道联系我们。',
     }
+  },
+
+  // Changelog Page
+  changelog: {
+    title: '更新日志',
+    subtitle: '追踪最新变化与改进。',
+    emptyTitle: '暂无更新',
+    emptyDesc: '稍后回来看看最新的变化与改进。'
   },
 
   // Key Usage Query Page
@@ -5067,6 +5076,25 @@ export default {
           '⚠️ iframe 提示：部分网站会通过 X-Frame-Options 或 CSP（frame-ancestors）禁止被 iframe 嵌入，出现空白时可引导用户使用”新窗口打开”。',
         integrationDoc: '支付集成文档',
         integrationDocHint: '包含接口说明、幂等语义及示例代码'
+      },
+      changelog: {
+        title: '更新日志',
+        description: '管理客户端版本更新日志条目，启用后将在 /changelog 页面展示。',
+        addEntry: '新增日志',
+        version: '版本号',
+        versionPlaceholder: '如 1.0.0',
+        publishedAt: '发布日期',
+        titleLabel: '标题',
+        titlePlaceholder: '本次更新标题',
+        items: '更新点',
+        itemPlaceholder: '支持 Markdown 语法',
+        addItem: '添加更新点',
+        enabled: '启用',
+        delete: '删除',
+        deleteConfirm: '确定删除这条日志吗？',
+        emptyHint: '暂无日志条目，点击「新增日志」添加。',
+        preview: '预览',
+        edit: '编辑'
       },
       soraClient: {
         title: 'Sora 客户端',

@@ -16,6 +16,7 @@ export default {
     heroDescription: 'Run Claude Code and Codex on the same account — fast onboarding, friendly pricing, and clear failure reasons.',
     navModels: 'Models',
     navPricing: 'Pricing',
+    navChangelog: 'Changelog',
     hero: {
       badge: 'One-click Claude Code / Codex',
       titleLeadPrimary: 'Claude Code',
@@ -351,6 +352,14 @@ export default {
       },
       contact: 'If you have any questions about these Terms of Service, please contact us through the support channel in the platform.',
     }
+  },
+
+  // Changelog Page
+  changelog: {
+    title: 'Changelog',
+    subtitle: 'Track what\'s new and what\'s changed.',
+    emptyTitle: 'No updates yet',
+    emptyDesc: 'Check back later for the latest changes and improvements.'
   },
 
   // Key Usage Query Page
@@ -4903,6 +4912,25 @@ export default {
           '⚠️ iframe note: Some websites block embedding via X-Frame-Options or CSP (frame-ancestors). If the page is blank, provide an "Open in new tab" alternative.',
         integrationDoc: 'Payment Integration Docs',
         integrationDocHint: 'Covers endpoint specs, idempotency semantics, and code samples'
+      },
+      changelog: {
+        title: 'Changelog',
+        description: 'Manage client version changelog entries. Enabled entries will be shown on the /changelog page.',
+        addEntry: 'Add Entry',
+        version: 'Version',
+        versionPlaceholder: 'e.g. 1.0.0',
+        publishedAt: 'Published Date',
+        titleLabel: 'Title',
+        titlePlaceholder: 'Update title',
+        items: 'Items',
+        itemPlaceholder: 'Supports Markdown',
+        addItem: 'Add Item',
+        enabled: 'Enabled',
+        delete: 'Delete',
+        deleteConfirm: 'Are you sure you want to delete this entry?',
+        emptyHint: 'No changelog entries yet. Click "Add Entry" to create one.',
+        preview: 'Preview',
+        edit: 'Edit'
       },
       soraClient: {
         title: 'Sora Client',

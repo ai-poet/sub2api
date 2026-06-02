@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from '../client'
-import type { CustomMenuItem, CustomEndpoint } from '@/types'
+import type { CustomMenuItem, CustomEndpoint, ClientChangelogEntry } from '@/types'
 
 export interface DefaultSubscriptionSetting {
   group_id: number
@@ -110,6 +110,8 @@ export interface SystemSettings {
   enable_fingerprint_unification: boolean
   enable_metadata_passthrough: boolean
   enable_cch_signing: boolean
+  // Client changelog entries
+  client_changelog_entries: ClientChangelogEntry[]
 }
 
 export interface UpdateSettingsRequest {
@@ -177,6 +179,8 @@ export interface UpdateSettingsRequest {
   enable_fingerprint_unification?: boolean
   enable_metadata_passthrough?: boolean
   enable_cch_signing?: boolean
+  // Client changelog entries
+  client_changelog_entries?: ClientChangelogEntry[]
 }
 
 /**

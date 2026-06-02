@@ -88,6 +88,14 @@ export interface CustomEndpoint {
   description: string
 }
 
+export interface ClientChangelogEntry {
+  version: string
+  published_at: string
+  title: string
+  items: string[]
+  enabled: boolean
+}
+
 export interface PublicSettings {
   registration_enabled: boolean
   email_verify_enabled: boolean
@@ -118,6 +126,7 @@ export interface PublicSettings {
   referral_enabled: boolean
   backend_mode_enabled: boolean
   version: string
+  client_changelog_entries: ClientChangelogEntry[]
 }
 
 export interface AuthResponse {

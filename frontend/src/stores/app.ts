@@ -358,7 +358,8 @@ export const useAppStore = defineStore('app', () => {
         referral_enabled: false,
         purchase_subscription_open_mode: 'iframe',
         backend_mode_enabled: false,
-        version: siteVersion.value
+        version: siteVersion.value,
+        client_changelog_entries: []
       }
     }
 
