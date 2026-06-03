@@ -695,7 +695,7 @@ const (
 	MaxChangelogItems   = 20
 	MaxChangelogVersion = 50
 	MaxChangelogTitle   = 200
-	MaxChangelogItemLen = 2000
+	MaxChangelogItemLen = 5000
 )
 
 // ValidateChangelogEntries validates a slice of changelog entries.
