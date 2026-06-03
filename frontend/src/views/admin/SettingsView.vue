@@ -2186,6 +2186,7 @@
                 v-for="(entry, index) in form.client_changelog_entries"
                 :key="index"
                 data-test="changelog-entry"
+                :data-changelog-entry="index"
                 class="rounded-lg border border-gray-200 p-4 dark:border-dark-600"
               >
                 <!-- Entry header -->
@@ -2616,8 +2617,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api'
 import type {
@@ -2644,6 +2643,7 @@ import {
   normalizeRegistrationEmailSuffixDomains,
   parseRegistrationEmailSuffixWhitelistInput
 } from '@/utils/registrationEmailPolicy'
+import { renderSafeMarkdown } from '@/utils/markdown'
 
 function normalizePurchaseSubscriptionOpenMode(mode?: string): string {
   const normalized = (mode || '').trim()
@@ -3041,9 +3041,7 @@ function toggleChangelogPreview(entryIndex: number, itemIndex: number) {
 }
 
 function renderChangelogPreview(content: string): string {
-  if (!content) return ''
-  const html = marked.parse(content, { breaks: true, gfm: true }) as string
-  return DOMPurify.sanitize(html)
+  return renderSafeMarkdown(content)
 }
 
 function normalizeChangelogEntries(
