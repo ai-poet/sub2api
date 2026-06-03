@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAppStore } from '@/stores/app'
+import { getPublicSettings } from '@/api/auth'
 
 // Mock API 模块
 vi.mock('@/api/admin/system', () => ({
@@ -12,9 +13,12 @@ vi.mock('@/api/auth', () => ({
 }))
 
 describe('useAppStore', () => {
+  const mockedGetPublicSettings = vi.mocked(getPublicSettings)
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.useFakeTimers()
+    mockedGetPublicSettings.mockReset()
     // 清除 window.__APP_CONFIG__
     delete (window as any).__APP_CONFIG__
   })
@@ -330,6 +334,59 @@ describe('useAppStore', () => {
 
       expect(result).toBe(true)
       expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('iframe')
+    })
+
+    it('注入配置存在延迟字段时会继续请求公开设置补齐', async () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = {
+        site_name: 'InjectedSite',
+        site_logo: '',
+        version: '1.0.0',
+        deferred_fields: ['site_logo'],
+      }
+      mockedGetPublicSettings.mockResolvedValue({
+        registration_enabled: false,
+        email_verify_enabled: false,
+        registration_email_suffix_whitelist: [],
+        promo_code_enabled: true,
+        password_reset_enabled: false,
+        invitation_code_enabled: false,
+        turnstile_enabled: false,
+        turnstile_site_key: '',
+        site_name: 'InjectedSite',
+        site_logo: 'data:image/png;base64,full-logo',
+        site_subtitle: '',
+        api_base_url: '',
+        contact_info: '',
+        doc_url: '',
+        home_content: '',
+        hide_ccs_import_button: false,
+        purchase_subscription_enabled: false,
+        purchase_subscription_url: '',
+        purchase_subscription_open_mode: 'iframe',
+        client_download_windows_url: '',
+        client_download_macos_url: '',
+        custom_menu_items: [],
+        custom_endpoints: [],
+        group_status_enabled: false,
+        linuxdo_oauth_enabled: false,
+        github_oauth_enabled: false,
+        referral_enabled: false,
+        backend_mode_enabled: false,
+        version: '1.0.0',
+        client_changelog_entries: [],
+      })
+
+      const store = useAppStore()
+      expect(store.initFromInjectedConfig()).toBe(true)
+      expect(store.siteName).toBe('InjectedSite')
+      expect(store.publicSettingsLoaded).toBe(false)
+
+      await store.fetchPublicSettings()
+
+      expect(mockedGetPublicSettings).toHaveBeenCalledTimes(1)
+      expect(store.publicSettingsLoaded).toBe(true)
+      expect(store.siteLogo).toBe('data:image/png;base64,full-logo')
     })
 
     it('无注入配置时返回 false', () => {

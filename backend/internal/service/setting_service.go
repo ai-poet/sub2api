@@ -33,6 +33,8 @@ var (
 	)
 )
 
+const maxInjectedSiteLogoBytes = 8 * 1024
+
 type SettingRepository interface {
 	Get(ctx context.Context, key string) (*Setting, error)
 	GetValue(ctx context.Context, key string) (string, error)
@@ -253,6 +255,13 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		return nil, err
 	}
 
+	injectedSiteLogo := settings.SiteLogo
+	deferredFields := make([]string, 0)
+	if len(injectedSiteLogo) > maxInjectedSiteLogoBytes {
+		injectedSiteLogo = ""
+		deferredFields = append(deferredFields, "site_logo")
+	}
+
 	// Return a struct that matches the frontend's expected format
 	return &struct {
 		RegistrationEnabled              bool                   `json:"registration_enabled"`
@@ -286,6 +295,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		BackendModeEnabled               bool                   `json:"backend_mode_enabled"`
 		Version                          string                 `json:"version,omitempty"`
 		ClientChangelogEntries           []ClientChangelogEntry `json:"client_changelog_entries"`
+		DeferredFields                   []string               `json:"deferred_fields,omitempty"`
 	}{
 		RegistrationEnabled:              settings.RegistrationEnabled,
 		EmailVerifyEnabled:               settings.EmailVerifyEnabled,
@@ -297,7 +307,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		TurnstileEnabled:                 settings.TurnstileEnabled,
 		TurnstileSiteKey:                 settings.TurnstileSiteKey,
 		SiteName:                         settings.SiteName,
-		SiteLogo:                         settings.SiteLogo,
+		SiteLogo:                         injectedSiteLogo,
 		SiteSubtitle:                     settings.SiteSubtitle,
 		APIBaseURL:                       settings.APIBaseURL,
 		ContactInfo:                      settings.ContactInfo,
@@ -318,6 +328,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		BackendModeEnabled:               settings.BackendModeEnabled,
 		Version:                          s.version,
 		ClientChangelogEntries:           settings.ClientChangelogEntries,
+		DeferredFields:                   deferredFields,
 	}, nil
 }
 

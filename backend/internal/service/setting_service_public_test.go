@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
@@ -79,6 +80,20 @@ func TestSettingService_GetPublicSettings_ExposesClientDownloadURLs(t *testing.T
 	require.Equal(t, "https://downloads.example.com/sub2api-mac.dmg", settings.ClientDownloadMacOSURL)
 }
 
+func TestSettingService_GetPublicSettings_ReturnsFullSiteLogo(t *testing.T) {
+	largeLogo := "data:image/png;base64," + strings.Repeat("A", maxInjectedSiteLogoBytes+1)
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeySiteLogo: largeLogo,
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, largeLogo, settings.SiteLogo)
+}
+
 func TestSettingService_GetPublicSettingsForInjection_IncludesClientDownloadURLs(t *testing.T) {
 	repo := &settingPublicRepoStub{
 		values: map[string]string{
@@ -118,6 +133,57 @@ func TestSettingService_GetPublicSettingsForInjection_IncludesClientDownloadURLs
 		"client_download_windows_url": "https://downloads.example.com/windows.exe",
 		"client_download_macos_url": "https://downloads.example.com/macos.dmg"
 	}`, string(encoded))
+}
+
+func TestSettingService_GetPublicSettingsForInjection_DefersLargeSiteLogo(t *testing.T) {
+	largeLogo := "data:image/png;base64," + strings.Repeat("A", maxInjectedSiteLogoBytes+1)
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeySiteLogo: largeLogo,
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	payload, err := svc.GetPublicSettingsForInjection(context.Background())
+	require.NoError(t, err)
+
+	encoded, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	var result struct {
+		SiteLogo       string   `json:"site_logo"`
+		DeferredFields []string `json:"deferred_fields"`
+	}
+	err = json.Unmarshal(encoded, &result)
+	require.NoError(t, err)
+	require.Empty(t, result.SiteLogo)
+	require.Equal(t, []string{"site_logo"}, result.DeferredFields)
+	require.NotContains(t, string(encoded), largeLogo)
+}
+
+func TestSettingService_GetPublicSettingsForInjection_IncludesSmallSiteLogo(t *testing.T) {
+	smallLogo := "data:image/png;base64,small-logo"
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeySiteLogo: smallLogo,
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	payload, err := svc.GetPublicSettingsForInjection(context.Background())
+	require.NoError(t, err)
+
+	encoded, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	var result struct {
+		SiteLogo       string   `json:"site_logo"`
+		DeferredFields []string `json:"deferred_fields"`
+	}
+	err = json.Unmarshal(encoded, &result)
+	require.NoError(t, err)
+	require.Equal(t, smallLogo, result.SiteLogo)
+	require.Empty(t, result.DeferredFields)
 }
 
 // ==================== Changelog Filtering Tests (UT-01) ====================

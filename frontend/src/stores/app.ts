@@ -24,6 +24,7 @@ export const useAppStore = defineStore('app', () => {
   // Public settings cache state
   const publicSettingsLoaded = ref<boolean>(false)
   const publicSettingsLoading = ref<boolean>(false)
+  const injectedConfigApplied = ref<boolean>(false)
   const siteName = ref<string>('Sub2API')
   const siteLogo = ref<string>('')
   const siteVersion = ref<string>('')
@@ -313,15 +314,27 @@ export const useAppStore = defineStore('app', () => {
     publicSettingsLoaded.value = true
   }
 
+  function applyInjectedSettings(config: PublicSettings): boolean {
+    applySettings(config)
+    injectedConfigApplied.value = true
+    const hasDeferredFields = (config.deferred_fields ?? []).length > 0
+    if (hasDeferredFields) {
+      publicSettingsLoaded.value = false
+    }
+    return hasDeferredFields
+  }
+
   /**
    * Fetch public settings (uses cache unless force=true)
    * @param force - Force refresh from API
    */
   async function fetchPublicSettings(force = false): Promise<PublicSettings | null> {
     // Check for injected config from server (eliminates flash)
-    if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__) {
-      applySettings(window.__APP_CONFIG__)
-      return cachedPublicSettings.value ? { ...cachedPublicSettings.value } : null
+    if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__ && !injectedConfigApplied.value) {
+      const hasDeferredFields = applyInjectedSettings(window.__APP_CONFIG__)
+      if (!hasDeferredFields) {
+        return cachedPublicSettings.value ? { ...cachedPublicSettings.value } : null
+      }
     }
 
     // Return cached data if available and not forcing refresh
@@ -387,6 +400,7 @@ export const useAppStore = defineStore('app', () => {
   function clearPublicSettingsCache(): void {
     publicSettingsLoaded.value = false
     cachedPublicSettings.value = null
+    injectedConfigApplied.value = false
   }
 
   /**
@@ -396,7 +410,7 @@ export const useAppStore = defineStore('app', () => {
    */
   function initFromInjectedConfig(): boolean {
     if (window.__APP_CONFIG__) {
-      applySettings(window.__APP_CONFIG__)
+      applyInjectedSettings(window.__APP_CONFIG__)
       return true
     }
     return false

@@ -127,6 +127,7 @@ export interface PublicSettings {
   backend_mode_enabled: boolean
   version: string
   client_changelog_entries: ClientChangelogEntry[]
+  deferred_fields?: string[]
 }
 
 export interface AuthResponse {

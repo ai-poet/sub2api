@@ -85,16 +85,16 @@
                   </h3>
 
                   <!-- Items -->
-                  <ul v-if="entry.items.length > 0" class="space-y-2">
+                  <ul v-if="entry.renderedItems.length > 0" class="space-y-2">
                     <li
-                      v-for="(item, itemIdx) in entry.items"
+                      v-for="(item, itemIdx) in entry.renderedItems"
                       :key="itemIdx"
                       class="flex items-start gap-2"
                     >
                       <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400 dark:bg-primary-500"></span>
                       <div
                         class="markdown-body prose prose-sm max-w-none text-sm text-[#555] dark:prose-invert dark:text-white/70"
-                        v-html="renderMarkdown(item)"
+                        v-html="item.html"
                       ></div>
                     </li>
                   </ul>
@@ -117,11 +117,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeHeader from '@/components/home/HomeHeader.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'
+import { renderSafeMarkdown } from '@/utils/markdown'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -131,7 +130,15 @@ const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appS
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const currentYear = computed(() => new Date().getFullYear())
 
-const entries = computed(() => appStore.cachedPublicSettings?.client_changelog_entries || [])
+const entries = computed(() =>
+  (appStore.cachedPublicSettings?.client_changelog_entries || []).map((entry) => ({
+    ...entry,
+    renderedItems: entry.items.map((item) => ({
+      source: item,
+      html: renderSafeMarkdown(item),
+    })),
+  }))
+)
 
 const isDark = ref(document.documentElement.classList.contains('dark'))
 
@@ -164,12 +171,6 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr
   }
-}
-
-function renderMarkdown(content: string): string {
-  if (!content) return ''
-  const html = marked.parse(content, { breaks: true, gfm: true }) as string
-  return DOMPurify.sanitize(html)
 }
 
 onMounted(() => {
