@@ -2307,10 +2307,17 @@
                           v-if="changelogPreviewIndex !== `${index}-${itemIdx}`"
                           v-model="entry.items[itemIdx]"
                           rows="2"
+                          maxlength="5000"
                           data-test="changelog-item-textarea"
                           class="input w-full text-sm"
                           :placeholder="t('admin.settings.changelog.itemPlaceholder')"
                         ></textarea>
+                        <p
+                          v-if="changelogPreviewIndex !== `${index}-${itemIdx}`"
+                          class="mt-1 text-right text-xs text-gray-400"
+                        >
+                          {{ entry.items[itemIdx]?.length || 0 }} / 5000
+                        </p>
                         <div
                           v-else
                           class="markdown-body prose prose-sm max-w-none rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-dark-600 dark:bg-dark-700 dark:prose-invert"
