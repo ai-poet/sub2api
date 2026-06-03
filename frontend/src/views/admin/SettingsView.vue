@@ -2319,11 +2319,11 @@
                         >
                           {{ entry.items[itemIdx]?.length || 0 }} / 5000
                         </p>
-                        <div
+                        <MarkdownRenderer
                           v-else
-                          class="markdown-body prose prose-sm max-w-none rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-dark-600 dark:bg-dark-700 dark:prose-invert"
-                          v-html="renderChangelogPreview(item)"
-                        ></div>
+                          :content="item"
+                          class-name="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-dark-600 dark:bg-dark-700 dark:text-gray-300"
+                        />
                       </div>
                       <div class="flex flex-col gap-1">
                         <button
@@ -2639,13 +2639,13 @@ import BackupSettings from '@/views/admin/BackupView.vue'
 import { useClipboard } from '@/composables/useClipboard'
 import { useAppStore } from '@/stores'
 import { useAdminSettingsStore } from '@/stores/adminSettings'
+import MarkdownRenderer from '@/components/common/MarkdownRenderer.vue'
 import {
   isRegistrationEmailSuffixDomainValid,
   normalizeRegistrationEmailSuffixDomain,
   normalizeRegistrationEmailSuffixDomains,
   parseRegistrationEmailSuffixWhitelistInput
 } from '@/utils/registrationEmailPolicy'
-import { renderSafeMarkdown } from '@/utils/markdown'
 
 function normalizePurchaseSubscriptionOpenMode(mode?: string): string {
   const normalized = (mode || '').trim()
@@ -3040,10 +3040,6 @@ function removeChangelogItem(entryIndex: number, itemIndex: number) {
 function toggleChangelogPreview(entryIndex: number, itemIndex: number) {
   const key = `${entryIndex}-${itemIndex}`
   changelogPreviewIndex.value = changelogPreviewIndex.value === key ? null : key
-}
-
-function renderChangelogPreview(content: string): string {
-  return renderSafeMarkdown(content)
 }
 
 function normalizeChangelogEntries(

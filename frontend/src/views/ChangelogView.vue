@@ -85,19 +85,19 @@
                   </h3>
 
                   <!-- Items -->
-                  <ul v-if="entry.renderedItems.length > 0" class="space-y-2">
-                    <li
+                  <div v-if="entry.items.length > 0" class="space-y-3">
+                    <div
                       v-for="(item, itemIdx) in entry.renderedItems"
                       :key="itemIdx"
                       class="flex items-start gap-2"
                     >
                       <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400 dark:bg-primary-500"></span>
-                      <div
-                        class="markdown-body prose prose-sm max-w-none text-sm text-[#555] dark:prose-invert dark:text-white/70"
-                        v-html="item.html"
-                      ></div>
-                    </li>
-                  </ul>
+                      <MarkdownRenderer
+                        :content="item.source"
+                        class-name="min-w-0 flex-1 text-sm text-[#555] dark:text-white/70"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -120,7 +120,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeHeader from '@/components/home/HomeHeader.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'
-import { renderSafeMarkdown } from '@/utils/markdown'
+import MarkdownRenderer from '@/components/common/MarkdownRenderer.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -135,7 +135,6 @@ const entries = computed(() =>
     ...entry,
     renderedItems: entry.items.map((item) => ({
       source: item,
-      html: renderSafeMarkdown(item),
     })),
   }))
 )
