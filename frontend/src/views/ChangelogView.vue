@@ -156,8 +156,10 @@ function syncThemeState() {
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return ''
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
   try {
     const d = new Date(dateStr + 'T00:00:00')
+    if (isNaN(d.getTime())) return dateStr
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
   } catch {
     return dateStr

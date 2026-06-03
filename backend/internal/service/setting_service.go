@@ -255,33 +255,33 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 
 	// Return a struct that matches the frontend's expected format
 	return &struct {
-		RegistrationEnabled              bool            `json:"registration_enabled"`
-		EmailVerifyEnabled               bool            `json:"email_verify_enabled"`
-		RegistrationEmailSuffixWhitelist []string        `json:"registration_email_suffix_whitelist"`
-		PromoCodeEnabled                 bool            `json:"promo_code_enabled"`
-		PasswordResetEnabled             bool            `json:"password_reset_enabled"`
-		InvitationCodeEnabled            bool            `json:"invitation_code_enabled"`
-		TotpEnabled                      bool            `json:"totp_enabled"`
-		TurnstileEnabled                 bool            `json:"turnstile_enabled"`
-		TurnstileSiteKey                 string          `json:"turnstile_site_key,omitempty"`
-		SiteName                         string          `json:"site_name"`
-		SiteLogo                         string          `json:"site_logo,omitempty"`
-		SiteSubtitle                     string          `json:"site_subtitle,omitempty"`
-		APIBaseURL                       string          `json:"api_base_url,omitempty"`
-		ContactInfo                      string          `json:"contact_info,omitempty"`
-		DocURL                           string          `json:"doc_url,omitempty"`
-		HomeContent                      string          `json:"home_content,omitempty"`
-		HideCcsImportButton              bool            `json:"hide_ccs_import_button"`
-		PurchaseSubscriptionEnabled      bool            `json:"purchase_subscription_enabled"`
-		PurchaseSubscriptionURL          string          `json:"purchase_subscription_url,omitempty"`
-		PurchaseSubscriptionOpenMode     string          `json:"purchase_subscription_open_mode"`
-		ClientDownloadWindowsURL         string          `json:"client_download_windows_url,omitempty"`
-		ClientDownloadMacOSURL           string          `json:"client_download_macos_url,omitempty"`
-		CustomMenuItems                  json.RawMessage `json:"custom_menu_items"`
-		CustomEndpoints                  json.RawMessage `json:"custom_endpoints"`
-		GroupStatusEnabled               bool            `json:"group_status_enabled"`
-		LinuxDoOAuthEnabled              bool            `json:"linuxdo_oauth_enabled"`
-		GitHubOAuthEnabled               bool            `json:"github_oauth_enabled"`
+		RegistrationEnabled              bool                   `json:"registration_enabled"`
+		EmailVerifyEnabled               bool                   `json:"email_verify_enabled"`
+		RegistrationEmailSuffixWhitelist []string               `json:"registration_email_suffix_whitelist"`
+		PromoCodeEnabled                 bool                   `json:"promo_code_enabled"`
+		PasswordResetEnabled             bool                   `json:"password_reset_enabled"`
+		InvitationCodeEnabled            bool                   `json:"invitation_code_enabled"`
+		TotpEnabled                      bool                   `json:"totp_enabled"`
+		TurnstileEnabled                 bool                   `json:"turnstile_enabled"`
+		TurnstileSiteKey                 string                 `json:"turnstile_site_key,omitempty"`
+		SiteName                         string                 `json:"site_name"`
+		SiteLogo                         string                 `json:"site_logo,omitempty"`
+		SiteSubtitle                     string                 `json:"site_subtitle,omitempty"`
+		APIBaseURL                       string                 `json:"api_base_url,omitempty"`
+		ContactInfo                      string                 `json:"contact_info,omitempty"`
+		DocURL                           string                 `json:"doc_url,omitempty"`
+		HomeContent                      string                 `json:"home_content,omitempty"`
+		HideCcsImportButton              bool                   `json:"hide_ccs_import_button"`
+		PurchaseSubscriptionEnabled      bool                   `json:"purchase_subscription_enabled"`
+		PurchaseSubscriptionURL          string                 `json:"purchase_subscription_url,omitempty"`
+		PurchaseSubscriptionOpenMode     string                 `json:"purchase_subscription_open_mode"`
+		ClientDownloadWindowsURL         string                 `json:"client_download_windows_url,omitempty"`
+		ClientDownloadMacOSURL           string                 `json:"client_download_macos_url,omitempty"`
+		CustomMenuItems                  json.RawMessage        `json:"custom_menu_items"`
+		CustomEndpoints                  json.RawMessage        `json:"custom_endpoints"`
+		GroupStatusEnabled               bool                   `json:"group_status_enabled"`
+		LinuxDoOAuthEnabled              bool                   `json:"linuxdo_oauth_enabled"`
+		GitHubOAuthEnabled               bool                   `json:"github_oauth_enabled"`
 		ReferralEnabled                  bool                   `json:"referral_enabled"`
 		BackendModeEnabled               bool                   `json:"backend_mode_enabled"`
 		Version                          string                 `json:"version,omitempty"`
@@ -582,11 +582,27 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyEnableCCHSigning] = strconv.FormatBool(settings.EnableCCHSigning)
 
 	// Client changelog entries
-	changelogJSON, err := json.Marshal(settings.ClientChangelogEntries)
+	// ClientChangelogEntries is a raw JSON string; unmarshal, validate, then marshal to avoid double-encoding
+	rawChangelog := strings.TrimSpace(settings.ClientChangelogEntries)
+	if rawChangelog == "" {
+		rawChangelog = "[]"
+	}
+	var changelogEntries []ClientChangelogEntry
+	if rawChangelog == "[]" {
+		changelogEntries = []ClientChangelogEntry{}
+	} else {
+		if err := json.Unmarshal([]byte(rawChangelog), &changelogEntries); err != nil {
+			return infraerrors.BadRequest("INVALID_CHANGELOG_JSON", "invalid changelog JSON: "+err.Error())
+		}
+	}
+	if err := ValidateChangelogEntries(changelogEntries); err != nil {
+		return err
+	}
+	normalizedChangelogJSON, err := json.Marshal(changelogEntries)
 	if err != nil {
 		return fmt.Errorf("marshal changelog entries: %w", err)
 	}
-	updates[SettingKeyClientChangelogEntries] = string(changelogJSON)
+	updates[SettingKeyClientChangelogEntries] = string(normalizedChangelogJSON)
 
 	err = s.settingRepo.SetMultiple(ctx, updates)
 	if err == nil {
@@ -673,25 +689,54 @@ func filterAndSortPublicChangelogEntries(raw string) []ClientChangelogEntry {
 	return filtered
 }
 
+// Changelog validation limits
+const (
+	MaxChangelogEntries = 50
+	MaxChangelogItems   = 20
+	MaxChangelogVersion = 50
+	MaxChangelogTitle   = 200
+	MaxChangelogItemLen = 2000
+)
+
 // ValidateChangelogEntries validates a slice of changelog entries.
 // Returns an error if any entry has invalid version, invalid date, or missing content.
+// Also enforces limits: entries count, items count, version/title/item length.
 func ValidateChangelogEntries(entries []ClientChangelogEntry) error {
+	if len(entries) > MaxChangelogEntries {
+		return infraerrors.BadRequest("INVALID_CHANGELOG_TOO_MANY_ENTRIES",
+			fmt.Sprintf("too many changelog entries (max %d)", MaxChangelogEntries))
+	}
 	for i, entry := range entries {
 		if strings.TrimSpace(entry.Version) == "" {
 			return infraerrors.BadRequest("INVALID_CHANGELOG_VERSION", fmt.Sprintf("changelog entry %d: version is required", i+1))
+		}
+		if len(entry.Version) > MaxChangelogVersion {
+			return infraerrors.BadRequest("INVALID_CHANGELOG_VERSION_TOO_LONG",
+				fmt.Sprintf("changelog entry %d: version too long (max %d characters)", i+1, MaxChangelogVersion))
 		}
 		if strings.TrimSpace(entry.PublishedAt) != "" {
 			if _, err := time.Parse("2006-01-02", strings.TrimSpace(entry.PublishedAt)); err != nil {
 				return infraerrors.BadRequest("INVALID_CHANGELOG_DATE", fmt.Sprintf("changelog entry %d: published_at must be YYYY-MM-DD format", i+1))
 			}
 		}
+		if len(entry.Title) > MaxChangelogTitle {
+			return infraerrors.BadRequest("INVALID_CHANGELOG_TITLE_TOO_LONG",
+				fmt.Sprintf("changelog entry %d: title too long (max %d characters)", i+1, MaxChangelogTitle))
+		}
+		if len(entry.Items) > MaxChangelogItems {
+			return infraerrors.BadRequest("INVALID_CHANGELOG_TOO_MANY_ITEMS",
+				fmt.Sprintf("changelog entry %d: too many items (max %d)", i+1, MaxChangelogItems))
+		}
 		// At least one of title or non-empty items must be present
 		hasTitle := strings.TrimSpace(entry.Title) != ""
 		hasItems := false
-		for _, item := range entry.Items {
+		for j, item := range entry.Items {
+			if len(item) > MaxChangelogItemLen {
+				return infraerrors.BadRequest("INVALID_CHANGELOG_ITEM_TOO_LONG",
+					fmt.Sprintf("changelog entry %d, item %d: item too long (max %d characters)", i+1, j+1, MaxChangelogItemLen))
+			}
 			if strings.TrimSpace(item) != "" {
 				hasItems = true
-				break
 			}
 		}
 		if !hasTitle && !hasItems {

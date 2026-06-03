@@ -5094,7 +5094,9 @@ export default {
         deleteConfirm: '确定删除这条日志吗？',
         emptyHint: '暂无日志条目，点击「新增日志」添加。',
         preview: '预览',
-        edit: '编辑'
+        edit: '编辑',
+        moveUp: '上移',
+        moveDown: '下移'
       },
       soraClient: {
         title: 'Sora 客户端',

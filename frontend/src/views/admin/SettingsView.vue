@@ -2159,6 +2159,7 @@
             <!-- Add Entry Button -->
             <button
               type="button"
+              data-test="changelog-add-entry"
               @click="addChangelogEntry"
               class="btn btn-secondary btn-sm"
             >
@@ -2171,6 +2172,7 @@
             <!-- Empty hint -->
             <div
               v-if="form.client_changelog_entries.length === 0"
+              data-test="changelog-empty-hint"
               class="rounded-lg border border-dashed border-gray-200 p-6 text-center dark:border-dark-600"
             >
               <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -2183,6 +2185,7 @@
               <div
                 v-for="(entry, index) in form.client_changelog_entries"
                 :key="index"
+                data-test="changelog-entry"
                 class="rounded-lg border border-gray-200 p-4 dark:border-dark-600"
               >
                 <!-- Entry header -->
@@ -2195,8 +2198,9 @@
                     <button
                       v-if="index > 0"
                       type="button"
+                      data-test="changelog-move-up"
                       class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700"
-                      :title="t('admin.settings.customMenu.moveUp')"
+                      :title="t('admin.settings.changelog.moveUp')"
                       @click="moveChangelogEntry(index, -1)"
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>
@@ -2205,8 +2209,9 @@
                     <button
                       v-if="index < form.client_changelog_entries.length - 1"
                       type="button"
+                      data-test="changelog-move-down"
                       class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700"
-                      :title="t('admin.settings.customMenu.moveDown')"
+                      :title="t('admin.settings.changelog.moveDown')"
                       @click="moveChangelogEntry(index, 1)"
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
@@ -2216,6 +2221,7 @@
                       <input
                         v-model="entry.enabled"
                         type="checkbox"
+                        data-test="changelog-enabled-toggle"
                         class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                       />
                       <span class="text-xs text-gray-600 dark:text-gray-400">{{ t('admin.settings.changelog.enabled') }}</span>
@@ -2223,6 +2229,7 @@
                     <!-- Delete -->
                     <button
                       type="button"
+                      data-test="changelog-delete-entry"
                       class="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
                       :title="t('admin.settings.changelog.delete')"
                       @click="removeChangelogEntry(index)"
@@ -2241,6 +2248,7 @@
                     <input
                       v-model="entry.version"
                       type="text"
+                      data-test="changelog-version-input"
                       class="input text-sm"
                       :placeholder="t('admin.settings.changelog.versionPlaceholder')"
                     />
@@ -2252,6 +2260,7 @@
                     <input
                       v-model="entry.published_at"
                       type="date"
+                      data-test="changelog-published-at-input"
                       class="input text-sm"
                     />
                   </div>
@@ -2264,6 +2273,7 @@
                   <input
                     v-model="entry.title"
                     type="text"
+                    data-test="changelog-title-input"
                     class="input text-sm"
                     :placeholder="t('admin.settings.changelog.titlePlaceholder')"
                   />
@@ -2277,6 +2287,7 @@
                     </label>
                     <button
                       type="button"
+                      data-test="changelog-add-item"
                       @click="addChangelogItem(index)"
                       class="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400"
                     >
@@ -2294,6 +2305,7 @@
                           v-if="changelogPreviewIndex !== `${index}-${itemIdx}`"
                           v-model="entry.items[itemIdx]"
                           rows="2"
+                          data-test="changelog-item-textarea"
                           class="input w-full text-sm"
                           :placeholder="t('admin.settings.changelog.itemPlaceholder')"
                         ></textarea>
@@ -2306,6 +2318,7 @@
                       <div class="flex flex-col gap-1">
                         <button
                           type="button"
+                          data-test="changelog-preview-toggle"
                           class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700"
                           :title="changelogPreviewIndex === `${index}-${itemIdx}` ? t('admin.settings.changelog.edit') : t('admin.settings.changelog.preview')"
                           @click="toggleChangelogPreview(index, itemIdx)"
@@ -2320,6 +2333,7 @@
                         </button>
                         <button
                           type="button"
+                          data-test="changelog-delete-item"
                           class="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
                           :title="t('admin.settings.changelog.delete')"
                           @click="removeChangelogItem(index, itemIdx)"

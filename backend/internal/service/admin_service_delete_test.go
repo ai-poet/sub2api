@@ -113,6 +113,10 @@ func (s *userRepoStub) DisableTotp(ctx context.Context, userID int64) error {
 	panic("unexpected DisableTotp call")
 }
 
+func (s *userRepoStub) GetByReferralCode(ctx context.Context, code string) (*User, error) {
+	panic("unexpected GetByReferralCode call")
+}
+
 type groupRepoStub struct {
 	affectedUserIDs []int64
 	deleteErr       error
