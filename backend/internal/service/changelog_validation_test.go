@@ -141,3 +141,110 @@ func TestValidateChangelogEntries(t *testing.T) {
 		})
 	}
 }
+
+// helper: create n valid changelog entries
+func makeValidChangelogEntries(n int) []ClientChangelogEntry {
+	entries := make([]ClientChangelogEntry, n)
+	for i := range entries {
+		entries[i] = ClientChangelogEntry{
+			Version:     "1.0." + string(rune('0'+i%10)),
+			PublishedAt: "2026-01-01",
+			Title:       "Entry",
+			Items:       []string{"item"},
+			Enabled:     true,
+		}
+	}
+	return entries
+}
+
+func TestValidateChangelogEntries_BoundaryEntryCount(t *testing.T) {
+	t.Run("at limit is valid", func(t *testing.T) {
+		err := ValidateChangelogEntries(makeValidChangelogEntries(MaxChangelogEntries))
+		require.NoError(t, err)
+	})
+	t.Run("over limit is invalid", func(t *testing.T) {
+		err := ValidateChangelogEntries(makeValidChangelogEntries(MaxChangelogEntries + 1))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "INVALID_CHANGELOG_TOO_MANY_ENTRIES")
+	})
+}
+
+func TestValidateChangelogEntries_BoundaryVersionLength(t *testing.T) {
+	t.Run("at limit is valid", func(t *testing.T) {
+		entries := []ClientChangelogEntry{
+			{Version: string(make([]byte, MaxChangelogVersion)), PublishedAt: "2026-01-01", Title: "A", Items: []string{"a"}, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.NoError(t, err)
+	})
+	t.Run("over limit is invalid", func(t *testing.T) {
+		entries := []ClientChangelogEntry{
+			{Version: string(make([]byte, MaxChangelogVersion+1)), PublishedAt: "2026-01-01", Title: "A", Items: []string{"a"}, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "INVALID_CHANGELOG_VERSION_TOO_LONG")
+	})
+}
+
+func TestValidateChangelogEntries_BoundaryTitleLength(t *testing.T) {
+	t.Run("at limit is valid", func(t *testing.T) {
+		entries := []ClientChangelogEntry{
+			{Version: "1.0", PublishedAt: "2026-01-01", Title: string(make([]byte, MaxChangelogTitle)), Items: []string{"a"}, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.NoError(t, err)
+	})
+	t.Run("over limit is invalid", func(t *testing.T) {
+		entries := []ClientChangelogEntry{
+			{Version: "1.0", PublishedAt: "2026-01-01", Title: string(make([]byte, MaxChangelogTitle+1)), Items: []string{"a"}, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "INVALID_CHANGELOG_TITLE_TOO_LONG")
+	})
+}
+
+func TestValidateChangelogEntries_BoundaryItemsCount(t *testing.T) {
+	t.Run("at limit is valid", func(t *testing.T) {
+		items := make([]string, MaxChangelogItems)
+		for i := range items {
+			items[i] = "item"
+		}
+		entries := []ClientChangelogEntry{
+			{Version: "1.0", PublishedAt: "2026-01-01", Title: "A", Items: items, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.NoError(t, err)
+	})
+	t.Run("over limit is invalid", func(t *testing.T) {
+		items := make([]string, MaxChangelogItems+1)
+		for i := range items {
+			items[i] = "item"
+		}
+		entries := []ClientChangelogEntry{
+			{Version: "1.0", PublishedAt: "2026-01-01", Title: "A", Items: items, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "INVALID_CHANGELOG_TOO_MANY_ITEMS")
+	})
+}
+
+func TestValidateChangelogEntries_BoundaryItemLength(t *testing.T) {
+	t.Run("at limit is valid", func(t *testing.T) {
+		entries := []ClientChangelogEntry{
+			{Version: "1.0", PublishedAt: "2026-01-01", Title: "A", Items: []string{string(make([]byte, MaxChangelogItemLen))}, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.NoError(t, err)
+	})
+	t.Run("over limit is invalid", func(t *testing.T) {
+		entries := []ClientChangelogEntry{
+			{Version: "1.0", PublishedAt: "2026-01-01", Title: "A", Items: []string{string(make([]byte, MaxChangelogItemLen+1))}, Enabled: true},
+		}
+		err := ValidateChangelogEntries(entries)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "INVALID_CHANGELOG_ITEM_TOO_LONG")
+	})
+}

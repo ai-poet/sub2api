@@ -3,9 +3,12 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -79,4 +82,72 @@ func TestSettingService_parseSettings_EmptyChangelogKey(t *testing.T) {
 	settings := map[string]string{}
 	result := svc.parseSettings(settings)
 	require.Empty(t, result.ClientChangelogEntries)
+}
+
+// ==================== UpdateSettings Changelog Validation (UT-07) ====================
+
+func TestSettingService_UpdateSettings_InvalidChangelogRejected(t *testing.T) {
+	repo := &settingUpdateRepoStub{}
+	svc := NewSettingService(repo, &config.Config{})
+
+	err := svc.UpdateSettings(context.Background(), &SystemSettings{
+		ClientChangelogEntries: `[{"version":"","title":"","items":[],"enabled":true}]`,
+	})
+	require.Error(t, err)
+	require.Equal(t, "INVALID_CHANGELOG_VERSION", infraerrors.Reason(err))
+	require.Nil(t, repo.updates)
+}
+
+func TestSettingService_UpdateSettings_EmptyChangelogStringTreatedAsEmptyArray(t *testing.T) {
+	repo := &settingUpdateRepoStub{}
+	svc := NewSettingService(repo, &config.Config{})
+
+	err := svc.UpdateSettings(context.Background(), &SystemSettings{
+		ClientChangelogEntries: "",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "[]", repo.updates[SettingKeyClientChangelogEntries])
+}
+
+func TestSettingService_UpdateSettings_ValidChangelogStoredWithoutDoubleEncoding(t *testing.T) {
+	repo := &settingUpdateRepoStub{}
+	svc := NewSettingService(repo, &config.Config{})
+
+	input := `[{"version":"1.0","title":"First","items":["a"],"enabled":true}]`
+	err := svc.UpdateSettings(context.Background(), &SystemSettings{
+		ClientChangelogEntries: input,
+	})
+	require.NoError(t, err)
+
+	stored := repo.updates[SettingKeyClientChangelogEntries]
+	// Should be valid JSON
+	require.True(t, json.Valid([]byte(stored)))
+	// Should unmarshal directly into []ClientChangelogEntry
+	var entries []ClientChangelogEntry
+	require.NoError(t, json.Unmarshal([]byte(stored), &entries))
+	require.Len(t, entries, 1)
+	require.Equal(t, "1.0", entries[0].Version)
+	// Must NOT be a JSON-encoded string (no leading quote)
+	require.False(t, len(stored) > 0 && stored[0] == '"', "stored value must not be double-encoded")
+}
+
+func TestSettingService_UpdateSettings_DoubleEncodingRegression(t *testing.T) {
+	repo := &settingUpdateRepoStub{}
+	svc := NewSettingService(repo, &config.Config{})
+
+	input := `[{"version":"1.0","published_at":"2026-01-01","title":"Test","items":["feature"],"enabled":true}]`
+	err := svc.UpdateSettings(context.Background(), &SystemSettings{
+		ClientChangelogEntries: input,
+	})
+	require.NoError(t, err)
+
+	stored := repo.updates[SettingKeyClientChangelogEntries]
+	// json.Valid returns true for the raw stored value
+	require.True(t, json.Valid([]byte(stored)))
+	// Unmarshal to []ClientChangelogEntry succeeds
+	var entries []ClientChangelogEntry
+	require.NoError(t, json.Unmarshal([]byte(stored), &entries))
+	require.Len(t, entries, 1)
+	// Stored value is NOT a JSON string (does not start with ")
+	require.False(t, len(stored) > 0 && stored[0] == '"', "double-encoding detected: value starts with quote")
 }

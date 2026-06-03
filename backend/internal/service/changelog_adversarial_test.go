@@ -46,9 +46,10 @@ func TestFilterAndSortPublicChangelogEntries_WhitespaceItems(t *testing.T) {
 }
 
 // TestFilterAndSortPublicChangelogEntries_LargeInput verifies behavior with many entries.
+// Uses 50 total entries (25 enabled + 25 disabled) to align with the validation-layer limit.
 func TestFilterAndSortPublicChangelogEntries_LargeInput(t *testing.T) {
-	entries := make([]ClientChangelogEntry, 100)
-	for i := 0; i < 100; i++ {
+	entries := make([]ClientChangelogEntry, 50)
+	for i := 0; i < 50; i++ {
 		entries[i] = ClientChangelogEntry{
 			Version:     "1.0." + string(rune('0'+i%10)),
 			PublishedAt: "2026-01-" + string(rune('0'+(i%28)+1)),
@@ -61,7 +62,7 @@ func TestFilterAndSortPublicChangelogEntries_LargeInput(t *testing.T) {
 
 	result := filterAndSortPublicChangelogEntries(string(raw))
 	// Only even-indexed entries are enabled
-	require.Len(t, result, 50)
+	require.Len(t, result, 25)
 }
 
 // TestFilterAndSortPublicChangelogEntries_NullDateHandling handles null published_at from JSON.
@@ -106,7 +107,7 @@ func TestValidateChangelogEntries_UnicodeContent(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestValidateChangelogEntries_VeryLongVersion verifies very long version strings are accepted.
+// TestValidateChangelogEntries_VeryLongVersion verifies very long version strings are rejected.
 func TestValidateChangelogEntries_VeryLongVersion(t *testing.T) {
 	entries := []ClientChangelogEntry{
 		{
@@ -118,7 +119,8 @@ func TestValidateChangelogEntries_VeryLongVersion(t *testing.T) {
 		},
 	}
 	err := ValidateChangelogEntries(entries)
-	require.NoError(t, err)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "INVALID_CHANGELOG_VERSION_TOO_LONG")
 }
 
 // TestValidateChangelogEntries_MultipleErrors verifies only the first error is returned.
@@ -138,13 +140,13 @@ func TestParseClientChangelogEntries_MalformedJSON(t *testing.T) {
 		input string
 		want  int
 	}{
-		{`[`, 0},                    // incomplete JSON array
-		{`[{`, 0},                   // incomplete object
-		{`[{}]`, 1},                 // valid array with empty object
-		{`not json at all`, 0},      // completely invalid
-		{`null`, 0},                 // null
-		{`{"version":"1.0"}`, 0},    // object instead of array
-		{`[1,2,3]`, 0},              // array of wrong type
+		{`[`, 0},                 // incomplete JSON array
+		{`[{`, 0},                // incomplete object
+		{`[{}]`, 1},              // valid array with empty object
+		{`not json at all`, 0},   // completely invalid
+		{`null`, 0},              // null
+		{`{"version":"1.0"}`, 0}, // object instead of array
+		{`[1,2,3]`, 0},           // array of wrong type
 	}
 
 	for _, tt := range tests {
@@ -192,4 +194,65 @@ func TestFilterAndSortPublicChangelogEntries_SameDateStableSort(t *testing.T) {
 	require.Equal(t, "1.0", result[0].Version)
 	require.Equal(t, "1.1", result[1].Version)
 	require.Equal(t, "1.2", result[2].Version)
+}
+
+// TestValidateChangelogEntries_TooManyEntries verifies entries exceeding MaxChangelogEntries are rejected.
+func TestValidateChangelogEntries_TooManyEntries(t *testing.T) {
+	entries := make([]ClientChangelogEntry, MaxChangelogEntries+1)
+	for i := range entries {
+		entries[i] = ClientChangelogEntry{
+			Version:     "1.0",
+			PublishedAt: "2026-01-01",
+			Title:       "Entry",
+			Items:       []string{"item"},
+			Enabled:     true,
+		}
+	}
+	err := ValidateChangelogEntries(entries)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "INVALID_CHANGELOG_TOO_MANY_ENTRIES")
+}
+
+// TestValidateChangelogEntries_TooManyItems verifies items exceeding MaxChangelogItems are rejected.
+func TestValidateChangelogEntries_TooManyItems(t *testing.T) {
+	items := make([]string, MaxChangelogItems+1)
+	for i := range items {
+		items[i] = "item"
+	}
+	entries := []ClientChangelogEntry{
+		{Version: "1.0", PublishedAt: "2026-01-01", Title: "A", Items: items, Enabled: true},
+	}
+	err := ValidateChangelogEntries(entries)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "INVALID_CHANGELOG_TOO_MANY_ITEMS")
+}
+
+// TestValidateChangelogEntries_VersionTooLong verifies version exceeding MaxChangelogVersion is rejected.
+func TestValidateChangelogEntries_VersionTooLong(t *testing.T) {
+	entries := []ClientChangelogEntry{
+		{Version: strings.Repeat("v", MaxChangelogVersion+1), PublishedAt: "2026-01-01", Title: "A", Items: []string{"item"}, Enabled: true},
+	}
+	err := ValidateChangelogEntries(entries)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "INVALID_CHANGELOG_VERSION_TOO_LONG")
+}
+
+// TestValidateChangelogEntries_TitleTooLong verifies title exceeding MaxChangelogTitle is rejected.
+func TestValidateChangelogEntries_TitleTooLong(t *testing.T) {
+	entries := []ClientChangelogEntry{
+		{Version: "1.0", PublishedAt: "2026-01-01", Title: strings.Repeat("t", MaxChangelogTitle+1), Items: []string{"item"}, Enabled: true},
+	}
+	err := ValidateChangelogEntries(entries)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "INVALID_CHANGELOG_TITLE_TOO_LONG")
+}
+
+// TestValidateChangelogEntries_ItemTooLong verifies an item exceeding MaxChangelogItemLen is rejected.
+func TestValidateChangelogEntries_ItemTooLong(t *testing.T) {
+	entries := []ClientChangelogEntry{
+		{Version: "1.0", PublishedAt: "2026-01-01", Title: "A", Items: []string{strings.Repeat("i", MaxChangelogItemLen+1)}, Enabled: true},
+	}
+	err := ValidateChangelogEntries(entries)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "INVALID_CHANGELOG_ITEM_TOO_LONG")
 }

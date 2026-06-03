@@ -4816,7 +4816,9 @@ export default {
         deleteConfirm: 'Are you sure you want to delete this entry?',
         emptyHint: 'No changelog entries yet. Click "Add Entry" to create one.',
         preview: 'Preview',
-        edit: 'Edit'
+        edit: 'Edit',
+        moveUp: 'Move Up',
+        moveDown: 'Move Down'
       },
       soraClient: {
         title: 'Sora Client',
