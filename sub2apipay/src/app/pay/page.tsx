@@ -205,7 +205,12 @@ function PayContent() {
         setOrdersHasMore(false);
       }
 
-      const cfgRes = await fetch(buildAppApiPath(`/api/user?user_id=${meId}&token=${encodeURIComponent(token)}`));
+      const cfgParams = new URLSearchParams({
+        user_id: String(meId),
+        token,
+        lang: locale,
+      });
+      const cfgRes = await fetch(buildAppApiPath(`/api/user?${cfgParams.toString()}`));
       if (cfgRes.ok) {
         const cfgData = await cfgRes.json();
         if (cfgData.config) {

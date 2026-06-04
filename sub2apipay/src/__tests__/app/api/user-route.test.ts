@@ -8,6 +8,7 @@ const mockQueryMethodLimits = vi.fn();
 const mockGetSupportedTypes = vi.fn();
 const mockFindManyProviderInstances = vi.fn();
 const mockGetVisiblePaymentTypes = vi.fn();
+const mockResolveLocale = vi.fn();
 
 vi.mock('@/lib/sub2api/client', () => ({
   getCurrentUserByToken: (...args: unknown[]) => mockGetCurrentUserByToken(...args),
@@ -72,7 +73,7 @@ vi.mock('@/lib/pay-utils', () => ({
 }));
 
 vi.mock('@/lib/locale', () => ({
-  resolveLocale: () => 'zh',
+  resolveLocale: (...args: unknown[]) => mockResolveLocale(...args),
 }));
 
 vi.mock('@/lib/system-config', () => ({
@@ -108,6 +109,7 @@ describe('GET /api/user', () => {
     vi.clearAllMocks();
     mockGetCurrentUserByToken.mockResolvedValue({ id: 1, status: 'active' });
     mockGetUser.mockResolvedValue({ id: 1, status: 'active' });
+    mockResolveLocale.mockReturnValue('zh');
     mockGetSupportedTypes.mockReturnValue(['alipay', 'wxpay', 'stripe']);
     mockFindManyProviderInstances.mockResolvedValue([]);
     mockGetVisiblePaymentTypes.mockResolvedValue(['alipay', 'wxpay', 'stripe']);
@@ -155,6 +157,28 @@ describe('GET /api/user', () => {
     mockGetCurrentUserByToken.mockResolvedValue({ id: 999, status: 'active' });
     const res = await GET(createRequest());
     expect(res.status).toBe(403);
+  });
+
+  it('ignores Accept-Language when lang is not provided', async () => {
+    const response = await GET(
+      new NextRequest('https://pay.example.com/api/user?user_id=1&token=test-token', {
+        headers: { 'Accept-Language': 'en-US,en;q=0.9' },
+      }),
+    );
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockResolveLocale).toHaveBeenCalledWith(null);
+    expect(mockGetVisiblePaymentTypes).toHaveBeenCalledWith();
+    expect(data.config.enabledPaymentTypes).toEqual(['alipay', 'wxpay', 'stripe']);
+  });
+
+  it('uses explicit lang only for localized response text', async () => {
+    const response = await GET(createRequest({ lang: 'en' }));
+
+    expect(response.status).toBe(200);
+    expect(mockResolveLocale).toHaveBeenCalledWith('en');
+    expect(mockGetVisiblePaymentTypes).toHaveBeenCalledWith();
   });
 
   it('returns 404 for USER_NOT_FOUND', async () => {

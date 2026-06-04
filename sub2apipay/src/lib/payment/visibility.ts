@@ -1,11 +1,7 @@
-import type { Locale } from '@/lib/locale';
 import { prisma } from '@/lib/db';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import { getSystemConfig } from '@/lib/system-config';
 import { resolveEnabledPaymentTypes } from '@/lib/payment/resolve-enabled-types';
-
-const EASY_PAY_FIAT_TYPES = new Set(['alipay', 'wxpay']);
-const EASY_PAY_CRYPTO_TYPES = new Set(['usdt.plasma', 'usdt.polygon', 'usdc.solana']);
 
 function getProviderKeyForType(type: string): string | undefined {
   const registry = paymentRegistry as {
@@ -28,17 +24,7 @@ function getProviderKeyForType(type: string): string | undefined {
   return type || undefined;
 }
 
-function filterEasyPayTypesByLocale(types: string[], locale: Locale): string[] {
-  const isZh = locale === 'zh';
-  return types.filter((type) => {
-    if (EASY_PAY_FIAT_TYPES.has(type)) return isZh;
-    if (type === 'bank') return !isZh;
-    if (EASY_PAY_CRYPTO_TYPES.has(type)) return false;
-    return false;
-  });
-}
-
-export async function getVisiblePaymentTypes(locale?: Locale): Promise<string[]> {
+export async function getVisiblePaymentTypes(): Promise<string[]> {
   await ensureDBProviders();
 
   const supportedTypes = paymentRegistry.getSupportedTypes();
@@ -72,5 +58,5 @@ export async function getVisiblePaymentTypes(locale?: Locale): Promise<string[]>
     });
   });
 
-  return locale ? filterEasyPayTypesByLocale(visible, locale) : visible;
+  return visible;
 }

@@ -15,7 +15,7 @@ import {
 } from '@/lib/currency';
 
 export async function GET(request: NextRequest) {
-  const locale = resolveLocale(request.nextUrl.searchParams.get('lang') || request.headers.get('accept-language'));
+  const locale = resolveLocale(request.nextUrl.searchParams.get('lang'));
   const userId = Number(request.nextUrl.searchParams.get('user_id'));
   if (!userId || isNaN(userId) || userId <= 0) {
     return NextResponse.json({ error: locale === 'en' ? 'Invalid user ID' : '无效的用户 ID' }, { status: 400 });
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const env = getEnv();
 
     const configPromise = Promise.all([
-      getVisiblePaymentTypes(locale),
+      getVisiblePaymentTypes(),
       getSystemConfig('BALANCE_PAYMENT_DISABLED'),
       getSystemConfig('MAX_PENDING_ORDERS'),
       getSystemConfig('RECHARGE_MIN_AMOUNT'),
