@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: backend
+title: AI 网关与订阅管理服务
+scope:
+    - backend/
+source_files: []
+depends_on: []
+related_to:
+    - path: frontend
+    - path: sub2apipay

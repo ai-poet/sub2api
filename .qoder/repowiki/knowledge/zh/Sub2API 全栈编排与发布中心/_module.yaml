@@ -1,0 +1,23 @@
+schema_version: 1
+module_path: ""
+title: Sub2API 全栈编排与发布中心
+scope:
+    - README.md
+    - Makefile
+    - Dockerfile
+    - Dockerfile.goreleaser
+    - .goreleaser.yaml
+    - .goreleaser.simple.yaml
+    - AGENTS.md
+    - CLAUDE.md
+    - DEV_GUIDE.md
+    - README_CN.md
+    - README_JA.md
+    - .dockerignore
+    - .gitattributes
+    - .gitignore
+    - .github/
+    - LICENSE
+source_files: []
+depends_on: []
+related_to: []

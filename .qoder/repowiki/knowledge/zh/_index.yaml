@@ -1,0 +1,70 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: cheap-router
+exported_at: "2026-06-04T09:18:21Z"
+modules:
+    "":
+        dir_name: Sub2API 全栈编排与发布中心
+        title: Sub2API 全栈编排与发布中心
+        scope:
+            - README.md
+            - Makefile
+            - Dockerfile
+            - Dockerfile.goreleaser
+            - .goreleaser.yaml
+            - .goreleaser.simple.yaml
+            - AGENTS.md
+            - CLAUDE.md
+            - DEV_GUIDE.md
+            - README_CN.md
+            - README_JA.md
+            - .dockerignore
+            - .gitattributes
+            - .gitignore
+            - .github/
+            - LICENSE
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    backend:
+        dir_name: AI 网关与订阅管理服务
+        title: AI 网关与订阅管理服务
+        scope:
+            - backend/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: frontend
+            - path: sub2apipay
+    deploy:
+        dir_name: Sub2API 部署与运维编排
+        title: Sub2API 部署与运维编排
+        scope:
+            - deploy/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    frontend:
+        dir_name: Sub2API 前端应用
+        title: Sub2API 前端应用
+        scope:
+            - frontend/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: backend
+    sub2apipay:
+        dir_name: Sub2API 支付网关与订阅管理
+        title: Sub2API 支付网关与订阅管理
+        scope:
+            - sub2apipay/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: backend

@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: sub2apipay
+title: Sub2API 支付网关与订阅管理
+scope:
+    - sub2apipay/
+source_files: []
+depends_on: []
+related_to:
+    - path: backend
