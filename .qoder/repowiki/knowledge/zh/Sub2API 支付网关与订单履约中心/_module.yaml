@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: sub2apipay
-title: Sub2API 支付网关与订阅管理
+title: Sub2API 支付网关与订单履约中心
 scope:
     - sub2apipay/
 source_files: []

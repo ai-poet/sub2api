@@ -1,0 +1,22 @@
+schema_version: 1
+module_path: ""
+title: Sub2API 全栈交付与运维编排
+scope:
+    - .dockerignore
+    - .gitattributes
+    - .gitignore
+    - .goreleaser.simple.yaml
+    - .goreleaser.yaml
+    - AGENTS.md
+    - CLAUDE.md
+    - DEV_GUIDE.md
+    - Dockerfile
+    - Dockerfile.goreleaser
+    - LICENSE
+    - Makefile
+    - README.md
+    - README_CN.md
+    - README_JA.md
+source_files: []
+depends_on: []
+related_to: []

@@ -2,28 +2,27 @@
 schema_version: 1
 locale: zh-CN
 branch: cheap-router
-exported_at: "2026-06-04T09:18:21Z"
+exported_at: "2026-06-04T12:55:51Z"
 modules:
     "":
-        dir_name: Sub2API 全栈编排与发布中心
-        title: Sub2API 全栈编排与发布中心
+        dir_name: Sub2API 全栈交付与运维编排
+        title: Sub2API 全栈交付与运维编排
         scope:
-            - README.md
-            - Makefile
-            - Dockerfile
-            - Dockerfile.goreleaser
-            - .goreleaser.yaml
-            - .goreleaser.simple.yaml
-            - AGENTS.md
-            - CLAUDE.md
-            - DEV_GUIDE.md
-            - README_CN.md
-            - README_JA.md
             - .dockerignore
             - .gitattributes
             - .gitignore
-            - .github/
+            - .goreleaser.simple.yaml
+            - .goreleaser.yaml
+            - AGENTS.md
+            - CLAUDE.md
+            - DEV_GUIDE.md
+            - Dockerfile
+            - Dockerfile.goreleaser
             - LICENSE
+            - Makefile
+            - README.md
+            - README_CN.md
+            - README_JA.md
         source_files: []
         children: []
         depends_on: []
@@ -59,8 +58,8 @@ modules:
         related_to:
             - path: backend
     sub2apipay:
-        dir_name: Sub2API 支付网关与订阅管理
-        title: Sub2API 支付网关与订阅管理
+        dir_name: Sub2API 支付网关与订单履约中心
+        title: Sub2API 支付网关与订单履约中心
         scope:
             - sub2apipay/
         source_files: []

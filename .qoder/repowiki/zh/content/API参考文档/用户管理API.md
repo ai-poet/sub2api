@@ -15,7 +15,19 @@
 - [frontend/src/views/user/ProfileView.vue](file://frontend/src/views/user/ProfileView.vue)
 - [frontend/src/api/admin/users.ts](file://frontend/src/api/admin/users.ts)
 - [frontend/src/api/subscriptions.ts](file://frontend/src/api/subscriptions.ts)
+- [frontend/src/api/client.ts](file://frontend/src/api/client.ts)
+- [backend/internal/service/header_util.go](file://backend/internal/service/header_util.go)
+- [backend/internal/service/openai_gateway_service.go](file://backend/internal/service/openai_gateway_service.go)
+- [backend/internal/repository/claude_oauth_service.go](file://backend/internal/repository/claude_oauth_service.go)
 </cite>
+
+## 更新摘要
+**所做更改**
+- 新增语言参数处理章节，说明本地化参数处理逻辑改进
+- 更新用户资料与个人设置章节，增加lang参数说明
+- 更新管理员用户管理与余额章节，增加lang参数说明
+- 更新API使用示例，补充语言参数使用说明
+- 新增语言参数处理的技术细节说明
 
 ## 目录
 1. [简介](#简介)
@@ -23,14 +35,17 @@
 3. [核心组件](#核心组件)
 4. [架构总览](#架构总览)
 5. [详细组件分析](#详细组件分析)
-6. [依赖分析](#依赖分析)
-7. [性能考虑](#性能考虑)
-8. [故障排除指南](#故障排除指南)
-9. [结论](#结论)
-10. [附录](#附录)
+6. [语言参数处理机制](#语言参数处理机制)
+7. [依赖分析](#依赖分析)
+8. [性能考虑](#性能考虑)
+9. [故障排除指南](#故障排除指南)
+10. [结论](#结论)
+11. [附录](#附录)
 
 ## 简介
 本文件系统化梳理用户管理API的设计与实现，覆盖用户资料管理、个人设置、自定义属性配置、余额查询与变动记录等能力，并明确请求参数校验、响应数据结构、权限控制机制。同时给出用户自助服务的API使用示例，说明与订阅系统的关联关系及数据一致性保障。
+
+**重要更新**：用户管理API现已改进本地化参数处理逻辑，移除了对Accept-Language头的依赖，现在仅基于显式lang参数进行语言控制。
 
 ## 项目结构
 用户管理API由后端路由层、处理器层、服务层与数据库迁移共同组成，前端通过API客户端调用后端接口，形成完整的用户自助与后台管理闭环。
@@ -41,6 +56,7 @@ subgraph "前端"
 FE_Profile["用户资料页面<br/>ProfileView.vue"]
 FE_AdminUsers["管理员用户管理API<br/>admin/users.ts"]
 FE_Subscriptions["订阅API<br/>subscriptions.ts"]
+FE_Client["API客户端<br/>client.ts"]
 end
 subgraph "后端"
 RT_User["用户路由<br/>routes/user.go"]
@@ -48,6 +64,8 @@ RT_Admin["管理员路由<br/>routes/admin.go"]
 H_User["用户处理器<br/>user_handler.go"]
 H_Admin["管理员处理器<br/>admin/user_handler.go"]
 S_Attr["用户属性服务<br/>user_attribute_service.go"]
+S_Header["头部处理服务<br/>header_util.go"]
+S_Gateway["网关服务<br/>openai_gateway_service.go"]
 end
 subgraph "数据层"
 M_Attr["用户属性迁移<br/>018_user_attributes.sql"]
@@ -58,11 +76,14 @@ end
 FE_Profile --> RT_User
 FE_AdminUsers --> RT_Admin
 FE_Subscriptions --> RT_User
+FE_Client --> RT_User
 RT_User --> H_User
 RT_Admin --> H_Admin
 H_User --> S_Attr
 H_Admin --> S_Attr
 S_Attr --> M_Attr
+S_Header --> RT_User
+S_Gateway --> RT_User
 M_Sub --> M_Bill
 M_Sub --> M_Dedup
 ```
@@ -73,6 +94,8 @@ M_Sub --> M_Dedup
 - [backend/internal/handler/user_handler.go:50-106](file://backend/internal/handler/user_handler.go#L50-L106)
 - [backend/internal/handler/admin/user_handler.go:170-259](file://backend/internal/handler/admin/user_handler.go#L170-L259)
 - [backend/internal/service/user_attribute_service.go:152-237](file://backend/internal/service/user_attribute_service.go#L152-L237)
+- [backend/internal/service/header_util.go:34](file://backend/internal/service/header_util.go#L34)
+- [backend/internal/service/openai_gateway_service.go:63](file://backend/internal/service/openai_gateway_service.go#L63)
 - [backend/migrations/018_user_attributes.sql:1-48](file://backend/migrations/018_user_attributes.sql#L1-L48)
 - [backend/migrations/003_subscription.sql:56-65](file://backend/migrations/003_subscription.sql#L56-L65)
 - [backend/migrations/027_usage_billing_consistency.sql:35-57](file://backend/migrations/027_usage_billing_consistency.sql#L35-L57)
@@ -126,6 +149,10 @@ Handler-->>Client : "标准化响应"
   - 更新当前用户资料：PUT /api/v1/user/profile
   - 修改密码：PUT /api/v1/user/password
   - TOTP相关：GET/POST /api/v1/user/totp/*
+- 语言参数支持
+  - 支持显式lang参数：lang=zh 或 lang=en
+  - 移除了对Accept-Language头的依赖
+  - 语言参数仅影响响应文本的本地化，不影响其他业务逻辑
 - 权限控制
   - 需要JWT认证，且处于用户模式（非后台维护模式）。
 - 参数与响应
@@ -140,12 +167,13 @@ participant C as "客户端"
 participant R as "用户路由"
 participant H as "用户处理器"
 participant S as "用户服务"
-C->>R : "PUT /api/v1/user/profile"
+C->>R : "PUT /api/v1/user/profile?lang=zh"
 R->>H : "转发请求"
 H->>H : "参数绑定与校验"
 H->>S : "UpdateProfile(userID, req)"
 S-->>H : "返回更新后的用户"
 H-->>C : "Success(data)"
+Note over H,C : "lang参数仅影响响应文本本地化"
 ```
 
 **图表来源**
@@ -167,6 +195,10 @@ H-->>C : "Success(data)"
   - 用户用量：GET /api/v1/admin/users/:id/usage
   - 余额历史：GET /api/v1/admin/users/:id/balance-history
   - 替换分组：POST /api/v1/admin/users/:id/replace-group
+- 语言参数支持
+  - 支持显式lang参数：lang=zh 或 lang=en
+  - 移除了对Accept-Language头的依赖
+  - 语言参数仅影响响应文本的本地化，不影响其他业务逻辑
 - 权限控制
   - 需要管理员角色。
 - 参数与响应
@@ -181,12 +213,13 @@ participant Admin as "管理员客户端"
 participant AR as "管理员路由"
 participant AH as "管理员处理器"
 participant AS as "管理员服务"
-Admin->>AR : "POST /api/v1/admin/users/ : id/balance"
+Admin->>AR : "POST /api/v1/admin/users/ : id/balance?lang=en"
 AR->>AH : "转发请求"
 AH->>AH : "解析userID并绑定请求体"
 AH->>AS : "UpdateUserBalance(userID, amount)"
 AS-->>AH : "返回更新后的用户"
 AH-->>Admin : "Success({message})"
+Note over AH,Admin : "lang参数仅影响响应文本本地化"
 ```
 
 **图表来源**
@@ -333,6 +366,51 @@ end
 - [backend/migrations/027_usage_billing_consistency.sql:35-57](file://backend/migrations/027_usage_billing_consistency.sql#L35-L57)
 - [backend/internal/server/api_contract_test.go:224-268](file://backend/internal/server/api_contract_test.go#L224-L268)
 
+## 语言参数处理机制
+
+### 本地化参数处理逻辑改进
+用户管理API已移除对Accept-Language头的依赖，改为仅基于显式lang参数进行语言控制：
+
+- **显式lang参数优先**：当提供lang参数时，系统使用该参数指定的语言
+- **Accept-Language头忽略**：即使请求包含Accept-Language头，也会被忽略
+- **默认语言处理**：当lang参数缺失时，默认使用中文(zh)
+- **响应文本本地化**：仅影响响应中的文本内容本地化，不影响业务逻辑
+
+### 语言参数处理流程
+```mermaid
+flowchart TD
+Start(["请求到达"]) --> CheckLang{"检查lang参数"}
+CheckLang --> |存在| ParseLang["解析lang参数"]
+CheckLang --> |不存在| DefaultLang["使用默认中文"]
+ParseLang --> ValidateLang{"验证语言参数"}
+ValidateLang --> |有效| SetLocale["设置本地化环境"]
+ValidateLang --> |无效| FallbackLang["回退到默认中文"]
+SetLocale --> ProcessReq["处理业务请求"]
+DefaultLang --> ProcessReq
+FallbackLang --> ProcessReq
+ProcessReq --> ReturnResp["返回本地化响应"]
+```
+
+**图表来源**
+- [backend/internal/service/header_util.go:34](file://backend/internal/service/header_util.go#L34)
+- [backend/internal/service/openai_gateway_service.go:63](file://backend/internal/service/openai_gateway_service.go#L63)
+
+### 语言参数支持范围
+- **支持的语言**：zh（中文）、en（英文）
+- **参数格式**：lang=zh 或 lang=en
+- **默认行为**：未提供lang参数时使用中文
+- **兼容性**：向后兼容现有API调用，但推荐显式指定lang参数
+
+### 技术实现细节
+- **头部处理**：系统保留Accept-Language头处理逻辑，但不再用于语言决策
+- **网关服务**：OpenAI网关服务仍处理Accept-Language头，但不影响用户管理API
+- **第三方集成**：Claude OAuth服务等第三方集成仍使用Accept-Language头
+
+**章节来源**
+- [backend/internal/service/header_util.go:34](file://backend/internal/service/header_util.go#L34)
+- [backend/internal/service/openai_gateway_service.go:63](file://backend/internal/service/openai_gateway_service.go#L63)
+- [backend/internal/repository/claude_oauth_service.go:127](file://backend/internal/repository/claude_oauth_service.go#L127)
+
 ## 依赖分析
 - 组件耦合
   - 路由层仅负责URL到处理器的映射，处理器依赖服务层完成业务逻辑。
@@ -385,21 +463,26 @@ Frontend["前端"] --> Router
 - [backend/internal/server/api_contract_test.go:662-709](file://backend/internal/server/api_contract_test.go#L662-L709)
 
 ## 结论
-用户管理API通过清晰的分层设计与完善的权限控制，实现了用户资料、个人设置、自定义属性与余额管理等核心能力；结合订阅系统与账单一致性机制，确保用量计费的准确性与可追溯性。建议在生产环境中配合缓存与幂等策略，持续优化查询性能与数据一致性。
+用户管理API通过清晰的分层设计与完善的权限控制，实现了用户资料、个人设置、自定义属性与余额管理等核心能力；结合订阅系统与账单一致性机制，确保用量计费的准确性与可追溯性。**最新改进**包括本地化参数处理逻辑优化，移除了对Accept-Language头的依赖，现在仅基于显式lang参数进行语言控制，提高了API的可控性和一致性。建议在生产环境中配合缓存与幂等策略，持续优化查询性能与数据一致性。
 
 ## 附录
 - API使用示例（用户自助）
-  - 获取当前用户资料：GET /api/v1/user/profile
-  - 更新个人资料：PUT /api/v1/user/profile
-  - 修改密码：PUT /api/v1/user/password
+  - 获取当前用户资料：GET /api/v1/user/profile?lang=zh
+  - 更新个人资料：PUT /api/v1/user/profile?lang=en
+  - 修改密码：PUT /api/v1/user/password?lang=zh
   - 查看余额：前端ProfileView展示账户余额
 - API使用示例（管理员）
-  - 查询余额历史：GET /api/v1/admin/users/:id/balance-history
-  - 更新余额：POST /api/v1/admin/users/:id/balance
-  - 用户属性管理：GET/PUT /api/v1/admin/users/:id/attributes
+  - 查询余额历史：GET /api/v1/admin/users/:id/balance-history?lang=en
+  - 更新余额：POST /api/v1/admin/users/:id/balance?lang=zh
+  - 用户属性管理：GET/PUT /api/v1/admin/users/:id/attributes?lang=en
+- 语言参数使用指南
+  - 显式指定语言：lang=zh 或 lang=en
+  - 默认语言：未提供lang参数时使用中文
+  - 兼容性：向后兼容现有API调用
 
 **章节来源**
 - [frontend/src/views/user/ProfileView.vue:1-43](file://frontend/src/views/user/ProfileView.vue#L1-L43)
 - [frontend/src/api/admin/users.ts:147-203](file://frontend/src/api/admin/users.ts#L147-L203)
 - [backend/internal/server/routes/user.go:22-39](file://backend/internal/server/routes/user.go#L22-L39)
 - [backend/internal/server/routes/admin.go:213-231](file://backend/internal/server/routes/admin.go#L213-L231)
+- [frontend/src/api/client.ts:55-81](file://frontend/src/api/client.ts#L55-L81)
