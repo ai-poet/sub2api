@@ -253,7 +253,6 @@ export function buildPaymentCenterUserApiUrl(input: {
   purchaseSubscriptionUrl?: string | null
   userId?: number | null
   token?: string | null
-  locale?: string
   baseOrigin?: string
 }): string | null {
   if (!input.userId || !input.token) {
@@ -276,9 +275,6 @@ export function buildPaymentCenterUserApiUrl(input: {
     apiUrl.pathname = apiPath
     apiUrl.searchParams.set('user_id', String(input.userId))
     apiUrl.searchParams.set('token', input.token)
-    if (input.locale) {
-      apiUrl.searchParams.set('lang', input.locale)
-    }
 
     return apiUrl.toString()
   } catch {
@@ -305,7 +301,6 @@ export async function fetchBalanceCreditCnyPerUsd(input: {
   try {
     const response = await fetch(url, {
       method: 'GET',
-      headers: input.locale ? { 'Accept-Language': input.locale } : undefined,
       mode: 'cors',
     })
 

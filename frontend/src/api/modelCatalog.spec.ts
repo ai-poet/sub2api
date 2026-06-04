@@ -218,7 +218,7 @@ describe('modelCatalog helpers', () => {
       userId: 42,
       token: 'token-123',
       locale: 'zh-CN',
-    })).toBe('https://pay.example.com/pay/api/user?user_id=42&token=token-123&lang=zh-CN')
+    })).toBe('https://pay.example.com/pay/api/user?user_id=42&token=token-123')
     expect(buildPaymentCenterUserApiUrl({
       purchaseSubscriptionUrl: 'https://pay.example.com',
       userId: 42,
@@ -255,9 +255,10 @@ describe('modelCatalog helpers', () => {
       error: null,
     })
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://pay.example.com/pay/api/user?user_id=42&token=token-123&lang=zh-CN',
-      expect.objectContaining({ method: 'GET' }),
+      'https://pay.example.com/pay/api/user?user_id=42&token=token-123',
+      expect.objectContaining({ method: 'GET', mode: 'cors' }),
     )
+    expect(fetchMock.mock.calls[0]?.[1]).not.toHaveProperty('headers')
 
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('cors failed')))
 
