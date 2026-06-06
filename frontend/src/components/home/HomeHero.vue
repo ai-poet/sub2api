@@ -85,7 +85,7 @@
       </p>
     </div>
 
-    <!-- ===== Client Preview ===== -->
+    <!-- ===== Agent Workflow Preview ===== -->
     <div class="mx-auto mt-12 max-w-[1380px]">
       <!-- Title & description -->
       <div class="mb-6">
@@ -104,15 +104,7 @@
         </span>
       </div>
 
-      <!-- Screenshot -->
-      <div class="relative overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_24px_72px_rgba(0,0,0,0.14)] dark:border-white/10 dark:shadow-[0_24px_72px_rgba(0,0,0,0.45)]">
-        <img src="/product.png" alt="Client" class="w-full" loading="lazy" />
-      </div>
-
-      <!-- Caption -->
-      <p class="mt-3 text-center text-xs text-gray-400 dark:text-white/25">
-        {{ t('home.clientShowcase.caption') }}
-      </p>
+      <HomeAgentWorkflowPreview />
 
     </div>
 
@@ -122,6 +114,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import HomeAgentWorkflowPreview from '@/components/home/HomeAgentWorkflowPreview.vue'
 import Icon from '@/components/icons/Icon.vue'
 import {
   detectPreferredClientPlatform,
