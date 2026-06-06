@@ -23,8 +23,61 @@ const translations: Record<string, string> = {
   'home.clientShowcase.pills.workspace': 'Workspace management',
   'home.clientShowcase.pills.terminal': 'Built-in terminal',
   'home.clientShowcase.pills.parallel': 'Parallel agents',
-  'home.clientShowcase.caption': 'Client preview',
   'home.clientShowcase.downloadCta': 'Download {platform}',
+  'home.clientWorkflow.ariaLabel': 'Animated agent workflow',
+  'home.clientWorkflow.windowTitle': 'CheapRouter Client',
+  'home.clientWorkflow.connected': 'Daemon connected',
+  'home.clientWorkflow.sidebarSubtitle': 'Local agent console',
+  'home.clientWorkflow.workspaces': 'Workspaces',
+  'home.clientWorkflow.workspaceName': 'New workspace',
+  'home.clientWorkflow.workspaceDocs': 'Client style source',
+  'home.clientWorkflow.newWorktree': 'New WorkTree',
+  'home.clientWorkflow.creatingWorktree': 'Creating',
+  'home.clientWorkflow.agents': 'Agents',
+  'home.clientWorkflow.draftAgent': 'Draft agent',
+  'home.clientWorkflow.runningAgent': 'Agent running',
+  'home.clientWorkflow.branch': 'main',
+  'home.clientWorkflow.balance': 'Balance ¥128.40',
+  'home.clientWorkflow.terminal': 'Terminal',
+  'home.clientWorkflow.tabDraft': 'New agent',
+  'home.clientWorkflow.tabAgent': 'Agent workflow preview',
+  'home.clientWorkflow.emptyTitle': 'What do you want to build in {project}?',
+  'home.clientWorkflow.emptyCopy':
+    'Your code stays local while Claude Code and Codex runs are visible in one desktop app.',
+  'home.clientWorkflow.composerTitle': 'What should the agent build?',
+  'home.clientWorkflow.provider': 'Claude',
+  'home.clientWorkflow.group': 'Claude',
+  'home.clientWorkflow.model': 'Opus 4.8 1M',
+  'home.clientWorkflow.mode': 'Bypass',
+  'home.clientWorkflow.thinking': 'Medium',
+  'home.clientWorkflow.prompt': 'Create a workspace, wire the billing dashboard, and verify the Claude agent flow.',
+  'home.clientWorkflow.runningStatus': 'Agent is streaming with Claude / Opus 4.8 1M...',
+  'home.clientWorkflow.workingRead': 'Reading workspace files',
+  'home.clientWorkflow.workingEdit': 'Editing dashboard and store',
+  'home.clientWorkflow.workingVerify': 'Running verification',
+  'home.clientWorkflow.streamThinking':
+    'Reading the workspace files and planning the billing dashboard changes...',
+  'home.clientWorkflow.requestTitle': 'Agent request',
+  'home.clientWorkflow.requestBody':
+    'Allow the agent to inspect local files and run the verification command.',
+  'home.clientWorkflow.permissionQuestion': 'Allow this action?',
+  'home.clientWorkflow.requestDeny': 'Deny',
+  'home.clientWorkflow.requestApproved': 'Allow',
+  'home.clientWorkflow.toolInspect': 'Read workspace files',
+  'home.clientWorkflow.toolEdit': 'Apply dashboard changes',
+  'home.clientWorkflow.toolTerminal': 'Run verification',
+  'home.clientWorkflow.streamStepOne':
+    'Updated the dashboard cards and connected the usage summary to the workspace state.',
+  'home.clientWorkflow.streamStepTwo':
+    'Verified the agent request, file changes, and terminal status inside the desktop workflow.',
+  'home.clientWorkflow.streamComplete': 'Done: Claude agent workflow completed',
+  'home.clientWorkflow.filesChanged': 'Files changed',
+  'home.clientWorkflow.terminalRun': 'Checks',
+  'home.clientWorkflow.typecheckDone': 'typecheck passed',
+  'home.clientWorkflow.buildDone': 'production build ready',
+  'home.clientWorkflow.spendTitle': 'Transparent spend',
+  'home.clientWorkflow.spendInput': 'Input tokens',
+  'home.clientWorkflow.spendOutput': 'Output tokens',
 }
 
 vi.mock('vue-i18n', async () => {
@@ -120,5 +173,36 @@ describe('HomeHero', () => {
     expect(wrapper.text()).toContain('Run multiple agent tasks in parallel')
     expect(wrapper.text()).toContain('Parallel agents')
     expect(wrapper.text()).not.toContain('Cross-device sync')
+  })
+
+  it('renders the animated agent workflow preview instead of the static product image', () => {
+    const wrapper = mountHero()
+
+    expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(true)
+    expect(wrapper.find('img[src="/product.png"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Agent workflow preview')
+    expect(wrapper.text()).toContain('What do you want to build in')
+    expect(wrapper.text()).not.toContain('What do you want to build in sub2api?')
+    expect(wrapper.text()).toContain('Claude')
+    expect(wrapper.text()).toContain('Opus 4.8 1M')
+    expect(wrapper.text()).toContain('Bypass')
+    expect(wrapper.text()).toContain('Medium')
+    expect(wrapper.text()).toContain('homepage-billing')
+    expect(wrapper.text()).toContain('pricing-copy')
+    expect(wrapper.text()).toContain('api-metering')
+    expect(wrapper.text()).toContain('new-agent-flow')
+    expect(wrapper.text()).toContain('Creating')
+    expect(wrapper.text()).toContain('Reviewer')
+    expect(wrapper.text()).toContain('Reading workspace files')
+    expect(wrapper.text()).toContain('Message the agent, tag @files')
+    expect(wrapper.text()).toContain('Changes')
+    expect(wrapper.text()).toContain('pnpm typecheck')
+    expect(wrapper.text()).toContain('pnpm build')
+    expect(wrapper.text()).toContain('Done: Claude agent workflow completed')
+    // Bypass 模式下不再展示权限确认卡片
+    expect(wrapper.text()).not.toContain('Agent request')
+    expect(wrapper.text()).not.toContain('Allow this action?')
+    expect(wrapper.text()).not.toContain('Client preview')
+    expect(wrapper.text()).not.toContain('客户端界面预览')
   })
 })
