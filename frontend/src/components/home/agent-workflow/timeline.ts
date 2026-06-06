@@ -4,16 +4,16 @@ import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 export const CYCLE_MS = 22000
 
 // stream 阶段相对整个循环的起点
-const STREAM_START = 5600
+const STREAM_START = 6000
 // draft 阶段重新开始（回到输入态）
 const RESET_AT = 21400
 
 // prompt 打字区间
-const TYPE_START = 180
-const TYPE_END = 4800
+const TYPE_START = 700
+const TYPE_END = 5000
 // 发送按钮脉冲
-const SEND_AT = 5100
-const SEND_DURATION = 420
+const SEND_AT = 5350
+const SEND_DURATION = 480
 
 // 以下时间都相对 STREAM_START
 const USER_SHOW = 0
@@ -55,6 +55,9 @@ export interface StreamFrame {
   stage: 'draft' | 'stream'
   // draft
   promptRatio: number
+  inputFocused: boolean
+  promptTyping: boolean
+  submitted: boolean
   caretOn: boolean
   sendPulse: number
   // stream
@@ -103,6 +106,9 @@ export function deriveFrame(
 ): StreamFrame {
   const inStream = t >= STREAM_START && t < RESET_AT
   const rel = t - STREAM_START
+  const sendPulse = t >= SEND_AT && t < SEND_AT + SEND_DURATION
+    ? Math.sin(((t - SEND_AT) / SEND_DURATION) * Math.PI)
+    : 0
 
   const steps: StepState[] = []
   let runningStep = -1
@@ -137,10 +143,11 @@ export function deriveFrame(
   return {
     stage: inStream ? 'stream' : 'draft',
     promptRatio: ratio(t, TYPE_START, TYPE_END),
+    inputFocused: !inStream && t < STREAM_START,
+    promptTyping: !inStream && t >= TYPE_START && t < TYPE_END,
+    submitted: !inStream && t >= SEND_AT && t < STREAM_START,
     caretOn: Math.floor(t / 500) % 2 === 0,
-    sendPulse: t >= SEND_AT && t < SEND_AT + SEND_DURATION
-      ? Math.sin(((t - SEND_AT) / SEND_DURATION) * Math.PI)
-      : 0,
+    sendPulse,
     showUser: inStream && rel >= USER_SHOW,
     introVisible,
     introRatio: ratio(rel, INTRO_TYPE_START, INTRO_TYPE_END),
@@ -156,43 +163,12 @@ export function deriveFrame(
   }
 }
 
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  )
-}
-
-// 降级帧：直接展示完成态，不做动画
-function staticFrame(stepCount: number, manualIndex: number | null): StreamFrame {
-  return {
-    stage: 'stream',
-    promptRatio: 1,
-    caretOn: false,
-    sendPulse: 0,
-    showUser: true,
-    introVisible: true,
-    introRatio: 1,
-    steps: Array.from({ length: stepCount }, () => 'done' as StepState),
-    runningStep: -1,
-    agentRunning: false,
-    finalVisible: true,
-    finalRatio1: 1,
-    finalRatio2: 1,
-    complete: true,
-    activeWorktree: manualIndex ?? 0,
-    liveComposerVisible: true,
-  }
-}
-
 export function useTimeline(stepCount: number, worktreeCount: number): TimelineControls {
   const manualWorktree = ref<number | null>(null)
   const frame = ref<StreamFrame>(deriveFrame(0, stepCount, worktreeCount, manualWorktree.value))
   let rafId = 0
   let start = 0
   let lastTick = -100
-  let reduced = false
 
   function loop(now: number) {
     if (start === 0) start = now
@@ -205,10 +181,6 @@ export function useTimeline(stepCount: number, worktreeCount: number): TimelineC
   }
 
   function restart() {
-    if (reduced) {
-      frame.value = staticFrame(stepCount, manualWorktree.value)
-      return
-    }
     if (typeof performance !== 'undefined') {
       start = performance.now()
     } else {
@@ -225,11 +197,6 @@ export function useTimeline(stepCount: number, worktreeCount: number): TimelineC
   }
 
   onMounted(() => {
-    if (prefersReducedMotion()) {
-      reduced = true
-      frame.value = staticFrame(stepCount, manualWorktree.value)
-      return
-    }
     rafId = requestAnimationFrame(loop)
   })
 

@@ -768,12 +768,36 @@ function onSelectWorktree(index: number) {
   border-radius: var(--radius-2xl);
   background: var(--surface-1);
   padding: 16px;
-  transition: border-color 200ms ease-in-out;
+  transition: border-color 200ms ease-in-out, background-color 200ms ease-in-out, box-shadow 200ms ease-in-out;
 }
 
 .agent-workflow-preview .hero-message-input {
   border-width: 0;
   background: var(--surface-0);
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.agent-workflow-preview .hero-message-input.draft-input-focused {
+  background: #191c1b;
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 203, 160, 0.24),
+    0 0 0 1px rgba(124, 203, 160, 0.14),
+    0 18px 42px rgba(0, 0, 0, 0.26);
+}
+
+.agent-workflow-preview .hero-message-input.draft-input-typing {
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 203, 160, 0.34),
+    0 0 0 1px rgba(124, 203, 160, 0.2),
+    0 18px 46px rgba(0, 0, 0, 0.32);
+}
+
+.agent-workflow-preview .hero-message-input.draft-input-submitted {
+  background: #1b201e;
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 203, 160, 0.4),
+    0 0 0 3px rgba(32, 116, 74, 0.18),
+    0 20px 52px rgba(0, 0, 0, 0.36);
 }
 
 .agent-workflow-preview .text-input-scroll-wrapper {
@@ -784,11 +808,20 @@ function onSelectWorktree(index: number) {
   line-height: 22.4px;
 }
 
+.agent-workflow-preview .hero-message-input .text-input-scroll-wrapper {
+  padding-right: 70px;
+}
+
 .agent-workflow-preview .typed-prompt {
   display: inline-block;
   min-height: 22px;
   vertical-align: top;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.agent-workflow-preview .draft-input-typing .typed-prompt {
+  color: #fff;
 }
 
 .agent-workflow-preview .typing-caret {
@@ -798,6 +831,41 @@ function onSelectWorktree(index: number) {
   margin-left: 1px;
   background: var(--foreground);
   vertical-align: -4px;
+}
+
+.agent-workflow-preview .draft-placeholder {
+  position: absolute;
+  inset: 0 70px auto 0;
+  display: block;
+  max-width: none;
+  pointer-events: none;
+}
+
+.agent-workflow-preview .draft-enter-key {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  display: inline-flex;
+  height: 26px;
+  min-width: 54px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  color: var(--foreground-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.18);
+  transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+}
+
+.agent-workflow-preview .draft-enter-key.active {
+  border-color: rgba(124, 203, 160, 0.62);
+  background: rgba(32, 116, 74, 0.36);
+  color: #fff;
 }
 
 .agent-workflow-preview .message-input-button-row {
