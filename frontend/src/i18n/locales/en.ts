@@ -89,7 +89,7 @@ export default {
     },
     clientShowcase: {
       badge: 'Client preview',
-      title: 'One desktop app for Claude Code and Codex',
+      title: 'An agent client that brings Claude Code and Codex together. Download-ready in China',
       description: 'Multiple agents working in parallel through worktrees · Claude and Codex side by side · File change tracking · Transparent spend',
       pills: {
         darkMode: 'Dark theme',

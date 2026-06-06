@@ -80,7 +80,7 @@ export interface StreamFrame {
 
 export interface TimelineControls {
   frame: Ref<StreamFrame>
-  // 用户手动选中的 selectable 索引；null = 自动轮转。
+  // 用户手动选中的 selectable 索引；null = 默认工作区。
   manualWorktree: Ref<number | null>
   // 切换到指定工作区并从头重放
   selectWorktree: (index: number) => void
@@ -130,13 +130,11 @@ export function deriveFrame(
   // agent 仍在工作：intro 出现后、所有步骤完成前；步骤跑完进入总结即收起
   const agentRunning = introVisible && !allStepsDone
 
-  // 手动选中时钉死；否则按 ~3.8s 自动轮转
+  // 不跟随动画自动切换侧边栏，避免预览播放时左侧列表一直跳。
   let activeWorktree = 0
   if (worktreeCount > 0) {
     if (manualIndex !== null) {
       activeWorktree = ((manualIndex % worktreeCount) + worktreeCount) % worktreeCount
-    } else {
-      activeWorktree = Math.floor(t / 3800) % worktreeCount
     }
   }
 
