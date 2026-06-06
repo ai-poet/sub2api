@@ -785,7 +785,8 @@ function onSelectWorktree(index: number) {
 }
 
 .agent-workflow-preview .typed-prompt {
-  display: inline;
+  display: inline-block;
+  min-height: 22px;
   vertical-align: top;
   overflow-wrap: anywhere;
 }
@@ -1023,6 +1024,21 @@ function onSelectWorktree(index: number) {
 
 .agent-workflow-preview .assistant-message p {
   margin: 0;
+}
+
+.agent-workflow-preview .stream-line {
+  display: inline;
+  overflow-wrap: anywhere;
+}
+
+.agent-workflow-preview .stream-caret {
+  display: inline-block;
+  width: 2px;
+  height: 18px;
+  margin-left: 3px;
+  background: var(--foreground);
+  vertical-align: -3px;
+  animation: agentWorkflowCaretBlink 1s steps(1) infinite;
 }
 
 .agent-workflow-preview .agent-status-row {
@@ -1560,6 +1576,7 @@ function onSelectWorktree(index: number) {
 @media (prefers-reduced-motion: reduce) {
   .agent-workflow-preview .working-dot,
   .agent-workflow-preview .working-text,
+  .agent-workflow-preview .stream-caret,
   .agent-workflow-preview .tool-status-dot,
   .agent-workflow-preview .workspace-active-dot,
   .agent-workflow-preview .workspace-status-dot.active::before,

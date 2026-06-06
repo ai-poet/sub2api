@@ -15,8 +15,11 @@
           <div class="user-bubble">{{ t('home.clientWorkflow.prompt') }}</div>
         </article>
 
-        <article v-if="frame.introVisible" class="assistant-message">
-          <p>{{ slice(introText, frame.introRatio) }}</p>
+        <article v-if="frame.introVisible" class="assistant-message first">
+          <p>
+            <span class="stream-line">{{ slice(introText, frame.introRatio) }}</span>
+            <span v-if="frame.agentRunning && frame.introRatio < 1" class="stream-caret"></span>
+          </p>
         </article>
 
         <div class="tool-sequence">
@@ -41,8 +44,18 @@
         </div>
 
         <article v-if="frame.finalVisible" class="assistant-message final">
-          <p>{{ slice(finalLine1, frame.finalRatio1) }}</p>
-          <p>{{ slice(finalLine2, frame.finalRatio2) }}</p>
+          <p>
+            <span class="stream-line">{{ slice(finalLine1, frame.finalRatio1) }}</span>
+            <span v-if="frame.finalRatio1 < 1" class="stream-caret"></span>
+          </p>
+          <p>
+            <span class="stream-line">{{ slice(finalLine2, frame.finalRatio2) }}</span>
+            <span v-if="frame.finalRatio1 >= 1 && frame.finalRatio2 < 1" class="stream-caret"></span>
+          </p>
+          <div v-if="frame.finalRatio2 >= 1" class="completion-row">
+            <Icon name="checkCircle" size="sm" />
+            <span>{{ t('home.clientWorkflow.streamComplete') }}</span>
+          </div>
         </article>
 
         <button
