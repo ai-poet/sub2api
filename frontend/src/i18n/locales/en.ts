@@ -145,6 +145,7 @@ export default {
       streamStepOne: 'Updated the dashboard cards and connected the usage summary to the workspace state.',
       streamStepTwo: 'Verified the agent request, file changes, and terminal status inside the desktop workflow.',
       streamComplete: 'Done: Claude agent workflow completed',
+      replay: 'Replay',
       filesChanged: 'Files changed',
       terminalRun: 'Checks',
       typecheckDone: 'typecheck passed',

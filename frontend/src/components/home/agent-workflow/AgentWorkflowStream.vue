@@ -1,5 +1,5 @@
 <template>
-  <section class="workspace-pane-content">
+  <section class="workspace-pane-content" @click="onContainerClick">
     <div v-show="frame.stage === 'draft'" class="draft-stage">
       <div class="draft-hero-section">
         <h3>{{ t('home.clientWorkflow.emptyTitle', { project: projectName }) }}</h3>
@@ -11,17 +11,17 @@
 
     <div v-show="frame.stage === 'stream'" class="stream-stage">
       <div class="stream-content-wrapper">
-        <article v-show="frame.showUser" class="user-message">
+        <article v-if="frame.showUser" class="user-message">
           <div class="user-bubble">{{ t('home.clientWorkflow.prompt') }}</div>
         </article>
 
-        <article v-show="frame.introVisible" class="assistant-message">
+        <article v-if="frame.introVisible" class="assistant-message">
           <p>{{ slice(introText, frame.introRatio) }}</p>
         </article>
 
         <div class="tool-sequence">
           <template v-for="(tool, index) in toolCalls" :key="tool.id">
-            <div v-show="frame.steps[index] !== 'pending'" class="tool-call-row" :class="frame.steps[index]">
+            <div v-if="frame.steps[index] !== 'pending'" class="tool-call-row" :class="frame.steps[index]">
               <span class="tool-status-dot" :class="frame.steps[index]" aria-hidden="true"></span>
               <Icon :name="tool.icon" size="sm" />
               <span class="tool-label">{{ tool.label }}</span>
@@ -31,7 +31,7 @@
           </template>
         </div>
 
-        <div v-show="frame.agentRunning" class="agent-status-row">
+        <div v-if="frame.agentRunning" class="agent-status-row">
           <span class="working-dots" aria-hidden="true">
             <span class="working-dot"></span>
             <span class="working-dot"></span>
@@ -40,14 +40,21 @@
           <span class="working-text">{{ runningLabel }}</span>
         </div>
 
-        <article v-show="frame.finalVisible" class="assistant-message final">
+        <article v-if="frame.finalVisible" class="assistant-message final">
           <p>{{ slice(finalLine1, frame.finalRatio1) }}</p>
           <p>{{ slice(finalLine2, frame.finalRatio2) }}</p>
-          <div v-show="frame.complete" class="completion-row">
-            <Icon name="checkCircle" size="sm" />
-            <span>{{ t('home.clientWorkflow.streamComplete') }}</span>
-          </div>
         </article>
+
+        <button
+          v-if="frame.finalVisible && frame.finalRatio2 >= 1"
+          class="replay-pill"
+          type="button"
+          data-test="replay-stream"
+          @click.stop="emit('replay')"
+        >
+          <Icon name="refresh" size="xs" />
+          <span>{{ t('home.clientWorkflow.replay') }}</span>
+        </button>
       </div>
     </div>
   </section>
@@ -65,6 +72,10 @@ const { t } = useI18n()
 const props = defineProps<{
   projectName: string
   frame: StreamFrame
+}>()
+
+const emit = defineEmits<{
+  (e: 'replay'): void
 }>()
 
 type IconName = InstanceType<typeof Icon>['$props']['name']
@@ -103,6 +114,12 @@ function slice(text: string, ratio: number): string {
   if (ratio <= 0) return ''
   const count = Math.max(0, Math.round(text.length * ratio))
   return text.slice(0, count)
+}
+
+// 整个流式区域可被点击重放，但要避开重放按钮自身（已 click.stop）
+function onContainerClick() {
+  if (!props.frame.finalVisible || props.frame.finalRatio2 < 1) return
+  emit('replay')
 }
 
 export type { IconName }

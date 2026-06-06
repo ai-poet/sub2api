@@ -39,20 +39,28 @@
           </div>
         </div>
 
-        <div
-          v-for="(workspace, index) in worktrees"
+        <button
+          v-for="(workspace, index) in workspaces"
           :key="workspace.name"
           class="workspace-row"
+          type="button"
+          :data-test="`workspace-row-${workspace.name}`"
           :class="{
-            'sidebar-row-selected': index === activeIndex,
+            'sidebar-row-selected': !workspace.creating && selectableIndexFor(index) === activeIndex,
             'workspace-row-creating': workspace.creating,
           }"
+          :disabled="workspace.creating"
+          :aria-pressed="!workspace.creating && selectableIndexFor(index) === activeIndex"
+          @click="onSelect(index, workspace.creating)"
         >
           <div class="workspace-row-main">
             <div class="workspace-row-left">
               <span
                 class="workspace-status-dot"
-                :class="[workspace.statusClass, { creating: workspace.creating, active: index === activeIndex }]"
+                :class="[
+                  workspace.statusClass,
+                  { creating: workspace.creating, active: !workspace.creating && selectableIndexFor(index) === activeIndex },
+                ]"
               >
                 <span v-if="workspace.attention" class="status-dot-overlay"></span>
               </span>
@@ -60,7 +68,11 @@
               <span v-if="workspace.persona" class="persona-badge">{{ workspace.persona }}</span>
             </div>
             <div class="workspace-row-right">
-              <span v-if="index === activeIndex && !workspace.creating" class="workspace-active-dot" aria-hidden="true"></span>
+              <span
+                v-if="!workspace.creating && selectableIndexFor(index) === activeIndex"
+                class="workspace-active-dot"
+                aria-hidden="true"
+              ></span>
               <span v-else-if="workspace.script" class="workspace-script-dot" aria-hidden="true"></span>
               <span v-if="workspace.creating" class="workspace-creating-text">{{ t('home.clientWorkflow.creatingWorktree') }}</span>
               <template v-else-if="workspace.diff">
@@ -72,7 +84,7 @@
           <div v-if="workspace.summary" class="workspace-meta-row">
             <span>{{ workspace.summary }}</span>
           </div>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -94,6 +106,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import type { StreamFrame } from './timeline'
+import { workspaces, selectableWorkspaces } from './workspaces'
 
 const { t } = useI18n()
 
@@ -101,42 +114,27 @@ const props = defineProps<{
   frame: StreamFrame
 }>()
 
-const worktrees = [
-  {
-    name: 'homepage-billing',
-    statusClass: 'active',
-    attention: true,
-    script: true,
-    diff: { additions: '+42', deletions: '-8' },
-  },
-  {
-    name: 'pricing-copy',
-    statusClass: 'muted',
-    persona: 'Reviewer',
-    summary: '3 skills',
-    diff: { additions: '+12', deletions: '-2' },
-  },
-  {
-    name: 'api-metering',
-    statusClass: 'ready',
-    persona: 'Builder',
-    summary: '2 skills',
-    diff: { additions: '+28', deletions: '-4' },
-  },
-  {
-    name: 'docs-worktree',
-    statusClass: 'muted',
-    persona: 'Writer',
-    summary: '1 skill',
-  },
-  {
-    name: 'new-agent-flow',
-    statusClass: 'creating',
-    creating: true,
-  },
-]
+const emit = defineEmits<{
+  (e: 'select', selectableIndex: number): void
+}>()
 
-// 只在非 creating 的工作区之间轮转高亮
-const selectableCount = worktrees.filter((w) => !w.creating).length
-const activeIndex = computed(() => props.frame.activeWorktree % selectableCount)
+// 把全量列表的下标映射到 selectable 列表的下标（creating 项返回 -1）
+const selectableIndexFor = (fullIndex: number): number => {
+  const item = workspaces[fullIndex]
+  if (!item || item.creating) return -1
+  return selectableWorkspaces.indexOf(item)
+}
+
+const selectableCount = selectableWorkspaces.length
+const activeIndex = computed(() => {
+  if (selectableCount === 0) return 0
+  const i = props.frame.activeWorktree
+  return ((i % selectableCount) + selectableCount) % selectableCount
+})
+
+function onSelect(fullIndex: number, creating: boolean | undefined) {
+  if (creating) return
+  const selIndex = selectableIndexFor(fullIndex)
+  if (selIndex >= 0) emit('select', selIndex)
+}
 </script>

@@ -71,6 +71,7 @@ const translations: Record<string, string> = {
   'home.clientWorkflow.streamStepTwo':
     'Verified the agent request, file changes, and terminal status inside the desktop workflow.',
   'home.clientWorkflow.streamComplete': 'Done: Claude agent workflow completed',
+  'home.clientWorkflow.replay': 'Replay',
   'home.clientWorkflow.filesChanged': 'Files changed',
   'home.clientWorkflow.terminalRun': 'Checks',
   'home.clientWorkflow.typecheckDone': 'typecheck passed',
@@ -180,7 +181,6 @@ describe('HomeHero', () => {
 
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(true)
     expect(wrapper.find('img[src="/product.png"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('Agent workflow preview')
     expect(wrapper.text()).toContain('What do you want to build in')
     expect(wrapper.text()).not.toContain('What do you want to build in sub2api?')
     expect(wrapper.text()).toContain('Claude')
@@ -193,16 +193,22 @@ describe('HomeHero', () => {
     expect(wrapper.text()).toContain('new-agent-flow')
     expect(wrapper.text()).toContain('Creating')
     expect(wrapper.text()).toContain('Reviewer')
-    expect(wrapper.text()).toContain('Reading workspace files')
     expect(wrapper.text()).toContain('Message the agent, tag @files')
     expect(wrapper.text()).toContain('Changes')
-    expect(wrapper.text()).toContain('pnpm typecheck')
-    expect(wrapper.text()).toContain('pnpm build')
-    expect(wrapper.text()).toContain('Done: Claude agent workflow completed')
+    // 流式完成回执不再渲染（去掉 "Done" 完成行）
+    expect(wrapper.text()).not.toContain('Done: Claude agent workflow completed')
     // Bypass 模式下不再展示权限确认卡片
     expect(wrapper.text()).not.toContain('Agent request')
     expect(wrapper.text()).not.toContain('Allow this action?')
     expect(wrapper.text()).not.toContain('Client preview')
     expect(wrapper.text()).not.toContain('客户端界面预览')
+  })
+
+  it('lets a viewer click any selectable workspace and replay the stream', async () => {
+    const wrapper = mountHero()
+    const target = wrapper.find('[data-test="workspace-row-pricing-copy"]')
+    expect(target.exists()).toBe(true)
+    await target.trigger('click')
+    expect(target.attributes('aria-pressed')).toBe('true')
   })
 })
