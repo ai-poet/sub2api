@@ -5,7 +5,7 @@
     :aria-label="t('home.clientWorkflow.ariaLabel')"
   >
     <div class="paseo-client-shell">
-      <AgentWorkflowSidebar :frame="frame" />
+      <AgentWorkflowSidebar :frame="frame" @select="onSelectWorktree" />
 
       <main class="workspace-column">
         <header class="screen-header">
@@ -14,8 +14,7 @@
               <Icon name="menu" size="sm" />
             </button>
             <div class="header-title-container">
-              <span class="header-title">homepage-billing</span>
-              <span class="header-project-title">{{ previewProjectName }}</span>
+              <span class="header-title">{{ activeWorktreeName }}</span>
             </div>
           </div>
           <div class="header-right">
@@ -23,14 +22,10 @@
               <Icon name="creditCard" size="sm" />
               {{ t('home.clientWorkflow.balance') }}
             </span>
-            <button class="header-action-button" type="button" aria-hidden="true">
-              <Icon name="filter" size="sm" />
-              <span>Commit</span>
-            </button>
-            <button class="source-control-button" type="button" aria-hidden="true">
+            <button class="source-control-button" type="button" aria-hidden="true" :title="diffTooltip">
               <Icon name="clipboard" size="sm" />
-              <span class="diff-add">+42</span>
-              <span class="diff-del">-8</span>
+              <span class="diff-add">{{ activeDiff.additions }}</span>
+              <span class="diff-del">{{ activeDiff.deletions }}</span>
             </button>
           </div>
         </header>
@@ -38,9 +33,15 @@
         <div class="workspace-tabs-row">
           <div class="tab-chip active">
             <span class="tab-focus-indicator"></span>
-            <span class="provider-dot">◎</span>
-            <span class="tab-label">{{ t('home.clientWorkflow.tabAgent') }}</span>
-            <button class="tab-close-button" type="button" aria-hidden="true">×</button>
+            <span class="tab-handle">
+              <span class="tab-icon">
+                <span class="provider-dot">◎</span>
+              </span>
+              <span class="tab-label">{{ activeWorktreeName || t('home.clientWorkflow.tabAgent') }}</span>
+            </span>
+            <button class="tab-close-button" type="button" aria-hidden="true" tabindex="-1">
+              <Icon name="x" size="xs" />
+            </button>
           </div>
           <button class="new-tab-action-button" type="button" aria-hidden="true">
             <Icon name="plus" size="sm" />
@@ -50,7 +51,7 @@
           </button>
         </div>
 
-        <AgentWorkflowStream :project-name="previewProjectName" :frame="frame" />
+        <AgentWorkflowStream :project-name="previewProjectName" :frame="frame" @replay="restart" />
 
         <footer v-show="frame.liveComposerVisible" class="composer-section">
           <div class="composer-content">
@@ -73,6 +74,7 @@ import AgentWorkflowComposer from './agent-workflow/AgentWorkflowComposer.vue'
 import AgentWorkflowSidebar from './agent-workflow/AgentWorkflowSidebar.vue'
 import AgentWorkflowStream from './agent-workflow/AgentWorkflowStream.vue'
 import { useTimeline } from './agent-workflow/timeline'
+import { selectableWorkspaces } from './agent-workflow/workspaces'
 
 const { t } = useI18n()
 
@@ -90,8 +92,17 @@ const previewProjectName = computed(() => {
   return projectNameOptions[index]
 })
 
-// 7 个步骤、5 个工作区
-const frame = useTimeline(7, 5)
+// 7 个步骤、5 个工作区（其中最后一个是 creating，selectable 只 4 个）
+const { frame, selectWorktree, restart } = useTimeline(7, selectableWorkspaces.length)
+
+const activeWorkspace = computed(() => selectableWorkspaces[frame.value.activeWorktree] ?? selectableWorkspaces[0])
+const activeWorktreeName = computed(() => activeWorkspace.value?.name ?? '')
+const activeDiff = computed(() => activeWorkspace.value?.diff ?? { additions: '+0', deletions: '-0' })
+const diffTooltip = computed(() => `${activeDiff.value.additions} ${activeDiff.value.deletions}`)
+
+function onSelectWorktree(index: number) {
+  selectWorktree(index)
+}
 </script>
 
 <style>
@@ -185,8 +196,24 @@ const frame = useTimeline(7, 5)
 .agent-workflow-preview .host-trigger {
   min-width: 0;
   border: 0;
+  background: transparent;
   color: inherit;
   font: inherit;
+  text-align: left;
+}
+
+.agent-workflow-preview .workspace-row {
+  width: 100%;
+  cursor: pointer;
+}
+
+.agent-workflow-preview .workspace-row[disabled] {
+  cursor: default;
+}
+
+.agent-workflow-preview .workspace-row:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: -2px;
 }
 
 .agent-workflow-preview .sidebar-primary-action {
@@ -320,7 +347,6 @@ const frame = useTimeline(7, 5)
 .agent-workflow-preview .workspace-branch-text,
 .agent-workflow-preview .host-trigger-text,
 .agent-workflow-preview .header-title,
-.agent-workflow-preview .header-project-title,
 .agent-workflow-preview .tab-label,
 .agent-workflow-preview .mode-badge span,
 .agent-workflow-preview .source-row-title,
@@ -334,6 +360,7 @@ const frame = useTimeline(7, 5)
 }
 
 .agent-workflow-preview .workspace-row {
+  display: block;
   min-height: 28px;
   margin-bottom: 2px;
   border-radius: var(--radius-md);
@@ -357,21 +384,22 @@ const frame = useTimeline(7, 5)
   flex-shrink: 0;
   gap: 4px;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .agent-workflow-preview .workspace-status-dot {
   position: relative;
   display: grid;
-  width: 18px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
   place-items: center;
   border-radius: 9999px;
 }
 
 .agent-workflow-preview .workspace-status-dot::before {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 9999px;
   background: var(--accent-bright);
   content: '';
@@ -382,6 +410,8 @@ const frame = useTimeline(7, 5)
 }
 
 .agent-workflow-preview .workspace-status-dot.active::before {
+  width: 9px;
+  height: 9px;
   background: var(--accent-bright);
   box-shadow: 0 0 0 0 rgba(124, 203, 160, 0.5);
   animation: agentWorkflowDotPulse 1.6s ease-in-out infinite;
@@ -417,12 +447,14 @@ const frame = useTimeline(7, 5)
 }
 
 .agent-workflow-preview .persona-badge {
-  max-width: 70px;
+  max-width: 92px;
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   padding: 1px 5px;
   color: var(--foreground-muted);
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 500;
 }
 
 .agent-workflow-preview .workspace-meta-row {
@@ -544,15 +576,9 @@ const frame = useTimeline(7, 5)
 .agent-workflow-preview .header-title {
   flex-shrink: 1;
   color: var(--foreground);
-  font-size: 16px;
-  font-weight: 300;
-}
-
-.agent-workflow-preview .header-project-title {
-  max-width: 60%;
-  flex-shrink: 1;
-  color: var(--foreground-muted);
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .agent-workflow-preview .header-balance,
@@ -600,6 +626,20 @@ const frame = useTimeline(7, 5)
   user-select: none;
 }
 
+.agent-workflow-preview .tab-handle {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.agent-workflow-preview .tab-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
 .agent-workflow-preview .tab-focus-indicator {
   position: absolute;
   top: 0;
@@ -622,30 +662,55 @@ const frame = useTimeline(7, 5)
 .agent-workflow-preview .tab-label {
   flex: 1;
   font-size: 14px;
+  color: var(--foreground-muted);
+  font-weight: 400;
 }
 
-.agent-workflow-preview .tab-close-button,
+.agent-workflow-preview .tab-chip.active .tab-label,
+.agent-workflow-preview .tab-chip:hover .tab-label {
+  color: var(--foreground);
+}
+
+.agent-workflow-preview .tab-close-button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground-muted);
+  opacity: 0;
+  transition: opacity 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.agent-workflow-preview .tab-chip:hover .tab-close-button,
+.agent-workflow-preview .tab-chip.active .tab-close-button {
+  opacity: 1;
+}
+
+.agent-workflow-preview .tab-close-button:hover {
+  background: var(--surface-3);
+  color: var(--foreground);
+}
+
 .agent-workflow-preview .new-tab-action-button {
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  border: 0;
-  color: var(--foreground-muted);
-}
-
-.agent-workflow-preview .tab-close-button {
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-3);
-}
-
-.agent-workflow-preview .new-tab-action-button {
   width: 22px;
   height: 22px;
   margin-left: 8px;
+  border: 0;
   border-radius: var(--radius-md);
   background: transparent;
+  color: var(--foreground-muted);
+}
+
+.agent-workflow-preview .new-tab-action-button:hover {
+  background: var(--surface-2);
+  color: var(--foreground);
 }
 
 .agent-workflow-preview .workspace-pane-content {
@@ -785,9 +850,110 @@ const frame = useTimeline(7, 5)
   flex-shrink: 2;
 }
 
-.agent-workflow-preview .mode-badge.bypass svg,
-.agent-workflow-preview .mode-badge.access svg {
+.agent-workflow-preview button.mode-badge {
+  cursor: pointer;
+  border: 0;
+  font: inherit;
+}
+
+.agent-workflow-preview .mode-badge-active,
+.agent-workflow-preview .mode-badge:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+}
+
+.agent-workflow-preview .mode-badge.tone-danger svg {
   color: var(--destructive);
+}
+
+.agent-workflow-preview .mode-badge.tone-info svg {
+  color: #60a5fa;
+}
+
+.agent-workflow-preview .mode-badge.tone-success svg {
+  color: #4ade80;
+}
+
+.agent-workflow-preview .mode-badge.tone-muted svg {
+  color: var(--foreground-muted);
+}
+
+.agent-workflow-preview .select-menu-anchor {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.agent-workflow-preview .select-menu {
+  position: absolute;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  width: max-content;
+  min-width: 180px;
+  max-width: 280px;
+  gap: 2px;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  padding: 4px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+  animation: agentWorkflowMenuIn 140ms ease-out;
+}
+
+.agent-workflow-preview .select-menu-option {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.agent-workflow-preview .select-menu-option:hover,
+.agent-workflow-preview .select-menu-option:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+}
+
+.agent-workflow-preview .select-menu-option-active {
+  background: var(--surface-2);
+}
+
+.agent-workflow-preview .select-menu-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.agent-workflow-preview .select-menu-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.agent-workflow-preview .select-menu-dot.dot-amber { background: #fbbf24; }
+.agent-workflow-preview .select-menu-dot.dot-blue { background: #60a5fa; }
+.agent-workflow-preview .select-menu-dot.dot-violet { background: #a78bfa; }
+.agent-workflow-preview .select-menu-dot.dot-red { background: var(--destructive); }
+
+.agent-workflow-preview .select-menu-description {
+  color: var(--foreground-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+@keyframes agentWorkflowMenuIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .agent-workflow-preview .mode-badge:hover,
@@ -977,6 +1143,39 @@ const frame = useTimeline(7, 5)
   gap: 8px;
   color: var(--accent-bright);
   font-size: 14px;
+}
+
+.agent-workflow-preview .replay-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin: 4px 8px;
+  border: 1px solid var(--border-accent);
+  border-radius: 999px;
+  background: var(--surface-1);
+  padding: 6px 12px;
+  color: var(--foreground-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+  animation: agentWorkflowRowIn 280ms ease-out;
+}
+
+.agent-workflow-preview .replay-pill:hover {
+  background: var(--surface-2);
+  color: var(--foreground);
+  border-color: var(--surface-3);
+}
+
+.agent-workflow-preview .replay-pill:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.agent-workflow-preview .live-message-input {
+  animation: agentWorkflowRowIn 280ms ease-out;
 }
 
 .agent-workflow-preview .composer-section {
@@ -1239,8 +1438,7 @@ const frame = useTimeline(7, 5)
     gap: 0;
   }
 
-  .agent-workflow-preview .header-title,
-  .agent-workflow-preview .header-project-title {
+  .agent-workflow-preview .header-title {
     max-width: 160px;
     font-size: 14px;
   }

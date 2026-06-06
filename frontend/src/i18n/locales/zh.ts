@@ -145,6 +145,7 @@ export default {
       streamStepOne: '已更新看板卡片，并把用量摘要接入工作区状态。',
       streamStepTwo: '已在桌面工作流里验证 Agent 请求、文件变更和终端状态。',
       streamComplete: '完成：Claude Agent 工作流已执行',
+      replay: '重新播放',
       filesChanged: 'Files changed',
       terminalRun: 'Checks',
       typecheckDone: 'typecheck passed',

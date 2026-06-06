@@ -70,9 +70,19 @@ export interface StreamFrame {
   finalRatio1: number
   finalRatio2: number
   complete: boolean
-  // 侧边栏当前高亮的工作区下标
+  // 侧边栏当前高亮的工作区下标（在 selectable 列表中）
   activeWorktree: number
   liveComposerVisible: boolean
+}
+
+export interface TimelineControls {
+  frame: Ref<StreamFrame>
+  // 用户手动选中的 selectable 索引；null = 自动轮转。
+  manualWorktree: Ref<number | null>
+  // 切换到指定工作区并从头重放
+  selectWorktree: (index: number) => void
+  // 重置时钟从头跑一次
+  restart: () => void
 }
 
 function clamp01(value: number): number {
@@ -85,7 +95,12 @@ function ratio(elapsed: number, start: number, end: number): number {
   return clamp01((elapsed - start) / (end - start))
 }
 
-export function deriveFrame(t: number, stepCount: number, worktreeCount: number): StreamFrame {
+export function deriveFrame(
+  t: number,
+  stepCount: number,
+  worktreeCount: number,
+  manualIndex: number | null = null,
+): StreamFrame {
   const inStream = t >= STREAM_START && t < RESET_AT
   const rel = t - STREAM_START
 
@@ -109,8 +124,15 @@ export function deriveFrame(t: number, stepCount: number, worktreeCount: number)
   // agent 仍在工作：intro 出现后、所有步骤完成前；步骤跑完进入总结即收起
   const agentRunning = introVisible && !allStepsDone
 
-  // 侧边栏在 stream 阶段每 ~3.8s 切换一次高亮工作区
-  const activeWorktree = worktreeCount > 0 ? Math.floor(t / 3800) % worktreeCount : 0
+  // 手动选中时钉死；否则按 ~3.8s 自动轮转
+  let activeWorktree = 0
+  if (worktreeCount > 0) {
+    if (manualIndex !== null) {
+      activeWorktree = ((manualIndex % worktreeCount) + worktreeCount) % worktreeCount
+    } else {
+      activeWorktree = Math.floor(t / 3800) % worktreeCount
+    }
+  }
 
   return {
     stage: inStream ? 'stream' : 'draft',
@@ -143,7 +165,7 @@ function prefersReducedMotion(): boolean {
 }
 
 // 降级帧：直接展示完成态，不做动画
-function staticFrame(stepCount: number): StreamFrame {
+function staticFrame(stepCount: number, manualIndex: number | null): StreamFrame {
   return {
     stage: 'stream',
     promptRatio: 1,
@@ -159,31 +181,53 @@ function staticFrame(stepCount: number): StreamFrame {
     finalRatio1: 1,
     finalRatio2: 1,
     complete: true,
-    activeWorktree: 0,
+    activeWorktree: manualIndex ?? 0,
     liveComposerVisible: true,
   }
 }
 
-export function useTimeline(stepCount: number, worktreeCount: number): Ref<StreamFrame> {
-  const frame = ref<StreamFrame>(deriveFrame(0, stepCount, worktreeCount))
+export function useTimeline(stepCount: number, worktreeCount: number): TimelineControls {
+  const manualWorktree = ref<number | null>(null)
+  const frame = ref<StreamFrame>(deriveFrame(0, stepCount, worktreeCount, manualWorktree.value))
   let rafId = 0
   let start = 0
   let lastTick = -100
+  let reduced = false
 
   function loop(now: number) {
     if (start === 0) start = now
     const t = (now - start) % CYCLE_MS
-    // 节流到 ~50ms，避免每帧都重算
     if (Math.abs(t - lastTick) >= 50 || t < lastTick) {
       lastTick = t
-      frame.value = deriveFrame(t, stepCount, worktreeCount)
+      frame.value = deriveFrame(t, stepCount, worktreeCount, manualWorktree.value)
     }
     rafId = requestAnimationFrame(loop)
   }
 
+  function restart() {
+    if (reduced) {
+      frame.value = staticFrame(stepCount, manualWorktree.value)
+      return
+    }
+    if (typeof performance !== 'undefined') {
+      start = performance.now()
+    } else {
+      start = 0
+    }
+    lastTick = -100
+    // 立刻把帧拨到 t=0，UI 同步重启
+    frame.value = deriveFrame(0, stepCount, worktreeCount, manualWorktree.value)
+  }
+
+  function selectWorktree(index: number) {
+    manualWorktree.value = index
+    restart()
+  }
+
   onMounted(() => {
     if (prefersReducedMotion()) {
-      frame.value = staticFrame(stepCount)
+      reduced = true
+      frame.value = staticFrame(stepCount, manualWorktree.value)
       return
     }
     rafId = requestAnimationFrame(loop)
@@ -193,5 +237,5 @@ export function useTimeline(stepCount: number, worktreeCount: number): Ref<Strea
     if (rafId) cancelAnimationFrame(rafId)
   })
 
-  return frame
+  return { frame, manualWorktree, selectWorktree, restart }
 }

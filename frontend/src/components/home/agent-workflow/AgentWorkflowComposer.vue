@@ -20,21 +20,73 @@
           <Icon name="cloud" size="sm" />
           <span>{{ t('home.clientWorkflow.group') }}</span>
         </span>
-        <span class="mode-badge">
-          <span class="provider-dot">◎</span>
-          <span>{{ t('home.clientWorkflow.model') }}</span>
-          <Icon name="chevronDown" size="xs" />
+
+        <span class="select-menu-anchor">
+          <button
+            type="button"
+            class="mode-badge"
+            :class="{ 'mode-badge-active': openSelector === 'model' }"
+            data-test="composer-model-badge"
+            :aria-expanded="openSelector === 'model'"
+            @click.stop="toggle('model')"
+          >
+            <span class="provider-dot">◎</span>
+            <span>{{ modelLabel }}</span>
+            <Icon name="chevronDown" size="xs" />
+          </button>
+          <AgentWorkflowSelectMenu
+            :open="openSelector === 'model'"
+            :model-value="selectedModel"
+            :options="modelOptions"
+            @update:model-value="onSelectModel"
+            @close="closeSelector"
+          />
         </span>
-        <span class="mode-badge">
-          <Icon name="brain" size="sm" />
-          <span>{{ t('home.clientWorkflow.thinking') }}</span>
-          <Icon name="chevronDown" size="xs" />
+
+        <span class="select-menu-anchor">
+          <button
+            type="button"
+            class="mode-badge"
+            :class="{ 'mode-badge-active': openSelector === 'thinking' }"
+            data-test="composer-thinking-badge"
+            :aria-expanded="openSelector === 'thinking'"
+            @click.stop="toggle('thinking')"
+          >
+            <Icon name="brain" size="sm" />
+            <span>{{ thinkingLabel }}</span>
+            <Icon name="chevronDown" size="xs" />
+          </button>
+          <AgentWorkflowSelectMenu
+            :open="openSelector === 'thinking'"
+            :model-value="selectedThinking"
+            :options="thinkingOptions"
+            @update:model-value="onSelectThinking"
+            @close="closeSelector"
+          />
         </span>
-        <span class="mode-badge access bypass">
-          <Icon name="exclamationTriangle" size="sm" />
-          <span>{{ t('home.clientWorkflow.mode') }}</span>
-          <Icon name="chevronDown" size="xs" />
+
+        <span class="select-menu-anchor">
+          <button
+            type="button"
+            class="mode-badge access"
+            :class="[modeBadgeTone, { 'mode-badge-active': openSelector === 'mode' }]"
+            data-test="composer-mode-badge"
+            :aria-expanded="openSelector === 'mode'"
+            @click.stop="toggle('mode')"
+          >
+            <Icon :name="modeIconName" size="sm" />
+            <span>{{ modeLabel }}</span>
+            <Icon name="chevronDown" size="xs" />
+          </button>
+          <AgentWorkflowSelectMenu
+            :open="openSelector === 'mode'"
+            :model-value="selectedMode"
+            :options="modeOptions"
+            @update:model-value="onSelectMode"
+            @close="closeSelector"
+          />
         </span>
+
         <span class="mode-icon-badge">
           <Icon name="bolt" size="sm" />
         </span>
@@ -58,10 +110,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import type { StreamFrame } from './timeline'
+import AgentWorkflowSelectMenu from './AgentWorkflowSelectMenu.vue'
+import type { SelectMenuOption } from './select-menu-types'
+import {
+  MODE_OPTIONS,
+  THINKING_OPTIONS,
+  MODEL_OPTIONS,
+  DEFAULT_MODE_ID,
+  DEFAULT_THINKING_ID,
+  DEFAULT_MODEL_ID,
+} from './composer-options'
 
 const props = defineProps<{
   variant: 'draft' | 'live'
@@ -69,6 +131,18 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+
+type IconName = InstanceType<typeof Icon>['$props']['name']
+type SelectorKey = 'model' | 'thinking' | 'mode'
+
+const openSelector = ref<SelectorKey | null>(null)
+const selectedModel = ref<string>(DEFAULT_MODEL_ID)
+const selectedThinking = ref<string>(DEFAULT_THINKING_ID)
+const selectedMode = ref<string>(DEFAULT_MODE_ID)
+
+const modelOptions = MODEL_OPTIONS as SelectMenuOption[]
+const thinkingOptions = THINKING_OPTIONS as SelectMenuOption[]
+const modeOptions = MODE_OPTIONS as SelectMenuOption[]
 
 const fullPrompt = computed(() => t('home.clientWorkflow.prompt'))
 
@@ -89,5 +163,56 @@ const sendStyle = computed(() => {
     boxShadow: `0 0 0 ${pulse * 9}px rgba(32, 116, 74, ${0.22 * (1 - pulse)})`,
   }
 })
-</script>
 
+function findOption(opts: SelectMenuOption[], id: string, fallback: SelectMenuOption): SelectMenuOption {
+  return opts.find((opt) => opt.id === id) ?? fallback
+}
+
+const modelLabel = computed(() => findOption(modelOptions, selectedModel.value, modelOptions[0]).label)
+const thinkingLabel = computed(() => findOption(thinkingOptions, selectedThinking.value, thinkingOptions[0]).label)
+const modeLabel = computed(() => findOption(modeOptions, selectedMode.value, modeOptions[0]).label)
+
+const modeIconName = computed<IconName>(() => {
+  switch (selectedMode.value) {
+    case 'plan':
+      return 'eye'
+    case 'acceptEdits':
+      return 'check'
+    case 'always-ask':
+      return 'shield'
+    default:
+      return 'exclamationTriangle'
+  }
+})
+
+const modeBadgeTone = computed(() => {
+  switch (selectedMode.value) {
+    case 'bypassPermissions':
+      return 'tone-danger'
+    case 'plan':
+      return 'tone-info'
+    case 'acceptEdits':
+      return 'tone-success'
+    default:
+      return 'tone-muted'
+  }
+})
+
+function toggle(key: SelectorKey) {
+  openSelector.value = openSelector.value === key ? null : key
+}
+
+function closeSelector() {
+  openSelector.value = null
+}
+
+function onSelectModel(id: string) {
+  selectedModel.value = id
+}
+function onSelectThinking(id: string) {
+  selectedThinking.value = id
+}
+function onSelectMode(id: string) {
+  selectedMode.value = id
+}
+</script>
