@@ -1,9 +1,20 @@
 <template>
-  <div class="message-input-wrapper" :class="{ 'hero-message-input': variant === 'draft', 'live-message-input': variant === 'live' }">
+  <div
+    class="message-input-wrapper"
+    :class="{
+      'hero-message-input': variant === 'draft',
+      'live-message-input': variant === 'live',
+      'draft-input-focused': isDraftFocused,
+      'draft-input-typing': isDraftTyping,
+      'draft-input-submitted': isDraftSubmitted,
+    }"
+  >
     <div class="text-input-scroll-wrapper">
       <template v-if="variant === 'draft'">
+        <span v-if="!typedPrompt" class="composer-placeholder draft-placeholder">Message the agent, tag @files, or use /commands and /skills</span>
         <span class="typed-prompt">{{ typedPrompt }}</span>
-        <span v-if="frame && frame.caretOn" class="typing-caret"></span>
+        <span v-if="frame && frame.inputFocused && frame.caretOn && !frame.submitted" class="typing-caret"></span>
+        <span class="draft-enter-key" :class="{ active: isDraftSubmitted }" :style="enterKeyStyle">Enter</span>
       </template>
       <template v-else>
         <span class="composer-placeholder">Message the agent, tag @files, or use /commands and /skills</span>
@@ -150,9 +161,13 @@ const typedPrompt = computed(() => {
   if (props.variant !== 'draft' || !props.frame) return fullPrompt.value
   const ratio = props.frame.promptRatio
   if (ratio >= 1) return fullPrompt.value
-  const count = Math.max(0, Math.round(fullPrompt.value.length * ratio))
+  const count = Math.max(0, Math.floor(fullPrompt.value.length * ratio))
   return fullPrompt.value.slice(0, count)
 })
+
+const isDraftFocused = computed(() => props.variant === 'draft' && !!props.frame?.inputFocused)
+const isDraftTyping = computed(() => props.variant === 'draft' && !!props.frame?.promptTyping)
+const isDraftSubmitted = computed(() => props.variant === 'draft' && !!props.frame?.submitted)
 
 const sendStyle = computed(() => {
   if (props.variant !== 'draft' || !props.frame) return {}
@@ -161,6 +176,16 @@ const sendStyle = computed(() => {
   return {
     transform: `scale(${1 + pulse * 0.1})`,
     boxShadow: `0 0 0 ${pulse * 9}px rgba(32, 116, 74, ${0.22 * (1 - pulse)})`,
+  }
+})
+
+const enterKeyStyle = computed(() => {
+  if (props.variant !== 'draft' || !props.frame) return {}
+  const pulse = props.frame.sendPulse
+  if (pulse <= 0) return {}
+  return {
+    transform: `translateY(${pulse * 2}px) scale(${1 - pulse * 0.04})`,
+    boxShadow: `inset 0 1px 0 rgba(255, 255, 255, ${0.14 + pulse * 0.14}), 0 0 0 ${pulse * 7}px rgba(124, 203, 160, ${0.16 * (1 - pulse)})`,
   }
 })
 
