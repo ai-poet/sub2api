@@ -23,34 +23,28 @@
       <!-- CTAs -->
       <div class="mt-6 flex flex-col gap-3 sm:flex-row">
         <a
-          v-for="(option, index) in clientDownloadOptions"
-          :key="option.id"
-          :href="option.url"
-          :data-platform="option.id"
-          :data-test="index === 0 ? 'hero-primary-download' : 'hero-platform-download'"
+          v-if="primaryClientDownloadOption"
+          :href="primaryClientDownloadOption.url"
+          :data-platform="primaryClientDownloadOption.id"
+          data-test="hero-primary-download"
           target="_blank"
           rel="noopener noreferrer"
-          :class="[
-            'inline-flex h-14 w-full items-center justify-center gap-2 rounded-full px-8 text-[15px] transition hover:-translate-y-[1px] active:translate-y-0 sm:w-auto',
-            index === 0
-              ? 'bg-[#111] font-bold text-white hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]'
-              : 'border border-gray-200 bg-white font-semibold text-[#111] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10',
-          ]"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
         >
-          <span>{{ index === 0 ? t('home.hero.downloadPrimary') : t('home.clientShowcase.downloadCta', { platform: option.name }) }}</span>
+          <span>{{ t('home.hero.downloadPrimary') }}</span>
           <Icon name="download" size="sm" />
         </a>
         <router-link
-          v-if="clientDownloadOptions.length > 0"
+          v-if="primaryClientDownloadOption"
           :to="dashboardPath"
           data-test="hero-connect-api"
           class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 active:translate-y-0 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
         >
           <span>{{ t('home.hero.connectApi') }}</span>
           <Icon name="arrowRight" size="sm" />
-        </router-link>
+          </router-link>
         <router-link
-          v-if="clientDownloadOptions.length === 0"
+          v-if="!primaryClientDownloadOption"
           :to="primaryTo"
           data-test="hero-primary-fallback"
           class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
@@ -60,7 +54,7 @@
         </router-link>
 
         <a
-          v-if="clientDownloadOptions.length === 0 && docUrl"
+          v-if="!primaryClientDownloadOption && docUrl"
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -70,7 +64,7 @@
           <Icon name="externalLink" size="sm" />
         </a>
         <router-link
-          v-else-if="clientDownloadOptions.length === 0"
+          v-else-if="!primaryClientDownloadOption"
           to="/login"
           class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
         >
@@ -146,6 +140,7 @@ const clientDownloadOptions = computed(() =>
     preferredClientPlatform.value,
   ),
 )
+const primaryClientDownloadOption = computed(() => clientDownloadOptions.value[0] ?? null)
 
 const pills = computed(() => [
   t('home.clientShowcase.pills.darkMode'),

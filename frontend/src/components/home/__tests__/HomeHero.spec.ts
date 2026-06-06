@@ -140,7 +140,7 @@ describe('HomeHero', () => {
     setPlatform('Linux')
   })
 
-  it('moves desktop download links into the primary hero CTA row', () => {
+  it('shows only the preferred desktop client download in the hero CTA row', () => {
     setPlatform('Windows')
 
     const wrapper = mountHero({
@@ -154,9 +154,8 @@ describe('HomeHero', () => {
     expect(downloadLink.attributes('data-platform')).toBe('windows')
     expect(downloadLink.text()).toContain('Download now')
     const platformDownloads = wrapper.findAll('[data-test="hero-platform-download"]')
-    expect(platformDownloads).toHaveLength(1)
-    expect(platformDownloads[0].attributes('href')).toBe('https://downloads.example.com/macos.dmg')
-    expect(platformDownloads[0].text()).toContain('Download macOS')
+    expect(platformDownloads).toHaveLength(0)
+    expect(wrapper.text()).not.toContain('Download macOS')
     expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
   })
 
