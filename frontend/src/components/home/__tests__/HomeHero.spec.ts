@@ -16,7 +16,7 @@ const translations: Record<string, string> = {
   'home.goToDashboard': 'Dashboard',
   'home.viewDocs': 'Docs',
   'home.login': 'Login',
-  'home.clientShowcase.title': 'One desktop app for Claude Code and Codex',
+  'home.clientShowcase.title': 'An agent client that brings Claude Code and Codex together. Download-ready in China',
   'home.clientShowcase.description':
     'Run multiple agent tasks in parallel across workspaces without switching windows.',
   'home.clientShowcase.pills.darkMode': 'Dark theme',
@@ -171,6 +171,7 @@ describe('HomeHero', () => {
   it('highlights parallel agent runs in the client preview copy and pills', () => {
     const wrapper = mountHero()
 
+    expect(wrapper.text()).toContain('An agent client that brings Claude Code and Codex together')
     expect(wrapper.text()).toContain('Run multiple agent tasks in parallel')
     expect(wrapper.text()).toContain('Parallel agents')
     expect(wrapper.text()).not.toContain('Cross-device sync')

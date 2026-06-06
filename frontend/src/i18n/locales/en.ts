@@ -89,8 +89,8 @@ export default {
     },
     clientShowcase: {
       badge: 'Client preview',
-      title: 'Auto download & configure Claude Code and Codex · Ready to use',
-      description: 'Run multiple agents in parallel via Worktree · Use Claude and Codex side by side · File-change tracking · Transparent spend',
+      title: 'An agent client that brings Claude Code and Codex together. Download-ready in China',
+      description: 'Multiple agents working in parallel through worktrees · Claude and Codex side by side · File change tracking · Transparent spend',
       pills: {
         darkMode: 'Dark mode',
         workspace: 'Workspace management',
