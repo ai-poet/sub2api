@@ -1,18 +1,18 @@
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 
 // 单次循环时长（ms）。所有阶段都从这个时钟派生，保证 sidebar / stream / composer 同步。
-export const CYCLE_MS = 20000
+export const CYCLE_MS = 22000
 
 // stream 阶段相对整个循环的起点
-const STREAM_START = 4000
+const STREAM_START = 5600
 // draft 阶段重新开始（回到输入态）
-const RESET_AT = 19200
+const RESET_AT = 21400
 
 // prompt 打字区间
-const TYPE_START = 400
-const TYPE_END = 3400
+const TYPE_START = 180
+const TYPE_END = 4800
 // 发送按钮脉冲
-const SEND_AT = 3650
+const SEND_AT = 5100
 const SEND_DURATION = 420
 
 // 以下时间都相对 STREAM_START
