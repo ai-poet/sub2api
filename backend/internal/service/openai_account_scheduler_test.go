@@ -203,6 +203,7 @@ func TestOpenAIGatewayService_SelectAccountWithScheduler_SessionSticky(t *testin
 		Status:      StatusActive,
 		Schedulable: true,
 		Concurrency: 1,
+		GroupIDs:    []int64{groupID},
 	}
 	cache := &stubGatewayCache{
 		sessionBindings: map[string]int64{
@@ -249,6 +250,7 @@ func TestOpenAIGatewayService_SelectAccountWithScheduler_SessionStickyBusyKeepsS
 			Schedulable: true,
 			Concurrency: 1,
 			Priority:    0,
+			GroupIDs:    []int64{groupID},
 		},
 		{
 			ID:          21002,
@@ -258,6 +260,7 @@ func TestOpenAIGatewayService_SelectAccountWithScheduler_SessionStickyBusyKeepsS
 			Schedulable: true,
 			Concurrency: 1,
 			Priority:    9,
+			GroupIDs:    []int64{groupID},
 		},
 	}
 	cache := &stubGatewayCache{
@@ -324,6 +327,7 @@ func TestOpenAIGatewayService_SelectAccountWithScheduler_SessionSticky_ForceHTTP
 		Status:      StatusActive,
 		Schedulable: true,
 		Concurrency: 1,
+		GroupIDs:    []int64{groupID},
 		Extra: map[string]any{
 			"openai_ws_force_http": true,
 		},
@@ -558,6 +562,7 @@ func TestOpenAIGatewayService_OpenAIAccountSchedulerMetrics(t *testing.T) {
 		Status:      StatusActive,
 		Schedulable: true,
 		Concurrency: 1,
+		GroupIDs:    []int64{groupID},
 	}
 	cache := &stubGatewayCache{
 		sessionBindings: map[string]int64{

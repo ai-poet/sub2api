@@ -320,7 +320,10 @@ func (s *defaultOpenAIAccountScheduler) selectBySessionHash(
 		_ = s.service.deleteStickySessionAccountID(ctx, req.GroupID, sessionHash)
 		return nil, nil
 	}
-	if shouldClearStickySession(account, req.RequestedModel) || !account.IsOpenAI() || !account.IsSchedulable() {
+	if shouldClearStickySession(account, req.RequestedModel) ||
+		!openAIStickyAccountMatchesGroup(account, req.GroupID) ||
+		!account.IsOpenAI() ||
+		!account.IsSchedulable() {
 		_ = s.service.deleteStickySessionAccountID(ctx, req.GroupID, sessionHash)
 		return nil, nil
 	}
@@ -361,6 +364,26 @@ func (s *defaultOpenAIAccountScheduler) selectBySessionHash(
 		}, nil
 	}
 	return nil, nil
+}
+
+func openAIStickyAccountMatchesGroup(account *Account, groupID *int64) bool {
+	if account == nil {
+		return false
+	}
+	if groupID == nil {
+		return len(account.AccountGroups) == 0 && len(account.GroupIDs) == 0
+	}
+	for _, accountGroupID := range account.GroupIDs {
+		if accountGroupID == *groupID {
+			return true
+		}
+	}
+	for _, accountGroup := range account.AccountGroups {
+		if accountGroup.GroupID == *groupID {
+			return true
+		}
+	}
+	return false
 }
 
 type openAIAccountCandidateScore struct {
