@@ -296,17 +296,6 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 		if channelMapping.Mapped {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
-		// 切组/会话失配防护：previous_response_id 未在当前分组命中粘连账号（StickyPreviousHit=false）
-		// 说明会话链不属于本次账号，携带它会触发上游会话链鉴权失败，故主动剥离改用完整 input 重建。
-		// 带 function_call_output 的工具续链无法重建，保持原样（与 WS 重连恢复一致）。
-		if previousResponseID != "" && !scheduleDecision.StickyPreviousHit &&
-			!service.ValidateFunctionCallOutputContextBytes(forwardBody).HasFunctionCallOutput {
-			forwardBody = service.RemovePreviousResponseIDFromBody(forwardBody)
-			reqLog.Debug("openai.previous_response_id_stripped_cross_group",
-				zap.Int64("account_id", account.ID),
-				zap.String("schedule_layer", scheduleDecision.Layer),
-			)
-		}
 		writerSizeBeforeForward := c.Writer.Size()
 		result, err := h.gatewayService.Forward(c.Request.Context(), c, account, forwardBody)
 		forwardDurationMs := time.Since(forwardStart).Milliseconds()
@@ -1329,6 +1318,18 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 	wsFirstMessage := firstMessage
 	if channelMappingWS.Mapped {
 		wsFirstMessage = h.gatewayService.ReplaceModelInBody(firstMessage, channelMappingWS.MappedModel)
+	}
+	// If previous_response_id did not resolve within this group, forwarding it
+	// to the selected account can fail upstream session-chain auth. Strip it on
+	// the first WSv2 payload and rebuild from input, except tool-output
+	// continuations that cannot be reconstructed.
+	if previousResponseID != "" && !scheduleDecision.StickyPreviousHit &&
+		!gjson.GetBytes(wsFirstMessage, `input.#(type=="function_call_output")`).Exists() {
+		wsFirstMessage = service.RemovePreviousResponseIDFromBody(wsFirstMessage)
+		reqLog.Debug("openai.websocket_previous_response_id_stripped_cross_group",
+			zap.Int64("account_id", account.ID),
+			zap.String("schedule_layer", scheduleDecision.Layer),
+		)
 	}
 
 	if err := h.gatewayService.ProxyResponsesWebSocketFromClient(ctx, c, wsConn, account, token, wsFirstMessage, hooks); err != nil {
