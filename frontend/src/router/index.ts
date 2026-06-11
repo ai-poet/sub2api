@@ -17,6 +17,8 @@ import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
 import { resolveDocumentTitle } from './title'
 import { getPendingPaseoBridgeRoute } from '@/utils/auth-redirect'
 
+const MODEL_MIRROR_EXTERNAL_URL = 'https://cctest.ai'
+
 /**
  * Route definitions with lazy loading
  */
@@ -247,13 +249,15 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/model-mirror',
     name: 'ModelMirror',
-    component: () => import('@/views/user/ModelMirrorView.vue'),
+    component: { render: () => null },
+    beforeEnter: () => {
+      window.location.href = MODEL_MIRROR_EXTERNAL_URL
+      return false
+    },
     meta: {
-      requiresAuth: true,
+      requiresAuth: false,
       requiresAdmin: false,
-      title: 'Claude Relay Inspector',
-      titleKey: 'modelMirror.title',
-      descriptionKey: 'modelMirror.description'
+      title: 'Claude Relay Inspector'
     }
   },
   {

@@ -3,8 +3,6 @@ package dto
 import (
 	"encoding/json"
 	"strings"
-
-	"github.com/Wei-Shaw/sub2api/internal/service"
 )
 
 // CustomMenuItem represents a user-configured custom menu entry.
@@ -96,9 +94,8 @@ type SystemSettings struct {
 	FallbackModelAntigravity string `json:"fallback_model_antigravity"`
 
 	// Identity patch configuration (Claude -> Gemini)
-	EnableIdentityPatch        bool                                `json:"enable_identity_patch"`
-	IdentityPatchPrompt        string                              `json:"identity_patch_prompt"`
-	ModelMirrorKnowledgeProbes []service.ModelMirrorKnowledgeProbe `json:"model_mirror_knowledge_probes"`
+	EnableIdentityPatch bool   `json:"enable_identity_patch"`
+	IdentityPatchPrompt string `json:"identity_patch_prompt"`
 
 	// Ops monitoring (vNext)
 	OpsMonitoringEnabled         bool   `json:"ops_monitoring_enabled"`

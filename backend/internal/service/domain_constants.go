@@ -154,9 +154,7 @@ const (
 	SettingKeyEnableIdentityPatch = "enable_identity_patch"
 	SettingKeyIdentityPatchPrompt = "identity_patch_prompt"
 
-	// Claude Relay Inspector knowledge probe bank (JSON array)
-	SettingKeyModelMirrorKnowledgeProbes = "model_mirror_knowledge_probes"
-	SettingKeyGroupStatusEnabled         = "group_status_enabled"
+	SettingKeyGroupStatusEnabled = "group_status_enabled"
 
 	// =========================
 	// Ops Monitoring (vNext)

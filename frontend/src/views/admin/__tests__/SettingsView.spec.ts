@@ -146,7 +146,6 @@ function createSettings(overrides: Record<string, unknown> = {}) {
     fallback_model_antigravity: '',
     enable_identity_patch: false,
     identity_patch_prompt: '',
-    model_mirror_knowledge_probes: [],
     ops_monitoring_enabled: true,
     ops_realtime_monitoring_enabled: true,
     ops_query_mode_default: 'auto',
