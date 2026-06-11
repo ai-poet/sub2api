@@ -70,9 +70,6 @@ type SystemSettings struct {
 	EnableIdentityPatch bool   `json:"enable_identity_patch"`
 	IdentityPatchPrompt string `json:"identity_patch_prompt"`
 
-	// Claude relay inspector knowledge probe bank
-	ModelMirrorKnowledgeProbes []ModelMirrorKnowledgeProbe `json:"model_mirror_knowledge_probes"`
-
 	// Ops monitoring (vNext)
 	OpsMonitoringEnabled         bool
 	OpsRealtimeMonitoringEnabled bool

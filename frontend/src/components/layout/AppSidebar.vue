@@ -213,6 +213,8 @@ interface NavItem {
   hideInSimpleMode?: boolean
 }
 
+const MODEL_MIRROR_EXTERNAL_URL = 'https://cctest.ai'
+
 const { t, locale } = useI18n()
 
 const route = useRoute()
@@ -598,7 +600,7 @@ const userNavItems = computed((): NavItem[] => {
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/integration-guide', label: t('nav.integrationGuide'), icon: GuideIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
-    { path: '/model-mirror', label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
+    { externalUrl: MODEL_MIRROR_EXTERNAL_URL, label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
     { path: '/models', label: t('nav.modelCatalog'), icon: ModelCatalogIcon },
     ...(appStore.cachedPublicSettings?.group_status_enabled
       ? [{ path: '/model-status', label: t('nav.modelStatus'), icon: ServerIcon }]
@@ -642,7 +644,7 @@ const personalNavItems = computed((): NavItem[] => {
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/integration-guide', label: t('nav.integrationGuide'), icon: GuideIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
-    { path: '/model-mirror', label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
+    { externalUrl: MODEL_MIRROR_EXTERNAL_URL, label: t('nav.modelMirror'), icon: MagnifierIcon, hideInSimpleMode: true },
     { path: '/models', label: t('nav.modelCatalog'), icon: ModelCatalogIcon },
     ...(appStore.cachedPublicSettings?.group_status_enabled
       ? [{ path: '/model-status', label: t('nav.modelStatus'), icon: ServerIcon }]

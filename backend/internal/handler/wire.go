@@ -103,7 +103,6 @@ func ProvideHandlers(
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
 	referralHandler *ReferralHandler,
-	modelMirrorHandler *ModelMirrorHandler,
 	modelCatalogHandler *ModelCatalogHandler,
 	groupStatusHandler *GroupStatusHandler,
 	_ *service.IdempotencyCoordinator,
@@ -123,7 +122,6 @@ func ProvideHandlers(
 		Setting:       settingHandler,
 		Totp:          totpHandler,
 		Referral:      referralHandler,
-		ModelMirror:   modelMirrorHandler,
 		ModelCatalog:  modelCatalogHandler,
 		GroupStatus:   groupStatusHandler,
 	}
@@ -143,7 +141,6 @@ var ProviderSet = wire.NewSet(
 	NewOpenAIGatewayHandler,
 	NewTotpHandler,
 	NewReferralHandler,
-	NewModelMirrorHandler,
 	NewModelCatalogHandler,
 	NewGroupStatusHandler,
 	ProvideSettingHandler,

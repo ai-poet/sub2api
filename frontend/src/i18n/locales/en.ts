@@ -483,77 +483,6 @@ export default {
     queryFailedRetry: 'Query failed, please try again later',
   },
 
-  modelMirror: {
-    title: 'Claude Relay Inspector',
-    description: 'Inspect whether a Claude relay preserves authentic Claude signals, structure, and channel integrity',
-    disclaimer: 'This inspection primarily targets Claude 4.6 series relays (e.g., claude-opus-4-6, claude-sonnet-4-6) to verify whether the relayed Claude 4.6 model is authentic. Results are for reference only and not definitive.',
-    statusLabel: 'Status',
-    verdictLabel: 'Verdict',
-    scoreLabel: 'Score',
-    scoreHint: '{passed}/{total} checks passed',
-    configTitle: 'Claude Relay Inspector',
-    configDescription: 'Fill in the upstream endpoint, model, and test key. The inspector will run streaming, identity, injection, and knowledge probes in sequence.',
-    endpoint: 'Endpoint',
-    endpointPlaceholder: 'https://example.com/v1/messages',
-    endpointHint: 'Pasting a base URL will auto-complete it to /v1/messages.',
-    model: 'Model',
-    modelPlaceholder: 'e.g. claude-opus-4-6',
-    apiKey: 'API Key',
-    apiKeyPlaceholder: 'Paste a temporary key for inspection',
-    privacyHint: 'Only the endpoint and model are stored locally. The API Key is never persisted.',
-    securityHint: 'Use a temporary test key when possible, then revoke or rotate it after inspection.',
-    backendModeBlocked: 'Self-service tools are disabled for regular users while Backend Mode is enabled.',
-    start: 'Start Inspection',
-    stop: 'Stop',
-    reset: 'Clear Results',
-    starting: 'Initializing inspection...',
-    idleTitle: 'Ready',
-    idleSubtitle: 'Enter an endpoint, model, and API Key to begin.',
-    testingTitle: 'Inspecting',
-    testingSubtitle: 'Running upstream probes and signal analysis.',
-    failedTitle: 'Inspection Failed',
-    stoppedTitle: 'Inspection Stopped',
-    stoppedSubtitle: 'The inspection flow was stopped manually.',
-    stoppedToast: 'Inspection stopped',
-    endpointRequired: 'Endpoint is required',
-    apiKeyRequired: 'API Key is required',
-    modelRequired: 'Model is required',
-    checksTitle: 'Checks',
-    checksDescription: 'See the per-check results for streaming shape, identity, injection, and knowledge probes.',
-    emptyChecks: 'No results yet. Start an inspection to populate this list.',
-    evidenceTitle: 'Evidence',
-    evidenceDescription: 'Review the main response excerpt, thinking excerpt, and upstream model name returned during inspection.',
-    upstreamModel: 'Upstream Model Name',
-    responseExcerpt: 'Response Excerpt',
-    thinkingExcerpt: 'Thinking Excerpt',
-    weight: 'Weight {weight}',
-    pass: 'Pass',
-    fail: 'Fail',
-    info: 'Info',
-    verdicts: {
-      pending: {
-        label: 'Pending',
-        description: 'No final verdict yet.'
-      },
-      max_pure: {
-        label: 'Max Pure Relay',
-        description: 'The relay strongly resembles a direct Claude Code Max upstream path.'
-      },
-      official_api: {
-        label: 'Official Claude API',
-        description: 'The target likely serves a real Claude model, but not necessarily a Claude Code Max relay.'
-      },
-      reverse_proxy: {
-        label: 'Likely Reverse Proxy',
-        description: 'The model may be real Claude, but the channel shows injection or override anomalies.'
-      },
-      likely_not_claude: {
-        label: 'Likely Not Claude 4.6',
-        description: 'Too many critical checks failed for the target to look like a real Claude 4.6 series relay.'
-      }
-    }
-  },
-
   modelStatus: {
     title: 'Model Status',
     description: 'Check runtime status and recent availability for the groups you can access',
@@ -4865,25 +4794,6 @@ export default {
         metadataPassthroughHint: 'Pass through client\'s original metadata.user_id without rewriting. May improve upstream cache hit rates.',
         cchSigning: 'CCH Signing',
         cchSigningHint: 'Sign the billing header in forwarded requests with CCH hash. When disabled, the placeholder is preserved.',
-      },
-      modelMirror: {
-        title: 'Claude Relay Inspector Probe Bank',
-        description: 'Configure the knowledge probe bank used by Claude Relay Inspector so the prompts are not trivially predictable.',
-        hint: 'These probes are stored in the database instead of being exposed as fixed frontend constants. Rotate them periodically.',
-        probeTitle: 'Probe #{index}',
-        enabled: 'Enabled',
-        removeProbe: 'Remove Probe',
-        addProbe: 'Add Probe',
-        probeId: 'Probe ID',
-        prompt: 'Prompt',
-        promptPlaceholder: 'Enter an offline knowledge probe question',
-        expectedKeywords: 'Expected Keywords',
-        expectedKeywordsPlaceholder: 'Comma-separated keywords, e.g. leo xiv, american',
-        expectedKeywordsHint: 'Separate with commas or new lines. The backend normalizes and deduplicates them.',
-        passMode: 'Pass Mode',
-        passModeAny: 'Any keyword matches',
-        passModeAll: 'All keywords required',
-        weight: 'Weight'
       },
       site: {
         title: 'Site Settings',

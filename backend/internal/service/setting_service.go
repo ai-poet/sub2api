@@ -456,14 +456,6 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 		normalizedWhitelist = []string{}
 	}
 	settings.RegistrationEmailSuffixWhitelist = normalizedWhitelist
-	normalizedProbes, err := ValidateModelMirrorKnowledgeProbes(settings.ModelMirrorKnowledgeProbes)
-	if err != nil {
-		return infraerrors.BadRequest("INVALID_MODEL_MIRROR_KNOWLEDGE_PROBES", err.Error())
-	}
-	if normalizedProbes == nil {
-		normalizedProbes = []ModelMirrorKnowledgeProbe{}
-	}
-	settings.ModelMirrorKnowledgeProbes = normalizedProbes
 
 	updates := make(map[string]string)
 
@@ -552,11 +544,6 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	// Identity patch configuration (Claude -> Gemini)
 	updates[SettingKeyEnableIdentityPatch] = strconv.FormatBool(settings.EnableIdentityPatch)
 	updates[SettingKeyIdentityPatchPrompt] = settings.IdentityPatchPrompt
-	modelMirrorKnowledgeProbesJSON, err := json.Marshal(settings.ModelMirrorKnowledgeProbes)
-	if err != nil {
-		return fmt.Errorf("marshal model mirror knowledge probes: %w", err)
-	}
-	updates[SettingKeyModelMirrorKnowledgeProbes] = string(modelMirrorKnowledgeProbesJSON)
 
 	// Ops monitoring (vNext)
 	updates[SettingKeyOpsMonitoringEnabled] = strconv.FormatBool(settings.OpsMonitoringEnabled)
@@ -1055,9 +1042,8 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyFallbackModelGemini:      "gemini-2.5-pro",
 		SettingKeyFallbackModelAntigravity: "gemini-2.5-pro",
 		// Identity patch defaults
-		SettingKeyEnableIdentityPatch:        "true",
-		SettingKeyIdentityPatchPrompt:        "",
-		SettingKeyModelMirrorKnowledgeProbes: "[]",
+		SettingKeyEnableIdentityPatch: "true",
+		SettingKeyIdentityPatchPrompt: "",
 
 		// Ops monitoring defaults (vNext)
 		SettingKeyOpsMonitoringEnabled:         "true",
@@ -1219,7 +1205,6 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		result.EnableIdentityPatch = true
 	}
 	result.IdentityPatchPrompt = settings[SettingKeyIdentityPatchPrompt]
-	result.ModelMirrorKnowledgeProbes = parseModelMirrorKnowledgeProbes(settings[SettingKeyModelMirrorKnowledgeProbes])
 
 	// Ops monitoring settings (default: enabled, fail-open)
 	result.OpsMonitoringEnabled = !isFalseSettingValue(settings[SettingKeyOpsMonitoringEnabled])
@@ -1337,14 +1322,6 @@ func (s *SettingService) GetIdentityPatchPrompt(ctx context.Context) string {
 		return ""
 	}
 	return value
-}
-
-func (s *SettingService) GetModelMirrorKnowledgeProbes(ctx context.Context) []ModelMirrorKnowledgeProbe {
-	value, err := s.settingRepo.GetValue(ctx, SettingKeyModelMirrorKnowledgeProbes)
-	if err != nil {
-		return DefaultModelMirrorKnowledgeProbes()
-	}
-	return parseModelMirrorKnowledgeProbes(value)
 }
 
 // GenerateAdminAPIKey 生成新的管理员 API Key
