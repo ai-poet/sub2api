@@ -1000,6 +1000,8 @@ export default {
     actualCost: '实际',
     userBilled: '用户扣费',
     accountBilled: '账号计费',
+    resetNow: '现在',
+    resetPending: '待刷新',
     accountMultiplier: '账号倍率',
     avgDuration: '平均耗时',
     inSelectedRange: '所选范围内',
