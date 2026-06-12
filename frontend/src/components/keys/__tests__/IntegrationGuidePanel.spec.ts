@@ -213,6 +213,8 @@ describe('IntegrationGuidePanel', () => {
     })
 
     expect(wrapper.text()).toContain('~/.codex/config.toml')
+    expect(wrapper.find('pre code').text()).toContain('model = "gpt-5.5"')
+    expect(wrapper.find('pre code').text()).toContain('review_model = "gpt-5.5"')
 
     const windowsTab = wrapper.findAll('button').find((button) =>
       button.text().includes('Windows')
