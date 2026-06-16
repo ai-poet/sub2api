@@ -127,6 +127,8 @@ export interface PublicSettings {
   backend_mode_enabled: boolean
   version: string
   client_changelog_entries: ClientChangelogEntry[]
+  community_qr_code: string
+  community_group_url: string
 }
 
 export interface AuthResponse {

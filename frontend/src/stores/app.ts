@@ -300,7 +300,9 @@ export const useAppStore = defineStore('app', () => {
       client_download_macos_url: config.client_download_macos_url || '',
       purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
         config.purchase_subscription_open_mode
-      )
+      ),
+      community_qr_code: config.community_qr_code || '',
+      community_group_url: config.community_group_url || ''
     }
 
     cachedPublicSettings.value = normalizedConfig
@@ -359,7 +361,9 @@ export const useAppStore = defineStore('app', () => {
         purchase_subscription_open_mode: 'iframe',
         backend_mode_enabled: false,
         version: siteVersion.value,
-        client_changelog_entries: []
+        client_changelog_entries: [],
+        community_qr_code: '',
+        community_group_url: ''
       }
     }
 

@@ -1705,6 +1705,37 @@
               />
             </div>
 
+            <!-- Community QR Code Upload -->
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('admin.settings.site.communityQRCode') }}
+              </label>
+              <ImageUpload
+                v-model="form.community_qr_code"
+                mode="image"
+                :upload-label="t('admin.settings.site.uploadQRCode')"
+                :remove-label="t('admin.settings.site.remove')"
+                :hint="t('admin.settings.site.qrCodeHint')"
+                :max-size="500 * 1024"
+              />
+            </div>
+
+            <!-- Community Group URL -->
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('admin.settings.site.communityGroupURL') }}
+              </label>
+              <input
+                v-model="form.community_group_url"
+                type="url"
+                class="input font-mono text-sm"
+                :placeholder="t('admin.settings.site.communityGroupURLPlaceholder')"
+              />
+              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('admin.settings.site.communityGroupURLHint') }}
+              </p>
+            </div>
+
             <!-- Home Content -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -2651,6 +2682,8 @@ const form = reactive<SettingsForm>({
   contact_info: '',
   doc_url: '',
   home_content: '',
+  community_qr_code: '',
+  community_group_url: '',
   backend_mode_enabled: false,
   hide_ccs_import_button: false,
   purchase_subscription_enabled: false,
@@ -3045,6 +3078,9 @@ async function saveSettings() {
     if (!isValidHttpUrl(form.client_download_macos_url)) {
       form.client_download_macos_url = ''
     }
+    if (!isValidHttpUrl(form.community_group_url)) {
+      form.community_group_url = ''
+    }
 
     const payload: UpdateSettingsRequest = {
       registration_enabled: form.registration_enabled,
@@ -3066,6 +3102,8 @@ async function saveSettings() {
       contact_info: form.contact_info,
       doc_url: form.doc_url,
       home_content: form.home_content,
+      community_qr_code: form.community_qr_code,
+      community_group_url: form.community_group_url,
       backend_mode_enabled: form.backend_mode_enabled,
       group_status_enabled: form.group_status_enabled,
       hide_ccs_import_button: form.hide_ccs_import_button,

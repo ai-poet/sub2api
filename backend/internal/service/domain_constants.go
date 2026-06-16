@@ -131,6 +131,8 @@ const (
 	SettingKeyClientDownloadMacOSURL       = "client_download_macos_url"       // macOS 客户端下载链接
 	SettingKeyCustomMenuItems              = "custom_menu_items"               // 自定义菜单项（JSON 数组）
 	SettingKeyCustomEndpoints              = "custom_endpoints"                // 自定义端点列表（JSON 数组）
+	SettingKeyCommunityQRCode              = "community_qr_code"               // 交流群二维码图片 (base64)
+	SettingKeyCommunityGroupURL            = "community_group_url"             // 交流群链接/群号
 
 	// 默认配置
 	SettingKeyDefaultConcurrency   = "default_concurrency"   // 新用户默认并发量

@@ -47,6 +47,8 @@ export interface SystemSettings {
   group_status_enabled: boolean
   custom_menu_items: CustomMenuItem[]
   custom_endpoints: CustomEndpoint[]
+  community_qr_code: string
+  community_group_url: string
   // SMTP settings
   smtp_host: string
   smtp_port: number
@@ -133,6 +135,8 @@ export interface UpdateSettingsRequest {
   group_status_enabled?: boolean
   custom_menu_items?: CustomMenuItem[]
   custom_endpoints?: CustomEndpoint[]
+  community_qr_code?: string
+  community_group_url?: string
   smtp_host?: string
   smtp_port?: number
   smtp_username?: string

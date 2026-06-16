@@ -172,6 +172,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyReferralEnabled,
 		SettingKeyBackendModeEnabled,
 		SettingKeyClientChangelogEntries,
+		SettingKeyCommunityQRCode,
+		SettingKeyCommunityGroupURL,
 	}
 
 	settings, err := s.settingRepo.GetMultiple(ctx, keys)
@@ -231,6 +233,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		ReferralEnabled:                  settings[SettingKeyReferralEnabled] == "true",
 		BackendModeEnabled:               settings[SettingKeyBackendModeEnabled] == "true",
 		ClientChangelogEntries:           filterAndSortPublicChangelogEntries(settings[SettingKeyClientChangelogEntries]),
+		CommunityQRCode:                  settings[SettingKeyCommunityQRCode],
+		CommunityGroupURL:                strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 	}, nil
 }
 
@@ -286,6 +290,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		BackendModeEnabled               bool                   `json:"backend_mode_enabled"`
 		Version                          string                 `json:"version,omitempty"`
 		ClientChangelogEntries           []ClientChangelogEntry `json:"client_changelog_entries"`
+		CommunityQRCode                  string                 `json:"community_qr_code,omitempty"`
+		CommunityGroupURL                string                 `json:"community_group_url,omitempty"`
 	}{
 		RegistrationEnabled:              settings.RegistrationEnabled,
 		EmailVerifyEnabled:               settings.EmailVerifyEnabled,
@@ -318,6 +324,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		BackendModeEnabled:               settings.BackendModeEnabled,
 		Version:                          s.version,
 		ClientChangelogEntries:           settings.ClientChangelogEntries,
+		CommunityQRCode:                  settings.CommunityQRCode,
+		CommunityGroupURL:                settings.CommunityGroupURL,
 	}, nil
 }
 
@@ -524,6 +532,8 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyCustomMenuItems] = settings.CustomMenuItems
 	updates[SettingKeyCustomEndpoints] = settings.CustomEndpoints
 	updates[SettingKeyGroupStatusEnabled] = strconv.FormatBool(settings.GroupStatusEnabled)
+	updates[SettingKeyCommunityQRCode] = settings.CommunityQRCode
+	updates[SettingKeyCommunityGroupURL] = strings.TrimSpace(settings.CommunityGroupURL)
 
 	// 默认配置
 	updates[SettingKeyDefaultConcurrency] = strconv.Itoa(settings.DefaultConcurrency)
@@ -1029,6 +1039,8 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyCustomMenuItems:                  "[]",
 		SettingKeyCustomEndpoints:                  "[]",
 		SettingKeyGroupStatusEnabled:               "false",
+		SettingKeyCommunityQRCode:                  "",
+		SettingKeyCommunityGroupURL:                "",
 		SettingKeyDefaultConcurrency:               strconv.Itoa(s.cfg.Default.UserConcurrency),
 		SettingKeyDefaultBalance:                   strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
 		SettingKeyDefaultSubscriptions:             "[]",
@@ -1100,6 +1112,8 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
 		GroupStatusEnabled:               settings[SettingKeyGroupStatusEnabled] == "true",
 		BackendModeEnabled:               settings[SettingKeyBackendModeEnabled] == "true",
+		CommunityQRCode:                  settings[SettingKeyCommunityQRCode],
+		CommunityGroupURL:                strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 	}
 
 	// 解析整数类型
