@@ -600,7 +600,11 @@ export default {
     modelCatalog: 'Model Catalog',
     modelStatus: 'Model Status',
     docs: 'Docs',
-    sora: 'Sora Studio'
+    sora: 'Sora Studio',
+    communityGroup: 'Join Community',
+    communityGroupTooltip: 'Scan to join our community group',
+    communityGroupScanHint: 'Scan the QR code with your phone',
+    communityGroupJoin: 'Join Now'
   },
 
   // Auth
@@ -4727,6 +4731,12 @@ export default {
         uploadImage: 'Upload Image',
         remove: 'Remove',
         logoHint: 'PNG, JPG, or SVG. Max 300KB. Recommended: 80x80px square image.',
+        communityQRCode: 'Community Group QR Code',
+        uploadQRCode: 'Upload QR Code',
+        qrCodeHint: 'Upload a QR code image for the community group. Max 500KB. Once uploaded, a community entry will appear in the top navigation bar.',
+        communityGroupURL: 'Community Group URL',
+        communityGroupURLPlaceholder: 'https://t.me/example',
+        communityGroupURLHint: 'Optional. If provided, a join link will be shown below the QR code. Must be an absolute http(s) URL.',
         logoSizeError: 'Image size exceeds 300KB limit ({size}KB)',
         logoTypeError: 'Please select an image file',
         logoReadError: 'Failed to read the image file',

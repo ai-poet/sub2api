@@ -600,7 +600,11 @@ export default {
     modelCatalog: '模型广场',
     modelStatus: '模型运行状态',
     docs: '文档',
-    sora: 'Sora 创作'
+    sora: 'Sora 创作',
+    communityGroup: '加入交流群',
+    communityGroupTooltip: '扫码加入交流群',
+    communityGroupScanHint: '使用手机扫码加入',
+    communityGroupJoin: '点击加入'
   },
 
   // Auth
@@ -4888,6 +4892,12 @@ export default {
         uploadImage: '上传图片',
         remove: '移除',
         logoHint: 'PNG、JPG 或 SVG 格式，最大 300KB。建议：80x80px 正方形图片。',
+        communityQRCode: '交流群二维码',
+        uploadQRCode: '上传二维码',
+        qrCodeHint: '上传交流群二维码图片，最大 500KB。上传后顶部导航栏将展示加入交流群入口。',
+        communityGroupURL: '交流群链接',
+        communityGroupURLPlaceholder: 'https://t.me/example',
+        communityGroupURLHint: '可选，填写后二维码下方会显示加入链接。必须是完整的 http(s) 链接。',
         logoSizeError: '图片大小超过 300KB 限制（{size}KB）',
         logoTypeError: '请选择图片文件',
         logoReadError: '读取图片文件失败',

@@ -116,6 +116,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		CustomMenuItems:                      dto.ParseCustomMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                      dto.ParseCustomEndpoints(settings.CustomEndpoints),
 		GroupStatusEnabled:                   settings.GroupStatusEnabled,
+		CommunityQRCode:                      settings.CommunityQRCode,
+		CommunityGroupURL:                    settings.CommunityGroupURL,
 		DefaultConcurrency:                   settings.DefaultConcurrency,
 		DefaultBalance:                       settings.DefaultBalance,
 		DefaultSubscriptions:                 defaultSubscriptions,
@@ -196,6 +198,8 @@ type UpdateSettingsRequest struct {
 	CustomMenuItems              *[]dto.CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints              *[]dto.CustomEndpoint `json:"custom_endpoints"`
 	GroupStatusEnabled           bool                  `json:"group_status_enabled"`
+	CommunityQRCode              string                `json:"community_qr_code"`
+	CommunityGroupURL            string                `json:"community_group_url"`
 
 	// 默认配置
 	DefaultConcurrency   int                              `json:"default_concurrency"`
@@ -435,6 +439,14 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	if clientDownloadMacOSURL != "" {
 		if err := config.ValidateAbsoluteHTTPURL(clientDownloadMacOSURL); err != nil {
 			response.BadRequest(c, "macOS client download URL must be an absolute http(s) URL")
+			return
+		}
+	}
+
+	req.CommunityGroupURL = strings.TrimSpace(req.CommunityGroupURL)
+	if req.CommunityGroupURL != "" {
+		if err := config.ValidateAbsoluteHTTPURL(req.CommunityGroupURL); err != nil {
+			response.BadRequest(c, "Community group URL must be an absolute http(s) URL")
 			return
 		}
 	}
@@ -681,6 +693,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		CustomMenuItems:                  customMenuJSON,
 		CustomEndpoints:                  customEndpointsJSON,
 		GroupStatusEnabled:               req.GroupStatusEnabled,
+		CommunityQRCode:                  req.CommunityQRCode,
+		CommunityGroupURL:                strings.TrimSpace(req.CommunityGroupURL),
 		DefaultConcurrency:               req.DefaultConcurrency,
 		DefaultBalance:                   req.DefaultBalance,
 		DefaultSubscriptions:             defaultSubscriptions,
@@ -805,6 +819,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		CustomMenuItems:                      dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
 		CustomEndpoints:                      dto.ParseCustomEndpoints(updatedSettings.CustomEndpoints),
 		GroupStatusEnabled:                   updatedSettings.GroupStatusEnabled,
+		CommunityQRCode:                      updatedSettings.CommunityQRCode,
+		CommunityGroupURL:                    updatedSettings.CommunityGroupURL,
 		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
 		DefaultBalance:                       updatedSettings.DefaultBalance,
 		DefaultSubscriptions:                 updatedDefaultSubscriptions,
@@ -950,6 +966,12 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.ClientDownloadMacOSURL != after.ClientDownloadMacOSURL {
 		changed = append(changed, "client_download_macos_url")
+	}
+	if before.CommunityQRCode != after.CommunityQRCode {
+		changed = append(changed, "community_qr_code")
+	}
+	if before.CommunityGroupURL != after.CommunityGroupURL {
+		changed = append(changed, "community_group_url")
 	}
 	if before.DefaultConcurrency != after.DefaultConcurrency {
 		changed = append(changed, "default_concurrency")

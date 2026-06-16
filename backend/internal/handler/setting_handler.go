@@ -69,5 +69,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 			}
 			return entries
 		}(),
+		CommunityQRCode:   settings.CommunityQRCode,
+		CommunityGroupURL: settings.CommunityGroupURL,
 	})
 }

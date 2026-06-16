@@ -81,6 +81,8 @@ type SystemSettings struct {
 	CustomMenuItems              []CustomMenuItem `json:"custom_menu_items"`
 	CustomEndpoints              []CustomEndpoint `json:"custom_endpoints"`
 	GroupStatusEnabled           bool             `json:"group_status_enabled"`
+	CommunityQRCode              string           `json:"community_qr_code"`
+	CommunityGroupURL            string           `json:"community_group_url"`
 
 	DefaultConcurrency   int                          `json:"default_concurrency"`
 	DefaultBalance       float64                      `json:"default_balance"`
@@ -157,6 +159,8 @@ type PublicSettings struct {
 	ReferralEnabled                  bool             `json:"referral_enabled"`
 	BackendModeEnabled               bool             `json:"backend_mode_enabled"`
 	Version                          string           `json:"version"`
+	CommunityQRCode                  string           `json:"community_qr_code"`
+	CommunityGroupURL                string           `json:"community_group_url"`
 
 	// Client changelog entries (public view: filtered to enabled only)
 	ClientChangelogEntries []ClientChangelogEntry `json:"client_changelog_entries"`

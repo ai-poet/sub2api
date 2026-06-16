@@ -128,6 +128,8 @@ export interface PublicSettings {
   version: string
   client_changelog_entries: ClientChangelogEntry[]
   deferred_fields?: string[]
+  community_qr_code: string
+  community_group_url: string
 }
 
 export interface AuthResponse {

@@ -54,6 +54,8 @@ type SystemSettings struct {
 	CustomMenuItems              string // JSON array of custom menu items
 	CustomEndpoints              string // JSON array of custom endpoints
 	GroupStatusEnabled           bool
+	CommunityQRCode              string // 交流群二维码图片 (base64)
+	CommunityGroupURL            string // 交流群链接/群号
 
 	DefaultConcurrency   int
 	DefaultBalance       float64
@@ -133,6 +135,8 @@ type PublicSettings struct {
 	ReferralEnabled     bool
 	BackendModeEnabled  bool
 	Version             string
+	CommunityQRCode     string // 交流群二维码图片 (base64)
+	CommunityGroupURL   string // 交流群链接/群号
 
 	// Client changelog entries (filtered, sorted for public view)
 	ClientChangelogEntries []ClientChangelogEntry
