@@ -81,9 +81,7 @@ func ResponsesToChatCompletions(resp *ResponsesResponse, model string) *ChatComp
 		FinishReason: finishReason,
 	}}
 
-	if resp.Usage != nil {
-		out.Usage = chatUsageFromResponsesUsage(resp.Usage)
-	}
+	out.Usage = chatUsageFromResponsesUsage(resp.Usage)
 
 	return out
 }
@@ -144,12 +142,20 @@ func ResponsesEventToChatChunks(evt *ResponsesStreamEvent, state *ResponsesEvent
 		return resToChatHandleTextDelta(evt, state)
 	case "response.output_item.added":
 		return resToChatHandleOutputItemAdded(evt, state)
-	case "response.function_call_arguments.delta":
+	case "response.function_call_arguments.delta",
+		// custom/freeform 工具（如新版 apply_patch）的输入增量与 function_call 参数增量同形，
+		// 均按 OutputIndex 累加到对应工具调用。
+		"response.custom_tool_call_input.delta":
 		return resToChatHandleFuncArgsDelta(evt, state)
-	case "response.reasoning_summary_text.delta":
+	case "response.reasoning_summary_text.delta",
+		// 原始推理文本增量（真实 Codex 客户端消费的 reasoning_text.delta），
+		// 与 reasoning summary 一样映射为 reasoning_content。
+		"response.reasoning_text.delta":
 		return resToChatHandleReasoningDelta(evt, state)
 	case "response.reasoning_summary_text.done":
 		return nil
+	// response.done 是 Realtime/WS 与项目透传路径使用的终止别名；
+	// 普通 Responses HTTP SSE 的公开终止事件仍以 response.completed 为主。
 	case "response.completed", "response.done", "response.incomplete", "response.failed":
 		return resToChatHandleCompleted(evt, state)
 	default:
@@ -228,7 +234,9 @@ func resToChatHandleTextDelta(evt *ResponsesStreamEvent, state *ResponsesEventTo
 }
 
 func resToChatHandleOutputItemAdded(evt *ResponsesStreamEvent, state *ResponsesEventToChatState) []ChatCompletionsChunk {
-	if evt.Item == nil || evt.Item.Type != "function_call" {
+	// function_call 与 custom_tool_call（custom/freeform 工具）均按工具调用注册，
+	// 以便后续 *_input.delta / *_arguments.delta 能映射到正确的工具索引。
+	if evt.Item == nil || (evt.Item.Type != "function_call" && evt.Item.Type != "custom_tool_call") {
 		return nil
 	}
 
@@ -445,7 +453,7 @@ func (a *BufferedResponseAccumulator) ProcessEvent(event *ResponsesStreamEvent) 
 			_, _ = a.text.WriteString(event.Delta)
 		}
 	case "response.output_item.added":
-		if event.Item != nil && event.Item.Type == "function_call" {
+		if event.Item != nil && (event.Item.Type == "function_call" || event.Item.Type == "custom_tool_call") {
 			idx := len(a.funcCalls)
 			a.outputIndexToFuncIdx[event.OutputIndex] = idx
 			a.funcCalls = append(a.funcCalls, bufferedFuncCall{
@@ -453,13 +461,13 @@ func (a *BufferedResponseAccumulator) ProcessEvent(event *ResponsesStreamEvent) 
 				Name:   event.Item.Name,
 			})
 		}
-	case "response.function_call_arguments.delta":
+	case "response.function_call_arguments.delta", "response.custom_tool_call_input.delta":
 		if event.Delta != "" {
 			if idx, ok := a.outputIndexToFuncIdx[event.OutputIndex]; ok {
 				_, _ = a.funcCalls[idx].Args.WriteString(event.Delta)
 			}
 		}
-	case "response.reasoning_summary_text.delta":
+	case "response.reasoning_summary_text.delta", "response.reasoning_text.delta":
 		if event.Delta != "" {
 			_, _ = a.reasoning.WriteString(event.Delta)
 		}
