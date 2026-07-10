@@ -84,6 +84,7 @@ var codexModelMap = map[string]string{
 	"gpt-5":                      "gpt-5.1",
 	"gpt-5-mini":                 "gpt-5.1",
 	"gpt-5-nano":                 "gpt-5.1",
+}
 
 type codexTransformResult struct {
 	Modified        bool
