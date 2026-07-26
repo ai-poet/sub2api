@@ -234,11 +234,6 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		RiskControlEnabled:                                     settings.RiskControlEnabled,
 		CyberSessionBlockEnabled:                               settings.CyberSessionBlockEnabled,
 		CyberSessionBlockTTLSeconds:                            settings.CyberSessionBlockTTLSeconds,
-		AffiliateRebateRate:                                    settings.AffiliateRebateRate,
-		AffiliateRebateFreezeHours:                             settings.AffiliateRebateFreezeHours,
-		AffiliateRebateDurationDays:                            settings.AffiliateRebateDurationDays,
-		AffiliateRebatePerInviteeCap:                           settings.AffiliateRebatePerInviteeCap,
-		AdminRechargeRebateEnabled:                             settings.AdminRechargeRebateEnabled,
 		DefaultUserRPMLimit:                                    settings.DefaultUserRPMLimit,
 		DefaultSubscriptions:                                   defaultSubscriptions,
 		EnableModelFallback:                                    settings.EnableModelFallback,
@@ -313,7 +308,6 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 
 		AvailableChannelsEnabled: settings.AvailableChannelsEnabled,
 
-		AffiliateEnabled: settings.AffiliateEnabled,
 
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
 	}

@@ -21,11 +21,12 @@ import (
 )
 
 const (
+	// 邀请码在 OAuth 往返中的暂存 cookie（本仓库用于 fork 推荐码）
+	emailOAuthAffiliateCookie = "email_oauth_affiliate"
 	emailOAuthCookiePath      = "/api/v1/auth/oauth"
 	emailOAuthStateCookieName = "email_oauth_state"
 	emailOAuthRedirectCookie  = "email_oauth_redirect"
 	emailOAuthProviderCookie  = "email_oauth_provider"
-	emailOAuthAffiliateCookie = "email_oauth_affiliate"
 	emailOAuthCookieMaxAgeSec = 10 * 60
 	emailOAuthDefaultRedirect = "/dashboard"
 )
@@ -361,7 +362,6 @@ func (h *AuthHandler) completeEmailOAuthRegistration(c *gin.Context, provider st
 
 	affiliateCode := strings.TrimSpace(req.AffCode)
 	if affiliateCode == "" {
-		affiliateCode = pendingSessionStringValue(session.UpstreamIdentityClaims, "aff_code")
 	}
 
 	tokenPair, user, err := h.authService.RegisterVerifiedOAuthEmailAccount(

@@ -219,7 +219,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyChannelMonitorEnabled,
 		SettingKeyChannelMonitorDefaultIntervalSeconds,
 		SettingKeyAvailableChannelsEnabled,
-		SettingKeyAffiliateEnabled,
 		SettingKeyRiskControlEnabled,
 		SettingKeyAllowUserViewErrorRequests,
 	}
@@ -339,7 +338,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 
 		AvailableChannelsEnabled: settings[SettingKeyAvailableChannelsEnabled] == "true",
 
-		AffiliateEnabled: settings[SettingKeyAffiliateEnabled] == "true",
 
 		RiskControlEnabled: settings[SettingKeyRiskControlEnabled] == "true",
 
@@ -446,6 +444,15 @@ func (s *SettingService) IsUserErrorViewAllowed(ctx context.Context) bool {
 // A unit test diffs this struct's JSON keys against dto.PublicSettings to catch
 // drift automatically (see setting_service_injection_test.go).
 type PublicSettingsInjectionPayload struct {
+	// fork 自有的公开设置
+	PurchaseSubscriptionOpenMode string                 `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL     string                 `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       string                 `json:"client_download_macos_url"`
+	GroupStatusEnabled           bool                   `json:"group_status_enabled"`
+	ReferralEnabled              bool                   `json:"referral_enabled"`
+	CommunityQRCode              string                 `json:"community_qr_code"`
+	CommunityGroupURL            string                 `json:"community_group_url"`
+	ClientChangelogEntries       []ClientChangelogEntry `json:"client_changelog_entries"`
 	RegistrationEnabled              bool                     `json:"registration_enabled"`
 	EmailVerifyEnabled               bool                     `json:"email_verify_enabled"`
 	RegistrationEmailSuffixWhitelist []string                 `json:"registration_email_suffix_whitelist"`
@@ -500,7 +507,6 @@ type PublicSettingsInjectionPayload struct {
 	ChannelMonitorEnabled                bool `json:"channel_monitor_enabled"`
 	ChannelMonitorDefaultIntervalSeconds int  `json:"channel_monitor_default_interval_seconds"`
 	AvailableChannelsEnabled             bool `json:"available_channels_enabled"`
-	AffiliateEnabled                     bool `json:"affiliate_enabled"`
 	RiskControlEnabled                   bool `json:"risk_control_enabled"`
 	AllowUserViewErrorRequests           bool `json:"allow_user_view_error_requests"`
 }
@@ -514,6 +520,15 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 	}
 
 	return &PublicSettingsInjectionPayload{
+		// fork 自有的公开设置
+		PurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:     settings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:       settings.ClientDownloadMacOSURL,
+		GroupStatusEnabled:           settings.GroupStatusEnabled,
+		ReferralEnabled:              settings.ReferralEnabled,
+		CommunityQRCode:              settings.CommunityQRCode,
+		CommunityGroupURL:            settings.CommunityGroupURL,
+		ClientChangelogEntries:       settings.ClientChangelogEntries,
 		RegistrationEnabled:              settings.RegistrationEnabled,
 		EmailVerifyEnabled:               settings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist: settings.RegistrationEmailSuffixWhitelist,
@@ -564,7 +579,6 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ChannelMonitorEnabled:                settings.ChannelMonitorEnabled,
 		ChannelMonitorDefaultIntervalSeconds: settings.ChannelMonitorDefaultIntervalSeconds,
 		AvailableChannelsEnabled:             settings.AvailableChannelsEnabled,
-		AffiliateEnabled:                     settings.AffiliateEnabled,
 		RiskControlEnabled:                   settings.RiskControlEnabled,
 		AllowUserViewErrorRequests:           settings.AllowUserViewErrorRequests,
 	}, nil
