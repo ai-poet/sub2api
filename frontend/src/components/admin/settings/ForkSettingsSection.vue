@@ -118,17 +118,13 @@
         <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           {{ t('admin.settings.site.communityQRCode') }}
         </label>
-        <input
+        <ImageUpload
           v-model="form.community_qr_code"
-          type="text"
-          class="input font-mono text-xs"
-          :placeholder="t('admin.settings.site.communityQRCodePlaceholder')"
-        />
-        <img
-          v-if="form.community_qr_code"
-          :src="form.community_qr_code"
-          alt="QR"
-          class="mt-2 h-24 w-24 rounded border border-gray-200 object-contain dark:border-dark-600"
+          mode="image"
+          :upload-label="t('admin.settings.site.uploadQRCode')"
+          :remove-label="t('admin.settings.site.remove')"
+          :hint="t('admin.settings.site.qrCodeHint')"
+          :max-size="500 * 1024"
         />
       </div>
     </div>
@@ -137,6 +133,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import ImageUpload from '@/components/common/ImageUpload.vue'
 import Toggle from '@/components/common/Toggle.vue'
 
 // fork 自有的站点设置区块。抽成独立组件是为了让上游 SettingsView.vue 保持原样，
