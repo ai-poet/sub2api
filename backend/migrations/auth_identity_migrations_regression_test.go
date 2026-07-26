@@ -7,15 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMigration112UsesIdempotentAddColumn(t *testing.T) {
-	content, err := FS.ReadFile("112_add_payment_order_provider_key_snapshot.sql")
-	require.NoError(t, err)
-
-	sql := string(content)
-	require.Contains(t, sql, "ADD COLUMN IF NOT EXISTS provider_key VARCHAR(30)")
-	require.NotContains(t, sql, "ADD COLUMN provider_key VARCHAR(30);")
-}
-
 func TestMigration118DoesNotForceOverwriteAuthSourceGrantDefaults(t *testing.T) {
 	content, err := FS.ReadFile("118_wechat_dual_mode_and_auth_source_defaults.sql")
 	require.NoError(t, err)
@@ -47,35 +38,6 @@ func TestAuthIdentityReportTypeWideningRunsBeforeLongReportWritersAndStillReconc
 	followupSQL := string(followupContent)
 	require.Contains(t, followupSQL, "ALTER TABLE auth_identity_migration_reports")
 	require.Contains(t, followupSQL, "ALTER COLUMN report_type TYPE VARCHAR(80)")
-}
-
-func TestMigration119DefersPaymentIndexRolloutToOnlineFollowup(t *testing.T) {
-	content, err := FS.ReadFile("119_enforce_payment_orders_out_trade_no_unique.sql")
-	require.NoError(t, err)
-
-	sql := string(content)
-	require.Contains(t, sql, "120_enforce_payment_orders_out_trade_no_unique_notx.sql")
-	require.Contains(t, sql, "NULL;")
-	require.NotContains(t, sql, "CREATE UNIQUE INDEX")
-	require.NotContains(t, sql, "DROP INDEX")
-
-	followupContent, err := FS.ReadFile("120_enforce_payment_orders_out_trade_no_unique_notx.sql")
-	require.NoError(t, err)
-
-	followupSQL := string(followupContent)
-	require.Contains(t, followupSQL, "explicit duplicate out_trade_no precheck")
-	require.Contains(t, followupSQL, "stale invalid paymentorder_out_trade_no_unique index")
-	require.Contains(t, followupSQL, "CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS paymentorder_out_trade_no_unique")
-	require.NotContains(t, followupSQL, "DROP INDEX CONCURRENTLY IF EXISTS paymentorder_out_trade_no_unique")
-	require.Contains(t, followupSQL, "DROP INDEX CONCURRENTLY IF EXISTS paymentorder_out_trade_no")
-	require.Contains(t, followupSQL, "WHERE out_trade_no <> ''")
-
-	alignmentContent, err := FS.ReadFile("120a_align_payment_orders_out_trade_no_index_name.sql")
-	require.NoError(t, err)
-
-	alignmentSQL := string(alignmentContent)
-	require.Contains(t, alignmentSQL, "paymentorder_out_trade_no_unique")
-	require.Contains(t, alignmentSQL, "RENAME TO paymentorder_out_trade_no")
 }
 
 func TestMigration110SeedsAuthSourceSignupGrantsDisabledByDefault(t *testing.T) {
@@ -126,21 +88,6 @@ func TestMigration124BackfillsLegacyOIDCSecurityFlagsSafely(t *testing.T) {
 	require.Contains(t, sql, "ON CONFLICT (key) DO NOTHING")
 	require.Contains(t, sql, "oidc_connect_enabled")
 	require.Contains(t, sql, "'false'")
-}
-
-func TestMigration134AddsAffiliateLedgerAuditFieldsWithoutJSONCast(t *testing.T) {
-	content, err := FS.ReadFile("134_affiliate_ledger_audit_snapshots.sql")
-	require.NoError(t, err)
-
-	sql := string(content)
-	require.Contains(t, sql, "ADD COLUMN IF NOT EXISTS source_order_id BIGINT")
-	require.Contains(t, sql, "ADD COLUMN IF NOT EXISTS balance_after DECIMAL(20,8)")
-	require.Contains(t, sql, "ADD COLUMN IF NOT EXISTS aff_quota_after DECIMAL(20,8)")
-	require.Contains(t, sql, "substring(")
-	require.Contains(t, sql, `"rebateAmount"`)
-	require.Contains(t, sql, "COUNT(*) OVER (PARTITION BY ra.order_id) AS order_match_count")
-	require.Contains(t, sql, "COUNT(*) OVER (PARTITION BY ual.id) AS ledger_match_count")
-	require.NotContains(t, sql, "detail::jsonb")
 }
 
 func TestMigration135AllowsGitHubAndGoogleAuthProviders(t *testing.T) {

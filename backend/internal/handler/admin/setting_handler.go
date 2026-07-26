@@ -112,6 +112,13 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 	}
 
 	payload := dto.SystemSettings{
+		// fork 自有设置
+		PurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:     settings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:       settings.ClientDownloadMacOSURL,
+		GroupStatusEnabled:           settings.GroupStatusEnabled,
+		CommunityQRCode:              settings.CommunityQRCode,
+		CommunityGroupURL:            settings.CommunityGroupURL,
 		RegistrationEnabled:                                    settings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     settings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       settings.RegistrationEmailSuffixWhitelist,

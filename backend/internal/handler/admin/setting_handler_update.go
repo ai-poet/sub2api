@@ -19,6 +19,15 @@ import (
 
 // UpdateSettingsRequest 更新设置请求
 type UpdateSettingsRequest struct {
+	// fork 自有设置
+	PurchaseSubscriptionOpenMode *string `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL     *string `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       *string `json:"client_download_macos_url"`
+	GroupStatusEnabled           *bool   `json:"group_status_enabled"`
+	CommunityQRCode              *string `json:"community_qr_code"`
+	CommunityGroupURL            *string `json:"community_group_url"`
+	ClientChangelogEntries       *string `json:"client_changelog_entries"`
+
 	// 注册设置
 	RegistrationEnabled              bool                         `json:"registration_enabled"`
 	EmailVerifyEnabled               bool                         `json:"email_verify_enabled"`
@@ -1660,6 +1669,9 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		},
 		ForceEmailOnThirdPartySignup: boolValueOrDefault(req.ForceEmailOnThirdPartySignup, previousAuthSourceDefaults.ForceEmailOnThirdPartySignup),
 	}
+	if !applyForkSettingsFromRequest(c, settings, previousSettings, req) {
+		return
+	}
 	if err := h.settingService.UpdateSettingsWithAuthSourceDefaults(c.Request.Context(), settings, authSourceDefaults); err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -1700,6 +1712,13 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 
 
 	payload := dto.SystemSettings{
+		// fork 自有设置
+		PurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:     settings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:       settings.ClientDownloadMacOSURL,
+		GroupStatusEnabled:           settings.GroupStatusEnabled,
+		CommunityQRCode:              settings.CommunityQRCode,
+		CommunityGroupURL:            settings.CommunityGroupURL,
 		RegistrationEnabled:                                    updatedSettings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     updatedSettings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       updatedSettings.RegistrationEmailSuffixWhitelist,
@@ -1975,4 +1994,106 @@ func (h *SettingHandler) ensureUserAttributeDefinition(ctx context.Context, key,
 		return
 	}
 	slog.Info("dingtalk: created user attribute definition", "key", key, "name", name, "type", attrType)
+}
+
+
+// applyForkSettingsFromRequest 把 fork 自有的站点设置从请求写入 SystemSettings。
+// 采用指针字段语义：未提供的键沿用旧值；URL 类字段做绝对 http(s) 校验。
+// 返回 false 表示已向客户端写过错误响应，调用方应直接返回。
+func applyForkSettingsFromRequest(
+	c *gin.Context,
+	settings *service.SystemSettings,
+	previous *service.SystemSettings,
+	req UpdateSettingsRequest,
+) bool {
+	settings.PurchaseSubscriptionEnabled = previous.PurchaseSubscriptionEnabled
+	if req.PurchaseSubscriptionEnabled != nil {
+		settings.PurchaseSubscriptionEnabled = *req.PurchaseSubscriptionEnabled
+	}
+
+	purchaseURL := previous.PurchaseSubscriptionURL
+	if req.PurchaseSubscriptionURL != nil {
+		purchaseURL = strings.TrimSpace(*req.PurchaseSubscriptionURL)
+	}
+	if purchaseURL != "" {
+		if err := config.ValidateAbsoluteHTTPURL(purchaseURL); err != nil {
+			response.BadRequest(c, "Purchase Subscription URL must be an absolute http(s) URL")
+			return false
+		}
+	}
+	settings.PurchaseSubscriptionURL = purchaseURL
+
+	openMode := normalizeForkPurchaseOpenMode(previous.PurchaseSubscriptionOpenMode)
+	if req.PurchaseSubscriptionOpenMode != nil {
+		openMode = strings.TrimSpace(*req.PurchaseSubscriptionOpenMode)
+		if openMode == "current_tab" {
+			openMode = "iframe"
+		}
+		if openMode != "iframe" && openMode != "new_window" {
+			response.BadRequest(c, "Purchase Subscription open mode must be 'iframe' or 'new_window'")
+			return false
+		}
+	}
+	settings.PurchaseSubscriptionOpenMode = openMode
+
+	windowsURL := previous.ClientDownloadWindowsURL
+	if req.ClientDownloadWindowsURL != nil {
+		windowsURL = strings.TrimSpace(*req.ClientDownloadWindowsURL)
+	}
+	if windowsURL != "" {
+		if err := config.ValidateAbsoluteHTTPURL(windowsURL); err != nil {
+			response.BadRequest(c, "Windows client download URL must be an absolute http(s) URL")
+			return false
+		}
+	}
+	settings.ClientDownloadWindowsURL = windowsURL
+
+	macosURL := previous.ClientDownloadMacOSURL
+	if req.ClientDownloadMacOSURL != nil {
+		macosURL = strings.TrimSpace(*req.ClientDownloadMacOSURL)
+	}
+	if macosURL != "" {
+		if err := config.ValidateAbsoluteHTTPURL(macosURL); err != nil {
+			response.BadRequest(c, "macOS client download URL must be an absolute http(s) URL")
+			return false
+		}
+	}
+	settings.ClientDownloadMacOSURL = macosURL
+
+	settings.GroupStatusEnabled = previous.GroupStatusEnabled
+	if req.GroupStatusEnabled != nil {
+		settings.GroupStatusEnabled = *req.GroupStatusEnabled
+	}
+
+	settings.CommunityQRCode = previous.CommunityQRCode
+	if req.CommunityQRCode != nil {
+		settings.CommunityQRCode = *req.CommunityQRCode
+	}
+
+	groupURL := previous.CommunityGroupURL
+	if req.CommunityGroupURL != nil {
+		groupURL = strings.TrimSpace(*req.CommunityGroupURL)
+	}
+	if groupURL != "" {
+		if err := config.ValidateAbsoluteHTTPURL(groupURL); err != nil {
+			response.BadRequest(c, "Community group URL must be an absolute http(s) URL")
+			return false
+		}
+	}
+	settings.CommunityGroupURL = groupURL
+
+	settings.ClientChangelogEntries = previous.ClientChangelogEntries
+	if req.ClientChangelogEntries != nil {
+		settings.ClientChangelogEntries = *req.ClientChangelogEntries
+	}
+	return true
+}
+
+func normalizeForkPurchaseOpenMode(mode string) string {
+	switch strings.TrimSpace(mode) {
+	case "new_window":
+		return "new_window"
+	default:
+		return "iframe"
+	}
 }

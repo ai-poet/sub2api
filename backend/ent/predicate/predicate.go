@@ -36,18 +36,6 @@ type BatchImageItem func(*sql.Selector)
 // BatchImageJob is the predicate function for batchimagejob builders.
 type BatchImageJob func(*sql.Selector)
 
-// ChannelMonitor is the predicate function for channelmonitor builders.
-type ChannelMonitor func(*sql.Selector)
-
-// ChannelMonitorDailyRollup is the predicate function for channelmonitordailyrollup builders.
-type ChannelMonitorDailyRollup func(*sql.Selector)
-
-// ChannelMonitorHistory is the predicate function for channelmonitorhistory builders.
-type ChannelMonitorHistory func(*sql.Selector)
-
-// ChannelMonitorRequestTemplate is the predicate function for channelmonitorrequesttemplate builders.
-type ChannelMonitorRequestTemplate func(*sql.Selector)
-
 // CompositeModelRoute is the predicate function for compositemodelroute builders.
 type CompositeModelRoute func(*sql.Selector)
 
