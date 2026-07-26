@@ -120,7 +120,6 @@ func NewAuthService(
 		turnstileService:      turnstileService,
 		emailQueueService:     emailQueueService,
 		promoService:          promoService,
-		affiliateService:      affiliateService,
 		defaultSubAssigner:    defaultSubAssigner,
 		userPlatformQuotaRepo: userPlatformQuotaRepo,
 		referralService:    referralService,
@@ -882,22 +881,6 @@ func authSourceSignupSettings(defaults *AuthSourceDefaultSettings, signupSource 
 		return defaults.DingTalk, true
 	default:
 		return ProviderDefaultGrantSettings{}, false
-	}
-}
-
-// bindOAuthAffiliate initializes the affiliate profile and binds the inviter
-// for an OAuth-registered user. Failures are logged but never block registration.
-func (s *AuthService) bindOAuthAffiliate(ctx context.Context, userID int64, affiliateCode string) {
-	if s.affiliateService == nil || userID <= 0 {
-		return
-	}
-	if _, err := s.affiliateService.EnsureUserAffiliate(ctx, userID); err != nil {
-		logger.LegacyPrintf("service.auth", "[Auth] Failed to initialize affiliate profile for user %d: %v", userID, err)
-	}
-	if code := strings.TrimSpace(affiliateCode); code != "" {
-		if err := s.affiliateService.BindInviterByCode(ctx, userID, code); err != nil {
-			logger.LegacyPrintf("service.auth", "[Auth] Failed to bind affiliate inviter for user %d: %v", userID, err)
-		}
 	}
 }
 

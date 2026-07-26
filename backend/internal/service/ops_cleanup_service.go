@@ -74,7 +74,6 @@ func NewOpsCleanupService(
 		db:                db,
 		redisClient:       redisClient,
 		cfg:               cfg,
-		channelMonitorSvc: channelMonitorSvc,
 		settingRepo:       settingRepo,
 		instanceID:        uuid.NewString(),
 	}
