@@ -42,5 +42,25 @@ declare module 'vue-router' {
      * @default false
      */
     hideInMenu?: boolean
+
+    /**
+     * @default false
+     */
+
+    /**
+     * 是否要求风控中心功能开关已启用
+     * @default false
+     */
+    requiresRiskControl?: boolean
+
+    /**
+     * i18n key for the page title
+     */
+    titleKey?: string
+
+    /**
+     * i18n key for the page description
+     */
+    descriptionKey?: string
   }
 }

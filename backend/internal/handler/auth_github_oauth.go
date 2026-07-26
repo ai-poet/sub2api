@@ -130,11 +130,7 @@ func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) {
 	secureCookie := isRequestHTTPS(c)
 	setGitHubCookie(c, gitHubOAuthStateCookieName, encodeCookieValue(string(payloadJSON)), gitHubOAuthCookieMaxAgeSec, secureCookie)
 
-	redirectURI := strings.TrimSpace(cfg.RedirectURL)
-	if redirectURI == "" {
-		response.ErrorFrom(c, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "oauth redirect url not configured"))
-		return
-	}
+	redirectURI := resolveGitHubRedirectURI(c, cfg)
 
 	authURL, err := buildGitHubAuthorizeURL(cfg, nonce, redirectURI)
 	if err != nil {
@@ -207,11 +203,8 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 		return
 	}
 
-	redirectURI := strings.TrimSpace(cfg.RedirectURL)
-	if redirectURI == "" {
-		redirectOAuthError(c, frontendCallback, "config_error", "oauth redirect url not configured", "")
-		return
-	}
+	// 与 start 使用同一推导逻辑，保证 redirect_uri 一致（GitHub 校验两次必须相同）。
+	redirectURI := resolveGitHubRedirectURI(c, cfg)
 
 	tokenResp, err := githubExchangeCode(c.Request.Context(), cfg, code, redirectURI)
 	if err != nil {
@@ -248,7 +241,7 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 	}
 
 	// 传入空邀请码；如果需要邀请码，服务层返回 ErrOAuthInvitationRequired
-	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), email, username, "")
+	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), email, username, "", "", "github")
 	if err != nil {
 		if errors.Is(err, service.ErrOAuthInvitationRequired) {
 			pendingToken, tokenErr := h.authService.CreatePendingOAuthToken(email, username)
@@ -298,7 +291,7 @@ func (h *AuthHandler) CompleteGitHubOAuthRegistration(c *gin.Context) {
 		return
 	}
 
-	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), email, username, req.InvitationCode)
+	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), email, username, req.InvitationCode, "", "github")
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -503,4 +496,18 @@ func githubSyntheticEmail(subject string) string {
 		return ""
 	}
 	return "github-" + subject + service.GitHubOAuthSyntheticEmailDomain
+}
+
+// resolveGitHubRedirectURI 返回 GitHub OAuth 的回调地址。
+// 优先使用显式配置；未配置时按当前请求推导（scheme://host + 固定回调路径），
+// start 与 callback 使用同一推导逻辑保证 redirect_uri 一致。
+func resolveGitHubRedirectURI(c *gin.Context, cfg config.GitHubOAuthConfig) string {
+	if v := strings.TrimSpace(cfg.RedirectURL); v != "" {
+		return v
+	}
+	scheme := "http"
+	if isRequestHTTPS(c) {
+		scheme = "https"
+	}
+	return scheme + "://" + c.Request.Host + "/api/v1/auth/oauth/github/callback"
 }

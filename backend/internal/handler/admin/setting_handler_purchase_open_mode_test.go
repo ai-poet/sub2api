@@ -76,7 +76,7 @@ func setupSettingHandlerForPurchaseOpenModeTest(repo service.SettingRepository) 
 			UserBalance:     0,
 		},
 	})
-	handler := NewSettingHandler(settingService, nil, nil, nil)
+	handler := NewSettingHandler(settingService, nil, nil, nil, nil)
 	router.PUT("/api/v1/admin/settings", handler.UpdateSettings)
 	return router
 }
@@ -166,8 +166,8 @@ func TestSettingHandler_UpdateSettings_ClientDownloadURLs_TrimsAndPersists(t *te
 	router := setupSettingHandlerForPurchaseOpenModeTest(repo)
 
 	body := []byte(`{
-		"client_download_windows_url": " https://downloads.example.com/cheaprouter-setup.exe ",
-		"client_download_macos_url": " https://downloads.example.com/cheaprouter.dmg "
+		"client_download_windows_url": " https://downloads.example.com/sub2api-windows.exe ",
+		"client_download_macos_url": " https://downloads.example.com/sub2api-macos.dmg "
 	}`)
 
 	recorder := httptest.NewRecorder()
@@ -186,16 +186,16 @@ func TestSettingHandler_UpdateSettings_ClientDownloadURLs_TrimsAndPersists(t *te
 	}
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 	require.Equal(t, 0, response.Code)
-	require.Equal(t, "https://downloads.example.com/cheaprouter-setup.exe", response.Data.ClientDownloadWindowsURL)
-	require.Equal(t, "https://downloads.example.com/cheaprouter.dmg", response.Data.ClientDownloadMacOSURL)
-	require.Equal(t, "https://downloads.example.com/cheaprouter-setup.exe", repo.values[service.SettingKeyClientDownloadWindowsURL])
-	require.Equal(t, "https://downloads.example.com/cheaprouter.dmg", repo.values[service.SettingKeyClientDownloadMacOSURL])
+	require.Equal(t, "https://downloads.example.com/sub2api-windows.exe", response.Data.ClientDownloadWindowsURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-macos.dmg", response.Data.ClientDownloadMacOSURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-windows.exe", repo.values["client_download_windows_url"])
+	require.Equal(t, "https://downloads.example.com/sub2api-macos.dmg", repo.values["client_download_macos_url"])
 }
 
 func TestSettingHandler_UpdateSettings_ClientDownloadURLs_AllowsClearing(t *testing.T) {
 	repo := &settingRepoForPurchaseOpenModeTest{values: map[string]string{
-		service.SettingKeyClientDownloadWindowsURL: "https://downloads.example.com/old-windows.exe",
-		service.SettingKeyClientDownloadMacOSURL:   "https://downloads.example.com/old-macos.dmg",
+		"client_download_windows_url": "https://downloads.example.com/old-windows.exe",
+		"client_download_macos_url":   "https://downloads.example.com/old-macos.dmg",
 	}}
 	router := setupSettingHandlerForPurchaseOpenModeTest(repo)
 
@@ -210,8 +210,8 @@ func TestSettingHandler_UpdateSettings_ClientDownloadURLs_AllowsClearing(t *test
 	router.ServeHTTP(recorder, request)
 
 	require.Equal(t, http.StatusOK, recorder.Code)
-	require.Equal(t, "", repo.values[service.SettingKeyClientDownloadWindowsURL])
-	require.Equal(t, "", repo.values[service.SettingKeyClientDownloadMacOSURL])
+	require.Equal(t, "", repo.values["client_download_windows_url"])
+	require.Equal(t, "", repo.values["client_download_macos_url"])
 }
 
 func TestSettingHandler_UpdateSettings_ClientDownloadURLs_RejectsInvalidURL(t *testing.T) {
@@ -219,8 +219,8 @@ func TestSettingHandler_UpdateSettings_ClientDownloadURLs_RejectsInvalidURL(t *t
 	router := setupSettingHandlerForPurchaseOpenModeTest(repo)
 
 	body := []byte(`{
-		"client_download_windows_url": "ftp://downloads.example.com/cheaprouter.exe",
-		"client_download_macos_url": "https://downloads.example.com/cheaprouter.dmg"
+		"client_download_windows_url": "ftp://downloads.example.com/sub2api.exe",
+		"client_download_macos_url": "https://downloads.example.com/sub2api.dmg"
 	}`)
 
 	recorder := httptest.NewRecorder()

@@ -143,6 +143,12 @@ func runMainServer() {
 		log.Println("⚠️  WARNING: Running in SIMPLE mode - billing and quota checks are DISABLED")
 	}
 
+	// 每次启动都对齐一次数据库 schema。安装路径之外原本不执行迁移，
+	// 升级重启会让新代码撞上尚未建好的列；迁移器本身幂等且带 advisory lock。
+	if err := setup.MigrateOnStartup(cfg); err != nil {
+		log.Fatalf("Failed to apply database migrations: %v", err)
+	}
+
 	buildInfo := handler.BuildInfo{
 		Version:   Version,
 		BuildType: BuildType,
@@ -153,6 +159,15 @@ func runMainServer() {
 		log.Fatalf("Failed to initialize application: %v", err)
 	}
 	defer app.Cleanup()
+	if app.PromptAudit != nil {
+		if err := app.PromptAudit.Start(context.Background()); err != nil {
+			// Startup continues so unrelated APIs stay up. Fail-closed (unavailable)
+			// applies only when a persisted blocking policy was observed; without
+			// blocking intent, Prompt Audit stays ModeOff so the gateway remains
+			// usable and administrators can still disable the feature (#4560).
+			log.Printf("Prompt Audit started in degraded state: %v", err)
+		}
+	}
 
 	// 启动服务器
 	go func() {
@@ -174,7 +189,7 @@ func runMainServer() {
 	defer cancel()
 
 	if err := app.Server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		log.Printf("Server forced to shutdown: %v", err)
 	}
 
 	log.Println("Server exited")

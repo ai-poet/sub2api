@@ -7,9 +7,13 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	htmlpkg "html"
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -37,6 +41,7 @@ type FrontendServer struct {
 	baseHTML   []byte
 	cache      *HTMLCache
 	settings   PublicSettingsProvider
+	overrideDir string // 本地文件覆盖目录，优先于内嵌资源
 }
 
 // NewFrontendServer creates a new frontend server with settings injection
@@ -99,7 +104,13 @@ func (s *FrontendServer) Middleware() gin.HandlerFunc {
 			return
 		}
 
-		// Serve static files normally
+		// Try local override first
+		if s.tryServeOverride(c, cleanPath) {
+			return
+		}
+
+		// Serve static files normally (hashed assets get long-lived cache headers)
+		applyStaticAssetCacheHeaders(c.Writer.Header(), cleanPath)
 		s.fileServer.ServeHTTP(c.Writer, c.Request)
 		c.Abort()
 	}
@@ -111,6 +122,22 @@ func (s *FrontendServer) fileExists(path string) bool {
 		return false
 	}
 	_ = file.Close()
+	return true
+}
+
+// tryServeOverride 命中本地覆盖文件时直接返回该文件。
+// overrideDir 下的文件优先于内嵌资源，便于不重建镜像替换前端产物。
+func (s *FrontendServer) tryServeOverride(c *gin.Context, cleanPath string) bool {
+	if s.overrideDir == "" {
+		return false
+	}
+	filePath := filepath.Join(s.overrideDir, filepath.Clean("/"+cleanPath))
+	info, err := os.Stat(filePath)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	c.File(filePath)
+	c.Abort()
 	return true
 }
 
@@ -182,10 +209,62 @@ func (s *FrontendServer) injectSettings(settingsJSON []byte) []byte {
 	headClose := []byte("</head>")
 	result := bytes.Replace(s.baseHTML, headClose, append(script, headClose...), 1)
 
-	// Replace <title> with custom site name so the browser tab shows it immediately
+	// Apply custom branding before the browser paints the static defaults.
 	result = injectSiteTitle(result, settingsJSON)
+	result = injectSiteFavicon(result, settingsJSON)
 
 	return result
+}
+
+// injectSiteFavicon replaces the static favicon with a configured, browser-safe image URL.
+func injectSiteFavicon(html, settingsJSON []byte) []byte {
+	var cfg struct {
+		SiteLogo string `json:"site_logo"`
+	}
+	if err := json.Unmarshal(settingsJSON, &cfg); err != nil {
+		return html
+	}
+
+	logoURL := safeImageURL(cfg.SiteLogo)
+	if logoURL == "" {
+		return html
+	}
+
+	linkStart := bytes.Index(html, []byte(`<link rel="icon"`))
+	if linkStart == -1 {
+		return html
+	}
+	linkEndOffset := bytes.IndexByte(html[linkStart:], '>')
+	if linkEndOffset == -1 {
+		return html
+	}
+	linkEnd := linkStart + linkEndOffset + 1
+	replacement := []byte(`<link rel="icon" href="` + htmlpkg.EscapeString(logoURL) + `" />`)
+
+	var buf bytes.Buffer
+	buf.Write(html[:linkStart])
+	buf.Write(replacement)
+	buf.Write(html[linkEnd:])
+	return buf.Bytes()
+}
+
+func safeImageURL(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return ""
+	}
+	if strings.HasPrefix(trimmed, "/") && !strings.HasPrefix(trimmed, "//") {
+		return trimmed
+	}
+	if strings.HasPrefix(strings.ToLower(trimmed), "data:image/") {
+		return trimmed
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return ""
+	}
+	return trimmed
 }
 
 // injectSiteTitle replaces the static <title> in HTML with the configured site name.
@@ -205,7 +284,7 @@ func injectSiteTitle(html, settingsJSON []byte) []byte {
 		return html
 	}
 
-	newTitle := []byte("<title>" + cfg.SiteName + " - AI API Gateway</title>")
+	newTitle := []byte("<title>" + htmlpkg.EscapeString(cfg.SiteName) + " - AI API Gateway</title>")
 	var buf bytes.Buffer
 	buf.Write(html[:titleStart])
 	buf.Write(newTitle)
@@ -226,6 +305,7 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 		panic("failed to get dist subdirectory: " + err.Error())
 	}
 	fileServer := http.FileServer(http.FS(distFS))
+	overrideDir := filepath.Join("data", "public")
 
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
@@ -242,6 +322,11 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 
 		if file, err := distFS.Open(cleanPath); err == nil {
 			_ = file.Close()
+			// Try local override first
+			if tryServeOverrideFile(c, overrideDir, cleanPath) {
+				return
+			}
+			applyStaticAssetCacheHeaders(c.Writer.Header(), cleanPath)
 			fileServer.ServeHTTP(c.Writer, c.Request)
 			c.Abort()
 			return
@@ -249,6 +334,20 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 
 		serveIndexHTML(c, distFS)
 	}
+}
+
+func tryServeOverrideFile(c *gin.Context, overrideDir, cleanPath string) bool {
+	if overrideDir == "" {
+		return false
+	}
+	filePath := filepath.Join(overrideDir, filepath.Clean("/"+cleanPath))
+	info, err := os.Stat(filePath)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	c.File(filePath)
+	c.Abort()
+	return true
 }
 
 func shouldBypassEmbeddedFrontend(path string) bool {
@@ -262,8 +361,12 @@ func shouldBypassEmbeddedFrontend(path string) bool {
 		strings.HasPrefix(trimmed, "/antigravity/") ||
 		strings.HasPrefix(trimmed, "/setup/") ||
 		trimmed == "/health" ||
+		trimmed == "/models" ||
 		trimmed == "/responses" ||
-		strings.HasPrefix(trimmed, "/responses/")
+		strings.HasPrefix(trimmed, "/responses/") ||
+		trimmed == "/alpha/search" ||
+		strings.HasPrefix(trimmed, "/images/") ||
+		strings.HasPrefix(trimmed, "/videos/")
 }
 
 func serveIndexHTML(c *gin.Context, fsys fs.FS) {

@@ -12,17 +12,23 @@ import "encoding/json"
 
 // AnthropicRequest is the request body for POST /v1/messages.
 type AnthropicRequest struct {
-	Model        string                 `json:"model"`
-	MaxTokens    int                    `json:"max_tokens"`
-	System       json.RawMessage        `json:"system,omitempty"` // string or []AnthropicContentBlock
-	Messages     []AnthropicMessage     `json:"messages"`
-	Tools        []AnthropicTool        `json:"tools,omitempty"`
-	Stream       bool                   `json:"stream,omitempty"`
-	Temperature  *float64               `json:"temperature,omitempty"`
-	TopP         *float64               `json:"top_p,omitempty"`
-	StopSeqs     []string               `json:"stop_sequences,omitempty"`
-	Thinking     *AnthropicThinking     `json:"thinking,omitempty"`
-	ToolChoice   json.RawMessage        `json:"tool_choice,omitempty"`
+	Model       string             `json:"model"`
+	MaxTokens   int                `json:"max_tokens"`
+	System      json.RawMessage    `json:"system,omitempty"` // string or []AnthropicContentBlock
+	Messages    []AnthropicMessage `json:"messages"`
+	Tools       []AnthropicTool    `json:"tools,omitempty"`
+	Stream      bool               `json:"stream,omitempty"`
+	Temperature *float64           `json:"temperature,omitempty"`
+	TopP        *float64           `json:"top_p,omitempty"`
+	StopSeqs    []string           `json:"stop_sequences,omitempty"`
+	Thinking    *AnthropicThinking `json:"thinking,omitempty"`
+	ToolChoice  json.RawMessage    `json:"tool_choice,omitempty"`
+	// Metadata 会被原样透传给上游。OAuth/Claude-Code 路径依赖 metadata.user_id
+	// 参与上游的"是否为官方 Claude Code 请求"判定；如果经由本结构体重新序列化
+	// 时丢弃该字段，网关侧后续的 metadata 重写(ensureClaudeOAuthMetadataUserID/
+	// RewriteUserIDWithMasking) 在 body 里拿不到起点，就无法重建一个合法的
+	// user_id，进而导致请求被归类为第三方 app。
+	Metadata     json.RawMessage        `json:"metadata,omitempty"`
 	OutputConfig *AnthropicOutputConfig `json:"output_config,omitempty"`
 }
 
@@ -47,11 +53,16 @@ type AnthropicMessage struct {
 type AnthropicContentBlock struct {
 	Type string `json:"type"`
 
+	CacheControl *AnthropicCacheControl `json:"cache_control,omitempty"`
+
 	// type=text
 	Text string `json:"text,omitempty"`
 
 	// type=thinking
 	Thinking string `json:"thinking,omitempty"`
+	// Signature carries provider encrypted reasoning (e.g. xAI encrypted_content)
+	// so multi-turn Claude clients can round-trip it back on subsequent turns.
+	Signature string `json:"signature,omitempty"`
 
 	// type=image
 	Source *AnthropicImageSource `json:"source,omitempty"`
@@ -67,6 +78,28 @@ type AnthropicContentBlock struct {
 	IsError   bool            `json:"is_error,omitempty"`
 }
 
+func (b AnthropicContentBlock) MarshalJSON() ([]byte, error) {
+	type anthropicContentBlock AnthropicContentBlock
+	base := struct {
+		anthropicContentBlock
+	}{anthropicContentBlock: anthropicContentBlock(b)}
+
+	switch b.Type {
+	case "text":
+		return json.Marshal(struct {
+			Text string `json:"text"`
+			anthropicContentBlock
+		}{Text: b.Text, anthropicContentBlock: anthropicContentBlock(b)})
+	case "thinking":
+		return json.Marshal(struct {
+			Thinking string `json:"thinking"`
+			anthropicContentBlock
+		}{Thinking: b.Thinking, anthropicContentBlock: anthropicContentBlock(b)})
+	default:
+		return json.Marshal(base)
+	}
+}
+
 // AnthropicImageSource describes the source data for an image content block.
 type AnthropicImageSource struct {
 	Type      string `json:"type"` // "base64"
@@ -76,22 +109,47 @@ type AnthropicImageSource struct {
 
 // AnthropicTool describes a tool available to the model.
 type AnthropicTool struct {
-	Type        string          `json:"type,omitempty"` // e.g. "web_search_20250305" for server tools
-	Name        string          `json:"name"`
-	Description string          `json:"description,omitempty"`
-	InputSchema json.RawMessage `json:"input_schema"` // JSON Schema object
+	Type         string                 `json:"type,omitempty"` // e.g. "web_search_20250305" for server tools
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description,omitempty"`
+	InputSchema  json.RawMessage        `json:"input_schema"` // JSON Schema object
+	CacheControl *AnthropicCacheControl `json:"cache_control,omitempty"`
+}
+
+// AnthropicCacheControl 对应 Anthropic API 的 cache_control 字段。
+// ttl 默认由调用方决定；本项目策略见 claude.DefaultCacheControlTTL。
+type AnthropicCacheControl struct {
+	Type string `json:"type"`          // "ephemeral"
+	TTL  string `json:"ttl,omitempty"` // "5m" / "1h" / 省略=默认 5m（由 Anthropic 判定）
 }
 
 // AnthropicResponse is the non-streaming response from POST /v1/messages.
+//
+// StopReason is a pointer so streaming message_start can emit JSON null
+// (official Anthropic wire format). A plain string zero-value would marshal as
+// "" which strict clients treat as invalid mid-stream state.
 type AnthropicResponse struct {
 	ID           string                  `json:"id"`
 	Type         string                  `json:"type"` // "message"
 	Role         string                  `json:"role"` // "assistant"
 	Content      []AnthropicContentBlock `json:"content"`
 	Model        string                  `json:"model"`
-	StopReason   string                  `json:"stop_reason"`
+	StopReason   *string                 `json:"stop_reason"`
 	StopSequence *string                 `json:"stop_sequence,omitempty"`
 	Usage        AnthropicUsage          `json:"usage"`
+}
+
+// AnthropicStopReasonPtr returns a non-nil pointer to s for final stop reasons.
+func AnthropicStopReasonPtr(s string) *string {
+	return &s
+}
+
+// AnthropicStopReasonString returns the stop reason value, or "" when unset/null.
+func AnthropicStopReasonString(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }
 
 // AnthropicUsage holds token counts in Anthropic format.
@@ -178,7 +236,8 @@ type ResponsesReasoning struct {
 
 // ResponsesText configures text output options in the Responses API.
 type ResponsesText struct {
-	Verbosity string `json:"verbosity,omitempty"` // "low" | "medium" | "high"
+	Format    json.RawMessage `json:"format,omitempty"`
+	Verbosity string          `json:"verbosity,omitempty"` // "low" | "medium" | "high"
 }
 
 // ResponsesInputItem is one item in the Responses API input array.
@@ -187,9 +246,12 @@ type ResponsesInputItem struct {
 	// Common
 	Type string `json:"type,omitempty"` // "" for role-based messages
 
-	// Role-based messages (system/user/assistant)
+	// Role-based messages (developer/system/user/assistant)
 	Role    string          `json:"role,omitempty"`
 	Content json.RawMessage `json:"content,omitempty"` // string or []ResponsesContentPart
+
+	// type=reasoning (multi-turn replay of encrypted reasoning)
+	EncryptedContent string `json:"encrypted_content,omitempty"`
 
 	// type=function_call
 	CallID    string `json:"call_id,omitempty"`
@@ -210,11 +272,31 @@ type ResponsesContentPart struct {
 
 // ResponsesTool describes a tool in the Responses API.
 type ResponsesTool struct {
-	Type        string          `json:"type"` // "function" | "web_search" | "local_shell" etc.
+	Type        string          `json:"type"` // "function" | "custom" | "web_search" | "local_shell" etc.
 	Name        string          `json:"name,omitempty"`
 	Description string          `json:"description,omitempty"`
 	Parameters  json.RawMessage `json:"parameters,omitempty"`
 	Strict      *bool           `json:"strict,omitempty"`
+
+	// type=namespace 的子工具列表（tools 与 children 二选一，语义相同）。
+	Tools    []ResponsesTool `json:"tools,omitempty"`
+	Children []ResponsesTool `json:"children,omitempty"`
+}
+
+// UnmarshalJSON 容忍字符串形式的工具声明：codex 会以 "name" 简写声明 custom 工具，
+func (t *ResponsesTool) UnmarshalJSON(data []byte) error {
+	var name string
+	if err := json.Unmarshal(data, &name); err == nil {
+		*t = ResponsesTool{Type: "custom", Name: name}
+		return nil
+	}
+	type alias ResponsesTool
+	var a alias
+	if err := json.Unmarshal(data, &a); err != nil {
+		return err
+	}
+	*t = ResponsesTool(a)
+	return nil
 }
 
 // ResponsesResponse is the non-streaming response from POST /v1/responses.
@@ -262,9 +344,86 @@ type ResponsesOutput struct {
 	CallID    string `json:"call_id,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Arguments string `json:"arguments,omitempty"`
+	// 来源为 namespace 子工具时的归属命名空间（codex 按 namespace+name 路由该调用）。
+	Namespace string `json:"namespace,omitempty"`
+
+	// type=custom_tool_call（custom/freeform 工具，input 为自由文本）
+	Input string `json:"input,omitempty"`
 
 	// type=web_search_call
 	Action *WebSearchAction `json:"action,omitempty"`
+}
+
+// MarshalJSON 处理 tool_search_call 项的线上形态（复用 CallID/Arguments 字段）：
+// execution 固定为 "client"（codex 的必填字段，非 client 的调用会被静默忽略），
+// arguments 是 JSON 对象而非 function_call 语义下的字符串。其余类型走默认结构体
+// 序列化，输出逐字节不变。
+func (o ResponsesOutput) MarshalJSON() ([]byte, error) {
+	type responsesOutputAlias ResponsesOutput
+	if o.Type != "tool_search_call" {
+		return json.Marshal(responsesOutputAlias(o))
+	}
+	m := map[string]any{
+		"type":      o.Type,
+		"id":        o.ID,
+		"call_id":   o.CallID,
+		"execution": "client",
+		"arguments": toolSearchCallArgumentsJSON(o.Arguments),
+	}
+	if o.Status != "" {
+		m["status"] = o.Status
+	}
+	return json.Marshal(m)
+}
+
+// UnmarshalJSON accepts both the Responses function-call string form and the
+// tool_search_call object form for arguments. The bridge stores arguments as a
+// string internally, so object arguments are retained as their raw JSON.
+func (o *ResponsesOutput) UnmarshalJSON(data []byte) error {
+	type responsesOutputAlias ResponsesOutput
+
+	var kind struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(data, &kind); err != nil {
+		return err
+	}
+	if kind.Type != "tool_search_call" {
+		var decoded responsesOutputAlias
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			return err
+		}
+		*o = ResponsesOutput(decoded)
+		return nil
+	}
+
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return err
+	}
+	arguments, hasArguments := fields["arguments"]
+	delete(fields, "arguments")
+	normalized, err := json.Marshal(fields)
+	if err != nil {
+		return err
+	}
+
+	var decoded responsesOutputAlias
+	if err := json.Unmarshal(normalized, &decoded); err != nil {
+		return err
+	}
+	*o = ResponsesOutput(decoded)
+	if !hasArguments || string(arguments) == "null" {
+		return nil
+	}
+
+	var argumentString string
+	if err := json.Unmarshal(arguments, &argumentString); err == nil {
+		o.Arguments = argumentString
+	} else {
+		o.Arguments = string(arguments)
+	}
+	return nil
 }
 
 // WebSearchAction describes the search action in a web_search_call output item.
@@ -281,9 +440,10 @@ type ResponsesSummary struct {
 
 // ResponsesUsage holds token counts in Responses API format.
 type ResponsesUsage struct {
-	InputTokens  int `json:"input_tokens"`
-	OutputTokens int `json:"output_tokens"`
-	TotalTokens  int `json:"total_tokens"`
+	InputTokens              int `json:"input_tokens"`
+	OutputTokens             int `json:"output_tokens"`
+	TotalTokens              int `json:"total_tokens"`
+	CacheCreationInputTokens int `json:"cache_creation_input_tokens,omitempty"`
 
 	// Optional detailed breakdown
 	InputTokensDetails  *ResponsesInputTokensDetails  `json:"input_tokens_details,omitempty"`
@@ -292,14 +452,28 @@ type ResponsesUsage struct {
 
 func (u *ResponsesUsage) UnmarshalJSON(data []byte) error {
 	type responsesUsageAlias ResponsesUsage
+	type cacheTokenPresence struct {
+		CacheCreationTokens *int `json:"cache_creation_tokens"`
+		CacheWriteTokens    *int `json:"cache_write_tokens"`
+	}
 	var aux struct {
 		responsesUsageAlias
 		PromptTokens            int                           `json:"prompt_tokens"`
 		CompletionTokens        int                           `json:"completion_tokens"`
+		CacheCreationTokens     int                           `json:"cache_creation_tokens"`
+		CacheWriteInputTokens   int                           `json:"cache_write_input_tokens"`
+		CacheWriteTokens        int                           `json:"cache_write_tokens"`
 		PromptTokensDetails     *ResponsesInputTokensDetails  `json:"prompt_tokens_details,omitempty"`
 		CompletionTokensDetails *ResponsesOutputTokensDetails `json:"completion_tokens_details,omitempty"`
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	var nestedPresence struct {
+		InputTokensDetails  *cacheTokenPresence `json:"input_tokens_details"`
+		PromptTokensDetails *cacheTokenPresence `json:"prompt_tokens_details"`
+	}
+	if err := json.Unmarshal(data, &nestedPresence); err != nil {
 		return err
 	}
 	*u = ResponsesUsage(aux.responsesUsageAlias)
@@ -309,11 +483,35 @@ func (u *ResponsesUsage) UnmarshalJSON(data []byte) error {
 	if u.OutputTokens == 0 && aux.CompletionTokens != 0 {
 		u.OutputTokens = aux.CompletionTokens
 	}
+	if u.CacheCreationInputTokens == 0 {
+		switch {
+		case aux.CacheWriteInputTokens > 0:
+			u.CacheCreationInputTokens = aux.CacheWriteInputTokens
+		case aux.CacheCreationTokens > 0:
+			u.CacheCreationInputTokens = aux.CacheCreationTokens
+		case aux.CacheWriteTokens > 0:
+			u.CacheCreationInputTokens = aux.CacheWriteTokens
+		}
+	}
 	if u.InputTokensDetails == nil && aux.PromptTokensDetails != nil {
 		u.InputTokensDetails = aux.PromptTokensDetails
 	}
 	if u.OutputTokensDetails == nil && aux.CompletionTokensDetails != nil {
 		u.OutputTokensDetails = aux.CompletionTokensDetails
+	}
+	var canonicalCacheCreationTokens *int
+	switch {
+	case nestedPresence.InputTokensDetails != nil && nestedPresence.InputTokensDetails.CacheWriteTokens != nil:
+		canonicalCacheCreationTokens = nestedPresence.InputTokensDetails.CacheWriteTokens
+	case nestedPresence.PromptTokensDetails != nil && nestedPresence.PromptTokensDetails.CacheWriteTokens != nil:
+		canonicalCacheCreationTokens = nestedPresence.PromptTokensDetails.CacheWriteTokens
+	case nestedPresence.InputTokensDetails != nil && nestedPresence.InputTokensDetails.CacheCreationTokens != nil:
+		canonicalCacheCreationTokens = nestedPresence.InputTokensDetails.CacheCreationTokens
+	case nestedPresence.PromptTokensDetails != nil && nestedPresence.PromptTokensDetails.CacheCreationTokens != nil:
+		canonicalCacheCreationTokens = nestedPresence.PromptTokensDetails.CacheCreationTokens
+	}
+	if canonicalCacheCreationTokens != nil {
+		u.CacheCreationInputTokens = max(*canonicalCacheCreationTokens, 0)
 	}
 	if u.TotalTokens == 0 && (u.InputTokens != 0 || u.OutputTokens != 0) {
 		u.TotalTokens = u.InputTokens + u.OutputTokens
@@ -323,8 +521,10 @@ func (u *ResponsesUsage) UnmarshalJSON(data []byte) error {
 
 // ResponsesInputTokensDetails breaks down input token usage.
 type ResponsesInputTokensDetails struct {
-	CachedTokens int `json:"cached_tokens,omitempty"`
-	AudioTokens  int `json:"audio_tokens,omitempty"`
+	CachedTokens        int `json:"cached_tokens,omitempty"`
+	AudioTokens         int `json:"audio_tokens,omitempty"`
+	CacheCreationTokens int `json:"cache_creation_tokens,omitempty"`
+	CacheWriteTokens    int `json:"cache_write_tokens,omitempty"`
 }
 
 // ResponsesOutputTokensDetails breaks down output token usage.
@@ -344,9 +544,9 @@ type ResponsesOutputTokensDetails struct {
 type ResponsesStreamEvent struct {
 	Type string `json:"type"`
 
-	// response.created / response.completed / response.failed / response.incomplete
+	// response.created / response.completed / response.done / response.failed / response.incomplete
 	Response *ResponsesResponse `json:"response,omitempty"`
-	// Some OpenAI-compatible upstreams put usage on the terminal event itself.
+	// 部分 OpenAI 兼容上游会把 usage 放在终止事件顶层，而不是 response.usage。
 	Usage *ResponsesUsage `json:"usage,omitempty"`
 
 	// response.output_item.added / response.output_item.done
@@ -363,6 +563,9 @@ type ResponsesStreamEvent struct {
 	CallID    string `json:"call_id,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Arguments string `json:"arguments,omitempty"`
+
+	// response.custom_tool_call_input.done
+	Input string `json:"input,omitempty"`
 
 	// response.reasoning_summary_text.delta / done
 	// Reuses Text/Delta fields above, SummaryIndex identifies which summary part
@@ -396,10 +599,12 @@ type ChatCompletionsRequest struct {
 	Stream              bool               `json:"stream,omitempty"`
 	StreamOptions       *ChatStreamOptions `json:"stream_options,omitempty"`
 	Tools               []ChatTool         `json:"tools,omitempty"`
+	ParallelToolCalls   *bool              `json:"parallel_tool_calls,omitempty"`
 	ToolChoice          json.RawMessage    `json:"tool_choice,omitempty"`
 	ReasoningEffort     string             `json:"reasoning_effort,omitempty"` // "low" | "medium" | "high"
 	ServiceTier         string             `json:"service_tier,omitempty"`
 	Stop                json.RawMessage    `json:"stop,omitempty"` // string or []string
+	ResponseFormat      json.RawMessage    `json:"response_format,omitempty"`
 
 	// Legacy function calling (deprecated but still supported)
 	Functions    []ChatFunction  `json:"functions,omitempty"`
@@ -505,6 +710,8 @@ type ChatUsage struct {
 type ChatTokenDetails struct {
 	CachedTokens             int `json:"cached_tokens,omitempty"`
 	AudioTokens              int `json:"audio_tokens,omitempty"`
+	CacheCreationTokens      int `json:"cache_creation_tokens,omitempty"`
+	CacheWriteTokens         int `json:"cache_write_tokens,omitempty"`
 	ReasoningTokens          int `json:"reasoning_tokens,omitempty"`
 	AcceptedPredictionTokens int `json:"accepted_prediction_tokens,omitempty"`
 	RejectedPredictionTokens int `json:"rejected_prediction_tokens,omitempty"`

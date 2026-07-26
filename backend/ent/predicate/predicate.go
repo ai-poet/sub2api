@@ -21,6 +21,24 @@ type Announcement func(*sql.Selector)
 // AnnouncementRead is the predicate function for announcementread builders.
 type AnnouncementRead func(*sql.Selector)
 
+// AuthIdentity is the predicate function for authidentity builders.
+type AuthIdentity func(*sql.Selector)
+
+// AuthIdentityChannel is the predicate function for authidentitychannel builders.
+type AuthIdentityChannel func(*sql.Selector)
+
+// BatchImageEvent is the predicate function for batchimageevent builders.
+type BatchImageEvent func(*sql.Selector)
+
+// BatchImageItem is the predicate function for batchimageitem builders.
+type BatchImageItem func(*sql.Selector)
+
+// BatchImageJob is the predicate function for batchimagejob builders.
+type BatchImageJob func(*sql.Selector)
+
+// CompositeModelRoute is the predicate function for compositemodelroute builders.
+type CompositeModelRoute func(*sql.Selector)
+
 // ErrorPassthroughRule is the predicate function for errorpassthroughrule builders.
 type ErrorPassthroughRule func(*sql.Selector)
 
@@ -41,6 +59,12 @@ type GroupStatusState func(*sql.Selector)
 
 // IdempotencyRecord is the predicate function for idempotencyrecord builders.
 type IdempotencyRecord func(*sql.Selector)
+
+// IdentityAdoptionDecision is the predicate function for identityadoptiondecision builders.
+type IdentityAdoptionDecision func(*sql.Selector)
+
+// PendingAuthSession is the predicate function for pendingauthsession builders.
+type PendingAuthSession func(*sql.Selector)
 
 // PromoCode is the predicate function for promocode builders.
 type PromoCode func(*sql.Selector)
@@ -80,6 +104,9 @@ type UserAttributeDefinition func(*sql.Selector)
 
 // UserAttributeValue is the predicate function for userattributevalue builders.
 type UserAttributeValue func(*sql.Selector)
+
+// UserPlatformQuota is the predicate function for userplatformquota builders.
+type UserPlatformQuota func(*sql.Selector)
 
 // UserReferral is the predicate function for userreferral builders.
 type UserReferral func(*sql.Selector)

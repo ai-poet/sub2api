@@ -11,6 +11,8 @@ import (
 )
 
 type txContextUserSubRepoStub struct {
+	// 内嵌接口：本用例只驱动下面显式实现的方法，其余保持未实现即可满足类型约束。
+	UserSubscriptionRepository
 	sub                 *UserSubscription
 	extendCalledInTx    bool
 	updateStatusInTx    bool
@@ -93,13 +95,13 @@ func (s *txContextUserSubRepoStub) UpdateNotes(ctx context.Context, id int64, no
 func (s *txContextUserSubRepoStub) ActivateWindows(context.Context, int64, time.Time) error {
 	return nil
 }
-func (s *txContextUserSubRepoStub) ResetDailyUsage(context.Context, int64, time.Time) error {
+func (s *txContextUserSubRepoStub) ResetDailyUsage(context.Context, int64, *time.Time, time.Time) error {
 	return nil
 }
-func (s *txContextUserSubRepoStub) ResetWeeklyUsage(context.Context, int64, time.Time) error {
+func (s *txContextUserSubRepoStub) ResetWeeklyUsage(context.Context, int64, *time.Time, time.Time) error {
 	return nil
 }
-func (s *txContextUserSubRepoStub) ResetMonthlyUsage(context.Context, int64, time.Time) error {
+func (s *txContextUserSubRepoStub) ResetMonthlyUsage(context.Context, int64, *time.Time, time.Time) error {
 	return nil
 }
 func (s *txContextUserSubRepoStub) IncrementUsage(context.Context, int64, float64) error {

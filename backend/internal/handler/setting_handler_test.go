@@ -105,8 +105,8 @@ func TestSettingHandler_GetPublicSettings_IncludesClientDownloadURLs(t *testing.
 
 	settingRepo := &stubSettingRepoForPublicSettings{
 		values: map[string]string{
-			service.SettingKeyClientDownloadWindowsURL: "https://downloads.example.com/cheaprouter-setup.exe",
-			service.SettingKeyClientDownloadMacOSURL:   "https://downloads.example.com/cheaprouter.dmg",
+			"client_download_windows_url": "https://downloads.example.com/sub2api-windows.exe",
+			"client_download_macos_url":   "https://downloads.example.com/sub2api-macos.dmg",
 		},
 	}
 
@@ -132,6 +132,6 @@ func TestSettingHandler_GetPublicSettings_IncludesClientDownloadURLs(t *testing.
 
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 	require.Equal(t, 0, response.Code)
-	require.Equal(t, "https://downloads.example.com/cheaprouter-setup.exe", response.Data.ClientDownloadWindowsURL)
-	require.Equal(t, "https://downloads.example.com/cheaprouter.dmg", response.Data.ClientDownloadMacOSURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-windows.exe", response.Data.ClientDownloadWindowsURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-macos.dmg", response.Data.ClientDownloadMacOSURL)
 }

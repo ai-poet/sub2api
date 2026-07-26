@@ -199,6 +199,7 @@ func TestGeminiErrorPolicyIntegration(t *testing.T) {
 		expectFailover       bool // expect UpstreamFailoverError
 		expectHandleError    bool // expect handleGeminiUpstreamError to be called
 		expectShouldFailover bool // for None path, whether shouldFailover triggers
+		expectModelScope     string
 	}{
 		{
 			name: "custom_codes_matched_429_failover",
@@ -252,7 +253,8 @@ func TestGeminiErrorPolicyIntegration(t *testing.T) {
 			statusCode:        503,
 			respBody:          []byte(`overloaded`),
 			expectFailover:    true,
-			expectHandleError: true,
+			expectHandleError: false,
+			expectModelScope:  "gemini-2.5-pro",
 		},
 		{
 			name: "no_policy_429_failover_via_shouldFailover",
@@ -306,15 +308,20 @@ func TestGeminiErrorPolicyIntegration(t *testing.T) {
 			headers := http.Header{}
 
 			if svc.rateLimitService != nil {
-				switch svc.rateLimitService.CheckErrorPolicy(ctx, account, statusCode, respBody) {
+				policy := svc.rateLimitService.CheckErrorPolicy(ctx, account, statusCode, respBody, "gemini-2.5-pro")
+				switch policy {
 				case ErrorPolicySkipped:
 					// Skipped → return error directly (no handleGeminiUpstreamError, no failover)
 					gotFailover = false
 					handleErrorCalled = false
 					goto verify
-				case ErrorPolicyMatched, ErrorPolicyTempUnscheduled:
+				case ErrorPolicyMatched:
 					svc.handleGeminiUpstreamError(ctx, account, statusCode, headers, respBody)
 					handleErrorCalled = true
+					gotFailover = true
+					goto verify
+				case ErrorPolicyTempUnscheduled:
+					handleErrorCalled = false
 					gotFailover = true
 					goto verify
 				}
@@ -330,6 +337,12 @@ func TestGeminiErrorPolicyIntegration(t *testing.T) {
 		verify:
 			require.Equal(t, tt.expectFailover, gotFailover, "failover mismatch")
 			require.Equal(t, tt.expectHandleError, handleErrorCalled, "handleGeminiUpstreamError call mismatch")
+			if tt.expectModelScope != "" {
+				require.Equal(t, 1, repo.setModelRateLimitedCalls)
+				require.Equal(t, tt.expectModelScope, repo.lastModelScope)
+				require.Zero(t, repo.setTempCalls)
+				require.Zero(t, repo.setRateLimitedCalls, "model temp rule must not be widened into an account rate limit")
+			}
 
 			if tt.expectShouldFailover {
 				require.True(t, svc.shouldFailoverGeminiUpstreamError(statusCode),
@@ -383,11 +396,44 @@ func TestGeminiErrorPolicy_NilRateLimitService(t *testing.T) {
 // policy tests. Embeds mockAccountRepoForGemini and adds tracking.
 // ---------------------------------------------------------------------------
 
+func TestHandleGeminiUpstreamError_GoogleOneCapacityExhaustedUsesTierCooldown(t *testing.T) {
+	repo := &rateLimit429AccountRepoStub{}
+	quotaSvc := NewGeminiQuotaService(&config.Config{}, nil)
+	rlSvc := NewRateLimitService(repo, nil, &config.Config{}, quotaSvc, nil)
+	svc := &GeminiMessagesCompatService{
+		accountRepo:      repo,
+		rateLimitService: rlSvc,
+	}
+
+	account := &Account{
+		ID:       511,
+		Platform: PlatformGemini,
+		Type:     AccountTypeOAuth,
+		Credentials: map[string]any{
+			"oauth_type": "google_one",
+			"tier_id":    "google_ai_pro",
+		},
+	}
+	body := []byte(`{"error":{"code":429,"details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","domain":"cloudcode-pa.googleapis.com","metadata":{"model":"gemini-3.1-pro-preview"},"reason":"MODEL_CAPACITY_EXHAUSTED"}],"message":"No capacity available for model gemini-3.1-pro-preview on the server","status":"RESOURCE_EXHAUSTED"}}`)
+
+	before := time.Now()
+	svc.handleGeminiUpstreamError(context.Background(), account, http.StatusTooManyRequests, http.Header{}, body)
+	after := time.Now()
+
+	require.Equal(t, 1, repo.rateLimitCalls)
+	require.Equal(t, int64(511), repo.lastRateLimitID)
+	require.WithinDuration(t, before.Add(5*time.Minute), repo.lastRateLimitReset, 2*time.Second)
+	require.True(t, repo.lastRateLimitReset.After(before))
+	require.True(t, repo.lastRateLimitReset.Before(after.Add(5*time.Minute).Add(2*time.Second)))
+}
+
 type geminiErrorPolicyRepo struct {
 	mockAccountRepoForGemini
-	setErrorCalls       int
-	setRateLimitedCalls int
-	setTempCalls        int
+	setErrorCalls            int
+	setRateLimitedCalls      int
+	setTempCalls             int
+	setModelRateLimitedCalls int
+	lastModelScope           string
 }
 
 func (r *geminiErrorPolicyRepo) SetError(_ context.Context, _ int64, _ string) error {
@@ -402,5 +448,11 @@ func (r *geminiErrorPolicyRepo) SetRateLimited(_ context.Context, _ int64, _ tim
 
 func (r *geminiErrorPolicyRepo) SetTempUnschedulable(_ context.Context, _ int64, _ time.Time, _ string) error {
 	r.setTempCalls++
+	return nil
+}
+
+func (r *geminiErrorPolicyRepo) SetModelRateLimit(_ context.Context, _ int64, scope string, _ time.Time, _ ...string) error {
+	r.setModelRateLimitedCalls++
+	r.lastModelScope = scope
 	return nil
 }

@@ -31,6 +31,12 @@ type delayedReadFrameConn struct {
 	once       sync.Once
 }
 
+type readStartSpyFrameConn struct {
+	base      FrameConn
+	started   chan struct{}
+	startOnce sync.Once
+}
+
 type closeSpyFrameConn struct {
 	closeCalls atomic.Int32
 }
@@ -123,6 +129,19 @@ func (c *delayedReadFrameConn) Close() error {
 	if c == nil || c.base == nil {
 		return nil
 	}
+	return c.base.Close()
+}
+
+func (c *readStartSpyFrameConn) ReadFrame(ctx context.Context) (coderws.MessageType, []byte, error) {
+	c.startOnce.Do(func() { close(c.started) })
+	return c.base.ReadFrame(ctx)
+}
+
+func (c *readStartSpyFrameConn) WriteFrame(ctx context.Context, msgType coderws.MessageType, payload []byte) error {
+	return c.base.WriteFrame(ctx, msgType, payload)
+}
+
+func (c *readStartSpyFrameConn) Close() error {
 	return c.base.Close()
 }
 
@@ -661,6 +680,51 @@ func TestRelay_ContextCanceled(t *testing.T) {
 	require.NotNil(t, relayExit)
 }
 
+func TestRelay_DownstreamPreambleStartsClientReader(t *testing.T) {
+	clientBase := newPassthroughTestFrameConn(nil, false)
+	clientConn := &readStartSpyFrameConn{base: clientBase, started: make(chan struct{})}
+	upstreamConn := newPassthroughTestFrameConn(nil, false)
+	resultCh := make(chan *RelayExit, 1)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	go func() {
+		_, relayExit := Relay(
+			ctx,
+			clientConn,
+			upstreamConn,
+			[]byte(`{"type":"response.create","model":"gpt-5.1"}`),
+			RelayOptions{
+				StartClientAfterFirstDownstream: true,
+			},
+		)
+		resultCh <- relayExit
+	}()
+
+	upstreamConn.readCh <- passthroughTestFrame{
+		msgType: coderws.MessageText,
+		payload: []byte(`{"type":"response.created","response":{"id":"resp_semantic_gate"}}`),
+	}
+	require.Eventually(t, func() bool { return len(clientBase.Writes()) == 1 }, time.Second, 10*time.Millisecond)
+	select {
+	case <-clientConn.started:
+	case <-time.After(time.Second):
+		t.Fatal("response.created did not start the client reader")
+	}
+
+	upstreamConn.readCh <- passthroughTestFrame{
+		msgType: coderws.MessageText,
+		payload: []byte(`{"type":"response.completed","response":{"id":"resp_semantic_gate","usage":{"input_tokens":1,"output_tokens":1}}}`),
+	}
+	_ = upstreamConn.Close()
+	select {
+	case relayExit := <-resultCh:
+		require.Nil(t, relayExit)
+	case <-time.After(time.Second):
+		t.Fatal("relay did not finish after terminal event and upstream close")
+	}
+}
+
 func TestRelay_TraceEvents_ContainsLifecycleStages(t *testing.T) {
 	t.Parallel()
 
@@ -749,4 +813,68 @@ func (c *errorOnWriteFrameConn) WriteFrame(_ context.Context, _ coderws.MessageT
 
 func (c *errorOnWriteFrameConn) Close() error {
 	return nil
+}
+
+func TestRelay_OnTurnComplete_RealOpenAIStream_FirstTokenMs(t *testing.T) {
+	t.Parallel()
+
+	clientConn := newPassthroughTestFrameConn(nil, false)
+	upstreamConn := newPassthroughTestFrameConn([]passthroughTestFrame{
+		{
+			msgType: coderws.MessageText,
+			payload: []byte(`{"type":"response.created","response":{"id":"resp_real"}}`),
+		},
+		{
+			msgType: coderws.MessageText,
+			payload: []byte(`{"type":"response.output_text.delta","delta":"He"}`),
+		},
+		{
+			msgType: coderws.MessageText,
+			payload: []byte(`{"type":"response.output_text.delta","delta":"llo"}`),
+		},
+		{
+			msgType: coderws.MessageText,
+			payload: []byte(`{"type":"response.output_text.delta","delta":" world"}`),
+		},
+		{
+			msgType: coderws.MessageText,
+			payload: []byte(`{"type":"response.completed","response":{"id":"resp_real","usage":{"input_tokens":2,"output_tokens":3}}}`),
+		},
+	}, true)
+
+	firstPayload := []byte(`{"type":"response.create","model":"gpt-5.3-codex","input":[]}`)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	base := time.Unix(0, 0)
+	var nowTick atomic.Int64
+	nowFn := func() time.Time {
+		step := nowTick.Add(1)
+		return base.Add(time.Duration(step) * 10 * time.Millisecond)
+	}
+
+	var turn RelayTurnResult
+	result, relayExit := Relay(ctx, clientConn, upstreamConn, firstPayload, RelayOptions{
+		Now: nowFn,
+		OnTurnComplete: func(current RelayTurnResult) {
+			turn = current
+		},
+	})
+	require.Nil(t, relayExit)
+	require.Equal(t, "resp_real", turn.RequestID)
+	require.Equal(t, "response.completed", turn.TerminalEventType)
+
+	require.NotNil(t, turn.FirstTokenMs, "per-turn FirstTokenMs must be captured for real OpenAI streams")
+	require.Greater(t, turn.Duration.Milliseconds(), int64(0))
+
+	require.Less(t,
+		int64(*turn.FirstTokenMs),
+		turn.Duration.Milliseconds(),
+		"per-turn FirstTokenMs (%dms) should be strictly less than Duration (%dms); "+
+			"equality indicates the bug where first_token is mistakenly stamped on the terminal event",
+		*turn.FirstTokenMs, turn.Duration.Milliseconds(),
+	)
+
+	require.NotNil(t, result.FirstTokenMs)
+	require.Greater(t, *result.FirstTokenMs, 0)
 }

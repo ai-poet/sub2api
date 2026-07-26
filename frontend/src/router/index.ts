@@ -3,21 +3,16 @@
  * Defines all application routes with lazy loading and navigation guards
  */
 
-import {
-  createRouter,
-  createWebHistory,
-  type NavigationGuardNext,
-  type RouteRecordRaw,
-} from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useAdminSettingsStore } from '@/stores/adminSettings'
+import { useAdminComplianceStore } from '@/stores/adminCompliance'
 import { useNavigationLoadingState } from '@/composables/useNavigationLoading'
 import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
-import { resolveDocumentTitle } from './title'
-import { getPendingPaseoBridgeRoute } from '@/utils/auth-redirect'
-
-const MODEL_MIRROR_EXTERNAL_URL = 'https://cctest.ai'
+import { getSetupStatus } from '@/api/setup'
+import { resolveCompletedSetupRedirectPath } from './setupRedirect'
+import { resolveRouteDocumentTitle } from './title'
 
 /**
  * Route definitions with lazy loading
@@ -25,23 +20,21 @@ const MODEL_MIRROR_EXTERNAL_URL = 'https://cctest.ai'
 const routes: RouteRecordRaw[] = [
   // ==================== Setup Routes ====================
   {
-    path: '/setup',
-    name: 'Setup',
-    component: () => import('@/views/setup/SetupWizardView.vue'),
+    path: '/auth/github/callback',
+    name: 'GitHubOAuthCallback',
+    component: () => import('@/views/auth/GitHubCallbackView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Setup'
+      title: 'GitHub OAuth Callback'
     }
   },
-
-  // ==================== Public Routes ====================
   {
-    path: '/home',
-    name: 'Home',
-    component: () => import('@/views/HomeView.vue'),
+    path: '/auth/paseo',
+    name: 'PaseoAuthBridge',
+    component: () => import('@/views/auth/PaseoBridgeView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Home'
+      title: 'Paseo Login'
     }
   },
   {
@@ -63,12 +56,127 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/changelog',
+    name: 'Changelog',
+    component: () => import('@/views/ChangelogView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Changelog',
+      titleKey: 'changelog.title'
+    }
+  },
+  {
+    path: '/integration-guide',
+    name: 'IntegrationGuide',
+    component: () => import('@/views/user/IntegrationGuideView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Integration Guide',
+      titleKey: 'integrationGuide.title',
+      descriptionKey: 'integrationGuide.description'
+    }
+  },
+  {
+    path: '/models',
+    name: 'ModelCatalog',
+    component: () => import('@/views/user/ModelCatalogView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Model Catalog',
+      titleKey: 'modelCatalog.title',
+      descriptionKey: 'modelCatalog.description'
+    }
+  },
+  {
+    path: '/model-status',
+    name: 'ModelStatus',
+    component: () => import('@/views/user/ModelStatusView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Model Status',
+      titleKey: 'modelStatus.title',
+      descriptionKey: 'modelStatus.description'
+    }
+  },
+  {
+    path: '/referral',
+    name: 'Referral',
+    component: () => import('@/views/user/ReferralView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Referral',
+      titleKey: 'referral.title',
+      descriptionKey: 'referral.description'
+    }
+  },
+  {
+    path: '/admin/referral',
+    name: 'AdminReferral',
+    component: () => import('@/views/admin/ReferralSettingsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Referral Settings',
+      titleKey: 'admin.referral.title',
+      descriptionKey: 'admin.referral.description'
+    }
+  },
+  {
+    path: '/purchase',
+    name: 'Purchase',
+    component: () => import('@/views/user/PurchaseSubscriptionView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Purchase Subscription',
+      titleKey: 'purchase.title',
+      descriptionKey: 'purchase.description'
+    }
+  },
+  {
+    path: '/admin/payment-management',
+    name: 'AdminPaymentManagement',
+    component: () => import('@/views/admin/PaymentManagementView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Payment Management',
+      titleKey: 'nav.paymentManagement',
+      descriptionKey: 'purchase.description'
+    }
+  },
+  {
+    path: '/setup',
+    name: 'Setup',
+    component: () => import('@/views/setup/SetupWizardView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Setup'
+    }
+  },
+
+  // ==================== Public Routes ====================
+  {
+    path: '/home',
+    name: 'Home',
+    component: () => import('@/views/HomeView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Home'
+    }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Login'
+      title: 'Login',
+      titleKey: 'home.login'
     }
   },
   {
@@ -77,7 +185,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/RegisterView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Register'
+      title: 'Register',
+      titleKey: 'auth.createAccount'
     }
   },
   {
@@ -92,10 +201,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/auth/callback',
     name: 'OAuthCallback',
+    alias: '/auth/oauth/callback',
     component: () => import('@/views/auth/OAuthCallbackView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'OAuth Callback'
+      title: 'OAuth Callback',
+      titleKey: 'auth.oauthCallbackPageTitle'
     }
   },
   {
@@ -104,25 +215,47 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/LinuxDoCallbackView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'LinuxDo OAuth Callback'
+      title: 'LinuxDo OAuth Callback',
+      titleKey: 'auth.linuxdoCallbackPageTitle'
     }
   },
   {
-    path: '/auth/github/callback',
-    name: 'GitHubOAuthCallback',
-    component: () => import('@/views/auth/GitHubCallbackView.vue'),
+    path: '/auth/wechat/callback',
+    name: 'WeChatOAuthCallback',
+    component: () => import('@/views/auth/WechatCallbackView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'GitHub OAuth Callback'
+      title: 'WeChat OAuth Callback',
+      titleKey: 'auth.wechatCallbackPageTitle'
     }
   },
   {
-    path: '/auth/paseo',
-    name: 'PaseoAuthBridge',
-    component: () => import('@/views/auth/PaseoBridgeView.vue'),
+    path: '/auth/dingtalk/callback',
+    name: 'DingTalkOAuthCallback',
+    component: () => import('@/views/auth/DingTalkCallbackView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Paseo Login'
+      title: 'DingTalk OAuth Callback',
+      titleKey: 'auth.dingtalkCallbackPageTitle'
+    }
+  },
+  {
+    path: '/auth/dingtalk/email-completion',
+    name: 'dingtalk-email-completion',
+    component: () => import('@/views/auth/DingTalkEmailCompletionView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'DingTalk Email Completion'
+    }
+  },
+  {
+    path: '/auth/oidc/callback',
+    name: 'OIDCOAuthCallback',
+    component: () => import('@/views/auth/OidcCallbackView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'OIDC OAuth Callback',
+      titleKey: 'auth.oidcCallbackPageTitle'
     }
   },
   {
@@ -131,7 +264,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/ForgotPasswordView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Forgot Password'
+      title: 'Forgot Password',
+      titleKey: 'auth.forgotPasswordTitle'
     }
   },
   {
@@ -153,13 +287,12 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/changelog',
-    name: 'Changelog',
-    component: () => import('@/views/ChangelogView.vue'),
+    path: '/legal/:documentId',
+    name: 'LegalDocument',
+    component: () => import('@/views/public/LegalDocumentView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Changelog',
-      titleKey: 'changelog.title'
+      title: 'Legal Document'
     }
   },
 
@@ -193,15 +326,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/integration-guide',
-    name: 'IntegrationGuide',
-    component: () => import('@/views/user/IntegrationGuideView.vue'),
+    path: '/batch-image',
+    name: 'BatchImageGuide',
+    alias: '/docs/batch-image',
+    component: () => import('@/views/user/BatchImageGuideView.vue'),
     meta: {
       requiresAuth: true,
       requiresAdmin: false,
-      title: 'Integration Guide',
-      titleKey: 'integrationGuide.title',
-      descriptionKey: 'integrationGuide.description'
+      title: 'Batch Image Guide',
+      titleKey: 'batchImageGuide.title',
+      descriptionKey: 'batchImageGuide.description'
     }
   },
   {
@@ -229,6 +363,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/available-channels',
+    name: 'UserAvailableChannels',
+    component: () => import('@/views/user/AvailableChannelsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Available Channels',
+      titleKey: 'availableChannels.title',
+      descriptionKey: 'availableChannels.description'
+    }
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: () => import('@/views/user/ProfileView.vue'),
@@ -250,68 +396,6 @@ const routes: RouteRecordRaw[] = [
       title: 'My Subscriptions',
       titleKey: 'userSubscriptions.title',
       descriptionKey: 'userSubscriptions.description'
-    }
-  },
-  {
-    path: '/referral',
-    name: 'Referral',
-    component: () => import('@/views/user/ReferralView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Referral',
-      titleKey: 'referral.title',
-      descriptionKey: 'referral.description'
-    }
-  },
-  {
-    path: '/model-mirror',
-    name: 'ModelMirror',
-    component: { render: () => null },
-    beforeEnter: () => {
-      window.location.href = MODEL_MIRROR_EXTERNAL_URL
-      return false
-    },
-    meta: {
-      requiresAuth: false,
-      requiresAdmin: false,
-      title: 'Claude Relay Inspector'
-    }
-  },
-  {
-    path: '/model-status',
-    name: 'ModelStatus',
-    component: () => import('@/views/user/ModelStatusView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Model Status',
-      titleKey: 'modelStatus.title',
-      descriptionKey: 'modelStatus.description'
-    }
-  },
-  {
-    path: '/models',
-    name: 'ModelCatalog',
-    component: () => import('@/views/user/ModelCatalogView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Model Catalog',
-      titleKey: 'modelCatalog.title',
-      descriptionKey: 'modelCatalog.description'
-    }
-  },
-  {
-    path: '/purchase',
-    name: 'Purchase',
-    component: () => import('@/views/user/PurchaseSubscriptionView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Purchase Subscription',
-      titleKey: 'purchase.title',
-      descriptionKey: 'purchase.description'
     }
   },
   {
@@ -356,6 +440,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/audit-logs',
+    name: 'AdminAuditLogs',
+    component: () => import('@/views/admin/AuditLogView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Audit Logs',
+      titleKey: 'admin.audit.title',
+      descriptionKey: 'admin.audit.description'
+    }
+  },
+  {
     path: '/admin/users',
     name: 'AdminUsers',
     component: () => import('@/views/admin/UsersView.vue'),
@@ -381,6 +477,10 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/admin/channels',
+    redirect: '/admin/channels/pricing'
+  },
+  {
+    path: '/admin/channels/pricing',
     name: 'AdminChannels',
     component: () => import('@/views/admin/ChannelsView.vue'),
     meta: {
@@ -464,18 +564,6 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/admin/referral',
-    name: 'AdminReferral',
-    component: () => import('@/views/admin/ReferralSettingsView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: true,
-      title: 'Referral Settings',
-      titleKey: 'admin.referral.title',
-      descriptionKey: 'admin.referral.description'
-    }
-  },
-  {
     path: '/admin/settings',
     name: 'AdminSettings',
     component: () => import('@/views/admin/SettingsView.vue'),
@@ -485,6 +573,32 @@ const routes: RouteRecordRaw[] = [
       title: 'System Settings',
       titleKey: 'admin.settings.title',
       descriptionKey: 'admin.settings.description'
+    }
+  },
+  {
+    path: '/admin/risk-control',
+    name: 'AdminRiskControl',
+    component: () => import('@/views/admin/RiskControlView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Risk Control',
+      titleKey: 'admin.riskControl.title',
+      descriptionKey: 'admin.riskControl.description',
+      requiresRiskControl: true
+    }
+  },
+  {
+    path: '/admin/prompt-audit',
+    name: 'AdminPromptAudit',
+    component: () => import('@/features/prompt-audit/PromptAuditView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Prompt Audit',
+      titleKey: 'admin.promptAudit.title',
+      descriptionKey: 'admin.promptAudit.description',
+      requiresRiskControl: true
     }
   },
   {
@@ -500,17 +614,10 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/admin/payment-management',
-    name: 'AdminPaymentManagement',
-    component: () => import('@/views/admin/PaymentManagementView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: true,
-      title: 'Payment Management',
-      titleKey: 'nav.paymentManagement',
-      descriptionKey: 'purchase.description'
-    }
+    path: '/admin/affiliates',
+    redirect: '/admin/affiliates/invites'
   },
+
 
   // ==================== 404 Not Found ====================
   {
@@ -548,30 +655,34 @@ let authInitialized = false
 const navigationLoading = useNavigationLoadingState()
 // 延迟初始化预加载，传入 router 实例
 let routePrefetch: ReturnType<typeof useRoutePrefetch> | null = null
-/** Public paths for unauthenticated users when backend-only mode is enabled. */
-const BACKEND_MODE_ALLOWED_PATHS = [
-  '/login',
-  '/key-usage',
-  '/setup',
+const BACKEND_MODE_ALLOWED_PATHS = ['/login', '/key-usage', '/setup', '/legal']
+const BACKEND_MODE_CALLBACK_PATHS = [
   '/auth/callback',
-  '/auth/github/callback',
   '/auth/linuxdo/callback',
-  '/auth/paseo',
+  '/auth/dingtalk/callback',
+  '/auth/dingtalk/email-completion',
+  '/auth/oidc/callback',
+  '/auth/wechat/callback',
 ]
+const BACKEND_MODE_PENDING_AUTH_PATHS = ['/register', '/email-verify']
 
-function nextDashboardRespectingPaseoPending(
-  next: NavigationGuardNext,
-  target: '/dashboard' | '/admin/dashboard',
-) {
-  const paseoLoc = getPendingPaseoBridgeRoute()
-  if (paseoLoc) {
-    next(paseoLoc)
-    return
+function isBackendModePublicRouteAllowed(path: string, hasPendingAuthSession: boolean): boolean {
+  if (BACKEND_MODE_ALLOWED_PATHS.some((allowedPath) => path === allowedPath || path.startsWith(allowedPath))) {
+    return true
   }
-  next(target)
+
+  if (BACKEND_MODE_CALLBACK_PATHS.some((callbackPath) => path === callbackPath)) {
+    return true
+  }
+
+  if (hasPendingAuthSession && BACKEND_MODE_PENDING_AUTH_PATHS.some((allowedPath) => path === allowedPath)) {
+    return true
+  }
+
+  return false
 }
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   // 开始导航加载状态
   navigationLoading.startNavigation()
 
@@ -585,26 +696,28 @@ router.beforeEach((to, _from, next) => {
 
   // Set page title
   const appStore = useAppStore()
-  // For custom pages, use menu item label as document title
-  if (to.name === 'CustomPage') {
-    const id = to.params.id as string
-    const publicItems = appStore.cachedPublicSettings?.custom_menu_items ?? []
-    const adminSettingsStore = useAdminSettingsStore()
-    const menuItem = publicItems.find((item) => item.id === id)
-      ?? (authStore.isAdmin ? adminSettingsStore.customMenuItems.find((item) => item.id === id) : undefined)
-    if (menuItem?.label) {
-      const siteName = appStore.siteName || 'Sub2API'
-      document.title = `${menuItem.label} - ${siteName}`
-    } else {
-      document.title = resolveDocumentTitle(to.meta.title, appStore.siteName, to.meta.titleKey as string)
-    }
-  } else {
-    document.title = resolveDocumentTitle(to.meta.title, appStore.siteName, to.meta.titleKey as string)
-  }
+  const adminSettingsStore = useAdminSettingsStore()
+  const customMenuItems = [
+    ...(appStore.cachedPublicSettings?.custom_menu_items ?? []),
+    ...(authStore.isAdmin ? adminSettingsStore.customMenuItems : []),
+  ]
+  document.title = resolveRouteDocumentTitle(to, appStore.siteName, customMenuItems)
 
   // Check if route requires authentication
   const requiresAuth = to.meta.requiresAuth !== false // Default to true
   const requiresAdmin = to.meta.requiresAdmin === true
+
+  if (to.path === '/setup') {
+    try {
+      const status = await getSetupStatus()
+      if (!status.needs_setup) {
+        next(resolveCompletedSetupRedirectPath(authStore.isAuthenticated, authStore.isAdmin))
+        return
+      }
+    } catch {
+      // If setup status cannot be determined, keep the setup page reachable.
+    }
+  }
 
   // If route doesn't require auth, allow access
   if (!requiresAuth) {
@@ -617,17 +730,14 @@ router.beforeEach((to, _from, next) => {
         return
       }
       // Admin users go to admin dashboard, regular users go to user dashboard
-      nextDashboardRespectingPaseoPending(
-        next,
-        authStore.isAdmin ? '/admin/dashboard' : '/dashboard',
-      )
+      next(authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
       return
     }
     // Backend mode: block public pages for unauthenticated users (except login, key-usage, setup)
     if (appStore.backendModeEnabled && !authStore.isAuthenticated) {
-      const isAllowed = BACKEND_MODE_ALLOWED_PATHS.some((p) => to.path === p || to.path.startsWith(p))
+      const isAllowed = isBackendModePublicRouteAllowed(to.path, authStore.hasPendingAuthSession)
       if (!isAllowed) {
-        next({ path: '/login', query: { redirect: to.fullPath } })
+        next('/login')
         return
       }
     }
@@ -648,7 +758,44 @@ router.beforeEach((to, _from, next) => {
   // Check admin requirement
   if (requiresAdmin && !authStore.isAdmin) {
     // User is authenticated but not admin, redirect to user dashboard
-    nextDashboardRespectingPaseoPending(next, '/dashboard')
+    next('/dashboard')
+    return
+  }
+
+  if (requiresAdmin && authStore.isAdmin) {
+    const adminComplianceStore = useAdminComplianceStore()
+    if (!adminComplianceStore.initialized) {
+      try {
+        await adminComplianceStore.fetchStatus()
+      } catch (error) {
+        const err = error as { status?: number; code?: string; metadata?: Record<string, string> }
+        if (err.status === 423 && err.code === 'ADMIN_COMPLIANCE_ACK_REQUIRED') {
+          adminComplianceStore.requireAcknowledgement(err.metadata)
+        }
+      }
+    }
+  }
+
+
+  // 公共设置可能尚未加载（App.vue 的 onMounted 异步拉取晚于首次导航，且纯静态部署
+  // 无 __APP_CONFIG__ 注入）。此时 cachedPublicSettings 为空会把 payment/risk_control
+  // 误判为“未启用”而错误拦截，故这里先确保设置加载完成。
+  if (to.meta.requiresRiskControl && !appStore.publicSettingsLoaded) {
+    try {
+      await appStore.fetchPublicSettings()
+    } catch (error) {
+      console.warn('Failed to load public settings in route guard', error)
+    }
+  }
+
+  // Only an explicit value from successfully loaded settings can disable a route.
+  // A transient settings failure is unknown state, not a confirmed feature toggle.
+  if (
+    to.meta.requiresRiskControl &&
+    appStore.publicSettingsLoaded &&
+    appStore.cachedPublicSettings?.risk_control_enabled === false
+  ) {
+    next(authStore.isAdmin ? '/admin/settings' : '/dashboard')
     return
   }
 
@@ -664,10 +811,7 @@ router.beforeEach((to, _from, next) => {
 
     if (restrictedPaths.some((path) => to.path.startsWith(path))) {
       // 简易模式下访问受限页面,重定向到仪表板
-      nextDashboardRespectingPaseoPending(
-        next,
-        authStore.isAdmin ? '/admin/dashboard' : '/dashboard',
-      )
+      next(authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
       return
     }
   }
@@ -678,25 +822,14 @@ router.beforeEach((to, _from, next) => {
       next()
       return
     }
-    const isAllowed = BACKEND_MODE_ALLOWED_PATHS.some((p) => to.path === p || to.path.startsWith(p))
+    const isAllowed = isBackendModePublicRouteAllowed(to.path, authStore.hasPendingAuthSession)
     if (!isAllowed) {
       next('/login')
       return
     }
   }
 
-  // All checks passed, allow navigation — unless a Paseo desktop handoff is still pending
-  if (
-    authStore.isAuthenticated &&
-    (to.path === '/dashboard' || to.path === '/admin/dashboard')
-  ) {
-    const paseoLoc = getPendingPaseoBridgeRoute()
-    if (paseoLoc) {
-      next(paseoLoc)
-      return
-    }
-  }
-
+  // All checks passed, allow navigation
   next()
 })
 

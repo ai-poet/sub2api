@@ -236,7 +236,7 @@ func newGroupStatusProbeServiceForTest(group *Group, accounts []Account, cache *
 	return &GroupStatusProbeService{
 		repo:             &groupStatusProbeRepo{},
 		groupRepo:        groupRepo,
-		accountTestSvc:   NewAccountTestService(accountRepo, nil, nil, upstream, cfg, &TLSFingerprintProfileService{}),
+		accountTestSvc:   NewAccountTestService(accountRepo, nil, nil, nil, nil, upstream, cfg, &TLSFingerprintProfileService{}),
 		gatewaySvc:       gatewaySvc,
 		openAIGatewaySvc: openAIGatewaySvc,
 	}

@@ -1,6 +1,64 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAppStore } from '@/stores/app'
+import { getPublicSettings } from '@/api/auth'
+import type { PublicSettings } from '@/types'
+
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+
+  return { promise, resolve, reject }
+}
+
+function createPublicSettings(overrides: Partial<PublicSettings> = {}): PublicSettings {
+  return {
+    registration_enabled: false,
+    email_verify_enabled: false,
+    force_email_on_third_party_signup: false,
+    registration_email_suffix_whitelist: [],
+    promo_code_enabled: true,
+    password_reset_enabled: false,
+    invitation_code_enabled: false,
+    turnstile_enabled: false,
+    turnstile_site_key: '',
+    site_name: 'Test Site',
+    site_logo: '',
+    site_subtitle: '',
+    api_base_url: '',
+    contact_info: '',
+    doc_url: '',
+    home_content: '',
+    hide_ccs_import_button: false,
+    payment_enabled: false,
+    risk_control_enabled: false,
+    table_default_page_size: 20,
+    table_page_size_options: [10, 20, 50, 100],
+    custom_menu_items: [],
+    custom_endpoints: [],
+    linuxdo_oauth_enabled: false,
+    wechat_oauth_enabled: false,
+    oidc_oauth_enabled: false,
+    oidc_oauth_provider_name: 'OIDC',
+    github_oauth_enabled: false,
+    google_oauth_enabled: false,
+    backend_mode_enabled: false,
+    version: '1.0.0',
+    balance_low_notify_enabled: false,
+    account_quota_notify_enabled: false,
+    balance_low_notify_threshold: 0,
+    channel_monitor_enabled: true,
+    channel_monitor_default_interval_seconds: 60,
+    available_channels_enabled: false,
+    service_quota_enabled: false,
+    affiliate_enabled: false,
+    ...overrides,
+  }
+}
 
 // Mock API 模块
 vi.mock('@/api/admin/system', () => ({
@@ -12,9 +70,13 @@ vi.mock('@/api/auth', () => ({
 }))
 
 describe('useAppStore', () => {
+  const mockedGetPublicSettings = vi.mocked(getPublicSettings)
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.useFakeTimers()
+    localStorage.clear()
+    vi.mocked(getPublicSettings).mockReset()
     // 清除 window.__APP_CONFIG__
     delete (window as any).__APP_CONFIG__
   })
@@ -144,6 +206,17 @@ describe('useAppStore', () => {
       expect(store.sidebarCollapsed).toBe(false)
     })
 
+    it('sidebarScrollTop 默认为 0 且可读写', () => {
+      const store = useAppStore()
+      expect(store.sidebarScrollTop).toBe(0)
+
+      store.sidebarScrollTop = 256
+      expect(store.sidebarScrollTop).toBe(256)
+
+      store.sidebarScrollTop = 0
+      expect(store.sidebarScrollTop).toBe(0)
+    })
+
     it('toggleMobileSidebar 切换移动端状态', () => {
       const store = useAppStore()
       expect(store.mobileOpen).toBe(false)
@@ -249,6 +322,75 @@ describe('useAppStore', () => {
   // --- 公开设置 ---
 
   describe('公开设置加载', () => {
+    it('并发调用复用并等待同一个请求，包括 force 调用', async () => {
+      const deferred = createDeferred<PublicSettings>()
+      vi.mocked(getPublicSettings).mockReturnValue(deferred.promise)
+      const settings = createPublicSettings({ payment_enabled: true })
+      const store = useAppStore()
+
+      const first = store.fetchPublicSettings()
+      const second = store.fetchPublicSettings()
+      const forced = store.fetchPublicSettings(true)
+
+      expect(getPublicSettings).toHaveBeenCalledTimes(1)
+
+      const settled = vi.fn()
+      void first.then(settled)
+      void second.then(settled)
+      void forced.then(settled)
+      await Promise.resolve()
+      expect(settled).not.toHaveBeenCalled()
+
+      deferred.resolve(settings)
+      await expect(Promise.all([first, second, forced])).resolves.toEqual([
+        settings,
+        settings,
+        settings,
+      ])
+      expect(store.publicSettingsLoaded).toBe(true)
+      expect(store.cachedPublicSettings?.payment_enabled).toBe(true)
+    })
+
+    it('force 在无活动请求时绕过缓存，刷新期间的普通调用等待刷新结果', async () => {
+      const initial = createPublicSettings({ site_name: 'Initial Site' })
+      vi.mocked(getPublicSettings).mockResolvedValueOnce(initial)
+      const store = useAppStore()
+      await store.fetchPublicSettings()
+
+      const deferred = createDeferred<PublicSettings>()
+      const updated = createPublicSettings({ site_name: 'Updated Site' })
+      vi.mocked(getPublicSettings).mockReturnValueOnce(deferred.promise)
+
+      const refresh = store.fetchPublicSettings(true)
+      const duringRefresh = store.fetchPublicSettings()
+
+      expect(getPublicSettings).toHaveBeenCalledTimes(2)
+
+      deferred.resolve(updated)
+      await expect(Promise.all([refresh, duringRefresh])).resolves.toEqual([updated, updated])
+      expect(store.siteName).toBe('Updated Site')
+
+      await expect(store.fetchPublicSettings()).resolves.toEqual(updated)
+      expect(getPublicSettings).toHaveBeenCalledTimes(2)
+    })
+
+    it('并发请求失败时所有调用得到 null，且不会标记设置已加载', async () => {
+      const deferred = createDeferred<PublicSettings>()
+      vi.mocked(getPublicSettings).mockReturnValue(deferred.promise)
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      const store = useAppStore()
+
+      const first = store.fetchPublicSettings()
+      const second = store.fetchPublicSettings()
+      deferred.reject(new Error('network unavailable'))
+
+      await expect(Promise.all([first, second])).resolves.toEqual([null, null])
+      expect(getPublicSettings).toHaveBeenCalledTimes(1)
+      expect(store.publicSettingsLoaded).toBe(false)
+      expect(store.cachedPublicSettings).toBeNull()
+      consoleError.mockRestore()
+    })
+
     it('从 window.__APP_CONFIG__ 初始化', () => {
       const windowAny = window as any
       windowAny.__APP_CONFIG__ = {
@@ -258,8 +400,6 @@ describe('useAppStore', () => {
         contact_info: 'test@test.com',
         api_base_url: 'https://api.test.com',
         doc_url: 'https://docs.test.com',
-        client_download_windows_url: 'https://downloads.test.com/windows.exe',
-        client_download_macos_url: 'https://downloads.test.com/macos.dmg',
         purchase_subscription_open_mode: 'new_window',
       }
 
@@ -270,24 +410,28 @@ describe('useAppStore', () => {
       expect(store.siteName).toBe('TestSite')
       expect(store.siteLogo).toBe('/logo.png')
       expect(store.siteVersion).toBe('1.0.0')
-      expect(store.cachedPublicSettings?.client_download_windows_url).toBe('https://downloads.test.com/windows.exe')
-      expect(store.cachedPublicSettings?.client_download_macos_url).toBe('https://downloads.test.com/macos.dmg')
       expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('new_window')
       expect(store.publicSettingsLoaded).toBe(true)
     })
 
-    it('注入配置缺失客户端下载链接时默认空字符串', () => {
+    it('保留注入配置中的客户端下载链接', () => {
       const windowAny = window as any
       windowAny.__APP_CONFIG__ = {
         site_name: 'TestSite',
+        client_download_windows_url: 'https://downloads.example.com/windows.exe',
+        client_download_macos_url: 'https://downloads.example.com/macos.dmg',
       }
 
       const store = useAppStore()
       const result = store.initFromInjectedConfig()
 
       expect(result).toBe(true)
-      expect(store.cachedPublicSettings?.client_download_windows_url).toBe('')
-      expect(store.cachedPublicSettings?.client_download_macos_url).toBe('')
+      expect(store.cachedPublicSettings?.client_download_windows_url).toBe(
+        'https://downloads.example.com/windows.exe'
+      )
+      expect(store.cachedPublicSettings?.client_download_macos_url).toBe(
+        'https://downloads.example.com/macos.dmg'
+      )
     })
 
     it('注入配置缺失打开方式时默认 iframe', () => {
@@ -328,6 +472,59 @@ describe('useAppStore', () => {
 
       expect(result).toBe(true)
       expect(store.cachedPublicSettings?.purchase_subscription_open_mode).toBe('iframe')
+    })
+
+    it('注入配置存在延迟字段时会继续请求公开设置补齐', async () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = {
+        site_name: 'InjectedSite',
+        site_logo: '',
+        version: '1.0.0',
+        deferred_fields: ['site_logo'],
+      }
+      mockedGetPublicSettings.mockResolvedValue({
+        registration_enabled: false,
+        email_verify_enabled: false,
+        registration_email_suffix_whitelist: [],
+        promo_code_enabled: true,
+        password_reset_enabled: false,
+        invitation_code_enabled: false,
+        turnstile_enabled: false,
+        turnstile_site_key: '',
+        site_name: 'InjectedSite',
+        site_logo: 'data:image/png;base64,full-logo',
+        site_subtitle: '',
+        api_base_url: '',
+        contact_info: '',
+        doc_url: '',
+        home_content: '',
+        hide_ccs_import_button: false,
+        purchase_subscription_enabled: false,
+        purchase_subscription_url: '',
+        purchase_subscription_open_mode: 'iframe',
+        client_download_windows_url: '',
+        client_download_macos_url: '',
+        custom_menu_items: [],
+        custom_endpoints: [],
+        group_status_enabled: false,
+        linuxdo_oauth_enabled: false,
+        github_oauth_enabled: false,
+        referral_enabled: false,
+        backend_mode_enabled: false,
+        version: '1.0.0',
+        client_changelog_entries: [],
+      })
+
+      const store = useAppStore()
+      expect(store.initFromInjectedConfig()).toBe(true)
+      expect(store.siteName).toBe('InjectedSite')
+      expect(store.publicSettingsLoaded).toBe(false)
+
+      await store.fetchPublicSettings()
+
+      expect(mockedGetPublicSettings).toHaveBeenCalledTimes(1)
+      expect(store.publicSettingsLoaded).toBe(true)
+      expect(store.siteLogo).toBe('data:image/png;base64,full-logo')
     })
 
     it('无注入配置时返回 false', () => {

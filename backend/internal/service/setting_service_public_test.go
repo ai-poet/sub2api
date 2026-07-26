@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
@@ -54,36 +55,50 @@ func TestSettingService_GetPublicSettings_ExposesRegistrationEmailSuffixWhitelis
 		values: map[string]string{
 			SettingKeyRegistrationEnabled:              "true",
 			SettingKeyEmailVerifyEnabled:               "true",
-			SettingKeyRegistrationEmailSuffixWhitelist: `["@EXAMPLE.com"," @foo.bar ","@invalid_domain",""]`,
+			SettingKeyRegistrationEmailSuffixWhitelist: `["@EXAMPLE.com"," @foo.bar ","*.EDU.CN","@invalid_domain",""]`,
 		},
 	}
 	svc := NewSettingService(repo, &config.Config{})
 
 	settings, err := svc.GetPublicSettings(context.Background())
 	require.NoError(t, err)
-	require.Equal(t, []string{"@example.com", "@foo.bar"}, settings.RegistrationEmailSuffixWhitelist)
+	require.Equal(t, []string{"@example.com", "@foo.bar", "*.edu.cn"}, settings.RegistrationEmailSuffixWhitelist)
 }
 
 func TestSettingService_GetPublicSettings_ExposesClientDownloadURLs(t *testing.T) {
 	repo := &settingPublicRepoStub{
 		values: map[string]string{
-			SettingKeyClientDownloadWindowsURL: " https://downloads.example.com/cheaprouter-win.exe ",
-			SettingKeyClientDownloadMacOSURL:   "https://downloads.example.com/cheaprouter-mac.dmg",
+			"client_download_windows_url": " https://downloads.example.com/sub2api-win.exe ",
+			"client_download_macos_url":   "https://downloads.example.com/sub2api-mac.dmg",
 		},
 	}
 	svc := NewSettingService(repo, &config.Config{})
 
 	settings, err := svc.GetPublicSettings(context.Background())
 	require.NoError(t, err)
-	require.Equal(t, "https://downloads.example.com/cheaprouter-win.exe", settings.ClientDownloadWindowsURL)
-	require.Equal(t, "https://downloads.example.com/cheaprouter-mac.dmg", settings.ClientDownloadMacOSURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-win.exe", settings.ClientDownloadWindowsURL)
+	require.Equal(t, "https://downloads.example.com/sub2api-mac.dmg", settings.ClientDownloadMacOSURL)
+}
+
+func TestSettingService_GetPublicSettings_ReturnsFullSiteLogo(t *testing.T) {
+	largeLogo := "data:image/png;base64," + strings.Repeat("A", maxInjectedSiteLogoBytes+1)
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeySiteLogo: largeLogo,
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, largeLogo, settings.SiteLogo)
 }
 
 func TestSettingService_GetPublicSettingsForInjection_IncludesClientDownloadURLs(t *testing.T) {
 	repo := &settingPublicRepoStub{
 		values: map[string]string{
-			SettingKeyClientDownloadWindowsURL: "https://downloads.example.com/windows.exe",
-			SettingKeyClientDownloadMacOSURL:   "https://downloads.example.com/macos.dmg",
+			"client_download_windows_url": "https://downloads.example.com/windows.exe",
+			"client_download_macos_url":   "https://downloads.example.com/macos.dmg",
 		},
 	}
 	svc := NewSettingService(repo, &config.Config{})
@@ -118,6 +133,57 @@ func TestSettingService_GetPublicSettingsForInjection_IncludesClientDownloadURLs
 		"client_download_windows_url": "https://downloads.example.com/windows.exe",
 		"client_download_macos_url": "https://downloads.example.com/macos.dmg"
 	}`, string(encoded))
+}
+
+func TestSettingService_GetPublicSettingsForInjection_DefersLargeSiteLogo(t *testing.T) {
+	largeLogo := "data:image/png;base64," + strings.Repeat("A", maxInjectedSiteLogoBytes+1)
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeySiteLogo: largeLogo,
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	payload, err := svc.GetPublicSettingsForInjection(context.Background())
+	require.NoError(t, err)
+
+	encoded, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	var result struct {
+		SiteLogo       string   `json:"site_logo"`
+		DeferredFields []string `json:"deferred_fields"`
+	}
+	err = json.Unmarshal(encoded, &result)
+	require.NoError(t, err)
+	require.Empty(t, result.SiteLogo)
+	require.Equal(t, []string{"site_logo"}, result.DeferredFields)
+	require.NotContains(t, string(encoded), largeLogo)
+}
+
+func TestSettingService_GetPublicSettingsForInjection_IncludesSmallSiteLogo(t *testing.T) {
+	smallLogo := "data:image/png;base64,small-logo"
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeySiteLogo: smallLogo,
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	payload, err := svc.GetPublicSettingsForInjection(context.Background())
+	require.NoError(t, err)
+
+	encoded, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	var result struct {
+		SiteLogo       string   `json:"site_logo"`
+		DeferredFields []string `json:"deferred_fields"`
+	}
+	err = json.Unmarshal(encoded, &result)
+	require.NoError(t, err)
+	require.Equal(t, smallLogo, result.SiteLogo)
+	require.Empty(t, result.DeferredFields)
 }
 
 // ==================== Changelog Filtering Tests (UT-01) ====================
@@ -317,4 +383,91 @@ func TestSettingService_GetPublicSettingsForInjection_ChangelogFiltering(t *test
 			}
 		})
 	}
+}
+
+func TestSettingService_GetPublicSettings_ExposesForceEmailOnThirdPartySignup(t *testing.T) {
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeyForceEmailOnThirdPartySignup: "true",
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.True(t, settings.ForceEmailOnThirdPartySignup)
+}
+
+func TestSettingService_GetPublicSettings_ExposesAllowUserViewErrorRequests(t *testing.T) {
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeyAllowUserViewErrorRequests: "true",
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.True(t, settings.AllowUserViewErrorRequests)
+}
+
+func TestSettingService_GetPublicSettings_ExposesWeChatOAuthModeCapabilities(t *testing.T) {
+	svc := NewSettingService(&settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeyWeChatConnectEnabled:             "true",
+			SettingKeyWeChatConnectAppID:               "wx-mp-app",
+			SettingKeyWeChatConnectAppSecret:           "wx-mp-secret",
+			SettingKeyWeChatConnectMode:                "mp",
+			SettingKeyWeChatConnectScopes:              "snsapi_base",
+			SettingKeyWeChatConnectOpenEnabled:         "true",
+			SettingKeyWeChatConnectMPEnabled:           "true",
+			SettingKeyWeChatConnectRedirectURL:         "https://api.example.com/api/v1/auth/oauth/wechat/callback",
+			SettingKeyWeChatConnectFrontendRedirectURL: "/auth/wechat/callback",
+		},
+	}, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.True(t, settings.WeChatOAuthEnabled)
+	require.True(t, settings.WeChatOAuthOpenEnabled)
+	require.True(t, settings.WeChatOAuthMPEnabled)
+}
+
+func TestSettingService_GetPublicSettings_DoesNotExposeMobileOnlyWeChatAsWebOAuthAvailable(t *testing.T) {
+	svc := NewSettingService(&settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeyWeChatConnectEnabled:             "true",
+			SettingKeyWeChatConnectMobileEnabled:       "true",
+			SettingKeyWeChatConnectMode:                "mobile",
+			SettingKeyWeChatConnectMobileAppID:         "wx-mobile-app",
+			SettingKeyWeChatConnectMobileAppSecret:     "wx-mobile-secret",
+			SettingKeyWeChatConnectFrontendRedirectURL: "/auth/wechat/callback",
+		},
+	}, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.False(t, settings.WeChatOAuthEnabled)
+	require.False(t, settings.WeChatOAuthOpenEnabled)
+	require.False(t, settings.WeChatOAuthMPEnabled)
+	require.True(t, settings.WeChatOAuthMobileEnabled)
+}
+
+func TestSettingService_GetPublicSettings_FallsBackToConfigForWeChatOAuthCapabilities(t *testing.T) {
+	svc := NewSettingService(&settingPublicRepoStub{values: map[string]string{}}, &config.Config{
+		WeChat: config.WeChatConnectConfig{
+			Enabled:             true,
+			OpenEnabled:         true,
+			OpenAppID:           "wx-open-config",
+			OpenAppSecret:       "wx-open-secret",
+			FrontendRedirectURL: "/auth/wechat/config-callback",
+		},
+	})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.True(t, settings.WeChatOAuthEnabled)
+	require.True(t, settings.WeChatOAuthOpenEnabled)
+	require.False(t, settings.WeChatOAuthMPEnabled)
+	require.False(t, settings.WeChatOAuthMobileEnabled)
 }

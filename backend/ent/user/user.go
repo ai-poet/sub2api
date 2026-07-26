@@ -29,6 +29,8 @@ const (
 	FieldRole = "role"
 	// FieldBalance holds the string denoting the balance field in the database.
 	FieldBalance = "balance"
+	// FieldFrozenBalance holds the string denoting the frozen_balance field in the database.
+	FieldFrozenBalance = "frozen_balance"
 	// FieldConcurrency holds the string denoting the concurrency field in the database.
 	FieldConcurrency = "concurrency"
 	// FieldStatus holds the string denoting the status field in the database.
@@ -43,8 +45,26 @@ const (
 	FieldTotpEnabled = "totp_enabled"
 	// FieldTotpEnabledAt holds the string denoting the totp_enabled_at field in the database.
 	FieldTotpEnabledAt = "totp_enabled_at"
+	// FieldSignupSource holds the string denoting the signup_source field in the database.
+	FieldSignupSource = "signup_source"
+	// FieldLastLoginAt holds the string denoting the last_login_at field in the database.
+	FieldLastLoginAt = "last_login_at"
+	// FieldLastActiveAt holds the string denoting the last_active_at field in the database.
+	FieldLastActiveAt = "last_active_at"
+	// FieldBalanceNotifyEnabled holds the string denoting the balance_notify_enabled field in the database.
+	FieldBalanceNotifyEnabled = "balance_notify_enabled"
+	// FieldBalanceNotifyThresholdType holds the string denoting the balance_notify_threshold_type field in the database.
+	FieldBalanceNotifyThresholdType = "balance_notify_threshold_type"
+	// FieldBalanceNotifyThreshold holds the string denoting the balance_notify_threshold field in the database.
+	FieldBalanceNotifyThreshold = "balance_notify_threshold"
+	// FieldBalanceNotifyExtraEmails holds the string denoting the balance_notify_extra_emails field in the database.
+	FieldBalanceNotifyExtraEmails = "balance_notify_extra_emails"
+	// FieldTotalRecharged holds the string denoting the total_recharged field in the database.
+	FieldTotalRecharged = "total_recharged"
 	// FieldReferralCode holds the string denoting the referral_code field in the database.
 	FieldReferralCode = "referral_code"
+	// FieldRpmLimit holds the string denoting the rpm_limit field in the database.
+	FieldRpmLimit = "rpm_limit"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -67,6 +87,12 @@ const (
 	EdgeReferralsMade = "referrals_made"
 	// EdgeReferralReceived holds the string denoting the referral_received edge name in mutations.
 	EdgeReferralReceived = "referral_received"
+	// EdgeAuthIdentities holds the string denoting the auth_identities edge name in mutations.
+	EdgeAuthIdentities = "auth_identities"
+	// EdgePendingAuthSessions holds the string denoting the pending_auth_sessions edge name in mutations.
+	EdgePendingAuthSessions = "pending_auth_sessions"
+	// EdgePlatformQuotas holds the string denoting the platform_quotas edge name in mutations.
+	EdgePlatformQuotas = "platform_quotas"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -146,6 +172,27 @@ const (
 	ReferralReceivedInverseTable = "user_referrals"
 	// ReferralReceivedColumn is the table column denoting the referral_received relation/edge.
 	ReferralReceivedColumn = "referee_id"
+	// AuthIdentitiesTable is the table that holds the auth_identities relation/edge.
+	AuthIdentitiesTable = "auth_identities"
+	// AuthIdentitiesInverseTable is the table name for the AuthIdentity entity.
+	// It exists in this package in order to avoid circular dependency with the "authidentity" package.
+	AuthIdentitiesInverseTable = "auth_identities"
+	// AuthIdentitiesColumn is the table column denoting the auth_identities relation/edge.
+	AuthIdentitiesColumn = "user_id"
+	// PendingAuthSessionsTable is the table that holds the pending_auth_sessions relation/edge.
+	PendingAuthSessionsTable = "pending_auth_sessions"
+	// PendingAuthSessionsInverseTable is the table name for the PendingAuthSession entity.
+	// It exists in this package in order to avoid circular dependency with the "pendingauthsession" package.
+	PendingAuthSessionsInverseTable = "pending_auth_sessions"
+	// PendingAuthSessionsColumn is the table column denoting the pending_auth_sessions relation/edge.
+	PendingAuthSessionsColumn = "target_user_id"
+	// PlatformQuotasTable is the table that holds the platform_quotas relation/edge.
+	PlatformQuotasTable = "user_platform_quotas"
+	// PlatformQuotasInverseTable is the table name for the UserPlatformQuota entity.
+	// It exists in this package in order to avoid circular dependency with the "userplatformquota" package.
+	PlatformQuotasInverseTable = "user_platform_quotas"
+	// PlatformQuotasColumn is the table column denoting the platform_quotas relation/edge.
+	PlatformQuotasColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -165,6 +212,7 @@ var Columns = []string{
 	FieldPasswordHash,
 	FieldRole,
 	FieldBalance,
+	FieldFrozenBalance,
 	FieldConcurrency,
 	FieldStatus,
 	FieldUsername,
@@ -172,7 +220,16 @@ var Columns = []string{
 	FieldTotpSecretEncrypted,
 	FieldTotpEnabled,
 	FieldTotpEnabledAt,
+	FieldSignupSource,
+	FieldLastLoginAt,
+	FieldLastActiveAt,
+	FieldBalanceNotifyEnabled,
+	FieldBalanceNotifyThresholdType,
+	FieldBalanceNotifyThreshold,
+	FieldBalanceNotifyExtraEmails,
+	FieldTotalRecharged,
 	FieldReferralCode,
+	FieldRpmLimit,
 }
 
 var (
@@ -215,6 +272,8 @@ var (
 	RoleValidator func(string) error
 	// DefaultBalance holds the default value on creation for the "balance" field.
 	DefaultBalance float64
+	// DefaultFrozenBalance holds the default value on creation for the "frozen_balance" field.
+	DefaultFrozenBalance float64
 	// DefaultConcurrency holds the default value on creation for the "concurrency" field.
 	DefaultConcurrency int
 	// DefaultStatus holds the default value on creation for the "status" field.
@@ -229,10 +288,24 @@ var (
 	DefaultNotes string
 	// DefaultTotpEnabled holds the default value on creation for the "totp_enabled" field.
 	DefaultTotpEnabled bool
+	// DefaultSignupSource holds the default value on creation for the "signup_source" field.
+	DefaultSignupSource string
+	// SignupSourceValidator is a validator for the "signup_source" field. It is called by the builders before save.
+	SignupSourceValidator func(string) error
+	// DefaultBalanceNotifyEnabled holds the default value on creation for the "balance_notify_enabled" field.
+	DefaultBalanceNotifyEnabled bool
+	// DefaultBalanceNotifyThresholdType holds the default value on creation for the "balance_notify_threshold_type" field.
+	DefaultBalanceNotifyThresholdType string
+	// DefaultBalanceNotifyExtraEmails holds the default value on creation for the "balance_notify_extra_emails" field.
+	DefaultBalanceNotifyExtraEmails string
+	// DefaultTotalRecharged holds the default value on creation for the "total_recharged" field.
+	DefaultTotalRecharged float64
 	// DefaultReferralCode holds the default value on creation for the "referral_code" field.
 	DefaultReferralCode string
 	// ReferralCodeValidator is a validator for the "referral_code" field. It is called by the builders before save.
 	ReferralCodeValidator func(string) error
+	// DefaultRpmLimit holds the default value on creation for the "rpm_limit" field.
+	DefaultRpmLimit int
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -278,6 +351,11 @@ func ByBalance(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBalance, opts...).ToFunc()
 }
 
+// ByFrozenBalance orders the results by the frozen_balance field.
+func ByFrozenBalance(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFrozenBalance, opts...).ToFunc()
+}
+
 // ByConcurrency orders the results by the concurrency field.
 func ByConcurrency(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldConcurrency, opts...).ToFunc()
@@ -313,9 +391,54 @@ func ByTotpEnabledAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotpEnabledAt, opts...).ToFunc()
 }
 
+// BySignupSource orders the results by the signup_source field.
+func BySignupSource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSignupSource, opts...).ToFunc()
+}
+
+// ByLastLoginAt orders the results by the last_login_at field.
+func ByLastLoginAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastLoginAt, opts...).ToFunc()
+}
+
+// ByLastActiveAt orders the results by the last_active_at field.
+func ByLastActiveAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastActiveAt, opts...).ToFunc()
+}
+
+// ByBalanceNotifyEnabled orders the results by the balance_notify_enabled field.
+func ByBalanceNotifyEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBalanceNotifyEnabled, opts...).ToFunc()
+}
+
+// ByBalanceNotifyThresholdType orders the results by the balance_notify_threshold_type field.
+func ByBalanceNotifyThresholdType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBalanceNotifyThresholdType, opts...).ToFunc()
+}
+
+// ByBalanceNotifyThreshold orders the results by the balance_notify_threshold field.
+func ByBalanceNotifyThreshold(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBalanceNotifyThreshold, opts...).ToFunc()
+}
+
+// ByBalanceNotifyExtraEmails orders the results by the balance_notify_extra_emails field.
+func ByBalanceNotifyExtraEmails(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBalanceNotifyExtraEmails, opts...).ToFunc()
+}
+
+// ByTotalRecharged orders the results by the total_recharged field.
+func ByTotalRecharged(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalRecharged, opts...).ToFunc()
+}
+
 // ByReferralCode orders the results by the referral_code field.
 func ByReferralCode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReferralCode, opts...).ToFunc()
+}
+
+// ByRpmLimit orders the results by the rpm_limit field.
+func ByRpmLimit(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRpmLimit, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.
@@ -472,6 +595,48 @@ func ByReferralReceived(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption 
 	}
 }
 
+// ByAuthIdentitiesCount orders the results by auth_identities count.
+func ByAuthIdentitiesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAuthIdentitiesStep(), opts...)
+	}
+}
+
+// ByAuthIdentities orders the results by auth_identities terms.
+func ByAuthIdentities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuthIdentitiesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPendingAuthSessionsCount orders the results by pending_auth_sessions count.
+func ByPendingAuthSessionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPendingAuthSessionsStep(), opts...)
+	}
+}
+
+// ByPendingAuthSessions orders the results by pending_auth_sessions terms.
+func ByPendingAuthSessions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPendingAuthSessionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPlatformQuotasCount orders the results by platform_quotas count.
+func ByPlatformQuotasCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPlatformQuotasStep(), opts...)
+	}
+}
+
+// ByPlatformQuotas orders the results by platform_quotas terms.
+func ByPlatformQuotas(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPlatformQuotasStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -560,6 +725,27 @@ func newReferralReceivedStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ReferralReceivedInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ReferralReceivedTable, ReferralReceivedColumn),
+	)
+}
+func newAuthIdentitiesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuthIdentitiesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AuthIdentitiesTable, AuthIdentitiesColumn),
+	)
+}
+func newPendingAuthSessionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PendingAuthSessionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PendingAuthSessionsTable, PendingAuthSessionsColumn),
+	)
+}
+func newPlatformQuotasStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PlatformQuotasInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PlatformQuotasTable, PlatformQuotasColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {
