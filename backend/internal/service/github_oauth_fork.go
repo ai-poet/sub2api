@@ -121,15 +121,16 @@ func (s *SettingService) GetGitHubOAuthConfig(ctx context.Context) (config.GitHu
 	if strings.TrimSpace(effective.ClientSecret) == "" {
 		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth client secret not configured")
 	}
-	if strings.TrimSpace(effective.RedirectURL) == "" {
-		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth redirect url not configured")
-	}
 	if strings.TrimSpace(effective.FrontendRedirectURL) == "" {
 		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth frontend redirect url not configured")
 	}
 
-	if err := config.ValidateAbsoluteHTTPURL(effective.RedirectURL); err != nil {
-		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth redirect url invalid")
+	// redirect_url 允许留空：handler 会按请求的 scheme/host 推导回调地址，
+	// 全新部署无需先进设置页配置即可使用 GitHub 登录。
+	if v := strings.TrimSpace(effective.RedirectURL); v != "" {
+		if err := config.ValidateAbsoluteHTTPURL(v); err != nil {
+			return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth redirect url invalid")
+		}
 	}
 	if err := config.ValidateFrontendRedirectURL(effective.FrontendRedirectURL); err != nil {
 		return config.GitHubOAuthConfig{}, infraerrors.InternalServer("OAUTH_CONFIG_INVALID", "github oauth frontend redirect url invalid")
