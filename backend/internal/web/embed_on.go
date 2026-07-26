@@ -41,6 +41,7 @@ type FrontendServer struct {
 	baseHTML   []byte
 	cache      *HTMLCache
 	settings   PublicSettingsProvider
+	overrideDir string // 本地文件覆盖目录，优先于内嵌资源
 }
 
 // NewFrontendServer creates a new frontend server with settings injection
@@ -121,6 +122,22 @@ func (s *FrontendServer) fileExists(path string) bool {
 		return false
 	}
 	_ = file.Close()
+	return true
+}
+
+// tryServeOverride 命中本地覆盖文件时直接返回该文件。
+// overrideDir 下的文件优先于内嵌资源，便于不重建镜像替换前端产物。
+func (s *FrontendServer) tryServeOverride(c *gin.Context, cleanPath string) bool {
+	if s.overrideDir == "" {
+		return false
+	}
+	filePath := filepath.Join(s.overrideDir, filepath.Clean("/"+cleanPath))
+	info, err := os.Stat(filePath)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	c.File(filePath)
+	c.Abort()
 	return true
 }
 
@@ -288,6 +305,7 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 		panic("failed to get dist subdirectory: " + err.Error())
 	}
 	fileServer := http.FileServer(http.FS(distFS))
+	overrideDir := filepath.Join("data", "public")
 
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
@@ -316,6 +334,20 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 
 		serveIndexHTML(c, distFS)
 	}
+}
+
+func tryServeOverrideFile(c *gin.Context, overrideDir, cleanPath string) bool {
+	if overrideDir == "" {
+		return false
+	}
+	filePath := filepath.Join(overrideDir, filepath.Clean("/"+cleanPath))
+	info, err := os.Stat(filePath)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	c.File(filePath)
+	c.Abort()
+	return true
 }
 
 func shouldBypassEmbeddedFrontend(path string) bool {
