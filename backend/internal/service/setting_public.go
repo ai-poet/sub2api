@@ -158,6 +158,15 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 	keys := []string{
 		SettingKeyRegistrationEnabled,
 		SettingKeyEmailVerifyEnabled,
+		// fork 自有的公开设置
+		SettingKeyReferralEnabled,
+		SettingKeyGroupStatusEnabled,
+		SettingKeyPurchaseSubscriptionOpenMode,
+		SettingKeyClientDownloadWindowsURL,
+		SettingKeyClientDownloadMacOSURL,
+		SettingKeyCommunityQRCode,
+		SettingKeyCommunityGroupURL,
+		SettingKeyClientChangelogEntries,
 		SettingKeyForceEmailOnThirdPartySignup,
 		SettingKeyRegistrationEmailSuffixWhitelist,
 		SettingKeyPromoCodeEnabled,

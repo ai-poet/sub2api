@@ -30,6 +30,7 @@ type userUsageRepoCapture struct {
 
 func (s *userUsageRepoCapture) ListWithFilters(ctx context.Context, params pagination.PaginationParams, filters usagestats.UsageLogFilters) ([]service.UsageLog, *pagination.PaginationResult, error) {
 	s.listFilters = filters
+	s.listParams = params
 	return s.listRows, &pagination.PaginationResult{
 		Total:    int64(len(s.listRows)),
 		Page:     params.Page,

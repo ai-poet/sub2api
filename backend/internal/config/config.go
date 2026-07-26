@@ -1777,6 +1777,14 @@ func load(allowMissingJWTSecret bool) (*Config, error) {
 	cfg.Log.Environment = strings.TrimSpace(cfg.Log.Environment)
 	cfg.Log.StacktraceLevel = strings.ToLower(strings.TrimSpace(cfg.Log.StacktraceLevel))
 	cfg.Log.Output.FilePath = strings.TrimSpace(cfg.Log.Output.FilePath)
+	cfg.Gateway.ForcedCodexInstructionsTemplateFile = strings.TrimSpace(cfg.Gateway.ForcedCodexInstructionsTemplateFile)
+	if cfg.Gateway.ForcedCodexInstructionsTemplateFile != "" {
+		content, err := os.ReadFile(cfg.Gateway.ForcedCodexInstructionsTemplateFile)
+		if err != nil {
+			return nil, fmt.Errorf("read forced codex instructions template %q: %w", cfg.Gateway.ForcedCodexInstructionsTemplateFile, err)
+		}
+		cfg.Gateway.ForcedCodexInstructionsTemplate = string(content)
+	}
 
 	// 兼容旧键 gateway.openai_ws.sticky_previous_response_ttl_seconds。
 	// 新键未配置（<=0）时回退旧键；新键优先。
@@ -2793,6 +2801,9 @@ func (c *Config) Validate() error {
 		if err := ValidateFrontendRedirectURL(c.OIDC.FrontendRedirectURL); err != nil {
 			return fmt.Errorf("oidc_connect.frontend_redirect_url invalid: %w", err)
 		}
+		if !scopeContainsOpenID(c.OIDC.Scopes) {
+			return fmt.Errorf("oidc_connect.scopes must contain openid")
+		}
 
 		warnIfInsecureURL("oidc_connect.issuer_url", c.OIDC.IssuerURL)
 		warnIfInsecureURL("oidc_connect.discovery_url", c.OIDC.DiscoveryURL)
@@ -3608,4 +3619,13 @@ func warnIfInsecureURL(field, raw string) {
 	if strings.EqualFold(u.Scheme, "http") {
 		slog.Warn("url uses http scheme; use https in production to avoid token leakage", "field", field)
 	}
+}
+
+func scopeContainsOpenID(scopes string) bool {
+	for _, scope := range strings.Fields(strings.ToLower(strings.TrimSpace(scopes))) {
+		if scope == "openid" {
+			return true
+		}
+	}
+	return false
 }

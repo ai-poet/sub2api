@@ -129,11 +129,11 @@ type UpdateSettingsRequest struct {
 	OIDCConnectUserInfoIDPath       string `json:"oidc_connect_userinfo_id_path"`
 	OIDCConnectUserInfoUsernamePath string `json:"oidc_connect_userinfo_username_path"`
 
-	GitHubOAuthEnabled             bool   `json:"github_oauth_enabled"`
-	GitHubOAuthClientID            string `json:"github_oauth_client_id"`
-	GitHubOAuthClientSecret        string `json:"github_oauth_client_secret"`
-	GitHubOAuthRedirectURL         string `json:"github_oauth_redirect_url"`
-	GitHubOAuthFrontendRedirectURL string `json:"github_oauth_frontend_redirect_url"`
+	GitHubOAuthEnabled             *bool   `json:"github_oauth_enabled"`
+	GitHubOAuthClientID            *string `json:"github_oauth_client_id"`
+	GitHubOAuthClientSecret        *string `json:"github_oauth_client_secret"`
+	GitHubOAuthRedirectURL         *string `json:"github_oauth_redirect_url"`
+	GitHubOAuthFrontendRedirectURL *string `json:"github_oauth_frontend_redirect_url"`
 	GoogleOAuthEnabled             bool   `json:"google_oauth_enabled"`
 	GoogleOAuthClientID            string `json:"google_oauth_client_id"`
 	GoogleOAuthClientSecret        string `json:"google_oauth_client_secret"`
@@ -1293,11 +1293,11 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		OIDCConnectUserInfoEmailPath:           req.OIDCConnectUserInfoEmailPath,
 		OIDCConnectUserInfoIDPath:              req.OIDCConnectUserInfoIDPath,
 		OIDCConnectUserInfoUsernamePath:        req.OIDCConnectUserInfoUsernamePath,
-		GitHubOAuthEnabled:                     req.GitHubOAuthEnabled,
-		GitHubOAuthClientID:                    req.GitHubOAuthClientID,
-		GitHubOAuthClientSecret:                req.GitHubOAuthClientSecret,
-		GitHubOAuthRedirectURL:                 req.GitHubOAuthRedirectURL,
-		GitHubOAuthFrontendRedirectURL:         req.GitHubOAuthFrontendRedirectURL,
+		GitHubOAuthEnabled:                     previousSettings.GitHubOAuthEnabled,
+		GitHubOAuthClientID:                    previousSettings.GitHubOAuthClientID,
+		GitHubOAuthClientSecret:                previousSettings.GitHubOAuthClientSecret,
+		GitHubOAuthRedirectURL:                 previousSettings.GitHubOAuthRedirectURL,
+		GitHubOAuthFrontendRedirectURL:         previousSettings.GitHubOAuthFrontendRedirectURL,
 		GoogleOAuthEnabled:                     req.GoogleOAuthEnabled,
 		GoogleOAuthClientID:                    req.GoogleOAuthClientID,
 		GoogleOAuthClientSecret:                req.GoogleOAuthClientSecret,
@@ -1615,6 +1615,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		},
 		ForceEmailOnThirdPartySignup: boolValueOrDefault(req.ForceEmailOnThirdPartySignup, previousAuthSourceDefaults.ForceEmailOnThirdPartySignup),
 	}
+	applyGitHubOAuthSettingsFromRequest(settings, req)
 	if !applyForkSettingsFromRequest(c, settings, previousSettings, req) {
 		return
 	}
@@ -2035,5 +2036,26 @@ func normalizeForkPurchaseOpenMode(mode string) string {
 		return "new_window"
 	default:
 		return "iframe"
+	}
+}
+
+
+// applyGitHubOAuthSettingsFromRequest 用指针语义写入 fork 自研 GitHub OAuth 配置：
+// 请求未携带的键保留原值，避免局部保存把未展示的字段清空。
+func applyGitHubOAuthSettingsFromRequest(settings *service.SystemSettings, req UpdateSettingsRequest) {
+	if req.GitHubOAuthEnabled != nil {
+		settings.GitHubOAuthEnabled = *req.GitHubOAuthEnabled
+	}
+	if req.GitHubOAuthClientID != nil {
+		settings.GitHubOAuthClientID = strings.TrimSpace(*req.GitHubOAuthClientID)
+	}
+	if req.GitHubOAuthClientSecret != nil {
+		settings.GitHubOAuthClientSecret = strings.TrimSpace(*req.GitHubOAuthClientSecret)
+	}
+	if req.GitHubOAuthRedirectURL != nil {
+		settings.GitHubOAuthRedirectURL = strings.TrimSpace(*req.GitHubOAuthRedirectURL)
+	}
+	if req.GitHubOAuthFrontendRedirectURL != nil {
+		settings.GitHubOAuthFrontendRedirectURL = strings.TrimSpace(*req.GitHubOAuthFrontendRedirectURL)
 	}
 }
