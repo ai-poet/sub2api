@@ -8,6 +8,7 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -135,4 +136,20 @@ func (s *SettingService) GetGitHubOAuthConfig(ctx context.Context) (config.GitHu
 	}
 
 	return effective, nil
+}
+
+// bindOAuthAffiliate 在 OAuth 注册后绑定 fork 的推荐关系。
+// 保留原方法名以兼容上游各 OAuth 流程的调用点；本仓库用推荐码体系替代上游 affiliate。
+func (s *AuthService) bindOAuthAffiliate(ctx context.Context, userID int64, inviteCode string) {
+	if s.referralService == nil || userID <= 0 {
+		return
+	}
+	if code := strings.TrimSpace(inviteCode); code != "" {
+		if err := s.referralService.RegisterReferral(ctx, code, userID); err != nil {
+			logger.LegacyPrintf("service.auth", "[Auth] Failed to register referral for user %d: %v", userID, err)
+		}
+	}
+	if _, err := s.referralService.GenerateReferralCode(ctx, userID); err != nil {
+		logger.LegacyPrintf("service.auth", "[Auth] Failed to pre-generate referral code for user %d: %v", userID, err)
+	}
 }

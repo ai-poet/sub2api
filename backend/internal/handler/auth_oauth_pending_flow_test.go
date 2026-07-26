@@ -2370,7 +2370,6 @@ type oauthPendingFlowTestHandlerOptions struct {
 	settingValues      map[string]string
 	promoRepo          service.PromoCodeRepository
 	defaultSubAssigner service.DefaultSubscriptionAssigner
-	affiliateFactory   func(*dbent.Client, *service.SettingService) *service.AffiliateService
 	totpCache          service.TotpCache
 	totpEncryptor      service.SecretEncryptor
 	userRepoOptions    oauthPendingFlowUserRepoOptions
@@ -2451,10 +2450,6 @@ CREATE TABLE IF NOT EXISTS user_affiliates (
 		settingValues[key] = value
 	}
 	settingSvc := service.NewSettingService(&oauthPendingFlowSettingRepoStub{values: settingValues}, cfg)
-	affiliateService := options.affiliateService
-	if affiliateService == nil && options.affiliateFactory != nil {
-		affiliateService = options.affiliateFactory(client, settingSvc)
-	}
 	userRepo := &oauthPendingFlowUserRepo{
 		client:  client,
 		options: options.userRepoOptions,

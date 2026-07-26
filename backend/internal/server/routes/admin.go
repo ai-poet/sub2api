@@ -106,7 +106,6 @@ func RegisterAdminRoutes(
 		registerChannelRoutes(admin, h)
 
 		// 渠道监控
-		registerChannelMonitorRoutes(admin, h)
 
 		// 风控中心
 		registerContentModerationRoutes(admin, h)
@@ -115,7 +114,6 @@ func RegisterAdminRoutes(
 		registerPromptAuditRoutes(admin, h)
 
 		// 邀请返利（专属用户管理）
-		registerAffiliateRoutes(admin, h)
 
 		// 操作审计日志
 		registerAuditLogRoutes(admin, h, stepUpAuth)
@@ -732,47 +730,3 @@ func registerChannelRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	}
 }
 
-func registerChannelMonitorRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
-	monitors := admin.Group("/channel-monitors")
-	{
-		monitors.GET("", h.Admin.ChannelMonitor.List)
-		monitors.POST("", h.Admin.ChannelMonitor.Create)
-		monitors.GET("/:id", h.Admin.ChannelMonitor.Get)
-		monitors.POST("/:id/duplicate", h.Admin.ChannelMonitor.Duplicate)
-		monitors.PUT("/:id", h.Admin.ChannelMonitor.Update)
-		monitors.DELETE("/:id", h.Admin.ChannelMonitor.Delete)
-		monitors.POST("/:id/run", h.Admin.ChannelMonitor.Run)
-		monitors.GET("/:id/history", h.Admin.ChannelMonitor.History)
-	}
-
-	templates := admin.Group("/channel-monitor-templates")
-	{
-		templates.GET("", h.Admin.ChannelMonitorTemplate.List)
-		templates.POST("", h.Admin.ChannelMonitorTemplate.Create)
-		templates.GET("/:id", h.Admin.ChannelMonitorTemplate.Get)
-		templates.PUT("/:id", h.Admin.ChannelMonitorTemplate.Update)
-		templates.DELETE("/:id", h.Admin.ChannelMonitorTemplate.Delete)
-		templates.GET("/:id/monitors", h.Admin.ChannelMonitorTemplate.AssociatedMonitors)
-		templates.POST("/:id/apply", h.Admin.ChannelMonitorTemplate.Apply)
-	}
-}
-
-// registerAffiliateRoutes 注册邀请返利的管理端路由（专属用户配置）
-func registerAffiliateRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
-	affiliates := admin.Group("/affiliates")
-	{
-		affiliates.GET("/invites", h.Admin.Affiliate.ListInviteRecords)
-		affiliates.GET("/rebates", h.Admin.Affiliate.ListRebateRecords)
-		affiliates.GET("/transfers", h.Admin.Affiliate.ListTransferRecords)
-
-		users := affiliates.Group("/users")
-		{
-			users.GET("", h.Admin.Affiliate.ListUsers)
-			users.GET("/lookup", h.Admin.Affiliate.LookupUsers)
-			users.POST("/batch-rate", h.Admin.Affiliate.BatchSetRate)
-			users.GET("/:user_id/overview", h.Admin.Affiliate.GetUserOverview)
-			users.PUT("/:user_id", h.Admin.Affiliate.UpdateUserSettings)
-			users.DELETE("/:user_id", h.Admin.Affiliate.ClearUserSettings)
-		}
-	}
-}

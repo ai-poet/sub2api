@@ -172,8 +172,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// aff_code（上游邀请返利码）与 referral_code（本 fork 推荐码）共用同一个注册入参，
-	// 前者优先，保证两套邀请链接都能生效。
+	// 本仓库只保留 fork 的推荐码体系；aff_code 作为历史/外部链接的别名一并接受，
+	// 二者最终都走 ReferralService。
 	inviteCode := strings.TrimSpace(req.AffCode)
 	if inviteCode == "" {
 		inviteCode = strings.TrimSpace(req.ReferralCode)

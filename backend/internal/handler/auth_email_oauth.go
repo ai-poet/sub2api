@@ -182,6 +182,7 @@ func (h *AuthHandler) emailOAuthCallbackWithProfile(
 		c.Request.Context(),
 		input,
 		"",
+		affiliateCode,
 		readOAuthPromoCode(c),
 	)
 	if err != nil {
@@ -410,6 +411,7 @@ func (h *AuthHandler) completeEmailOAuthRegistration(c *gin.Context, provider st
 		user,
 		strings.TrimSpace(req.InvitationCode),
 		strings.TrimSpace(session.ProviderType),
+		h.emailOAuthAffiliateCode(c),
 	); err != nil {
 		_ = tx.Rollback()
 		_ = h.authService.RollbackOAuthEmailAccountCreation(c.Request.Context(), user.ID, strings.TrimSpace(req.InvitationCode))
