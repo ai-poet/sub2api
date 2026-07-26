@@ -20,6 +20,13 @@ const (
 	CloudflareInsightsDomain = "https://static.cloudflareinsights.com"
 )
 
+var requiredCSPDirectiveValues = []struct {
+	directive string
+	value     string
+}{
+	{"script-src", CloudflareInsightsDomain},
+}
+
 // GenerateNonce generates a cryptographically secure random nonce.
 // 返回 error 以确保调用方在 crypto/rand 失败时能正确降级。
 func GenerateNonce() (string, error) {
@@ -99,7 +106,8 @@ func isAPIRoutePath(c *gin.Context) bool {
 	return strings.HasPrefix(path, "/v1/") ||
 		strings.HasPrefix(path, "/v1beta/") ||
 		strings.HasPrefix(path, "/antigravity/") ||
-		strings.HasPrefix(path, "/responses")
+		strings.HasPrefix(path, "/responses") ||
+		strings.HasPrefix(path, "/images")
 }
 
 func isPayProxyPath(c *gin.Context) bool {
@@ -120,9 +128,10 @@ func enhanceCSPPolicy(policy string) string {
 		policy = addToDirective(policy, "script-src", NonceTemplate)
 	}
 
-	// Add Cloudflare Insights domain to script-src if not present
-	if !strings.Contains(policy, CloudflareInsightsDomain) {
-		policy = addToDirective(policy, "script-src", CloudflareInsightsDomain)
+	for _, required := range requiredCSPDirectiveValues {
+		if !directiveHasValue(policy, required.directive, required.value) {
+			policy = addToDirective(policy, required.directive, required.value)
+		}
 	}
 
 	// Allow same-origin iframe embeds for integrated pages like /purchase -> /pay.
@@ -133,6 +142,22 @@ func enhanceCSPPolicy(policy string) string {
 	}
 
 	return policy
+}
+
+func directiveHasValue(policy, directive, value string) bool {
+	for _, rawDirective := range strings.Split(policy, ";") {
+		fields := strings.Fields(strings.TrimSpace(rawDirective))
+		if len(fields) == 0 || fields[0] != directive {
+			continue
+		}
+		for _, field := range fields[1:] {
+			if field == value {
+				return true
+			}
+		}
+		return false
+	}
+	return false
 }
 
 // addToDirective adds a value to a specific CSP directive.

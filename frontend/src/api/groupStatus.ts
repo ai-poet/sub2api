@@ -12,6 +12,7 @@ function ensureArray<T>(value: T[] | null | undefined): T[] {
 }
 
 function normalizeGroup(raw: any): Group {
+  // 仅用于运行状态展示，上游新增的 Group 字段由后端补全，这里不逐一映射
   return {
     id: raw?.id ?? raw?.ID ?? 0,
     name: raw?.name ?? raw?.Name ?? '',
@@ -36,7 +37,7 @@ function normalizeGroup(raw: any): Group {
     require_privacy_set: raw?.require_privacy_set ?? raw?.RequirePrivacySet ?? false,
     created_at: raw?.created_at ?? raw?.CreatedAt ?? '',
     updated_at: raw?.updated_at ?? raw?.UpdatedAt ?? '',
-  }
+  } as Group
 }
 
 export async function listStatuses(): Promise<GroupStatusListItem[]> {

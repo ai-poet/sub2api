@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { resolveCompletedSetupRedirectPath } from '@/router/setupRedirect'
 
 // Mock 导航加载状态
 vi.mock('@/composables/useNavigationLoading', () => {
@@ -52,6 +53,8 @@ interface MockAuthState {
   isAdmin: boolean
   isSimpleMode: boolean
   backendModeEnabled: boolean
+  hasPendingAuthSession: boolean
+  setupNeedsSetup?: boolean
 }
 
 /**
@@ -65,6 +68,10 @@ function simulateGuard(
   const requiresAuth = toMeta.requiresAuth !== false
   const requiresAdmin = toMeta.requiresAdmin === true
 
+  if (toPath === '/setup' && authState.setupNeedsSetup === false) {
+    return resolveCompletedSetupRedirectPath(authState.isAuthenticated, authState.isAdmin)
+  }
+
   // 不需要认证的路由
   if (!requiresAuth) {
     if (
@@ -77,17 +84,21 @@ function simulateGuard(
       return authState.isAdmin ? '/admin/dashboard' : '/dashboard'
     }
     if (authState.backendModeEnabled && !authState.isAuthenticated) {
-      const allowed = [
-        '/login',
-        '/key-usage',
-        '/setup',
+      const allowed = ['/login', '/key-usage', '/setup', '/payment/result']
+      const callbackPaths = [
         '/auth/callback',
-        '/auth/github/callback',
         '/auth/linuxdo/callback',
-        '/auth/paseo',
+        '/auth/oidc/callback',
+        '/auth/wechat/callback',
+        '/auth/wechat/payment/callback',
       ]
-      if (!allowed.some((path) => toPath === path || toPath.startsWith(path))) {
-        return `/login?redirect=${encodeURIComponent(toPath)}`
+      const pendingAuthPaths = ['/register', '/email-verify']
+      const isAllowed =
+        allowed.some((path) => toPath === path || toPath.startsWith(path)) ||
+        callbackPaths.includes(toPath) ||
+        (authState.hasPendingAuthSession && pendingAuthPaths.includes(toPath))
+      if (!isAllowed) {
+        return '/login'
       }
     }
     return null // 允许通过
@@ -122,16 +133,20 @@ function simulateGuard(
     if (authState.isAuthenticated && authState.isAdmin) {
       return null
     }
-    const allowed = [
-      '/login',
-      '/key-usage',
-      '/setup',
+    const allowed = ['/login', '/key-usage', '/setup', '/payment/result']
+    const callbackPaths = [
       '/auth/callback',
-      '/auth/github/callback',
       '/auth/linuxdo/callback',
-      '/auth/paseo',
+      '/auth/oidc/callback',
+      '/auth/wechat/callback',
+      '/auth/wechat/payment/callback',
     ]
-    if (!allowed.some((path) => toPath === path || toPath.startsWith(path))) {
+    const pendingAuthPaths = ['/register', '/email-verify']
+    const isAllowed =
+      allowed.some((path) => toPath === path || toPath.startsWith(path)) ||
+      callbackPaths.includes(toPath) ||
+      (authState.hasPendingAuthSession && pendingAuthPaths.includes(toPath))
+    if (!isAllowed) {
       return '/login'
     }
   }
@@ -152,6 +167,7 @@ describe('路由守卫逻辑', () => {
       isAdmin: false,
       isSimpleMode: false,
       backendModeEnabled: false,
+      hasPendingAuthSession: false,
     }
 
     it('访问需要认证的页面重定向到 /login', () => {
@@ -183,6 +199,7 @@ describe('路由守卫逻辑', () => {
       isAdmin: false,
       isSimpleMode: false,
       backendModeEnabled: false,
+      hasPendingAuthSession: false,
     }
 
     it('访问 /login 重定向到 /dashboard', () => {
@@ -219,6 +236,7 @@ describe('路由守卫逻辑', () => {
       isAdmin: true,
       isSimpleMode: false,
       backendModeEnabled: false,
+      hasPendingAuthSession: false,
     }
 
     it('访问 /login 重定向到 /admin/dashboard', () => {
@@ -246,6 +264,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: true,
         backendModeEnabled: false,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/subscriptions', {}, authState)
       expect(redirect).toBe('/dashboard')
@@ -257,6 +276,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: true,
         backendModeEnabled: false,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/redeem', {}, authState)
       expect(redirect).toBe('/dashboard')
@@ -268,6 +288,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: true,
         isSimpleMode: true,
         backendModeEnabled: false,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/admin/groups', { requiresAdmin: true }, authState)
       expect(redirect).toBe('/admin/dashboard')
@@ -279,6 +300,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: true,
         isSimpleMode: true,
         backendModeEnabled: false,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard(
         '/admin/subscriptions',
@@ -294,6 +316,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: true,
         backendModeEnabled: false,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/dashboard', {}, authState)
       expect(redirect).toBeNull()
@@ -305,6 +328,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: true,
         backendModeEnabled: false,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/keys', {}, authState)
       expect(redirect).toBeNull()
@@ -318,6 +342,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/home', { requiresAuth: false }, authState)
       expect(redirect).toBe('/login?redirect=%2Fhome')
@@ -329,6 +354,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/login', { requiresAuth: false }, authState)
       expect(redirect).toBeNull()
@@ -340,6 +366,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/key-usage', { requiresAuth: false }, authState)
       expect(redirect).toBeNull()
@@ -351,9 +378,36 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/setup', { requiresAuth: false }, authState)
       expect(redirect).toBeNull()
+    })
+
+    it('unauthenticated: initialized /setup redirects to /login', () => {
+      const authState: MockAuthState = {
+        isAuthenticated: false,
+        isAdmin: false,
+        isSimpleMode: false,
+        backendModeEnabled: true,
+        hasPendingAuthSession: false,
+        setupNeedsSetup: false,
+      }
+      const redirect = simulateGuard('/setup', { requiresAuth: false }, authState)
+      expect(redirect).toBe('/login')
+    })
+
+    it('admin: initialized /setup redirects to /admin/dashboard', () => {
+      const authState: MockAuthState = {
+        isAuthenticated: true,
+        isAdmin: true,
+        isSimpleMode: false,
+        backendModeEnabled: true,
+        hasPendingAuthSession: false,
+        setupNeedsSetup: false,
+      }
+      const redirect = simulateGuard('/setup', { requiresAuth: false }, authState)
+      expect(redirect).toBe('/admin/dashboard')
     })
 
     it('admin: /admin/dashboard is allowed', () => {
@@ -362,6 +416,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: true,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/admin/dashboard', { requiresAdmin: true }, authState)
       expect(redirect).toBeNull()
@@ -373,6 +428,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: true,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/login', { requiresAuth: false }, authState)
       expect(redirect).toBe('/admin/dashboard')
@@ -384,6 +440,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/dashboard', {}, authState)
       expect(redirect).toBe('/login')
@@ -395,6 +452,7 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/login', { requiresAuth: false }, authState)
       expect(redirect).toBeNull()
@@ -406,9 +464,70 @@ describe('路由守卫逻辑', () => {
         isAdmin: false,
         isSimpleMode: false,
         backendModeEnabled: true,
+        hasPendingAuthSession: false,
       }
       const redirect = simulateGuard('/key-usage', { requiresAuth: false }, authState)
       expect(redirect).toBeNull()
+    })
+
+    it('unauthenticated: callback routes are allowed', () => {
+      const authState: MockAuthState = {
+        isAuthenticated: false,
+        isAdmin: false,
+        isSimpleMode: false,
+        backendModeEnabled: true,
+        hasPendingAuthSession: false,
+      }
+      const redirect = simulateGuard('/auth/wechat/callback', { requiresAuth: false }, authState)
+      expect(redirect).toBeNull()
+    })
+
+    it('unauthenticated: WeChat payment callback route is allowed', () => {
+      const authState: MockAuthState = {
+        isAuthenticated: false,
+        isAdmin: false,
+        isSimpleMode: false,
+        backendModeEnabled: true,
+        hasPendingAuthSession: false,
+      }
+      const redirect = simulateGuard('/auth/wechat/payment/callback', { requiresAuth: false }, authState)
+      expect(redirect).toBeNull()
+    })
+
+    it('unauthenticated: /payment/result is allowed', () => {
+      const authState: MockAuthState = {
+        isAuthenticated: false,
+        isAdmin: false,
+        isSimpleMode: false,
+        backendModeEnabled: true,
+        hasPendingAuthSession: false,
+      }
+      const redirect = simulateGuard('/payment/result', { requiresAuth: false }, authState)
+      expect(redirect).toBeNull()
+    })
+
+    it('unauthenticated: /register is allowed when a pending auth session exists', () => {
+      const authState: MockAuthState = {
+        isAuthenticated: false,
+        isAdmin: false,
+        isSimpleMode: false,
+        backendModeEnabled: true,
+        hasPendingAuthSession: true,
+      }
+      const redirect = simulateGuard('/register', { requiresAuth: false }, authState)
+      expect(redirect).toBeNull()
+    })
+
+    it('unauthenticated: /email-verify is blocked without a pending auth session', () => {
+      const authState: MockAuthState = {
+        isAuthenticated: false,
+        isAdmin: false,
+        isSimpleMode: false,
+        backendModeEnabled: true,
+        hasPendingAuthSession: false,
+      }
+      const redirect = simulateGuard('/email-verify', { requiresAuth: false }, authState)
+      expect(redirect).toBe('/login')
     })
   })
 })

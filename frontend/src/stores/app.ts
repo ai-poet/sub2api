@@ -6,6 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Toast, ToastType, PublicSettings } from '@/types'
+import { i18n } from '@/i18n'
 import {
   checkUpdates as checkUpdatesAPI,
   type VersionInfo,
@@ -18,13 +19,13 @@ export const useAppStore = defineStore('app', () => {
 
   const sidebarCollapsed = ref<boolean>(false)
   const mobileOpen = ref<boolean>(false)
+  const sidebarScrollTop = ref<number>(0)
   const loading = ref<boolean>(false)
   const toasts = ref<Toast[]>([])
 
   // Public settings cache state
   const publicSettingsLoaded = ref<boolean>(false)
   const publicSettingsLoading = ref<boolean>(false)
-  const injectedConfigApplied = ref<boolean>(false)
   const siteName = ref<string>('Sub2API')
   const siteLogo = ref<string>('')
   const siteVersion = ref<string>('')
@@ -32,6 +33,7 @@ export const useAppStore = defineStore('app', () => {
   const apiBaseUrl = ref<string>('')
   const docUrl = ref<string>('')
   const cachedPublicSettings = ref<PublicSettings | null>(null)
+  let publicSettingsRequest: Promise<PublicSettings | null> | null = null
 
   // Version cache state
   const versionLoaded = ref<boolean>(false)
@@ -51,13 +53,6 @@ export const useAppStore = defineStore('app', () => {
   const backendModeEnabled = computed(() => cachedPublicSettings.value?.backend_mode_enabled ?? false)
 
   const loadingCount = ref<number>(0)
-
-  function normalizePurchaseSubscriptionOpenMode(mode?: string): 'iframe' | 'new_window' {
-    if (mode === 'new_window') {
-      return 'new_window'
-    }
-    return 'iframe'
-  }
 
   // ==================== Actions ====================
 
@@ -217,7 +212,10 @@ export const useAppStore = defineStore('app', () => {
     try {
       return await operation()
     } catch (error) {
-      const message = errorMessage || (error as { message?: string }).message || 'An error occurred'
+      const message =
+        errorMessage ||
+        (error as { message?: string }).message ||
+        i18n.global.t('common.unknownError')
       showError(message)
       return null
     } finally {
@@ -292,61 +290,45 @@ export const useAppStore = defineStore('app', () => {
    * Apply settings to store state (internal helper to avoid code duplication)
    */
   function applySettings(config: PublicSettings): void {
-    const normalizedConfig: PublicSettings = {
-      ...config,
-      linuxdo_oauth_enabled: config.linuxdo_oauth_enabled ?? false,
-      github_oauth_enabled: config.github_oauth_enabled ?? false,
-      group_status_enabled: config.group_status_enabled ?? false,
-      client_download_windows_url: config.client_download_windows_url ?? '',
-      client_download_macos_url: config.client_download_macos_url ?? '',
-      purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
-        config.purchase_subscription_open_mode
-      ),
-      community_qr_code: config.community_qr_code || '',
-      community_group_url: config.community_group_url || ''
+    if (typeof window !== 'undefined') {
+      window.__APP_CONFIG__ = { ...config }
     }
-
-    cachedPublicSettings.value = normalizedConfig
-    siteName.value = normalizedConfig.site_name || 'Sub2API'
-    siteLogo.value = normalizedConfig.site_logo || ''
-    siteVersion.value = normalizedConfig.version || ''
-    contactInfo.value = normalizedConfig.contact_info || ''
-    apiBaseUrl.value = normalizedConfig.api_base_url || ''
-    docUrl.value = normalizedConfig.doc_url || ''
+    cachedPublicSettings.value = config
+    siteName.value = config.site_name || 'Sub2API'
+    siteLogo.value = config.site_logo || ''
+    siteVersion.value = config.version || ''
+    contactInfo.value = config.contact_info || ''
+    apiBaseUrl.value = config.api_base_url || ''
+    docUrl.value = config.doc_url || ''
     publicSettingsLoaded.value = true
-  }
-
-  function applyInjectedSettings(config: PublicSettings): boolean {
-    applySettings(config)
-    injectedConfigApplied.value = true
-    const hasDeferredFields = (config.deferred_fields ?? []).length > 0
-    if (hasDeferredFields) {
-      publicSettingsLoaded.value = false
-    }
-    return hasDeferredFields
   }
 
   /**
    * Fetch public settings (uses cache unless force=true)
    * @param force - Force refresh from API
    */
-  async function fetchPublicSettings(force = false): Promise<PublicSettings | null> {
+  function fetchPublicSettings(force = false): Promise<PublicSettings | null> {
+    // An active request always wins over cache/force semantics so every caller observes
+    // the same refresh result and no older request can overwrite a newer one.
+    if (publicSettingsRequest) {
+      return publicSettingsRequest
+    }
+
     // Check for injected config from server (eliminates flash)
-    if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__ && !injectedConfigApplied.value) {
-      const hasDeferredFields = applyInjectedSettings(window.__APP_CONFIG__)
-      if (!hasDeferredFields) {
-        return cachedPublicSettings.value ? { ...cachedPublicSettings.value } : null
-      }
+    if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__) {
+      applySettings(window.__APP_CONFIG__)
+      return Promise.resolve(window.__APP_CONFIG__)
     }
 
     // Return cached data if available and not forcing refresh
     if (publicSettingsLoaded.value && !force) {
       if (cachedPublicSettings.value) {
-        return { ...cachedPublicSettings.value }
+        return Promise.resolve({ ...cachedPublicSettings.value })
       }
-      return {
+      return Promise.resolve({
         registration_enabled: false,
         email_verify_enabled: false,
+        force_email_on_third_party_signup: false,
         registration_email_suffix_whitelist: [],
         promo_code_enabled: true,
         password_reset_enabled: false,
@@ -361,41 +343,63 @@ export const useAppStore = defineStore('app', () => {
         doc_url: docUrl.value,
         home_content: '',
         hide_ccs_import_button: false,
-        purchase_subscription_enabled: false,
-        purchase_subscription_url: '',
-        client_download_windows_url: '',
-        client_download_macos_url: '',
-        group_status_enabled: false,
+        payment_enabled: false,
+        table_default_page_size: 20,
+        table_page_size_options: [10, 20, 50, 100],
         custom_menu_items: [],
         custom_endpoints: [],
         linuxdo_oauth_enabled: false,
+        wechat_oauth_enabled: false,
+        wechat_oauth_open_enabled: false,
+        wechat_oauth_mp_enabled: false,
+        wechat_oauth_mobile_enabled: false,
+        oidc_oauth_enabled: false,
+        oidc_oauth_provider_name: 'OIDC',
         github_oauth_enabled: false,
-        referral_enabled: false,
-        purchase_subscription_open_mode: 'iframe',
+        google_oauth_enabled: false,
         backend_mode_enabled: false,
         version: siteVersion.value,
-        client_changelog_entries: [],
-        community_qr_code: '',
-        community_group_url: ''
-      }
-    }
-
-    // Prevent duplicate requests
-    if (publicSettingsLoading.value) {
-      return null
+        balance_low_notify_enabled: false,
+        account_quota_notify_enabled: false,
+        balance_low_notify_threshold: 0,
+        channel_monitor_enabled: true,
+        channel_monitor_default_interval_seconds: 60,
+        available_channels_enabled: false,
+        risk_control_enabled: false,
+        service_quota_enabled: false,
+        affiliate_enabled: false,
+        allow_user_view_error_requests: false,
+      })
     }
 
     publicSettingsLoading.value = true
+    let apiRequest: Promise<PublicSettings>
     try {
-      const data = await fetchPublicSettingsAPI()
-      applySettings(data)
-      return data
+      apiRequest = fetchPublicSettingsAPI()
     } catch (error) {
       console.error('Failed to fetch public settings:', error)
-      return null
-    } finally {
       publicSettingsLoading.value = false
+      return Promise.resolve(null)
     }
+
+    const request = apiRequest
+      .then((data) => {
+        applySettings(data)
+        return data
+      })
+      .catch((error) => {
+        console.error('Failed to fetch public settings:', error)
+        return null
+      })
+      .finally(() => {
+        if (publicSettingsRequest === request) {
+          publicSettingsRequest = null
+          publicSettingsLoading.value = false
+        }
+      })
+
+    publicSettingsRequest = request
+    return request
   }
 
   /**
@@ -404,7 +408,6 @@ export const useAppStore = defineStore('app', () => {
   function clearPublicSettingsCache(): void {
     publicSettingsLoaded.value = false
     cachedPublicSettings.value = null
-    injectedConfigApplied.value = false
   }
 
   /**
@@ -414,7 +417,7 @@ export const useAppStore = defineStore('app', () => {
    */
   function initFromInjectedConfig(): boolean {
     if (window.__APP_CONFIG__) {
-      applyInjectedSettings(window.__APP_CONFIG__)
+      applySettings(window.__APP_CONFIG__)
       return true
     }
     return false
@@ -426,6 +429,7 @@ export const useAppStore = defineStore('app', () => {
     // State
     sidebarCollapsed,
     mobileOpen,
+    sidebarScrollTop,
     loading,
     toasts,
 

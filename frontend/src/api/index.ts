@@ -15,10 +15,11 @@ export { usageAPI } from './usage'
 export { userAPI } from './user'
 export { redeemAPI, type RedeemHistoryItem } from './redeem'
 export { userGroupsAPI } from './groups'
+export { userChannelsAPI } from './channels'
+export * as batchImageAPI from './batchImage'
 export { totpAPI } from './totp'
 export { default as announcementsAPI } from './announcements'
-export { groupStatusAPI } from './groupStatus'
-export { modelCatalogAPI } from './modelCatalog'
+export { channelMonitorUserAPI } from './channelMonitor'
 
 // Admin APIs
 export { adminAPI } from './admin'

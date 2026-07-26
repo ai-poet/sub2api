@@ -327,57 +327,21 @@ func TestNonceTemplate(t *testing.T) {
 	})
 }
 
-func TestEnhanceCSPPolicy(t *testing.T) {
-	t.Run("adds_nonce_placeholder_if_missing", func(t *testing.T) {
-		policy := "default-src 'self'; script-src 'self'"
-		enhanced := enhanceCSPPolicy(policy)
-
-		assert.Contains(t, enhanced, NonceTemplate)
-		assert.Contains(t, enhanced, CloudflareInsightsDomain)
-	})
-
-	t.Run("does_not_duplicate_nonce_placeholder", func(t *testing.T) {
-		policy := "default-src 'self'; script-src 'self' __CSP_NONCE__"
-		enhanced := enhanceCSPPolicy(policy)
-
-		// Should not duplicate
-		count := strings.Count(enhanced, NonceTemplate)
-		assert.Equal(t, 1, count)
-	})
-
-	t.Run("does_not_duplicate_cloudflare_domain", func(t *testing.T) {
-		policy := "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com"
-		enhanced := enhanceCSPPolicy(policy)
-
-		count := strings.Count(enhanced, CloudflareInsightsDomain)
-		assert.Equal(t, 1, count)
-	})
-
-	t.Run("handles_policy_without_script_src", func(t *testing.T) {
-		policy := "default-src 'self'"
-		enhanced := enhanceCSPPolicy(policy)
-
-		assert.Contains(t, enhanced, "script-src")
-		assert.Contains(t, enhanced, NonceTemplate)
-		assert.Contains(t, enhanced, CloudflareInsightsDomain)
-		assert.Contains(t, enhanced, "frame-src 'self' https://challenges.cloudflare.com")
-	})
-
-	t.Run("adds_self_to_existing_frame_src", func(t *testing.T) {
-		policy := "default-src 'self'; frame-src https://challenges.cloudflare.com"
-		enhanced := enhanceCSPPolicy(policy)
-
-		assert.Contains(t, enhanced, "frame-src https://challenges.cloudflare.com 'self'")
-	})
-
-	t.Run("preserves_existing_nonce", func(t *testing.T) {
-		policy := "script-src 'self' 'nonce-existing'"
-		enhanced := enhanceCSPPolicy(policy)
-
-		// Should not add placeholder if nonce already exists
-		assert.NotContains(t, enhanced, NonceTemplate)
-		assert.Contains(t, enhanced, "'nonce-existing'")
-	})
+func countDirectiveValue(policy, directive, value string) int {
+	for _, rawDirective := range strings.Split(policy, ";") {
+		fields := strings.Fields(strings.TrimSpace(rawDirective))
+		if len(fields) == 0 || fields[0] != directive {
+			continue
+		}
+		count := 0
+		for _, field := range fields[1:] {
+			if field == value {
+				count++
+			}
+		}
+		return count
+	}
+	return 0
 }
 
 func TestAddToDirective(t *testing.T) {

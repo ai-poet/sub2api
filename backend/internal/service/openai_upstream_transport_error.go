@@ -124,6 +124,11 @@ func (s *OpenAIGatewayService) handleOpenAIUpstreamTransportError(ctx context.Co
 		return err
 	}
 
+	// Transport attempt reached the network path; count as Ollama Cloud activity.
+	if s != nil {
+		scheduleOllamaCloudUsageActivity(s.deferredService, account)
+	}
+
 	if classifyOpenAITransportError(err).Persistent {
 		s.tempUnscheduleOpenAITransportError(ctx, account, safeErr)
 	}
@@ -154,8 +159,7 @@ func (s *OpenAIGatewayService) tempUnscheduleOpenAITransportError(ctx context.Co
 
 	// Immediate in-memory block (honoured by the scheduler at selection time),
 	// effective even if the DB write below fails or the account cache lags.
-	account.TempUnschedulableUntil = &until
-	account.TempUnschedulableReason = "transport_error"
+	s.BlockAccountScheduling(account, until, "transport_error")
 
 	if s.accountRepo == nil {
 		// No DB configured — block is in-memory only; emit a distinct event so
@@ -171,7 +175,7 @@ func (s *OpenAIGatewayService) tempUnscheduleOpenAITransportError(ctx context.Co
 		return
 	}
 
-	bgCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+	bgCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), openAIAccountStateUpdateTimeout)
 	defer cancel()
 	if err := s.accountRepo.SetTempUnschedulable(bgCtx, account.ID, until, reason); err != nil {
 		logger.L().With(zap.String("component", "service.openai_gateway")).Warn(

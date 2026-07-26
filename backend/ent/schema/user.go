@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/Wei-Shaw/sub2api/ent/schema/mixins"
 	"github.com/Wei-Shaw/sub2api/internal/domain"
 
@@ -47,6 +49,9 @@ func (User) Fields() []ent.Field {
 		field.Float("balance").
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0),
+		field.Float("frozen_balance").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Default(0),
 		field.Int("concurrency").
 			Default(5),
 		field.String("status").
@@ -72,11 +77,49 @@ func (User) Fields() []ent.Field {
 		field.Time("totp_enabled_at").
 			Optional().
 			Nillable(),
+		field.String("signup_source").
+			Validate(func(value string) error {
+				switch value {
+				case "email", "linuxdo", "wechat", "oidc", "github", "google", "dingtalk":
+					return nil
+				default:
+					return fmt.Errorf("must be one of email, linuxdo, wechat, oidc, github, google, dingtalk")
+				}
+			}).
+			Default("email"),
+		field.Time("last_login_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
+		field.Time("last_active_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
+
+		// 余额/额度提醒（用户通知功能，不属于支付栈）
+		field.Bool("balance_notify_enabled").
+			Default(true),
+		field.String("balance_notify_threshold_type").
+			Default("fixed"), // "fixed" | "percentage"
+		field.Float("balance_notify_threshold").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Optional().
+			Nillable(),
+		field.String("balance_notify_extra_emails").
+			SchemaType(map[string]string{dialect.Postgres: "text"}).
+			Default("[]"),
+		field.Float("total_recharged").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Default(0),
 
 		// 推荐码
 		field.String("referral_code").
 			MaxLen(32).
 			Default(""),
+
+		// 用户级每分钟请求数上限（0 = 不限制）。仅当所在分组未设置 rpm_limit 时作为兜底生效。
+		field.Int("rpm_limit").
+			Default(0),
 	}
 }
 
@@ -94,6 +137,10 @@ func (User) Edges() []ent.Edge {
 		edge.To("promo_code_usages", PromoCodeUsage.Type),
 		edge.To("referrals_made", UserReferral.Type),
 		edge.To("referral_received", UserReferral.Type),
+		edge.To("auth_identities", AuthIdentity.Type).
+			Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("pending_auth_sessions", PendingAuthSession.Type),
+		edge.To("platform_quotas", UserPlatformQuota.Type),
 	}
 }
 
