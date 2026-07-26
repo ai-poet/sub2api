@@ -20,6 +20,15 @@ import { resolveRouteDocumentTitle } from './title'
 const routes: RouteRecordRaw[] = [
   // ==================== Setup Routes ====================
   {
+    path: '/auth/github/callback',
+    name: 'GitHubOAuthCallback',
+    component: () => import('@/views/auth/GitHubCallbackView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'GitHub OAuth Callback'
+    }
+  },
+  {
     path: '/auth/paseo',
     name: 'PaseoAuthBridge',
     component: () => import('@/views/auth/PaseoBridgeView.vue'),

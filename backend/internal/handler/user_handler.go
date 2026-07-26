@@ -20,7 +20,6 @@ type UserHandler struct {
 	authService           *service.AuthService
 	emailService          *service.EmailService
 	emailCache            service.EmailCache
-	affiliateService      *service.AffiliateService
 	userPlatformQuotaRepo service.UserPlatformQuotaRepository
 }
 
@@ -30,7 +29,6 @@ func NewUserHandler(
 	authService *service.AuthService,
 	emailService *service.EmailService,
 	emailCache service.EmailCache,
-	affiliateService *service.AffiliateService,
 	userPlatformQuotaRepo service.UserPlatformQuotaRepository,
 ) *UserHandler {
 	return &UserHandler{

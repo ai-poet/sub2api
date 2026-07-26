@@ -46,14 +46,9 @@ type emailOAuthProfile struct {
 	Metadata      map[string]any
 }
 
-func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) { h.emailOAuthStart(c, "github") }
 func (h *AuthHandler) GoogleOAuthStart(c *gin.Context) { h.emailOAuthStart(c, "google") }
 
-func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) { h.emailOAuthCallback(c, "github") }
 func (h *AuthHandler) GoogleOAuthCallback(c *gin.Context) { h.emailOAuthCallback(c, "google") }
-func (h *AuthHandler) CompleteGitHubOAuthRegistration(c *gin.Context) {
-	h.completeEmailOAuthRegistration(c, "github")
-}
 func (h *AuthHandler) CompleteGoogleOAuthRegistration(c *gin.Context) {
 	h.completeEmailOAuthRegistration(c, "google")
 }
@@ -187,7 +182,6 @@ func (h *AuthHandler) emailOAuthCallbackWithProfile(
 		c.Request.Context(),
 		input,
 		"",
-		affiliateCode,
 		readOAuthPromoCode(c),
 	)
 	if err != nil {
@@ -416,7 +410,6 @@ func (h *AuthHandler) completeEmailOAuthRegistration(c *gin.Context, provider st
 		user,
 		strings.TrimSpace(req.InvitationCode),
 		strings.TrimSpace(session.ProviderType),
-		affiliateCode,
 	); err != nil {
 		_ = tx.Rollback()
 		_ = h.authService.RollbackOAuthEmailAccountCreation(c.Request.Context(), user.ID, strings.TrimSpace(req.InvitationCode))
@@ -508,8 +501,6 @@ func fetchEmailOAuthProfile(ctx context.Context, provider string, cfg config.Ema
 		return nil, fmt.Errorf("userinfo endpoint status %d: %s", resp.StatusCode, truncateLogValue(resp.String(), 1024))
 	}
 	switch strings.ToLower(strings.TrimSpace(provider)) {
-	case "github":
-		return parseGitHubOAuthProfile(ctx, cfg, token, resp.String())
 	case "google":
 		return parseGoogleOAuthProfile(resp.String())
 	default:

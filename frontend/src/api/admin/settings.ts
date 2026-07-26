@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from "../client";
+import type { ClientChangelogEntry } from '@/types'
 import type {
   CustomEndpoint,
   CustomMenuItem,
@@ -450,6 +451,7 @@ export interface SystemSettings {
   group_status_enabled: boolean
   community_qr_code: string
   community_group_url: string
+  client_changelog_entries: ClientChangelogEntry[]
   // SMTP settings
   smtp_host: string;
   smtp_port: number;
@@ -674,6 +676,17 @@ export interface SystemSettings {
 }
 
 export interface UpdateSettingsRequest {
+  // fork 自有设置（站点定制 / sub2apipay 集成 / 客户端下载 / 交流群 / 更新日志）
+  purchase_subscription_enabled?: boolean;
+  purchase_subscription_url?: string;
+  purchase_subscription_open_mode?: string;
+  client_download_windows_url?: string;
+  client_download_macos_url?: string;
+  group_status_enabled?: boolean;
+  community_qr_code?: string;
+  community_group_url?: string;
+  client_changelog_entries?: ClientChangelogEntry[];
+
   registration_enabled?: boolean;
   email_verify_enabled?: boolean;
   registration_email_suffix_whitelist?: string[];

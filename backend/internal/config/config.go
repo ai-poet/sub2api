@@ -77,7 +77,7 @@ type Config struct {
 	WeChat                  WeChatConnectConfig           `mapstructure:"wechat_connect"`
 	OIDC                    OIDCConnectConfig             `mapstructure:"oidc_connect"`
 	DingTalk                DingTalkConnectConfig         `mapstructure:"dingtalk_connect"`
-	GitHubOAuth             EmailOAuthProviderConfig      `mapstructure:"github_oauth"`
+	GitHub                  GitHubOAuthConfig             `mapstructure:"github_oauth"`
 	GoogleOAuth             EmailOAuthProviderConfig      `mapstructure:"google_oauth"`
 	Default                 DefaultConfig                 `mapstructure:"default"`
 	RateLimit               RateLimitConfig               `mapstructure:"rate_limit"`
@@ -178,6 +178,14 @@ type IdempotencyConfig struct {
 	CleanupIntervalSeconds int `mapstructure:"cleanup_interval_seconds"`
 	// CleanupBatchSize 每次清理的最大记录数。
 	CleanupBatchSize int `mapstructure:"cleanup_batch_size"`
+}
+
+type GitHubOAuthConfig struct {
+	Enabled             bool   `mapstructure:"enabled"`
+	ClientID            string `mapstructure:"client_id"`
+	ClientSecret        string `mapstructure:"client_secret"`
+	RedirectURL         string `mapstructure:"redirect_url"`          // 后端回调地址
+	FrontendRedirectURL string `mapstructure:"frontend_redirect_url"` // 前端接收 token 的路由（默认：/auth/github/callback）
 }
 
 type BatchImageConfig struct {
@@ -1727,6 +1735,10 @@ func load(allowMissingJWTSecret bool) (*Config, error) {
 	cfg.LinuxDo.UserInfoEmailPath = strings.TrimSpace(cfg.LinuxDo.UserInfoEmailPath)
 	cfg.LinuxDo.UserInfoIDPath = strings.TrimSpace(cfg.LinuxDo.UserInfoIDPath)
 	cfg.LinuxDo.UserInfoUsernamePath = strings.TrimSpace(cfg.LinuxDo.UserInfoUsernamePath)
+	cfg.GitHub.ClientID = strings.TrimSpace(cfg.GitHub.ClientID)
+	cfg.GitHub.ClientSecret = strings.TrimSpace(cfg.GitHub.ClientSecret)
+	cfg.GitHub.RedirectURL = strings.TrimSpace(cfg.GitHub.RedirectURL)
+	cfg.GitHub.FrontendRedirectURL = strings.TrimSpace(cfg.GitHub.FrontendRedirectURL)
 	applyLegacyWeChatConnectEnvCompatibility(&cfg.WeChat)
 	normalizeWeChatConnectConfig(&cfg.WeChat)
 	cfg.OIDC.ProviderName = strings.TrimSpace(cfg.OIDC.ProviderName)
@@ -1929,6 +1941,12 @@ func setDefaults() {
 	viper.SetDefault("linuxdo_connect.userinfo_id_path", "")
 	viper.SetDefault("linuxdo_connect.userinfo_username_path", "")
 
+	// GitHub OAuth 登录（fork 自研实现）
+	viper.SetDefault("github_oauth.enabled", false)
+	viper.SetDefault("github_oauth.client_id", "")
+	viper.SetDefault("github_oauth.client_secret", "")
+	viper.SetDefault("github_oauth.redirect_url", "")
+	viper.SetDefault("github_oauth.frontend_redirect_url", "/auth/github/callback")
 	// WeChat Connect OAuth 登录
 	viper.SetDefault("wechat_connect.enabled", false)
 	viper.SetDefault("wechat_connect.app_id", "")
@@ -2667,6 +2685,24 @@ func (c *Config) Validate() error {
 		warnIfInsecureURL("linuxdo_connect.userinfo_url", c.LinuxDo.UserInfoURL)
 		warnIfInsecureURL("linuxdo_connect.redirect_url", c.LinuxDo.RedirectURL)
 		warnIfInsecureURL("linuxdo_connect.frontend_redirect_url", c.LinuxDo.FrontendRedirectURL)
+	}
+	if c.GitHub.Enabled {
+		if strings.TrimSpace(c.GitHub.ClientID) == "" {
+			return fmt.Errorf("github_oauth.client_id is required when github_oauth.enabled=true")
+		}
+		if strings.TrimSpace(c.GitHub.ClientSecret) == "" {
+			return fmt.Errorf("github_oauth.client_secret is required when github_oauth.enabled=true")
+		}
+		if strings.TrimSpace(c.GitHub.RedirectURL) == "" {
+			return fmt.Errorf("github_oauth.redirect_url is required when github_oauth.enabled=true")
+		}
+		if err := ValidateAbsoluteHTTPURL(c.GitHub.RedirectURL); err != nil {
+			return fmt.Errorf("github_oauth.redirect_url invalid: %w", err)
+		}
+		if err := ValidateFrontendRedirectURL(c.GitHub.FrontendRedirectURL); err != nil {
+			return fmt.Errorf("github_oauth.frontend_redirect_url invalid: %w", err)
+		}
+		warnIfInsecureURL("github_oauth.redirect_url", c.GitHub.RedirectURL)
 	}
 	if c.WeChat.Enabled {
 		weChat := c.WeChat

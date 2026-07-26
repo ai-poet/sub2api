@@ -235,6 +235,7 @@
 </template>
 
 <script setup lang="ts">
+import { rememberPaseoBridgeTargetIfApplicable } from '@/utils/auth-redirect'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -575,6 +576,7 @@ async function finalizeCompletion(completion: PendingOAuthExchangeResponse, redi
     clearPendingAuthSession()
     clearAllAffiliateReferralCodes()
     appStore.showSuccess(bindSuccessMessage)
+    rememberPaseoBridgeTargetIfApplicable(bindRedirect)
     await router.replace(bindRedirect)
     return
   }
@@ -587,6 +589,7 @@ async function finalizeCompletion(completion: PendingOAuthExchangeResponse, redi
   await authStore.setToken(completion.access_token)
   clearAllAffiliateReferralCodes()
   appStore.showSuccess(t('auth.loginSuccess'))
+  rememberPaseoBridgeTargetIfApplicable(redirect)
   await router.replace(redirect)
 }
 
@@ -732,6 +735,7 @@ async function handleSubmitTotpChallenge() {
     await authStore.setToken(completion.access_token)
     clearAllAffiliateReferralCodes()
     appStore.showSuccess(t('auth.loginSuccess'))
+    rememberPaseoBridgeTargetIfApplicable(redirectTo.value)
     await router.replace(redirectTo.value)
   } catch (e: unknown) {
     totpError.value = getRequestErrorMessage(e, t('auth.loginFailed'))
@@ -756,6 +760,7 @@ onMounted(async () => {
       await authStore.setToken(legacyLogin.access_token)
       clearAllAffiliateReferralCodes()
       appStore.showSuccess(t('auth.loginSuccess'))
+      rememberPaseoBridgeTargetIfApplicable(redirect)
       await router.replace(redirect)
       return
     }

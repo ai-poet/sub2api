@@ -5390,6 +5390,20 @@
 
         <!-- Tab: General -->
         <div v-show="activeTab === 'general'" class="space-y-6">
+          <!-- fork 自有站点设置（分组运行状态 / 购买订阅 / 客户端下载 / 交流群） -->
+          <div class="card">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                {{ t("admin.settings.site.title") }}
+              </h2>
+            </div>
+            <div class="p-6">
+              <ForkSettingsSection :form="form" />
+            </div>
+          </div>
+
+          <ClientChangelogEditor :entries="form.client_changelog_entries" />
+
           <!-- Site Settings -->
           <div class="card">
             <div
@@ -7212,6 +7226,9 @@ import type {
   Proxy,
 } from "@/types";
 import AppLayout from "@/components/layout/AppLayout.vue";
+import ForkSettingsSection from "@/components/admin/settings/ForkSettingsSection.vue";
+import ClientChangelogEditor from "@/components/admin/settings/ClientChangelogEditor.vue";
+import type { ClientChangelogEntry } from "@/types";
 import Icon from "@/components/icons/Icon.vue";
 import Select from "@/components/common/Select.vue";
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
@@ -8157,6 +8174,7 @@ const form = reactive<SettingsForm>({
   group_status_enabled: false,
   community_qr_code: "",
   community_group_url: "",
+  client_changelog_entries: [] as ClientChangelogEntry[],
 });
 
 type OpenAIAdvancedSchedulerOverrideKey =
@@ -9054,8 +9072,6 @@ async function loadSettings() {
   loadFailed.value = false;
   try {
     const settings = await adminAPI.settings.getSettings();
-    settings.payment_load_balance_strategy =
-      settings.payment_load_balance_strategy || "round-robin";
     // Only assign non-null values from backend (null means unconfigured, keep defaults)
     for (const [key, value] of Object.entries(settings)) {
       if (value !== null && value !== undefined) {
@@ -9700,6 +9716,16 @@ async function saveSettings() {
       // Affiliate (邀请返利) feature switch
       affiliate_enabled: form.affiliate_enabled,
       allow_user_view_error_requests: form.allow_user_view_error_requests,
+      // fork 自有设置
+      purchase_subscription_enabled: form.purchase_subscription_enabled,
+      purchase_subscription_url: form.purchase_subscription_url,
+      purchase_subscription_open_mode: form.purchase_subscription_open_mode,
+      client_download_windows_url: form.client_download_windows_url,
+      client_download_macos_url: form.client_download_macos_url,
+      group_status_enabled: form.group_status_enabled,
+      community_qr_code: form.community_qr_code,
+      community_group_url: form.community_group_url,
+      client_changelog_entries: form.client_changelog_entries,
     };
 
     // 仅当 openai_fast_policy_settings 已成功从后端加载时才回写，

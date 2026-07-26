@@ -46,7 +46,6 @@ type OpsCleanupService struct {
 	db                *sql.DB
 	redisClient       *redis.Client
 	cfg               *config.Config
-	channelMonitorSvc *ChannelMonitorService
 	settingRepo       SettingRepository
 
 	instanceID string
@@ -68,7 +67,6 @@ func NewOpsCleanupService(
 	db *sql.DB,
 	redisClient *redis.Client,
 	cfg *config.Config,
-	channelMonitorSvc *ChannelMonitorService,
 	settingRepo SettingRepository,
 ) *OpsCleanupService {
 	return &OpsCleanupService{
@@ -323,11 +321,6 @@ func (s *OpsCleanupService) runCleanupOnce(ctx context.Context) (opsCleanupDelet
 	// Channel monitor 每日维护（聚合昨日明细 + 软删过期明细/聚合）。
 	// 失败只记日志，不影响 ops 清理的成功状态（与 ops 各步骤风格一致）；
 	// 维护本身已经把每步错误打到 slog，heartbeat result 不再分项记录。
-	if s.channelMonitorSvc != nil {
-		if err := s.channelMonitorSvc.RunDailyMaintenance(ctx); err != nil {
-			logger.LegacyPrintf("service.ops_cleanup", "[OpsCleanup] channel monitor maintenance failed: %v", err)
-		}
-	}
 
 	return out, nil
 }

@@ -289,17 +289,42 @@ export const useAppStore = defineStore('app', () => {
   /**
    * Apply settings to store state (internal helper to avoid code duplication)
    */
-  function applySettings(config: PublicSettings): void {
-    if (typeof window !== 'undefined') {
-      window.__APP_CONFIG__ = { ...config }
+  // fork 自有设置在注入配置里可能缺省，这里统一补默认值并归一化购买页打开方式，
+  // 避免旧版 __APP_CONFIG__ 注入导致 undefined / legacy 值泄漏到界面。
+  function normalizePurchaseSubscriptionOpenMode(mode?: string): 'iframe' | 'new_window' {
+    if (mode === 'new_window') {
+      return 'new_window'
     }
-    cachedPublicSettings.value = config
-    siteName.value = config.site_name || 'Sub2API'
-    siteLogo.value = config.site_logo || ''
-    siteVersion.value = config.version || ''
-    contactInfo.value = config.contact_info || ''
-    apiBaseUrl.value = config.api_base_url || ''
-    docUrl.value = config.doc_url || ''
+    return 'iframe'
+  }
+
+  function applySettings(config: PublicSettings): void {
+    const normalizedConfig: PublicSettings = {
+      ...config,
+      linuxdo_oauth_enabled: config.linuxdo_oauth_enabled ?? false,
+      github_oauth_enabled: config.github_oauth_enabled ?? false,
+      referral_enabled: config.referral_enabled ?? false,
+      group_status_enabled: config.group_status_enabled ?? false,
+      client_download_windows_url: config.client_download_windows_url ?? '',
+      client_download_macos_url: config.client_download_macos_url ?? '',
+      purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(
+        config.purchase_subscription_open_mode
+      ),
+      community_qr_code: config.community_qr_code || '',
+      community_group_url: config.community_group_url || '',
+      client_changelog_entries: config.client_changelog_entries ?? []
+    }
+
+    if (typeof window !== 'undefined') {
+      window.__APP_CONFIG__ = { ...normalizedConfig }
+    }
+    cachedPublicSettings.value = normalizedConfig
+    siteName.value = normalizedConfig.site_name || 'Sub2API'
+    siteLogo.value = normalizedConfig.site_logo || ''
+    siteVersion.value = normalizedConfig.version || ''
+    contactInfo.value = normalizedConfig.contact_info || ''
+    apiBaseUrl.value = normalizedConfig.api_base_url || ''
+    docUrl.value = normalizedConfig.doc_url || ''
     publicSettingsLoaded.value = true
   }
 

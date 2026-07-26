@@ -657,6 +657,22 @@ export async function exchangePendingOAuthCompletion(
   return completePendingOAuthBindLogin(decision)
 }
 
+export async function completeGitHubOAuthRegistration(
+  pendingOAuthToken: string,
+  invitationCode: string
+): Promise<{ access_token: string; refresh_token: string; expires_in: number; token_type: string }> {
+  const { data } = await apiClient.post<{
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    token_type: string
+  }>('/auth/oauth/github/complete-registration', {
+    pending_oauth_token: pendingOAuthToken,
+    invitation_code: invitationCode
+  })
+  return data
+}
+
 export const authAPI = {
   login,
   login2FA,
@@ -692,7 +708,8 @@ export const authAPI = {
   completeLinuxDoOAuthRegistration,
   completeOIDCOAuthRegistration,
   completeWeChatOAuthRegistration,
-  createPendingDingTalkOAuthAccount
+  createPendingDingTalkOAuthAccount,
+  completeGitHubOAuthRegistration
 }
 
 export default authAPI

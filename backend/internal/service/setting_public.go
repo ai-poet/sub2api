@@ -281,6 +281,15 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 
 	return &PublicSettings{
 		RegistrationEnabled:              settings[SettingKeyRegistrationEnabled] == "true",
+		// fork 自有设置
+		ReferralEnabled:              settings[SettingKeyReferralEnabled] == "true",
+		PurchaseSubscriptionOpenMode: firstNonEmpty(settings[SettingKeyPurchaseSubscriptionOpenMode], "iframe"),
+		ClientDownloadWindowsURL:     strings.TrimSpace(settings[SettingKeyClientDownloadWindowsURL]),
+		ClientDownloadMacOSURL:       strings.TrimSpace(settings[SettingKeyClientDownloadMacOSURL]),
+		GroupStatusEnabled:           settings[SettingKeyGroupStatusEnabled] == "true",
+		ClientChangelogEntries:       filterAndSortPublicChangelogEntries(settings[SettingKeyClientChangelogEntries]),
+		CommunityQRCode:              settings[SettingKeyCommunityQRCode],
+		CommunityGroupURL:            strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 		EmailVerifyEnabled:               emailVerifyEnabled,
 		ForceEmailOnThirdPartySignup:     settings[SettingKeyForceEmailOnThirdPartySignup] == "true",
 		RegistrationEmailSuffixWhitelist: registrationEmailSuffixWhitelist,

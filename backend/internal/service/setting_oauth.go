@@ -286,9 +286,8 @@ func (s *SettingService) emailOAuthBaseConfig(provider string) config.EmailOAuth
 			Scopes:              defaultGitHubOAuthScopes,
 			FrontendRedirectURL: defaultGitHubOAuthFrontend,
 		}
-		if s != nil && s.cfg != nil {
-			cfg = mergeEmailOAuthBaseConfig(cfg, s.cfg.GitHubOAuth)
-		}
+		// GitHub 走 fork 自研实现（handler/auth_github_oauth.go），
+		// 这里只保留默认端点信息供设置页展示，不再从 config.GitHubOAuth 合并。
 		return cfg
 	case "google":
 		cfg := config.EmailOAuthProviderConfig{

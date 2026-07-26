@@ -55,6 +55,13 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 	// 初始化默认设置
 	defaults := map[string]string{
 		SettingKeyRegistrationEnabled:                       "true",
+		SettingKeyPurchaseSubscriptionOpenMode: "iframe",
+		SettingKeyClientDownloadWindowsURL:     "",
+		SettingKeyClientDownloadMacOSURL:       "",
+		SettingKeyGroupStatusEnabled:           "false",
+		SettingKeyCommunityQRCode:              "",
+		SettingKeyCommunityGroupURL:            "",
+		SettingKeyClientChangelogEntries:       "[]",
 		SettingKeyEmailVerifyEnabled:                        "false",
 		SettingKeyRegistrationEmailSuffixWhitelist:          "[]",
 		SettingKeyPromoCodeEnabled:                          "true", // 默认启用优惠码功能
@@ -288,6 +295,14 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	}
 	result := &SystemSettings{
 		RegistrationEnabled:              settings[SettingKeyRegistrationEnabled] == "true",
+		// fork 自有设置
+		PurchaseSubscriptionOpenMode: s.getStringOrDefault(settings, SettingKeyPurchaseSubscriptionOpenMode, "iframe"),
+		ClientDownloadWindowsURL:     strings.TrimSpace(settings[SettingKeyClientDownloadWindowsURL]),
+		ClientDownloadMacOSURL:       strings.TrimSpace(settings[SettingKeyClientDownloadMacOSURL]),
+		GroupStatusEnabled:           settings[SettingKeyGroupStatusEnabled] == "true",
+		ClientChangelogEntries:       settings[SettingKeyClientChangelogEntries],
+		CommunityQRCode:              settings[SettingKeyCommunityQRCode],
+		CommunityGroupURL:            strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 		EmailVerifyEnabled:               emailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist: ParseRegistrationEmailSuffixWhitelist(settings[SettingKeyRegistrationEmailSuffixWhitelist]),
 		PromoCodeEnabled:                 settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用

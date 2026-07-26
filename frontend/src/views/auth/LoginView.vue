@@ -198,6 +198,7 @@
 </template>
 
 <script setup lang="ts">
+import { rememberPaseoBridgeTargetIfApplicable } from '@/utils/auth-redirect'
 import { computed, ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -499,6 +500,7 @@ async function handleLogin(): Promise<void> {
 
     // Redirect to dashboard or intended route
     const redirectTo = (router.currentRoute.value.query.redirect as string) || '/dashboard'
+    rememberPaseoBridgeTargetIfApplicable(redirectTo)
     await router.push(redirectTo)
   } catch (error: unknown) {
     // Reset Turnstile on error
@@ -533,6 +535,7 @@ async function handle2FAVerify(code: string): Promise<void> {
 
     // Redirect to dashboard or intended route
     const redirectTo = (router.currentRoute.value.query.redirect as string) || '/dashboard'
+    rememberPaseoBridgeTargetIfApplicable(redirectTo)
     await router.push(redirectTo)
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { message?: string } } }

@@ -2370,7 +2370,6 @@ type oauthPendingFlowTestHandlerOptions struct {
 	settingValues      map[string]string
 	promoRepo          service.PromoCodeRepository
 	defaultSubAssigner service.DefaultSubscriptionAssigner
-	affiliateService   *service.AffiliateService
 	affiliateFactory   func(*dbent.Client, *service.SettingService) *service.AffiliateService
 	totpCache          service.TotpCache
 	totpEncryptor      service.SecretEncryptor
@@ -2486,7 +2485,6 @@ CREATE TABLE IF NOT EXISTS user_affiliates (
 		promoService,
 		nil,
 		options.defaultSubAssigner,
-		affiliateService,
 		nil,
 	)
 	userSvc := service.NewUserService(userRepo, nil, nil, nil)
