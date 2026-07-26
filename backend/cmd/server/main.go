@@ -143,6 +143,12 @@ func runMainServer() {
 		log.Println("⚠️  WARNING: Running in SIMPLE mode - billing and quota checks are DISABLED")
 	}
 
+	// 每次启动都对齐一次数据库 schema。安装路径之外原本不执行迁移，
+	// 升级重启会让新代码撞上尚未建好的列；迁移器本身幂等且带 advisory lock。
+	if err := setup.MigrateOnStartup(cfg); err != nil {
+		log.Fatalf("Failed to apply database migrations: %v", err)
+	}
+
 	buildInfo := handler.BuildInfo{
 		Version:   Version,
 		BuildType: BuildType,
