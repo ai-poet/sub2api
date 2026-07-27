@@ -119,6 +119,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		GroupStatusEnabled:           settings.GroupStatusEnabled,
 		CommunityQRCode:              settings.CommunityQRCode,
 		CommunityGroupURL:            settings.CommunityGroupURL,
+		ClientChangelogEntries:       dto.ParseClientChangelogEntries(settings.ClientChangelogEntries),
 		RegistrationEnabled:                                    settings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     settings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       settings.RegistrationEmailSuffixWhitelist,
