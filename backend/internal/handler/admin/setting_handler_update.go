@@ -26,7 +26,7 @@ type UpdateSettingsRequest struct {
 	GroupStatusEnabled           *bool   `json:"group_status_enabled"`
 	CommunityQRCode              *string `json:"community_qr_code"`
 	CommunityGroupURL            *string `json:"community_group_url"`
-	ClientChangelogEntries       *string `json:"client_changelog_entries"`
+	ClientChangelogEntries       *[]service.ClientChangelogEntry `json:"client_changelog_entries"`
 
 	// 注册设置
 	RegistrationEnabled              bool                         `json:"registration_enabled"`
@@ -1666,6 +1666,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		GroupStatusEnabled:           settings.GroupStatusEnabled,
 		CommunityQRCode:              settings.CommunityQRCode,
 		CommunityGroupURL:            settings.CommunityGroupURL,
+		ClientChangelogEntries:       dto.ParseClientChangelogEntries(updatedSettings.ClientChangelogEntries),
 		RegistrationEnabled:                                    updatedSettings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     updatedSettings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       updatedSettings.RegistrationEmailSuffixWhitelist,
@@ -2025,7 +2026,12 @@ func applyForkSettingsFromRequest(
 
 	settings.ClientChangelogEntries = previous.ClientChangelogEntries
 	if req.ClientChangelogEntries != nil {
-		settings.ClientChangelogEntries = *req.ClientChangelogEntries
+		encoded, err := json.Marshal(*req.ClientChangelogEntries)
+		if err != nil {
+			response.BadRequest(c, "Invalid client changelog entries")
+			return false
+		}
+		settings.ClientChangelogEntries = string(encoded)
 	}
 	return true
 }

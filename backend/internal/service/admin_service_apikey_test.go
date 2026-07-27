@@ -118,7 +118,7 @@ func (s *userRepoStubForGroupUpdate) GetLatestUsedAtByUserID(context.Context, in
 func (s *userRepoStubForGroupUpdate) UpdateUserLastActiveAt(context.Context, int64, time.Time) error {
 	panic("unexpected")
 }
-func (s *userRepoStubForGroupUpdate) RemoveGroupFromUserAllowedGroups(context.Context, int64, int64) error {
+func (s *userRepoStubForGroupUpdate) GetByReferralCode(context.Context, string) (*User, error) {
 	panic("unexpected")
 }
 

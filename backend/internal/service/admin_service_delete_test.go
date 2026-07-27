@@ -199,6 +199,8 @@ func (s *userRepoStub) DisableTotp(ctx context.Context, userID int64) error {
 
 func (s *userRepoStub) GetByReferralCode(ctx context.Context, code string) (*User, error) {
 	panic("unexpected GetByReferralCode call")
+}
+
 func (s *userRepoStub) GetByIDIncludeDeleted(ctx context.Context, id int64) (*User, error) {
 	return s.GetByID(ctx, id)
 }

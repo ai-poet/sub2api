@@ -152,6 +152,10 @@ func (s *emailSyncRepoStub) GetByIDIncludeDeleted(ctx context.Context, id int64)
 	return s.GetByID(ctx, id)
 }
 
+func (s *emailSyncRepoStub) GetByReferralCode(context.Context, string) (*User, error) {
+	panic("unexpected GetByReferralCode call")
+}
+
 func (s *emailSyncRepoStub) EnsureEmailAuthIdentity(_ context.Context, userID int64, email string) error {
 	s.ensureCalls = append(s.ensureCalls, ensureEmailCall{userID: userID, email: email})
 	return s.ensureErr
