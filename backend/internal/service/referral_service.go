@@ -180,7 +180,7 @@ func (s *ReferralService) GenerateReferralCode(ctx context.Context, userID int64
 
 		// 保存到用户记录
 		user.ReferralCode = code
-		if err := s.userRepo.Update(ctx, user); err != nil {
+		if err := s.userRepo.Update(ctx, user, UserUpdateFields{ReferralCode: true}); err != nil {
 			// 唯一约束冲突，重试
 			continue
 		}
