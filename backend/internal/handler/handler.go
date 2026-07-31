@@ -57,7 +57,9 @@ type Handlers struct {
 	Referral         *ReferralHandler
 	ModelCatalog     *ModelCatalogHandler
 	GroupStatus      *GroupStatusHandler
+	Passkey          *PasskeyHandler
 	AvailableChannel *AvailableChannelHandler
+	ModelPlaza       *ModelPlazaHandler
 	AsyncImage       *AsyncImageHandler
 	BatchImage       *BatchImageHandler
 }
