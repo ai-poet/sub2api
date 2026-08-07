@@ -346,6 +346,48 @@
             </div>
           </template>
 
+          <template #cell-runtime_status="{ row }">
+            <div class="space-y-1 text-xs">
+              <template v-if="getRuntimeSummary(row.id)">
+                <span
+                  :class="[
+                    'badge',
+                    getGroupRuntimeStatusBadgeClass(
+                      getRuntimeDisplayStatus(getRuntimeSummary(row.id)!),
+                    ),
+                  ]"
+                >
+                  {{ getRuntimeStatusText(getRuntimeSummary(row.id)!) }}
+                </span>
+                <div
+                  v-if="getRuntimeSummary(row.id)!.observed_at"
+                  class="text-gray-500 dark:text-gray-400"
+                >
+                  {{
+                    formatRelativeTime(getRuntimeSummary(row.id)!.observed_at)
+                  }}
+                </div>
+                <div
+                  v-if="getRuntimeSummary(row.id)!.latency_ms !== null"
+                  class="text-gray-500 dark:text-gray-400"
+                >
+                  {{
+                    formatGroupRuntimeLatency(
+                      getRuntimeSummary(row.id)!.latency_ms,
+                    )
+                  }}
+                </div>
+              </template>
+              <div v-else class="text-gray-400 dark:text-gray-500">
+                {{
+                  runtimeStatusLoading
+                    ? t("common.loading")
+                    : t("admin.groups.runtimeStatus.notConfigured")
+                }}
+              </div>
+            </div>
+          </template>
+
           <template #cell-status="{ value }">
             <span
               :class="[
@@ -403,6 +445,15 @@
                 <Icon name="dollar" size="sm" />
                 <span class="text-xs">{{
                   t("admin.groups.rateMultipliers")
+                }}</span>
+              </button>
+              <button
+                @click="handleRuntimeStatus(row)"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+              >
+                <Icon name="server" size="sm" />
+                <span class="text-xs">{{
+                  t("admin.groups.runtimeStatus.action")
                 }}</span>
               </button>
               <button
@@ -4039,6 +4090,14 @@
       @close="showRPMOverridesModal = false"
       @success="loadGroups"
     />
+
+    <!-- Group Runtime Status Dialog -->
+    <GroupRuntimeStatusDialog
+      :show="showRuntimeStatusDialog"
+      :group="runtimeStatusGroup"
+      @close="closeRuntimeStatusDialog"
+      @updated="loadRuntimeStatusSummary"
+    />
   </AppLayout>
 </template>
 
@@ -4056,6 +4115,7 @@ import type {
   CompositeRouteEndpoint,
   CompositeRouteMatchType,
   GroupPlatform,
+  GroupStatusSummary,
   SubscriptionType,
 } from "@/types";
 import type { Column } from "@/components/common/types";
@@ -4071,11 +4131,18 @@ import PlatformIcon from "@/components/common/PlatformIcon.vue";
 import Icon from "@/components/icons/Icon.vue";
 import GroupRateMultipliersModal from "@/components/admin/group/GroupRateMultipliersModal.vue";
 import GroupRPMOverridesModal from "@/components/admin/group/GroupRPMOverridesModal.vue";
+import GroupRuntimeStatusDialog from "@/components/admin/group/GroupRuntimeStatusDialog.vue";
 import GroupCapacityBadge from "@/components/common/GroupCapacityBadge.vue";
 import ReasoningEffortPolicyFields from "@/components/admin/group/ReasoningEffortPolicyFields.vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { createStableObjectKeyResolver } from "@/utils/stableObjectKey";
 import { extractApiErrorMessage } from "@/utils/apiError";
+import { formatRelativeTime } from "@/utils/format";
+import {
+  formatGroupRuntimeLatency,
+  getGroupRuntimeStatusBadgeClass,
+  normalizeGroupRuntimeStatus,
+} from "@/utils/groupStatus";
 import { useKeyedDebouncedSearch } from "@/composables/useKeyedDebouncedSearch";
 import { getPersistedPageSize } from "@/composables/usePersistedPageSize";
 import {
@@ -4161,6 +4228,11 @@ const allColumns = computed<Column[]>(() => [
     sortable: false,
   },
   { key: "usage", label: t("admin.groups.columns.usage"), sortable: false },
+  {
+    key: "runtime_status",
+    label: t("admin.groups.columns.runtimeStatus"),
+    sortable: false,
+  },
   { key: "status", label: t("admin.groups.columns.status"), sortable: true },
   { key: "actions", label: t("admin.groups.columns.actions"), sortable: false },
 ]);
@@ -4246,6 +4318,9 @@ const hasVisibleUsageSummaryConsumer = computed(
   () => isColumnVisible("usage") || isColumnVisible("billing_type"),
 );
 const hasVisibleCapacityColumn = computed(() => isColumnVisible("capacity"));
+const hasVisibleRuntimeStatusColumn = computed(() =>
+  isColumnVisible("runtime_status"),
+);
 
 const toggleColumn = (key: string) => {
   const validKeys = getValidHiddenColumnKeys();
@@ -4491,6 +4566,8 @@ const capacityMap = ref<
     }
   >
 >(new Map());
+const runtimeStatusMap = ref<Map<number, GroupStatusSummary>>(new Map());
+const runtimeStatusLoading = ref(false);
 const searchQuery = ref("");
 const filters = reactive({
   platform: "",
@@ -4532,6 +4609,8 @@ const showRateMultipliersModal = ref(false);
 const rateMultipliersGroup = ref<AdminGroup | null>(null);
 const showRPMOverridesModal = ref(false);
 const rpmOverridesGroup = ref<AdminGroup | null>(null);
+const showRuntimeStatusDialog = ref(false);
+const runtimeStatusGroup = ref<AdminGroup | null>(null);
 const sortableGroups = ref<AdminGroup[]>([]);
 type ConcreteGroupPlatform = Exclude<GroupPlatform, "composite">;
 type CompositeRouteFormState = {
@@ -5246,6 +5325,11 @@ const loadGroups = async () => {
     if (hasVisibleCapacityColumn.value) {
       loadCapacitySummary();
     }
+    if (hasVisibleRuntimeStatusColumn.value) {
+      loadRuntimeStatusSummary();
+    } else {
+      runtimeStatusLoading.value = false;
+    }
   } catch (error: any) {
     if (
       signal.aborted ||
@@ -5344,6 +5428,48 @@ const loadCapacitySummary = async () => {
   } catch (error) {
     console.error("Error loading group capacity summary:", error);
   }
+};
+
+const loadRuntimeStatusSummary = async () => {
+  if (!hasVisibleRuntimeStatusColumn.value) {
+    runtimeStatusLoading.value = false;
+    return;
+  }
+  runtimeStatusLoading.value = true;
+  try {
+    const data = await adminAPI.groups.getRuntimeStatusSummary();
+    const map = new Map<number, GroupStatusSummary>();
+    for (const item of data) {
+      map.set(item.group_id, item);
+    }
+    runtimeStatusMap.value = map;
+  } catch (error) {
+    console.error("Error loading group runtime status summary:", error);
+  } finally {
+    runtimeStatusLoading.value = false;
+  }
+};
+
+const getRuntimeSummary = (groupId: number) => runtimeStatusMap.value.get(groupId);
+
+const getRuntimeDisplayStatus = (summary: GroupStatusSummary) => {
+  if (summary.stable_status) {
+    return normalizeGroupRuntimeStatus(summary.stable_status);
+  }
+  if (summary.latest_status) {
+    return normalizeGroupRuntimeStatus(summary.latest_status);
+  }
+  return "unknown";
+};
+
+const getRuntimeStatusText = (summary: GroupStatusSummary) => {
+  if (!summary.enabled) {
+    return t("admin.groups.runtimeStatus.disabled");
+  }
+  if (!summary.observed_at) {
+    return t("admin.groups.runtimeStatus.waiting");
+  }
+  return t(`modelStatus.statuses.${getRuntimeDisplayStatus(summary)}`);
 };
 
 let searchTimeout: ReturnType<typeof setTimeout>;
@@ -5804,6 +5930,16 @@ const handleRateMultipliers = (group: AdminGroup) => {
 const handleRPMOverrides = (group: AdminGroup) => {
   rpmOverridesGroup.value = group;
   showRPMOverridesModal.value = true;
+};
+
+const handleRuntimeStatus = (group: AdminGroup) => {
+  runtimeStatusGroup.value = group;
+  showRuntimeStatusDialog.value = true;
+};
+
+const closeRuntimeStatusDialog = () => {
+  showRuntimeStatusDialog.value = false;
+  runtimeStatusGroup.value = null;
 };
 
 const handleDuplicate = async (group: AdminGroup) => {
