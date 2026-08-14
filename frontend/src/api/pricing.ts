@@ -24,7 +24,11 @@ export interface PublicPricing {
 }
 
 export interface PublicPricingComparison {
-  /** 仅在 official_pricing.has_reference 为 true 时下发。 */
+  /**
+   * ⚠️ 名字叫 percent，实际是 `1 - effective/official` 的**小数**，不是 0–100 的百分数。
+   * 倍率 0.18 的分组下发 0.82（即省 82%、打 1.8 折）。换算时务必先 ×100 或 ×10。
+   * 仅在 official_pricing.has_reference 为 true 时下发。
+   */
   savings_percent: number | null
   is_cheaper_than_official: boolean
 }

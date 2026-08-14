@@ -10,7 +10,7 @@ const translations: Record<string, string> = {
   'home.pricingTable.badge': 'Goal',
   'home.pricingTable.badgeValue': 'Lower total cost',
   'home.pricingTable.badgeSavings': 'Max savings',
-  'home.pricingTable.badgeSavingsValue': '{percent}% off',
+  'home.pricingTable.badgeSavingsValue': '[{discount}折|{percent}% off]',
   'home.pricingTable.currencyNote': 'Converted at 1 USD = CNY {rate}.',
   'home.pricingTable.note': 'Final billing follows the dashboard price.',
   'home.pricingTable.table.model': 'Model',
@@ -20,7 +20,7 @@ const translations: Record<string, string> = {
   'home.pricingTable.table.cacheWrite': 'Cache write / 1M',
   'home.pricingTable.table.cacheRead': 'Cache read / 1M',
   'home.pricingTable.table.discountHeader': 'vs official',
-  'home.pricingTable.table.discount': '{percent}% off',
+  'home.pricingTable.table.discount': '[{discount}折|{percent}% off]',
   'home.pricingTable.table.perRequest': '{price} / request',
   'home.pricingTable.table.perImage': '{price} / image',
   'home.pricingTable.table.modelCount': '{count} models',
@@ -94,13 +94,14 @@ function makeItem(overrides: Partial<PublicPricingItem> = {}): PublicPricingItem
       per_image_usd: null,
       has_reference: true,
     },
-    comparison: { savings_percent: 20, is_cheaper_than_official: true },
+    // 小数语义：0.2 = 省 20% = 8 折
+    comparison: { savings_percent: 0.2, is_cheaper_than_official: true },
     ...overrides,
   }
 }
 
 function makeResponse(items: PublicPricingItem[]): PublicPricingResponse {
-  return { enabled: true, items, summary: { total_models: items.length, max_savings_percent: 20 } }
+  return { enabled: true, items, summary: { total_models: items.length, max_savings_percent: 0.2 } }
 }
 
 describe('HomePricingSection', () => {
@@ -124,7 +125,7 @@ describe('HomePricingSection', () => {
     expect(text).toContain('$12.00')
     expect(text).toContain('Public')
     expect(text).toContain('×0.8')
-    expect(text).toContain('20% off')
+    expect(text).toContain('[8折|20% off]')
   })
 
   // 落地页对访客必须永远可用：接口失败时静默回落到静态文案卡片，不能抛错、不能空白。
@@ -184,8 +185,46 @@ describe('HomePricingSection', () => {
     const wrapper = mount(HomePricingSection)
     await flushPromises()
 
-    expect(wrapper.text()).not.toContain('% off')
+    expect(wrapper.text()).not.toContain('折|')
     expect(wrapper.text()).toContain('—')
+  })
+
+  // 回归：savings_percent 是小数不是百分数。倍率 0.18 的分组下发 0.82，
+  // 曾被当成 82 处理算出 (100-0.82)/10 = 9.9 折 —— 明明打了 1.8 折却显示 9.9 折。
+  it('renders the real discount for a heavily discounted group', async () => {
+    getPublicPricing.mockResolvedValue(
+      makeResponse([
+        makeItem({
+          group: { name: 'Codex', rate_multiplier: 0.18, rate_source: 'group_default' },
+          comparison: { savings_percent: 0.82, is_cheaper_than_official: true },
+        }),
+      ]),
+    )
+
+    const wrapper = mount(HomePricingSection)
+    await flushPromises()
+
+    const text = wrapper.text()
+    // 1.8 折，不是曾经错算出的 9.9 折
+    expect(text).toContain('[1.8折|82% off]')
+    expect(text).not.toContain('9.9')
+  })
+
+  // 倍率 0.3 → 7 折；整数折扣不留 ".0" 尾巴。
+  it('drops the trailing zero on a whole-number discount', async () => {
+    getPublicPricing.mockResolvedValue(
+      makeResponse([
+        makeItem({
+          group: { name: 'Claude Sale', rate_multiplier: 0.3, rate_source: 'group_default' },
+          comparison: { savings_percent: 0.7, is_cheaper_than_official: true },
+        }),
+      ]),
+    )
+
+    const wrapper = mount(HomePricingSection)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('[3折|70% off]')
   })
 
   // 拿到汇率时价格换算成人民币，并说明换算比例。
