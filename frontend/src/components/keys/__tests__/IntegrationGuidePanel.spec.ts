@@ -213,8 +213,10 @@ describe('IntegrationGuidePanel', () => {
     })
 
     expect(wrapper.text()).toContain('~/.codex/config.toml')
-    expect(wrapper.find('pre code').text()).toContain('model = "gpt-5.5"')
-    expect(wrapper.find('pre code').text()).toContain('review_model = "gpt-5.5"')
+    expect(wrapper.find('pre code').text()).toContain('model = "gpt-5.6-sol"')
+    expect(wrapper.find('pre code').text()).toContain('review_model = "gpt-5.6-terra"')
+    expect(wrapper.find('pre code').text()).toContain('image_generation = true')
+    expect(wrapper.find('pre code').text()).toContain('remote_compaction_v2 = true')
 
     const windowsTab = wrapper.findAll('button').find((button) =>
       button.text().includes('Windows')
