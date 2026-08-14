@@ -315,6 +315,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 
 		AvailableChannelsEnabled: settings.AvailableChannelsEnabled,
 
+		PublicPricingEnabled: settings.PublicPricingEnabled,
+
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
 	}
 

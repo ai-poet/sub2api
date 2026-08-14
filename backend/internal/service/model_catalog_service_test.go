@@ -10,8 +10,9 @@ import (
 )
 
 type modelCatalogAccessStub struct {
-	groups func(ctx context.Context, userID int64) ([]Group, error)
-	rates  func(ctx context.Context, userID int64) (map[int64]float64, error)
+	groups       func(ctx context.Context, userID int64) ([]Group, error)
+	rates        func(ctx context.Context, userID int64) (map[int64]float64, error)
+	publicGroups func(ctx context.Context) ([]Group, error)
 }
 
 func (s *modelCatalogAccessStub) GetAvailableGroups(ctx context.Context, userID int64) ([]Group, error) {
@@ -20,6 +21,15 @@ func (s *modelCatalogAccessStub) GetAvailableGroups(ctx context.Context, userID 
 
 func (s *modelCatalogAccessStub) GetUserGroupRates(ctx context.Context, userID int64) (map[int64]float64, error) {
 	return s.rates(ctx, userID)
+}
+
+// ListPublicGroups 默认复用 groups（userID 0），让既有用例无需改动；
+// 需要区分公开分组口径的用例可以单独覆盖 publicGroups。
+func (s *modelCatalogAccessStub) ListPublicGroups(ctx context.Context) ([]Group, error) {
+	if s.publicGroups != nil {
+		return s.publicGroups(ctx)
+	}
+	return s.groups(ctx, 0)
 }
 
 type modelCatalogModelsStub struct {
@@ -84,7 +94,7 @@ func newModelCatalogTestService(t *testing.T, groups []Group, modelsByGroup map[
 		},
 		&modelCatalogModelsStub{byGroup: modelsByGroup},
 		billing,
-		NewModelPricingResolver(NewChannelService(repo, nil), billing),
+		NewModelPricingResolver(NewChannelService(repo, nil, nil, nil), billing),
 	)
 }
 
@@ -128,6 +138,77 @@ func TestModelCatalogService_GetCatalog_ReturnsGroupModelCards(t *testing.T) {
 	require.Equal(t, "Beta", result.Items[1].BestGroup.Name)
 	require.Equal(t, 2, result.Items[1].AvailableGroupCount)
 	require.Len(t, result.Items[0].OtherGroups, 1)
+}
+
+// 公开目录没有「当前用户」，因此即便存在用户专属倍率也必须忽略，
+// 一律回落到分组默认倍率（RateSource = group_default）。
+func TestModelCatalogService_GetPublicCatalog_IgnoresUserOverrideRate(t *testing.T) {
+	pricing := map[string]*LiteLLMModelPricing{
+		"claude-sonnet-4": {
+			InputCostPerToken:  3e-6,
+			OutputCostPerToken: 15e-6,
+		},
+	}
+
+	svc := newModelCatalogTestService(t,
+		[]Group{
+			{ID: 10, Name: "Alpha", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1.4, SubscriptionType: SubscriptionTypeStandard},
+		},
+		map[int64][]string{
+			10: {"claude-sonnet-4"},
+		},
+		// 用户专属倍率 0.6 存在，但公开目录不应采用它。
+		map[int64]float64{10: 0.6},
+		pricing,
+		nil,
+	)
+
+	result, err := svc.GetPublicCatalog(context.Background())
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	require.Equal(t, "group_default", result.Items[0].BestGroup.RateSource)
+	require.InDelta(t, 1.4, result.Items[0].BestGroup.RateMultiplier, 1e-12)
+	// 有效单价 = 官方 $3/Mtok × 分组默认倍率 1.4
+	require.NotNil(t, result.Items[0].EffectivePricingUSD.InputPerMTokUSD)
+	require.InDelta(t, 4.2, *result.Items[0].EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+}
+
+// GetPublicCatalog 走的是 ListPublicGroups 而非 GetAvailableGroups——
+// 专属 / 免费订阅分组在那一层就被排除，公开目录只能看到剩下的分组。
+func TestModelCatalogService_GetPublicCatalog_UsesPublicGroupSource(t *testing.T) {
+	pricing := map[string]*LiteLLMModelPricing{
+		"claude-sonnet-4": {InputCostPerToken: 3e-6, OutputCostPerToken: 15e-6},
+	}
+
+	svc := newModelCatalogTestService(t,
+		[]Group{
+			{ID: 10, Name: "PublicGroup", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard},
+			{ID: 20, Name: "ExclusiveGroup", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard},
+		},
+		map[int64][]string{
+			10: {"claude-sonnet-4"},
+			20: {"claude-sonnet-4"},
+		},
+		nil,
+		pricing,
+		nil,
+	)
+	// 模拟 ListPublicGroups 已剔除专属分组，只放行 ID=10。
+	svc.accessService.(*modelCatalogAccessStub).publicGroups = func(_ context.Context) ([]Group, error) {
+		return []Group{
+			{ID: 10, Name: "PublicGroup", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard},
+		}, nil
+	}
+
+	result, err := svc.GetPublicCatalog(context.Background())
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	require.Equal(t, "PublicGroup", result.Items[0].BestGroup.Name)
+
+	// 对照：登录态目录仍能看到两个分组，证明公开路径的收窄没有影响既有行为。
+	authed, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, authed.Items, 2)
 }
 
 func TestModelCatalogService_GetCatalog_UsesUserOverrideRate(t *testing.T) {

@@ -12,6 +12,8 @@ const mtokMultiplier = 1_000_000
 type modelCatalogAccessService interface {
 	GetAvailableGroups(ctx context.Context, userID int64) ([]Group, error)
 	GetUserGroupRates(ctx context.Context, userID int64) (map[int64]float64, error)
+	// ListPublicGroups 返回可对匿名访客公开展示的分组（活跃 + 非专属 + 非免费订阅）。
+	ListPublicGroups(ctx context.Context) ([]Group, error)
 }
 
 type modelCatalogModelsService interface {
@@ -126,8 +128,8 @@ type modelCatalogEntry struct {
 }
 
 func (s *ModelCatalogService) GetCatalog(ctx context.Context, userID int64) (*ModelCatalogResponse, error) {
-	if s == nil || s.accessService == nil || s.modelService == nil || s.billing == nil || s.resolver == nil {
-		return nil, fmt.Errorf("model catalog service is not configured")
+	if err := s.ensureConfigured(); err != nil {
+		return nil, err
 	}
 
 	groups, err := s.accessService.GetAvailableGroups(ctx, userID)
@@ -140,6 +142,45 @@ func (s *ModelCatalogService) GetCatalog(ctx context.Context, userID int64) (*Mo
 		return nil, fmt.Errorf("get user group rates: %w", err)
 	}
 
+	return s.buildCatalog(ctx, groups, userRates), nil
+}
+
+// GetPublicCatalog 构建面向匿名访客的模型定价目录。
+//
+// 与 GetCatalog 的区别只有分组来源和倍率来源：这里取「公开分组」（活跃、非专属、
+// 非免费订阅，见 ListPublicGroups），且不带任何用户专属倍率——传 nil userRates 后
+// resolveCatalogRate 会回落到分组默认倍率并把 RateSource 标为 group_default。
+//
+// 刻意不加缓存：渠道定价读路径本身走 ChannelService 的进程内缓存（CRUD 后立即重建），
+// 分组则直接查库，因此后台调价能即时反映到公开定价页。加缓存会破坏这个实时性。
+func (s *ModelCatalogService) GetPublicCatalog(ctx context.Context) (*ModelCatalogResponse, error) {
+	if err := s.ensureConfigured(); err != nil {
+		return nil, err
+	}
+
+	groups, err := s.accessService.ListPublicGroups(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list public groups: %w", err)
+	}
+
+	return s.buildCatalog(ctx, groups, nil), nil
+}
+
+func (s *ModelCatalogService) ensureConfigured() error {
+	if s == nil || s.accessService == nil || s.modelService == nil || s.billing == nil || s.resolver == nil {
+		return fmt.Errorf("model catalog service is not configured")
+	}
+	return nil
+}
+
+// buildCatalog 是目录构建的纯计算部分：给定分组集合与倍率覆盖表，产出条目与汇总。
+// 不感知「当前用户是谁」，因此登录态目录与公开目录可以共用同一套排序、分桶与对比逻辑。
+// userRates 为 nil 时全部回落到分组默认倍率。
+func (s *ModelCatalogService) buildCatalog(
+	ctx context.Context,
+	groups []Group,
+	userRates map[int64]float64,
+) *ModelCatalogResponse {
 	entries := make([]modelCatalogEntry, 0)
 	modelBuckets := make(map[string][]*modelCatalogEntry)
 
@@ -206,7 +247,7 @@ func (s *ModelCatalogService) GetCatalog(ctx context.Context, userID int64) (*Mo
 	return &ModelCatalogResponse{
 		Items:   items,
 		Summary: summary,
-	}, nil
+	}
 }
 
 func (s *ModelCatalogService) buildEntry(

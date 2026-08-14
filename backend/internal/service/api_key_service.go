@@ -1016,6 +1016,32 @@ func (s *APIKeyService) GetAvailableGroups(ctx context.Context, userID int64) ([
 	return availableGroups, nil
 }
 
+// ListPublicGroups 返回可以对**匿名访客**公开展示定价的分组。
+//
+// 与 GetAvailableGroups 的区别：这里没有「当前用户」，因此不看订阅、不看授权，
+// 只回答「哪些分组的价格适合挂在公开定价页上」。过滤口径：
+//   - 专属分组（IsExclusive）：排除。专属分组是小范围授权，公开其模型清单与价格即信息泄露。
+//   - 免费订阅分组（IsFreeSubscription，订阅类且倍率为 0）：排除。其有效价会算成 $0，
+//     访客会误读成「这个模型免费」，实际上要先买订阅。
+//
+// 其余非专属分组（含倍率 > 0 的订阅类分组）保留——它们的单价对访客真实且有意义。
+func (s *APIKeyService) ListPublicGroups(ctx context.Context) ([]Group, error) {
+	allGroups, err := s.groupRepo.ListActive(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list active groups: %w", err)
+	}
+
+	publicGroups := make([]Group, 0, len(allGroups))
+	for _, group := range allGroups {
+		if group.IsExclusive || group.IsFreeSubscription() {
+			continue
+		}
+		publicGroups = append(publicGroups, group)
+	}
+
+	return publicGroups, nil
+}
+
 // canUserBindGroupInternal 内部方法，检查用户是否可以绑定分组（使用预加载的订阅数据）
 func (s *APIKeyService) canUserBindGroupInternal(user *User, group *Group, subscribedGroupIDs map[int64]bool) bool {
 	// 订阅类型分组：需要有效订阅

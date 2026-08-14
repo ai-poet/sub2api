@@ -382,6 +382,12 @@ const (
 	// sidebar entry is hidden. Defaults to false (opt-in feature).
 	SettingKeyAvailableChannelsEnabled = "available_channels_enabled"
 
+	// SettingKeyPublicPricingEnabled is a DB-backed soft switch for the anonymous pricing
+	// catalog shown on the landing page. When false: the public endpoint returns an empty
+	// list (never 401) and the landing section falls back to static copy.
+	// Defaults to true (opt-out feature) — public pricing is the intended default.
+	SettingKeyPublicPricingEnabled = "public_pricing_enabled"
+
 	// SettingKeyUpstreamBillingProbeSettings stores the global enable switch and interval
 	// for probing remote Sub2API API-key billing metadata.
 	SettingKeyUpstreamBillingProbeSettings = "upstream_billing_probe_settings"
