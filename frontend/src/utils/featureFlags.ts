@@ -104,6 +104,13 @@ export const FeatureFlags = {
     mode: 'opt-in',
     label: 'Available Channels',
   }),
+  // 落地页公开定价：默认开启。opt-out 保证公开设置尚未加载时也先渲染，
+  // 避免访客首屏看到「无定价」再闪成有定价。
+  publicPricing: defineFlag({
+    key: 'public_pricing_enabled',
+    mode: 'opt-out',
+    label: 'Public Pricing',
+  }),
   payment: defineFlag({
     key: 'payment_enabled',
     mode: 'opt-out',

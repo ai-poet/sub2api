@@ -199,6 +199,23 @@ export default {
       "description": "Claude Code、Codex、GPT-5.5 等主流编码模型，比官方 API 便宜很多。一个账户、一份余额，用多少扣多少，余额长期有效。",
       "badge": "目标",
       "badgeValue": "总成本更低",
+      "badgeSavings": "最高节省",
+      "badgeSavingsValue": "省 {percent}%",
+      "table": {
+        "model": "模型",
+        "group": "分组",
+        "input": "输入 / 1M",
+        "output": "输出 / 1M",
+        "cacheWrite": "缓存写 / 1M",
+        "cacheRead": "缓存读 / 1M",
+        "vsOfficial": "对比官方",
+        "savings": "省 {percent}%",
+        "perRequest": "{price} / 次",
+        "perImage": "{price} / 张",
+        "modelCount": "{count} 个模型",
+        "expand": "展开全部（还有 {count} 个）",
+        "collapse": "收起"
+      },
       "cards": {
         "claude": {
           "tag": "Claude 系列",

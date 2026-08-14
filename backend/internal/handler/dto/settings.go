@@ -269,6 +269,9 @@ type SystemSettings struct {
 	// Available Channels feature switch (user-facing aggregate view)
 	AvailableChannelsEnabled bool `json:"available_channels_enabled"`
 
+	// Public pricing catalog on the landing page (opt-out, default enabled)
+	PublicPricingEnabled bool `json:"public_pricing_enabled"`
+
 	// 风控中心功能开关
 	RiskControlEnabled bool `json:"risk_control_enabled"`
 
@@ -352,6 +355,8 @@ type PublicSettings struct {
 	ChannelMonitorDefaultIntervalSeconds int  `json:"channel_monitor_default_interval_seconds"`
 
 	AvailableChannelsEnabled bool `json:"available_channels_enabled"`
+
+	PublicPricingEnabled bool `json:"public_pricing_enabled"`
 
 	RiskControlEnabled bool `json:"risk_control_enabled"`
 

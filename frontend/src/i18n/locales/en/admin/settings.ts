@@ -30,6 +30,12 @@ export default {
           enabled: 'Enable Available Channels',
           enabledHint: 'When off, the sidebar entry is hidden and the endpoint returns an empty list.',
         },
+        publicPricing: {
+          title: 'Public Pricing',
+          description: 'Show real model prices and group rate multipliers to logged-out visitors on the landing page, synced live with channel pricing. Enabled by default.',
+          enabled: 'Enable Public Pricing',
+          enabledHint: 'When off, the landing pricing section falls back to static copy and the public endpoint returns an empty list. Exclusive and free-subscription groups are never exposed.',
+        },
         riskControl: {
           title: 'Risk Control',
           description: 'Enable the content moderation menu and gateway audit entry point. Disabled by default.',

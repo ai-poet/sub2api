@@ -30,6 +30,12 @@ export default {
           enabled: '启用可用渠道',
           enabledHint: '关闭后用户端侧边栏入口隐藏，接口返回空数组。',
         },
+        publicPricing: {
+          title: '公开定价',
+          description: '在落地页向**未登录访客**展示真实的模型单价与分组倍率，数据与渠道定价实时同步。默认开启。',
+          enabled: '启用公开定价',
+          enabledHint: '关闭后落地页定价区回落为静态文案介绍，公开接口返回空列表。专属分组与免费订阅分组始终不会公开。',
+        },
         riskControl: {
           title: '风控中心',
           description: '启用内容审计菜单和全端点请求审核入口。默认关闭。',

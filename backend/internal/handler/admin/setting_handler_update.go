@@ -313,6 +313,9 @@ type UpdateSettingsRequest struct {
 	// Available Channels feature switch (user-facing)
 	AvailableChannelsEnabled *bool `json:"available_channels_enabled"`
 
+	// Public pricing catalog switch (landing page, anonymous)
+	PublicPricingEnabled *bool `json:"public_pricing_enabled"`
+
 	// Affiliate (邀请返利) feature switch
 
 	// 风控中心功能开关
@@ -1597,6 +1600,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.AvailableChannelsEnabled
 		}(),
+		PublicPricingEnabled: func() bool {
+			if req.PublicPricingEnabled != nil {
+				return *req.PublicPricingEnabled
+			}
+			return previousSettings.PublicPricingEnabled
+		}(),
 		RiskControlEnabled: func() bool {
 			if req.RiskControlEnabled != nil {
 				return *req.RiskControlEnabled
@@ -1920,6 +1929,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 
 		AvailableChannelsEnabled: updatedSettings.AvailableChannelsEnabled,
 
+		PublicPricingEnabled: updatedSettings.PublicPricingEnabled,
 
 		RiskControlEnabled:          updatedSettings.RiskControlEnabled,
 		CyberSessionBlockEnabled:    updatedSettings.CyberSessionBlockEnabled,

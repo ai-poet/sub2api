@@ -199,6 +199,23 @@ export default {
       "description": "Claude Code, Codex, GPT-5.5, and other mainstream coding models — far cheaper than official APIs. One account, one balance, pay only for what you use, balance never expires.",
       "badge": "Goal",
       "badgeValue": "Lower total cost",
+      "badgeSavings": "Max savings",
+      "badgeSavingsValue": "{percent}% off",
+      "table": {
+        "model": "Model",
+        "group": "Group",
+        "input": "Input / 1M",
+        "output": "Output / 1M",
+        "cacheWrite": "Cache write / 1M",
+        "cacheRead": "Cache read / 1M",
+        "vsOfficial": "vs official",
+        "savings": "{percent}% off",
+        "perRequest": "{price} / request",
+        "perImage": "{price} / image",
+        "modelCount": "{count} models",
+        "expand": "Show all ({count} more)",
+        "collapse": "Show less"
+      },
       "cards": {
         "claude": {
           "tag": "Claude family",

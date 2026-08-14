@@ -229,6 +229,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyChannelMonitorEnabled,
 		SettingKeyChannelMonitorDefaultIntervalSeconds,
 		SettingKeyAvailableChannelsEnabled,
+		SettingKeyPublicPricingEnabled,
 		SettingKeyRiskControlEnabled,
 		SettingKeyAllowUserViewErrorRequests,
 	}
@@ -349,6 +350,9 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 
 		AvailableChannelsEnabled: settings[SettingKeyAvailableChannelsEnabled] == "true",
 
+		// opt-out：只有显式存成 false 才关闭，缺省/空值都视为开启。
+		PublicPricingEnabled: !isFalseSettingValue(settings[SettingKeyPublicPricingEnabled]),
+
 		RiskControlEnabled: settings[SettingKeyRiskControlEnabled] == "true",
 
 		AllowUserViewErrorRequests: settings[SettingKeyAllowUserViewErrorRequests] == "true",
@@ -426,6 +430,25 @@ func (s *SettingService) GetAvailableChannelsRuntime(ctx context.Context) Availa
 	}
 	return AvailableChannelsRuntime{
 		Enabled: vals[SettingKeyAvailableChannelsEnabled] == "true",
+	}
+}
+
+// PublicPricingRuntime is the lightweight view of the public-pricing feature switch
+// consumed by the anonymous pricing handler.
+type PublicPricingRuntime struct {
+	Enabled bool
+}
+
+// GetPublicPricingRuntime reads the public-pricing feature switch directly from the
+// settings store. Fail-open: on error returns Enabled=true, matching the opt-out
+// default (unknown ↔ enabled) — public pricing is the intended out-of-the-box state.
+func (s *SettingService) GetPublicPricingRuntime(ctx context.Context) PublicPricingRuntime {
+	vals, err := s.settingRepo.GetMultiple(ctx, []string{SettingKeyPublicPricingEnabled})
+	if err != nil {
+		return PublicPricingRuntime{Enabled: true}
+	}
+	return PublicPricingRuntime{
+		Enabled: !isFalseSettingValue(vals[SettingKeyPublicPricingEnabled]),
 	}
 }
 
@@ -518,6 +541,7 @@ type PublicSettingsInjectionPayload struct {
 	ChannelMonitorEnabled                bool `json:"channel_monitor_enabled"`
 	ChannelMonitorDefaultIntervalSeconds int  `json:"channel_monitor_default_interval_seconds"`
 	AvailableChannelsEnabled             bool `json:"available_channels_enabled"`
+	PublicPricingEnabled                 bool `json:"public_pricing_enabled"`
 	RiskControlEnabled                   bool `json:"risk_control_enabled"`
 	AllowUserViewErrorRequests           bool `json:"allow_user_view_error_requests"`
 }
@@ -591,6 +615,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ChannelMonitorEnabled:                settings.ChannelMonitorEnabled,
 		ChannelMonitorDefaultIntervalSeconds: settings.ChannelMonitorDefaultIntervalSeconds,
 		AvailableChannelsEnabled:             settings.AvailableChannelsEnabled,
+		PublicPricingEnabled:                 settings.PublicPricingEnabled,
 		RiskControlEnabled:                   settings.RiskControlEnabled,
 		AllowUserViewErrorRequests:           settings.AllowUserViewErrorRequests,
 	}, nil

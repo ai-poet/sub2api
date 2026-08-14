@@ -227,6 +227,16 @@ func RegisterAuthRoutes(
 		settings.GET("/email-unsubscribe", h.Setting.UnsubscribeNotificationEmail)
 	}
 
+	// 公开定价目录（无需认证）：落地页给匿名访客展示真实模型单价与分组倍率。
+	// 与 /settings/public 同样按客户端 IP 兜底限流；刻意不加缓存，保证后台调价即时生效。
+	// 注意：该 handler 永不返回 401（开关关闭/出错都返回 200 + 空列表），
+	// 否则前端 apiClient 的全局 401 拦截会把落地页访客强制跳转到 /login。
+	pricing := v1.Group("/pricing")
+	pricing.Use(panelRateLimiter.PublicIP())
+	{
+		pricing.GET("/public", h.PublicPricing.List)
+	}
+
 	// 需要认证的当前用户信息
 	authenticated := v1.Group("")
 	authenticated.Use(gin.HandlerFunc(jwtAuth))
