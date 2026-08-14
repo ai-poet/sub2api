@@ -711,8 +711,8 @@ function generateOpenAIFiles(baseUrl: string, apiKey: string): FileConfig[] {
 
   // config.toml content
   const configContent = `model_provider = "OpenAI"
-model = "gpt-5.5"
-review_model = "gpt-5.5"
+model = "gpt-5.6-sol"
+review_model = "gpt-5.6-terra"
 model_reasoning_effort = "xhigh"
 disable_response_storage = true
 network_access = "enabled"
@@ -725,6 +725,8 @@ wire_api = "responses"
 ${generateCodexProviderAuthConfig()}
 
 [features]
+image_generation = true
+remote_compaction_v2 = true
 goals = true`
 
   // auth.json content
@@ -746,12 +748,10 @@ goals = true`
 }
 
 function generateCodexProviderAuthConfig(): string {
-  if (codexAuthMode.value === 'api-key') {
-    return `requires_openai_auth = false
-http_headers = { "x-openai-actor-authorization" = "local-image-extension" }`
-  }
+  return `requires_openai_auth = false
 
-  return 'requires_openai_auth = true'
+[model_providers.OpenAI.http_headers]
+x-openai-actor-authorization = "local-relay"`
 }
 
 function generateGrokFiles(baseUrl: string, apiKey: string): FileConfig[] {
@@ -820,8 +820,8 @@ function generateOpenAIWsFiles(baseUrl: string, apiKey: string): FileConfig[] {
 
   // config.toml content with WebSocket v2
   const configContent = `model_provider = "OpenAI"
-model = "gpt-5.5"
-review_model = "gpt-5.5"
+model = "gpt-5.6-sol"
+review_model = "gpt-5.6-terra"
 model_reasoning_effort = "xhigh"
 disable_response_storage = true
 network_access = "enabled"
@@ -835,6 +835,8 @@ supports_websockets = true
 ${generateCodexProviderAuthConfig()}
 
 [features]
+image_generation = true
+remote_compaction_v2 = true
 responses_websockets_v2 = true
 goals = true`
 

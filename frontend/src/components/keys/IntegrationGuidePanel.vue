@@ -457,8 +457,8 @@ function generateOpenAIFiles(baseUrl: string, apiKey: string): FileConfig[] {
   const configDir = isWindows ? '%userprofile%\\.codex' : '~/.codex'
 
   const configContent = `model_provider = "OpenAI"
-model = "gpt-5.5"
-review_model = "gpt-5.5"
+model = "gpt-5.6-sol"
+review_model = "gpt-5.6-terra"
 model_reasoning_effort = "xhigh"
 disable_response_storage = true
 network_access = "enabled"
@@ -470,7 +470,14 @@ model_auto_compact_token_limit = 900000
 name = "OpenAI"
 base_url = "${baseUrl}"
 wire_api = "responses"
-requires_openai_auth = true`
+requires_openai_auth = false
+
+[model_providers.OpenAI.http_headers]
+x-openai-actor-authorization = "local-relay"
+
+[features]
+image_generation = true
+remote_compaction_v2 = true`
 
   const authContent = `{
   "OPENAI_API_KEY": "${apiKey}"
@@ -494,8 +501,8 @@ function generateOpenAIWsFiles(baseUrl: string, apiKey: string): FileConfig[] {
   const configDir = isWindows ? '%userprofile%\\.codex' : '~/.codex'
 
   const configContent = `model_provider = "OpenAI"
-model = "gpt-5.5"
-review_model = "gpt-5.5"
+model = "gpt-5.6-sol"
+review_model = "gpt-5.6-terra"
 model_reasoning_effort = "xhigh"
 disable_response_storage = true
 network_access = "enabled"
@@ -508,9 +515,14 @@ name = "OpenAI"
 base_url = "${baseUrl}"
 wire_api = "responses"
 supports_websockets = true
-requires_openai_auth = true
+requires_openai_auth = false
+
+[model_providers.OpenAI.http_headers]
+x-openai-actor-authorization = "local-relay"
 
 [features]
+image_generation = true
+remote_compaction_v2 = true
 responses_websockets_v2 = true`
 
   const authContent = `{
