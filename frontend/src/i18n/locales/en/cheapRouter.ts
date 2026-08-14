@@ -232,6 +232,7 @@ export default {
       "badgeValue": "Lower total cost",
       "badgeSavings": "Max savings",
       "badgeSavingsValue": "{percent}% off",
+      "currencyNote": "Prices shown converted at 1 USD ≈ CNY {rate}; billing is settled in USD.",
       "table": {
         "model": "Model",
         "group": "Group",
@@ -239,8 +240,8 @@ export default {
         "output": "Output / 1M",
         "cacheWrite": "Cache write / 1M",
         "cacheRead": "Cache read / 1M",
-        "vsOfficial": "vs official",
-        "savings": "{percent}% off",
+        "discountHeader": "vs official",
+        "discount": "{percent}% off",
         "perRequest": "{price} / request",
         "perImage": "{price} / image",
         "modelCount": "{count} models",

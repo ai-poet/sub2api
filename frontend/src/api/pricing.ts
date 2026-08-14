@@ -70,4 +70,81 @@ export async function getPublicPricing(options?: {
   return data
 }
 
-export const publicPricingAPI = { getPublicPricing }
+/**
+ * 构造支付服务的匿名汇率端点地址。
+ *
+ * 与 `modelCatalog.buildPaymentCenterUserApiUrl` 的区别：这里**不带 user_id / token**，
+ * 目标是 /api/public-config —— 一个只返回汇率、不含任何用户数据的匿名端点。
+ * 默认部署下支付服务由网关反代在 /pay，因此通常是同源请求。
+ */
+export function buildPaymentCenterPublicConfigUrl(input: {
+  purchaseSubscriptionUrl?: string | null
+  baseOrigin?: string
+}): string | null {
+  const raw = (input.purchaseSubscriptionUrl || '').trim()
+  const fallbackOrigin =
+    input.baseOrigin || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+
+  try {
+    const baseUrl = raw ? new URL(raw, fallbackOrigin) : new URL('/pay', fallbackOrigin)
+    if (baseUrl.protocol !== 'http:' && baseUrl.protocol !== 'https:') {
+      return null
+    }
+
+    const normalizedBasePath = baseUrl.pathname.replace(/\/+$/, '')
+    const apiPath = normalizedBasePath
+      ? `${normalizedBasePath}/api/public-config`
+      : '/api/public-config'
+    const apiUrl = new URL(baseUrl.origin)
+    apiUrl.pathname = apiPath
+    return apiUrl.toString()
+  } catch {
+    return null
+  }
+}
+
+export interface PublicCurrencyRates {
+  /** 1 USD 折合多少人民币。null 表示拿不到汇率，调用方应回退到美元展示。 */
+  balanceCreditCnyPerUsd: number | null
+  usdExchangeRate: number | null
+}
+
+function toPositiveNumber(value: number | string | null | undefined): number | null {
+  if (value == null) return null
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+/**
+ * 匿名拉取汇率。任何失败（未部署支付服务、未配置地址、超时、跨域）都返回 null 汇率，
+ * 由调用方回退到美元展示——落地页不能因为拿不到汇率就报错或空白。
+ */
+export async function fetchPublicCurrencyRates(input: {
+  purchaseSubscriptionUrl?: string | null
+  baseOrigin?: string
+  signal?: AbortSignal
+}): Promise<PublicCurrencyRates> {
+  const empty: PublicCurrencyRates = { balanceCreditCnyPerUsd: null, usdExchangeRate: null }
+
+  const url = buildPaymentCenterPublicConfigUrl(input)
+  if (!url) return empty
+
+  try {
+    const response = await fetch(url, { method: 'GET', mode: 'cors', signal: input.signal })
+    if (!response.ok) return empty
+
+    const payload = (await response.json()) as {
+      balanceCreditCnyPerUsd?: number | string | null
+      usdExchangeRate?: number | string | null
+    } | null
+
+    return {
+      balanceCreditCnyPerUsd: toPositiveNumber(payload?.balanceCreditCnyPerUsd),
+      usdExchangeRate: toPositiveNumber(payload?.usdExchangeRate)
+    }
+  } catch {
+    return empty
+  }
+}
+
+export const publicPricingAPI = { getPublicPricing, fetchPublicCurrencyRates }

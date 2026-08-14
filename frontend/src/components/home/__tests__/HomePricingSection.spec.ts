@@ -11,6 +11,7 @@ const translations: Record<string, string> = {
   'home.pricingTable.badgeValue': 'Lower total cost',
   'home.pricingTable.badgeSavings': 'Max savings',
   'home.pricingTable.badgeSavingsValue': '{percent}% off',
+  'home.pricingTable.currencyNote': 'Converted at 1 USD = CNY {rate}.',
   'home.pricingTable.note': 'Final billing follows the dashboard price.',
   'home.pricingTable.table.model': 'Model',
   'home.pricingTable.table.group': 'Group',
@@ -18,8 +19,8 @@ const translations: Record<string, string> = {
   'home.pricingTable.table.output': 'Output / 1M',
   'home.pricingTable.table.cacheWrite': 'Cache write / 1M',
   'home.pricingTable.table.cacheRead': 'Cache read / 1M',
-  'home.pricingTable.table.vsOfficial': 'vs official',
-  'home.pricingTable.table.savings': '{percent}% off',
+  'home.pricingTable.table.discountHeader': 'vs official',
+  'home.pricingTable.table.discount': '{percent}% off',
   'home.pricingTable.table.perRequest': '{price} / request',
   'home.pricingTable.table.perImage': '{price} / image',
   'home.pricingTable.table.modelCount': '{count} models',
@@ -54,9 +55,18 @@ vi.mock('vue-i18n', async () => {
 })
 
 const getPublicPricing = vi.fn()
+const fetchPublicCurrencyRates = vi.fn()
 vi.mock('@/api/pricing', () => ({
   getPublicPricing: (...args: unknown[]) => getPublicPricing(...args),
+  fetchPublicCurrencyRates: (...args: unknown[]) => fetchPublicCurrencyRates(...args),
 }))
+
+vi.mock('@/stores/app', () => ({
+  useAppStore: () => ({ cachedPublicSettings: { purchase_subscription_url: '/pay' } }),
+}))
+
+/** 默认：拿不到汇率 → 组件回退美元展示。需要人民币的用例单独覆盖。 */
+const NO_RATES = { balanceCreditCnyPerUsd: null, usdExchangeRate: null }
 
 function makeItem(overrides: Partial<PublicPricingItem> = {}): PublicPricingItem {
   return {
@@ -96,6 +106,8 @@ function makeResponse(items: PublicPricingItem[]): PublicPricingResponse {
 describe('HomePricingSection', () => {
   beforeEach(() => {
     getPublicPricing.mockReset()
+    fetchPublicCurrencyRates.mockReset()
+    fetchPublicCurrencyRates.mockResolvedValue(NO_RATES)
   })
 
   it('renders real prices returned by the public endpoint', async () => {
@@ -161,8 +173,8 @@ describe('HomePricingSection', () => {
     expect(wrapper.text()).not.toContain('Worse')
   })
 
-  // 没有官方参考价时后端不下发 savings_percent，对比列显示占位而不是编造的比例。
-  it('shows no savings badge when the backend omits savings_percent', async () => {
+  // 没有官方参考价时后端不下发 savings_percent，折扣列显示占位而不是编造的比例。
+  it('shows no discount badge when the backend omits savings_percent', async () => {
     getPublicPricing.mockResolvedValue(
       makeResponse([
         makeItem({ comparison: { savings_percent: null, is_cheaper_than_official: false } }),
@@ -174,6 +186,53 @@ describe('HomePricingSection', () => {
 
     expect(wrapper.text()).not.toContain('% off')
     expect(wrapper.text()).toContain('—')
+  })
+
+  // 拿到汇率时价格换算成人民币，并说明换算比例。
+  it('renders prices in CNY when the anonymous rate endpoint returns a rate', async () => {
+    getPublicPricing.mockResolvedValue(makeResponse([makeItem()]))
+    fetchPublicCurrencyRates.mockResolvedValue({
+      balanceCreditCnyPerUsd: 7.2,
+      usdExchangeRate: 7.2,
+    })
+
+    const wrapper = mount(HomePricingSection)
+    await flushPromises()
+
+    const text = wrapper.text()
+    // $2.40 × 7.2 = ¥17.28，$12 × 7.2 = ¥86.40
+    expect(text).toContain('¥17.28')
+    expect(text).toContain('¥86.40')
+    expect(text).not.toContain('$2.40')
+    expect(text).toContain('Converted at 1 USD = CNY 7.20.')
+  })
+
+  // 汇率端点不可用（未部署/未配置/超时）时回退美元，价目表本身不受影响。
+  it('falls back to USD when the rate endpoint is unavailable', async () => {
+    getPublicPricing.mockResolvedValue(makeResponse([makeItem()]))
+    fetchPublicCurrencyRates.mockRejectedValue(new Error('pay service down'))
+
+    const wrapper = mount(HomePricingSection)
+    await flushPromises()
+
+    const text = wrapper.text()
+    expect(text).toContain('$2.40')
+    expect(text).not.toContain('¥')
+    expect(text).not.toContain('Converted at')
+  })
+
+  // 汇率只有 usdExchangeRate 时也能用（balanceCreditCnyPerUsd 缺省回退到它）。
+  it('uses usdExchangeRate when balanceCreditCnyPerUsd is absent', async () => {
+    getPublicPricing.mockResolvedValue(makeResponse([makeItem()]))
+    fetchPublicCurrencyRates.mockResolvedValue({
+      balanceCreditCnyPerUsd: null,
+      usdExchangeRate: 7,
+    })
+
+    const wrapper = mount(HomePricingSection)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('¥16.80')
   })
 
   it('renders per-request pricing for non-token billing modes', async () => {

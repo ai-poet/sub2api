@@ -52,7 +52,7 @@
                   <th scope="col" class="px-4 py-3 text-right font-medium">{{ t('home.pricingTable.table.output') }}</th>
                   <th scope="col" class="px-4 py-3 text-right font-medium">{{ t('home.pricingTable.table.cacheWrite') }}</th>
                   <th scope="col" class="px-4 py-3 text-right font-medium">{{ t('home.pricingTable.table.cacheRead') }}</th>
-                  <th scope="col" class="px-4 py-3 text-right font-medium">{{ t('home.pricingTable.table.vsOfficial') }}</th>
+                  <th scope="col" class="px-4 py-3 text-right font-medium">{{ t('home.pricingTable.table.discountHeader') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -85,9 +85,9 @@
 
                   <td class="px-4 py-3 text-right">
                     <span
-                      v-if="savingsLabel(row)"
+                      v-if="discountLabel(row)"
                       class="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
-                    >{{ savingsLabel(row) }}</span>
+                    >{{ discountLabel(row) }}</span>
                     <span v-else class="text-xs text-[#7a7268] dark:text-white/40">—</span>
                   </td>
                 </tr>
@@ -144,6 +144,9 @@
       </div>
 
       <p class="mt-8 text-xs leading-6 text-[#7a7268] dark:text-white/45">
+        <span v-if="hasPricing && cnyPerUsd != null">
+          {{ t('home.pricingTable.currencyNote', { rate: cnyPerUsd.toFixed(2) }) }}
+        </span>
         {{ t('home.pricingTable.note') }}
       </p>
     </div>
@@ -153,16 +156,20 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { getPublicPricing, type PublicPricingItem } from '@/api/pricing'
+import { fetchPublicCurrencyRates, getPublicPricing, type PublicPricingItem } from '@/api/pricing'
+import { useAppStore } from '@/stores/app'
 import { formatScaled } from '@/utils/pricing'
 
 const { t } = useI18n()
+const appStore = useAppStore()
 
 /** 首屏默认展示的模型条数，避免落地页被上百行价目表撑爆。 */
 const COLLAPSED_LIMIT = 12
 
 const items = ref<PublicPricingItem[]>([])
 const expanded = ref(false)
+/** 1 USD 折合人民币。拿不到时为 null，价格回退为美元展示。 */
+const cnyPerUsd = ref<number | null>(null)
 let controller: AbortController | null = null
 
 /**
@@ -218,50 +225,96 @@ const badgeLabel = computed(() =>
     : t('home.pricingTable.badge')
 )
 
-const badgeValue = computed(() =>
-  hasPricing.value && maxSavings.value > 0
-    ? t('home.pricingTable.badgeSavingsValue', { percent: maxSavings.value.toFixed(0) })
-    : t('home.pricingTable.badgeValue')
-)
+const badgeValue = computed(() => {
+  if (!hasPricing.value || maxSavings.value <= 0) return t('home.pricingTable.badgeValue')
+  const discount = (100 - maxSavings.value) / 10
+  return t('home.pricingTable.badgeSavingsValue', {
+    discount: stripTrailingZero(discount.toFixed(1)),
+    percent: maxSavings.value.toFixed(maxSavings.value < 10 ? 1 : 0),
+  })
+})
 
 function isTokenBilling(row: PublicPricingItem): boolean {
   return row.billing_mode === 'token' || row.billing_mode === ''
 }
 
-/** 每 100 万 token 的价格。后端下发的 *_per_mtok_usd 已是「每 100 万 token 美元数」，
- *  这里只做格式化，不再换算（scale = 1）。 */
+/**
+ * 金额展示。拿到汇率时换算成人民币，否则回退美元。
+ * 极小金额（不足 1 分）多保留两位小数，避免直接显示成 ¥0.00。
+ */
+function money(valueUsd: number | null): string {
+  if (valueUsd == null) return '—'
+  const rate = cnyPerUsd.value
+  if (rate == null) return formatScaled(valueUsd, 1, 2)
+  const cny = valueUsd * rate
+  const abs = Math.abs(cny)
+  return `¥${cny.toFixed(abs > 0 && abs < 0.01 ? 4 : 2)}`
+}
+
+/** 每 100 万 token 的价格。后端下发的 *_per_mtok_usd 已是「每 100 万 token」的金额。 */
 function perMTok(value: number | null): string {
-  return value == null ? '—' : formatScaled(value, 1, 2)
+  return money(value)
 }
 
 /** 按次 / 按张计费模型的单价。 */
 function flatPrice(row: PublicPricingItem): string {
   const pricing = row.effective_pricing_usd
   if (pricing.per_image_usd != null) {
-    return t('home.pricingTable.table.perImage', { price: formatScaled(pricing.per_image_usd, 1, 2) })
+    return t('home.pricingTable.table.perImage', { price: money(pricing.per_image_usd) })
   }
   if (pricing.per_request_usd != null) {
-    return t('home.pricingTable.table.perRequest', { price: formatScaled(pricing.per_request_usd, 1, 2) })
+    return t('home.pricingTable.table.perRequest', { price: money(pricing.per_request_usd) })
   }
   return '—'
 }
 
-/** 只有后端确实下发了省钱比例（即存在官方参考价）时才展示对比。 */
-function savingsLabel(row: PublicPricingItem): string {
+/**
+ * 折扣展示。后端只在存在官方参考价时才下发 savings_percent，因此这里不会凭空造对比。
+ *
+ * 中文按「折」的习惯表达（8.5 折 = 官方价的 85%），英文用「% off」——
+ * 两个 param 都传，各语言各取所需。
+ */
+function discountLabel(row: PublicPricingItem): string {
   const percent = row.comparison.savings_percent
   if (percent == null || percent <= 0) return ''
-  return t('home.pricingTable.table.savings', { percent: percent.toFixed(0) })
+  // 8.5 折 = 官方价的 85%，即省 15%
+  const discount = (100 - percent) / 10
+  return t('home.pricingTable.table.discount', {
+    discount: stripTrailingZero(discount.toFixed(1)),
+    percent: percent.toFixed(percent < 10 ? 1 : 0),
+  })
+}
+
+/** "8.0" → "8"，"8.5" 保持不变。 */
+function stripTrailingZero(s: string): string {
+  return s.replace(/\.0$/, '')
 }
 
 onMounted(async () => {
   controller = new AbortController()
+  const signal = controller.signal
+
+  // 汇率与定价并行拉取。汇率失败只影响币种展示（回退美元），不影响价目表本身。
+  const ratesPromise = fetchPublicCurrencyRates({
+    purchaseSubscriptionUrl: appStore.cachedPublicSettings?.purchase_subscription_url,
+    signal,
+  })
+    .then((rates) => {
+      cnyPerUsd.value = rates.balanceCreditCnyPerUsd ?? rates.usdExchangeRate
+    })
+    .catch(() => {
+      cnyPerUsd.value = null
+    })
+
   try {
-    const res = await getPublicPricing({ signal: controller.signal })
+    const res = await getPublicPricing({ signal })
     items.value = res?.items ?? []
   } catch {
     // 落地页对访客必须永远可用：拉取失败就静默回落到静态文案卡片。
     items.value = []
   }
+
+  await ratesPromise
 })
 
 onUnmounted(() => {
