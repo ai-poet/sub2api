@@ -227,11 +227,8 @@ const badgeLabel = computed(() =>
 
 const badgeValue = computed(() => {
   if (!hasPricing.value || maxSavings.value <= 0) return t('home.pricingTable.badgeValue')
-  const discount = (100 - maxSavings.value) / 10
-  return t('home.pricingTable.badgeSavingsValue', {
-    discount: stripTrailingZero(discount.toFixed(1)),
-    percent: maxSavings.value.toFixed(maxSavings.value < 10 ? 1 : 0),
-  })
+  // maxSavings 是最大省钱小数 → 对应最低的折扣，正是「低至 X 折」要的数
+  return t('home.pricingTable.badgeSavingsValue', discountParams(maxSavings.value))
 })
 
 function isTokenBilling(row: PublicPricingItem): boolean {
@@ -271,23 +268,39 @@ function flatPrice(row: PublicPricingItem): string {
 /**
  * 折扣展示。后端只在存在官方参考价时才下发 savings_percent，因此这里不会凭空造对比。
  *
- * 中文按「折」的习惯表达（8.5 折 = 官方价的 85%），英文用「% off」——
- * 两个 param 都传，各语言各取所需。
+ * ⚠️ savings_percent 名字叫 percent，实际是 `1 - effective/official` 的**小数**
+ * （后端 savingsPercentPtr）。倍率 0.18 的分组会下发 0.82，不是 82。
+ * 折扣 = (1 - savings) × 10：0.82 → 1.8 折，0.30 → 7 折。
+ *
+ * 中文按「折」的习惯表达，英文用「% off」——两个 param 都传，各语言各取所需。
  */
 function discountLabel(row: PublicPricingItem): string {
-  const percent = row.comparison.savings_percent
-  if (percent == null || percent <= 0) return ''
-  // 8.5 折 = 官方价的 85%，即省 15%
-  const discount = (100 - percent) / 10
-  return t('home.pricingTable.table.discount', {
-    discount: stripTrailingZero(discount.toFixed(1)),
-    percent: percent.toFixed(percent < 10 ? 1 : 0),
-  })
+  return formatDiscount(row.comparison.savings_percent)
 }
 
-/** "8.0" → "8"，"8.5" 保持不变。 */
-function stripTrailingZero(s: string): string {
-  return s.replace(/\.0$/, '')
+function formatDiscount(savings: number | null): string {
+  if (savings == null || savings <= 0) return ''
+  return t('home.pricingTable.table.discount', discountParams(savings))
+}
+
+/** 由省钱小数算出「折」与「% off」两种表达。 */
+function discountParams(savings: number): { discount: string; percent: string } {
+  const ratio = (1 - savings) * 10
+  const percentOff = savings * 100
+  return {
+    discount: formatDiscountRatio(ratio),
+    percent: percentOff < 10 ? percentOff.toFixed(1) : percentOff.toFixed(0),
+  }
+}
+
+/**
+ * "8.0" → "8"，"1.8" 保持。折扣极小时一位小数会四舍五入成 "10"（等于没打折），
+ * 这种情况多给一位小数，避免显示成明显错误的「10 折」。
+ */
+function formatDiscountRatio(ratio: number): string {
+  let s = ratio.toFixed(1)
+  if (Number(s) >= 10) s = ratio.toFixed(2)
+  return s.replace(/\.0+$/, '')
 }
 
 onMounted(async () => {
