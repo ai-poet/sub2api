@@ -115,6 +115,14 @@ export default {
         presignExpiryHours: 'Presigned link TTL (hours)',
         saved: 'Async image object storage saved'
       },
+      invoiceStorage: {
+        title: 'Invoice file storage',
+        description:
+          'Object storage for issued invoice files. Configured separately from backups: changing it cannot affect database backups, so saving does not require a step-up challenge. Reuses the backup credentials above by default, or point it at a different bucket or provider entirely.',
+        reuseBackupS3: 'Reuse the backup S3 configuration above (different bucket/prefix only)',
+        prefixHint: 'Key prefix for invoice objects; must not overlap the backup prefix',
+        saved: 'Invoice file storage saved'
+      },
       schedule: {
         title: 'Scheduled Backup',
         description: 'Configure automatic scheduled backups',

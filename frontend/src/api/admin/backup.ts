@@ -106,6 +106,55 @@ export async function testImageStorageConnection(
   return data
 }
 
+// Invoice file object storage
+//
+// Kept separate from the backup S3 config on purpose: changing the backup target can
+// redirect the whole database, while changing this one only affects where newly
+// uploaded invoice files land. That is why these endpoints are not step-up gated.
+// `reuse_backup_s3` borrows the endpoint and credentials configured above.
+export interface InvoiceStorageConfig {
+  reuse_backup_s3: boolean
+  bucket: string
+  prefix: string
+  endpoint: string
+  region: string
+  access_key_id: string
+  secret_access_key?: string
+  force_path_style: boolean
+}
+
+export interface InvoiceStorageConfigResponse {
+  config: InvoiceStorageConfig
+  secret_configured: boolean
+}
+
+export async function getInvoiceStorageConfig(): Promise<InvoiceStorageConfigResponse> {
+  const { data } = await apiClient.get<InvoiceStorageConfigResponse>(
+    '/admin/backups/invoice-storage',
+  )
+  return data
+}
+
+export async function updateInvoiceStorageConfig(
+  config: InvoiceStorageConfig,
+): Promise<InvoiceStorageConfig> {
+  const { data } = await apiClient.put<InvoiceStorageConfig>(
+    '/admin/backups/invoice-storage',
+    config,
+  )
+  return data
+}
+
+export async function testInvoiceStorageConnection(
+  config: InvoiceStorageConfig,
+): Promise<TestS3Response> {
+  const { data } = await apiClient.post<TestS3Response>(
+    '/admin/backups/invoice-storage/test',
+    config,
+  )
+  return data
+}
+
 // Schedule
 export async function getSchedule(): Promise<BackupScheduleConfig> {
   const { data } = await apiClient.get<BackupScheduleConfig>('/admin/backups/schedule')
@@ -155,6 +204,9 @@ export const backupAPI = {
   getImageStorageConfig,
   updateImageStorageConfig,
   testImageStorageConnection,
+  getInvoiceStorageConfig,
+  updateInvoiceStorageConfig,
+  testInvoiceStorageConnection,
   getSchedule,
   updateSchedule,
   createBackup,

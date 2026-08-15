@@ -129,6 +129,69 @@
         </div>
       </div>
 
+      <!-- Invoice file object storage -->
+      <div class="card p-6">
+        <div class="mb-4">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            {{ t('admin.backup.invoiceStorage.title') }}
+          </h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {{ t('admin.backup.invoiceStorage.description') }}
+          </p>
+        </div>
+
+        <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input v-model="invoiceStorageForm.reuse_backup_s3" type="checkbox" />
+          <span>{{ t('admin.backup.invoiceStorage.reuseBackupS3') }}</span>
+        </label>
+
+        <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.bucket') }}</label>
+            <input v-model="invoiceStorageForm.bucket" class="input w-full" :placeholder="invoiceStorageForm.reuse_backup_s3 ? t('admin.backup.imageStorage.bucketInherited') : ''" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.prefix') }}</label>
+            <input v-model="invoiceStorageForm.prefix" class="input w-full" placeholder="invoices/" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.backup.invoiceStorage.prefixHint') }}
+            </p>
+          </div>
+
+          <template v-if="!invoiceStorageForm.reuse_backup_s3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.endpoint') }}</label>
+              <input v-model="invoiceStorageForm.endpoint" class="input w-full" placeholder="https://<account_id>.r2.cloudflarestorage.com" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.region') }}</label>
+              <input v-model="invoiceStorageForm.region" class="input w-full" placeholder="auto" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.accessKeyId') }}</label>
+              <input v-model="invoiceStorageForm.access_key_id" class="input w-full" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.secretAccessKey') }}</label>
+              <input v-model="invoiceStorageForm.secret_access_key" type="password" class="input w-full" :placeholder="invoiceStorageSecretConfigured ? t('admin.backup.s3.secretConfigured') : ''" />
+            </div>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 md:col-span-2">
+              <input v-model="invoiceStorageForm.force_path_style" type="checkbox" />
+              <span>{{ t('admin.backup.s3.forcePathStyle') }}</span>
+            </label>
+          </template>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" :disabled="testingInvoiceStorage" @click="testInvoiceStorage">
+            {{ testingInvoiceStorage ? t('common.loading') : t('admin.backup.s3.testConnection') }}
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" :disabled="savingInvoiceStorage" @click="saveInvoiceStorageConfig">
+            {{ savingInvoiceStorage ? t('common.loading') : t('common.save') }}
+          </button>
+        </div>
+      </div>
+
       <!-- Schedule Config -->
       <div class="card p-6">
         <div class="mb-4">
@@ -364,6 +427,7 @@ import type {
   BackupScheduleConfig,
   BackupRecord,
   ImageStorageConfig,
+  InvoiceStorageConfig,
 } from '@/api/admin/backup'
 import { useStepUp, isStepUpBlocked, isStepUpCancelled, stepUpBlockReason } from '@/composables/useStepUp'
 import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
@@ -416,6 +480,22 @@ const imageStorageForm = ref<ImageStorageConfig>({
 const imageStorageSecretConfigured = ref(false)
 const savingImageStorage = ref(false)
 const testingImageStorage = ref(false)
+
+// Invoice file object storage. Separate from the backup config on purpose — see the
+// note on the API client — and therefore saved without a step-up challenge.
+const invoiceStorageForm = ref<InvoiceStorageConfig>({
+  reuse_backup_s3: true,
+  bucket: '',
+  prefix: 'invoices/',
+  endpoint: '',
+  region: 'auto',
+  access_key_id: '',
+  secret_access_key: '',
+  force_path_style: false,
+})
+const invoiceStorageSecretConfigured = ref(false)
+const savingInvoiceStorage = ref(false)
+const testingInvoiceStorage = ref(false)
 
 // Schedule config
 const scheduleForm = ref<BackupScheduleConfig>({
@@ -633,6 +713,51 @@ async function testImageStorage() {
   }
 }
 
+async function loadInvoiceStorageConfig() {
+  try {
+    const { config, secret_configured } = await adminAPI.backup.getInvoiceStorageConfig()
+    invoiceStorageForm.value = {
+      ...config,
+      prefix: config.prefix || 'invoices/',
+      region: config.region || 'auto',
+      secret_access_key: '',
+    }
+    invoiceStorageSecretConfigured.value = secret_configured
+  } catch (error) {
+    appStore.showError((error as { message?: string })?.message || t('errors.networkError'))
+  }
+}
+
+async function saveInvoiceStorageConfig() {
+  savingInvoiceStorage.value = true
+  try {
+    // 无 step-up：改发票存储目标影响不到数据库备份，后端另有前缀重叠校验兜底。
+    await adminAPI.backup.updateInvoiceStorageConfig(invoiceStorageForm.value)
+    appStore.showSuccess(t('admin.backup.invoiceStorage.saved'))
+    await loadInvoiceStorageConfig()
+  } catch (error) {
+    appStore.showError((error as { message?: string })?.message || t('errors.networkError'))
+  } finally {
+    savingInvoiceStorage.value = false
+  }
+}
+
+async function testInvoiceStorage() {
+  testingInvoiceStorage.value = true
+  try {
+    const result = await adminAPI.backup.testInvoiceStorageConnection(invoiceStorageForm.value)
+    if (result.ok) {
+      appStore.showSuccess(result.message || t('admin.backup.s3.testSuccess'))
+    } else {
+      appStore.showError(result.message || t('admin.backup.s3.testFailed'))
+    }
+  } catch (error) {
+    appStore.showError((error as { message?: string })?.message || t('errors.networkError'))
+  } finally {
+    testingInvoiceStorage.value = false
+  }
+}
+
 async function testS3() {
   testingS3.value = true
   try {
@@ -790,7 +915,13 @@ function formatDate(value?: string): string {
 
 onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
-  await Promise.all([loadS3Config(), loadImageStorageConfig(), loadSchedule(), loadBackups()])
+  await Promise.all([
+    loadS3Config(),
+    loadImageStorageConfig(),
+    loadInvoiceStorageConfig(),
+    loadSchedule(),
+    loadBackups(),
+  ])
 
   // 如果有正在 running 的备份，恢复轮询
   const runningBackup = backups.value.find(r => r.status === 'running')

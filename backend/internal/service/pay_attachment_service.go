@@ -13,13 +13,12 @@ import (
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
 
-// PayAttachmentPrefix 是支付服务附件在对象存储中的顶层前缀。
+// 发票附件的对象前缀由 InvoiceStorageSettingService 提供（后台可配置，默认
+// DefaultInvoiceStoragePrefix）。
 //
-// 它刻意放在备份配置的 Prefix（通常 "backups/"）之外：备份保留策略
-// （cleanupOldBackups）按 Prefix 枚举并删除过期对象，发票必须不在其射程内。
-// 同时它也是 presign/delete 的授权边界——只有该前缀下的 key 才允许签名或删除，
-// 否则持有内部桥接令牌即可读走整库备份。
-const PayAttachmentPrefix = "pay-attachments/"
+// 它同时是 presign/delete 的授权边界——只有该前缀下的 key 才允许签名或删除。
+// 没有这条边界，持有内部桥接令牌就能为同一个桶里的数据库备份签发下载链接；
+// 因此设置项那侧还会拒绝与备份前缀重叠的取值。
 
 // MaxPayAttachmentBytes 单个附件上限（10 MiB）。发票 PDF/OFD 通常在 1 MiB 内。
 const MaxPayAttachmentBytes = 10 << 20
@@ -94,15 +93,15 @@ type PayAttachmentStoreFactory func(ctx context.Context, cfg *BackupS3Config) (P
 
 // PayAttachmentService 为支付服务（sub2apipay）提供对象存储读写能力。
 //
-// 凭证直接复用「系统设置 → 备份 → S3 配置」，因此管理员只需配置一次对象存储，
-// 发票附件即可用；这也避免了在支付服务里再存一份 S3 密钥。
+// 凭证与前缀来自独立的「发票文件存储」设置（InvoiceStorageSettingService），
+// 默认复用备份 S3 的凭证，也可以整套单独配置到别的桶或别的服务商。
 type PayAttachmentService struct {
-	backup  *BackupService
-	factory PayAttachmentStoreFactory
+	settings *InvoiceStorageSettingService
+	factory  PayAttachmentStoreFactory
 }
 
-func NewPayAttachmentService(backup *BackupService, factory PayAttachmentStoreFactory) *PayAttachmentService {
-	return &PayAttachmentService{backup: backup, factory: factory}
+func NewPayAttachmentService(settings *InvoiceStorageSettingService, factory PayAttachmentStoreFactory) *PayAttachmentService {
+	return &PayAttachmentService{settings: settings, factory: factory}
 }
 
 // PayAttachmentPutInput 描述一次附件上传。
@@ -150,12 +149,12 @@ func (s *PayAttachmentService) Put(ctx context.Context, in PayAttachmentPutInput
 		return nil, ErrPayAttachmentContentMismatch
 	}
 
-	store, err := s.store(ctx)
+	store, prefix, err := s.resolve(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := buildPayAttachmentKey(scope, ref, ext)
+	key, err := buildPayAttachmentKey(prefix, ref, ext)
 	if err != nil {
 		return nil, err
 	}
@@ -173,13 +172,14 @@ func (s *PayAttachmentService) Put(ctx context.Context, in PayAttachmentPutInput
 
 // Presign 为已上传的附件生成短期下载链接。
 func (s *PayAttachmentService) Presign(ctx context.Context, key, downloadName string, ttl time.Duration) (string, time.Time, error) {
-	if err := validatePayAttachmentKey(key); err != nil {
-		return "", time.Time{}, err
-	}
 	ttl = clampPresignTTL(ttl)
 
-	store, err := s.store(ctx)
+	store, prefix, err := s.resolve(ctx)
 	if err != nil {
+		return "", time.Time{}, err
+	}
+	// 前缀校验必须在解析出当前前缀之后做：它是授权边界，不能用调用方给的值。
+	if err := validatePayAttachmentKey(key, prefix); err != nil {
 		return "", time.Time{}, err
 	}
 	url, err := store.PresignDownloadURL(ctx, key, downloadName, ttl)
@@ -191,50 +191,55 @@ func (s *PayAttachmentService) Presign(ctx context.Context, key, downloadName st
 
 // Delete 删除附件对象（用于回滚孤儿对象、或替换文件后清理旧对象）。
 func (s *PayAttachmentService) Delete(ctx context.Context, key string) error {
-	if err := validatePayAttachmentKey(key); err != nil {
+	store, prefix, err := s.resolve(ctx)
+	if err != nil {
 		return err
 	}
-	store, err := s.store(ctx)
-	if err != nil {
+	if err := validatePayAttachmentKey(key, prefix); err != nil {
 		return err
 	}
 	return store.Delete(ctx, key)
 }
 
-// store 每次现建客户端。
+// resolve 取出当前生效的存储客户端与对象前缀。
 //
-// 刻意不缓存：BackupService.getOrCreateStore 自带缓存并在管理员改 S3 配置时失效，
-// 这里再存一份就会在改配置后读到陈旧凭证。发票流量只有每天个位数，而 S3 客户端
-// 构造是纯本地操作（不发网络请求），因此现建的代价可以忽略。
-func (s *PayAttachmentService) store(ctx context.Context) (PayAttachmentStore, error) {
-	if s == nil || s.backup == nil || s.factory == nil {
-		return nil, ErrPayAttachmentStorageNotConfigured
+// 每次现建客户端，刻意不缓存客户端本身：设置服务已经缓存了解析后的配置并在管理员
+// 改设置时失效，这里再存一份就会在改配置后读到陈旧凭证。发票流量只有每天个位数，
+// 而 S3 客户端构造是纯本地操作（不发网络请求），现建的代价可以忽略。
+func (s *PayAttachmentService) resolve(ctx context.Context) (PayAttachmentStore, string, error) {
+	if s == nil || s.settings == nil || s.factory == nil {
+		return nil, "", ErrPayAttachmentStorageNotConfigured
 	}
-	cfg, err := s.backup.loadS3Config(ctx)
+	cfg, prefix, ok := s.settings.Resolve(ctx)
+	if !ok {
+		return nil, "", ErrPayAttachmentStorageNotConfigured
+	}
+	store, err := s.factory(ctx, cfg)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	if cfg == nil || !cfg.IsConfigured() {
-		return nil, ErrPayAttachmentStorageNotConfigured
-	}
-	return s.factory(ctx, cfg)
+	return store, prefix, nil
 }
 
 // buildPayAttachmentKey 完全由服务端拼 key，不含任何客户端可控的自由文本。
-// 形如 pay-attachments/invoice/2026/08/<ref>-<rand8>.pdf
-func buildPayAttachmentKey(scope, ref, ext string) (string, error) {
+// 形如 invoices/2026/08/<ref>-<rand8>.pdf
+//
+// scope 没有出现在路径里：前缀本身就是命名空间，由管理员配置。若将来新增第二种
+// scope，需要把 scope 重新拼回路径，否则两类附件会混在同一前缀下。
+func buildPayAttachmentKey(prefix, ref, ext string) (string, error) {
 	suffix := make([]byte, 4)
 	if _, err := rand.Read(suffix); err != nil {
 		return "", infraerrors.InternalServer("PAY_ATTACHMENT_KEY_FAILED", "failed to generate attachment key")
 	}
 	now := time.Now().UTC()
-	return PayAttachmentPrefix + scope + "/" + now.Format("2006/01") + "/" + ref + "-" + hex.EncodeToString(suffix) + ext, nil
+	return prefix + now.Format("2006/01") + "/" + ref + "-" + hex.EncodeToString(suffix) + ext, nil
 }
 
-// validatePayAttachmentKey 是 presign/delete 的授权边界。
-func validatePayAttachmentKey(key string) error {
+// validatePayAttachmentKey 是 presign/delete 的授权边界。prefix 必须来自当前生效的
+// 设置，不能取调用方传入的值。
+func validatePayAttachmentKey(key, prefix string) error {
 	key = strings.TrimSpace(key)
-	if key == "" || !strings.HasPrefix(key, PayAttachmentPrefix) {
+	if key == "" || prefix == "" || !strings.HasPrefix(key, prefix) {
 		return ErrPayAttachmentInvalidKey
 	}
 	// path.Clean 会把 "a/../../b" 规约掉，规约后仍必须落在前缀内。
