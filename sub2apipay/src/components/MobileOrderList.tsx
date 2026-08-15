@@ -6,7 +6,9 @@ import type { Locale } from '@/lib/locale';
 import {
   formatStatus,
   formatCreatedAt,
+  formatInvoiceStatus,
   getStatusBadgeClass,
+  getInvoiceStatusBadgeClass,
   getPaymentDisplayInfo,
   type MyOrder,
   type OrderStatusFilter,
@@ -21,6 +23,9 @@ interface MobileOrderListProps {
   onRefresh: () => void;
   onLoadMore: () => void;
   locale?: Locale;
+  /** 未提供时不显示开票入口（开票功能关闭或调用方不支持）。 */
+  onInvoiceRequest?: (order: MyOrder) => void;
+  onInvoiceDownload?: (invoiceId: string) => void;
 }
 
 export default function MobileOrderList({
@@ -32,6 +37,8 @@ export default function MobileOrderList({
   onRefresh,
   onLoadMore,
   locale = 'zh',
+  onInvoiceRequest,
+  onInvoiceDownload,
 }: MobileOrderListProps) {
   const [activeFilter, setActiveFilter] = useState<OrderStatusFilter>('ALL');
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -125,6 +132,49 @@ export default function MobileOrderList({
               <div className={['mt-0.5 text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                 {formatCreatedAt(order.createdAt, locale)}
               </div>
+              {onInvoiceRequest && (
+                <div className="mt-2 flex items-center gap-2">
+                  {order.invoice && order.invoice.status !== 'CANCELLED' && order.invoice.status !== 'REJECTED' ? (
+                    <>
+                      <span
+                        className={[
+                          'rounded-full px-2 py-0.5 text-xs',
+                          getInvoiceStatusBadgeClass(order.invoice.status, isDark),
+                        ].join(' ')}
+                      >
+                        {formatInvoiceStatus(order.invoice.status, locale)}
+                      </span>
+                      {order.invoice.status === 'ISSUED' && order.invoice.hasFile && onInvoiceDownload && (
+                        <button
+                          type="button"
+                          onClick={() => onInvoiceDownload(order.invoice!.id)}
+                          className={[
+                            'rounded px-2 py-1 text-xs',
+                            isDark
+                              ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
+                          ].join(' ')}
+                        >
+                          {locale === 'en' ? 'Download invoice' : '下载发票'}
+                        </button>
+                      )}
+                    </>
+                  ) : order.canRequestInvoice ? (
+                    <button
+                      type="button"
+                      onClick={() => onInvoiceRequest(order)}
+                      className={[
+                        'rounded px-2 py-1 text-xs',
+                        isDark
+                          ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+                      ].join(' ')}
+                    >
+                      {locale === 'en' ? 'Request invoice' : '申请开票'}
+                    </button>
+                  ) : null}
+                </div>
+              )}
             </div>
           ))}
 

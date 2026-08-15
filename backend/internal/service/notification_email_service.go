@@ -27,6 +27,7 @@ const (
 	NotificationEmailEventSubscriptionExpiryReminder  = "subscription.expiry_reminder"
 	NotificationEmailEventBalanceLow                  = "balance.low"
 	NotificationEmailEventBalanceRechargeSuccess      = "balance.recharge_success"
+	NotificationEmailEventBillingInvoiceReady         = "billing.invoice_ready"
 	NotificationEmailEventAccountQuotaAlert           = "account.quota_alert"
 	NotificationEmailEventContentModerationViolation  = "content_moderation.violation_notice"
 	NotificationEmailEventContentModerationDisabled   = "content_moderation.account_disabled"
@@ -913,6 +914,11 @@ func notificationEmailSampleVariables(locale string) map[string]string {
 			"recharge_url":        "https://example.com/recharge",
 			"recharge_amount":     "50.00",
 			"order_id":            "1024",
+			"invoice_amount":      "¥128.00",
+			"invoice_title":       "某某科技有限公司",
+			"invoice_tax_no":      "91310000MA1FL1XXXX",
+			"invoice_issued_at":   "2026-08-15 10:30",
+			"invoice_url":         "https://example.com/purchase",
 			"unsubscribe_url":     "https://example.com/unsubscribe",
 			"account_id":          "1001",
 			"account_name":        "openai-main",
@@ -961,6 +967,11 @@ func notificationEmailSampleVariables(locale string) map[string]string {
 		"recharge_url":        "https://example.com/recharge",
 		"recharge_amount":     "50.00",
 		"order_id":            "1024",
+		"invoice_amount":      "¥128.00",
+		"invoice_title":       "Acme Technology Co., Ltd.",
+		"invoice_tax_no":      "91310000MA1FL1XXXX",
+		"invoice_issued_at":   "2026-08-15 10:30",
+		"invoice_url":         "https://example.com/purchase",
 		"unsubscribe_url":     "https://example.com/unsubscribe",
 		"account_id":          "1001",
 		"account_name":        "openai-main",
@@ -1028,6 +1039,7 @@ var notificationEmailEventOrder = []string{
 	NotificationEmailEventSubscriptionExpiryReminder,
 	NotificationEmailEventBalanceLow,
 	NotificationEmailEventBalanceRechargeSuccess,
+	NotificationEmailEventBillingInvoiceReady,
 	NotificationEmailEventAccountQuotaAlert,
 	NotificationEmailEventContentModerationViolation,
 	NotificationEmailEventContentModerationDisabled,
@@ -1092,6 +1104,17 @@ var notificationEmailEventDefinitions = map[string]NotificationEmailEventInfo{
 		Category:     "billing",
 		Optional:     false,
 		Placeholders: append(append([]string{}, notificationEmailCommonPlaceholders...), "recharge_amount", "current_balance", "order_id"),
+	},
+	NotificationEmailEventBillingInvoiceReady: {
+		Event:       NotificationEmailEventBillingInvoiceReady,
+		Label:       "Invoice ready",
+		Description: "Sent when an admin issues the VAT invoice requested for a paid order.",
+		Category:    "billing",
+		// Transactional: the user explicitly asked for this invoice, so it must
+		// not be silenced by the unsubscribe preference.
+		Optional: false,
+		Placeholders: append(append([]string{}, notificationEmailCommonPlaceholders...),
+			"invoice_amount", "invoice_title", "invoice_tax_no", "order_id", "invoice_issued_at", "invoice_url"),
 	},
 	NotificationEmailEventAccountQuotaAlert: {
 		Event:       NotificationEmailEventAccountQuotaAlert,
@@ -1290,6 +1313,38 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 <p>您的余额充值 <strong>${{recharge_amount}}</strong> 已完成。</p>
 <p>当前余额：<strong>${{current_balance}}</strong></p>
 			<p>订单号：{{order_id}}</p>`),
+		},
+	},
+	NotificationEmailEventBillingInvoiceReady: {
+		notificationEmailDefaultLocale: {
+			Subject: "[{{site_name}}] Your invoice is ready",
+			HTML: notificationEmailCard("#2563eb", "Invoice ready", `
+<p>Hello {{recipient_name}},</p>
+<p>The invoice you requested has been issued and is ready to download.</p>
+<table style="width:100%;border-collapse:collapse;">
+  <tr><td>Invoice title</td><td>{{invoice_title}}</td></tr>
+  <tr><td>Tax ID</td><td>{{invoice_tax_no}}</td></tr>
+  <tr><td>Amount</td><td>{{invoice_amount}}</td></tr>
+  <tr><td>Order ID</td><td>{{order_id}}</td></tr>
+  <tr><td>Issued at</td><td>{{invoice_issued_at}}</td></tr>
+</table>
+<p><a class="button" href="{{invoice_url}}">Download invoice</a></p>
+<p class="muted">Sign in and open the billing page, then find this order under 我的订单 to download the file.</p>`),
+		},
+		notificationEmailLocaleChinese: {
+			Subject: "[{{site_name}}] 您的发票已开具",
+			HTML: notificationEmailCard("#2563eb", "发票已开具", `
+<p>{{recipient_name}}，您好：</p>
+<p>您申请的发票已开具，可前往站点下载。</p>
+<table style="width:100%;border-collapse:collapse;">
+  <tr><td>发票抬头</td><td>{{invoice_title}}</td></tr>
+  <tr><td>税号</td><td>{{invoice_tax_no}}</td></tr>
+  <tr><td>开票金额</td><td>{{invoice_amount}}</td></tr>
+  <tr><td>订单号</td><td>{{order_id}}</td></tr>
+  <tr><td>开具时间</td><td>{{invoice_issued_at}}</td></tr>
+</table>
+<p><a class="button" href="{{invoice_url}}">前往下载发票</a></p>
+<p class="muted">登录后进入充值页面，在「我的订单」中找到该订单即可下载发票文件。</p>`),
 		},
 	},
 	NotificationEmailEventAccountQuotaAlert: {

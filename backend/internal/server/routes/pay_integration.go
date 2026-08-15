@@ -52,6 +52,17 @@ func RegisterPayRoutes(
 		})
 	}
 
+	// 附件与通知桥接：只需内部令牌，不需要 internalPayAdminContextMiddleware 合成的
+	// 管理员身份（它们不复用任何 admin handler）。
+	attachments := internal.Group("/attachments")
+	attachments.Use(middleware.RequestBodyLimit(service.MaxPayAttachmentBytes))
+	{
+		attachments.POST("", h.PayBridge.UploadAttachment)
+		attachments.POST("/presign", h.PayBridge.PresignAttachment)
+		attachments.DELETE("", h.PayBridge.DeleteAttachment)
+	}
+	internal.POST("/notifications/invoice-ready", h.PayBridge.SendInvoiceReadyEmail)
+
 	adminInternal := internal.Group("")
 	adminInternal.Use(internalPayAdminContextMiddleware(userService))
 	{

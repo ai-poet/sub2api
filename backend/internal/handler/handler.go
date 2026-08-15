@@ -62,6 +62,7 @@ type Handlers struct {
 	AvailableChannel *AvailableChannelHandler
 	AsyncImage       *AsyncImageHandler
 	BatchImage       *BatchImageHandler
+	PayBridge        *PayBridgeHandler
 }
 
 // BuildInfo contains build-time information

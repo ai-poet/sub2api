@@ -5,7 +5,10 @@ import type { Locale } from '@/lib/locale';
 import {
   formatStatus,
   formatCreatedAt,
+  formatInvoiceStatus,
+  formatInvoiceIneligibleReason,
   getStatusBadgeClass,
+  getInvoiceStatusBadgeClass,
   getPaymentDisplayInfo,
   type MyOrder,
 } from '@/lib/pay-utils';
@@ -18,9 +21,22 @@ interface OrderTableProps {
   orders: MyOrder[];
   userBalance: number;
   onRefundRequest: (orderId: string, amount: number, reason: string) => Promise<void>;
+  /** 未提供时整列隐藏（开票功能关闭或调用方不支持）。 */
+  onInvoiceRequest?: (order: MyOrder) => void;
+  onInvoiceDownload?: (invoiceId: string) => void;
 }
 
-export default function OrderTable({ isDark, locale, loading, error, orders, userBalance, onRefundRequest }: OrderTableProps) {
+export default function OrderTable({
+  isDark,
+  locale,
+  loading,
+  error,
+  orders,
+  userBalance,
+  onRefundRequest,
+  onInvoiceRequest,
+  onInvoiceDownload,
+}: OrderTableProps) {
   const text =
     locale === 'en'
       ? {
@@ -31,6 +47,9 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           status: 'Status',
           createdAt: 'Created At',
           actions: 'Actions',
+          invoice: 'Invoice',
+          invoiceRequest: 'Request',
+          invoiceDownload: 'Download',
           refundRequest: 'Request Refund',
           requested: 'Requested',
           partialRefunded: 'Partially refunded',
@@ -55,6 +74,9 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           status: '状态',
           createdAt: '创建时间',
           actions: '操作',
+          invoice: '发票',
+          invoiceRequest: '申请开票',
+          invoiceDownload: '下载发票',
           refundRequest: '申请退款',
           requested: '已申请',
           partialRefunded: '已部分退款',
@@ -71,6 +93,12 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           refundAmountExceedOrder: '退款金额不能超过订单金额',
           refundAmountExceedBalance: '退款金额不能超过当前余额',
         };
+
+  // 开票列只在调用方接上处理器时出现，因此关闭开票的部署不会多出一列空白。
+  const showInvoiceColumn = !!onInvoiceRequest;
+  const gridCols = showInvoiceColumn
+    ? 'md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr_0.9fr]'
+    : 'md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr]';
 
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [refundOrder, setRefundOrder] = useState<MyOrder | null>(null);
@@ -171,7 +199,8 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
           <>
             <div
               className={[
-                'hidden rounded-xl px-4 py-2 text-xs font-medium md:grid md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr]',
+                'hidden rounded-xl px-4 py-2 text-xs font-medium md:grid',
+                gridCols,
                 isDark ? 'text-slate-300' : 'text-slate-600',
               ].join(' ')}
             >
@@ -181,13 +210,15 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
               <span>{text.status}</span>
               <span>{text.createdAt}</span>
               <span>{text.actions}</span>
+              {showInvoiceColumn && <span>{text.invoice}</span>}
             </div>
             <div className="space-y-2 md:space-y-0">
               {orders.map((order) => (
                 <div
                   key={order.id}
                   className={[
-                    'border-t px-4 py-3 first:border-t-0 md:grid md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr] md:items-center',
+                    'border-t px-4 py-3 first:border-t-0 md:grid md:items-center',
+                    gridCols,
                     isDark ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-700',
                   ].join(' ')}
                 >
@@ -227,6 +258,61 @@ export default function OrderTable({ isDark, locale, loading, error, orders, use
                       <span className={isDark ? 'text-slate-500 text-xs' : 'text-slate-400 text-xs'}>-</span>
                     )}
                   </div>
+                  {showInvoiceColumn && (
+                    <div className="mt-2 md:mt-0">
+                      {order.invoice && order.invoice.status !== 'CANCELLED' && order.invoice.status !== 'REJECTED' ? (
+                        <div className="flex flex-col items-start gap-1">
+                          <span
+                            className={[
+                              'rounded-full px-2 py-0.5 text-xs',
+                              getInvoiceStatusBadgeClass(order.invoice.status, isDark),
+                            ].join(' ')}
+                          >
+                            {formatInvoiceStatus(order.invoice.status, locale)}
+                          </span>
+                          {order.invoice.status === 'ISSUED' && order.invoice.hasFile && onInvoiceDownload && (
+                            <button
+                              type="button"
+                              onClick={() => onInvoiceDownload(order.invoice!.id)}
+                              className={[
+                                'rounded px-2 py-1 text-xs',
+                                isDark
+                                  ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
+                              ].join(' ')}
+                            >
+                              {text.invoiceDownload}
+                            </button>
+                          )}
+                        </div>
+                      ) : order.canRequestInvoice ? (
+                        <button
+                          type="button"
+                          // 被驳回后仍可重新申请，把驳回原因挂在 title 上。
+                          title={order.invoice?.rejectReason ?? undefined}
+                          onClick={() => onInvoiceRequest(order)}
+                          className={[
+                            'rounded px-2 py-1 text-xs',
+                            isDark
+                              ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+                          ].join(' ')}
+                        >
+                          {text.invoiceRequest}
+                        </button>
+                      ) : (
+                        // 禁用时也说明原因，而不是让按钮凭空消失。
+                        <span
+                          title={formatInvoiceIneligibleReason(order.invoiceIneligibleReason, locale)}
+                          className={isDark ? 'text-slate-500 text-xs' : 'text-slate-400 text-xs'}
+                        >
+                          {order.invoice?.status === 'REJECTED'
+                            ? formatInvoiceStatus('REJECTED', locale)
+                            : '-'}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

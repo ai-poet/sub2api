@@ -6,6 +6,10 @@ import PayPageLayout from '@/components/PayPageLayout';
 import OrderFilterBar from '@/components/OrderFilterBar';
 import OrderSummaryCards from '@/components/OrderSummaryCards';
 import OrderTable from '@/components/OrderTable';
+import InvoiceRequestDialog, {
+  type InvoiceRequestPayload,
+  type SavedInvoiceTitleOption,
+} from '@/components/InvoiceRequestDialog';
 import PaginationBar from '@/components/PaginationBar';
 import { getOrdersAccessHint, getOrdersSessionExpiredHint } from '@/lib/branding';
 import { applyLocaleToSearchParams, pickLocaleText, resolveLocale } from '@/lib/locale';
@@ -48,6 +52,8 @@ function OrdersContent() {
       'Missing authentication information. Please open the orders page from the main system.',
     ),
     refundRequestFailed: pickLocaleText(locale, '退款申请失败，请稍后重试。', 'Refund request failed. Please try again later.'),
+    invoiceRequestFailed: pickLocaleText(locale, '开票申请失败，请稍后重试。', 'Invoice request failed. Please try again later.'),
+    invoiceDownloadFailed: pickLocaleText(locale, '发票下载失败，请稍后重试。', 'Invoice download failed. Please try again later.'),
   };
 
   const [isIframeContext, setIsIframeContext] = useState(true);
@@ -63,6 +69,12 @@ function OrdersContent() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [invoiceEnabled, setInvoiceEnabled] = useState(false);
+  const [invoiceOrder, setInvoiceOrder] = useState<MyOrder | null>(null);
+  const [savedTitles, setSavedTitles] = useState<SavedInvoiceTitleOption[]>([]);
+  const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
+  const [invoiceError, setInvoiceError] = useState('');
 
   const isEmbedded = uiMode === 'embedded' && isIframeContext;
   const hasToken = token.length > 0;
@@ -124,6 +136,7 @@ function OrdersContent() {
       setSummary(data.summary ?? { total: 0, pending: 0, completed: 0, failed: 0 });
       setPage(data.page ?? targetPage);
       setTotalPages(data.total_pages ?? 1);
+      setInvoiceEnabled(!!data.invoiceEnabled);
     } catch {
       setOrders([]);
       setError(text.networkError);
@@ -163,6 +176,65 @@ function OrdersContent() {
     }
 
     await loadOrders(page, pageSize);
+  };
+
+  // 抬头记忆：先取回已存抬头再挂载对话框，让对话框能在初始化时直接回填。
+  const openInvoiceDialog = async (order: MyOrder) => {
+    setInvoiceError('');
+    let titles: SavedInvoiceTitleOption[] = [];
+    try {
+      const params = new URLSearchParams({ token, page: '1', page_size: '20' });
+      applyLocaleToSearchParams(params, locale);
+      const res = await fetch(buildAppApiPath(`/api/invoices/my?${params}`));
+      if (res.ok) {
+        const data = await res.json();
+        titles = Array.isArray(data.titles) ? data.titles : [];
+      }
+    } catch {
+      // 回填失败不阻塞开票，用户手填即可。
+    }
+    setSavedTitles(titles);
+    setInvoiceOrder(order);
+  };
+
+  const handleInvoiceRequest = async (payload: InvoiceRequestPayload) => {
+    if (!invoiceOrder) return;
+    setInvoiceSubmitting(true);
+    setInvoiceError('');
+    try {
+      const params = new URLSearchParams({ token });
+      applyLocaleToSearchParams(params, locale);
+      const res = await fetch(buildAppApiPath(`/api/orders/${invoiceOrder.id}/invoice-request?${params}`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title_name: payload.titleName,
+          tax_no: payload.taxNo,
+          ...(payload.remark && { remark: payload.remark }),
+          ...(payload.contactEmail && { contact_email: payload.contactEmail }),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setInvoiceError(data.error || text.invoiceRequestFailed);
+        return;
+      }
+
+      setInvoiceOrder(null);
+      await loadOrders(page, pageSize);
+    } catch {
+      setInvoiceError(text.invoiceRequestFailed);
+    } finally {
+      setInvoiceSubmitting(false);
+    }
+  };
+
+  const handleInvoiceDownload = (invoiceId: string) => {
+    const params = new URLSearchParams({ token });
+    applyLocaleToSearchParams(params, locale);
+    // 后端 302 到预签名链接，且响应头带 attachment disposition，同页导航即触发下载。
+    window.location.href = buildAppApiPath(`/api/invoices/${invoiceId}/download?${params}`);
   };
 
   const filteredOrders = activeFilter === 'ALL' ? orders : orders.filter((o) => o.status === activeFilter);
@@ -242,6 +314,8 @@ function OrdersContent() {
             setError(err instanceof Error ? err.message : text.refundRequestFailed);
           }
         }}
+        onInvoiceRequest={invoiceEnabled ? openInvoiceDialog : undefined}
+        onInvoiceDownload={invoiceEnabled ? handleInvoiceDownload : undefined}
       />
 
       <PaginationBar
@@ -256,6 +330,24 @@ function OrdersContent() {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
+
+      {invoiceOrder && (
+        <InvoiceRequestDialog
+          isDark={isDark}
+          locale={locale}
+          amount={invoiceOrder.payAmount ?? null}
+          orderId={invoiceOrder.id}
+          savedTitles={savedTitles}
+          submitting={invoiceSubmitting}
+          error={invoiceError}
+          onSubmit={handleInvoiceRequest}
+          onClose={() => {
+            if (invoiceSubmitting) return;
+            setInvoiceOrder(null);
+            setInvoiceError('');
+          }}
+        />
+      )}
     </PayPageLayout>
   );
 }
