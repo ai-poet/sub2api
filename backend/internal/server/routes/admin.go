@@ -609,6 +609,14 @@ func registerBackupRoutes(admin *gin.RouterGroup, h *handler.Handlers, stepUpAut
 		backup.PUT("/image-storage", gin.HandlerFunc(stepUpAuth), h.Admin.Backup.UpdateImageStorageConfig)
 		backup.POST("/image-storage/test", h.Admin.Backup.TestImageStorageConnection)
 
+		// 发票文件对象存储配置。
+		// 不挂 step-up：改这里改不了备份目标，presign 也只放行发票前缀下的 key，
+		// 影响面止于「此后新上传的发票文件流向何处」。设置服务会拒绝与备份前缀
+		// 重叠的取值，防止绕开上面那两条 step-up。
+		backup.GET("/invoice-storage", h.Admin.Backup.GetInvoiceStorageConfig)
+		backup.PUT("/invoice-storage", h.Admin.Backup.UpdateInvoiceStorageConfig)
+		backup.POST("/invoice-storage/test", h.Admin.Backup.TestInvoiceStorageConnection)
+
 		// 定时备份配置
 		backup.GET("/schedule", h.Admin.Backup.GetSchedule)
 		backup.PUT("/schedule", h.Admin.Backup.UpdateSchedule)

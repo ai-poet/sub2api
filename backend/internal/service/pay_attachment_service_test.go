@@ -125,11 +125,15 @@ func newPayAttachmentServiceForTest(t *testing.T) (*PayAttachmentService, *fakeP
 	}
 
 	store := &fakePayAttachmentStore{}
-	svc := NewPayAttachmentService(backup, func(context.Context, *BackupS3Config) (PayAttachmentStore, error) {
+	settings := NewInvoiceStorageSettingService(repo, encryptor, backup)
+	svc := NewPayAttachmentService(settings, func(context.Context, *BackupS3Config) (PayAttachmentStore, error) {
 		return store, nil
 	})
 	return svc, store
 }
+
+// testInvoicePrefix 是未保存过发票存储设置时生效的默认前缀。
+const testInvoicePrefix = DefaultInvoiceStoragePrefix
 
 // minimal PDF payload: http.DetectContentType keys off the %PDF- magic bytes.
 func pdfBytes() []byte {
@@ -152,7 +156,7 @@ func TestPayAttachmentPutBuildsServerControlledKey(t *testing.T) {
 		t.Fatalf("Put: %v", err)
 	}
 
-	if !strings.HasPrefix(res.Key, PayAttachmentPrefix+"invoice/") {
+	if !strings.HasPrefix(res.Key, testInvoicePrefix) {
 		t.Fatalf("key %q is not under the invoice prefix", res.Key)
 	}
 	// The client filename must never leak into the object key.
@@ -274,8 +278,8 @@ func TestPayAttachmentPresignRejectsKeysOutsidePrefix(t *testing.T) {
 	// read the whole database backup out of the shared bucket.
 	badKeys := []string{
 		"backups/2026/08/14/dump.sql.gz",
-		"pay-attachments/../backups/dump.sql.gz",
-		"pay-attachments/invoice/../../backups/dump.sql.gz",
+		testInvoicePrefix + "../backups/dump.sql.gz",
+		testInvoicePrefix + "2026/08/../../backups/dump.sql.gz",
 		"",
 		"   ",
 		"images/foo.png",
@@ -294,7 +298,7 @@ func TestPayAttachmentPresignRejectsKeysOutsidePrefix(t *testing.T) {
 
 func TestPayAttachmentPresignClampsTTL(t *testing.T) {
 	svc, store := newPayAttachmentServiceForTest(t)
-	key := PayAttachmentPrefix + "invoice/2026/08/clx1-a1b2c3d4.pdf"
+	key := testInvoicePrefix + "2026/08/clx1-a1b2c3d4.pdf"
 
 	cases := []struct {
 		name string
@@ -334,7 +338,8 @@ func TestPayAttachmentFailsClosedWithoutS3Config(t *testing.T) {
 	backup := NewBackupService(repo, &config.Config{
 		Totp: config.TotpConfig{EncryptionKeyConfigured: true},
 	}, payAttachmentEncryptor{}, nil, nil)
-	svc := NewPayAttachmentService(backup, func(context.Context, *BackupS3Config) (PayAttachmentStore, error) {
+	settings := NewInvoiceStorageSettingService(repo, payAttachmentEncryptor{}, backup)
+	svc := NewPayAttachmentService(settings, func(context.Context, *BackupS3Config) (PayAttachmentStore, error) {
 		t.Fatal("factory must not be called when S3 is unconfigured")
 		return nil, nil
 	})

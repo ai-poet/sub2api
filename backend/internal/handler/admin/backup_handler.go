@@ -8,16 +8,23 @@ import (
 )
 
 type BackupHandler struct {
-	backupService *service.BackupService
-	userService   *service.UserService
-	imageStorage  *service.ImageStorageSettingService
+	backupService  *service.BackupService
+	userService    *service.UserService
+	imageStorage   *service.ImageStorageSettingService
+	invoiceStorage *service.InvoiceStorageSettingService
 }
 
-func NewBackupHandler(backupService *service.BackupService, userService *service.UserService, imageStorage *service.ImageStorageSettingService) *BackupHandler {
+func NewBackupHandler(
+	backupService *service.BackupService,
+	userService *service.UserService,
+	imageStorage *service.ImageStorageSettingService,
+	invoiceStorage *service.InvoiceStorageSettingService,
+) *BackupHandler {
 	return &BackupHandler{
-		backupService: backupService,
-		userService:   userService,
-		imageStorage:  imageStorage,
+		backupService:  backupService,
+		userService:    userService,
+		imageStorage:   imageStorage,
+		invoiceStorage: invoiceStorage,
 	}
 }
 
@@ -245,6 +252,53 @@ func (h *BackupHandler) TestImageStorageConnection(c *gin.Context) {
 		return
 	}
 	if err := h.imageStorage.TestConnection(c.Request.Context(), req); err != nil {
+		response.Success(c, gin.H{"ok": false, "message": err.Error()})
+		return
+	}
+	response.Success(c, gin.H{"ok": true, "message": "connection successful"})
+}
+
+// ─── 发票文件对象存储配置 ───
+//
+// 与备份 S3 分开，是因为两者的影响面不同：改备份目标可以把整库数据导向外部账号，
+// 改发票目标最多影响此后新上传的发票文件，且 presign 只放行发票前缀下的 key。
+// 因此这三条路由不挂 step-up 2FA。作为交换，设置服务会拒绝把发票前缀设成与备份
+// 前缀重叠的值，避免绕开 step-up 打开一条给数据库备份签下载链接的通道。
+
+func (h *BackupHandler) GetInvoiceStorageConfig(c *gin.Context) {
+	ctx := c.Request.Context()
+	cfg, err := h.invoiceStorage.Get(ctx)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{
+		"config":            cfg,
+		"secret_configured": h.invoiceStorage.SecretConfigured(ctx),
+	})
+}
+
+func (h *BackupHandler) UpdateInvoiceStorageConfig(c *gin.Context) {
+	var req service.InvoiceStorageSettings
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	cfg, err := h.invoiceStorage.Update(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, cfg)
+}
+
+func (h *BackupHandler) TestInvoiceStorageConnection(c *gin.Context) {
+	var req service.InvoiceStorageSettings
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	if err := h.invoiceStorage.TestConnection(c.Request.Context(), req); err != nil {
 		response.Success(c, gin.H{"ok": false, "message": err.Error()})
 		return
 	}

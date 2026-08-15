@@ -90,7 +90,9 @@ func newPayBridgeRouter(t *testing.T) (*gin.Engine, *payBridgeMemoryStore) {
 	require.NoError(t, repo.Set(context.Background(), "backup_s3_config", string(raw)))
 
 	store := &payBridgeMemoryStore{}
-	attachments := service.NewPayAttachmentService(backup, func(context.Context, *service.BackupS3Config) (service.PayAttachmentStore, error) {
+	// 未保存发票存储设置时默认复用备份凭证，所以这里只 seed 备份配置即可。
+	invoiceStorage := service.NewInvoiceStorageSettingService(repo, payBridgeEncryptor{}, backup)
+	attachments := service.NewPayAttachmentService(invoiceStorage, func(context.Context, *service.BackupS3Config) (service.PayAttachmentStore, error) {
 		return store, nil
 	})
 	h := NewPayBridgeHandler(attachments, nil)
@@ -134,7 +136,7 @@ func TestPayBridgeUploadStoresPDFAndReturnsKey(t *testing.T) {
 		Data service.PayAttachmentPutResult `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	require.True(t, strings.HasPrefix(resp.Data.Key, service.PayAttachmentPrefix+"invoice/"))
+	require.True(t, strings.HasPrefix(resp.Data.Key, service.DefaultInvoiceStoragePrefix))
 	require.Equal(t, resp.Data.Key, store.uploadedKey)
 	require.Equal(t, "发票 2026.pdf", resp.Data.FileName, "the UTF-8 download name must survive URL decoding")
 }
