@@ -143,3 +143,5 @@ output/
 # Paseo 客户端（本地克隆，不作为子模块跟踪）
 client/
 
+# Vitest / Vite cache at repo root
+.vite/

@@ -33,6 +33,7 @@ function createPublicSettings(overrides: Partial<PublicSettings> = {}): PublicSe
     contact_info: '',
     doc_url: '',
     home_content: '',
+    compact_home_enabled: false,
     hide_ccs_import_button: false,
     payment_enabled: false,
     risk_control_enabled: false,
@@ -547,6 +548,45 @@ describe('useAppStore', () => {
 
       expect(store.publicSettingsLoaded).toBe(false)
       expect(store.cachedPublicSettings).toBeNull()
+    })
+
+    it('fetchPublicSettings(force) 会同步更新运行时注入配置', async () => {
+      vi.mocked(getPublicSettings).mockResolvedValue({
+        registration_enabled: false,
+        email_verify_enabled: false,
+        registration_email_suffix_whitelist: [],
+        promo_code_enabled: true,
+        password_reset_enabled: false,
+        invitation_code_enabled: false,
+        turnstile_enabled: false,
+        turnstile_site_key: '',
+        site_name: 'Updated Site',
+        site_logo: '',
+        site_subtitle: '',
+        api_base_url: '',
+        contact_info: '',
+        doc_url: '',
+        home_content: '',
+        compact_home_enabled: false,
+        hide_ccs_import_button: false,
+        purchase_subscription_enabled: false,
+        purchase_subscription_url: '',
+        table_default_page_size: 1000,
+        table_page_size_options: [20, 100, 1000],
+        custom_menu_items: [],
+        custom_endpoints: [],
+        linuxdo_oauth_enabled: false,
+        backend_mode_enabled: false,
+        version: '1.0.0'
+      })
+
+      const store = useAppStore()
+      await store.fetchPublicSettings(true)
+
+      expect((window as any).__APP_CONFIG__.table_default_page_size).toBe(1000)
+      expect((window as any).__APP_CONFIG__.table_page_size_options).toEqual([20, 100, 1000])
+      expect(localStorage.getItem('table-page-size')).toBeNull()
+      expect(localStorage.getItem('table-page-size-source')).toBeNull()
     })
   })
 })

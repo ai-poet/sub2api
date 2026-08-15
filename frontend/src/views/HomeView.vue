@@ -1,5 +1,7 @@
 <template>
-  <div v-if="homeContent" class="min-h-screen">
+  <!-- Custom Home Content: Full Page Mode -->
+  <div v-if="hasHomeContent" class="min-h-screen">
+    <!-- iframe mode -->
     <iframe
       v-if="isHomeContentUrl"
       :src="homeContent.trim()"
@@ -9,6 +11,7 @@
     <div v-else v-html="homeContent"></div>
   </div>
 
+  <!-- Default Home Page -->
   <div
     v-else
     class="home-font-sans relative min-h-screen overflow-hidden bg-[#f8fafb] text-[#161616] dark:bg-[#0f1114] dark:text-[#f3f1ed]"
@@ -117,6 +120,7 @@ const clientDownloadMacOSUrl = computed(
 const hasClientDownloads = computed(
   () => Boolean(clientDownloadWindowsUrl.value) || Boolean(clientDownloadMacOSUrl.value)
 )
+const hasHomeContent = computed(() => homeContent.value.trim().length > 0)
 
 const isHomeContentUrl = computed(() => {
   const content = homeContent.value.trim()
