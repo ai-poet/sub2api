@@ -8,9 +8,18 @@ export interface UserInfo {
   balance?: number;
 }
 
+export interface MyOrderInvoice {
+  id: string;
+  status: string;
+  hasFile: boolean;
+  rejectReason?: string | null;
+}
+
 export interface MyOrder {
   id: string;
   amount: number;
+  /** 实付人民币，也是开票金额；老订单可能为 null。 */
+  payAmount?: number | null;
   status: string;
   paymentType: string;
   createdAt: string;
@@ -19,6 +28,9 @@ export interface MyOrder {
   refundRequestReason?: string | null;
   refundAmount?: number | null;
   canRefundRequest?: boolean;
+  canRequestInvoice?: boolean;
+  invoiceIneligibleReason?: string | null;
+  invoice?: MyOrderInvoice | null;
 }
 
 export type OrderStatusFilter =
@@ -376,4 +388,65 @@ export function getStatusBadgeClass(status: string, isDark: boolean): string {
     return isDark ? 'bg-slate-600 text-slate-200' : 'bg-slate-100 text-slate-700';
   }
   return isDark ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-700';
+}
+
+// ── 发票 ──
+
+const INVOICE_STATUS_TEXT_MAP: Record<Locale, Record<string, string>> = {
+  zh: {
+    PENDING: '开票中',
+    ISSUED: '已开具',
+    REJECTED: '已驳回',
+    CANCELLED: '已取消',
+  },
+  en: {
+    PENDING: 'Processing',
+    ISSUED: 'Issued',
+    REJECTED: 'Rejected',
+    CANCELLED: 'Cancelled',
+  },
+};
+
+export function formatInvoiceStatus(status: string, locale: Locale): string {
+  return INVOICE_STATUS_TEXT_MAP[locale][status] ?? status;
+}
+
+export function getInvoiceStatusBadgeClass(status: string, isDark: boolean): string {
+  switch (status) {
+    case 'ISSUED':
+      return isDark ? 'bg-emerald-500/20 text-emerald-200' : 'bg-emerald-100 text-emerald-700';
+    case 'PENDING':
+      return isDark ? 'bg-blue-500/20 text-blue-200' : 'bg-blue-100 text-blue-700';
+    case 'REJECTED':
+      return isDark ? 'bg-red-500/20 text-red-200' : 'bg-red-100 text-red-700';
+    default:
+      return isDark ? 'bg-slate-600 text-slate-200' : 'bg-slate-100 text-slate-700';
+  }
+}
+
+const INVOICE_INELIGIBLE_TEXT_MAP: Record<Locale, Record<string, string>> = {
+  zh: {
+    FEATURE_DISABLED: '当前未开放在线开票',
+    NOT_COMPLETED: '仅已完成的订单可以开票',
+    STABLECOIN_NOT_SUPPORTED: '该支付方式不支持开具人民币发票',
+    MISSING_PAY_AMOUNT: '该订单缺少人民币支付金额，请联系客服',
+    ORDER_REFUNDED: '已退款的订单不可开票',
+    TOO_OLD: '该订单已超过可开票期限',
+    ALREADY_REQUESTED: '该订单已申请开票',
+  },
+  en: {
+    FEATURE_DISABLED: 'Online invoicing is unavailable',
+    NOT_COMPLETED: 'Only completed orders can be invoiced',
+    STABLECOIN_NOT_SUPPORTED: 'This payment method does not support CNY invoices',
+    MISSING_PAY_AMOUNT: 'This order has no CNY amount on record; contact support',
+    ORDER_REFUNDED: 'Refunded orders cannot be invoiced',
+    TOO_OLD: 'This order is past the invoicing window',
+    ALREADY_REQUESTED: 'An invoice has already been requested',
+  },
+};
+
+/** 把不可开票的原因翻成人话，让禁用的按钮能解释自己。 */
+export function formatInvoiceIneligibleReason(reason: string | null | undefined, locale: Locale): string {
+  if (!reason) return '';
+  return INVOICE_INELIGIBLE_TEXT_MAP[locale][reason] ?? '';
 }

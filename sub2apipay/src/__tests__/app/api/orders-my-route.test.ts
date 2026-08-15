@@ -11,6 +11,8 @@ const mockOrderFindMany = vi.fn();
 const mockOrderCount = vi.fn();
 const mockOrderGroupBy = vi.fn();
 const mockInstanceFindMany = vi.fn();
+const mockSystemConfigFindMany = vi.fn();
+const mockInvoiceFindMany = vi.fn();
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -21,6 +23,12 @@ vi.mock('@/lib/db', () => ({
     },
     paymentProviderInstance: {
       findMany: (...args: unknown[]) => mockInstanceFindMany(...args),
+    },
+    systemConfig: {
+      findMany: (...args: unknown[]) => mockSystemConfigFindMany(...args),
+    },
+    invoiceRequest: {
+      findMany: (...args: unknown[]) => mockInvoiceFindMany(...args),
     },
   },
 }));
@@ -35,6 +43,7 @@ vi.mock('@/lib/order/status', () => ({
 }));
 
 import { GET } from '@/app/api/orders/my/route';
+import { invalidateConfigCache } from '@/lib/system-config';
 
 function createRequest(params?: Record<string, string>) {
   const qs = new URLSearchParams({ token: 'test-token', ...params });
@@ -54,6 +63,10 @@ describe('GET /api/orders/my - canRefundRequest', () => {
     mockOrderGroupBy.mockResolvedValue([]);
     mockOrderFindMany.mockResolvedValue([]);
     mockInstanceFindMany.mockResolvedValue([]);
+    // 开票默认关闭：invoice_enabled 未配置时不应影响既有订单字段。
+    mockSystemConfigFindMany.mockResolvedValue([]);
+    mockInvoiceFindMany.mockResolvedValue([]);
+    invalidateConfigCache();
   });
 
   it('returns 400 when token is missing', async () => {

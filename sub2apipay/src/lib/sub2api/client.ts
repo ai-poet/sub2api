@@ -6,7 +6,7 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 const RECHARGE_TIMEOUT_MS = 30_000;
 const RECHARGE_MAX_ATTEMPTS = 2;
 
-function buildInternalUrl(pathname: string): string {
+export function buildInternalUrl(pathname: string): string {
   const env = getEnv();
   const baseUrl = env.SUB2API_INTERNAL_BASE_URL || env.SUB2API_BASE_URL || 'http://127.0.0.1:8080';
   const normalized = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;

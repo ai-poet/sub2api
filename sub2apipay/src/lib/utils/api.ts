@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OrderError } from '@/lib/order/service';
+import { InvoiceError } from '@/lib/invoice/types';
 import { resolveLocale } from '@/lib/locale';
 
-/** 统一处理 OrderError 和未知错误 */
+/** 统一处理 OrderError / InvoiceError 和未知错误 */
 export function handleApiError(error: unknown, fallbackMessage: string, request?: NextRequest): NextResponse {
-  if (error instanceof OrderError) {
+  if (error instanceof OrderError || error instanceof InvoiceError) {
     const body: Record<string, unknown> = { error: error.message, code: error.code };
     if (error.data) body.data = error.data;
     return NextResponse.json(body, { status: error.statusCode });

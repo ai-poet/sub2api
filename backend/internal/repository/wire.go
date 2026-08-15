@@ -144,6 +144,9 @@ var ProviderSet = wire.NewSet(
 	NewPgDumper,
 	NewS3BackupStoreFactory,
 
+	// Pay-service attachment storage (invoice files), reusing the backup S3 credentials
+	NewPayAttachmentStoreFactory,
+
 	// Image storage (async image task result offload)
 	ProvideImageStorageFactory,
 

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
 import { deriveOrderState, isRechargeRetryable } from '@/lib/order/status';
+import { getInvoiceSettings, loadInvoicesForOrders } from '@/lib/invoice/service';
+import { evaluateInvoiceEligibility } from '@/lib/invoice/eligibility';
+import type { InvoiceStatus } from '@/lib/invoice/types';
 
 const VALID_PAGE_SIZES = [20, 50, 100];
 
@@ -36,6 +39,8 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           amount: true,
+          // 开票金额是实付人民币，不是到账美元余额。
+          payAmount: true,
           status: true,
           paymentType: true,
           createdAt: true,
@@ -67,6 +72,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 一次批量取本页订单的开票记录，与上面的实例查询同样避免 N+1。
+    const [invoiceSettings, invoiceMap] = await Promise.all([
+      getInvoiceSettings(),
+      loadInvoicesForOrders(orders.map((o) => o.id)),
+    ]);
+
     return NextResponse.json({
       user: {
         id: user.id,
@@ -75,14 +86,32 @@ export async function GET(request: NextRequest) {
         displayName: user.username || user.email || `User #${user.id}`,
         balance: user.balance,
       },
+      invoiceEnabled: invoiceSettings.enabled,
       orders: orders.map((item) => {
         const derived = deriveOrderState(item);
         const instanceRefundEnabled = item.providerInstanceId
           ? (refundEnabledMap.get(item.providerInstanceId) ?? false)
           : false;
+        const invoice = invoiceMap.get(item.id);
+        const eligibility = evaluateInvoiceEligibility(item, {
+          featureEnabled: invoiceSettings.enabled,
+          maxAgeDays: invoiceSettings.maxAgeDays,
+          existingStatus: (invoice?.status as InvoiceStatus | undefined) ?? null,
+        });
         return {
           id: item.id,
           amount: Number(item.amount),
+          payAmount: item.payAmount ? Number(item.payAmount) : null,
+          canRequestInvoice: eligibility.eligible,
+          invoiceIneligibleReason: eligibility.reason ?? null,
+          invoice: invoice
+            ? {
+                id: invoice.id,
+                status: invoice.status,
+                hasFile: !!invoice.fileKey,
+                rejectReason: invoice.rejectReason,
+              }
+            : null,
           status: item.status,
           paymentType: item.paymentType,
           createdAt: item.createdAt,

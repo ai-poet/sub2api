@@ -26,6 +26,7 @@ import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
 import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/lib/payment/load-balancer';
 import { createProviderFromInstance } from '@/lib/payment/provider-factory';
 import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
+import { applyRefundToInvoice } from '@/lib/invoice/service';
 
 const DEFAULT_MAX_PENDING_ORDERS = 3;
 /** Decimal(10,2) 允许的最大金额 */
@@ -1345,6 +1346,10 @@ export interface RefundResult {
   requireForce?: boolean;
   balanceDeducted?: number;
   subscriptionDaysDeducted?: number;
+  /** 该订单已开具发票，需线下红冲；仅提示，不影响退款结果。 */
+  invoiceWarning?: string;
+  /** 待处理的开票申请已随退款自动取消。 */
+  invoiceCancelled?: boolean;
 }
 
 // ── 退款内部类型与辅助函数 ──
@@ -1694,7 +1699,23 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
       },
     });
 
-    return { success: true, balanceDeducted: plan.balanceAmount, subscriptionDaysDeducted: plan.subscriptionDays };
+    // 退款后调整发票状态：待处理的自动取消，已开具的只提示需人工红冲。
+    // applyRefundToInvoice 内部吞掉所有异常——退款绝不能因发票副作用而失败。
+    const invoiceImpact = await applyRefundToInvoice(input.orderId);
+
+    return {
+      success: true,
+      balanceDeducted: plan.balanceAmount,
+      subscriptionDaysDeducted: plan.subscriptionDays,
+      ...(invoiceImpact.needsCreditNote && {
+        invoiceWarning: message(
+          locale,
+          '该订单已开具发票，请线下办理红冲/作废',
+          'An invoice was already issued for this order; handle the credit note offline',
+        ),
+      }),
+      ...(invoiceImpact.cancelledPending && { invoiceCancelled: true }),
+    };
   } catch (error) {
     // 未被内部处理的异常（如扣减阶段失败）— 标记 REFUND_FAILED
     if (!(error instanceof OrderError && error.code === 'REFUND_FAILED')) {

@@ -51,7 +51,8 @@ model Order {
   subscriptionDays    Int?               @map("subscription_days")
   providerInstanceId  String?  @map("provider_instance_id")
 
-  auditLogs     AuditLog[]
+  auditLogs      AuditLog[]
+  invoiceRequest InvoiceRequest?
 
   @@index([userId])
   @@index([status])
@@ -144,6 +145,73 @@ model SystemConfig {
 
   @@index([group])
   @@map("system_configs")
+}
+
+// ── 发票（增值税普通发票） ──
+
+enum InvoiceStatus {
+  PENDING
+  ISSUED
+  REJECTED
+  CANCELLED
+}
+
+/// 一张订单最多一条开票申请（orderId 唯一）。被驳回或取消后重新申请时复用同一行
+/// 改回 PENDING，而不是新插一行——这样「一单一票」由数据库约束兜底。
+model InvoiceRequest {
+  id      String @id @default(cuid())
+  orderId String @unique @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id])
+  userId  Int    @map("user_id")
+
+  titleName    String  @map("title_name")
+  taxNo        String  @map("tax_no")
+  remark       String? @db.Text
+  /// 仅展示给管理员；通知邮件的收件人始终由后端按 userId 解析。
+  contactEmail String? @map("contact_email")
+
+  /// 人民币开票金额，下单时对 order.payAmount 的快照。
+  amount Decimal       @db.Decimal(10, 2)
+  status InvoiceStatus @default(PENDING)
+
+  fileKey         String? @map("file_key")
+  fileName        String? @map("file_name")
+  fileSize        Int?    @map("file_size")
+  fileContentType String? @map("file_content_type")
+
+  rejectReason String?   @map("reject_reason") @db.Text
+  adminNote    String?   @map("admin_note") @db.Text
+  issuedAt     DateTime? @map("issued_at")
+  issuedBy     String?   @map("issued_by")
+  rejectedAt   DateTime? @map("rejected_at")
+  notifiedAt   DateTime? @map("notified_at")
+
+  downloadCount    Int       @default(0) @map("download_count")
+  lastDownloadedAt DateTime? @map("last_downloaded_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("invoice_requests")
+}
+
+/// 抬头记忆：用户再次开票时自动回填，按税号去重。
+model InvoiceTitle {
+  id           String   @id @default(cuid())
+  userId       Int      @map("user_id")
+  titleName    String   @map("title_name")
+  taxNo        String   @map("tax_no")
+  remark       String?  @db.Text
+  contactEmail String?  @map("contact_email")
+  lastUsedAt   DateTime @default(now()) @map("last_used_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, taxNo])
+  @@index([userId, lastUsedAt])
+  @@map("invoice_titles")
 }
 
 // ── 支付服务商实例（多实例轮询） ──

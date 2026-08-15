@@ -7,6 +7,10 @@ import PaymentQRCode from '@/components/PaymentQRCode';
 import OrderStatus from '@/components/OrderStatus';
 import PayPageLayout from '@/components/PayPageLayout';
 import MobileOrderList from '@/components/MobileOrderList';
+import InvoiceRequestDialog, {
+  type InvoiceRequestPayload,
+  type SavedInvoiceTitleOption,
+} from '@/components/InvoiceRequestDialog';
 import MainTabs from '@/components/MainTabs';
 import ChannelGrid from '@/components/ChannelGrid';
 import SubscriptionPlanCard from '@/components/SubscriptionPlanCard';
@@ -74,6 +78,11 @@ function PayContent() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [resolvedUserId, setResolvedUserId] = useState<number | null>(null);
   const [myOrders, setMyOrders] = useState<MyOrder[]>([]);
+  const [invoiceEnabled, setInvoiceEnabled] = useState(false);
+  const [invoiceOrder, setInvoiceOrder] = useState<MyOrder | null>(null);
+  const [savedInvoiceTitles, setSavedInvoiceTitles] = useState<SavedInvoiceTitleOption[]>([]);
+  const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
+  const [invoiceError, setInvoiceError] = useState('');
   const [ordersPage, setOrdersPage] = useState(1);
   const [ordersHasMore, setOrdersHasMore] = useState(false);
   const [ordersLoadingMore, setOrdersLoadingMore] = useState(false);
@@ -185,6 +194,7 @@ function PayContent() {
 
       setResolvedUserId(meId);
       setPendingCount(meData.summary?.pending ?? 0);
+      setInvoiceEnabled(!!meData.invoiceEnabled);
 
       setUserInfo({
         id: meId,
@@ -288,6 +298,63 @@ function PayContent() {
     } finally {
       setOrdersLoadingMore(false);
     }
+  };
+
+  // 抬头记忆：先取回已存抬头再挂载对话框，让对话框能在初始化时直接回填。
+  const openInvoiceDialog = async (order: MyOrder) => {
+    setInvoiceError('');
+    let titles: SavedInvoiceTitleOption[] = [];
+    try {
+      const params = new URLSearchParams({ token, page: '1', page_size: '20' });
+      applyLocaleToSearchParams(params, locale);
+      const res = await fetch(buildAppApiPath(`/api/invoices/my?${params}`));
+      if (res.ok) {
+        const data = await res.json();
+        titles = Array.isArray(data.titles) ? data.titles : [];
+      }
+    } catch {
+      // 回填失败不阻塞开票，用户手填即可。
+    }
+    setSavedInvoiceTitles(titles);
+    setInvoiceOrder(order);
+  };
+
+  const handleInvoiceRequest = async (payload: InvoiceRequestPayload) => {
+    if (!invoiceOrder) return;
+    setInvoiceSubmitting(true);
+    setInvoiceError('');
+    try {
+      const params = new URLSearchParams({ token });
+      applyLocaleToSearchParams(params, locale);
+      const res = await fetch(buildAppApiPath(`/api/orders/${invoiceOrder.id}/invoice-request?${params}`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title_name: payload.titleName,
+          tax_no: payload.taxNo,
+          ...(payload.remark && { remark: payload.remark }),
+          ...(payload.contactEmail && { contact_email: payload.contactEmail }),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setInvoiceError(data.error || pickLocaleText(locale, '开票申请失败，请稍后重试。', 'Invoice request failed.'));
+        return;
+      }
+      setInvoiceOrder(null);
+      await loadUserAndOrders();
+    } catch {
+      setInvoiceError(pickLocaleText(locale, '开票申请失败，请稍后重试。', 'Invoice request failed.'));
+    } finally {
+      setInvoiceSubmitting(false);
+    }
+  };
+
+  const handleInvoiceDownload = (invoiceId: string) => {
+    const params = new URLSearchParams({ token });
+    applyLocaleToSearchParams(params, locale);
+    // 后端 302 到预签名链接，响应头带 attachment disposition，同页导航即触发下载。
+    window.location.href = buildAppApiPath(`/api/invoices/${invoiceId}/download?${params}`);
   };
 
   useEffect(() => {
@@ -996,6 +1063,8 @@ function PayContent() {
                     onRefresh={loadUserAndOrders}
                     onLoadMore={loadMoreOrders}
                     locale={locale}
+                    onInvoiceRequest={invoiceEnabled ? openInvoiceDialog : undefined}
+                    onInvoiceDownload={invoiceEnabled ? handleInvoiceDownload : undefined}
                   />
                 )
               ) : (
@@ -1095,6 +1164,8 @@ function PayContent() {
               onRefresh={loadUserAndOrders}
               onLoadMore={loadMoreOrders}
               locale={locale}
+              onInvoiceRequest={invoiceEnabled ? openInvoiceDialog : undefined}
+              onInvoiceDownload={invoiceEnabled ? handleInvoiceDownload : undefined}
             />
           )}
         </>
@@ -1154,6 +1225,24 @@ function PayContent() {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
+      )}
+
+      {invoiceOrder && (
+        <InvoiceRequestDialog
+          isDark={isDark}
+          locale={locale}
+          amount={invoiceOrder.payAmount ?? null}
+          orderId={invoiceOrder.id}
+          savedTitles={savedInvoiceTitles}
+          submitting={invoiceSubmitting}
+          error={invoiceError}
+          onSubmit={handleInvoiceRequest}
+          onClose={() => {
+            if (invoiceSubmitting) return;
+            setInvoiceOrder(null);
+            setInvoiceError('');
+          }}
+        />
       )}
     </PayPageLayout>
   );
