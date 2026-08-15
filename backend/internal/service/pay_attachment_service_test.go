@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 )
@@ -73,9 +73,7 @@ type fakePayAttachmentStore struct {
 	uploadedContentType string
 	uploadedBytes       int
 
-	presignedKey  string
-	presignedName string
-	presignedTTL  time.Duration
+	openedKey string
 
 	deletedKey string
 }
@@ -87,11 +85,10 @@ func (f *fakePayAttachmentStore) Upload(_ context.Context, key, contentType stri
 	return nil
 }
 
-func (f *fakePayAttachmentStore) PresignDownloadURL(_ context.Context, key, downloadName string, expiry time.Duration) (string, error) {
-	f.presignedKey = key
-	f.presignedName = downloadName
-	f.presignedTTL = expiry
-	return "https://example.invalid/" + key, nil
+func (f *fakePayAttachmentStore) Open(_ context.Context, key string) (io.ReadCloser, string, int64, error) {
+	f.openedKey = key
+	body := "%PDF-1.7 stored bytes"
+	return io.NopCloser(strings.NewReader(body)), "application/pdf", int64(len(body)), nil
 }
 
 func (f *fakePayAttachmentStore) Delete(_ context.Context, key string) error {
@@ -269,9 +266,9 @@ func TestPayAttachmentPutAcceptsContentTypeWithCharset(t *testing.T) {
 	}
 }
 
-// ─── presign / delete authorization boundary ───
+// ─── 读取 / 删除的授权边界 ───
 
-func TestPayAttachmentPresignRejectsKeysOutsidePrefix(t *testing.T) {
+func TestPayAttachmentOpenRejectsKeysOutsidePrefix(t *testing.T) {
 	svc, _ := newPayAttachmentServiceForTest(t)
 
 	// Without the prefix guard, the internal bridge token would be enough to
@@ -286,8 +283,8 @@ func TestPayAttachmentPresignRejectsKeysOutsidePrefix(t *testing.T) {
 	}
 	for _, key := range badKeys {
 		t.Run(key, func(t *testing.T) {
-			if _, _, err := svc.Presign(context.Background(), key, "x.pdf", time.Minute); err != ErrPayAttachmentInvalidKey {
-				t.Fatalf("Presign(%q): got %v, want ErrPayAttachmentInvalidKey", key, err)
+			if _, err := svc.Open(context.Background(), key); err != ErrPayAttachmentInvalidKey {
+				t.Fatalf("Open(%q): got %v, want ErrPayAttachmentInvalidKey", key, err)
 			}
 			if err := svc.Delete(context.Background(), key); err != ErrPayAttachmentInvalidKey {
 				t.Fatalf("Delete(%q): got %v, want ErrPayAttachmentInvalidKey", key, err)
@@ -296,38 +293,54 @@ func TestPayAttachmentPresignRejectsKeysOutsidePrefix(t *testing.T) {
 	}
 }
 
-func TestPayAttachmentPresignClampsTTL(t *testing.T) {
+func TestPayAttachmentOpenReturnsStoredBytes(t *testing.T) {
 	svc, store := newPayAttachmentServiceForTest(t)
 	key := testInvoicePrefix + "2026/08/clx1-a1b2c3d4.pdf"
 
-	cases := []struct {
-		name string
-		ttl  time.Duration
-		want time.Duration
-	}{
-		{"zero falls back to default", 0, defaultPayAttachmentPresignTTL},
-		{"negative falls back to default", -time.Hour, defaultPayAttachmentPresignTTL},
-		{"below floor is raised", time.Second, minPayAttachmentPresignTTL},
-		{"above ceiling is capped", time.Hour, maxPayAttachmentPresignTTL},
-		{"in range is preserved", 3 * time.Minute, 3 * time.Minute},
+	content, err := svc.Open(context.Background(), key)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			before := time.Now()
-			_, expiresAt, err := svc.Presign(context.Background(), key, "发票.pdf", tc.ttl)
-			if err != nil {
-				t.Fatalf("Presign: %v", err)
-			}
-			if store.presignedTTL != tc.want {
-				t.Fatalf("ttl = %v, want %v", store.presignedTTL, tc.want)
-			}
-			if expiresAt.Before(before.Add(tc.want - time.Second)) {
-				t.Fatalf("expiresAt %v is earlier than the clamped ttl %v", expiresAt, tc.want)
-			}
-			if store.presignedName != "发票.pdf" {
-				t.Fatalf("download name = %q, want the UTF-8 name to survive", store.presignedName)
-			}
-		})
+	defer func() { _ = content.Body.Close() }()
+
+	if store.openedKey != key {
+		t.Fatalf("opened key = %q, want %q", store.openedKey, key)
+	}
+	data, err := io.ReadAll(content.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if len(data) == 0 || content.ContentType != "application/pdf" {
+		t.Fatalf("unexpected content: type=%q len=%d", content.ContentType, len(data))
+	}
+	if content.Size != int64(len(data)) {
+		t.Fatalf("size = %d, want %d", content.Size, len(data))
+	}
+}
+
+// 中文文件名要按 RFC 6266 同时给出 ASCII 回退名和 UTF-8 编码名，
+// 否则浏览器存下来会是乱码或随机的对象 key。
+func TestAttachmentContentDispositionEncodesUTF8Name(t *testing.T) {
+	got := AttachmentContentDisposition("发票 2026.pdf")
+	if !strings.Contains(got, "filename*=UTF-8''") {
+		t.Fatalf("missing RFC 5987 filename*: %s", got)
+	}
+	if !strings.Contains(got, "%E5%8F%91%E7%A5%A8") {
+		t.Fatalf("UTF-8 name not percent-encoded: %s", got)
+	}
+	if !strings.HasPrefix(got, "attachment; filename=") {
+		t.Fatalf("missing ascii fallback: %s", got)
+	}
+}
+
+// 头注入防护：文件名里的 CRLF 与引号必须被剥掉，否则能往响应头里塞任意字段。
+func TestAttachmentContentDispositionStripsHeaderInjection(t *testing.T) {
+	got := AttachmentContentDisposition("a\r\nSet-Cookie: x=1\"; drop.pdf")
+	if strings.ContainsAny(got, "\r\n") {
+		t.Fatalf("disposition still contains CRLF: %q", got)
+	}
+	if strings.Contains(got, `x=1"`) {
+		t.Fatalf("disposition still contains a raw quote: %q", got)
 	}
 }
 

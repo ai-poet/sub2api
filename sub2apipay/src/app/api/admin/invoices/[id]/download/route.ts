@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
-import { adminGetInvoiceDownloadUrl } from '@/lib/invoice/service';
+import { adminOpenInvoiceFile } from '@/lib/invoice/service';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
 
@@ -11,9 +11,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const { id } = await params;
-    const url = await adminGetInvoiceDownloadUrl({ invoiceId: id, locale });
-    return NextResponse.redirect(url, { status: 302, headers: { 'Cache-Control': 'no-store, private' } });
+    const file = await adminOpenInvoiceFile({ invoiceId: id, locale });
+
+    const headers = new Headers({
+      'Content-Type': file.contentType,
+      'Content-Disposition': file.contentDisposition,
+      'Cache-Control': 'no-store, private',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    if (file.contentLength) headers.set('Content-Length', file.contentLength);
+
+    return new NextResponse(file.body, { status: 200, headers });
   } catch (error) {
-    return handleApiError(error, '获取发票下载链接失败', request);
+    return handleApiError(error, '发票下载失败', request);
   }
 }

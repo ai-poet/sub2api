@@ -58,7 +58,7 @@ func RegisterPayRoutes(
 	attachments.Use(middleware.RequestBodyLimit(service.MaxPayAttachmentBytes))
 	{
 		attachments.POST("", h.PayBridge.UploadAttachment)
-		attachments.POST("/presign", h.PayBridge.PresignAttachment)
+		attachments.GET("/content", h.PayBridge.DownloadAttachment)
 		attachments.DELETE("", h.PayBridge.DeleteAttachment)
 	}
 	internal.POST("/notifications/invoice-ready", h.PayBridge.SendInvoiceReadyEmail)

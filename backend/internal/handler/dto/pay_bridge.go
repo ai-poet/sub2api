@@ -1,19 +1,5 @@
 package dto
 
-// PayAttachmentPresignRequest 请求为已上传附件签发临时下载链接。
-type PayAttachmentPresignRequest struct {
-	Key      string `json:"key" binding:"required"`
-	FileName string `json:"file_name"`
-	// ExpiresInSeconds 会被服务端钳制到 [60, 900]。
-	ExpiresInSeconds int `json:"expires_in_seconds"`
-}
-
-// PayAttachmentPresignResponse 是签发结果。
-type PayAttachmentPresignResponse struct {
-	URL       string `json:"url"`
-	ExpiresAt string `json:"expires_at"`
-}
-
 // PayAttachmentDeleteRequest 请求删除附件对象。
 type PayAttachmentDeleteRequest struct {
 	Key string `json:"key" binding:"required"`

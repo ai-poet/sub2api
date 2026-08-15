@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -66,8 +66,9 @@ func (s *payBridgeMemoryStore) Upload(_ context.Context, key, _ string, _ []byte
 	return nil
 }
 
-func (s *payBridgeMemoryStore) PresignDownloadURL(_ context.Context, key, _ string, _ time.Duration) (string, error) {
-	return "https://example.invalid/" + key, nil
+func (s *payBridgeMemoryStore) Open(_ context.Context, key string) (io.ReadCloser, string, int64, error) {
+	body := "%PDF-1.7 stored"
+	return io.NopCloser(strings.NewReader(body)), "application/pdf", int64(len(body)), nil
 }
 
 func (s *payBridgeMemoryStore) Delete(context.Context, string) error { return nil }
@@ -101,7 +102,7 @@ func newPayBridgeRouter(t *testing.T) (*gin.Engine, *payBridgeMemoryStore) {
 	group := r.Group("/api/internal/pay/attachments")
 	group.Use(middleware.RequestBodyLimit(service.MaxPayAttachmentBytes))
 	group.POST("", h.UploadAttachment)
-	group.POST("/presign", h.PresignAttachment)
+	group.GET("/content", h.DownloadAttachment)
 	group.DELETE("", h.DeleteAttachment)
 	return r, store
 }
@@ -142,18 +143,44 @@ func TestPayBridgeUploadStoresPDFAndReturnsKey(t *testing.T) {
 }
 
 // The internal bridge token is shared with sub2apipay; without this guard a bug
-// (or a leaked token) in the pay service could sign a download URL for the
-// database backups that live in the same bucket.
-func TestPayBridgePresignRejectsKeyOutsideAttachmentPrefix(t *testing.T) {
+// (or a leaked token) in the pay service could read the database backups that
+// live in the same bucket.
+func TestPayBridgeDownloadRejectsKeyOutsideAttachmentPrefix(t *testing.T) {
 	r, _ := newPayBridgeRouter(t)
 
-	body, err := json.Marshal(map[string]any{"key": "backups/2026/08/14/dump.sql.gz", "file_name": "dump.sql.gz"})
-	require.NoError(t, err)
-	req := httptest.NewRequest(http.MethodPost, "/api/internal/pay/attachments/presign", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/internal/pay/attachments/content?key="+url.QueryEscape("backups/2026/08/14/dump.sql.gz"),
+		nil,
+	)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusBadRequest, w.Code, "body=%s", w.Body.String())
-	require.NotContains(t, w.Body.String(), "https://", "no signed URL may be returned")
+	require.NotContains(t, w.Body.String(), "%PDF", "no object bytes may be returned")
+}
+
+// 同源流式回传：绕开父页面 CSP 的 frame-src 与 HTTPS→HTTP 混合内容两道拦截。
+func TestPayBridgeDownloadStreamsWithUTF8Filename(t *testing.T) {
+	r, _ := newPayBridgeRouter(t)
+
+	key := service.DefaultInvoiceStoragePrefix + "2026/08/clx1-abcd1234.pdf"
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/internal/pay/attachments/content?key="+url.QueryEscape(key)+"&filename="+url.QueryEscape("发票 2026.pdf"),
+		nil,
+	)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+	require.Contains(t, w.Body.String(), "%PDF")
+	require.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
+
+	disposition := w.Header().Get("Content-Disposition")
+	require.Contains(t, disposition, "attachment;")
+	require.Contains(t, disposition, "filename*=UTF-8''")
+	// 发票带着抬头和税号，任何一层都不该缓存。
+	require.Contains(t, w.Header().Get("Cache-Control"), "no-store")
+	require.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
 }
