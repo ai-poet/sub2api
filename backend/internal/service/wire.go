@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"database/sql"
-	"os"
 	"time"
 
+	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/antigravity"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
@@ -66,7 +66,7 @@ func ProvideAuthService(
 	emailQueueService *EmailQueueService,
 	promoService *PromoService,
 	defaultSubAssigner DefaultSubscriptionAssigner,
-	affiliateService *AffiliateService,
+	referralService *ReferralService,
 	userPlatformQuotaRepo UserPlatformQuotaRepository,
 ) *AuthService {
 	svc := NewAuthService(
@@ -80,8 +80,8 @@ func ProvideAuthService(
 		turnstileService,
 		emailQueueService,
 		promoService,
+		referralService,
 		defaultSubAssigner,
-		affiliateService,
 		userPlatformQuotaRepo,
 	)
 	svc.SetTencentCaptchaService(tencentCaptchaService)

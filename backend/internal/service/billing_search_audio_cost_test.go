@@ -39,4 +39,3 @@ func TestCalculateAudioCost(t *testing.T) {
 	require.Equal(t, 0.0, s.CalculateAudioCost("realtime", 1, &audioPriceConfig{RealtimePerMin: &zero}, 1).ActualCost)
 }
 
-func floatPtr(v float64) *float64 { return &v }

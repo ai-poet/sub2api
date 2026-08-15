@@ -365,10 +365,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		CommunityQRCode:              settings[SettingKeyCommunityQRCode],
 		CommunityGroupURL:            strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 
-		ChannelMonitorEnabled:                !isFalseSettingValue(settings[SettingKeyChannelMonitorEnabled]),
-		ChannelMonitorMode:                   normalizeChannelMonitorMode(settings[SettingKeyChannelMonitorMode]),
-		ChannelMonitorDefaultIntervalSeconds: parseChannelMonitorInterval(settings[SettingKeyChannelMonitorDefaultIntervalSeconds]),
-		ChannelMonitorHideThroughput:         !isFalseSettingValue(settings[SettingKeyChannelMonitorHideThroughput]),
 
 		AvailableChannelsEnabled: settings[SettingKeyAvailableChannelsEnabled] == "true",
 
@@ -694,10 +690,6 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		CommunityGroupURL:            settings.CommunityGroupURL,
 		ClientChangelogEntries:       settings.ClientChangelogEntries,
 
-		ChannelMonitorEnabled:                settings.ChannelMonitorEnabled,
-		ChannelMonitorMode:                   settings.ChannelMonitorMode,
-		ChannelMonitorDefaultIntervalSeconds: settings.ChannelMonitorDefaultIntervalSeconds,
-		ChannelMonitorHideThroughput:         settings.ChannelMonitorHideThroughput,
 		AvailableChannelsEnabled:             settings.AvailableChannelsEnabled,
 		PublicPricingEnabled:                 settings.PublicPricingEnabled,
 		RiskControlEnabled:                   settings.RiskControlEnabled,
