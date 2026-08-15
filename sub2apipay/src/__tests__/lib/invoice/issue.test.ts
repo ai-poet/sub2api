@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockUploadAttachment = vi.fn();
 const mockDeleteAttachmentQuietly = vi.fn();
 const mockSendInvoiceReadyEmail = vi.fn();
-const mockPresignAttachment = vi.fn();
+const mockFetchAttachment = vi.fn();
 
 vi.mock('@/lib/sub2api/attachments', async () => {
   const actual = await vi.importActual<typeof import('@/lib/sub2api/attachments')>('@/lib/sub2api/attachments');
@@ -12,7 +12,7 @@ vi.mock('@/lib/sub2api/attachments', async () => {
     uploadAttachment: (...a: unknown[]) => mockUploadAttachment(...a),
     deleteAttachmentQuietly: (...a: unknown[]) => mockDeleteAttachmentQuietly(...a),
     sendInvoiceReadyEmail: (...a: unknown[]) => mockSendInvoiceReadyEmail(...a),
-    presignAttachment: (...a: unknown[]) => mockPresignAttachment(...a),
+    fetchAttachment: (...a: unknown[]) => mockFetchAttachment(...a),
   };
 });
 

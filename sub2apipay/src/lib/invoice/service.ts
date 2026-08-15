@@ -7,9 +7,10 @@ import type { Locale } from '@/lib/locale';
 import {
   AttachmentError,
   deleteAttachmentQuietly,
-  presignAttachment,
+  fetchAttachment,
   sendInvoiceReadyEmail,
   uploadAttachment,
+  type AttachmentStream,
 } from '@/lib/sub2api/attachments';
 import { evaluateInvoiceEligibility } from './eligibility';
 import {
@@ -331,11 +332,11 @@ export async function cancelInvoice(input: { invoiceId: string; userId: number; 
   });
 }
 
-export async function getUserInvoiceDownloadUrl(input: {
+export async function openUserInvoiceFile(input: {
   invoiceId: string;
   userId: number;
   locale: Locale;
-}): Promise<string> {
+}): Promise<AttachmentStream> {
   // 归属 + 状态一起写进查询条件：这是整个功能里最关键的一条越权防线。
   const invoice = await prisma.invoiceRequest.findFirst({
     where: { id: input.invoiceId, userId: input.userId, status: INVOICE_STATUS.ISSUED },
@@ -349,7 +350,7 @@ export async function getUserInvoiceDownloadUrl(input: {
     );
   }
 
-  const { url } = await presignAttachment({ key: invoice.fileKey, fileName: invoice.fileName });
+  const stream = await fetchAttachment({ key: invoice.fileKey, fileName: invoice.fileName });
 
   await prisma.invoiceRequest
     .update({
@@ -361,7 +362,7 @@ export async function getUserInvoiceDownloadUrl(input: {
     invoiceId: invoice.id,
   });
 
-  return url;
+  return stream;
 }
 
 // ─── 管理侧 ───
@@ -738,7 +739,7 @@ export async function adminReplaceInvoiceFile(input: {
   return (await adminGetInvoice(invoice.id))!;
 }
 
-export async function adminGetInvoiceDownloadUrl(input: { invoiceId: string; locale: Locale }): Promise<string> {
+export async function adminOpenInvoiceFile(input: { invoiceId: string; locale: Locale }): Promise<AttachmentStream> {
   const invoice = await prisma.invoiceRequest.findUnique({
     where: { id: input.invoiceId },
     select: { fileKey: true, fileName: true },
@@ -750,8 +751,7 @@ export async function adminGetInvoiceDownloadUrl(input: { invoiceId: string; loc
       404,
     );
   }
-  const { url } = await presignAttachment({ key: invoice.fileKey, fileName: invoice.fileName });
-  return url;
+  return fetchAttachment({ key: invoice.fileKey, fileName: invoice.fileName });
 }
 
 // ─── 退款联动 ───

@@ -4,7 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"strings"
@@ -16,18 +19,12 @@ import (
 // 发票附件的对象前缀由 InvoiceStorageSettingService 提供（后台可配置，默认
 // DefaultInvoiceStoragePrefix）。
 //
-// 它同时是 presign/delete 的授权边界——只有该前缀下的 key 才允许签名或删除。
-// 没有这条边界，持有内部桥接令牌就能为同一个桶里的数据库备份签发下载链接；
-// 因此设置项那侧还会拒绝与备份前缀重叠的取值。
+// 它同时是读取/删除的授权边界——只有该前缀下的 key 才允许被取回或删除。
+// 没有这条边界，持有内部桥接令牌就能读走同一个桶里的数据库备份；因此设置项
+// 那侧还会拒绝与备份前缀重叠的取值。
 
 // MaxPayAttachmentBytes 单个附件上限（10 MiB）。发票 PDF/OFD 通常在 1 MiB 内。
 const MaxPayAttachmentBytes = 10 << 20
-
-const (
-	minPayAttachmentPresignTTL     = time.Minute
-	maxPayAttachmentPresignTTL     = 15 * time.Minute
-	defaultPayAttachmentPresignTTL = 5 * time.Minute
-)
 
 var (
 	ErrPayAttachmentStorageNotConfigured = infraerrors.BadRequest(
@@ -72,8 +69,8 @@ var payAttachmentAllowedTypes = map[string]string{
 // payAttachmentAllowedSniffs 是 http.DetectContentType 的粗粒度白名单。
 //
 // 这是一个「够用即可」的闸门而非严格相等校验：OFD 实际是 zip 容器，会被嗅探成
-// application/zip。它要挡住的是「扩展名 .pdf、内容其实是 HTML」——该文件随后会
-// 从对象存储的域上以预签名链接提供，若允许 HTML 就等于在自己的源上落一个存储型 XSS。
+// application/zip。它要挡住的是「扩展名 .pdf、内容其实是 HTML」——该文件随后会被
+// 同源回传给浏览器，若允许 HTML 就等于在自己的源上落一个存储型 XSS。
 var payAttachmentAllowedSniffs = map[string]struct{}{
 	"application/pdf": {},
 	"application/zip": {},
@@ -84,7 +81,7 @@ var payAttachmentAllowedSniffs = map[string]struct{}{
 // PayAttachmentStore 是支付服务附件的对象存储抽象，由 repository 层实现。
 type PayAttachmentStore interface {
 	Upload(ctx context.Context, key, contentType string, data []byte) error
-	PresignDownloadURL(ctx context.Context, key, downloadName string, expiry time.Duration) (string, error)
+	Open(ctx context.Context, key string) (io.ReadCloser, string, int64, error)
 	Delete(ctx context.Context, key string) error
 }
 
@@ -170,23 +167,70 @@ func (s *PayAttachmentService) Put(ctx context.Context, in PayAttachmentPutInput
 	}, nil
 }
 
-// Presign 为已上传的附件生成短期下载链接。
-func (s *PayAttachmentService) Presign(ctx context.Context, key, downloadName string, ttl time.Duration) (string, time.Time, error) {
-	ttl = clampPresignTTL(ttl)
+// PayAttachmentContent 是一次附件读取的结果，调用方负责 Close。
+type PayAttachmentContent struct {
+	Body        io.ReadCloser
+	ContentType string
+	Size        int64
+}
 
+// Open 取回附件内容，由调用方同源回传给浏览器。
+//
+// 不返回预签名链接：下载页跑在 iframe 里，让浏览器直接跳到对象存储会被父页面
+// CSP 的 frame-src 拦下，HTTPS 页面里跳 http:// 还会再撞一次混合内容。同源回传
+// 与存储端的域名/协议完全解耦，对象存储也就不必对公网暴露。
+func (s *PayAttachmentService) Open(ctx context.Context, key string) (*PayAttachmentContent, error) {
 	store, prefix, err := s.resolve(ctx)
 	if err != nil {
-		return "", time.Time{}, err
+		return nil, err
 	}
 	// 前缀校验必须在解析出当前前缀之后做：它是授权边界，不能用调用方给的值。
 	if err := validatePayAttachmentKey(key, prefix); err != nil {
-		return "", time.Time{}, err
+		return nil, err
 	}
-	url, err := store.PresignDownloadURL(ctx, key, downloadName, ttl)
+	body, contentType, size, err := store.Open(ctx, key)
 	if err != nil {
-		return "", time.Time{}, err
+		return nil, err
 	}
-	return url, time.Now().Add(ttl), nil
+	return &PayAttachmentContent{Body: body, ContentType: contentType, Size: size}, nil
+}
+
+// AttachmentContentDisposition 构造 RFC 6266 的 Content-Disposition：
+// ASCII 回退名给老客户端，filename* 给支持 RFC 5987 的现代浏览器。
+// 发票的对象 key 是随机生成的，用户期望的文件名往往还是中文，所以不能直接用 key。
+func AttachmentContentDisposition(name string) string {
+	name = sanitizeAttachmentName(name)
+	if name == "" {
+		name = "attachment"
+	}
+	return fmt.Sprintf("attachment; filename=%q; filename*=UTF-8''%s", asciiFallbackName(name), url.PathEscape(name))
+}
+
+// sanitizeAttachmentName 去掉换行与路径分隔符，避免头注入与目录穿越。
+func sanitizeAttachmentName(name string) string {
+	name = strings.NewReplacer("\r", "", "\n", "", "\x00", "", "/", "_", "\\", "_", `"`, "").Replace(name)
+	name = strings.TrimSpace(name)
+	if len(name) > 180 {
+		name = name[:180]
+	}
+	return name
+}
+
+// asciiFallbackName 把非 ASCII 字符替换成 '_'，用于 filename= 回退项。
+func asciiFallbackName(name string) string {
+	var b strings.Builder
+	for _, r := range name {
+		if r < 0x20 || r > 0x7e {
+			b.WriteByte('_')
+			continue
+		}
+		b.WriteRune(r)
+	}
+	fallback := strings.TrimSpace(b.String())
+	if fallback == "" {
+		return "attachment"
+	}
+	return fallback
 }
 
 // Delete 删除附件对象（用于回滚孤儿对象、或替换文件后清理旧对象）。
@@ -235,7 +279,7 @@ func buildPayAttachmentKey(prefix, ref, ext string) (string, error) {
 	return prefix + now.Format("2006/01") + "/" + ref + "-" + hex.EncodeToString(suffix) + ext, nil
 }
 
-// validatePayAttachmentKey 是 presign/delete 的授权边界。prefix 必须来自当前生效的
+// validatePayAttachmentKey 是读取/删除的授权边界。prefix 必须来自当前生效的
 // 设置，不能取调用方传入的值。
 func validatePayAttachmentKey(key, prefix string) error {
 	key = strings.TrimSpace(key)
@@ -247,19 +291,6 @@ func validatePayAttachmentKey(key, prefix string) error {
 		return ErrPayAttachmentInvalidKey
 	}
 	return nil
-}
-
-func clampPresignTTL(ttl time.Duration) time.Duration {
-	switch {
-	case ttl <= 0:
-		return defaultPayAttachmentPresignTTL
-	case ttl < minPayAttachmentPresignTTL:
-		return minPayAttachmentPresignTTL
-	case ttl > maxPayAttachmentPresignTTL:
-		return maxPayAttachmentPresignTTL
-	default:
-		return ttl
-	}
 }
 
 func normalizeContentType(raw string) string {

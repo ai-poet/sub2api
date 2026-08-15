@@ -74,32 +74,46 @@ export async function uploadAttachment(params: {
   return body.data;
 }
 
-/** 签发短期下载链接。网关会拒绝不在发票前缀下的 key。 */
-export async function presignAttachment(params: {
+export interface AttachmentStream {
+  body: ReadableStream<Uint8Array>;
+  contentType: string;
+  contentDisposition: string;
+  contentLength: string | null;
+}
+
+/**
+ * 取回附件内容，由本服务同源回传给浏览器。
+ *
+ * 不用预签名链接直接跳转：下载页跑在 iframe 里，浏览器直接访问对象存储会被父页面
+ * CSP 的 frame-src 拦下（Chrome 提示 "This content is blocked"），HTTPS 页面里跳
+ * http:// 还会再撞一次混合内容。同源回传也让对象存储不必对公网暴露。
+ *
+ * 返回的是流，不落地成 Buffer——发票虽小，但没必要为每次下载占一份完整内存。
+ */
+export async function fetchAttachment(params: {
   key: string;
   fileName?: string | null;
-  expiresInSeconds?: number;
-}): Promise<{ url: string; expiresAt: string }> {
-  const response = await fetch(buildInternalUrl('/api/internal/pay/attachments/presign'), {
-    method: 'POST',
-    headers: getInternalPayHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({
-      key: params.key,
-      file_name: params.fileName ?? '',
-      expires_in_seconds: params.expiresInSeconds ?? 300,
-    }),
+}): Promise<AttachmentStream> {
+  const query = new URLSearchParams({ key: params.key, filename: params.fileName ?? '' });
+
+  const response = await fetch(buildInternalUrl(`/api/internal/pay/attachments/content?${query}`), {
+    headers: getInternalPayHeaders(),
     signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
   });
 
   if (!response.ok) {
-    throw await readError(response, `Presign failed (${response.status})`);
+    throw await readError(response, `Attachment download failed (${response.status})`);
+  }
+  if (!response.body) {
+    throw new AttachmentError('ATTACHMENT_EMPTY_BODY', 'Attachment response had no body', 502);
   }
 
-  const body = (await response.json()) as InternalEnvelope<{ url: string; expires_at: string }>;
-  if (!body.data?.url) {
-    throw new AttachmentError('ATTACHMENT_PRESIGN_INVALID_RESPONSE', 'Presign returned no URL', 502);
-  }
-  return { url: body.data.url, expiresAt: body.data.expires_at };
+  return {
+    body: response.body,
+    contentType: response.headers.get('content-type') || 'application/octet-stream',
+    contentDisposition: response.headers.get('content-disposition') || 'attachment',
+    contentLength: response.headers.get('content-length'),
+  };
 }
 
 /**

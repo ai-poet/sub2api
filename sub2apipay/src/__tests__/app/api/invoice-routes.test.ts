@@ -6,7 +6,7 @@ vi.mock('@/lib/sub2api/client', () => ({
   getCurrentUserByToken: (...args: unknown[]) => mockGetCurrentUserByToken(...args),
 }));
 
-const mockPresignAttachment = vi.fn();
+const mockFetchAttachment = vi.fn();
 const mockUploadAttachment = vi.fn();
 const mockDeleteAttachmentQuietly = vi.fn();
 const mockSendInvoiceReadyEmail = vi.fn();
@@ -14,7 +14,7 @@ vi.mock('@/lib/sub2api/attachments', async () => {
   const actual = await vi.importActual<typeof import('@/lib/sub2api/attachments')>('@/lib/sub2api/attachments');
   return {
     AttachmentError: actual.AttachmentError,
-    presignAttachment: (...args: unknown[]) => mockPresignAttachment(...args),
+    fetchAttachment: (...args: unknown[]) => mockFetchAttachment(...args),
     uploadAttachment: (...args: unknown[]) => mockUploadAttachment(...args),
     deleteAttachmentQuietly: (...args: unknown[]) => mockDeleteAttachmentQuietly(...args),
     sendInvoiceReadyEmail: (...args: unknown[]) => mockSendInvoiceReadyEmail(...args),
@@ -242,30 +242,47 @@ describe('GET /api/invoices/[id]/download', () => {
     return new NextRequest('https://pay.example.com/api/invoices/inv-1/download?token=tok');
   }
 
-  it('redirects to a presigned URL for the owner', async () => {
+  // 同源流式回传，不再 302 到对象存储：下载页在 iframe 里，跳外部源会被父页面
+  // CSP 的 frame-src 拦下（Chrome 提示 "This content is blocked"），
+  // HTTPS 页面跳 http:// 还会再撞一次混合内容。
+  it('streams the file back from the same origin for the owner', async () => {
     mockInvoiceFindFirst.mockResolvedValue({
       id: 'inv-1',
       orderId: 'order-1',
-      fileKey: 'pay-attachments/invoice/2026/08/inv-1-abcd.pdf',
+      fileKey: 'invoices/2026/08/inv-1-abcd.pdf',
       fileName: '发票.pdf',
     });
-    mockPresignAttachment.mockResolvedValue({ url: 'https://s3.example/signed', expiresAt: '2026-08-15T00:05:00Z' });
+    mockFetchAttachment.mockResolvedValue({
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('%PDF-1.7 bytes'));
+          controller.close();
+        },
+      }),
+      contentType: 'application/pdf',
+      contentDisposition: "attachment; filename=\"_.pdf\"; filename*=UTF-8''%E5%8F%91%E7%A5%A8.pdf",
+      contentLength: '14',
+    });
     mockInvoiceUpdate.mockResolvedValue({});
 
     const res = await downloadInvoiceRoute(downloadRequest(), { params });
-    expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe('https://s3.example/signed');
-    // 预签名链接是短期凭证，不能被任何一层缓存留存。
+
+    expect(res.status).toBe(200);
+    // 绝不能是跳转——那正是被 CSP 拦掉的形态。
+    expect(res.headers.get('location')).toBeNull();
+    expect(res.headers.get('content-type')).toBe('application/pdf');
+    expect(res.headers.get('content-disposition')).toContain("filename*=UTF-8''");
     expect(res.headers.get('cache-control')).toContain('no-store');
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(await res.text()).toContain('%PDF');
   });
 
   // 这是整个功能里最关键的一条越权防线：归属与状态都写在查询条件里。
-  it("does not redirect for another user's invoice", async () => {
+  it("returns nothing for another user's invoice", async () => {
     mockInvoiceFindFirst.mockResolvedValue(null);
     const res = await downloadInvoiceRoute(downloadRequest(), { params });
     expect(res.status).toBe(404);
-    expect(res.headers.get('location')).toBeNull();
-    expect(mockPresignAttachment).not.toHaveBeenCalled();
+    expect(mockFetchAttachment).not.toHaveBeenCalled();
 
     const where = mockInvoiceFindFirst.mock.calls[0][0].where;
     expect(where.userId).toBe(USER.id);
@@ -278,6 +295,6 @@ describe('GET /api/invoices/[id]/download', () => {
       { params },
     );
     expect(res.status).toBe(401);
-    expect(mockPresignAttachment).not.toHaveBeenCalled();
+    expect(mockFetchAttachment).not.toHaveBeenCalled();
   });
 });

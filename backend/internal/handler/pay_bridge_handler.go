@@ -3,9 +3,10 @@ package handler
 import (
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
-	"time"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -73,29 +74,49 @@ func (h *PayBridgeHandler) UploadAttachment(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// PresignAttachment 为附件签发短期下载链接。
-func (h *PayBridgeHandler) PresignAttachment(c *gin.Context) {
+// DownloadAttachment 把附件内容流式回传。
+//
+// 不签发预签名链接：下载页跑在 iframe 里，让浏览器直接跳到对象存储会被父页面 CSP
+// 的 frame-src 拦下（Chrome 提示 "This content is blocked"），HTTPS 页面里跳
+// http:// 还会再撞一次混合内容。同源回传绕开这两道，对象存储也不必对公网暴露。
+//
+// GET /api/internal/pay/attachments/content?key=...&filename=...
+func (h *PayBridgeHandler) DownloadAttachment(c *gin.Context) {
 	if h == nil || h.attachments == nil {
 		response.ErrorFrom(c, service.ErrPayAttachmentStorageNotConfigured)
 		return
 	}
 
-	var req dto.PayAttachmentPresignRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "invalid request body")
-		return
-	}
-
-	ttl := time.Duration(req.ExpiresInSeconds) * time.Second
-	signedURL, expiresAt, err := h.attachments.Presign(c.Request.Context(), req.Key, req.FileName, ttl)
+	content, err := h.attachments.Open(c.Request.Context(), c.Query("key"))
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, dto.PayAttachmentPresignResponse{
-		URL:       signedURL,
-		ExpiresAt: expiresAt.UTC().Format(time.RFC3339),
-	})
+	defer func() { _ = content.Body.Close() }()
+
+	fileName := c.Query("filename")
+	if decoded, decodeErr := url.QueryUnescape(fileName); decodeErr == nil {
+		fileName = decoded
+	}
+
+	contentType := content.ContentType
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	c.Header("Content-Type", contentType)
+	c.Header("Content-Disposition", service.AttachmentContentDisposition(fileName))
+	// 发票是客户的商业信息，任何一层都不该缓存。
+	c.Header("Cache-Control", "no-store, private")
+	c.Header("X-Content-Type-Options", "nosniff")
+	if content.Size > 0 {
+		c.Header("Content-Length", strconv.FormatInt(content.Size, 10))
+	}
+
+	c.Status(http.StatusOK)
+	if _, err := io.Copy(c.Writer, content.Body); err != nil {
+		// 头已经发出去了，只能记日志——此时再写 JSON 错误体只会污染文件内容。
+		log.Printf("[pay_bridge] streaming attachment failed: %v", err)
+	}
 }
 
 // DeleteAttachment 删除附件对象（回滚孤儿对象、替换文件后清理旧对象）。
