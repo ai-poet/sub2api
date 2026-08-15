@@ -29,6 +29,24 @@ function decryptAndMaskConfig(encryptedConfig: string): Record<string, string> {
   return masked;
 }
 
+/**
+ * 解密失败的实例不应该让整个列表 500。
+ *
+ * config 用 SHA256(JWT_SECRET) 加密，轮换过 JWT_SECRET 之后旧密文就永久解不开了。
+ * 之前一行坏掉会抛穿整个 map，管理员连页面都打不开，也就无从删除或重建那一行——
+ * 恰好在最需要后台的时候把后台锁死。这里改为单行降级，返回标记让前端提示重配。
+ * ensureDBProviders 早就是这么做的（逐个 try/catch 后 skip）。
+ */
+function safeDecryptAndMaskConfig(
+  encryptedConfig: string,
+): { config: Record<string, string>; decryptFailed: boolean } {
+  try {
+    return { config: decryptAndMaskConfig(encryptedConfig), decryptFailed: false };
+  } catch {
+    return { config: {}, decryptFailed: true };
+  }
+}
+
 // GET: List all instances (optionally filter by providerKey)
 export async function GET(request: NextRequest) {
   if (!(await verifyAdminToken(request))) return unauthorizedResponse(request);
@@ -41,11 +59,24 @@ export async function GET(request: NextRequest) {
       orderBy: { sortOrder: 'asc' },
     });
 
-    const result = instances.map((inst) => ({
-      ...inst,
-      config: decryptAndMaskConfig(inst.config),
-      limits: inst.limits ? JSON.parse(inst.limits) : null,
-    }));
+    const result = instances.map((inst) => {
+      const { config, decryptFailed } = safeDecryptAndMaskConfig(inst.config);
+      let limits = null;
+      try {
+        limits = inst.limits ? JSON.parse(inst.limits) : null;
+      } catch {
+        // 同理：一行 limits 存坏了也不该拖垮整页。
+      }
+      return { ...inst, config, limits, config_decrypt_failed: decryptFailed };
+    });
+
+    const brokenCount = result.filter((inst) => inst.config_decrypt_failed).length;
+    if (brokenCount > 0) {
+      console.warn(
+        `[payment] ${brokenCount} provider instance(s) could not be decrypted; ` +
+          'this usually means JWT_SECRET was rotated. They must be deleted and recreated.',
+      );
+    }
 
     return NextResponse.json({ instances: result });
   } catch (error) {

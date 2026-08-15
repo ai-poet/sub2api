@@ -236,6 +236,8 @@ interface ProviderInstanceData {
   limits: Record<string, ChannelLimits> | null;
   refundEnabled: boolean;
   todayAmount?: number;
+  /** 密文解不开（通常是轮换过 JWT_SECRET），只能删除后重建。 */
+  config_decrypt_failed?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -1049,6 +1051,18 @@ function PaymentConfigContent() {
                                           className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-slate-600 text-slate-400' : 'bg-slate-100 text-slate-500'}`}
                                         >
                                           {t.allChannels}
+                                        </span>
+                                      )}
+                                      {inst.config_decrypt_failed && (
+                                        <span
+                                          title={
+                                            locale === 'en'
+                                              ? 'Stored credentials cannot be decrypted, usually because JWT_SECRET was rotated. Delete this instance and create it again.'
+                                              : '凭证无法解密，通常是因为轮换过 JWT_SECRET。请删除该实例后重新创建。'
+                                          }
+                                          className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-red-500/20 text-red-300' : 'bg-red-100 text-red-700'}`}
+                                        >
+                                          {locale === 'en' ? 'Credentials unreadable' : '凭证无法解密'}
                                         </span>
                                       )}
                                       {inst.todayAmount !== undefined && inst.todayAmount > 0 && (
