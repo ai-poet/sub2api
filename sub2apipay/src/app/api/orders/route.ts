@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const visiblePaymentTypes = await getVisiblePaymentTypes(locale);
+    const visiblePaymentTypes = await getVisiblePaymentTypes();
     if (!visiblePaymentTypes.includes(payment_type)) {
       return NextResponse.json({ error: `不支持的支付方式: ${payment_type}` }, { status: 400 });
     }

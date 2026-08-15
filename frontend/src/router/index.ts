@@ -38,6 +38,24 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/privacy',
+    name: 'Privacy',
+    component: () => import('@/views/PrivacyPolicyView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Privacy Policy'
+    }
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: () => import('@/views/TermsOfServiceView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Terms of Service'
+    }
+  },
+  {
     path: '/changelog',
     name: 'Changelog',
     component: () => import('@/views/ChangelogView.vue'),

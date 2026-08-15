@@ -1,6 +1,6 @@
 <template>
   <section class="mx-auto max-w-[1380px]">
-    <div class="rounded-[28px] border border-gray-100 bg-white p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] dark:border-white/8 dark:bg-white/[0.03] md:p-10">
+    <div class="bg-white border border-gray-100 rounded-[28px] p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] dark:bg-white/[0.03] dark:border-white/8">
 
       <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
 

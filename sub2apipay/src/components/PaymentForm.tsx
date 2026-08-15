@@ -193,6 +193,15 @@ export default function PaymentForm({
         </span>
       );
     }
+    if (iconType === 'bank') {
+      return (
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#D4A574] text-white">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+            <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zM12 1L2 6v2h19V6L12 1z" />
+          </svg>
+        </span>
+      );
+    }
     return null;
   };
 

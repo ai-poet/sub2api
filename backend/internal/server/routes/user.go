@@ -143,7 +143,5 @@ func RegisterUserRoutes(
 			groupStatus.GET("/:groupId/records", h.GroupStatus.Records)
 			groupStatus.GET("/:groupId/events", h.GroupStatus.Events)
 		}
-
-		// 渠道监控（用户只读）
 	}
 }

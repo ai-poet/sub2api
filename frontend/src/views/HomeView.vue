@@ -1,5 +1,7 @@
 <template>
-  <div v-if="homeContent" class="min-h-screen">
+  <!-- Custom Home Content: Full Page Mode -->
+  <div v-if="hasHomeContent" class="min-h-screen">
+    <!-- iframe mode -->
     <iframe
       v-if="isHomeContentUrl"
       :src="homeContent.trim()"
@@ -9,6 +11,7 @@
     <div v-else v-html="homeContent"></div>
   </div>
 
+  <!-- Default Home Page -->
   <div
     v-else
     class="home-font-sans relative min-h-screen overflow-hidden bg-[#f8fafb] text-[#161616] dark:bg-[#0f1114] dark:text-[#f3f1ed]"
@@ -82,15 +85,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
 import HomeDownloadSection from '@/components/home/HomeDownloadSection.vue'
+import HomePricingSection from '@/components/home/HomePricingSection.vue'
 import HomeFinalCta from '@/components/home/HomeFinalCta.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'
 import HomeHeader from '@/components/home/HomeHeader.vue'
 import HomeHero from '@/components/home/HomeHero.vue'
-import HomePricingSection from '@/components/home/HomePricingSection.vue'
 import HomeProofStrip from '@/components/home/HomeProofStrip.vue'
 import HomeReveal from '@/components/home/HomeReveal.vue'
 import HomeTrustSection from '@/components/home/HomeTrustSection.vue'
@@ -98,20 +101,26 @@ import HomeValueSection from '@/components/home/HomeValueSection.vue'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
+const homeDocumentTitle = 'CheapRouter - Claude Code / Codex 一键接入 · 按量计费'
+let titleSyncTimer: number | undefined
 
-const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
+const siteName = computed(() => {
+  const configuredName = appStore.cachedPublicSettings?.site_name?.trim() || appStore.siteName.trim()
+  return configuredName && configuredName !== 'Sub2API' ? configuredName : 'CheapRouter'
+})
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
 const clientDownloadWindowsUrl = computed(
-  () => appStore.cachedPublicSettings?.client_download_windows_url || ''
+  () => appStore.cachedPublicSettings?.client_download_windows_url?.trim() || ''
 )
 const clientDownloadMacOSUrl = computed(
-  () => appStore.cachedPublicSettings?.client_download_macos_url || ''
+  () => appStore.cachedPublicSettings?.client_download_macos_url?.trim() || ''
 )
 const hasClientDownloads = computed(
-  () => Boolean(clientDownloadWindowsUrl.value.trim()) || Boolean(clientDownloadMacOSUrl.value.trim())
+  () => Boolean(clientDownloadWindowsUrl.value) || Boolean(clientDownloadMacOSUrl.value)
 )
+const hasHomeContent = computed(() => homeContent.value.trim().length > 0)
 
 const isHomeContentUrl = computed(() => {
   const content = homeContent.value.trim()
@@ -128,6 +137,19 @@ const userInitial = computed(() => {
   if (!user?.email) return ''
   return user.email.charAt(0).toUpperCase()
 })
+
+function applyHomeDocumentTitle() {
+  document.title = homeDocumentTitle
+}
+
+watch(
+  [siteName, () => appStore.publicSettingsLoaded],
+  () => {
+    applyHomeDocumentTitle()
+    window.setTimeout(applyHomeDocumentTitle)
+  },
+  { immediate: true, flush: 'post' },
+)
 
 const currentYear = computed(() => new Date().getFullYear())
 
@@ -147,6 +169,22 @@ onMounted(() => {
 
   if (!appStore.publicSettingsLoaded) {
     appStore.fetchPublicSettings()
+  }
+
+  window.setTimeout(applyHomeDocumentTitle)
+  titleSyncTimer = window.setInterval(applyHomeDocumentTitle, 250)
+  window.setTimeout(() => {
+    if (titleSyncTimer) {
+      window.clearInterval(titleSyncTimer)
+      titleSyncTimer = undefined
+    }
+  }, 3000)
+})
+
+onBeforeUnmount(() => {
+  if (titleSyncTimer) {
+    window.clearInterval(titleSyncTimer)
+    titleSyncTimer = undefined
   }
 })
 </script>

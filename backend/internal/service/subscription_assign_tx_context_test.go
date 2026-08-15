@@ -92,7 +92,7 @@ func (s *txContextUserSubRepoStub) UpdateNotes(ctx context.Context, id int64, no
 	return nil
 }
 
-func (s *txContextUserSubRepoStub) ActivateWindows(context.Context, int64, time.Time) error {
+func (s *txContextUserSubRepoStub) ActivateWindows(context.Context, int64, time.Time, time.Time) error {
 	return nil
 }
 func (s *txContextUserSubRepoStub) ResetDailyUsage(context.Context, int64, *time.Time, time.Time) error {
