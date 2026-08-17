@@ -7,6 +7,8 @@ import { formatInvoiceStatus, getInvoiceStatusBadgeClass } from '@/lib/pay-utils
 export interface AdminInvoice {
   id: string;
   orderId: string;
+  /** 该发票覆盖的全部订单号；合并开票时长度大于 1。 */
+  orderIds?: string[];
   userId: number;
   status: string;
   titleName: string;
@@ -173,6 +175,8 @@ export default function InvoiceTable({
                   </div>
                   <div className={['truncate font-mono', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
                     {text.order} #{invoice.orderId.slice(0, 10)}
+                    {/* 合并开票：管理员必须一眼看出这张票不止一单，金额才对得上。 */}
+                    {(invoice.orderIds?.length ?? 1) > 1 && ` +${invoice.orderIds!.length - 1}`}
                   </div>
                 </div>
 

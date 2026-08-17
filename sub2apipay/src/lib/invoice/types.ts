@@ -58,7 +58,10 @@ export interface SavedInvoiceTitle {
 
 export interface InvoiceRequestView {
   id: string;
+  /** 主订单号（合并开票时为最早付款的那张）。 */
   orderId: string;
+  /** 该发票覆盖的全部订单号，单订单开票时长度为 1。 */
+  orderIds: string[];
   status: InvoiceStatus;
   titleName: string;
   taxNo: string;

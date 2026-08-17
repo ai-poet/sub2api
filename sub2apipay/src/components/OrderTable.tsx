@@ -24,6 +24,9 @@ interface OrderTableProps {
   /** 未提供时整列隐藏（开票功能关闭或调用方不支持）。 */
   onInvoiceRequest?: (order: MyOrder) => void;
   onInvoiceDownload?: (invoiceId: string) => void;
+  /** 合并开票的勾选态；未提供 onToggleInvoiceSelect 时不渲染勾选列。 */
+  selectedInvoiceOrderIds?: ReadonlySet<string>;
+  onToggleInvoiceSelect?: (orderId: string) => void;
 }
 
 export default function OrderTable({
@@ -36,6 +39,8 @@ export default function OrderTable({
   onRefundRequest,
   onInvoiceRequest,
   onInvoiceDownload,
+  selectedInvoiceOrderIds,
+  onToggleInvoiceSelect,
 }: OrderTableProps) {
   const text =
     locale === 'en'
@@ -96,9 +101,14 @@ export default function OrderTable({
 
   // 开票列只在调用方接上处理器时出现，因此关闭开票的部署不会多出一列空白。
   const showInvoiceColumn = !!onInvoiceRequest;
-  const gridCols = showInvoiceColumn
-    ? 'md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr_0.9fr]'
-    : 'md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr]';
+  const showSelectColumn = showInvoiceColumn && !!onToggleInvoiceSelect;
+  const gridCols = [
+    showSelectColumn ? 'md:grid-cols-[2rem_1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr_0.9fr]' : null,
+    !showSelectColumn && showInvoiceColumn ? 'md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr_0.9fr]' : null,
+    !showInvoiceColumn ? 'md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr]' : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [refundOrder, setRefundOrder] = useState<MyOrder | null>(null);
@@ -204,6 +214,7 @@ export default function OrderTable({
                 isDark ? 'text-slate-300' : 'text-slate-600',
               ].join(' ')}
             >
+              {showSelectColumn && <span />}
               <span>{text.orderId}</span>
               <span>{text.amount}</span>
               <span>{text.payment}</span>
@@ -222,6 +233,22 @@ export default function OrderTable({
                     isDark ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-700',
                   ].join(' ')}
                 >
+                  {showSelectColumn && (
+                    <div className="mb-1 md:mb-0">
+                      {/* 只有可开票的订单能被勾选，避免选出一个必然整体失败的组合。 */}
+                      {order.canRequestInvoice ? (
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 cursor-pointer accent-blue-600"
+                          checked={selectedInvoiceOrderIds?.has(order.id) ?? false}
+                          onChange={() => onToggleInvoiceSelect?.(order.id)}
+                          aria-label={`${text.invoiceRequest} ${order.id}`}
+                        />
+                      ) : (
+                        <span className="inline-block h-4 w-4" />
+                      )}
+                    </div>
+                  )}
                   <div className="font-medium">#{order.id.slice(0, 12)}</div>
                   <div className="font-semibold">{formatOrderAmount(order)}</div>
                   <div>{getPaymentDisplayInfo(order.paymentType, locale).channel}</div>

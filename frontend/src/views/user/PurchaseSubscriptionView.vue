@@ -57,6 +57,7 @@
             {{ t('purchase.openInNewTab') }}
           </a>
           <iframe
+            ref="purchaseFrame"
             :src="purchaseUrl"
             class="purchase-embed-frame"
             allowfullscreen
@@ -82,7 +83,30 @@ const authStore = useAuthStore()
 
 const loading = ref(false)
 const purchaseTheme = ref<'light' | 'dark'>('light')
+const purchaseFrame = ref<HTMLIFrameElement | null>(null)
 let themeObserver: MutationObserver | null = null
+
+// 支付页在 iframe 内完成到账，顶栏余额来自 authStore.user，不会自己更新。
+// 支付页订单完成时会 postMessage 通知，这里收到后重新拉一次用户信息。
+const PAYMENT_SUCCESS_MESSAGE_TYPE = 'SUB2API_PAYMENT_SUCCESS'
+
+function onPurchaseMessage(event: MessageEvent) {
+  // 只认当前 iframe 发来的消息：支付页可能部署在任意配置的域名下，
+  // 用 source 比对比维护 origin 白名单更可靠，也挡掉了其他窗口的伪造消息。
+  if (!purchaseFrame.value || event.source !== purchaseFrame.value.contentWindow) return
+  const data = event.data as { type?: unknown } | null
+  if (!data || typeof data !== 'object' || data.type !== PAYMENT_SUCCESS_MESSAGE_TYPE) return
+
+  authStore.refreshUser().catch(() => {
+    // 刷新失败不打扰用户：余额会在下一次常规刷新时对齐。
+  })
+}
+
+// 「新窗口打开」的支付页没有宿主可通知，用户付完切回本页时补一次刷新。
+function onVisibilityChange() {
+  if (document.visibilityState !== 'visible') return
+  authStore.refreshUser().catch(() => {})
+}
 
 const purchaseEnabled = computed(() => {
   return appStore.cachedPublicSettings?.purchase_subscription_enabled ?? false
@@ -102,7 +126,13 @@ const isValidUrl = computed(() => {
 onMounted(async () => {
   purchaseTheme.value = detectTheme()
 
+  if (typeof window !== 'undefined') {
+    window.addEventListener('message', onPurchaseMessage)
+  }
+
   if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
     themeObserver = new MutationObserver(() => {
       purchaseTheme.value = detectTheme()
     })
@@ -122,6 +152,12 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('message', onPurchaseMessage)
+  }
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+  }
   if (themeObserver) {
     themeObserver.disconnect()
     themeObserver = null

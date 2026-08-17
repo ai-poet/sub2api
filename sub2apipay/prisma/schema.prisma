@@ -53,6 +53,7 @@ model Order {
 
   auditLogs      AuditLog[]
   invoiceRequest InvoiceRequest?
+  invoiceOrder   InvoiceRequestOrder?
 
   @@index([userId])
   @@index([status])
@@ -159,10 +160,13 @@ enum InvoiceStatus {
 /// 一张订单最多一条开票申请（orderId 唯一）。被驳回或取消后重新申请时复用同一行
 /// 改回 PENDING，而不是新插一行——这样「一单一票」由数据库约束兜底。
 model InvoiceRequest {
-  id      String @id @default(cuid())
-  orderId String @unique @map("order_id")
-  order   Order  @relation(fields: [orderId], references: [id])
-  userId  Int    @map("user_id")
+  id String @id @default(cuid())
+  /// 主订单。合并开票时取最早付款的那张，用于审计日志、通知邮件与管理端展示。
+  /// 完整的覆盖订单清单在 orders 里（单订单开票也会写一行）。
+  orderId String                @unique @map("order_id")
+  order   Order                 @relation(fields: [orderId], references: [id])
+  orders  InvoiceRequestOrder[]
+  userId  Int                   @map("user_id")
 
   titleName    String  @map("title_name")
   taxNo        String  @map("tax_no")
@@ -195,6 +199,25 @@ model InvoiceRequest {
   @@index([userId, createdAt])
   @@index([status, createdAt])
   @@map("invoice_requests")
+}
+
+/// 合并开票明细：一张发票覆盖的每一张订单。
+///
+/// order_id 上的唯一约束是「一单只进一张有效发票」的最终裁决者——并发提交时后到者
+/// 拿 P2002，映射成 409。被驳回/取消的发票在重新申请时整行删除（级联清掉这里的行），
+/// 所以唯一约束不会挡住重新开票。
+model InvoiceRequestOrder {
+  id        String         @id @default(cuid())
+  invoiceId String         @map("invoice_id")
+  invoice   InvoiceRequest @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  orderId   String         @unique @map("order_id")
+  order     Order          @relation(fields: [orderId], references: [id])
+  /// 该订单计入发票的人民币金额，申请时对 order.payAmount 的快照。
+  amount    Decimal        @db.Decimal(10, 2)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@index([invoiceId])
+  @@map("invoice_request_orders")
 }
 
 /// 抬头记忆：用户再次开票时自动回填，按税号去重。

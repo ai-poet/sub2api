@@ -22,9 +22,10 @@ export interface InvoiceRequestPayload {
 interface InvoiceRequestDialogProps {
   isDark: boolean;
   locale: Locale;
-  /** 开票金额（人民币），来自订单的实付金额。 */
+  /** 开票金额（人民币）；合并开票时为各单实付之和。 */
   amount: number | null;
-  orderId: string;
+  /** 本次开票覆盖的订单号，合并开票时长度大于 1。 */
+  orderIds: string[];
   savedTitles: SavedInvoiceTitleOption[];
   submitting: boolean;
   error: string;
@@ -38,7 +39,7 @@ export default function InvoiceRequestDialog({
   isDark,
   locale,
   amount,
-  orderId,
+  orderIds,
   savedTitles,
   submitting,
   error,
@@ -59,6 +60,9 @@ export default function InvoiceRequestDialog({
     contactEmailPlaceholder: pickLocaleText(locale, '选填，便于客服联系', 'Optional'),
     amount: pickLocaleText(locale, '开票金额', 'Invoice amount'),
     orderId: pickLocaleText(locale, '订单号', 'Order ID'),
+    mergedOrders: pickLocaleText(locale, '合并订单', 'Merged orders'),
+    mergedCount: (count: number) =>
+      pickLocaleText(locale, `${count} 张订单合并开具一张发票`, `${count} orders merged into one invoice`),
     cancel: pickLocaleText(locale, '取消', 'Cancel'),
     submit: pickLocaleText(locale, '提交申请', 'Submit'),
     submitting: pickLocaleText(locale, '提交中...', 'Submitting...'),
@@ -124,10 +128,33 @@ export default function InvoiceRequestDialog({
             <div className="mt-1 font-semibold">{amount == null ? '-' : `¥${amount.toFixed(2)}`}</div>
           </div>
           <div className={['rounded-lg p-3', isDark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
-            <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>{text.orderId}</div>
-            <div className="mt-1 truncate font-mono text-xs">#{orderId.slice(0, 12)}</div>
+            <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
+              {orderIds.length > 1 ? text.mergedOrders : text.orderId}
+            </div>
+            <div className="mt-1 truncate font-mono text-xs">
+              {orderIds.length > 1 ? `${orderIds.length}` : `#${(orderIds[0] ?? '').slice(0, 12)}`}
+            </div>
           </div>
         </div>
+
+        {orderIds.length > 1 && (
+          <div
+            className={[
+              'mt-3 rounded-lg p-3 text-xs',
+              isDark ? 'bg-slate-800/60 text-slate-300' : 'bg-blue-50 text-blue-700',
+            ].join(' ')}
+          >
+            <div className="font-medium">{text.mergedCount(orderIds.length)}</div>
+            {/* 列出全部订单号：金额是合计值，用户需要能核对合进来的是哪几张。 */}
+            <div className="mt-1 max-h-24 overflow-y-auto font-mono leading-5">
+              {orderIds.map((id) => (
+                <div key={id} className="truncate">
+                  #{id}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {savedTitles.length > 0 && (
           <div className="mt-4">

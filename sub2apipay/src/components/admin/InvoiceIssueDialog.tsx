@@ -102,7 +102,14 @@ export default function InvoiceIssueDialog({
           </div>
           <div className="flex justify-between gap-3">
             <dt className={isDark ? 'text-slate-400' : 'text-gray-500'}>{text.orderId}</dt>
-            <dd className="truncate font-mono text-xs">#{invoice.orderId.slice(0, 12)}</dd>
+            {/* 合并开票时列全部订单号：管理员要靠它核对合计金额。 */}
+            <dd className="max-h-24 overflow-y-auto text-right font-mono text-xs">
+              {(invoice.orderIds?.length ? invoice.orderIds : [invoice.orderId]).map((id) => (
+                <div key={id} className="truncate">
+                  #{id}
+                </div>
+              ))}
+            </dd>
           </div>
           {invoice.remark && (
             <div className="flex justify-between gap-3">

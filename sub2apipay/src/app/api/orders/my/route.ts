@@ -87,6 +87,8 @@ export async function GET(request: NextRequest) {
         balance: user.balance,
       },
       invoiceEnabled: invoiceSettings.enabled,
+      // 起开金额按合计判定，前端据此提示还差多少、并禁用提交按钮。
+      invoiceMinAmount: invoiceSettings.minAmount,
       orders: orders.map((item) => {
         const derived = deriveOrderState(item);
         const instanceRefundEnabled = item.providerInstanceId

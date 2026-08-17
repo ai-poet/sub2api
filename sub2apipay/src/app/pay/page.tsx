@@ -20,6 +20,7 @@ import PurchaseFlow from '@/components/PurchaseFlow';
 import { getRechargeAccessHint } from '@/lib/branding';
 import { resolveLocale, pickLocaleText, applyLocaleToSearchParams } from '@/lib/locale';
 import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrder } from '@/lib/pay-utils';
+import { notifyParentPaymentSuccess } from '@/lib/embed-bridge';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
 import { buildAppApiPath } from '@/lib/public-path';
 import type { MethodLimitInfo } from '@/components/PaymentForm';
@@ -366,6 +367,11 @@ function PayContent() {
     if (step !== 'result' || finalOrderState?.status !== 'COMPLETED') return;
     loadUserAndOrders();
     loadChannelsAndPlans();
+    // 到账发生在 iframe 内，宿主顶栏的余额不会自己更新，通知它重新拉一次用户信息。
+    notifyParentPaymentSuccess(
+      { orderId: finalOrderState.id, orderType: orderResult?.orderType },
+      srcHost,
+    );
     const timer = setTimeout(() => {
       setStep('form');
       setOrderResult(null);
@@ -376,7 +382,7 @@ function PayContent() {
       setRenewGroupId(null);
     }, 2200);
     return () => clearTimeout(timer);
-  }, [step, finalOrderState, loadUserAndOrders, loadChannelsAndPlans]);
+  }, [step, finalOrderState, orderResult?.orderType, srcHost, loadUserAndOrders, loadChannelsAndPlans]);
 
   // 检查订单完成后是否是订阅分组消失的情况
   useEffect(() => {
@@ -1112,7 +1118,11 @@ function PayContent() {
                           {pickLocaleText(locale, '订单完成后会自动到账', 'Balance will be credited automatically')}
                         </li>
                         <li>
-                          {pickLocaleText(locale, '如需历史记录请查看「我的订单」', 'Check "My Orders" for history')}
+                          {pickLocaleText(
+                            locale,
+                            '如需历史记录和开票请查看「我的订单」',
+                            'Check "My Orders" for history and invoices',
+                          )}
                         </li>
                         {config.maxDailyAmount > 0 && (
                           <li>
@@ -1239,7 +1249,7 @@ function PayContent() {
           isDark={isDark}
           locale={locale}
           amount={invoiceOrder.payAmount ?? null}
-          orderId={invoiceOrder.id}
+          orderIds={[invoiceOrder.id]}
           savedTitles={savedInvoiceTitles}
           submitting={invoiceSubmitting}
           error={invoiceError}

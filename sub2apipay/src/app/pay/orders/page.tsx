@@ -43,6 +43,21 @@ function OrdersContent() {
     switchingMobileTab: pickLocaleText(locale, '正在切换到移动端订单 Tab...', 'Switching to mobile orders tab...'),
     myOrders: pickLocaleText(locale, '我的订单', 'My Orders'),
     refresh: pickLocaleText(locale, '刷新', 'Refresh'),
+    selectAllInvoiceable: pickLocaleText(locale, '全选可开票', 'Select all invoiceable'),
+    clearSelection: pickLocaleText(locale, '清空选择', 'Clear selection'),
+    quickInvoice: pickLocaleText(locale, '一键开票', 'One-click invoice'),
+    mergeInvoice: pickLocaleText(locale, '填写抬头开票', 'Enter title & invoice'),
+    invoiceSelectionHint: pickLocaleText(
+      locale,
+      '勾选订单可合并为一张发票',
+      'Select orders to merge them into one invoice',
+    ),
+    invoiceBelowMin: (short: number, min: number) =>
+      pickLocaleText(
+        locale,
+        `还差 ¥${short.toFixed(2)} 满 ¥${min.toFixed(2)} 起开，可多勾几张订单`,
+        `¥${short.toFixed(2)} short of the ¥${min.toFixed(2)} minimum — select more orders`,
+      ),
     backToPay: pickLocaleText(locale, '返回充值/订单', 'Back to Purchase'),
     loading: pickLocaleText(locale, '加载中...', 'Loading...'),
     userPrefix: pickLocaleText(locale, '用户', 'User'),
@@ -71,10 +86,14 @@ function OrdersContent() {
   const [totalPages, setTotalPages] = useState(1);
 
   const [invoiceEnabled, setInvoiceEnabled] = useState(false);
-  const [invoiceOrder, setInvoiceOrder] = useState<MyOrder | null>(null);
+  const [invoiceMinAmount, setInvoiceMinAmount] = useState(0);
+  /** 开票对话框覆盖的订单；单张开票时长度为 1，合并开票时为勾选集合。 */
+  const [invoiceTargets, setInvoiceTargets] = useState<MyOrder[] | null>(null);
   const [savedTitles, setSavedTitles] = useState<SavedInvoiceTitleOption[]>([]);
   const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
   const [invoiceError, setInvoiceError] = useState('');
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<Set<string>>(new Set());
+  const [quickInvoiceError, setQuickInvoiceError] = useState('');
 
   const isEmbedded = uiMode === 'embedded' && isIframeContext;
   const hasToken = token.length > 0;
@@ -137,6 +156,7 @@ function OrdersContent() {
       setPage(data.page ?? targetPage);
       setTotalPages(data.total_pages ?? 1);
       setInvoiceEnabled(!!data.invoiceEnabled);
+      setInvoiceMinAmount(typeof data.invoiceMinAmount === 'number' ? data.invoiceMinAmount : 0);
     } catch {
       setOrders([]);
       setError(text.networkError);
@@ -178,56 +198,139 @@ function OrdersContent() {
     await loadOrders(page, pageSize);
   };
 
-  // 抬头记忆：先取回已存抬头再挂载对话框，让对话框能在初始化时直接回填。
-  const openInvoiceDialog = async (order: MyOrder) => {
-    setInvoiceError('');
-    let titles: SavedInvoiceTitleOption[] = [];
+  const fetchSavedTitles = async (): Promise<SavedInvoiceTitleOption[]> => {
     try {
       const params = new URLSearchParams({ token, page: '1', page_size: '20' });
       applyLocaleToSearchParams(params, locale);
       const res = await fetch(buildAppApiPath(`/api/invoices/my?${params}`));
-      if (res.ok) {
-        const data = await res.json();
-        titles = Array.isArray(data.titles) ? data.titles : [];
-      }
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data.titles) ? data.titles : [];
     } catch {
       // 回填失败不阻塞开票，用户手填即可。
+      return [];
     }
+  };
+
+  // 一键开票要用最近一次抬头直接提交，所以抬头必须在用户点按钮之前就在手上。
+  useEffect(() => {
+    if (!invoiceEnabled || !hasToken) return;
+    let cancelled = false;
+    fetchSavedTitles().then((titles) => {
+      if (!cancelled) setSavedTitles(titles);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [invoiceEnabled, hasToken, token, locale]);
+
+  const defaultTitle = savedTitles[0] ?? null;
+
+  // 抬头记忆：先取回已存抬头再挂载对话框，让对话框能在初始化时直接回填。
+  const openInvoiceDialog = async (targets: MyOrder[]) => {
+    if (targets.length === 0) return;
+    setInvoiceError('');
+    setQuickInvoiceError('');
+    const titles = await fetchSavedTitles();
     setSavedTitles(titles);
-    setInvoiceOrder(order);
+    setInvoiceTargets(targets);
+  };
+
+  /** 提交开票。单张与合并走同一个批量接口，避免两条路径的行为漂移。 */
+  const submitInvoiceRequest = async (
+    orderIds: string[],
+    payload: InvoiceRequestPayload,
+  ): Promise<string | null> => {
+    const params = new URLSearchParams({ token });
+    applyLocaleToSearchParams(params, locale);
+    const res = await fetch(buildAppApiPath(`/api/invoices/requests?${params}`), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        order_ids: orderIds,
+        title_name: payload.titleName,
+        tax_no: payload.taxNo,
+        ...(payload.remark && { remark: payload.remark }),
+        ...(payload.contactEmail && { contact_email: payload.contactEmail }),
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return data.error || text.invoiceRequestFailed;
+    }
+    return null;
   };
 
   const handleInvoiceRequest = async (payload: InvoiceRequestPayload) => {
-    if (!invoiceOrder) return;
+    if (!invoiceTargets?.length) return;
     setInvoiceSubmitting(true);
     setInvoiceError('');
     try {
-      const params = new URLSearchParams({ token });
-      applyLocaleToSearchParams(params, locale);
-      const res = await fetch(buildAppApiPath(`/api/orders/${invoiceOrder.id}/invoice-request?${params}`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title_name: payload.titleName,
-          tax_no: payload.taxNo,
-          ...(payload.remark && { remark: payload.remark }),
-          ...(payload.contactEmail && { contact_email: payload.contactEmail }),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setInvoiceError(data.error || text.invoiceRequestFailed);
+      const failure = await submitInvoiceRequest(
+        invoiceTargets.map((order) => order.id),
+        payload,
+      );
+      if (failure) {
+        setInvoiceError(failure);
         return;
       }
 
-      setInvoiceOrder(null);
+      setInvoiceTargets(null);
+      setSelectedInvoiceIds(new Set());
       await loadOrders(page, pageSize);
     } catch {
       setInvoiceError(text.invoiceRequestFailed);
     } finally {
       setInvoiceSubmitting(false);
     }
+  };
+
+  /**
+   * 一键开票：直接用最近一次使用的抬头提交，不弹对话框。
+   * 没有历史抬头时退回到对话框——首次开票总得有人把抬头敲进去。
+   */
+  const handleQuickInvoice = async (targets: MyOrder[]) => {
+    if (targets.length === 0) return;
+    if (!defaultTitle) {
+      await openInvoiceDialog(targets);
+      return;
+    }
+
+    setInvoiceSubmitting(true);
+    setQuickInvoiceError('');
+    try {
+      const failure = await submitInvoiceRequest(
+        targets.map((order) => order.id),
+        {
+          titleName: defaultTitle.titleName,
+          taxNo: defaultTitle.taxNo,
+          remark: defaultTitle.remark ?? '',
+          contactEmail: defaultTitle.contactEmail ?? '',
+        },
+      );
+      if (failure) {
+        setQuickInvoiceError(failure);
+        return;
+      }
+
+      setSelectedInvoiceIds(new Set());
+      await loadOrders(page, pageSize);
+    } catch {
+      setQuickInvoiceError(text.invoiceRequestFailed);
+    } finally {
+      setInvoiceSubmitting(false);
+    }
+  };
+
+  const toggleInvoiceSelect = (orderId: string) => {
+    setQuickInvoiceError('');
+    setSelectedInvoiceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
   };
 
   const handleInvoiceDownload = (invoiceId: string) => {
@@ -238,6 +341,21 @@ function OrdersContent() {
   };
 
   const filteredOrders = activeFilter === 'ALL' ? orders : orders.filter((o) => o.status === activeFilter);
+
+  // 只在当前筛选结果内做全选/合计：勾选的是用户此刻看得见的行。
+  const invoiceableOrders = invoiceEnabled ? filteredOrders.filter((order) => order.canRequestInvoice) : [];
+  const selectedOrders = invoiceableOrders.filter((order) => selectedInvoiceIds.has(order.id));
+  const selectedTotal = selectedOrders.reduce((sum, order) => sum + (order.payAmount ?? 0), 0);
+  const allInvoiceableSelected =
+    invoiceableOrders.length > 0 && invoiceableOrders.every((order) => selectedInvoiceIds.has(order.id));
+  // 起开金额按合计判定，所以差额提示挂在勾选集合上，而不是单张订单上。
+  const belowMinAmount = invoiceMinAmount > 0 && selectedTotal < invoiceMinAmount;
+  const canSubmitInvoice = selectedOrders.length > 0 && !belowMinAmount && !invoiceSubmitting;
+
+  const toggleSelectAllInvoiceable = () => {
+    setQuickInvoiceError('');
+    setSelectedInvoiceIds(allInvoiceableSelected ? new Set() : new Set(invoiceableOrders.map((order) => order.id)));
+  };
 
   const btnClass = [
     'inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
@@ -300,6 +418,72 @@ function OrdersContent() {
         <OrderFilterBar isDark={isDark} locale={locale} activeFilter={activeFilter} onChange={setActiveFilter} />
       </div>
 
+      {invoiceEnabled && invoiceableOrders.length > 0 && (
+        <div
+          className={[
+            'mb-3 flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2 text-xs',
+            isDark ? 'border-slate-700 bg-slate-800/60 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600',
+          ].join(' ')}
+        >
+          <label className="inline-flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              className="h-4 w-4 cursor-pointer accent-blue-600"
+              checked={allInvoiceableSelected}
+              onChange={toggleSelectAllInvoiceable}
+            />
+            {text.selectAllInvoiceable}
+          </label>
+
+          {selectedOrders.length > 0 ? (
+            <span className={isDark ? 'text-slate-200' : 'text-slate-800'}>
+              {selectedOrders.length} · ¥{selectedTotal.toFixed(2)}
+            </span>
+          ) : (
+            <span>{text.invoiceSelectionHint}</span>
+          )}
+
+          {belowMinAmount && selectedOrders.length > 0 && (
+            <span className={isDark ? 'text-amber-300' : 'text-amber-700'}>
+              {text.invoiceBelowMin(invoiceMinAmount - selectedTotal, invoiceMinAmount)}
+            </span>
+          )}
+
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {selectedOrders.length > 0 && (
+              <button type="button" onClick={() => setSelectedInvoiceIds(new Set())} className={btnClass}>
+                {text.clearSelection}
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={!canSubmitInvoice}
+              onClick={() => openInvoiceDialog(selectedOrders)}
+              className={`${btnClass} disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              {text.mergeInvoice}
+            </button>
+            <button
+              type="button"
+              disabled={!canSubmitInvoice}
+              onClick={() => handleQuickInvoice(selectedOrders)}
+              // 一键开票是这一排的主操作：用实心样式跟旁边的次要按钮区分开。
+              className={[
+                'inline-flex items-center rounded-lg border border-blue-500 bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors',
+                'hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50',
+              ].join(' ')}
+              title={defaultTitle ? `${defaultTitle.titleName} · ${defaultTitle.taxNo}` : undefined}
+            >
+              {invoiceSubmitting ? '...' : text.quickInvoice}
+            </button>
+          </div>
+
+          {quickInvoiceError && (
+            <div className={['w-full', isDark ? 'text-red-400' : 'text-red-600'].join(' ')}>{quickInvoiceError}</div>
+          )}
+        </div>
+      )}
+
       <OrderTable
         isDark={isDark}
         locale={locale}
@@ -314,8 +498,22 @@ function OrdersContent() {
             setError(err instanceof Error ? err.message : text.refundRequestFailed);
           }
         }}
-        onInvoiceRequest={invoiceEnabled ? openInvoiceDialog : undefined}
+        onInvoiceRequest={
+          invoiceEnabled
+            ? (order) => {
+                // 单张不够起开金额时先勾上让用户继续凑单，而不是填完抬头才被拒。
+                if (invoiceMinAmount > 0 && (order.payAmount ?? 0) < invoiceMinAmount) {
+                  setQuickInvoiceError('');
+                  setSelectedInvoiceIds((prev) => new Set(prev).add(order.id));
+                  return;
+                }
+                openInvoiceDialog([order]);
+              }
+            : undefined
+        }
         onInvoiceDownload={invoiceEnabled ? handleInvoiceDownload : undefined}
+        selectedInvoiceOrderIds={selectedInvoiceIds}
+        onToggleInvoiceSelect={invoiceEnabled ? toggleInvoiceSelect : undefined}
       />
 
       <PaginationBar
@@ -331,19 +529,19 @@ function OrdersContent() {
         onPageSizeChange={handlePageSizeChange}
       />
 
-      {invoiceOrder && (
+      {invoiceTargets && invoiceTargets.length > 0 && (
         <InvoiceRequestDialog
           isDark={isDark}
           locale={locale}
-          amount={invoiceOrder.payAmount ?? null}
-          orderId={invoiceOrder.id}
+          amount={invoiceTargets.reduce((sum, order) => sum + (order.payAmount ?? 0), 0)}
+          orderIds={invoiceTargets.map((order) => order.id)}
           savedTitles={savedTitles}
           submitting={invoiceSubmitting}
           error={invoiceError}
           onSubmit={handleInvoiceRequest}
           onClose={() => {
             if (invoiceSubmitting) return;
-            setInvoiceOrder(null);
+            setInvoiceTargets(null);
             setInvoiceError('');
           }}
         />

@@ -19,6 +19,7 @@ vi.mock('@/lib/sub2api/attachments', async () => {
 const mockInvoiceFindUnique = vi.fn();
 const mockInvoiceUpdate = vi.fn();
 const mockInvoiceUpdateMany = vi.fn();
+const mockInvoiceOrderFindUnique = vi.fn();
 const mockAuditCreate = vi.fn();
 
 vi.mock('@/lib/db', () => ({
@@ -28,10 +29,18 @@ vi.mock('@/lib/db', () => ({
       update: (...a: unknown[]) => mockInvoiceUpdate(...a),
       updateMany: (...a: unknown[]) => mockInvoiceUpdateMany(...a),
     },
+    invoiceRequestOrder: {
+      findUnique: (...a: unknown[]) => mockInvoiceOrderFindUnique(...a),
+    },
     auditLog: { create: (...a: unknown[]) => mockAuditCreate(...a) },
     systemConfig: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
+
+/** 退款联动按明细表查发票：合并开票时退款订单可能不是主订单。 */
+function mockLinkedInvoice(invoice: { id: string; status: string } | null) {
+  mockInvoiceOrderFindUnique.mockResolvedValue(invoice ? { invoice } : null);
+}
 
 import { AttachmentError } from '@/lib/sub2api/attachments';
 import { adminIssueInvoice, applyRefundToInvoice } from '@/lib/invoice/service';
@@ -170,7 +179,7 @@ describe('adminIssueInvoice', () => {
 
 describe('applyRefundToInvoice', () => {
   it('cancels a pending invoice', async () => {
-    mockInvoiceFindUnique.mockResolvedValue({ id: 'inv-1', status: 'PENDING' });
+    mockLinkedInvoice({ id: 'inv-1', status: 'PENDING' });
     mockInvoiceUpdateMany.mockResolvedValue({ count: 1 });
 
     const impact = await applyRefundToInvoice('order-1');
@@ -179,7 +188,7 @@ describe('applyRefundToInvoice', () => {
 
   // 已开具的发票不自动作废：红冲是线下动作，这里只提示。
   it('flags an issued invoice as needing a credit note', async () => {
-    mockInvoiceFindUnique.mockResolvedValue({ id: 'inv-1', status: 'ISSUED' });
+    mockLinkedInvoice({ id: 'inv-1', status: 'ISSUED' });
 
     const impact = await applyRefundToInvoice('order-1');
     expect(impact).toEqual({ needsCreditNote: true, cancelledPending: false });
@@ -189,7 +198,7 @@ describe('applyRefundToInvoice', () => {
 
   // 退款绝不能因为发票副作用而失败。
   it('swallows database errors so a refund never fails because of invoicing', async () => {
-    mockInvoiceFindUnique.mockRejectedValue(new Error('db down'));
+    mockInvoiceOrderFindUnique.mockRejectedValue(new Error('db down'));
 
     await expect(applyRefundToInvoice('order-1')).resolves.toEqual({
       needsCreditNote: false,
@@ -198,7 +207,7 @@ describe('applyRefundToInvoice', () => {
   });
 
   it('is a no-op when the order has no invoice', async () => {
-    mockInvoiceFindUnique.mockResolvedValue(null);
+    mockLinkedInvoice(null);
     await expect(applyRefundToInvoice('order-1')).resolves.toEqual({
       needsCreditNote: false,
       cancelledPending: false,

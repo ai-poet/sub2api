@@ -27,7 +27,8 @@ vi.mock('@/lib/db', () => ({
     systemConfig: {
       findMany: (...args: unknown[]) => mockSystemConfigFindMany(...args),
     },
-    invoiceRequest: {
+    // 订单列表按明细表回填开票状态：合并开票时非主订单也要显示为已申请。
+    invoiceRequestOrder: {
       findMany: (...args: unknown[]) => mockInvoiceFindMany(...args),
     },
   },

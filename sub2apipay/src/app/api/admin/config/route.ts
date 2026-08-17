@@ -99,6 +99,7 @@ const ALLOWED_CONFIG_KEYS = new Set([
   'invoice_enabled',
   'invoice_max_age_days',
   'invoice_daily_request_limit',
+  'invoice_min_amount',
 ]);
 
 export async function PUT(request: NextRequest) {

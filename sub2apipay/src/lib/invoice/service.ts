@@ -36,22 +36,34 @@ export const INVOICE_ALLOWED_CONTENT_TYPES = [
 
 export const INVOICE_MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-const CONFIG_KEYS = ['invoice_enabled', 'invoice_max_age_days', 'invoice_daily_request_limit'] as const;
+const CONFIG_KEYS = [
+  'invoice_enabled',
+  'invoice_max_age_days',
+  'invoice_daily_request_limit',
+  'invoice_min_amount',
+] as const;
+
+/** 起开金额默认值（人民币）：小额订单需要攒够或合并后才能开票。 */
+export const INVOICE_DEFAULT_MIN_AMOUNT = 100;
 
 export interface InvoiceSettings {
   enabled: boolean;
   maxAgeDays: number;
   dailyRequestLimit: number;
+  /** 单张发票的最低金额；0 表示不限。合并开票按合计金额判定。 */
+  minAmount: number;
 }
 
 export async function getInvoiceSettings(): Promise<InvoiceSettings> {
   const configs = await getSystemConfigs([...CONFIG_KEYS]);
   const maxAgeDays = Number.parseInt(configs.invoice_max_age_days ?? '', 10);
   const dailyLimit = Number.parseInt(configs.invoice_daily_request_limit ?? '', 10);
+  const minAmount = Number.parseFloat(configs.invoice_min_amount ?? '');
   return {
     enabled: configs.invoice_enabled === 'true',
     maxAgeDays: Number.isFinite(maxAgeDays) && maxAgeDays >= 0 ? maxAgeDays : 180,
     dailyRequestLimit: Number.isFinite(dailyLimit) && dailyLimit >= 0 ? dailyLimit : 20,
+    minAmount: Number.isFinite(minAmount) && minAmount >= 0 ? minAmount : INVOICE_DEFAULT_MIN_AMOUNT,
   };
 }
 
@@ -68,11 +80,14 @@ function formatIssuedAt(date: Date): string {
 // ─── 视图映射 ───
 
 type InvoiceRow = Prisma.InvoiceRequestGetPayload<object>;
+type InvoiceRowWithOrders = InvoiceRow & { orders?: { orderId: string }[] };
 
-function toInvoiceView(row: InvoiceRow): InvoiceRequestView {
+function toInvoiceView(row: InvoiceRowWithOrders): InvoiceRequestView {
   return {
     id: row.id,
     orderId: row.orderId,
+    // 合并开票时把全部订单号带给前端；未 include 关联时退回主订单，保持字段恒非空。
+    orderIds: row.orders?.length ? row.orders.map((item) => item.orderId) : [row.orderId],
     status: row.status as InvoiceStatus,
     titleName: row.titleName,
     taxNo: row.taxNo,
@@ -88,7 +103,7 @@ function toInvoiceView(row: InvoiceRow): InvoiceRequestView {
 }
 
 function toAdminInvoiceView(
-  row: InvoiceRow & {
+  row: InvoiceRowWithOrders & {
     order?: {
       id: string;
       payAmount: Prisma.Decimal | null;
@@ -146,21 +161,34 @@ export async function listMyInvoices(
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
+      include: { orders: { select: { orderId: true } } },
     }),
     prisma.invoiceRequest.count({ where: { userId } }),
   ]);
   return { invoices: rows.map(toInvoiceView), total };
 }
 
-/** 批量取订单对应的开票状态，供订单列表一次性回填（避免 N+1）。 */
+/**
+ * 批量取订单对应的开票状态，供订单列表一次性回填（避免 N+1）。
+ *
+ * 走明细表而不是 invoice_requests.order_id：合并开票时只有主订单落在那一列，
+ * 其余订单必须同样显示为「已申请」，否则用户会看到可以重复开票的按钮。
+ */
 export async function loadInvoicesForOrders(orderIds: string[]): Promise<Map<string, InvoiceRow>> {
   if (orderIds.length === 0) return new Map();
-  const rows = await prisma.invoiceRequest.findMany({ where: { orderId: { in: orderIds } } });
-  return new Map(rows.map((row) => [row.orderId, row]));
+  const rows = await prisma.invoiceRequestOrder.findMany({
+    where: { orderId: { in: orderIds } },
+    include: { invoice: true },
+  });
+  return new Map(rows.map((row) => [row.orderId, row.invoice]));
 }
 
+/** 单次合并开票的订单数上限：足够覆盖常见的按月汇总，也挡住误操作式的全选。 */
+export const INVOICE_MAX_MERGED_ORDERS = 30;
+
 export interface RequestInvoiceInput {
-  orderId: string;
+  /** 一张或多张订单。多张时合并为一张发票，金额为各单实付之和。 */
+  orderIds: string[];
   userId: number;
   titleName: string;
   taxNo: string;
@@ -169,12 +197,36 @@ export interface RequestInvoiceInput {
   locale: Locale;
 }
 
+/**
+ * 申请开票。支持把多张订单合并成一张发票。
+ *
+ * 合并的判定是「逐单资格 + 金额求和」：任何一张不合格就整体拒绝，并回报是哪一张、
+ * 为什么——部分成功会让用户搞不清最终开了哪些单。
+ */
 export async function requestInvoice(input: RequestInvoiceInput): Promise<InvoiceRequestView> {
   const { locale } = input;
+  // 去重后保持稳定顺序：同一张单被勾两次不该撑大金额。
+  const orderIds = [...new Set(input.orderIds.map((id) => id.trim()).filter(Boolean))];
+
+  if (orderIds.length === 0) {
+    throw new InvoiceError('ORDER_NOT_FOUND', invoiceMessage(locale, '请选择要开票的订单', 'Select at least one order'), 400);
+  }
+  if (orderIds.length > INVOICE_MAX_MERGED_ORDERS) {
+    throw new InvoiceError(
+      'INVOICE_TOO_MANY_ORDERS',
+      invoiceMessage(
+        locale,
+        `单次最多合并 ${INVOICE_MAX_MERGED_ORDERS} 张订单`,
+        `At most ${INVOICE_MAX_MERGED_ORDERS} orders can be merged into one invoice`,
+      ),
+      400,
+    );
+  }
+
   const settings = await getInvoiceSettings();
 
-  const order = await prisma.order.findUnique({
-    where: { id: input.orderId },
+  const orders = await prisma.order.findMany({
+    where: { id: { in: orderIds } },
     select: {
       id: true,
       userId: true,
@@ -187,19 +239,30 @@ export async function requestInvoice(input: RequestInvoiceInput): Promise<Invoic
   });
 
   // 归属检查先于资格检查：不能让他人通过错误码区分「订单不存在」与「订单不属于我」。
-  if (!order || order.userId !== input.userId) {
+  if (orders.length !== orderIds.length || orders.some((order) => order.userId !== input.userId)) {
     throw new InvoiceError('ORDER_NOT_FOUND', invoiceMessage(locale, '订单不存在', 'Order not found'), 404);
   }
 
-  const existing = await prisma.invoiceRequest.findUnique({ where: { orderId: input.orderId } });
-  const eligibility = evaluateInvoiceEligibility(order, {
-    featureEnabled: settings.enabled,
-    maxAgeDays: settings.maxAgeDays,
-    existingStatus: (existing?.status as InvoiceStatus | undefined) ?? null,
+  const existingLinks = await prisma.invoiceRequestOrder.findMany({
+    where: { orderId: { in: orderIds } },
+    include: { invoice: { select: { id: true, status: true } } },
   });
-  if (!eligibility.eligible) {
-    const reason = eligibility.reason!;
-    throw new InvoiceError(reason, invoiceIneligibleMessage(locale, reason), reason === 'ALREADY_REQUESTED' ? 409 : 400);
+  const existingByOrder = new Map(existingLinks.map((link) => [link.orderId, link.invoice]));
+
+  for (const order of orders) {
+    const eligibility = evaluateInvoiceEligibility(order, {
+      featureEnabled: settings.enabled,
+      maxAgeDays: settings.maxAgeDays,
+      existingStatus: (existingByOrder.get(order.id)?.status as InvoiceStatus | undefined) ?? null,
+    });
+    if (!eligibility.eligible) {
+      const reason = eligibility.reason!;
+      const message =
+        orders.length > 1
+          ? `${invoiceMessage(locale, '订单', 'Order')} ${order.id}: ${invoiceIneligibleMessage(locale, reason)}`
+          : invoiceIneligibleMessage(locale, reason);
+      throw new InvoiceError(reason, message, reason === 'ALREADY_REQUESTED' ? 409 : 400, { orderId: order.id });
+    }
   }
 
   if (settings.dailyRequestLimit > 0) {
@@ -216,49 +279,66 @@ export async function requestInvoice(input: RequestInvoiceInput): Promise<Invoic
     }
   }
 
-  const amount = new Prisma.Decimal(Number(order.payAmount).toFixed(2));
+  // 主订单取最早付款的那张：发票覆盖的账期从它算起，审计日志与邮件也按它归档。
+  const sortedOrders = [...orders].sort(
+    (a, b) => (a.paidAt?.getTime() ?? 0) - (b.paidAt?.getTime() ?? 0) || a.id.localeCompare(b.id),
+  );
+  const primaryOrder = sortedOrders[0];
+  const lineAmounts = new Map(
+    sortedOrders.map((order) => [order.id, new Prisma.Decimal(Number(order.payAmount).toFixed(2))]),
+  );
+  const amount = sortedOrders.reduce(
+    (sum, order) => sum.add(lineAmounts.get(order.id)!),
+    new Prisma.Decimal(0),
+  );
+
+  // 起开金额按合计判定，而不是逐单：小额订单本来就该攒够或合并后再开，
+  // 逐单判定会把它们永远挡在门外。
+  if (settings.minAmount > 0 && amount.lessThan(settings.minAmount)) {
+    throw new InvoiceError(
+      'INVOICE_BELOW_MIN_AMOUNT',
+      invoiceMessage(
+        locale,
+        `开票金额需满 ${formatInvoiceAmount(settings.minAmount)}，当前 ${formatInvoiceAmount(amount)}，可勾选多张订单合并开票`,
+        `The invoice amount must reach ${formatInvoiceAmount(settings.minAmount)} (currently ${formatInvoiceAmount(amount)}). Select more orders to merge them into one invoice.`,
+      ),
+      400,
+      { minAmount: settings.minAmount, amount: Number(amount) },
+    );
+  }
+
   const titleName = input.titleName.trim();
   const taxNo = input.taxNo.trim().toUpperCase();
   const remark = input.remark?.trim() || null;
   const contactEmail = input.contactEmail?.trim() || null;
 
+  // 被驳回/取消的旧申请整行删除（级联清掉明细行），让订单重新变为可开票。
+  // 这些行本来就是死申请：原实现也是就地覆写、清空文件与驳回原因，信息量等同。
+  const supersededInvoiceIds = [
+    ...new Set(
+      existingLinks
+        .filter((link) => INVOICE_REREQUESTABLE_STATUSES.includes(link.invoice.status as InvoiceStatus))
+        .map((link) => link.invoice.id),
+    ),
+  ];
+
   let row: InvoiceRow;
-  if (existing) {
-    // 复用同一行改回 PENDING。守卫 status 以防与管理员的处理动作并发。
-    const updated = await prisma.invoiceRequest.updateMany({
-      where: { id: existing.id, userId: input.userId, status: { in: INVOICE_REREQUESTABLE_STATUSES } },
-      data: {
-        status: INVOICE_STATUS.PENDING,
-        titleName,
-        taxNo,
-        remark,
-        contactEmail,
-        amount,
-        rejectReason: null,
-        rejectedAt: null,
-        adminNote: null,
-        fileKey: null,
-        fileName: null,
-        fileSize: null,
-        fileContentType: null,
-        issuedAt: null,
-        issuedBy: null,
-        notifiedAt: null,
-      },
-    });
-    if (updated.count === 0) {
-      throw new InvoiceError(
-        'CONFLICT',
-        invoiceMessage(locale, '开票状态已变更，请刷新后重试', 'Invoice status changed, refresh and retry'),
-        409,
-      );
-    }
-    row = (await prisma.invoiceRequest.findUniqueOrThrow({ where: { id: existing.id } })) as InvoiceRow;
-  } else {
-    try {
-      row = await prisma.invoiceRequest.create({
+  try {
+    row = await prisma.$transaction(async (tx) => {
+      if (supersededInvoiceIds.length > 0) {
+        // 守卫 status：与管理员的处理动作并发时，这里删不掉，随后的唯一约束会给出 409。
+        await tx.invoiceRequest.deleteMany({
+          where: {
+            id: { in: supersededInvoiceIds },
+            userId: input.userId,
+            status: { in: INVOICE_REREQUESTABLE_STATUSES },
+          },
+        });
+      }
+
+      return tx.invoiceRequest.create({
         data: {
-          orderId: input.orderId,
+          orderId: primaryOrder.id,
           userId: input.userId,
           titleName,
           taxNo,
@@ -266,28 +346,35 @@ export async function requestInvoice(input: RequestInvoiceInput): Promise<Invoic
           contactEmail,
           amount,
           status: INVOICE_STATUS.PENDING,
+          orders: {
+            create: sortedOrders.map((order) => ({
+              orderId: order.id,
+              amount: lineAmounts.get(order.id)!,
+            })),
+          },
         },
       });
-    } catch (error) {
-      // 并发申请：唯一约束是最终裁决者，先到者胜出。
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new InvoiceError(
-          'ALREADY_REQUESTED',
-          invoiceIneligibleMessage(locale, 'ALREADY_REQUESTED'),
-          409,
-        );
-      }
-      throw error;
+    });
+  } catch (error) {
+    // 并发申请：唯一约束是最终裁决者，先到者胜出。
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw new InvoiceError('ALREADY_REQUESTED', invoiceIneligibleMessage(locale, 'ALREADY_REQUESTED'), 409);
     }
+    throw error;
   }
 
   await rememberInvoiceTitle(input.userId, { titleName, taxNo, remark, contactEmail });
-  await writeInvoiceAuditLog(input.orderId, 'INVOICE_REQUESTED', `user:${input.userId}`, {
-    invoiceId: row.id,
-    amount: Number(amount),
-  });
+  // 每张被覆盖的订单各记一条：按订单号查审计时不会漏掉合并进来的那些。
+  for (const order of sortedOrders) {
+    await writeInvoiceAuditLog(order.id, 'INVOICE_REQUESTED', `user:${input.userId}`, {
+      invoiceId: row.id,
+      amount: Number(lineAmounts.get(order.id)!),
+      totalAmount: Number(amount),
+      orderCount: sortedOrders.length,
+    });
+  }
 
-  return toInvoiceView(row);
+  return toInvoiceView({ ...row, orders: sortedOrders.map((order) => ({ orderId: order.id })) });
 }
 
 async function rememberInvoiceTitle(
@@ -394,6 +481,8 @@ export async function adminListInvoices(
       { titleName: { contains: filters.keyword, mode: 'insensitive' } },
       { taxNo: { contains: filters.keyword, mode: 'insensitive' } },
       { orderId: { contains: filters.keyword } },
+      // 合并开票时被并进来的订单号不在主列上，按订单号搜索必须也能命中。
+      { orders: { some: { orderId: { contains: filters.keyword } } } },
     ];
   }
 
@@ -416,6 +505,7 @@ export async function adminListInvoices(
             userName: true,
           },
         },
+        orders: { select: { orderId: true } },
       },
     }),
     prisma.invoiceRequest.count({ where }),
@@ -446,6 +536,7 @@ export async function adminGetInvoice(invoiceId: string): Promise<AdminInvoiceRe
           userName: true,
         },
       },
+      orders: { select: { orderId: true } },
     },
   });
   return row ? toAdminInvoiceView(row) : null;
@@ -768,10 +859,12 @@ export interface InvoiceRefundImpact {
 export async function applyRefundToInvoice(orderId: string): Promise<InvoiceRefundImpact> {
   const impact: InvoiceRefundImpact = { needsCreditNote: false, cancelledPending: false };
   try {
-    const invoice = await prisma.invoiceRequest.findUnique({
+    // 按明细表查：合并开票时退款的那张订单可能不是主订单。
+    const link = await prisma.invoiceRequestOrder.findUnique({
       where: { orderId },
-      select: { id: true, status: true },
+      select: { invoice: { select: { id: true, status: true } } },
     });
+    const invoice = link?.invoice;
     if (!invoice) return impact;
 
     if (invoice.status === INVOICE_STATUS.PENDING) {

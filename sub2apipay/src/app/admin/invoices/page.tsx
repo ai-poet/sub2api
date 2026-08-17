@@ -40,6 +40,12 @@ function AdminInvoicesContent() {
     enableInvoicing: pickLocaleText(locale, '开放在线开票', 'Enable online invoicing'),
     maxAgeDays: pickLocaleText(locale, '可开票期限（天，0 = 不限）', 'Invoicing window (days, 0 = unlimited)'),
     dailyLimit: pickLocaleText(locale, '每用户每日申请上限（0 = 不限）', 'Daily requests per user (0 = unlimited)'),
+    minAmount: pickLocaleText(locale, '起开金额（元，0 = 不限）', 'Minimum amount (CNY, 0 = unlimited)'),
+    minAmountHint: pickLocaleText(
+      locale,
+      '按开票合计金额判定，用户可勾选多张订单合并到这个金额。',
+      'Checked against the invoice total; users can merge several orders to reach it.',
+    ),
     save: pickLocaleText(locale, '保存设置', 'Save settings'),
     saved: pickLocaleText(locale, '设置已保存', 'Settings saved'),
     storageHint: pickLocaleText(
@@ -84,6 +90,7 @@ function AdminInvoicesContent() {
   const [cfgEnabled, setCfgEnabled] = useState(false);
   const [cfgMaxAgeDays, setCfgMaxAgeDays] = useState('180');
   const [cfgDailyLimit, setCfgDailyLimit] = useState('20');
+  const [cfgMinAmount, setCfgMinAmount] = useState('100');
   const [savingSettings, setSavingSettings] = useState(false);
 
   const authHeaders = useCallback(
@@ -138,6 +145,7 @@ function AdminInvoicesContent() {
         setCfgEnabled(find('invoice_enabled') === 'true');
         setCfgMaxAgeDays(find('invoice_max_age_days') ?? '180');
         setCfgDailyLimit(find('invoice_daily_request_limit') ?? '20');
+        setCfgMinAmount(find('invoice_min_amount') ?? '100');
       })
       .catch(() => {});
   }, [token]);
@@ -158,6 +166,7 @@ function AdminInvoicesContent() {
               group: 'invoice',
               label: '每用户每日申请上限',
             },
+            { key: 'invoice_min_amount', value: cfgMinAmount || '0', group: 'invoice', label: '起开金额（元）' },
           ],
         }),
       });
@@ -369,6 +378,24 @@ function AdminInvoicesContent() {
                 min="0"
                 value={cfgDailyLimit}
                 onChange={(e) => setCfgDailyLimit(e.target.value)}
+                className={[
+                  'w-28 rounded-lg border px-2 py-1 focus:border-blue-500 focus:outline-none',
+                  isDark ? 'border-slate-600 bg-slate-800 text-slate-100' : 'border-slate-300 bg-white text-slate-900',
+                ].join(' ')}
+              />
+            </label>
+
+            <label className="text-xs">
+              <span className={['mb-1 block', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                {text.minAmount}
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={cfgMinAmount}
+                onChange={(e) => setCfgMinAmount(e.target.value)}
+                title={text.minAmountHint}
                 className={[
                   'w-28 rounded-lg border px-2 py-1 focus:border-blue-500 focus:outline-none',
                   isDark ? 'border-slate-600 bg-slate-800 text-slate-100' : 'border-slate-300 bg-white text-slate-900',
