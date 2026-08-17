@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+﻿import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 
@@ -21,7 +21,7 @@ vi.mock('@/composables/useClipboard', () => ({
 import UseKeyModal from '../UseKeyModal.vue'
 
 describe('UseKeyModal', () => {
-  it('renders Grok Build and OpenCode setup for Grok groups', async () => {
+  it('renders Grok Build setup for Grok groups', async () => {
     const wrapper = mount(UseKeyModal, {
       props: {
         show: true,
@@ -90,27 +90,6 @@ describe('UseKeyModal', () => {
     await windowsTab!.trigger('click')
     await nextTick()
     expect(wrapper.text().toLowerCase()).toContain('%userprofile%\\.grok\\config.toml')
-
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('keys.useKeyModal.cliTabs.opencode')
-    )
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
-    await nextTick()
-
-    const parsed = JSON.parse(wrapper.find('pre code').text())
-    expect(parsed.provider.grok.npm).toBe('@ai-sdk/openai-compatible')
-    expect(parsed.provider.grok.name).toBe('Grok via Sub2API')
-    expect(parsed.provider.grok.options).toEqual({
-      baseURL: 'https://example.com/v1',
-      apiKey: 'sk-grok-test'
-    })
-    expect(parsed.provider.grok.models['grok-4.5']).toBeDefined()
-    expect(parsed.provider.grok.models['grok-4.5'].limit.context).toBe(500000)
-    expect(parsed.provider.grok.models['grok-build-0.1']).toBeDefined()
-    expect(parsed.provider.grok.models['grok-4.20-multi-agent-0309']).toBeDefined()
-    expect(parsed.provider.grok.models['grok-composer-2.5-fast']).toBeDefined()
-    expect(parsed.provider.grok.models['gpt-5.6']).toBeUndefined()
   })
 
   it('renders copyable Claude Code setup through the Grok Messages gateway', async () => {
@@ -490,7 +469,7 @@ describe('UseKeyModal', () => {
     expect(wrapper.findAll('pre code').map((code) => code.text()).join('\n')).toContain('x-openai-actor-authorization = "local-relay"')
   })
 
-  it('renders GPT-5.4 mini entry in OpenCode config', async () => {
+  it('renders Grok CLI install command and config.toml for OpenAI groups', async () => {
     const wrapper = mount(UseKeyModal, {
       props: {
         show: true,
@@ -510,180 +489,31 @@ describe('UseKeyModal', () => {
       }
     })
 
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('keys.useKeyModal.cliTabs.opencode')
+    const grokCliTab = wrapper.findAll('button').find((button) =>
+      button.text().includes('keys.useKeyModal.cliTabs.grokCli')
     )
 
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
+    expect(grokCliTab).toBeDefined()
+    await grokCliTab!.trigger('click')
     await nextTick()
 
-    const codeBlock = wrapper.find('pre code')
-    expect(codeBlock.exists()).toBe(true)
-    expect(codeBlock.text()).toContain('"name": "GPT-5.4 Mini"')
-    expect(codeBlock.text()).not.toContain('"name": "GPT-5.4 Nano"')
-  })
+    let codeBlocks = wrapper.findAll('pre code').map((code) => code.text())
+    expect(codeBlocks[0]).toBe('curl -fsSL https://x.ai/cli/install.sh | bash')
+    expect(wrapper.text()).toContain('~/.grok/config.toml')
+    expect(codeBlocks[1]).toContain('base_url = "https://example.com/v1"')
+    expect(codeBlocks[1]).toContain('api_key = "sk-test"')
+    expect(codeBlocks[1]).toContain('api_backend = "responses"')
+    expect(codeBlocks[1]).toContain('default = "grok"')
 
-  it('renders GPT-5.6 alias and max variants in OpenCode config', async () => {
-    const wrapper = mount(UseKeyModal, {
-      props: {
-        show: true,
-        apiKey: 'sk-test',
-        baseUrl: 'https://example.com/v1',
-        platform: 'openai'
-      },
-      global: {
-        stubs: {
-          BaseDialog: {
-            template: '<div><slot /><slot name="footer" /></div>'
-          },
-          Icon: {
-            template: '<span />'
-          }
-        }
-      }
-    })
-
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('keys.useKeyModal.cliTabs.opencode')
+    const windowsTab = wrapper.findAll('button').find(
+      (button) => button.text().trim() === 'Windows'
     )
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
+    expect(windowsTab).toBeDefined()
+    await windowsTab!.trigger('click')
     await nextTick()
 
-    const parsed = JSON.parse(wrapper.find('pre code').text())
-    const models = parsed.provider.openai.models
-    for (const model of ['gpt-5.6', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna']) {
-      expect(models[model]).toBeDefined()
-      expect(models[model].variants).toHaveProperty('max')
-      expect(models[model].variants).toHaveProperty('xhigh')
-    }
-    expect(models['gpt-5.6'].name).toBe('GPT-5.6 (Sol)')
-  })
-
-  it('renders Claude Fable 5 OpenCode config with adaptive thinking', async () => {
-    const wrapper = mount(UseKeyModal, {
-      props: {
-        show: true,
-        apiKey: 'sk-test',
-        baseUrl: 'https://example.com/v1',
-        platform: 'antigravity'
-      },
-      global: {
-        stubs: {
-          BaseDialog: {
-            template: '<div><slot /><slot name="footer" /></div>'
-          },
-          Icon: {
-            template: '<span />'
-          }
-        }
-      }
-    })
-
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('keys.useKeyModal.cliTabs.opencode')
-    )
-
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
-    await nextTick()
-
-    const claudeConfig = wrapper.findAll('pre code')
-      .map((code) => code.text())
-      .find((content) => content.includes('"antigravity-claude"'))
-
-    expect(claudeConfig).toBeDefined()
-    const parsed = JSON.parse(claudeConfig!)
-    const fable = parsed.provider['antigravity-claude'].models['claude-fable-5']
-
-    expect(fable.name).toBe('Claude Fable 5')
-    expect(fable.limit).toEqual({ context: 1048576, output: 128000 })
-    expect(fable.options.thinking).toEqual({ type: 'adaptive' })
-    expect(fable.options.thinking).not.toHaveProperty('budgetTokens')
-  })
-
-  it('renders Claude Fable 5 OpenCode config with adaptive thinking', async () => {
-    const wrapper = mount(UseKeyModal, {
-      props: {
-        show: true,
-        apiKey: 'sk-test',
-        baseUrl: 'https://example.com/v1',
-        platform: 'antigravity'
-      },
-      global: {
-        stubs: {
-          BaseDialog: {
-            template: '<div><slot /><slot name="footer" /></div>'
-          },
-          Icon: {
-            template: '<span />'
-          }
-        }
-      }
-    })
-
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('keys.useKeyModal.cliTabs.opencode')
-    )
-
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
-    await nextTick()
-
-    const claudeConfig = wrapper.findAll('pre code')
-      .map((code) => code.text())
-      .find((content) => content.includes('"antigravity-claude"'))
-
-    expect(claudeConfig).toBeDefined()
-    const parsed = JSON.parse(claudeConfig!)
-    const fable = parsed.provider['antigravity-claude'].models['claude-fable-5']
-
-    expect(fable.name).toBe('Claude Fable 5')
-    expect(fable.limit).toEqual({ context: 1048576, output: 128000 })
-    expect(fable.options.thinking).toEqual({ type: 'adaptive' })
-    expect(fable.options.thinking).not.toHaveProperty('budgetTokens')
-  })
-
-  it('renders Claude Fable 5 OpenCode config with adaptive thinking', async () => {
-    const wrapper = mount(UseKeyModal, {
-      props: {
-        show: true,
-        apiKey: 'sk-test',
-        baseUrl: 'https://example.com/v1',
-        platform: 'antigravity'
-      },
-      global: {
-        stubs: {
-          BaseDialog: {
-            template: '<div><slot /><slot name="footer" /></div>'
-          },
-          Icon: {
-            template: '<span />'
-          }
-        }
-      }
-    })
-
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('keys.useKeyModal.cliTabs.opencode')
-    )
-
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
-    await nextTick()
-
-    const claudeConfig = wrapper.findAll('pre code')
-      .map((code) => code.text())
-      .find((content) => content.includes('"antigravity-claude"'))
-
-    expect(claudeConfig).toBeDefined()
-    const parsed = JSON.parse(claudeConfig!)
-    const fable = parsed.provider['antigravity-claude'].models['claude-fable-5']
-
-    expect(fable.name).toBe('Claude Fable 5')
-    expect(fable.limit).toEqual({ context: 1048576, output: 128000 })
-    expect(fable.options.thinking).toEqual({ type: 'adaptive' })
-    expect(fable.options.thinking).not.toHaveProperty('budgetTokens')
+    codeBlocks = wrapper.findAll('pre code').map((code) => code.text())
+    expect(codeBlocks[0]).toBe('irm https://x.ai/cli/install.ps1 | iex')
+    expect(wrapper.text()).toContain('%USERPROFILE%\\.grok\\config.toml')
   })
 })

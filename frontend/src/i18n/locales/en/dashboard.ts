@@ -154,7 +154,6 @@ export default {
         codexCli: 'Codex CLI',
         codexCliWs: 'Codex CLI (WebSocket)',
         grokCli: 'Grok CLI',
-        opencode: 'OpenCode',
       },
       antigravity: {
         description: 'Configure API access for Antigravity group. Select the configuration method based on your client.',
@@ -170,7 +169,7 @@ export default {
       },
       grok: {
         description:
-          'Configure Grok CLI, Claude Code, Codex, or OpenCode to send requests through your Sub2API Grok group. Text models use Responses; image/video use Imagine model IDs on media endpoints.',
+          'Configure Grok CLI, Claude Code, or Codex to send requests through your Sub2API Grok group. Text models use Responses; image/video use Imagine model IDs on media endpoints.',
         claudeDescription: 'Configure Claude Code to send Messages API traffic through your Sub2API Grok group.',
         codexDescription: 'Configure Codex to send Responses API traffic through your Sub2API Grok group.',
         configTomlHint:
@@ -188,10 +187,16 @@ export default {
         codexNoteWindows:
           'Set $env:SUB2API_API_KEY, save config.toml under %USERPROFILE%\\.codex. Prefer env_key auth; do not commit secrets.',
       },
-      opencode: {
-        title: 'OpenCode Example',
-        subtitle: 'opencode.json',
-        hint: 'Config path: ~/.config/opencode/opencode.json (or opencode.jsonc), create if not exists. Use default providers (openai/anthropic/google) or custom provider_id. API Key can be configured directly or via /connect command. This is an example, adjust models and options as needed.',
+      grokCli: {
+        description:
+          'Install Grok CLI and write ~/.grok/config.toml so the grok command reaches models through this group. Text models use the Responses API (api_backend = "responses").',
+        installHint: 'Official installer from x.ai. Reopen your terminal afterwards and run grok --version to verify.',
+        configHint:
+          'Grok CLI main config file — create it if missing (macOS/Linux: mkdir -p ~/.grok). Back up an existing file before merging.',
+        note:
+          'Save the content above as ~/.grok/config.toml, then run grok. The file contains a plaintext API key — never commit or share it.',
+        noteWindows:
+          'Press Win+R and enter %USERPROFILE%\\.grok to open the config directory (create it first if missing), then save the content above as config.toml. The file contains a plaintext API key — never commit or share it.',
       },
     },
     customKeyLabel: 'Custom Key',

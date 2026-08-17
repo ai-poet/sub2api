@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="rounded-3xl border border-gray-200/80 bg-white/90 p-5 shadow-sm backdrop-blur dark:border-dark-700 dark:bg-dark-900/80">
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -89,7 +89,7 @@
         </nav>
       </div>
 
-      <div v-if="showShellTabs" class="border-b border-gray-200 dark:border-dark-700">
+      <div class="border-b border-gray-200 dark:border-dark-700">
         <nav class="-mb-px flex flex-wrap gap-x-4 gap-y-2" aria-label="Shell">
           <button
             v-for="tab in currentTabs"
@@ -148,7 +148,6 @@
       </div>
 
       <div
-        v-if="showPlatformNote"
         class="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/80 p-4 text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-200"
       >
         <Icon name="infoCircle" size="md" class="mt-0.5 flex-shrink-0" />
@@ -164,6 +163,13 @@ import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import { useClipboard } from '@/composables/useClipboard'
+import {
+  grokCliConfigPath,
+  grokCliConfigToml,
+  grokCliInstallCommand,
+  grokCliInstallShellLabel,
+  type GrokCliOS
+} from './grokCliGuide'
 import type { ApiKey, GroupPlatform } from '@/types'
 
 interface Props {
@@ -293,13 +299,12 @@ const clientTabs = computed((): TabConfig[] => {
       if (allowMessagesDispatch.value) {
         tabs.push({ id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon })
       }
-      tabs.push({ id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon })
+      tabs.push({ id: 'grok-cli', label: t('keys.useKeyModal.cliTabs.grokCli'), icon: TerminalIcon })
       return tabs
     }
     default:
       return [
-        { id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon },
-        { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon }
+        { id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon }
       ]
   }
 })
@@ -330,11 +335,12 @@ const openAITabs: TabConfig[] = [
   { id: 'windows', label: 'Windows', icon: WindowsIcon }
 ]
 
-const showShellTabs = computed(() => activeClientTab.value !== 'opencode')
-
 const currentTabs = computed(() => {
-  if (!showShellTabs.value) return []
-  if (activeClientTab.value === 'codex' || activeClientTab.value === 'codex-ws') {
+  if (
+    activeClientTab.value === 'codex' ||
+    activeClientTab.value === 'codex-ws' ||
+    activeClientTab.value === 'grok-cli'
+  ) {
     return openAITabs
   }
   return shellTabs
@@ -348,6 +354,9 @@ const platformDescription = computed(() => {
       if (activeClientTab.value === 'claude') {
         return t('keys.useKeyModal.description')
       }
+      if (activeClientTab.value === 'grok-cli') {
+        return t('keys.useKeyModal.grokCli.description')
+      }
       return t('keys.useKeyModal.openai.description')
     default:
       return t('keys.useKeyModal.description')
@@ -360,6 +369,11 @@ const platformNote = computed(() => {
       if (activeClientTab.value === 'claude') {
         return t('keys.useKeyModal.note')
       }
+      if (activeClientTab.value === 'grok-cli') {
+        return activeTab.value === 'windows'
+          ? t('keys.useKeyModal.grokCli.noteWindows')
+          : t('keys.useKeyModal.grokCli.note')
+      }
       return activeTab.value === 'windows'
         ? t('keys.useKeyModal.openai.noteWindows')
         : t('keys.useKeyModal.openai.note')
@@ -367,8 +381,6 @@ const platformNote = computed(() => {
       return t('keys.useKeyModal.note')
   }
 })
-
-const showPlatformNote = computed(() => activeClientTab.value !== 'opencode')
 
 const currentFiles = computed((): FileConfig[] => {
   const baseUrl = props.baseUrl || window.location.origin
@@ -380,15 +392,8 @@ const currentFiles = computed((): FileConfig[] => {
   }
   const apiBase = ensureV1(baseRoot)
 
-  if (activeClientTab.value === 'opencode') {
-    switch (props.platform) {
-      case 'anthropic':
-        return [generateOpenCodeConfig('anthropic', apiBase, apiKey)]
-      case 'openai':
-        return [generateOpenCodeConfig('openai', apiBase, apiKey)]
-      default:
-        return [generateOpenCodeConfig('anthropic', apiBase, apiKey)]
-    }
+  if (activeClientTab.value === 'grok-cli') {
+    return generateGrokCliFiles(apiBase, apiKey)
   }
 
   switch (props.platform) {
@@ -404,6 +409,22 @@ const currentFiles = computed((): FileConfig[] => {
       return generateAnthropicFiles(baseUrl, apiKey)
   }
 })
+
+function generateGrokCliFiles(baseUrl: string, apiKey: string): FileConfig[] {
+  const os: GrokCliOS = activeTab.value === 'windows' ? 'windows' : 'unix'
+  return [
+    {
+      path: grokCliInstallShellLabel(os),
+      content: grokCliInstallCommand(os),
+      hint: t('keys.useKeyModal.grokCli.installHint')
+    },
+    {
+      path: grokCliConfigPath(os),
+      content: grokCliConfigToml(baseUrl, apiKey),
+      hint: t('keys.useKeyModal.grokCli.configHint')
+    }
+  ]
+}
 
 function generateAnthropicFiles(baseUrl: string, apiKey: string): FileConfig[] {
   let path: string
@@ -542,71 +563,6 @@ responses_websockets_v2 = true`
   ]
 }
 
-function generateOpenCodeConfig(platform: string, baseUrl: string, apiKey: string, pathLabel?: string): FileConfig {
-  const provider: Record<string, any> = {
-    [platform]: {
-      options: {
-        baseURL: baseUrl,
-        apiKey
-      }
-    }
-  }
-
-  const openaiModels = {
-    'gpt-5-codex': { name: 'GPT-5 Codex', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {} } },
-    'gpt-5.1-codex': { name: 'GPT-5.1 Codex', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {} } },
-    'gpt-5.1-codex-max': { name: 'GPT-5.1 Codex Max', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {} } },
-    'gpt-5.1-codex-mini': { name: 'GPT-5.1 Codex Mini', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {} } },
-    'gpt-5.2': { name: 'GPT-5.2', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'gpt-5.5': { name: 'GPT-5.5', limit: { context: 1050000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'gpt-5.4': { name: 'GPT-5.4', limit: { context: 1050000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'gpt-5.4-mini': { name: 'GPT-5.4 Mini', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'gpt-5.4-nano': { name: 'GPT-5.4 Nano', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'gpt-5.3-codex-spark': { name: 'GPT-5.3 Codex Spark', limit: { context: 128000, output: 32000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'gpt-5.3-codex': { name: 'GPT-5.3 Codex', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'gpt-5.2-codex': { name: 'GPT-5.2 Codex', limit: { context: 400000, output: 128000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {}, xhigh: {} } },
-    'codex-mini-latest': { name: 'Codex Mini', limit: { context: 200000, output: 100000 }, options: { store: false }, variants: { low: {}, medium: {}, high: {} } }
-  }
-
-  if (platform === 'anthropic') {
-    provider[platform].npm = '@ai-sdk/anthropic'
-  } else if (platform === 'openai') {
-    provider[platform].models = openaiModels
-  }
-
-  const agent =
-    platform === 'openai'
-      ? {
-          build: {
-            options: {
-              store: false
-            }
-          },
-          plan: {
-            options: {
-              store: false
-            }
-          }
-        }
-      : undefined
-
-  const content = JSON.stringify(
-    {
-      provider,
-      ...(agent ? { agent } : {}),
-      $schema: 'https://opencode.ai/config.json'
-    },
-    null,
-    2
-  )
-
-  return {
-    path: pathLabel ?? 'opencode.json',
-    content,
-    hint: t('keys.useKeyModal.opencode.hint')
-  }
-}
-
 function maskKey(key: string): string {
   if (key.length <= 12) return key
   return `${key.slice(0, 8)}...${key.slice(-4)}`
@@ -617,7 +573,7 @@ function formatKeyOption(apiKeyItem: ApiKey): string {
   if (apiKeyItem.status !== 'active') {
     parts.push(t(`keys.status.${apiKeyItem.status}`))
   }
-  return parts.join(' · ')
+  return parts.join(' Â· ')
 }
 
 async function copyContent(content: string, index: number) {

@@ -21,11 +21,15 @@ const messages: Record<string, string> = {
   'keys.useKeyModal.openai.note': 'OpenAI note',
   'keys.useKeyModal.openai.noteWindows': 'OpenAI Windows note',
   'keys.useKeyModal.openai.configTomlHint': 'config.toml should stay at the top',
-  'keys.useKeyModal.opencode.hint': 'OpenCode config path',
+  'keys.useKeyModal.grokCli.description': 'Grok CLI setup',
+  'keys.useKeyModal.grokCli.installHint': 'Grok CLI installer',
+  'keys.useKeyModal.grokCli.configHint': 'Grok CLI config path',
+  'keys.useKeyModal.grokCli.note': 'Grok CLI note',
+  'keys.useKeyModal.grokCli.noteWindows': 'Grok CLI Windows note',
   'keys.useKeyModal.cliTabs.claudeCode': 'Claude Code',
   'keys.useKeyModal.cliTabs.codexCli': 'Codex CLI',
   'keys.useKeyModal.cliTabs.codexCliWs': 'Codex CLI (WebSocket)',
-  'keys.useKeyModal.cliTabs.opencode': 'OpenCode',
+  'keys.useKeyModal.cliTabs.grokCli': 'Grok CLI',
   'keys.useKeyModal.copy': 'Copy',
   'keys.useKeyModal.copied': 'Copied',
   'keys.copied': 'Copied!',
@@ -169,7 +173,7 @@ describe('IntegrationGuidePanel', () => {
     expect(wrapper.findAll('pre code')[1].text()).toContain('sk-plain-example-abcdef123456')
   })
 
-  it('renders updated GPT-5.4 mini and nano names in OpenCode config', async () => {
+  it('renders Grok CLI install command and config.toml for OpenAI groups', async () => {
     const wrapper = mount(IntegrationGuidePanel, {
       props: {
         platform: 'openai',
@@ -184,17 +188,31 @@ describe('IntegrationGuidePanel', () => {
       }
     })
 
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('OpenCode')
+    const grokTab = wrapper.findAll('button').find((button) =>
+      button.text().includes('Grok CLI')
     )
 
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
+    expect(grokTab).toBeDefined()
+    await grokTab!.trigger('click')
     await nextTick()
 
-    const codeBlock = wrapper.find('pre code')
-    expect(codeBlock.text()).toContain('"name": "GPT-5.4 Mini"')
-    expect(codeBlock.text()).toContain('"name": "GPT-5.4 Nano"')
+    const codeBlocks = wrapper.findAll('pre code').map((code) => code.text())
+    expect(codeBlocks[0]).toBe('curl -fsSL https://x.ai/cli/install.sh | bash')
+    expect(wrapper.text()).toContain('~/.grok/config.toml')
+    expect(codeBlocks[1]).toContain('base_url = "https://example.com/v1"')
+    expect(codeBlocks[1]).toContain('api_key = "sk-live-example-1234567890"')
+    expect(codeBlocks[1]).toContain('api_backend = "responses"')
+    expect(codeBlocks[1]).toContain('model = "grok-4.6"')
+
+    const windowsTab = wrapper.findAll('button').find((button) =>
+      button.text().includes('Windows')
+    )
+    expect(windowsTab).toBeDefined()
+    await windowsTab!.trigger('click')
+    await nextTick()
+
+    expect(wrapper.findAll('pre code')[0].text()).toBe('irm https://x.ai/cli/install.ps1 | iex')
+    expect(wrapper.text()).toContain('%USERPROFILE%\\.grok\\config.toml')
   })
 
   it('updates snippets when switching client and system tabs', async () => {
@@ -227,16 +245,16 @@ describe('IntegrationGuidePanel', () => {
 
     expect(wrapper.text()).toContain('%userprofile%\\.codex/config.toml')
 
-    const opencodeTab = wrapper.findAll('button').find((button) =>
-      button.text().includes('OpenCode')
+    const grokTab = wrapper.findAll('button').find((button) =>
+      button.text().includes('Grok CLI')
     )
-    expect(opencodeTab).toBeDefined()
-    await opencodeTab!.trigger('click')
+    expect(grokTab).toBeDefined()
+    await grokTab!.trigger('click')
     await nextTick()
 
-    const codeBlock = wrapper.find('pre code')
-    expect(codeBlock.text()).toContain('"baseURL": "https://example.com/v1"')
-    expect(wrapper.text()).toContain('opencode.json')
+    // 切换客户端 tab 会重置回 macOS/Linux。
+    expect(wrapper.findAll('pre code')[0].text()).toBe('curl -fsSL https://x.ai/cli/install.sh | bash')
+    expect(wrapper.text()).toContain('~/.grok/config.toml')
   })
 
   it('copies the currently visible snippet', async () => {

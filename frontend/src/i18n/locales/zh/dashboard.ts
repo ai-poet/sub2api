@@ -154,8 +154,7 @@ export default {
         geminiCli: 'Gemini CLI',
         codexCli: 'Codex CLI',
         codexCliWs: 'Codex CLI (WebSocket)',
-        grokCli: 'Grok CLI',
-        opencode: 'OpenCode'
+        grokCli: 'Grok CLI'
       },
       antigravity: {
         description: '为 Antigravity 分组配置 API 访问。请根据您使用的客户端选择对应的配置方式。',
@@ -174,7 +173,7 @@ export default {
       },
       grok: {
         description:
-          '配置 Grok CLI、Claude Code、Codex 或 OpenCode，让请求通过当前 Sub2API Grok 分组发送。文本模型走 Responses；图片/视频使用 Imagine 模型 ID 与媒体端点。',
+          '配置 Grok CLI、Claude Code 或 Codex，让请求通过当前 Sub2API Grok 分组发送。文本模型走 Responses；图片/视频使用 Imagine 模型 ID 与媒体端点。',
         claudeDescription: '配置 Claude Code，让 Messages API 请求通过当前 Sub2API Grok 分组发送。',
         codexDescription: '配置 Codex，让 Responses API 请求通过当前 Sub2API Grok 分组发送。',
         configTomlHint:
@@ -192,11 +191,17 @@ export default {
         codexNoteWindows:
           '设置 $env:SUB2API_API_KEY，将 config.toml 保存到 %USERPROFILE%\\.codex。优先 env_key，勿提交密钥。'
       },
-      opencode: {
-        title: 'OpenCode 配置示例',
-        subtitle: 'opencode.json',
-        hint: '配置文件路径：~/.config/opencode/opencode.json（或 opencode.jsonc），不存在需手动创建。可使用默认 provider（openai/anthropic/google）或自定义 provider_id。API Key 支持直接配置或通过客户端 /connect 命令配置。示例仅供参考，模型与选项可按需调整。'
-      }
+      grokCli: {
+        description:
+          '安装 Grok CLI 并写入 ~/.grok/config.toml，让 grok 命令通过当前分组访问模型。文本模型走 Responses 接口（api_backend = "responses"）。',
+        installHint: '安装脚本来自 x.ai 官方；安装完成后重开终端，运行 grok --version 验证。',
+        configHint:
+          'Grok CLI 主配置文件，不存在需手动创建（macOS/Linux 可运行 mkdir -p ~/.grok）。已有配置请先备份再合并。',
+        note:
+          '将上面的内容保存为 ~/.grok/config.toml，然后运行 grok 即可使用。文件内含明文 API Key，请勿提交到仓库或分享到公开场合。',
+        noteWindows:
+          '按 Win+R 输入 %USERPROFILE%\\.grok 打开配置目录（不存在需先手动创建），将上面的内容保存为 config.toml。文件内含明文 API Key，请勿提交到仓库或分享到公开场合。'
+      },
     },
     customKeyLabel: '自定义密钥',
     customKeyPlaceholder: '输入自定义密钥（至少16个字符）',
