@@ -612,7 +612,7 @@ function PayContent() {
   const showMainTabs = channelsLoaded && userLoaded && !allEntriesClosed && (hasChannels || hasPlans);
   const effectiveTab = !canTopUp ? 'subscribe' : !hasPlans ? 'topup' : mainTab;
   const pageTitle = showMainTabs
-    ? pickLocaleText(locale, '选择适合你的 充值/订阅服务', 'Choose Your Recharge / Subscription')
+    ? pickLocaleText(locale, '选择适合你的 充值/订单服务', 'Choose Your Recharge / Orders')
     : pickLocaleText(locale, '余额充值', 'Balance Recharge');
   const pageSubtitle = showMainTabs
     ? pickLocaleText(locale, '充值余额或者订阅套餐', 'Top up balance or subscribe to a plan')
@@ -772,7 +772,7 @@ function PayContent() {
                 </svg>
               </div>
               <p className={['text-lg font-medium mb-2', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                {pickLocaleText(locale, '充值/订阅 入口未开放', 'Recharge / Subscription entry is not available')}
+                {pickLocaleText(locale, '充值/订单 入口未开放', 'Recharge / Orders entry is not available')}
               </p>
               <p className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
                 {pickLocaleText(

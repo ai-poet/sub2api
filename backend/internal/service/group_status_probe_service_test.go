@@ -390,6 +390,103 @@ func TestGroupStatusProbe_OpenAIUsesOpenAISchedulerRules(t *testing.T) {
 	require.Equal(t, int64(2), attempt.Account.ID)
 }
 
+func groupStatusProbeGrokAccount(id int64, groupID int64, priority int, mapping map[string]any) Account {
+	account := groupStatusProbeAccount(id, PlatformGrok, groupID, priority, mapping)
+	// Grok 走自己的 base_url 解析（GetGrokBaseURL），不复用 anthropic 的 base_url。
+	delete(account.Credentials, "base_url")
+	return account
+}
+
+func TestDefaultGroupStatusConfig_GrokUsesGrokProbeModel(t *testing.T) {
+	cfg := DefaultGroupStatusConfig(&Group{ID: 20, Platform: PlatformGrok})
+	require.Equal(t, grokDefaultResponsesModel, cfg.ProbeModel)
+}
+
+func TestGroupStatusProbe_GrokUsesResponsesEndpointNotAnthropic(t *testing.T) {
+	group := &Group{ID: 21, Platform: PlatformGrok, Status: StatusActive, Hydrated: true}
+	cfg := groupStatusProbeConfig(group.ID, grokDefaultResponsesModel)
+	account := groupStatusProbeGrokAccount(1, group.ID, 1, map[string]any{grokDefaultResponsesModel: grokDefaultResponsesModel})
+	upstream := &groupStatusProbeHTTPUpstream{
+		responses: []*http.Response{
+			groupStatusProbeResponse(http.StatusOK, `data: {"type":"response.output_text.delta","delta":"ONLINE"}
+data: {"type":"response.completed"}
+
+`),
+		},
+	}
+	svc := newGroupStatusProbeServiceForTest(group, []Account{account}, nil, upstream, nil)
+
+	execution, err := svc.executeProbe(context.Background(), group, cfg)
+	require.NoError(t, err)
+	require.Equal(t, GroupRuntimeStatusUp, execution.Result.Status, "%s: %s", execution.Result.SubStatus, execution.Result.ErrorDetail)
+	require.Len(t, upstream.requests, 1)
+
+	req := upstream.requests[0]
+	require.Contains(t, req.URL.Path, "/responses")
+	require.NotContains(t, req.URL.Host, "anthropic")
+	require.Equal(t, "Bearer test-key", req.Header.Get("Authorization"))
+	require.Empty(t, req.Header.Get("x-api-key"))
+	require.Empty(t, req.Header.Get("anthropic-version"))
+}
+
+func TestGroupStatusProbe_GrokErrorDetailMatchesClientFacingMessage(t *testing.T) {
+	group := &Group{ID: 22, Platform: PlatformGrok, Status: StatusActive, Hydrated: true}
+	cfg := groupStatusProbeConfig(group.ID, grokDefaultResponsesModel)
+	account := groupStatusProbeGrokAccount(1, group.ID, 1, map[string]any{grokDefaultResponsesModel: grokDefaultResponsesModel})
+	upstream := &groupStatusProbeHTTPUpstream{
+		responses: []*http.Response{
+			groupStatusProbeResponse(http.StatusUnauthorized, `{"error":{"message":"Incorrect API key provided: sk-secret"}}`),
+		},
+	}
+	svc := newGroupStatusProbeServiceForTest(group, []Account{account}, nil, upstream, nil)
+
+	execution, err := svc.executeProbe(context.Background(), group, cfg)
+	require.NoError(t, err)
+	require.Equal(t, GroupRuntimeStatusDown, execution.Result.Status)
+	// 401 的下游文案是固定的，探测记录必须用同一句，而不是把上游原始报文写进状态页。
+	require.Contains(t, execution.Result.ErrorDetail, "Upstream authentication failed, please contact administrator")
+	require.NotContains(t, execution.Result.ErrorDetail, "sk-secret")
+}
+
+func TestGroupStatusProbe_GrokContentPolicyStaysOnAccount(t *testing.T) {
+	group := &Group{ID: 23, Platform: PlatformGrok, Status: StatusActive, Hydrated: true}
+	cfg := groupStatusProbeConfig(group.ID, grokDefaultResponsesModel)
+	accounts := []Account{
+		groupStatusProbeGrokAccount(1, group.ID, 1, map[string]any{grokDefaultResponsesModel: grokDefaultResponsesModel}),
+		groupStatusProbeGrokAccount(2, group.ID, 2, map[string]any{grokDefaultResponsesModel: grokDefaultResponsesModel}),
+	}
+	upstream := &groupStatusProbeHTTPUpstream{
+		responses: []*http.Response{
+			groupStatusProbeResponse(http.StatusForbidden, `{"error":{"code":"content_policy_violation","message":"Prompt violates content policy"}}`),
+			groupStatusProbeResponse(http.StatusOK, `data: {"type":"response.completed"}
+
+`),
+		},
+	}
+	svc := newGroupStatusProbeServiceForTest(group, accounts, nil, upstream, nil)
+
+	execution, err := svc.executeProbe(context.Background(), group, cfg)
+	require.NoError(t, err)
+	require.Equal(t, GroupRuntimeStatusDown, execution.Result.Status)
+	// 内容策略拒绝换账号也是同样结果，探测不应该继续抽干账号池。
+	require.Len(t, upstream.requests, 1)
+	require.Contains(t, execution.Result.ErrorDetail, "Prompt violates content policy")
+}
+
+func TestProbeUpstreamClientMessage_MatchesGatewayMapping(t *testing.T) {
+	anthropicAccount := &Account{Platform: PlatformAnthropic}
+	openAIAccount := &Account{Platform: PlatformOpenAI}
+
+	_, _, anthropic429 := anthropicUpstreamClientError(http.StatusTooManyRequests)
+	require.Equal(t, anthropic429, probeUpstreamClientMessage(anthropicAccount, http.StatusTooManyRequests, []byte(`{"error":{"message":"raw upstream detail"}}`)))
+
+	_, _, openAI402 := openAIUpstreamClientError(http.StatusPaymentRequired)
+	require.Equal(t, openAI402, probeUpstreamClientMessage(openAIAccount, http.StatusPaymentRequired, nil))
+
+	// 400 是确定性请求错误，两条路径都把上游 message 原样回给调用方。
+	require.Equal(t, "model not found", probeUpstreamClientMessage(openAIAccount, http.StatusBadRequest, []byte(`{"error":{"message":"model not found"}}`)))
+}
+
 func TestGroupStatusProbe_GeminiMixedSchedulingUsesAntigravityAccount(t *testing.T) {
 	group := &Group{ID: 16, Platform: PlatformGemini, Status: StatusActive, Hydrated: true}
 	cfg := groupStatusProbeConfig(group.ID, "gemini-3-flash")

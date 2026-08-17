@@ -597,7 +597,7 @@ export default {
         "openMode": "Open Mode",
         "openModeIframe": "Embedded (iframe)",
         "openModeNewWindow": "New Window",
-        "openModeHint": "Choose how to open the recharge/subscription page"
+        "openModeHint": "Choose how to open the recharge/orders page"
       },
       "clientDownloads": {
         "title": "Client Downloads",

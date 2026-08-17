@@ -209,6 +209,26 @@ func isOpenAIContextWindowError(upstreamMsg string, upstreamBody []byte) bool {
 	return match(string(upstreamBody))
 }
 
+// openAIUpstreamClientError 把上游状态码映射成下游实际收到的 status/type/message。
+//
+// 抽成函数是为了让分组在线探测复用同一张表：探测失败时展示给用户的文案必须与用户
+// 真正调用时收到的一致，否则状态页会显示上游原始报文，而调用方看到的是这里的固定
+// 文案。任何一方单独改动都会让两者漂移。
+func openAIUpstreamClientError(statusCode int) (int, string, string) {
+	switch statusCode {
+	case http.StatusUnauthorized:
+		return http.StatusBadGateway, "upstream_error", "Upstream authentication failed, please contact administrator"
+	case http.StatusPaymentRequired:
+		return http.StatusBadGateway, "upstream_error", "Upstream payment required: insufficient balance or billing issue"
+	case http.StatusForbidden:
+		return http.StatusBadGateway, "upstream_error", "Upstream access forbidden, please contact administrator"
+	case http.StatusTooManyRequests:
+		return http.StatusTooManyRequests, "rate_limit_error", "Upstream rate limit exceeded, please retry later"
+	default:
+		return http.StatusBadGateway, "upstream_error", "Upstream request failed"
+	}
+}
+
 func (s *OpenAIGatewayService) shouldFailoverUpstreamError(statusCode int) bool {
 	switch statusCode {
 	case 401, 402, 403, 405, 429, 529:
@@ -507,31 +527,7 @@ func (s *OpenAIGatewayService) handleErrorResponse(
 	}
 
 	// Return appropriate error response
-	var errType, errMsg string
-	var statusCode int
-
-	switch resp.StatusCode {
-	case 401:
-		statusCode = http.StatusBadGateway
-		errType = "upstream_error"
-		errMsg = "Upstream authentication failed, please contact administrator"
-	case 402:
-		statusCode = http.StatusBadGateway
-		errType = "upstream_error"
-		errMsg = "Upstream payment required: insufficient balance or billing issue"
-	case 403:
-		statusCode = http.StatusBadGateway
-		errType = "upstream_error"
-		errMsg = "Upstream access forbidden, please contact administrator"
-	case 429:
-		statusCode = http.StatusTooManyRequests
-		errType = "rate_limit_error"
-		errMsg = "Upstream rate limit exceeded, please retry later"
-	default:
-		statusCode = http.StatusBadGateway
-		errType = "upstream_error"
-		errMsg = "Upstream request failed"
-	}
+	statusCode, errType, errMsg := openAIUpstreamClientError(resp.StatusCode)
 	if isOpenAIContextWindowError(upstreamMsg, body) && upstreamMsg != "" {
 		errMsg = upstreamMsg
 	}

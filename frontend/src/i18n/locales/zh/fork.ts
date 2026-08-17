@@ -637,7 +637,7 @@ export default {
         "openMode": "打开方式",
         "openModeIframe": "内嵌模式（iframe）",
         "openModeNewWindow": "新窗口",
-        "openModeHint": "选择充值/订阅页面的打开方式"
+        "openModeHint": "选择充值/订单页面的打开方式"
       },
       "clientDownloads": {
         "title": "客户端下载",

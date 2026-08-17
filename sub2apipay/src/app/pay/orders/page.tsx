@@ -43,7 +43,7 @@ function OrdersContent() {
     switchingMobileTab: pickLocaleText(locale, '正在切换到移动端订单 Tab...', 'Switching to mobile orders tab...'),
     myOrders: pickLocaleText(locale, '我的订单', 'My Orders'),
     refresh: pickLocaleText(locale, '刷新', 'Refresh'),
-    backToPay: pickLocaleText(locale, '返回充值/订阅', 'Back to Purchase'),
+    backToPay: pickLocaleText(locale, '返回充值/订单', 'Back to Purchase'),
     loading: pickLocaleText(locale, '加载中...', 'Loading...'),
     userPrefix: pickLocaleText(locale, '用户', 'User'),
     authError: pickLocaleText(

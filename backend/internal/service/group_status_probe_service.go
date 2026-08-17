@@ -15,6 +15,7 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/xai"
 )
 
 type GroupStatusProbeService struct {
@@ -156,7 +157,7 @@ func (s *GroupStatusProbeService) executeProbe(ctx context.Context, group *Group
 			firstFailureDetail = probeAttemptFailureSummary(account, rawResult)
 		}
 
-		if !s.shouldProbeFailover(account, rawResult) {
+		if !s.shouldProbeFailover(account, rawResult, err) {
 			return s.saveProbeExecution(ctx, group, cfg, account, rawResult)
 		}
 		excludedIDs[account.ID] = struct{}{}
@@ -210,8 +211,11 @@ func (s *GroupStatusProbeService) selectProbeAttempt(ctx context.Context, group 
 
 func (s *GroupStatusProbeService) selectProbeAttemptWithRealScheduler(ctx context.Context, group *Group, cfg *GroupStatusConfig, excludedIDs map[int64]struct{}) (*AccountSelectionResult, string, error) {
 	groupID := group.ID
-	if group.Platform == PlatformOpenAI && s.openAIGatewaySvc != nil {
-		selection, err := s.openAIGatewaySvc.SelectAccountWithLoadAwareness(ctx, &groupID, "", cfg.ProbeModel, excludedIDs)
+	// Grok 走的是 OpenAI 网关（handler/openai_gateway_handler.go），调度规则、
+	// 账号切换上限都在 OpenAIGatewayService 上。探测必须用同一个调度器，否则
+	// 选出的账号与真实请求命中的账号可能不是同一批。
+	if isOpenAIGatewayPlatform(group.Platform) && s.openAIGatewaySvc != nil {
+		selection, err := s.openAIGatewaySvc.SelectAccountWithLoadAwarenessForPlatform(ctx, &groupID, group.Platform, "", cfg.ProbeModel, excludedIDs)
 		return selection, "openai_gateway", err
 	}
 	if s.gatewaySvc != nil {
@@ -277,7 +281,7 @@ func (s *GroupStatusProbeService) maxProbeAttempts(group *Group) int {
 	if s.gatewaySvc != nil && s.gatewaySvc.cfg != nil && s.gatewaySvc.cfg.Gateway.MaxAccountSwitches > 0 {
 		switches = s.gatewaySvc.cfg.Gateway.MaxAccountSwitches
 	}
-	if group != nil && group.Platform == PlatformOpenAI && s.openAIGatewaySvc != nil && s.openAIGatewaySvc.cfg != nil && s.openAIGatewaySvc.cfg.Gateway.MaxAccountSwitches > 0 {
+	if group != nil && isOpenAIGatewayPlatform(group.Platform) && s.openAIGatewaySvc != nil && s.openAIGatewaySvc.cfg != nil && s.openAIGatewaySvc.cfg.Gateway.MaxAccountSwitches > 0 {
 		switches = s.openAIGatewaySvc.cfg.Gateway.MaxAccountSwitches
 	}
 	if group != nil && group.Platform == PlatformGemini && s.gatewaySvc != nil && s.gatewaySvc.cfg != nil && s.gatewaySvc.cfg.Gateway.MaxAccountSwitchesGemini > 0 {
@@ -352,11 +356,20 @@ func (s *GroupStatusProbeService) saveProbeExecution(ctx context.Context, group 
 	}, nil
 }
 
-func (s *GroupStatusProbeService) shouldProbeFailover(account *Account, result *GroupStatusProbeResult) bool {
+func (s *GroupStatusProbeService) shouldProbeFailover(account *Account, result *GroupStatusProbeResult, probeErr error) bool {
 	if result == nil || result.HTTPCode == nil {
 		return false
 	}
 	statusCode := *result.HTTPCode
+	if account != nil && account.Platform == PlatformGrok {
+		// Grok 的 failover 判定是看响应体的：内容策略拒绝必须留在当前账号（换号也会
+		// 被拒，只会白白抽干账号池），而 free-usage 耗尽的 400 反过来必须换号。仅凭
+		// 状态码判断会把这两种情况都判反。
+		if s.openAIGatewaySvc != nil {
+			return s.openAIGatewaySvc.shouldFailoverGrokUpstreamError(statusCode, probeUpstreamErrorBody(probeErr))
+		}
+		return shouldOpenAIProbeFailoverStatus(statusCode)
+	}
 	if account != nil && account.Platform == PlatformOpenAI {
 		if s.openAIGatewaySvc != nil {
 			return s.openAIGatewaySvc.shouldFailoverUpstreamError(statusCode)
@@ -367,6 +380,11 @@ func (s *GroupStatusProbeService) shouldProbeFailover(account *Account, result *
 		return s.gatewaySvc.shouldFailoverUpstreamError(statusCode)
 	}
 	return shouldGatewayProbeFailoverStatus(statusCode)
+}
+
+// isOpenAIGatewayPlatform 报告该平台的真实请求是否由 OpenAIGatewayService 承载。
+func isOpenAIGatewayPlatform(platform string) bool {
+	return platform == PlatformOpenAI || platform == PlatformGrok
 }
 
 func shouldOpenAIProbeFailoverStatus(statusCode int) bool {
@@ -441,6 +459,8 @@ func (s *GroupStatusProbeService) executeAccountProbe(ctx context.Context, accou
 		responseText, httpCode, err = s.probeGemini(ctx, account, cfg)
 	case account.Platform == PlatformAntigravity:
 		responseText, httpCode, err = s.probeAntigravity(ctx, account, cfg)
+	case account.Platform == PlatformGrok:
+		responseText, httpCode, err = s.probeGrok(ctx, account, cfg)
 	default:
 		responseText, httpCode, err = s.probeAnthropic(ctx, account, cfg)
 	}
@@ -747,6 +767,76 @@ func (s *GroupStatusProbeService) probeGemini(ctx context.Context, account *Acco
 	return s.executeStreamingProbe(req, account, parseGeminiProbeStream)
 }
 
+// probeGrok 复用网关转发 Grok Responses 的请求构造（base_url 解析、CLI 身份头、
+// 模型别名归一），而不是落到 probeAnthropic —— 后者会把 Grok 的 OAuth token 发到
+// api.anthropic.com，或者用 x-api-key 打到错误的 /v1/messages 路径，探测必然失败。
+func (s *GroupStatusProbeService) probeGrok(ctx context.Context, account *Account, cfg *GroupStatusConfig) (string, *int, error) {
+	if s.accountTestSvc == nil {
+		return "", nil, errors.New("account test service is not configured")
+	}
+
+	upstreamModel := strings.TrimSpace(account.GetMappedModel(cfg.ProbeModel))
+	if upstreamModel == "" {
+		upstreamModel = grokDefaultResponsesModel
+	}
+	upstreamModel = xai.ResolveGrokTextResponsesModelID(upstreamModel, grokDefaultResponsesModel)
+	if isGrokImageGenerationModel(upstreamModel) || isGrokVideoGenerationModel(upstreamModel) {
+		return "", nil, fmt.Errorf("probe model %s is a media model and is not available on the Responses endpoint", upstreamModel)
+	}
+
+	token, err := s.grokProbeAccessToken(ctx, account)
+	if err != nil {
+		return "", nil, err
+	}
+
+	payloadBytes, err := createGrokProbePayload(upstreamModel, cfg.ProbePrompt)
+	if err != nil {
+		return "", nil, err
+	}
+	// cacheIdentity 留空：探测不参与 prompt cache 分桶，也就不该污染真实会话的缓存键。
+	req, err := buildGrokResponsesRequest(ctx, nil, account, payloadBytes, token, "", s.accountTestSvc.cfg, s.accountTestSvc.settingService)
+	if err != nil {
+		return "", nil, err
+	}
+	return s.executeStreamingProbe(req, account, parseOpenAIProbeStream)
+}
+
+// grokProbeAccessToken 取生产调度使用的凭据（不是管理员手测那条会跳过可调度性检查的
+// 路径），这样探测结果才代表用户真实调用时的可用性。
+func (s *GroupStatusProbeService) grokProbeAccessToken(ctx context.Context, account *Account) (string, error) {
+	switch account.Type {
+	case AccountTypeOAuth:
+		if s.accountTestSvc.grokTokenProvider == nil {
+			return "", errors.New("grok token provider is not configured")
+		}
+		token, err := s.accountTestSvc.grokTokenProvider.GetAccessToken(ctx, account)
+		if err != nil {
+			return "", fmt.Errorf("failed to get grok access token: %w", err)
+		}
+		return token, nil
+	case AccountTypeAPIKey:
+		token := strings.TrimSpace(account.GetCredential("api_key"))
+		if token == "" {
+			return "", errors.New("no API key available")
+		}
+		return token, nil
+	default:
+		return "", fmt.Errorf("unsupported account type: %s", account.Type)
+	}
+}
+
+func createGrokProbePayload(modelID, prompt string) ([]byte, error) {
+	textPrompt := strings.TrimSpace(prompt)
+	if textPrompt == "" {
+		textPrompt = "Please reply with ONLINE."
+	}
+	return json.Marshal(map[string]any{
+		"model":  modelID,
+		"input":  textPrompt,
+		"stream": true,
+	})
+}
+
 func (s *GroupStatusProbeService) probeAntigravity(ctx context.Context, account *Account, cfg *GroupStatusConfig) (string, *int, error) {
 	if account.Type == AccountTypeAPIKey {
 		if strings.HasPrefix(cfg.ProbeModel, "gemini-") {
@@ -765,6 +855,67 @@ func (s *GroupStatusProbeService) probeAntigravity(ctx context.Context, account 
 	return res.Text, &code, nil
 }
 
+// probeUpstreamError 是探测遇到上游 HTTP 错误时的错误类型。
+//
+// Error() 返回的是调用方真实会收到的文案（见 probeUpstreamClientMessage），因为它
+// 会被写进 error_detail 并展示在用户可见的模型状态页；原始响应体单独留在 Body 上，
+// 只用于与请求路径一致的 failover 分类，不外泄给用户。
+type probeUpstreamError struct {
+	StatusCode int
+	Body       []byte
+	Message    string
+}
+
+func (e *probeUpstreamError) Error() string {
+	if e == nil {
+		return ""
+	}
+	return e.Message
+}
+
+func newProbeUpstreamError(account *Account, statusCode int, body []byte) *probeUpstreamError {
+	return &probeUpstreamError{
+		StatusCode: statusCode,
+		Body:       append([]byte(nil), body...),
+		Message:    fmt.Sprintf("http %d: %s", statusCode, probeUpstreamClientMessage(account, statusCode, body)),
+	}
+}
+
+func probeUpstreamErrorBody(err error) []byte {
+	var upstreamErr *probeUpstreamError
+	if errors.As(err, &upstreamErr) && upstreamErr != nil {
+		return upstreamErr.Body
+	}
+	return nil
+}
+
+// probeUpstreamClientMessage 复用网关的下游错误文案，让探测记录与用户实际调用收到的
+// 提示一致：确定性的请求错误（400）保留上游 message，其余状态码使用网关那张固定文案
+// 表，而不是把上游原始报文糊到状态页上。
+func probeUpstreamClientMessage(account *Account, statusCode int, body []byte) string {
+	platform := ""
+	if account != nil {
+		platform = account.Platform
+	}
+	if platform == PlatformGrok && isGrokContentPolicyRejection(statusCode, body) {
+		return grokContentPolicyClientMessage(body)
+	}
+	if isOpenAIDeterministicClientError(statusCode) {
+		if msg := sanitizeUpstreamErrorMessage(strings.TrimSpace(extractUpstreamErrorMessage(body))); msg != "" {
+			return msg
+		}
+		if isOpenAIGatewayPlatform(platform) {
+			return openAIUpstreamClientErrorFallbackMessage
+		}
+	}
+	if isOpenAIGatewayPlatform(platform) {
+		_, _, msg := openAIUpstreamClientError(statusCode)
+		return msg
+	}
+	_, _, msg := anthropicUpstreamClientError(statusCode)
+	return msg
+}
+
 func (s *GroupStatusProbeService) executeStreamingProbe(req *http.Request, account *Account, parser func(io.Reader) (string, error)) (string, *int, error) {
 	resp, err := s.doHTTPRequest(req, account)
 	if err != nil {
@@ -774,7 +925,7 @@ func (s *GroupStatusProbeService) executeStreamingProbe(req *http.Request, accou
 	code := resp.StatusCode
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return string(body), &code, fmt.Errorf("http %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return string(body), &code, newProbeUpstreamError(account, code, body)
 	}
 	text, err := parser(resp.Body)
 	return text, &code, err
@@ -789,7 +940,7 @@ func (s *GroupStatusProbeService) executeJSONProbe(req *http.Request, account *A
 	code := resp.StatusCode
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return string(body), &code, fmt.Errorf("http %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return string(body), &code, newProbeUpstreamError(account, code, body)
 	}
 	text, err := parser(body)
 	return text, &code, err

@@ -58,15 +58,15 @@ export default {
     dockerRecreate: '重新创建容器'
   },
 
-  // Recharge / Subscription Page
+  // Recharge / Orders Page
   purchase: {
-    title: '充值/订阅',
-    description: '通过内嵌页面完成充值/订阅',
+    title: '充值/订单',
+    description: '通过内嵌页面完成充值/订单',
     openInNewTab: '新窗口打开',
     notEnabledTitle: '该功能未开启',
-    notEnabledDesc: '管理员暂未开启充值/订阅入口，请联系管理员。',
-    notConfiguredTitle: '充值/订阅链接未配置',
-    notConfiguredDesc: '管理员已开启入口，但尚未配置充值/订阅链接，请联系管理员。'
+    notEnabledDesc: '管理员暂未开启充值/订单入口，请联系管理员。',
+    notConfiguredTitle: '充值/订单链接未配置',
+    notConfiguredDesc: '管理员已开启入口，但尚未配置充值/订单链接，请联系管理员。'
   },
 
   // Custom Page (iframe embed)
@@ -309,7 +309,7 @@ export default {
 
   // Payment System
   payment: {
-    title: '充值/订阅',
+    title: '充值/订单',
     amountLabel: '充值金额',
     paymentAmount: '支付金额',
     creditedBalance: '到账余额',

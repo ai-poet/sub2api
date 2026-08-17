@@ -215,6 +215,8 @@ func defaultProbeModelByPlatform(platform string) string {
 		return geminiDefaultProbeModel()
 	case PlatformAntigravity:
 		return "claude-sonnet-4-5"
+	case PlatformGrok:
+		return grokDefaultProbeModel()
 	default:
 		return claudeDefaultProbeModel()
 	}
@@ -230,6 +232,12 @@ func openaiDefaultProbeModel() string {
 
 func geminiDefaultProbeModel() string {
 	return "gemini-2.5-flash"
+}
+
+// grokDefaultProbeModel 跟随网关转发 Grok Responses 时的默认模型，避免分组默认落到
+// claude-sonnet-4-5 —— 没有任何 Grok 账号支持它，探测会恒定失败。
+func grokDefaultProbeModel() string {
+	return grokDefaultResponsesModel
 }
 
 func NormalizeGroupStatusConfig(group *Group, input *GroupStatusConfigUpsertInput) (*GroupStatusConfig, error) {
