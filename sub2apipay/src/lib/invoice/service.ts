@@ -14,6 +14,7 @@ import {
 } from '@/lib/sub2api/attachments';
 import { evaluateInvoiceEligibility } from './eligibility';
 import {
+  INVOICE_MAX_MERGED_ORDERS,
   INVOICE_REREQUESTABLE_STATUSES,
   INVOICE_STATUS,
   InvoiceError,
@@ -183,8 +184,7 @@ export async function loadInvoicesForOrders(orderIds: string[]): Promise<Map<str
   return new Map(rows.map((row) => [row.orderId, row.invoice]));
 }
 
-/** 单次合并开票的订单数上限：足够覆盖常见的按月汇总，也挡住误操作式的全选。 */
-export const INVOICE_MAX_MERGED_ORDERS = 30;
+export { INVOICE_MAX_MERGED_ORDERS };
 
 export interface RequestInvoiceInput {
   /** 一张或多张订单。多张时合并为一张发票，金额为各单实付之和。 */

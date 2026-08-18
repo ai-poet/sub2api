@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
-import { INVOICE_MAX_MERGED_ORDERS, requestInvoice } from '@/lib/invoice/service';
+import { requestInvoice } from '@/lib/invoice/service';
 import { invoiceInvalidParamsMessage, invoiceMessage } from '@/lib/invoice/types';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
@@ -13,7 +13,10 @@ import { handleApiError } from '@/lib/utils/api';
  * 这里只是把「选哪些单」交给调用方。
  */
 const mergedInvoiceRequestSchema = z.object({
-  order_ids: z.array(z.string().trim().min(1)).min(1).max(INVOICE_MAX_MERGED_ORDERS),
+  // 这里只做形状校验，上限（INVOICE_MAX_MERGED_ORDERS）由 service 检查——
+  // 那边的报错是「单次最多合并 N 张订单」，比 zod 的「订单格式不正确」能让用户
+  // 知道该怎么办。500 只是防滥用的荷载兜底。
+  order_ids: z.array(z.string().trim().min(1)).min(1).max(500),
   title_name: z.string().trim().min(2).max(100),
   // 统一社会信用代码 18 位；兼容旧的 15 位纳税人识别号及部分 20 位号段。
   tax_no: z

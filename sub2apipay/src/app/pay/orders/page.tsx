@@ -11,6 +11,7 @@ import InvoiceRequestDialog, {
   type SavedInvoiceTitleOption,
 } from '@/components/InvoiceRequestDialog';
 import PaginationBar from '@/components/PaginationBar';
+import { INVOICE_MAX_MERGED_ORDERS } from '@/lib/invoice/types';
 import { getOrdersAccessHint, getOrdersSessionExpiredHint } from '@/lib/branding';
 import { applyLocaleToSearchParams, pickLocaleText, resolveLocale } from '@/lib/locale';
 import { detectDeviceIsMobile, type UserInfo, type MyOrder, type OrderStatusFilter } from '@/lib/pay-utils';
@@ -58,6 +59,11 @@ function OrdersContent() {
         `还差 ¥${short.toFixed(2)} 满 ¥${min.toFixed(2)} 起开，可多勾几张订单`,
         `¥${short.toFixed(2)} short of the ¥${min.toFixed(2)} minimum — select more orders`,
       ),
+    invoiceOverLimit: pickLocaleText(
+      locale,
+      `单次最多合并 ${INVOICE_MAX_MERGED_ORDERS} 张订单，请减少勾选`,
+      `At most ${INVOICE_MAX_MERGED_ORDERS} orders per invoice — deselect some`,
+    ),
     backToPay: pickLocaleText(locale, '返回充值/订单', 'Back to Purchase'),
     loading: pickLocaleText(locale, '加载中...', 'Loading...'),
     userPrefix: pickLocaleText(locale, '用户', 'User'),
@@ -172,12 +178,15 @@ function OrdersContent() {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
+    // 合并提交只覆盖当前页的勾选，翻页后残留的勾选既不可见也不会被提交，直接清掉。
+    setSelectedInvoiceIds(new Set());
     loadOrders(newPage, pageSize);
   };
 
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     setPage(1);
+    setSelectedInvoiceIds(new Set());
     loadOrders(1, newSize);
   };
 
@@ -350,7 +359,9 @@ function OrdersContent() {
     invoiceableOrders.length > 0 && invoiceableOrders.every((order) => selectedInvoiceIds.has(order.id));
   // 起开金额按合计判定，所以差额提示挂在勾选集合上，而不是单张订单上。
   const belowMinAmount = invoiceMinAmount > 0 && selectedTotal < invoiceMinAmount;
-  const canSubmitInvoice = selectedOrders.length > 0 && !belowMinAmount && !invoiceSubmitting;
+  // 服务端有同样的上限；这里先拦住并给出人话，别让用户填完抬头才被拒。
+  const overMergeLimit = selectedOrders.length > INVOICE_MAX_MERGED_ORDERS;
+  const canSubmitInvoice = selectedOrders.length > 0 && !belowMinAmount && !overMergeLimit && !invoiceSubmitting;
 
   const toggleSelectAllInvoiceable = () => {
     setQuickInvoiceError('');
@@ -447,6 +458,10 @@ function OrdersContent() {
             <span className={isDark ? 'text-amber-300' : 'text-amber-700'}>
               {text.invoiceBelowMin(invoiceMinAmount - selectedTotal, invoiceMinAmount)}
             </span>
+          )}
+
+          {overMergeLimit && (
+            <span className={isDark ? 'text-amber-300' : 'text-amber-700'}>{text.invoiceOverLimit}</span>
           )}
 
           <div className="ml-auto flex flex-wrap items-center gap-2">

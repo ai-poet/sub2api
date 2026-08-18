@@ -348,6 +348,34 @@ describe('POST /api/invoices/requests (合并开票)', () => {
     expect(res.status).toBe(200);
   });
 
+  // 上限报错必须是「单次最多合并 N 张」而不是 zod 的「订单格式不正确」——
+  // 后者会让用户以为订单号本身有问题（真实事故）。
+  it('rejects too many orders with an actionable message', async () => {
+    const ids = Array.from({ length: 101 }, (_, i) => `order-${i}`);
+    const res = await mergedInvoiceRoute(mergedPostRequest({ ...VALID_BODY, order_ids: ids }));
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('INVOICE_TOO_MANY_ORDERS');
+    expect(body.error).toContain('100');
+    expect(mockInvoiceCreate).not.toHaveBeenCalled();
+  });
+
+  it('accepts a full page of 100 orders', async () => {
+    const orders = Array.from({ length: 100 }, (_, i) =>
+      eligibleOrder({ id: `order-${i}`, paidAt: new Date(2026, 7, 1 + (i % 28)), payAmount: '2.00' }),
+    );
+    mockOrderFindMany.mockResolvedValue(orders);
+    mockInvoiceCreate.mockResolvedValue(createdInvoice({ amount: '200.00' }));
+
+    const res = await mergedInvoiceRoute(
+      mergedPostRequest({ ...VALID_BODY, order_ids: orders.map((o) => o.id) }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockInvoiceCreate.mock.calls[0][0].data.orders.create).toHaveLength(100);
+  });
+
   it('deduplicates repeated order ids instead of double counting', async () => {
     mockOrderFindMany.mockResolvedValue([eligibleOrder({ id: 'order-1', payAmount: '128.00' })]);
     mockInvoiceCreate.mockResolvedValue(createdInvoice());

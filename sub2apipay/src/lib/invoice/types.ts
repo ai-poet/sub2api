@@ -49,6 +49,15 @@ export function invoiceInvalidParamsMessage(locale: Locale, badFields: string[])
   );
 }
 
+/**
+ * 单次合并开票的订单数上限。
+ *
+ * 与订单页每页最大条数（100）对齐：合并提交只作用于当前页的勾选，所以 UI 上不可能
+ * 超过它；服务端仍然强制，作为直接调 API 的兜底。放在 types 里是因为前端也要引用
+ * （service 引入了 prisma，不能进客户端包）。
+ */
+export const INVOICE_MAX_MERGED_ORDERS = 100;
+
 export const INVOICE_STATUS = {
   PENDING: 'PENDING',
   ISSUED: 'ISSUED',
