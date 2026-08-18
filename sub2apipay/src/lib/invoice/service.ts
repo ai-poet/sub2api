@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 
 import { prisma } from '@/lib/db';
+import { ORDER_STATUS } from '@/lib/constants';
 import { getSystemConfigs } from '@/lib/system-config';
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import type { Locale } from '@/lib/locale';
@@ -375,6 +376,117 @@ export async function requestInvoice(input: RequestInvoiceInput): Promise<Invoic
   }
 
   return toInvoiceView({ ...row, orders: sortedOrders.map((order) => ({ orderId: order.id })) });
+}
+
+// ─── 一键开票 ───
+
+export interface QuickInvoicePreview {
+  enabled: boolean;
+  /** 本次一键开票会覆盖的订单（最早付款优先，封顶 INVOICE_MAX_MERGED_ORDERS）。 */
+  orderIds: string[];
+  count: number;
+  /** 覆盖订单的实付合计（人民币）。 */
+  amount: number;
+  /** 全部可开票订单数（未截断前）。 */
+  eligibleCount: number;
+  capped: boolean;
+  minAmount: number;
+}
+
+/**
+ * 计算「一键开票」会覆盖哪些订单。
+ *
+ * 订单由服务端挑选而不是前端勾选：前端只有当前页的数据，而可开票订单散落在所有
+ * 分页里。挑选规则与订单列表展示的 canRequestInvoice 完全一致（同一个
+ * evaluateInvoiceEligibility），最早付款的排前面——开票窗口先过期的先开掉。
+ */
+export async function previewQuickInvoice(userId: number): Promise<QuickInvoicePreview> {
+  const settings = await getInvoiceSettings();
+  const empty: QuickInvoicePreview = {
+    enabled: settings.enabled,
+    orderIds: [],
+    count: 0,
+    amount: 0,
+    eligibleCount: 0,
+    capped: false,
+    minAmount: settings.minAmount,
+  };
+  if (!settings.enabled) return empty;
+
+  const windowStart =
+    settings.maxAgeDays > 0 ? new Date(Date.now() - settings.maxAgeDays * 24 * 60 * 60 * 1000) : null;
+  const orders = await prisma.order.findMany({
+    where: {
+      userId,
+      status: ORDER_STATUS.COMPLETED,
+      paidAt: windowStart ? { gte: windowStart } : { not: null },
+    },
+    select: { id: true, status: true, paymentType: true, paidAt: true, payAmount: true, refundAmount: true },
+    orderBy: { paidAt: 'asc' },
+  });
+  if (orders.length === 0) return empty;
+
+  const links = await loadInvoicesForOrders(orders.map((order) => order.id));
+  const eligible = orders.filter(
+    (order) =>
+      evaluateInvoiceEligibility(order, {
+        featureEnabled: true,
+        maxAgeDays: settings.maxAgeDays,
+        existingStatus: (links.get(order.id)?.status as InvoiceStatus | undefined) ?? null,
+      }).eligible,
+  );
+
+  const candidates = eligible.slice(0, INVOICE_MAX_MERGED_ORDERS);
+  const amount = candidates.reduce((sum, order) => sum + Number(order.payAmount), 0);
+  return {
+    enabled: true,
+    orderIds: candidates.map((order) => order.id),
+    count: candidates.length,
+    amount: Number(amount.toFixed(2)),
+    eligibleCount: eligible.length,
+    capped: eligible.length > candidates.length,
+    minAmount: settings.minAmount,
+  };
+}
+
+export interface RequestQuickInvoiceInput {
+  userId: number;
+  titleName: string;
+  taxNo: string;
+  remark?: string | null;
+  contactEmail?: string | null;
+  locale: Locale;
+}
+
+/**
+ * 一键开票：服务端挑单后走 requestInvoice——资格、起开金额、并发唯一约束全部复用，
+ * 预览与提交之间订单状态变了也由那边的逐单校验兜住。
+ */
+export async function requestQuickInvoice(
+  input: RequestQuickInvoiceInput,
+): Promise<{ invoice: InvoiceRequestView; count: number; amount: number }> {
+  const preview = await previewQuickInvoice(input.userId);
+  if (!preview.enabled) {
+    throw new InvoiceError('FEATURE_DISABLED', invoiceIneligibleMessage(input.locale, 'FEATURE_DISABLED'), 400);
+  }
+  if (preview.count === 0) {
+    throw new InvoiceError(
+      'NO_INVOICEABLE_ORDERS',
+      invoiceMessage(input.locale, '当前没有可开票的订单', 'There are no invoiceable orders right now'),
+      400,
+    );
+  }
+
+  const invoice = await requestInvoice({
+    orderIds: preview.orderIds,
+    userId: input.userId,
+    titleName: input.titleName,
+    taxNo: input.taxNo,
+    remark: input.remark,
+    contactEmail: input.contactEmail,
+    locale: input.locale,
+  });
+  return { invoice, count: preview.count, amount: preview.amount };
 }
 
 async function rememberInvoiceTitle(

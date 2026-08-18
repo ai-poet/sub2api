@@ -21,12 +21,16 @@ interface OrderTableProps {
   orders: MyOrder[];
   userBalance: number;
   onRefundRequest: (orderId: string, amount: number, reason: string) => Promise<void>;
-  /** 未提供时整列隐藏（开票功能关闭或调用方不支持）。 */
-  onInvoiceRequest?: (order: MyOrder) => void;
+  /** 开票功能开关：控制发票状态列与勾选列的显示。开票动作在表格顶部操作栏发起。 */
+  invoiceEnabled?: boolean;
   onInvoiceDownload?: (invoiceId: string) => void;
-  /** 合并开票的勾选态；未提供 onToggleInvoiceSelect 时不渲染勾选列。 */
+  /** 勾选开票的勾选态；未提供 onToggleInvoiceSelect 时不渲染勾选列。 */
   selectedInvoiceOrderIds?: ReadonlySet<string>;
-  onToggleInvoiceSelect?: (orderId: string) => void;
+  /** 传整个 order：跨页勾选需要在当前页之外记住金额。 */
+  onToggleInvoiceSelect?: (order: MyOrder) => void;
+  /** 表头全选框（作用于当前页的可开票订单）。 */
+  pageAllSelected?: boolean;
+  onToggleSelectAllPage?: () => void;
 }
 
 export default function OrderTable({
@@ -37,10 +41,12 @@ export default function OrderTable({
   orders,
   userBalance,
   onRefundRequest,
-  onInvoiceRequest,
+  invoiceEnabled,
   onInvoiceDownload,
   selectedInvoiceOrderIds,
   onToggleInvoiceSelect,
+  pageAllSelected,
+  onToggleSelectAllPage,
 }: OrderTableProps) {
   const text =
     locale === 'en'
@@ -99,8 +105,8 @@ export default function OrderTable({
           refundAmountExceedBalance: '退款金额不能超过当前余额',
         };
 
-  // 开票列只在调用方接上处理器时出现，因此关闭开票的部署不会多出一列空白。
-  const showInvoiceColumn = !!onInvoiceRequest;
+  // 开票列只在功能开启时出现，因此关闭开票的部署不会多出一列空白。
+  const showInvoiceColumn = !!invoiceEnabled;
   const showSelectColumn = showInvoiceColumn && !!onToggleInvoiceSelect;
   const gridCols = [
     showSelectColumn ? 'md:grid-cols-[2rem_1.2fr_0.6fr_0.8fr_0.8fr_1fr_0.8fr_0.9fr]' : null,
@@ -214,7 +220,18 @@ export default function OrderTable({
                 isDark ? 'text-slate-300' : 'text-slate-600',
               ].join(' ')}
             >
-              {showSelectColumn && <span />}
+              {showSelectColumn && (
+                <span>
+                  {/* 表头全选：只作用于当前页的可开票订单，跨页的勾选保留。 */}
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 cursor-pointer accent-blue-600"
+                    checked={pageAllSelected ?? false}
+                    onChange={() => onToggleSelectAllPage?.()}
+                    aria-label={text.invoiceRequest}
+                  />
+                </span>
+              )}
               <span>{text.orderId}</span>
               <span>{text.amount}</span>
               <span>{text.payment}</span>
@@ -241,7 +258,7 @@ export default function OrderTable({
                           type="checkbox"
                           className="h-4 w-4 cursor-pointer accent-blue-600"
                           checked={selectedInvoiceOrderIds?.has(order.id) ?? false}
-                          onChange={() => onToggleInvoiceSelect?.(order.id)}
+                          onChange={() => onToggleInvoiceSelect?.(order)}
                           aria-label={`${text.invoiceRequest} ${order.id}`}
                         />
                       ) : (
@@ -313,20 +330,14 @@ export default function OrderTable({
                           )}
                         </div>
                       ) : order.canRequestInvoice ? (
-                        <button
-                          type="button"
-                          // 被驳回后仍可重新申请，把驳回原因挂在 title 上。
+                        // 开票动作在顶部操作栏发起（一键/勾选），行内只保留勾选框与状态。
+                        // 被驳回后仍可重新勾选申请，驳回原因挂在 title 上。
+                        <span
                           title={order.invoice?.rejectReason ?? undefined}
-                          onClick={() => onInvoiceRequest(order)}
-                          className={[
-                            'rounded px-2 py-1 text-xs',
-                            isDark
-                              ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200',
-                          ].join(' ')}
+                          className={isDark ? 'text-slate-500 text-xs' : 'text-slate-400 text-xs'}
                         >
-                          {text.invoiceRequest}
-                        </button>
+                          {order.invoice?.status === 'REJECTED' ? formatInvoiceStatus('REJECTED', locale) : '-'}
+                        </span>
                       ) : (
                         // 禁用时也说明原因，而不是让按钮凭空消失。
                         <span

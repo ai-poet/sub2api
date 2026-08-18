@@ -24,8 +24,10 @@ interface InvoiceRequestDialogProps {
   locale: Locale;
   /** 开票金额（人民币）；合并开票时为各单实付之和。 */
   amount: number | null;
-  /** 本次开票覆盖的订单号，合并开票时长度大于 1。 */
+  /** 本次开票覆盖的订单号，合并开票时长度大于 1。一键开票（服务端挑单）时为空数组。 */
   orderIds: string[];
+  /** 覆盖订单数；一键开票时前端没有订单号清单，由服务端预览给出。缺省取 orderIds.length。 */
+  orderCount?: number;
   savedTitles: SavedInvoiceTitleOption[];
   submitting: boolean;
   error: string;
@@ -42,6 +44,7 @@ export default function InvoiceRequestDialog({
   locale,
   amount,
   orderIds,
+  orderCount,
   savedTitles,
   submitting,
   error,
@@ -94,6 +97,7 @@ export default function InvoiceRequestDialog({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [submitting, onClose]);
 
+  const coveredCount = orderCount ?? orderIds.length;
   const trimmedTitle = titleName.trim();
   const trimmedTaxNo = taxNo.trim();
   const trimmedEmail = contactEmail.trim();
@@ -140,30 +144,32 @@ export default function InvoiceRequestDialog({
           </div>
           <div className={['rounded-lg p-3', isDark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
             <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>
-              {orderIds.length > 1 ? text.mergedOrders : text.orderId}
+              {coveredCount > 1 ? text.mergedOrders : text.orderId}
             </div>
             <div className="mt-1 truncate font-mono text-xs">
-              {orderIds.length > 1 ? `${orderIds.length}` : `#${(orderIds[0] ?? '').slice(0, 12)}`}
+              {coveredCount > 1 ? `${coveredCount}` : `#${(orderIds[0] ?? '').slice(0, 12)}`}
             </div>
           </div>
         </div>
 
-        {orderIds.length > 1 && (
+        {coveredCount > 1 && (
           <div
             className={[
               'mt-3 rounded-lg p-3 text-xs',
               isDark ? 'bg-slate-800/60 text-slate-300' : 'bg-blue-50 text-blue-700',
             ].join(' ')}
           >
-            <div className="font-medium">{text.mergedCount(orderIds.length)}</div>
-            {/* 列出全部订单号：金额是合计值，用户需要能核对合进来的是哪几张。 */}
-            <div className="mt-1 max-h-24 overflow-y-auto font-mono leading-5">
-              {orderIds.map((id) => (
-                <div key={id} className="truncate">
-                  #{id}
-                </div>
-              ))}
-            </div>
+            <div className="font-medium">{text.mergedCount(coveredCount)}</div>
+            {/* 有订单号清单时列出供核对；一键开票由服务端挑单，只展示单数与合计。 */}
+            {orderIds.length > 0 && (
+              <div className="mt-1 max-h-24 overflow-y-auto font-mono leading-5">
+                {orderIds.map((id) => (
+                  <div key={id} className="truncate">
+                    #{id}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

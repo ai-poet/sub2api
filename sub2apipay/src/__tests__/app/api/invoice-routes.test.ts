@@ -59,6 +59,7 @@ vi.mock('@/lib/db', () => {
 
 import { POST as requestInvoiceRoute } from '@/app/api/orders/[id]/invoice-request/route';
 import { POST as mergedInvoiceRoute } from '@/app/api/invoices/requests/route';
+import { GET as quickInvoicePreviewRoute, POST as quickInvoiceRoute } from '@/app/api/invoices/quick/route';
 import { GET as downloadInvoiceRoute } from '@/app/api/invoices/[id]/download/route';
 import { invalidateConfigCache } from '@/lib/system-config';
 
@@ -374,6 +375,69 @@ describe('POST /api/invoices/requests (合并开票)', () => {
 
     expect(res.status).toBe(200);
     expect(mockInvoiceCreate.mock.calls[0][0].data.orders.create).toHaveLength(100);
+  });
+
+  it('quick preview reports server-selected count and amount across all pages', async () => {
+    mockOrderFindMany.mockResolvedValue([
+      eligibleOrder({ id: 'order-1', paidAt: new Date('2026-08-01'), payAmount: '60.00' }),
+      eligibleOrder({ id: 'order-2', paidAt: new Date('2026-08-02'), payAmount: '40.00' }),
+      // 已有有效发票的订单不计入
+      eligibleOrder({ id: 'order-3', paidAt: new Date('2026-08-03'), payAmount: '30.00' }),
+    ]);
+    mockInvoiceOrderFindMany.mockResolvedValue([linkedInvoice('order-3', { id: 'inv-x', status: 'ISSUED' })]);
+
+    const qs = new URLSearchParams({ token: 'tok', lang: 'zh' });
+    const res = await quickInvoicePreviewRoute(
+      new NextRequest(`https://pay.example.com/api/invoices/quick?${qs}`),
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.enabled).toBe(true);
+    expect(body.count).toBe(2);
+    expect(body.amount).toBe(100);
+    expect(body.min_amount).toBe(100);
+  });
+
+  it('quick invoice lets the server pick the orders (no order_ids in the request)', async () => {
+    mockOrderFindMany.mockResolvedValue([
+      eligibleOrder({ id: 'order-2', paidAt: new Date('2026-08-02'), payAmount: '40.00' }),
+      eligibleOrder({ id: 'order-1', paidAt: new Date('2026-08-01'), payAmount: '60.00' }),
+    ]);
+    mockInvoiceCreate.mockResolvedValue(createdInvoice({ amount: '100.00' }));
+
+    const qs = new URLSearchParams({ token: 'tok', lang: 'zh' });
+    const res = await quickInvoiceRoute(
+      new NextRequest(`https://pay.example.com/api/invoices/quick?${qs}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(VALID_BODY),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBe(2);
+    expect(body.amount).toBe(100);
+    const created = mockInvoiceCreate.mock.calls[0][0].data;
+    expect(created.orders.create.map((line: { orderId: string }) => line.orderId)).toEqual(['order-1', 'order-2']);
+  });
+
+  it('quick invoice rejects when nothing is invoiceable', async () => {
+    mockOrderFindMany.mockResolvedValue([]);
+
+    const qs = new URLSearchParams({ token: 'tok', lang: 'zh' });
+    const res = await quickInvoiceRoute(
+      new NextRequest(`https://pay.example.com/api/invoices/quick?${qs}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(VALID_BODY),
+      }),
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe('NO_INVOICEABLE_ORDERS');
+    expect(mockInvoiceCreate).not.toHaveBeenCalled();
   });
 
   it('deduplicates repeated order ids instead of double counting', async () => {
