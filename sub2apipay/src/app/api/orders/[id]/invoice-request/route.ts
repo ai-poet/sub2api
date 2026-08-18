@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
 import { requestInvoice } from '@/lib/invoice/service';
-import { invoiceInvalidParamsMessage } from '@/lib/invoice/types';
+import { invoiceInvalidParamsMessage, invoiceMessage } from '@/lib/invoice/types';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
 
@@ -30,7 +30,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   try {
     const user = await getCurrentUserByToken(token);
-    const body = await request.json().catch(() => ({}));
+    // body 读不出来时给独立的错误码，不与字段校验失败混用同一句「参数错误」。
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        {
+          error: invoiceMessage(locale, '请求体读取失败，请刷新页面后重试', 'Failed to read request body, refresh and retry'),
+          code: 'INVALID_JSON_BODY',
+        },
+        { status: 400 },
+      );
+    }
     const parsed = invoiceRequestSchema.safeParse(body);
     if (!parsed.success) {
       const fieldErrors = parsed.error.flatten().fieldErrors;
