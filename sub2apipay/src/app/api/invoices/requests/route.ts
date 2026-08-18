@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
 import { INVOICE_MAX_MERGED_ORDERS, requestInvoice } from '@/lib/invoice/service';
+import { invoiceInvalidParamsMessage } from '@/lib/invoice/types';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
 
@@ -20,7 +21,11 @@ const mergedInvoiceRequestSchema = z.object({
     .trim()
     .regex(/^[0-9A-Za-z]{15,20}$/),
   remark: z.string().trim().max(200).optional(),
-  contact_email: z.email().max(200).optional(),
+  // 选填字段对空串宽容：调用方漏掉「空则省略」的逻辑不该变成 400。
+  contact_email: z
+    .union([z.literal(''), z.email().max(200)])
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
 });
 
 export async function POST(request: NextRequest) {
@@ -35,10 +40,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const parsed = mergedInvoiceRequestSchema.safeParse(body);
     if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
       return NextResponse.json(
         {
-          error: locale === 'en' ? 'Invalid parameters' : '参数错误',
-          details: parsed.error.flatten().fieldErrors,
+          error: invoiceInvalidParamsMessage(locale, Object.keys(fieldErrors)),
+          details: fieldErrors,
         },
         { status: 400 },
       );

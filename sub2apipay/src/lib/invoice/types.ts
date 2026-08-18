@@ -20,6 +20,35 @@ export function invoiceMessage(locale: Locale, zh: string, en: string): string {
   return pickLocaleText(locale, zh, en);
 }
 
+/** 开票请求各字段的展示名，用于把 zod 校验失败翻译成用户能定位的提示。 */
+const INVOICE_FIELD_LABELS: Record<string, { zh: string; en: string }> = {
+  order_ids: { zh: '订单', en: 'orders' },
+  title_name: { zh: '单位名称', en: 'company name' },
+  tax_no: { zh: '税号', en: 'tax ID' },
+  remark: { zh: '备注', en: 'remark' },
+  contact_email: { zh: '收票邮箱', en: 'contact email' },
+};
+
+/**
+ * 把校验失败的字段列表拼成可读提示。
+ *
+ * 一句裸的「参数错误」等于让用户逐个字段猜——收票邮箱这类选填项出错时尤其致命，
+ * 用户根本想不到问题出在一个可以留空的输入框上。
+ */
+export function invoiceInvalidParamsMessage(locale: Locale, badFields: string[]): string {
+  const labels = badFields
+    .map((field) => INVOICE_FIELD_LABELS[field] ?? { zh: field, en: field })
+    .map((label) => pickLocaleText(locale, label.zh, label.en));
+  if (labels.length === 0) {
+    return invoiceMessage(locale, '参数错误', 'Invalid parameters');
+  }
+  return pickLocaleText(
+    locale,
+    `参数错误：${labels.join('、')}格式不正确`,
+    `Invalid ${labels.join(', ')}`,
+  );
+}
+
 export const INVOICE_STATUS = {
   PENDING: 'PENDING',
   ISSUED: 'ISSUED',

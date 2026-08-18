@@ -34,6 +34,8 @@ interface InvoiceRequestDialogProps {
 }
 
 const TAX_NO_PATTERN = /^[0-9A-Za-z]{15,20}$/;
+// 比服务端 z.email() 略严（不允许引号等罕见格式），保证客户端放行的服务端一定收。
+const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
 
 export default function InvoiceRequestDialog({
   isDark,
@@ -68,6 +70,7 @@ export default function InvoiceRequestDialog({
     submitting: pickLocaleText(locale, '提交中...', 'Submitting...'),
     titleNameInvalid: pickLocaleText(locale, '请输入 2-100 个字符的单位名称', 'Company name must be 2-100 characters'),
     taxNoInvalid: pickLocaleText(locale, '税号应为 15-20 位字母或数字', 'Tax ID must be 15-20 letters or digits'),
+    emailInvalid: pickLocaleText(locale, '请输入有效的邮箱地址，或留空', 'Enter a valid email address or leave it empty'),
     notice: pickLocaleText(
       locale,
       '提交后由客服人工开具，完成后将邮件通知您回到本页下载。',
@@ -93,10 +96,18 @@ export default function InvoiceRequestDialog({
 
   const trimmedTitle = titleName.trim();
   const trimmedTaxNo = taxNo.trim();
+  const trimmedEmail = contactEmail.trim();
   const titleError = trimmedTitle.length > 0 && (trimmedTitle.length < 2 || trimmedTitle.length > 100) ? text.titleNameInvalid : '';
   const taxNoError = trimmedTaxNo.length > 0 && !TAX_NO_PATTERN.test(trimmedTaxNo) ? text.taxNoInvalid : '';
+  // 收票邮箱选填，但填了就必须是邮箱：这是唯一没有客户端校验就能提交的字段，
+  // 缺了这道检查，用户会在填完所有信息后收到服务端一句「参数错误」。
+  const emailError = trimmedEmail.length > 0 && !EMAIL_PATTERN.test(trimmedEmail) ? text.emailInvalid : '';
   const canSubmit =
-    !submitting && trimmedTitle.length >= 2 && trimmedTitle.length <= 100 && TAX_NO_PATTERN.test(trimmedTaxNo);
+    !submitting &&
+    trimmedTitle.length >= 2 &&
+    trimmedTitle.length <= 100 &&
+    TAX_NO_PATTERN.test(trimmedTaxNo) &&
+    !emailError;
 
   const applySavedTitle = (saved: SavedInvoiceTitleOption) => {
     setTitleName(saved.titleName);
@@ -239,6 +250,7 @@ export default function InvoiceRequestDialog({
               placeholder={text.contactEmailPlaceholder}
               className={inputClass}
             />
+            {emailError && <div className={['mt-1 text-xs', isDark ? 'text-red-400' : 'text-red-600'].join(' ')}>{emailError}</div>}
           </div>
         </div>
 

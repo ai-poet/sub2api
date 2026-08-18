@@ -324,6 +324,30 @@ describe('POST /api/invoices/requests (合并开票)', () => {
     expect(res.status).toBe(200);
   });
 
+  // 收票邮箱是唯一没有客户端强校验的字段，服务端报错必须点名它，而不是一句裸的「参数错误」。
+  it('names the contact email field when it is not a valid address', async () => {
+    const res = await mergedInvoiceRoute(
+      mergedPostRequest({ ...VALID_BODY, order_ids: ['order-1'], contact_email: '13800138000' }),
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('收票邮箱');
+    expect(body.details.contact_email).toBeDefined();
+    expect(mockOrderFindMany).not.toHaveBeenCalled();
+  });
+
+  it('treats an empty contact email string as absent', async () => {
+    mockOrderFindMany.mockResolvedValue([eligibleOrder({ id: 'order-1', payAmount: '128.00' })]);
+    mockInvoiceCreate.mockResolvedValue(createdInvoice());
+
+    const res = await mergedInvoiceRoute(
+      mergedPostRequest({ ...VALID_BODY, order_ids: ['order-1'], contact_email: '' }),
+    );
+
+    expect(res.status).toBe(200);
+  });
+
   it('deduplicates repeated order ids instead of double counting', async () => {
     mockOrderFindMany.mockResolvedValue([eligibleOrder({ id: 'order-1', payAmount: '128.00' })]);
     mockInvoiceCreate.mockResolvedValue(createdInvoice());
