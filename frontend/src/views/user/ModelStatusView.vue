@@ -386,7 +386,7 @@
                     v-if="event.error_detail"
                     class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300"
                   >
-                    {{ event.error_detail }}
+                    {{ sanitizeRuntimeErrorDetail(event.error_detail) }}
                   </div>
                 </div>
               </div>
@@ -431,6 +431,7 @@ import {
   getGroupRuntimeStatusBarClass,
   getGroupRuntimeStatusSurfaceClass,
   normalizeGroupRuntimeStatus,
+  sanitizeRuntimeErrorDetail,
   shortenRuntimeExcerpt,
 } from '@/utils/groupStatus'
 
@@ -589,7 +590,7 @@ function getSummaryStatusText(summary: GroupStatusListItem['summary']): string {
 
 function getSummaryPreview(summary: GroupStatusListItem['summary']): string {
   if (summary.error_detail) {
-    return shortenRuntimeExcerpt(summary.error_detail, 180)
+    return shortenRuntimeExcerpt(sanitizeRuntimeErrorDetail(summary.error_detail), 180)
   }
   if (summary.response_excerpt) {
     return shortenRuntimeExcerpt(summary.response_excerpt, 180)

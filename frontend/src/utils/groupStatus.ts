@@ -89,6 +89,23 @@ export function shouldShowRuntimeKeywordEditor(mode: GroupStatusValidationMode):
   return mode === 'keywords_any' || mode === 'keywords_all'
 }
 
+const runtimeRequestPrefixPattern = /\b(?:Get|Post|Put|Patch|Delete|Head)\s+"https?:\/\/[^"]*":\s*/gi
+const runtimeUpstreamUrlPattern = /https?:\/\/[^\s"'<>]+/gi
+
+// 后端新版探测结果已不含上游地址，这里兜底处理历史记录：
+// 去掉 Go url.Error 形如 `Post "https://host/path": reason` 的请求前缀，
+// 并把残留的 URL 替换成占位符，避免上游地址暴露在状态页上。
+export function sanitizeRuntimeErrorDetail(text?: string | null): string {
+  const trimmed = (text || '').trim()
+  if (!trimmed) {
+    return ''
+  }
+  return trimmed
+    .replace(runtimeRequestPrefixPattern, '')
+    .replace(runtimeUpstreamUrlPattern, '[upstream]')
+    .trim()
+}
+
 export function shortenRuntimeExcerpt(text?: string | null, maxLength: number = 140): string {
   const trimmed = (text || '').trim()
   if (!trimmed) {

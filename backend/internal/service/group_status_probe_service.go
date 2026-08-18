@@ -10,6 +10,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -474,7 +476,7 @@ func (s *GroupStatusProbeService) executeAccountProbe(ctx context.Context, accou
 	if err != nil {
 		result.Status = GroupRuntimeStatusDown
 		result.SubStatus = inferProbeSubStatus(httpCode, err)
-		result.ErrorDetail = truncateProbeText(err.Error())
+		result.ErrorDetail = truncateProbeText(sanitizeProbeErrorDetail(err))
 		return result, err
 	}
 
@@ -512,7 +514,7 @@ func finalizeProbeResult(result *GroupStatusProbeResult, cfg *GroupStatusConfig)
 		return
 	}
 	result.ResponseExcerpt = truncateProbeText(result.ResponseExcerpt)
-	result.ErrorDetail = truncateProbeText(result.ErrorDetail)
+	result.ErrorDetail = truncateProbeText(redactProbeUpstreamAddresses(result.ErrorDetail))
 	if result.Status == "" {
 		result.Status = GroupRuntimeStatusDown
 	}
@@ -551,6 +553,52 @@ func inferProbeSubStatus(httpCode *int, err error) string {
 		return "timeout"
 	}
 	return "network_error"
+}
+
+var probeUpstreamURLPattern = regexp.MustCompile(`(?i)\bhttps?://[^\s"'<>]+`)
+
+// redactProbeUpstreamAddresses 把文本中的 URL 全部替换成占位符。error_detail 会展示在
+// 用户可见的模型状态页，上游 base_url 属于内部配置，不能出现在里面；中转服务的错误
+// 报文里也经常回显自家地址，一并覆盖。
+func redactProbeUpstreamAddresses(text string) string {
+	if text == "" {
+		return text
+	}
+	return strings.TrimSpace(probeUpstreamURLPattern.ReplaceAllString(text, "[upstream]"))
+}
+
+// sanitizeProbeErrorDetail 生成不含上游地址的探测失败文案。http.Client 返回的
+// *url.Error 会把完整上游 URL 拼进 Error()（如 `Post "https://host/path": context
+// deadline exceeded`），DNS/dial 错误还会带上主机名或 IP，这里逐层剥掉，只保留真正的
+// 失败原因；原始错误仍会完整打到日志里（见 executeProbe 的 LegacyPrintf）。
+func sanitizeProbeErrorDetail(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) && urlErr.Err != nil {
+		msg = strings.Replace(msg, urlErr.Error(), sanitizeProbeNetErrorMessage(urlErr.Err), 1)
+	}
+	return redactProbeUpstreamAddresses(msg)
+}
+
+func sanitizeProbeNetErrorMessage(err error) string {
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		// 不带 dnsErr.Name，避免泄露上游主机名。
+		reason := strings.TrimSpace(dnsErr.Err)
+		if reason == "" {
+			reason = "lookup failed"
+		}
+		return "dns lookup failed: " + reason
+	}
+	var opErr *net.OpError
+	if errors.As(err, &opErr) && opErr.Err != nil {
+		// net.OpError.Error() 会拼上 dial 目标地址，只保留操作名和底层原因。
+		return strings.TrimSpace(opErr.Op + " failed: " + opErr.Err.Error())
+	}
+	return err.Error()
 }
 
 func truncateProbeText(text string) string {
