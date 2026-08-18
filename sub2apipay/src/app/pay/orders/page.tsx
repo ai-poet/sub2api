@@ -62,6 +62,12 @@ function OrdersContent() {
       `单次最多合并 ${INVOICE_MAX_MERGED_ORDERS} 张订单，请减少勾选`,
       `At most ${INVOICE_MAX_MERGED_ORDERS} orders per invoice — deselect some`,
     ),
+    quickBelowMin: (amount: number, min: number) =>
+      pickLocaleText(
+        locale,
+        `可开票金额 ¥${amount.toFixed(2)}，未满 ¥${min.toFixed(2)} 起开——累计满 ¥${min.toFixed(2)} 后即可一键开票`,
+        `Invoiceable total is ¥${amount.toFixed(2)} — invoicing opens at ¥${min.toFixed(2)}`,
+      ),
     quickCappedHint: (limit: number) =>
       pickLocaleText(
         locale,
@@ -439,8 +445,9 @@ function OrdersContent() {
   // 服务端有同样的上限；这里先拦住并给出人话，别让用户填完抬头才被拒。
   const overMergeLimit = selectedCount > INVOICE_MAX_MERGED_ORDERS;
   const canSubmitSelected = selectedCount > 0 && !belowMinAmount && !overMergeLimit && !invoiceSubmitting;
+  // count > 0 才提示：一单都没有时不存在「凑满起开金额」的问题，操作栏也不显示。
   const quickBelowMin =
-    quickPreview != null && invoiceMinAmount > 0 && quickPreview.amount < invoiceMinAmount;
+    quickPreview != null && quickPreview.count > 0 && invoiceMinAmount > 0 && quickPreview.amount < invoiceMinAmount;
   const canSubmitQuick = !!quickPreview && quickPreview.count > 0 && !quickBelowMin && !invoiceSubmitting;
 
   const toggleSelectAllPage = () => {
@@ -534,7 +541,14 @@ function OrdersContent() {
                 'inline-flex items-center rounded-lg border border-blue-500 bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors',
                 'hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50',
               ].join(' ')}
-              title={defaultTitle ? `${defaultTitle.titleName} · ${defaultTitle.taxNo}` : undefined}
+              // 按钮禁用时 hover 也能看到原因；正文提示在下方消息带里常显。
+              title={
+                quickBelowMin && quickPreview
+                  ? text.quickBelowMin(quickPreview.amount, invoiceMinAmount)
+                  : defaultTitle
+                    ? `${defaultTitle.titleName} · ${defaultTitle.taxNo}`
+                    : undefined
+              }
             >
               {invoiceSubmitting ? '...' : text.quickInvoice}
             </button>
@@ -564,6 +578,7 @@ function OrdersContent() {
       {invoiceEnabled &&
         (invoiceNotice ||
           quickInvoiceError ||
+          quickBelowMin ||
           (belowMinAmount && selectedCount > 0) ||
           overMergeLimit ||
           (quickPreview?.capped && quickPreview.count > 0)) && (
@@ -578,6 +593,11 @@ function OrdersContent() {
             )}
             {quickInvoiceError && (
               <div className={isDark ? 'text-red-400' : 'text-red-600'}>{quickInvoiceError}</div>
+            )}
+            {quickBelowMin && quickPreview && (
+              <div className={isDark ? 'text-amber-300' : 'text-amber-700'}>
+                {text.quickBelowMin(quickPreview.amount, invoiceMinAmount)}
+              </div>
             )}
             {belowMinAmount && selectedCount > 0 && (
               <div className={isDark ? 'text-amber-300' : 'text-amber-700'}>
