@@ -28,6 +28,7 @@ export default {
       "primaryNote": "One-click setup · easy top-up · clear spend · friendly pricing",
       "downloadPrimary": "Download now",
       "connectApi": "Use the API",
+      "startApi": "Start with the API",
       "badgeDiscount": "vs official API",
       "tags": {
         "coding": "Claude Code",

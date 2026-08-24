@@ -20,6 +20,7 @@ export default {
       "primaryNote": "One desktop client for both Claude Code and Codex",
       "downloadPrimary": "Download now",
       "connectApi": "Use the API",
+      "startApi": "Start with the API",
       "badgeDiscount": "vs official API",
       "tags": {
         "coding": "Claude Code",
@@ -601,7 +602,7 @@ export default {
       },
       "clientDownloads": {
         "title": "Client Downloads",
-        "description": "Set public Windows and macOS desktop client download links. The default home page shows a download entry when at least one link is configured.",
+        "description": "Set public Windows and macOS desktop client download links. The default home page shows a download entry when at least one link is configured. When both are empty, the home page hides all client-related content and the primary button becomes \"Start with the API\".",
         "windowsUrl": "Windows Download URL",
         "windowsUrlPlaceholder": "https://downloads.example.com/sub2api-windows.exe",
         "windowsUrlHint": "Leave empty to hide the Windows download button.",

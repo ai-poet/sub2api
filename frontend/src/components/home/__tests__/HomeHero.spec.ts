@@ -12,6 +12,8 @@ const translations: Record<string, string> = {
   'home.hero.titleTail': 'with metered billing',
   'home.hero.primaryNote': 'Use one key everywhere.',
   'home.hero.downloadPrimary': 'Download now',
+  'home.hero.connectApi': 'Use the API',
+  'home.hero.startApi': 'Start with the API',
   'home.cta.button': 'Start',
   'home.goToDashboard': 'Dashboard',
   'home.viewDocs': 'Docs',
@@ -159,16 +161,29 @@ describe('HomeHero', () => {
     expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
   })
 
-  it('falls back to the registration CTA when no client download is configured', () => {
+  it('falls back to the API CTA when no client download is configured', () => {
     const wrapper = mountHero()
 
-    expect(wrapper.find('[data-test="hero-primary-fallback"]').attributes('href')).toBe('/login')
+    const fallback = wrapper.find('[data-test="hero-primary-fallback"]')
+    expect(fallback.attributes('href')).toBe('/login')
+    expect(fallback.text()).toContain('Start with the API')
     expect(wrapper.find('[data-test="hero-primary-download"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="hero-platform-download"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="hero-connect-api"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Use the API')
+  })
+
+  it('hides all client-related content when no client download is configured', () => {
+    const wrapper = mountHero()
+
+    expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('An agent client that brings Claude Code and Codex together')
+    expect(wrapper.text()).not.toContain('Use one key everywhere.')
   })
 
   it('highlights parallel agent runs in the client preview copy and pills', () => {
-    const wrapper = mountHero()
+    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
 
     expect(wrapper.text()).toContain('An agent client that brings Claude Code and Codex together')
     expect(wrapper.text()).toContain('Run multiple agent tasks in parallel')
@@ -177,7 +192,7 @@ describe('HomeHero', () => {
   })
 
   it('renders the animated agent workflow preview instead of the static product image', () => {
-    const wrapper = mountHero()
+    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
 
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(true)
     expect(wrapper.find('img[src="/product.png"]').exists()).toBe(false)
@@ -205,7 +220,7 @@ describe('HomeHero', () => {
   })
 
   it('lets a viewer click any selectable workspace and replay the stream', async () => {
-    const wrapper = mountHero()
+    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
     const target = wrapper.find('[data-test="workspace-row-pricing-copy"]')
     expect(target.exists()).toBe(true)
     await target.trigger('click')

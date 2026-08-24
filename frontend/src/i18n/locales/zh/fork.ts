@@ -20,6 +20,7 @@ export default {
       "primaryNote": "一个桌面端集中使用Claude Code和Codex",
       "downloadPrimary": "立即下载",
       "connectApi": "自行接入API",
+      "startApi": "开始接入API",
       "badgeDiscount": "比官方 API",
       "tags": {
         "coding": "Claude Code",
@@ -641,7 +642,7 @@ export default {
       },
       "clientDownloads": {
         "title": "客户端下载",
-        "description": "填写 Windows 和 macOS 桌面客户端的公开下载链接，默认首页会在已配置链接时展示下载入口。",
+        "description": "填写 Windows 和 macOS 桌面客户端的公开下载链接，默认首页会在已配置链接时展示下载入口。全部留空时，首页将隐藏客户端相关内容，主按钮显示「开始接入API」。",
         "windowsUrl": "Windows 下载链接",
         "windowsUrlPlaceholder": "https://downloads.example.com/sub2api-windows.exe",
         "windowsUrlHint": "留空则隐藏 Windows 下载按钮。",

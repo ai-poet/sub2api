@@ -49,7 +49,7 @@
           data-test="hero-primary-fallback"
           class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
         >
-          <span>{{ primaryLabel }}</span>
+          <span>{{ t('home.hero.startApi') }}</span>
           <Icon name="arrowRight" size="sm" />
         </router-link>
 
@@ -74,13 +74,16 @@
       </div>
 
       <!-- Note -->
-      <p class="mt-2 max-w-full text-sm leading-6 text-gray-400 [overflow-wrap:anywhere] dark:text-white/35">
+      <p
+        v-if="hasClientDownloads"
+        class="mt-2 max-w-full text-sm leading-6 text-gray-400 [overflow-wrap:anywhere] dark:text-white/35"
+      >
         {{ t('home.hero.primaryNote') }}
       </p>
     </div>
 
     <!-- ===== Agent Workflow Preview ===== -->
-    <div class="mx-auto mt-12 max-w-[1380px]">
+    <div v-if="hasClientDownloads" data-test="client-showcase" class="mx-auto mt-12 max-w-[1380px]">
       <!-- Title & description -->
       <div class="mb-6">
         <h2 class="text-2xl font-semibold tracking-[-0.02em] text-[#111] dark:text-white md:text-3xl">
@@ -127,7 +130,6 @@ const props = defineProps<{
 const { t } = useI18n()
 
 const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
-const primaryLabel = computed(() => (props.isAuthenticated ? t('home.goToDashboard') : t('home.cta.button')))
 const titleAccent = computed(() => t('home.hero.titleAccent').trim())
 const titleTail = computed(() => t('home.hero.titleTail').trim())
 const preferredClientPlatform = computed(() => detectPreferredClientPlatform())
@@ -141,6 +143,7 @@ const clientDownloadOptions = computed(() =>
   ),
 )
 const primaryClientDownloadOption = computed(() => clientDownloadOptions.value[0] ?? null)
+const hasClientDownloads = computed(() => clientDownloadOptions.value.length > 0)
 
 const pills = computed(() => [
   t('home.clientShowcase.pills.darkMode'),

@@ -28,6 +28,7 @@ export default {
       "primaryNote": "一个桌面端集中使用Claude Code和Codex",
       "downloadPrimary": "立即下载",
       "connectApi": "自行接入API",
+      "startApi": "开始接入API",
       "badgeDiscount": "比官方 API",
       "tags": {
         "coding": "Claude Code",
