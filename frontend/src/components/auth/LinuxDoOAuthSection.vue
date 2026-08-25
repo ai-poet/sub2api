@@ -43,7 +43,7 @@
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { OAuthLoginStart } from '@/api/auth'
-import { resolveAffiliateReferralCode, storeOAuthAffiliateCode } from '@/utils/oauthAffiliate'
+import { resolveAffiliateReferralCodeFromQuery, storeOAuthAffiliateCode } from '@/utils/oauthAffiliate'
 
 const props = withDefaults(defineProps<{
   disabled?: boolean
@@ -61,7 +61,7 @@ const { t } = useI18n()
 
 function startLogin(): void {
   const redirectTo = (route.query.redirect as string) || '/dashboard'
-  storeOAuthAffiliateCode(resolveAffiliateReferralCode(props.affCode, route.query.aff, route.query.aff_code))
+  storeOAuthAffiliateCode(resolveAffiliateReferralCodeFromQuery(route.query, props.affCode))
   emit('start', { provider: 'linuxdo', params: { redirect: redirectTo } })
 }
 </script>

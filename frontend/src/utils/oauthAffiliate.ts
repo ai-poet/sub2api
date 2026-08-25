@@ -84,6 +84,16 @@ export function resolveAffiliateReferralCode(...values: unknown[]): string {
   return loadAffiliateReferralCode()
 }
 
+// 邀请链接存在两种参数形态：上游返利体系的 ?aff= / ?aff_code=，以及本仓库推荐码体系
+// 生成的 /register?ref=（见 ReferralView 与后端 GetReferralInfo）。注册页与各 OAuth
+// 入口必须统一经由此函数解析，漏掉任何一种参数都会导致邀请关系无法建立。
+export function resolveAffiliateReferralCodeFromQuery(
+  query: Record<string, unknown>,
+  preferredCode?: unknown
+): string {
+  return resolveAffiliateReferralCode(preferredCode, query.aff, query.aff_code, query.ref)
+}
+
 export function storeOAuthAffiliateCode(value?: unknown): void {
   if (typeof window === 'undefined') {
     return

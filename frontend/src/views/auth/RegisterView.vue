@@ -197,7 +197,7 @@
             </div>
             <input
               id="referral_code"
-              v-model="formData.referral_code"
+              v-model="formData.aff_code"
               type="text"
               :disabled="isLoading"
               class="input pl-11"
@@ -365,7 +365,7 @@ import {
 import {
   clearAffiliateReferralCode,
   loadAffiliateReferralCode,
-  resolveAffiliateReferralCode
+  resolveAffiliateReferralCodeFromQuery
 } from '@/utils/oauthAffiliate'
 import type { LoginAgreementDocument } from '@/types'
 
@@ -463,8 +463,7 @@ const formData = reactive({
   password: '',
   promo_code: '',
   invitation_code: '',
-  aff_code: '',
-  referral_code: ''
+  aff_code: ''
 })
 
 const errors = reactive({
@@ -508,7 +507,7 @@ watch(validationToastMessage, (value, previousValue) => {
 })
 
 function syncAffiliateReferralCode(): string {
-  const code = resolveAffiliateReferralCode(route.query.aff, route.query.aff_code)
+  const code = resolveAffiliateReferralCodeFromQuery(route.query)
   if (code) {
     formData.aff_code = code
   }
@@ -568,7 +567,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => [route.query.aff, route.query.aff_code],
+  () => [route.query.aff, route.query.aff_code, route.query.ref],
   () => {
     syncAffiliateReferralCode()
   }
