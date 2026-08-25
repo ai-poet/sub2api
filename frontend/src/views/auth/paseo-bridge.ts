@@ -17,6 +17,65 @@ export function resolveExpiresInSeconds(expiresAt: number, now: number = Date.no
   return Math.max(Math.floor(remainingMs / 1000), 0)
 }
 
+/** Where the session gets delivered after the browser login completes. */
+export interface CallbackTarget {
+  /** URL the fragment is appended to and navigated first. */
+  base: string
+  /**
+   * Second attempt for desktop builds that registered the old URL scheme.
+   * Only present when the primary is itself a guessed scheme — an explicit
+   * `redirect_to` never falls back.
+   */
+  legacyFallback?: string
+}
+
+/** The scheme current desktop builds register. */
+export const CALLBACK_SCHEME = 'agentdesk://auth/callback'
+/** The scheme the previous desktop generation registered. */
+export const LEGACY_CALLBACK_SCHEME = 'paseo://auth/callback'
+
+/**
+ * Validate and resolve the client-requested delivery target.
+ *
+ * The fragment carries the whole session (tokens and API keys), so
+ * `redirect_to` is strictly allow-listed — a crafted
+ * `/auth/paseo?redirect_to=https://evil` link must never be able to walk away
+ * with it. Allowed:
+ *
+ * - loopback HTTP (`http://127.0.0.1:*` / `http://localhost:*`) — the native
+ *   desktop's local listener;
+ * - the app's own URL schemes, current and legacy.
+ *
+ * Anything else — including any non-loopback http(s) — is ignored, and the
+ * flow falls back to the scheme pair: the current scheme first, the legacy
+ * one as a delayed second attempt for older installs.
+ */
+export function resolveCallbackTarget(redirectTo?: string | null): CallbackTarget {
+  const requested = (redirectTo ?? '').trim()
+  if (requested) {
+    if (
+      requested.startsWith(`${CALLBACK_SCHEME.split('://')[0]}://`) ||
+      requested.startsWith(`${LEGACY_CALLBACK_SCHEME.split('://')[0]}://`)
+    ) {
+      return { base: requested }
+    }
+    try {
+      const parsed = new URL(requested)
+      const loopback =
+        parsed.protocol === 'http:' &&
+        (parsed.hostname === '127.0.0.1' ||
+          parsed.hostname === 'localhost' ||
+          parsed.hostname === '[::1]')
+      if (loopback) {
+        return { base: requested }
+      }
+    } catch {
+      // Not a URL at all; treated as absent.
+    }
+  }
+  return { base: CALLBACK_SCHEME, legacyFallback: LEGACY_CALLBACK_SCHEME }
+}
+
 export function buildPaseoCallbackUrl(
   payload: PaseoCallbackPayload,
   options?: {
@@ -37,5 +96,5 @@ export function buildPaseoCallbackUrl(
   }
   params.set('endpoint', normalizePaseoEndpoint(payload.endpoint))
 
-  return `${options?.callbackBase ?? 'paseo://auth/callback'}#${params.toString()}`
+  return `${options?.callbackBase ?? CALLBACK_SCHEME}#${params.toString()}`
 }

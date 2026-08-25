@@ -42,7 +42,7 @@ import { AuthLayout } from '@/components/layout'
 import { keysAPI, userGroupsAPI } from '@/api'
 import { getAuthToken, getRefreshToken, getTokenExpiresAt } from '@/api/auth'
 import { clearStoredOAuthReturnPath, rememberOAuthReturnPath } from '@/utils/auth-redirect'
-import { buildPaseoCallbackUrl, normalizePaseoEndpoint } from './paseo-bridge'
+import { buildPaseoCallbackUrl, normalizePaseoEndpoint, resolveCallbackTarget } from './paseo-bridge'
 import type { ApiKey, Group, GroupPlatform } from '@/types'
 
 const route = useRoute()
@@ -57,6 +57,12 @@ const endpoint = computed(() => {
   const fallbackOrigin = typeof window !== 'undefined' ? window.location.origin : ''
   return normalizePaseoEndpoint(routeEndpoint || fallbackOrigin)
 })
+
+// Where to deliver the session: an allow-listed `redirect_to` (the native
+// desktop's loopback listener), or the app URL scheme pair.
+const callbackTarget = computed(() =>
+  resolveCallbackTarget(typeof route.query.redirect_to === 'string' ? route.query.redirect_to : '')
+)
 
 type PaseoScopedPlatform = Extract<GroupPlatform, 'anthropic' | 'openai'>
 
@@ -179,7 +185,7 @@ onMounted(async () => {
       throw new Error('Missing token or API key state after browser login.')
     }
 
-    callbackUrl.value = buildPaseoCallbackUrl({
+    const payload = {
       accessToken: nextAccessToken,
       refreshToken,
       expiresAt,
@@ -187,11 +193,37 @@ onMounted(async () => {
       claudeApiKey: preparedKeys.claudeApiKey,
       codexApiKey: preparedKeys.codexApiKey,
       endpoint: endpoint.value,
-    })
+    }
+    const target = callbackTarget.value
+    callbackUrl.value = buildPaseoCallbackUrl(payload, { callbackBase: target.base })
 
-    statusMessage.value = 'Opening Paseo...'
+    statusMessage.value = 'Opening the app...'
     clearStoredOAuthReturnPath()
     window.location.href = callbackUrl.value
+
+    // A URL scheme nobody registered navigates nowhere and reports nothing,
+    // so when the primary is a guess, retry with the previous generation's
+    // scheme after a beat. If the current app took over, this page loses
+    // visibility and the retry is cancelled — at worst an install with BOTH
+    // generations sees the old app receive a login it also understands.
+    if (target.legacyFallback) {
+      const legacyUrl = buildPaseoCallbackUrl(payload, { callbackBase: target.legacyFallback })
+      const timer = window.setTimeout(() => {
+        if (document.visibilityState === 'visible' && document.hasFocus()) {
+          callbackUrl.value = legacyUrl
+          window.location.href = legacyUrl
+        }
+      }, 1800)
+      document.addEventListener(
+        'visibilitychange',
+        () => {
+          if (document.visibilityState !== 'visible') {
+            window.clearTimeout(timer)
+          }
+        },
+        { once: true }
+      )
+    }
   } catch (error: unknown) {
     errorMessage.value =
       error instanceof Error ? error.message : 'Unable to complete the Paseo login flow.'
