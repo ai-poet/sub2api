@@ -104,6 +104,9 @@ func clearGitHubCookie(c *gin.Context, name string, secure bool) {
 // GitHubOAuthStart 启动 GitHub OAuth 登录流程。
 // GET /api/v1/auth/oauth/github/start?redirect=/dashboard
 func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) {
+	if !h.requireActionCaptchaForOAuthLoginStart(c) {
+		return
+	}
 	cfg, err := h.getGitHubOAuthConfig(c.Request.Context())
 	if err != nil {
 		response.ErrorFrom(c, err)
