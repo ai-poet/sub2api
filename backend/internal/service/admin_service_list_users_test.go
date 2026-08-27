@@ -139,7 +139,7 @@ func TestAdminService_ListUsers_BatchRateFallbackToSingle(t *testing.T) {
 		userGroupRateRepo: rateRepo,
 	}
 
-	users, total, err := svc.ListUsers(context.Background(), 1, 20, UserListFilters{})
+	users, total, err := svc.ListUsers(context.Background(), 1, 20, UserListFilters{}, "", "")
 	require.NoError(t, err)
 	require.Equal(t, int64(2), total)
 	require.Len(t, users, 2)

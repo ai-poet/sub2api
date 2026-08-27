@@ -16,7 +16,6 @@ import (
 // 本文件承载 fork 自研 GitHub OAuth 所需的 service 能力。
 // 单独成文件是为了不与上游 auth/setting 的重构互相覆盖。
 
-
 // pendingOAuthTokenTTL is the validity period for pending OAuth tokens.
 const pendingOAuthTokenTTL = 10 * time.Minute
 

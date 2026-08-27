@@ -178,6 +178,18 @@ func (s *emailCacheStub) DeleteVerificationCode(ctx context.Context, email strin
 	return nil
 }
 
+func (s *emailCacheStub) GetNotifyVerifyCode(ctx context.Context, email string) (*VerificationCodeData, error) {
+	return nil, nil
+}
+
+func (s *emailCacheStub) SetNotifyVerifyCode(ctx context.Context, email string, data *VerificationCodeData, ttl time.Duration) error {
+	return nil
+}
+
+func (s *emailCacheStub) DeleteNotifyVerifyCode(ctx context.Context, email string) error {
+	return nil
+}
+
 func (s *emailCacheStub) GetPasswordResetToken(ctx context.Context, email string) (*PasswordResetTokenData, error) {
 	return nil, nil
 }
@@ -241,7 +253,6 @@ func newAuthService(repo *userRepoStub, settings map[string]string, emailCache E
 		nil, // promoService
 		nil, // referralService
 		nil, // defaultSubAssigner
-		nil, // affiliateService
 		quotaRepo,
 	)
 }

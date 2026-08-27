@@ -13,20 +13,20 @@ func UserFromServiceShallow(u *service.User) *User {
 		return nil
 	}
 	return &User{
-		ID:                         u.ID,
-		Email:                      u.Email,
-		Username:                   u.Username,
-		Role:                       u.Role,
-		Balance:                    u.Balance,
-		FrozenBalance:              u.FrozenBalance,
-		Concurrency:                u.Concurrency,
-		Status:                     u.Status,
-		AllowedGroups:              u.AllowedGroups,
-		LastActiveAt:               u.LastActiveAt,
-		CreatedAt:                  u.CreatedAt,
-		UpdatedAt:                  u.UpdatedAt,
-		RPMLimit:                   u.RPMLimit,
-		DeletedAt:                  u.DeletedAt,
+		ID:            u.ID,
+		Email:         u.Email,
+		Username:      u.Username,
+		Role:          u.Role,
+		Balance:       u.Balance,
+		FrozenBalance: u.FrozenBalance,
+		Concurrency:   u.Concurrency,
+		Status:        u.Status,
+		AllowedGroups: u.AllowedGroups,
+		LastActiveAt:  u.LastActiveAt,
+		CreatedAt:     u.CreatedAt,
+		UpdatedAt:     u.UpdatedAt,
+		RPMLimit:      u.RPMLimit,
+		DeletedAt:     u.DeletedAt,
 	}
 }
 

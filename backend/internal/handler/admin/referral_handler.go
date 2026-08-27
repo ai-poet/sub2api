@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 // ReferralHandler 管理侧推荐 Handler
 type ReferralHandler struct {
 	referralService *service.ReferralService

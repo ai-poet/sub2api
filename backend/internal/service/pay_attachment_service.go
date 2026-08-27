@@ -221,10 +221,10 @@ func asciiFallbackName(name string) string {
 	var b strings.Builder
 	for _, r := range name {
 		if r < 0x20 || r > 0x7e {
-			b.WriteByte('_')
+			_ = b.WriteByte('_')
 			continue
 		}
-		b.WriteRune(r)
+		_, _ = b.WriteRune(r)
 	}
 	fallback := strings.TrimSpace(b.String())
 	if fallback == "" {

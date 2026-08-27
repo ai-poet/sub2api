@@ -276,7 +276,7 @@ func TestSchedulerFullRebuildActiveTombstoneDoesNotBlockFollowingGroupEvent(t *t
 	accounts := &fullRebuildAccountRepo{}
 	outbox := &outboxCleanupRepo{events: []SchedulerOutboxEvent{
 		{ID: 1, EventType: SchedulerOutboxEventFullRebuild},
-		{ID: 2, EventType: SchedulerOutboxEventGroupChanged, GroupID: ptrInt64(groupID)},
+		{ID: 2, EventType: SchedulerOutboxEventGroupChanged, GroupID: int64Ptr(groupID)},
 	}}
 	svc := newFullRebuildLifecycleService(cache, outbox, accounts, groups, config.RunModeStandard)
 

@@ -454,14 +454,14 @@ func (s *GroupStatusProbeService) executeAccountProbe(ctx context.Context, accou
 		err          error
 	)
 
-	switch {
-	case account.Platform == PlatformOpenAI:
+	switch account.Platform {
+	case PlatformOpenAI:
 		responseText, httpCode, err = s.probeOpenAI(ctx, account, cfg)
-	case account.Platform == PlatformGemini:
+	case PlatformGemini:
 		responseText, httpCode, err = s.probeGemini(ctx, account, cfg)
-	case account.Platform == PlatformAntigravity:
+	case PlatformAntigravity:
 		responseText, httpCode, err = s.probeAntigravity(ctx, account, cfg)
-	case account.Platform == PlatformGrok:
+	case PlatformGrok:
 		responseText, httpCode, err = s.probeGrok(ctx, account, cfg)
 	default:
 		responseText, httpCode, err = s.probeAnthropic(ctx, account, cfg)

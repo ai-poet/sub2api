@@ -56,13 +56,13 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 	// 初始化默认设置
 	defaults := map[string]string{
 		SettingKeyRegistrationEnabled:                       "true",
-		SettingKeyPurchaseSubscriptionOpenMode: "iframe",
-		SettingKeyClientDownloadWindowsURL:     "",
-		SettingKeyClientDownloadMacOSURL:       "",
-		SettingKeyGroupStatusEnabled:           "false",
-		SettingKeyCommunityQRCode:              "",
-		SettingKeyCommunityGroupURL:            "",
-		SettingKeyClientChangelogEntries:       "[]",
+		SettingKeyPurchaseSubscriptionOpenMode:              "iframe",
+		SettingKeyClientDownloadWindowsURL:                  "",
+		SettingKeyClientDownloadMacOSURL:                    "",
+		SettingKeyGroupStatusEnabled:                        "false",
+		SettingKeyCommunityQRCode:                           "",
+		SettingKeyCommunityGroupURL:                         "",
+		SettingKeyClientChangelogEntries:                    "[]",
 		SettingKeyEmailVerifyEnabled:                        "false",
 		SettingKeyRegistrationEmailSuffixWhitelist:          "[]",
 		SettingKeyRegistrationEmailDomainQuotaEnabled:       "false",
@@ -943,7 +943,6 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 
 	return result
 }
-
 
 func isFalseSettingValue(value string) bool {
 	switch strings.ToLower(strings.TrimSpace(value)) {

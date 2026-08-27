@@ -86,7 +86,7 @@ type AuthService struct {
 	promoService          *PromoService
 	defaultSubAssigner    DefaultSubscriptionAssigner
 	userPlatformQuotaRepo UserPlatformQuotaRepository
-	referralService    *ReferralService
+	referralService       *ReferralService
 }
 
 type CaptchaProof struct {
@@ -136,7 +136,7 @@ func NewAuthService(
 		promoService:          promoService,
 		defaultSubAssigner:    defaultSubAssigner,
 		userPlatformQuotaRepo: userPlatformQuotaRepo,
-		referralService:    referralService,
+		referralService:       referralService,
 	}
 }
 

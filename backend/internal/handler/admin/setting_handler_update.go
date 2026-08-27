@@ -23,12 +23,12 @@ import (
 // UpdateSettingsRequest 更新设置请求
 type UpdateSettingsRequest struct {
 	// fork 自有设置
-	PurchaseSubscriptionOpenMode *string `json:"purchase_subscription_open_mode"`
-	ClientDownloadWindowsURL     *string `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL       *string `json:"client_download_macos_url"`
-	GroupStatusEnabled           *bool   `json:"group_status_enabled"`
-	CommunityQRCode              *string `json:"community_qr_code"`
-	CommunityGroupURL            *string `json:"community_group_url"`
+	PurchaseSubscriptionOpenMode *string                         `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL     *string                         `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       *string                         `json:"client_download_macos_url"`
+	GroupStatusEnabled           *bool                           `json:"group_status_enabled"`
+	CommunityQRCode              *string                         `json:"community_qr_code"`
+	CommunityGroupURL            *string                         `json:"community_group_url"`
 	ClientChangelogEntries       *[]service.ClientChangelogEntry `json:"client_changelog_entries"`
 
 	// 注册设置
@@ -155,11 +155,11 @@ type UpdateSettingsRequest struct {
 	GitHubOAuthClientSecret        *string `json:"github_oauth_client_secret"`
 	GitHubOAuthRedirectURL         *string `json:"github_oauth_redirect_url"`
 	GitHubOAuthFrontendRedirectURL *string `json:"github_oauth_frontend_redirect_url"`
-	GoogleOAuthEnabled             bool   `json:"google_oauth_enabled"`
-	GoogleOAuthClientID            string `json:"google_oauth_client_id"`
-	GoogleOAuthClientSecret        string `json:"google_oauth_client_secret"`
-	GoogleOAuthRedirectURL         string `json:"google_oauth_redirect_url"`
-	GoogleOAuthFrontendRedirectURL string `json:"google_oauth_frontend_redirect_url"`
+	GoogleOAuthEnabled             bool    `json:"google_oauth_enabled"`
+	GoogleOAuthClientID            string  `json:"google_oauth_client_id"`
+	GoogleOAuthClientSecret        string  `json:"google_oauth_client_secret"`
+	GoogleOAuthRedirectURL         string  `json:"google_oauth_redirect_url"`
+	GoogleOAuthFrontendRedirectURL string  `json:"google_oauth_frontend_redirect_url"`
 
 	// OEM设置
 	SiteName                    string                `json:"site_name"`
@@ -1963,13 +1963,13 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 
 	payload := dto.SystemSettings{
 		// fork 自有设置
-		PurchaseSubscriptionOpenMode: settings.PurchaseSubscriptionOpenMode,
-		ClientDownloadWindowsURL:     settings.ClientDownloadWindowsURL,
-		ClientDownloadMacOSURL:       settings.ClientDownloadMacOSURL,
-		GroupStatusEnabled:           settings.GroupStatusEnabled,
-		CommunityQRCode:              settings.CommunityQRCode,
-		CommunityGroupURL:            settings.CommunityGroupURL,
-		ClientChangelogEntries:       dto.ParseClientChangelogEntries(updatedSettings.ClientChangelogEntries),
+		PurchaseSubscriptionOpenMode:                           settings.PurchaseSubscriptionOpenMode,
+		ClientDownloadWindowsURL:                               settings.ClientDownloadWindowsURL,
+		ClientDownloadMacOSURL:                                 settings.ClientDownloadMacOSURL,
+		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
+		CommunityQRCode:                                        settings.CommunityQRCode,
+		CommunityGroupURL:                                      settings.CommunityGroupURL,
+		ClientChangelogEntries:                                 dto.ParseClientChangelogEntries(updatedSettings.ClientChangelogEntries),
 		RegistrationEnabled:                                    updatedSettings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     updatedSettings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       updatedSettings.RegistrationEmailSuffixWhitelist,
@@ -2270,7 +2270,6 @@ func (h *SettingHandler) ensureUserAttributeDefinition(ctx context.Context, key,
 	slog.Info("dingtalk: created user attribute definition", "key", key, "name", name, "type", attrType)
 }
 
-
 // applyForkSettingsFromRequest 把 fork 自有的站点设置从请求写入 SystemSettings。
 // 采用指针字段语义：未提供的键沿用旧值；URL 类字段做绝对 http(s) 校验。
 // 返回 false 表示已向客户端写过错误响应，调用方应直接返回。
@@ -2376,7 +2375,6 @@ func normalizeForkPurchaseOpenMode(mode string) string {
 		return "iframe"
 	}
 }
-
 
 // applyGitHubOAuthSettingsFromRequest 用指针语义写入 fork 自研 GitHub OAuth 配置：
 // 请求未携带的键保留原值，避免局部保存把未展示的字段清空。

@@ -1446,7 +1446,6 @@ func TestValidateConfigWithLinuxDoEnabled(t *testing.T) {
 	}
 }
 
-
 func TestValidateJWTSecretStrength(t *testing.T) {
 	if !isWeakJWTSecret("change-me-in-production") {
 		t.Fatalf("isWeakJWTSecret should detect weak secret")

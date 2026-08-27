@@ -363,10 +363,6 @@ func (h *AuthHandler) completeEmailOAuthRegistration(c *gin.Context, provider st
 		return
 	}
 
-	affiliateCode := strings.TrimSpace(req.AffCode)
-	if affiliateCode == "" {
-	}
-
 	tokenPair, user, err := h.authService.RegisterVerifiedOAuthEmailAccount(
 		c.Request.Context(),
 		strings.TrimSpace(session.ResolvedEmail),
@@ -511,70 +507,6 @@ func fetchEmailOAuthProfile(ctx context.Context, provider string, cfg config.Ema
 	default:
 		return nil, errors.New("unsupported oauth provider")
 	}
-}
-
-func parseGitHubOAuthProfile(ctx context.Context, cfg config.EmailOAuthProviderConfig, token *emailOAuthTokenResponse, body string) (*emailOAuthProfile, error) {
-	subject := strings.TrimSpace(gjson.Get(body, "id").String())
-	if subject == "" {
-		return nil, errors.New("github user id is missing")
-	}
-	email := ""
-	emailsURL := strings.TrimSpace(cfg.EmailsURL)
-	if emailsURL == "" {
-		return nil, errors.New("github verified email is missing")
-	}
-	verifiedEmail, err := fetchGitHubPrimaryVerifiedEmail(ctx, emailsURL, token.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-	email = verifiedEmail
-	if email == "" {
-		return nil, errors.New("github verified email is missing")
-	}
-	login := strings.TrimSpace(gjson.Get(body, "login").String())
-	name := strings.TrimSpace(gjson.Get(body, "name").String())
-	return &emailOAuthProfile{
-		Subject:       subject,
-		Email:         email,
-		EmailVerified: true,
-		Username:      firstNonEmpty(login, name, "github_"+subject),
-		DisplayName:   firstNonEmpty(name, login),
-		AvatarURL:     strings.TrimSpace(gjson.Get(body, "avatar_url").String()),
-		Metadata: map[string]any{
-			"login": login,
-		},
-	}, nil
-}
-
-func fetchGitHubPrimaryVerifiedEmail(ctx context.Context, emailsURL string, accessToken string) (string, error) {
-	resp, err := req.C().
-		R().
-		SetContext(ctx).
-		SetBearerAuthToken(accessToken).
-		SetHeader("Accept", "application/json").
-		Get(emailsURL)
-	if err != nil {
-		return "", err
-	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("github emails endpoint status %d: %s", resp.StatusCode, truncateLogValue(resp.String(), 1024))
-	}
-	items := gjson.Parse(resp.String()).Array()
-	for _, item := range items {
-		if item.Get("primary").Bool() && item.Get("verified").Bool() {
-			if email := strings.TrimSpace(item.Get("email").String()); email != "" {
-				return email, nil
-			}
-		}
-	}
-	for _, item := range items {
-		if item.Get("verified").Bool() {
-			if email := strings.TrimSpace(item.Get("email").String()); email != "" {
-				return email, nil
-			}
-		}
-	}
-	return "", errors.New("github verified email is missing")
 }
 
 func parseGoogleOAuthProfile(body string) (*emailOAuthProfile, error) {

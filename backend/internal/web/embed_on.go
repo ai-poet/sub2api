@@ -36,11 +36,11 @@ type PublicSettingsProvider interface {
 
 // FrontendServer serves the embedded frontend with settings injection
 type FrontendServer struct {
-	distFS     fs.FS
-	fileServer http.Handler
-	baseHTML   []byte
-	cache      *HTMLCache
-	settings   PublicSettingsProvider
+	distFS      fs.FS
+	fileServer  http.Handler
+	baseHTML    []byte
+	cache       *HTMLCache
+	settings    PublicSettingsProvider
 	overrideDir string // 本地文件覆盖目录，优先于内嵌资源
 }
 

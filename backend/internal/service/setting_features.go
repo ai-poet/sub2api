@@ -78,8 +78,6 @@ func (s *SettingService) GetCustomMenuItemsRaw(ctx context.Context) string {
 	return value
 }
 
-
-
 // 调用方只关心一个可用的数值。
 
 // 返回 0 表示不冻结（向后兼容）。

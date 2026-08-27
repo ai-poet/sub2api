@@ -157,21 +157,21 @@ type SystemSettings struct {
 	GoogleOAuthRedirectURL            string `json:"google_oauth_redirect_url"`
 	GoogleOAuthFrontendRedirectURL    string `json:"google_oauth_frontend_redirect_url"`
 
-	SiteName                    string           `json:"site_name"`
-	SiteLogo                    string           `json:"site_logo"`
-	SiteSubtitle                string           `json:"site_subtitle"`
-	APIBaseURL                  string           `json:"api_base_url"`
-	ContactInfo                 string           `json:"contact_info"`
-	DocURL                      string           `json:"doc_url"`
-	HomeContent                 string           `json:"home_content"`
-	CompactHomeEnabled          bool             `json:"compact_home_enabled"`
-	HideCcsImportButton         bool             `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled bool             `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL     string           `json:"purchase_subscription_url"`
-	TableDefaultPageSize        int              `json:"table_default_page_size"`
-	TablePageSizeOptions        []int            `json:"table_page_size_options"`
-	CustomMenuItems             []CustomMenuItem `json:"custom_menu_items"`
-	CustomEndpoints             []CustomEndpoint `json:"custom_endpoints"`
+	SiteName                     string           `json:"site_name"`
+	SiteLogo                     string           `json:"site_logo"`
+	SiteSubtitle                 string           `json:"site_subtitle"`
+	APIBaseURL                   string           `json:"api_base_url"`
+	ContactInfo                  string           `json:"contact_info"`
+	DocURL                       string           `json:"doc_url"`
+	HomeContent                  string           `json:"home_content"`
+	CompactHomeEnabled           bool             `json:"compact_home_enabled"`
+	HideCcsImportButton          bool             `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled  bool             `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL      string           `json:"purchase_subscription_url"`
+	TableDefaultPageSize         int              `json:"table_default_page_size"`
+	TablePageSizeOptions         []int            `json:"table_page_size_options"`
+	CustomMenuItems              []CustomMenuItem `json:"custom_menu_items"`
+	CustomEndpoints              []CustomEndpoint `json:"custom_endpoints"`
 	PurchaseSubscriptionOpenMode string           `json:"purchase_subscription_open_mode"` // iframe or new_window
 	ClientDownloadWindowsURL     string           `json:"client_download_windows_url"`
 	ClientDownloadMacOSURL       string           `json:"client_download_macos_url"`
@@ -179,10 +179,10 @@ type SystemSettings struct {
 	CommunityQRCode              string           `json:"community_qr_code"`
 	CommunityGroupURL            string           `json:"community_group_url"`
 
-	DefaultConcurrency           int                          `json:"default_concurrency"`
-	DefaultBalance               float64                      `json:"default_balance"`
-	DefaultUserRPMLimit          int                          `json:"default_user_rpm_limit"`
-	DefaultSubscriptions         []DefaultSubscriptionSetting `json:"default_subscriptions"`
+	DefaultConcurrency   int                          `json:"default_concurrency"`
+	DefaultBalance       float64                      `json:"default_balance"`
+	DefaultUserRPMLimit  int                          `json:"default_user_rpm_limit"`
+	DefaultSubscriptions []DefaultSubscriptionSetting `json:"default_subscriptions"`
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
@@ -237,7 +237,6 @@ type SystemSettings struct {
 	// Web Search Emulation
 	WebSearchEmulationEnabled bool `json:"web_search_emulation_enabled"`
 
-
 	// OpenAI account scheduling
 	OpenAILowUpstreamRatePriorityEnabled                   bool    `json:"openai_low_upstream_rate_priority_enabled"`
 	OpenAIOAuthSchedulingRateMultiplier                    float64 `json:"openai_oauth_scheduling_rate_multiplier"`
@@ -267,9 +266,7 @@ type SystemSettings struct {
 	OpenAIAdvancedSchedulerEffectiveWeightPreviousResponse string  `json:"openai_advanced_scheduler_effective_weight_previous_response"`
 	OpenAIAdvancedSchedulerEffectiveWeightSessionSticky    string  `json:"openai_advanced_scheduler_effective_weight_session_sticky"`
 
-
 	// Cancel rate limit
-
 
 	// 余额、订阅到期与账号限额通知
 	BalanceLowNotifyEnabled         bool               `json:"balance_low_notify_enabled"`
@@ -401,29 +398,20 @@ type PublicSettings struct {
 	AllowUserViewErrorRequests bool `json:"allow_user_view_error_requests"`
 
 	// fork 自有的公开设置
-	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"` // iframe or new_window
-	ClientDownloadWindowsURL string `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL string `json:"client_download_macos_url"`
-	GroupStatusEnabled bool `json:"group_status_enabled"`
-	ReferralEnabled bool `json:"referral_enabled"`
-	CommunityQRCode string `json:"community_qr_code"`
-	CommunityGroupURL string `json:"community_group_url"`
-	ClientChangelogEntries []ClientChangelogEntry `json:"client_changelog_entries"`
+	PurchaseSubscriptionOpenMode string                 `json:"purchase_subscription_open_mode"` // iframe or new_window
+	ClientDownloadWindowsURL     string                 `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       string                 `json:"client_download_macos_url"`
+	GroupStatusEnabled           bool                   `json:"group_status_enabled"`
+	ReferralEnabled              bool                   `json:"referral_enabled"`
+	CommunityQRCode              string                 `json:"community_qr_code"`
+	CommunityGroupURL            string                 `json:"community_group_url"`
+	ClientChangelogEntries       []ClientChangelogEntry `json:"client_changelog_entries"`
 }
 
 type LoginAgreementDocument struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
 	ContentMD string `json:"content_md"`
-	PurchaseSubscriptionOpenMode     string           `json:"purchase_subscription_open_mode"` // iframe or new_window
-	ClientDownloadWindowsURL         string           `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL           string           `json:"client_download_macos_url"`
-	GroupStatusEnabled               bool             `json:"group_status_enabled"`
-	ReferralEnabled                  bool             `json:"referral_enabled"`
-	CommunityQRCode                  string           `json:"community_qr_code"`
-	CommunityGroupURL                string           `json:"community_group_url"`
-	// Client changelog entries (public view: filtered to enabled only)
-	ClientChangelogEntries []ClientChangelogEntry `json:"client_changelog_entries"`
 }
 
 // OverloadCooldownSettings 529过载冷却配置 DTO

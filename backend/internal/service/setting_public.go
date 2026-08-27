@@ -536,6 +536,11 @@ func (s *SettingService) IsUserErrorViewAllowed(ctx context.Context) bool {
 //
 // A unit test diffs this struct's JSON keys against dto.PublicSettings to catch
 // drift automatically (see setting_service_injection_test.go).
+// maxInjectedSiteLogoBytes 限制注入 HTML 的站点 Logo 体积：超过阈值的 base64 Logo
+// 不随首屏 HTML 内联（否则每次页面加载都携带大图），改为记入 deferred_fields，
+// 由前端等待异步 /api/v1/settings/public 返回完整值。
+const maxInjectedSiteLogoBytes = 8 * 1024
+
 type PublicSettingsInjectionPayload struct {
 	RegistrationEnabled                 bool                     `json:"registration_enabled"`
 	EmailVerifyEnabled                  bool                     `json:"email_verify_enabled"`
@@ -611,6 +616,10 @@ type PublicSettingsInjectionPayload struct {
 	RiskControlEnabled         bool `json:"risk_control_enabled"`
 	AllowUserViewErrorRequests bool `json:"allow_user_view_error_requests"`
 	PublicPricingEnabled       bool `json:"public_pricing_enabled"`
+
+	// DeferredFields 列出因体积原因未随 HTML 注入、需等待异步公开设置接口的字段名
+	// （如超过 maxInjectedSiteLogoBytes 的 site_logo）。
+	DeferredFields []string `json:"deferred_fields,omitempty"`
 }
 
 // GetPublicSettingsForInjection returns public settings in a format suitable for HTML injection.
@@ -619,6 +628,13 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 	settings, err := s.GetPublicSettings(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	injectedSiteLogo := settings.SiteLogo
+	var deferredFields []string
+	if len(injectedSiteLogo) > maxInjectedSiteLogoBytes {
+		injectedSiteLogo = ""
+		deferredFields = append(deferredFields, "site_logo")
 	}
 
 	return &PublicSettingsInjectionPayload{
@@ -646,7 +662,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		AliyunCaptchaPrefix:                 settings.AliyunCaptchaPrefix,
 		AliyunCaptchaRegion:                 settings.AliyunCaptchaRegion,
 		SiteName:                            settings.SiteName,
-		SiteLogo:                            settings.SiteLogo,
+		SiteLogo:                            injectedSiteLogo,
 		SiteSubtitle:                        settings.SiteSubtitle,
 		APIBaseURL:                          settings.APIBaseURL,
 		ContactInfo:                         settings.ContactInfo,
@@ -692,6 +708,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PublicPricingEnabled:       settings.PublicPricingEnabled,
 		RiskControlEnabled:         settings.RiskControlEnabled,
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
+
+		DeferredFields: deferredFields,
 	}, nil
 }
 

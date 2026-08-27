@@ -38,4 +38,3 @@ func TestCalculateAudioCost(t *testing.T) {
 	zero := 0.0
 	require.Equal(t, 0.0, s.CalculateAudioCost("realtime", 1, &audioPriceConfig{RealtimePerMin: &zero}, 1).ActualCost)
 }
-

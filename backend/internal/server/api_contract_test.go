@@ -680,8 +680,8 @@ func TestAPIContracts(t *testing.T) {
 					service.SettingKeyAPIBaseURL:   "https://api.example.com",
 					service.SettingKeyContactInfo:  "support",
 					service.SettingKeyDocURL:       "https://docs.example.com",
-					"client_download_windows_url": "https://downloads.example.com/sub2api.exe",
-					"client_download_macos_url":   "https://downloads.example.com/sub2api.dmg",
+					"client_download_windows_url":  "https://downloads.example.com/sub2api.exe",
+					"client_download_macos_url":    "https://downloads.example.com/sub2api.dmg",
 
 					service.SettingKeyDefaultConcurrency: "5",
 					service.SettingKeyDefaultBalance:     "1.25",
@@ -690,10 +690,6 @@ func TestAPIContracts(t *testing.T) {
 					service.SettingKeyOpsRealtimeMonitoringEnabled:                       "true",
 					service.SettingKeyOpsQueryModeDefault:                                "auto",
 					service.SettingKeyOpsMetricsIntervalSeconds:                          "60",
-					service.SettingPaymentVisibleMethodAlipaySource:                      service.VisibleMethodSourceEasyPayAlipay,
-					service.SettingPaymentVisibleMethodWxpaySource:                       service.VisibleMethodSourceOfficialWechat,
-					service.SettingPaymentVisibleMethodAlipayEnabled:                     "true",
-					service.SettingPaymentVisibleMethodWxpayEnabled:                      "false",
 					service.SettingKeyOpenAILowUpstreamRatePriorityEnabled:               "true",
 					service.SettingKeyOpenAIOAuthSchedulingRateMultiplier:                "0.05",
 					"openai_advanced_scheduler_enabled":                                  "true",
@@ -1391,7 +1387,7 @@ func newContractDeps(t *testing.T) *contractDeps {
 		RunMode: config.RunModeStandard,
 	}
 
-	userService := service.NewUserService(userRepo, nil, nil)
+	userService := service.NewUserService(userRepo, nil, nil, nil)
 	apiKeyService := service.NewAPIKeyService(apiKeyRepo, userRepo, groupRepo, userSubRepo, nil, apiKeyCache, cfg)
 
 	usageRepo := newStubUsageLogRepo()
@@ -1406,11 +1402,11 @@ func newContractDeps(t *testing.T) *contractDeps {
 	settingRepo := newStubSettingRepo()
 	settingService := service.NewSettingService(settingRepo, cfg)
 
-	adminService := service.NewAdminService(userRepo, groupRepo, &accountRepo, proxyRepo, apiKeyRepo, redeemRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	adminService := service.NewAdminService(userRepo, groupRepo, &accountRepo, proxyRepo, apiKeyRepo, redeemRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	authHandler := handler.NewAuthHandler(cfg, nil, userService, settingService, nil, redeemService, nil, nil)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
 	usageHandler := handler.NewUsageHandler(usageService, apiKeyService, nil, nil)
-	adminSettingHandler := adminhandler.NewSettingHandler(settingService, nil, nil, nil, nil, nil, nil)
+	adminSettingHandler := adminhandler.NewSettingHandler(settingService, nil, nil, nil, nil)
 	adminAccountHandler := adminhandler.NewAccountHandler(adminService, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	jwtAuth := func(c *gin.Context) {
@@ -1513,6 +1509,10 @@ func (r *stubUserRepo) GetByID(ctx context.Context, id int64) (*service.User, er
 	}
 	clone := *user
 	return &clone, nil
+}
+
+func (r *stubUserRepo) GetByReferralCode(ctx context.Context, code string) (*service.User, error) {
+	return nil, service.ErrUserNotFound
 }
 
 func (r *stubUserRepo) GetByEmail(ctx context.Context, email string) (*service.User, error) {

@@ -174,7 +174,7 @@ func TestAdminService_ListAccounts_WithSearch(t *testing.T) {
 		}
 		svc := &adminServiceImpl{accountRepo: repo}
 
-		accounts, total, err := svc.ListAccounts(context.Background(), 1, 20, PlatformGemini, AccountTypeOAuth, StatusActive, "acc", 0, "")
+		accounts, total, err := svc.ListAccounts(context.Background(), 1, 20, PlatformGemini, AccountTypeOAuth, StatusActive, "acc", 0, "", "", "")
 		require.NoError(t, err)
 		require.Equal(t, int64(10), total)
 		require.Equal(t, []Account{{ID: 1, Name: "acc"}}, accounts)
@@ -196,7 +196,7 @@ func TestAdminService_ListAccounts_WithPrivacyMode(t *testing.T) {
 		}
 		svc := &adminServiceImpl{accountRepo: repo}
 
-		accounts, total, err := svc.ListAccounts(context.Background(), 1, 20, PlatformOpenAI, AccountTypeOAuth, StatusActive, "acc2", 0, PrivacyModeCFBlocked)
+		accounts, total, err := svc.ListAccounts(context.Background(), 1, 20, PlatformOpenAI, AccountTypeOAuth, StatusActive, "acc2", 0, PrivacyModeCFBlocked, "", "")
 		require.NoError(t, err)
 		require.Equal(t, int64(1), total)
 		require.Equal(t, []Account{{ID: 2, Name: "acc2"}}, accounts)
@@ -212,7 +212,7 @@ func TestAdminService_ListProxies_WithSearch(t *testing.T) {
 		}
 		svc := &adminServiceImpl{proxyRepo: repo}
 
-		proxies, total, err := svc.ListProxies(context.Background(), 3, 50, "http", StatusActive, "p1")
+		proxies, total, err := svc.ListProxies(context.Background(), 3, 50, "http", StatusActive, "p1", "", "")
 		require.NoError(t, err)
 		require.Equal(t, int64(7), total)
 		require.Equal(t, []Proxy{{ID: 2, Name: "p1"}}, proxies)
@@ -233,7 +233,7 @@ func TestAdminService_ListProxiesWithAccountCount_WithSearch(t *testing.T) {
 		}
 		svc := &adminServiceImpl{proxyRepo: repo}
 
-		proxies, total, err := svc.ListProxiesWithAccountCount(context.Background(), 2, 10, "socks5", StatusDisabled, "p2")
+		proxies, total, err := svc.ListProxiesWithAccountCount(context.Background(), 2, 10, "socks5", StatusDisabled, "p2", "", "")
 		require.NoError(t, err)
 		require.Equal(t, int64(9), total)
 		require.Equal(t, []ProxyWithAccountCount{{Proxy: Proxy{ID: 3, Name: "p2"}, AccountCount: 5}}, proxies)
@@ -254,7 +254,7 @@ func TestAdminService_ListRedeemCodes_WithSearch(t *testing.T) {
 		}
 		svc := &adminServiceImpl{redeemCodeRepo: repo}
 
-		codes, total, err := svc.ListRedeemCodes(context.Background(), 1, 20, RedeemTypeBalance, StatusUnused, "ABC")
+		codes, total, err := svc.ListRedeemCodes(context.Background(), 1, 20, RedeemTypeBalance, StatusUnused, "ABC", "", "")
 		require.NoError(t, err)
 		require.Equal(t, int64(3), total)
 		require.Equal(t, []RedeemCode{{ID: 4, Code: "ABC"}}, codes)

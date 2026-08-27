@@ -754,4 +754,3 @@ func registerChannelRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		channels.DELETE("/:id", h.Admin.Channel.Delete)
 	}
 }
-

@@ -43,11 +43,11 @@ return 0
 // 附带：在 runCleanupOnce 末尾调用 ChannelMonitorService.RunDailyMaintenance，
 // 统一共享 cron schedule + leader lock + heartbeat，避免再引一套调度。
 type OpsCleanupService struct {
-	opsRepo           OpsRepository
-	db                *sql.DB
-	redisClient       *redis.Client
-	cfg               *config.Config
-	settingRepo       SettingRepository
+	opsRepo     OpsRepository
+	db          *sql.DB
+	redisClient *redis.Client
+	cfg         *config.Config
+	settingRepo SettingRepository
 
 	instanceID string
 
@@ -71,12 +71,12 @@ func NewOpsCleanupService(
 	settingRepo SettingRepository,
 ) *OpsCleanupService {
 	return &OpsCleanupService{
-		opsRepo:           opsRepo,
-		db:                db,
-		redisClient:       redisClient,
-		cfg:               cfg,
-		settingRepo:       settingRepo,
-		instanceID:        uuid.NewString(),
+		opsRepo:     opsRepo,
+		db:          db,
+		redisClient: redisClient,
+		cfg:         cfg,
+		settingRepo: settingRepo,
+		instanceID:  uuid.NewString(),
 	}
 }
 

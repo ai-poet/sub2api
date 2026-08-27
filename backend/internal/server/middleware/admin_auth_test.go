@@ -40,7 +40,7 @@ func TestAdminAuthJWTValidatesTokenVersion(t *testing.T) {
 			return &clone, nil
 		},
 	}
-	userService := service.NewUserService(userRepo, nil, nil)
+	userService := service.NewUserService(userRepo, nil, nil, nil)
 
 	router := gin.New()
 	router.Use(gin.HandlerFunc(NewAdminAuthMiddleware(authService, userService, nil, nil)))
@@ -144,6 +144,10 @@ func (s *stubUserRepo) GetByID(ctx context.Context, id int64) (*service.User, er
 
 func (s *stubUserRepo) GetByEmail(ctx context.Context, email string) (*service.User, error) {
 	panic("unexpected GetByEmail call")
+}
+
+func (s *stubUserRepo) GetByReferralCode(ctx context.Context, code string) (*service.User, error) {
+	panic("unexpected GetByReferralCode call")
 }
 
 func (s *stubUserRepo) GetFirstAdmin(ctx context.Context) (*service.User, error) {

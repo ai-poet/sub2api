@@ -13,11 +13,10 @@ import (
 type txContextUserSubRepoStub struct {
 	// 内嵌接口：本用例只驱动下面显式实现的方法，其余保持未实现即可满足类型约束。
 	UserSubscriptionRepository
-	sub                 *UserSubscription
-	extendCalledInTx    bool
-	updateStatusInTx    bool
-	updateNotesInTx     bool
-	updatedSubscription *UserSubscription
+	sub              *UserSubscription
+	extendCalledInTx bool
+	updateStatusInTx bool
+	updateNotesInTx  bool
 }
 
 func (s *txContextUserSubRepoStub) Create(context.Context, *UserSubscription) error { return nil }

@@ -30,7 +30,6 @@ const (
 	redeemLockDuration      = 10 * time.Second // 锁超时时间，防止死锁
 )
 
-
 // RedeemCache defines cache operations for redeem service
 type RedeemCache interface {
 	GetRedeemAttemptCount(ctx context.Context, userID int64) (int, error)
@@ -518,10 +517,6 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 			}()
 			s.referralService.TriggerReferralReward(context.Background(), userID)
 		}()
-	}
-
-	// 余额类正数兑换码触发邀请返利（best-effort，失败不影响兑换结果）
-	if redeemCode.Type == RedeemTypeBalance && redeemCode.Value > 0 {
 	}
 
 	// 重新获取更新后的兑换码

@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS user_provider_default_grants (
 		emailSvc = service.NewEmailService(settingRepo, emailCache)
 	}
 
-	svc := service.NewAuthService(client, repo, nil, refreshTokenCache, cfg, settingSvc, emailSvc, nil, nil, nil, defaultSubAssigner, nil, nil)
+	svc := service.NewAuthService(client, repo, nil, refreshTokenCache, cfg, settingSvc, emailSvc, nil, nil, nil, nil, defaultSubAssigner, nil)
 	return svc, repo, client
 }
 
@@ -896,6 +896,10 @@ func (s *emailBindUserRepoStub) GetByEmail(_ context.Context, email string) (*se
 		return nil, service.ErrUserNotFound
 	}
 	return cloneEmailBindUser(user), nil
+}
+
+func (s *emailBindUserRepoStub) GetByReferralCode(context.Context, string) (*service.User, error) {
+	return nil, service.ErrUserNotFound
 }
 
 func (s *emailBindUserRepoStub) GetFirstAdmin(context.Context) (*service.User, error) {

@@ -426,7 +426,7 @@ func (s *ReferralService) distributeRewards(ctx context.Context, ref *UserReferr
 			GroupID:      *snapshot.RefereeGroupID,
 			ValidityDays: snapshot.RefereeSubscriptionDays,
 			AssignedBy:   0,
-			Notes:        fmt.Sprintf("推荐奖励：通过推荐链接注册并充值"),
+			Notes:        "推荐奖励：通过推荐链接注册并充值",
 		})
 		if err != nil {
 			return fmt.Errorf("assign referee subscription: %w", err)
