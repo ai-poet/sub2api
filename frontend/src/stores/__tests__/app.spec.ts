@@ -57,6 +57,16 @@ function createPublicSettings(overrides: Partial<PublicSettings> = {}): PublicSe
     available_channels_enabled: false,
     service_quota_enabled: false,
     affiliate_enabled: false,
+    // fork 自有字段：与 applySettings 的归一化默认值保持一致，
+    // 否则缓存副本会比原始响应多出这些键导致 toEqual 失败。
+    referral_enabled: false,
+    group_status_enabled: false,
+    client_download_windows_url: '',
+    client_download_macos_url: '',
+    purchase_subscription_open_mode: 'iframe',
+    community_qr_code: '',
+    community_group_url: '',
+    client_changelog_entries: [],
     ...overrides,
   }
 }
@@ -390,6 +400,47 @@ describe('useAppStore', () => {
       expect(store.publicSettingsLoaded).toBe(false)
       expect(store.cachedPublicSettings).toBeNull()
       consoleError.mockRestore()
+    })
+
+    it('注入配置存在延迟字段时会继续请求公开设置补齐', async () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = createPublicSettings({
+        site_name: 'InjectedSite',
+        site_logo: '',
+        deferred_fields: ['site_logo'],
+      })
+      const full = createPublicSettings({
+        site_name: 'InjectedSite',
+        site_logo: 'data:image/png;base64,full-logo',
+      })
+      vi.mocked(getPublicSettings).mockResolvedValue(full)
+
+      const store = useAppStore()
+      expect(store.initFromInjectedConfig()).toBe(true)
+      expect(store.siteName).toBe('InjectedSite')
+      // 带延迟字段的注入不算加载完成，后续 fetch 必须真正发起请求
+      expect(store.publicSettingsLoaded).toBe(false)
+
+      await store.fetchPublicSettings()
+
+      expect(getPublicSettings).toHaveBeenCalledTimes(1)
+      expect(store.publicSettingsLoaded).toBe(true)
+      expect(store.siteLogo).toBe('data:image/png;base64,full-logo')
+    })
+
+    it('无延迟字段的注入配置直接完成加载，不再请求接口', async () => {
+      const windowAny = window as any
+      windowAny.__APP_CONFIG__ = createPublicSettings({
+        site_name: 'InjectedSite',
+        site_logo: 'data:image/png;base64,small-logo',
+      })
+
+      const store = useAppStore()
+      await store.fetchPublicSettings()
+
+      expect(getPublicSettings).not.toHaveBeenCalled()
+      expect(store.publicSettingsLoaded).toBe(true)
+      expect(store.siteLogo).toBe('data:image/png;base64,small-logo')
     })
 
     it('从 window.__APP_CONFIG__ 初始化', () => {

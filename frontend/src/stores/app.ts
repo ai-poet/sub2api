@@ -25,6 +25,9 @@ export const useAppStore = defineStore('app', () => {
 
   // Public settings cache state
   const publicSettingsLoaded = ref<boolean>(false)
+  // 注入配置只应用一次；带 deferred_fields 的注入（如超限的 site_logo）不算加载完成，
+  // 需要继续等异步 /api/v1/settings/public 返回完整值。
+  const injectedConfigApplied = ref<boolean>(false)
   const publicSettingsLoading = ref<boolean>(false)
   const siteName = ref<string>('Sub2API')
   const siteLogo = ref<string>('')
@@ -328,6 +331,16 @@ export const useAppStore = defineStore('app', () => {
     publicSettingsLoaded.value = true
   }
 
+  function applyInjectedSettings(config: PublicSettings): boolean {
+    applySettings(config)
+    injectedConfigApplied.value = true
+    const hasDeferredFields = (config.deferred_fields ?? []).length > 0
+    if (hasDeferredFields) {
+      publicSettingsLoaded.value = false
+    }
+    return hasDeferredFields
+  }
+
   /**
    * Fetch public settings (uses cache unless force=true)
    * @param force - Force refresh from API
@@ -340,9 +353,12 @@ export const useAppStore = defineStore('app', () => {
     }
 
     // Check for injected config from server (eliminates flash)
-    if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__) {
-      applySettings(window.__APP_CONFIG__)
-      return Promise.resolve(window.__APP_CONFIG__)
+    if (!publicSettingsLoaded.value && !force && window.__APP_CONFIG__ && !injectedConfigApplied.value) {
+      const hasDeferredFields = applyInjectedSettings(window.__APP_CONFIG__)
+      if (!hasDeferredFields) {
+        return Promise.resolve(window.__APP_CONFIG__)
+      }
+      // 有延迟字段时继续走下面的异步请求，取回完整设置（如完整 site_logo）。
     }
 
     // Return cached data if available and not forcing refresh
@@ -440,6 +456,7 @@ export const useAppStore = defineStore('app', () => {
   function clearPublicSettingsCache(): void {
     publicSettingsLoaded.value = false
     cachedPublicSettings.value = null
+    injectedConfigApplied.value = false
   }
 
   /**
@@ -449,7 +466,7 @@ export const useAppStore = defineStore('app', () => {
    */
   function initFromInjectedConfig(): boolean {
     if (window.__APP_CONFIG__) {
-      applySettings(window.__APP_CONFIG__)
+      applyInjectedSettings(window.__APP_CONFIG__)
       return true
     }
     return false

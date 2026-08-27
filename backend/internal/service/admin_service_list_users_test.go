@@ -22,6 +22,7 @@ type userRepoStubForListUsers struct {
 }
 
 func (s *userRepoStubForListUsers) ListWithFilters(_ context.Context, params pagination.PaginationParams, _ UserListFilters) ([]User, *pagination.PaginationResult, error) {
+	s.listWithFiltersParams = params
 	if s.err != nil {
 		return nil, nil, s.err
 	}
