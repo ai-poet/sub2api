@@ -373,6 +373,13 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		RiskControlEnabled: settings[SettingKeyRiskControlEnabled] == "true",
 
 		AllowUserViewErrorRequests: settings[SettingKeyAllowUserViewErrorRequests] == "true",
+
+		// 渠道监控公开开关，语义与 GetChannelMonitorRuntime 保持一致
+		//（enabled / hide_throughput 为 opt-out：缺省视为开启）。
+		ChannelMonitorEnabled:                !isFalseSettingValue(settings[SettingKeyChannelMonitorEnabled]),
+		ChannelMonitorMode:                   normalizeChannelMonitorMode(settings[SettingKeyChannelMonitorMode]),
+		ChannelMonitorDefaultIntervalSeconds: parseChannelMonitorInterval(settings[SettingKeyChannelMonitorDefaultIntervalSeconds]),
+		ChannelMonitorHideThroughput:         !isFalseSettingValue(settings[SettingKeyChannelMonitorHideThroughput]),
 	}, nil
 }
 
@@ -617,6 +624,11 @@ type PublicSettingsInjectionPayload struct {
 	AllowUserViewErrorRequests bool `json:"allow_user_view_error_requests"`
 	PublicPricingEnabled       bool `json:"public_pricing_enabled"`
 
+	ChannelMonitorEnabled                bool   `json:"channel_monitor_enabled"`
+	ChannelMonitorMode                   string `json:"channel_monitor_mode"`
+	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
+	ChannelMonitorHideThroughput         bool   `json:"channel_monitor_hide_throughput"`
+
 	// DeferredFields 列出因体积原因未随 HTML 注入、需等待异步公开设置接口的字段名
 	// （如超过 maxInjectedSiteLogoBytes 的 site_logo）。
 	DeferredFields []string `json:"deferred_fields,omitempty"`
@@ -708,6 +720,11 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		PublicPricingEnabled:       settings.PublicPricingEnabled,
 		RiskControlEnabled:         settings.RiskControlEnabled,
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
+
+		ChannelMonitorEnabled:                settings.ChannelMonitorEnabled,
+		ChannelMonitorMode:                   settings.ChannelMonitorMode,
+		ChannelMonitorDefaultIntervalSeconds: settings.ChannelMonitorDefaultIntervalSeconds,
+		ChannelMonitorHideThroughput:         settings.ChannelMonitorHideThroughput,
 
 		DeferredFields: deferredFields,
 	}, nil

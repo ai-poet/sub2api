@@ -29,6 +29,10 @@ func (s *txContextUserSubRepoStub) GetByID(_ context.Context, id int64) (*UserSu
 	return &cp, nil
 }
 
+func (s *txContextUserSubRepoStub) GetByIDForUpdate(ctx context.Context, id int64) (*UserSubscription, error) {
+	return s.GetByID(ctx, id)
+}
+
 func (s *txContextUserSubRepoStub) GetByUserIDAndGroupID(_ context.Context, userID, groupID int64) (*UserSubscription, error) {
 	if s.sub == nil || s.sub.UserID != userID || s.sub.GroupID != groupID {
 		return nil, ErrSubscriptionNotFound

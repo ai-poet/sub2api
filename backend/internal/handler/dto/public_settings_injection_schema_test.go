@@ -33,12 +33,6 @@ func TestPublicSettingsInjectionPayload_SchemaDoesNotDrift(t *testing.T) {
 		"sora_client_enabled": "upstream-only field, not used on this fork",
 		// force_email_on_third_party_signup lives on the DTO but is not injected via SSR.
 		"force_email_on_third_party_signup": "auth-source default, not a feature flag",
-		// channel_monitor_* 是上游字段：本 fork 的公开设置服务不产出这些值
-		// （异步 /api/v1/settings/public 同样返回零值），注入与否对前端无影响。
-		"channel_monitor_enabled":                  "upstream-only field, fork never populates it",
-		"channel_monitor_mode":                     "upstream-only field, fork never populates it",
-		"channel_monitor_default_interval_seconds": "upstream-only field, fork never populates it",
-		"channel_monitor_hide_throughput":          "upstream-only field, fork never populates it",
 	}
 
 	var missing []string
