@@ -110,33 +110,13 @@ func TestSettingService_GetPublicSettingsForInjection_IncludesClientDownloadURLs
 	payload, err := svc.GetPublicSettingsForInjection(context.Background())
 	require.NoError(t, err)
 
-	encoded, err := json.Marshal(payload)
-	require.NoError(t, err)
-	require.JSONEq(t, `{
-		"registration_enabled": false,
-		"email_verify_enabled": false,
-		"registration_email_suffix_whitelist": [],
-		"promo_code_enabled": true,
-		"password_reset_enabled": false,
-		"invitation_code_enabled": false,
-		"totp_enabled": false,
-		"turnstile_enabled": false,
-		"site_name": "Sub2API",
-		"site_subtitle": "Subscription to API Conversion Platform",
-		"hide_ccs_import_button": false,
-		"purchase_subscription_enabled": false,
-		"purchase_subscription_open_mode": "iframe",
-		"custom_menu_items": [],
-		"custom_endpoints": [],
-		"group_status_enabled": false,
-		"linuxdo_oauth_enabled": false,
-		"github_oauth_enabled": false,
-		"referral_enabled": false,
-		"backend_mode_enabled": false,
-		"client_changelog_entries": [],
-		"client_download_windows_url": "https://downloads.example.com/windows.exe",
-		"client_download_macos_url": "https://downloads.example.com/macos.dmg"
-	}`, string(encoded))
+	// 注入 payload 的完整字段集由 dto 侧的 schema 漂移测试守护
+	//（handler/dto/public_settings_injection_schema_test.go），这里只断言
+	// 本用例关心的 fork 自有下载链接字段。
+	injected, ok := payload.(*PublicSettingsInjectionPayload)
+	require.True(t, ok, "payload should be *PublicSettingsInjectionPayload, got %T", payload)
+	require.Equal(t, "https://downloads.example.com/windows.exe", injected.ClientDownloadWindowsURL)
+	require.Equal(t, "https://downloads.example.com/macos.dmg", injected.ClientDownloadMacOSURL)
 }
 
 func TestSettingService_GetPublicSettingsForInjection_DefersLargeSiteLogo(t *testing.T) {

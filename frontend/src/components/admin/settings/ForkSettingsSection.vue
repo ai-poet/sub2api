@@ -1,4 +1,7 @@
 <template>
+  <!-- eslint-disable vue/no-mutating-props ——
+       form 是父组件 SettingsView 的共享 reactive 表单对象：本区块按约定直接 v-model
+       其字段（与 SettingsView 其余内联设置区块一致），保存动作仍由父组件统一提交。 -->
   <div class="space-y-6">
     <!-- 分组运行状态 -->
     <div

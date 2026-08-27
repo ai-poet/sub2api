@@ -34,8 +34,6 @@ const {
   deleteProvider,
   fetchPublicSettings,
   adminSettingsFetch,
-  getAllGroups,
-  fetchAdminSettings,
   showError,
   showSuccess,
 } = vi.hoisted(() => ({

@@ -217,6 +217,9 @@ import { useI18n } from 'vue-i18n'
 import type { ClientChangelogEntry } from '@/types'
 
 // fork 自有的「客户端更新日志」编辑器。抽成独立组件，避免与上游 SettingsView 冲突。
+/* eslint-disable vue/no-mutating-props --
+   entries 是父组件 SettingsView 传入的共享 reactive 数组：本编辑器按约定就地增删排序
+   （与 SettingsView 其余内联设置区块一致），保存动作仍由父组件统一提交。 */
 const props = defineProps<{ entries: ClientChangelogEntry[] }>()
 const { t } = useI18n()
 
