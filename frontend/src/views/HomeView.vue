@@ -27,6 +27,7 @@
       :is-authenticated="isAuthenticated"
       :dashboard-path="dashboardPath"
       :user-initial="userInitial"
+      :show-changelog="hasClientDownloads"
       @toggle-theme="toggleTheme"
     />
 

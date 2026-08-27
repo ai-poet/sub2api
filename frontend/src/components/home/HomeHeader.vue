@@ -35,7 +35,9 @@
           {{ t('home.navPricing') }}
         </a>
         <router-link
+          v-if="showChangelog"
           to="/changelog"
+          data-test="nav-changelog"
           class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
         >
           {{ t('home.navChangelog') }}
@@ -81,14 +83,20 @@ import { useI18n } from 'vue-i18n'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
 
-defineProps<{
-  siteName: string
-  docUrl: string
-  isDark: boolean
-  isAuthenticated: boolean
-  dashboardPath: string
-  userInitial: string
-}>()
+withDefaults(
+  defineProps<{
+    siteName: string
+    docUrl: string
+    isDark: boolean
+    isAuthenticated: boolean
+    dashboardPath: string
+    userInitial: string
+    showChangelog?: boolean
+  }>(),
+  {
+    showChangelog: true,
+  },
+)
 
 defineEmits<{
   toggleTheme: []

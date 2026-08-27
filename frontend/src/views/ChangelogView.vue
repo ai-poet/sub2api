@@ -12,6 +12,7 @@
       :is-authenticated="isAuthenticated"
       :dashboard-path="dashboardPath"
       :user-initial="userInitial"
+      :show-changelog="hasClientDownloads"
       @toggle-theme="toggleTheme"
     />
 
@@ -128,6 +129,10 @@ const appStore = useAppStore()
 
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
+const hasClientDownloads = computed(() =>
+  Boolean(appStore.cachedPublicSettings?.client_download_windows_url?.trim()) ||
+  Boolean(appStore.cachedPublicSettings?.client_download_macos_url?.trim())
+)
 const currentYear = computed(() => new Date().getFullYear())
 
 const entries = computed(() =>
