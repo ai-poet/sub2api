@@ -50,7 +50,13 @@ func (f *fakeSchedulerCache) TryAcquireGroupLifecycleLease(_ context.Context, _ 
 func (f *fakeSchedulerCache) ReleaseGroupLifecycleLease(_ context.Context, _ service.SchedulerGroupLifecycleLease) error {
 	return nil
 }
-func (f *fakeSchedulerCache) GetAccount(_ context.Context, _ int64) (*service.Account, error) {
+func (f *fakeSchedulerCache) GetAccount(_ context.Context, accountID int64) (*service.Account, error) {
+	// 必须命中缓存：测试的 snapshot service 未注入 accountRepo，未命中会走 nil 仓储兜底。
+	for _, account := range f.accounts {
+		if account != nil && account.ID == accountID {
+			return account, nil
+		}
+	}
 	return nil, nil
 }
 func (f *fakeSchedulerCache) SetAccount(_ context.Context, _ *service.Account) error { return nil }

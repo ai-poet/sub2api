@@ -311,16 +311,17 @@ func TestModelCatalogService_GetCatalog_SupportsPerRequestAndImageModes(t *testi
 	require.NoError(t, err)
 	require.Len(t, result.Items, 2)
 
-	require.Equal(t, string(BillingModePerRequest), result.Items[0].BillingMode)
-	require.NotNil(t, result.Items[0].EffectivePricingUSD.PerRequestUSD)
-	require.InDelta(t, 0.04, *result.Items[0].EffectivePricingUSD.PerRequestUSD, 1e-12)
+	// 目录按节省比例降序排列：image 组（免费，节省 100%）在 per_request 组（节省 50%）之前。
+	require.Equal(t, string(BillingModeImage), result.Items[0].BillingMode)
+	require.Equal(t, "group_default", result.Items[0].BestGroup.RateSource)
+	require.Equal(t, 0.0, result.Items[0].BestGroup.RateMultiplier)
+	require.NotNil(t, result.Items[0].EffectivePricingUSD.PerImageUSD)
+	require.InDelta(t, 0.0, *result.Items[0].EffectivePricingUSD.PerImageUSD, 1e-12)
+	require.NotNil(t, result.Items[0].OfficialPricing.PerImageUSD)
+	require.NotNil(t, result.Items[0].Comparison.SavingsPercent)
+	require.InDelta(t, 1.0, *result.Items[0].Comparison.SavingsPercent, 1e-12)
 
-	require.Equal(t, string(BillingModeImage), result.Items[1].BillingMode)
-	require.Equal(t, "group_default", result.Items[1].BestGroup.RateSource)
-	require.Equal(t, 0.0, result.Items[1].BestGroup.RateMultiplier)
-	require.NotNil(t, result.Items[1].EffectivePricingUSD.PerImageUSD)
-	require.InDelta(t, 0.0, *result.Items[1].EffectivePricingUSD.PerImageUSD, 1e-12)
-	require.NotNil(t, result.Items[1].OfficialPricing.PerImageUSD)
-	require.NotNil(t, result.Items[1].Comparison.SavingsPercent)
-	require.InDelta(t, 1.0, *result.Items[1].Comparison.SavingsPercent, 1e-12)
+	require.Equal(t, string(BillingModePerRequest), result.Items[1].BillingMode)
+	require.NotNil(t, result.Items[1].EffectivePricingUSD.PerRequestUSD)
+	require.InDelta(t, 0.04, *result.Items[1].EffectivePricingUSD.PerRequestUSD, 1e-12)
 }

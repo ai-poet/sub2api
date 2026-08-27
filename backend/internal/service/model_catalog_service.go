@@ -181,7 +181,10 @@ func (s *ModelCatalogService) buildCatalog(
 	groups []Group,
 	userRates map[int64]float64,
 ) *ModelCatalogResponse {
-	entries := make([]modelCatalogEntry, 0)
+	// entries 与 modelBuckets 必须共享同一批 *modelCatalogEntry：
+	// 若 buckets 里存 &entries[i]，entries 扩容重分配后这些指针会指向废弃的
+	// 旧底层数组，后面写入的 AvailableGroupCount / OtherGroups 全部丢失。
+	entries := make([]*modelCatalogEntry, 0)
 	modelBuckets := make(map[string][]*modelCatalogEntry)
 
 	for _, group := range groups {
@@ -197,9 +200,9 @@ func (s *ModelCatalogService) buildCatalog(
 			if !ok {
 				continue
 			}
-			entries = append(entries, entry)
+			entries = append(entries, &entry)
 			modelKey := strings.ToLower(strings.TrimSpace(model))
-			modelBuckets[modelKey] = append(modelBuckets[modelKey], &entries[len(entries)-1])
+			modelBuckets[modelKey] = append(modelBuckets[modelKey], &entry)
 		}
 	}
 
@@ -220,7 +223,7 @@ func (s *ModelCatalogService) buildCatalog(
 	}
 
 	sort.Slice(entries, func(i, j int) bool {
-		return compareCatalogEntries(&entries[i], &entries[j])
+		return compareCatalogEntries(entries[i], entries[j])
 	})
 
 	items := make([]ModelCatalogItem, 0, len(entries))
