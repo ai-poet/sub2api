@@ -20,12 +20,12 @@ export default {
     "navChangelog": "更新日志",
     "hero": {
       "badge": "Claude Code / Codex 一键接入",
-      "titleLeadPrimary": "Claude Code 和 Codex",
-      "titleLeadSecondary": "零门槛使用",
+      "titleLeadPrimary": "极具价格竞争力的 AI 中转站",
+      "titleLeadSecondary": "× Agent 桌面客户端",
       "titleAccent": "",
       "titleTail": "",
-      "description": "一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。",
-      "primaryNote": "一个桌面端集中使用Claude Code和Codex",
+      "description": "深度合一的 Claude Code · Codex · Grok · Pi 桌面 Agent 客户端，登录即路由，余额、分组倍率、在线率一目了然。",
+      "primaryNote": "一个桌面端集中管理所有 Agent CLI",
       "downloadPrimary": "立即下载",
       "installPrimary": "立即安装",
       "connectApi": "自行接入API",
@@ -34,7 +34,7 @@ export default {
       "tags": {
         "coding": "Claude Code",
         "agent": "Codex",
-        "tools": "多账号 · 多模型"
+        "tools": "Grok · Pi · 更多"
       },
       "stats": {
         "setupValue": "1 步",
@@ -136,7 +136,7 @@ export default {
         "today": "今天",
         "taskTitle": "在吗",
         "project": "amadeus-system",
-        "email": "huzw1995{'@'}163.com"
+        "email": "admin{'@'}cheaprouter.cc"
       },
       "labels": {
         "read": "读取",

@@ -3,13 +3,13 @@ import { mount } from '@vue/test-utils'
 import HomeHero from '../HomeHero.vue'
 
 const translations: Record<string, string> = {
-  'home.hero.tags.coding': 'Coding',
-  'home.hero.tags.agent': 'Agent',
-  'home.hero.tags.tools': 'Tools',
-  'home.hero.titleLeadPrimary': 'Claude Code',
-  'home.hero.titleLeadSecondary': 'and Codex',
-  'home.hero.titleAccent': 'in one gateway',
-  'home.hero.titleTail': 'with metered billing',
+  'home.hero.tags.coding': 'Claude Code',
+  'home.hero.tags.agent': 'Codex',
+  'home.hero.tags.tools': 'Grok · Pi · More',
+  'home.hero.titleLeadPrimary': 'Price-competitive AI relay',
+  'home.hero.titleLeadSecondary': '× Agent desktop client',
+  'home.hero.titleAccent': '',
+  'home.hero.titleTail': '',
   'home.hero.primaryNote': 'Use one key everywhere.',
   'home.hero.downloadPrimary': 'Download now',
   'home.hero.installPrimary': 'Install now',
@@ -49,7 +49,7 @@ const translations: Record<string, string> = {
   'home.clientWorkflow.sidebar.today': '今天',
   'home.clientWorkflow.sidebar.taskTitle': '在吗',
   'home.clientWorkflow.sidebar.project': 'amadeus-system',
-  'home.clientWorkflow.sidebar.email': 'huzw1995@163.com',
+  'home.clientWorkflow.sidebar.email': 'admin@cheaprouter.cc',
   'home.clientWorkflow.labels.read': '读取',
   'home.clientWorkflow.labels.tool': '工具',
   'home.clientWorkflow.labels.thinking': '思考',
@@ -239,7 +239,7 @@ describe('HomeHero', () => {
     expect(wrapper.text()).toContain('新建任务')
     expect(wrapper.text()).toContain('在吗')
     expect(wrapper.text()).toContain('amadeus-system')
-    expect(wrapper.text()).toContain('huzw1995@163.com')
+    expect(wrapper.text()).toContain('admin@cheaprouter.cc')
     // transcript tool rows
     expect(wrapper.text()).toContain('读取')
     expect(wrapper.text()).toContain('main.ts')
@@ -277,6 +277,17 @@ describe('HomeHero', () => {
     expect(wrapper.text()).toContain('使用记录')
     expect(wrapper.text()).toContain('退出登录')
     expect(wrapper.text()).toContain('已切换到 Codex Sale，对新启动的任务生效')
+  })
+
+  it('renders the CLI icons strip below the headline', () => {
+    const wrapper = mountHero()
+
+    const text = wrapper.text()
+    expect(text).toContain('Claude Code')
+    expect(text).toContain('Codex')
+    expect(text).toContain('Grok')
+    expect(text).toContain('Pi')
+    expect(text).toContain('Grok · Pi · More')
   })
 
   it('renders the advantages strip and the API-only card below the preview', () => {

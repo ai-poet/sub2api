@@ -20,6 +20,29 @@
         <span v-if="titleTail" class="block text-[#111] dark:text-white">{{ titleTail }}</span>
       </h1>
 
+      <!-- CLI icons strip -->
+      <div class="mt-5 flex flex-wrap items-center gap-2.5">
+        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          Claude Code
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+          Codex
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Grok
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+          Pi
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-400 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/40">
+          + {{ t('home.hero.tags.tools') }}
+        </span>
+      </div>
+
       <!-- CTAs -->
       <div class="mt-6 flex flex-col gap-3 sm:flex-row">
         <!-- 终端命令类型主按钮 -->
@@ -86,6 +109,42 @@
         </router-link>
       </div>
 
+      <!-- API-only card: 提到醒目位置 -->
+      <div
+        data-test="api-only-card"
+        class="mt-6 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
+      >
+        <div>
+          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">
+            {{ t('home.clientShowcase.apiOnly.title') }}
+          </h3>
+          <p class="mt-1.5 max-w-[38rem] text-sm leading-6 text-gray-500 dark:text-white/55">
+            {{ t('home.clientShowcase.apiOnly.body') }}
+          </p>
+        </div>
+        <div class="flex shrink-0 flex-wrap items-center gap-3">
+          <router-link
+            :to="dashboardPath"
+            data-test="api-only-dashboard"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#111] px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
+          >
+            <span>{{ t('home.clientShowcase.apiOnly.dashboardCta') }}</span>
+            <Icon name="arrowRight" size="sm" />
+          </router-link>
+          <a
+            v-if="docUrl"
+            :href="docUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-test="api-only-docs"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-[#111] transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+          >
+            <span>{{ t('home.clientShowcase.apiOnly.docsCta') }}</span>
+            <Icon name="externalLink" size="sm" />
+          </a>
+        </div>
+      </div>
+
       <!-- Note -->
       <p
         v-if="hasClientDownloads"
@@ -125,42 +184,6 @@
         >
           <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">{{ card.title }}</h3>
           <p class="mt-1.5 text-sm leading-6 text-gray-500 dark:text-white/55">{{ card.body }}</p>
-        </div>
-      </div>
-
-      <!-- API-only card -->
-      <div
-        data-test="api-only-card"
-        class="mt-3 flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
-      >
-        <div>
-          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">
-            {{ t('home.clientShowcase.apiOnly.title') }}
-          </h3>
-          <p class="mt-1.5 max-w-[38rem] text-sm leading-6 text-gray-500 dark:text-white/55">
-            {{ t('home.clientShowcase.apiOnly.body') }}
-          </p>
-        </div>
-        <div class="flex shrink-0 flex-wrap items-center gap-3">
-          <router-link
-            :to="dashboardPath"
-            data-test="api-only-dashboard"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#111] px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
-          >
-            <span>{{ t('home.clientShowcase.apiOnly.dashboardCta') }}</span>
-            <Icon name="arrowRight" size="sm" />
-          </router-link>
-          <a
-            v-if="docUrl"
-            :href="docUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-test="api-only-docs"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-[#111] transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          >
-            <span>{{ t('home.clientShowcase.apiOnly.docsCta') }}</span>
-            <Icon name="externalLink" size="sm" />
-          </a>
         </div>
       </div>
 

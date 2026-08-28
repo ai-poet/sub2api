@@ -20,12 +20,12 @@ export default {
     "navChangelog": "Changelog",
     "hero": {
       "badge": "One-click Claude Code / Codex",
-      "titleLeadPrimary": "Claude Code",
-      "titleLeadSecondary": "and Codex,",
-      "titleAccent": "one workspace",
-      "titleTail": "is enough",
-      "description": "One-click setup, pay-as-you-go top-up, and clear visibility into every charge. Claude Code, Codex, and GPT-5.5 share one account, one balance, and one usage panel — no more juggling two configs, two addresses, and two bills. After signing up on the desktop app, Claude Code and Codex are configured for you automatically — no more copy-pasting JSON configs.",
-      "primaryNote": "One-click setup · easy top-up · clear spend · friendly pricing",
+      "titleLeadPrimary": "Price-competitive AI relay",
+      "titleLeadSecondary": "× Agent desktop client",
+      "titleAccent": "",
+      "titleTail": "",
+      "description": "Deeply unified desktop agent client for Claude Code · Codex · Grok · Pi — sign in and you are routed, with balance, group rates, and uptime at a glance.",
+      "primaryNote": "One desktop client for all your agent CLIs",
       "downloadPrimary": "Download now",
       "installPrimary": "Install now",
       "connectApi": "Use the API",
@@ -34,7 +34,7 @@ export default {
       "tags": {
         "coding": "Claude Code",
         "agent": "Codex",
-        "tools": "Multi-account · Multi-model"
+        "tools": "Grok · Pi · More"
       },
       "stats": {
         "setupValue": "1 step",
@@ -136,7 +136,7 @@ export default {
         "today": "今天",
         "taskTitle": "在吗",
         "project": "amadeus-system",
-        "email": "huzw1995{'@'}163.com"
+        "email": "admin{'@'}cheaprouter.cc"
       },
       "labels": {
         "read": "读取",

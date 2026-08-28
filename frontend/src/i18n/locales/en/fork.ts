@@ -12,12 +12,12 @@ export default {
     "navChangelog": "Changelog",
     "hero": {
       "badge": "One-click access to Claude Code / Codex",
-      "titleLeadPrimary": "Claude Code and Codex",
-      "titleLeadSecondary": "zero-friction access",
+      "titleLeadPrimary": "Price-competitive AI relay",
+      "titleLeadSecondary": "× Agent desktop client",
       "titleAccent": "",
       "titleTail": "",
-      "description": "One-click access, pay-as-you-go top-ups, clear visibility into every spend. Claude Code, Codex, and GPT-5.5 share one account, one balance, one usage panel — no more juggling two configs, two endpoints, two bills. The desktop client auto-configures Claude Code and Codex on sign-in, so you skip the JSON copy-paste.",
-      "primaryNote": "One desktop client for both Claude Code and Codex",
+      "description": "Deeply unified desktop agent client for Claude Code · Codex · Grok · Pi — sign in and you are routed, with balance, group rates, and uptime at a glance.",
+      "primaryNote": "One desktop client for all your agent CLIs",
       "downloadPrimary": "Download now",
       "connectApi": "Use the API",
       "startApi": "Start with the API",
@@ -25,7 +25,7 @@ export default {
       "tags": {
         "coding": "Claude Code",
         "agent": "Codex",
-        "tools": "Multi-account · Multi-model"
+        "tools": "Grok · Pi · More"
       },
       "stats": {
         "setupValue": "1 step",
