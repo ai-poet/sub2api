@@ -43,45 +43,88 @@
         </div>
 
         <div class="grid gap-3">
-          <a
-            v-for="option in downloadOptions"
-            :key="option.id"
-            :href="option.url"
-            :data-platform="option.id"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 transition hover:-translate-y-0.5 hover:border-primary-200 hover:bg-white hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-white/[0.03] dark:hover:border-primary-400/40 dark:hover:bg-white/[0.06] sm:p-5"
-          >
-            <span class="flex min-w-0 items-center gap-4">
-              <span
-                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-800 shadow-sm ring-1 ring-gray-100 dark:bg-white/8 dark:text-white dark:ring-white/10"
-              >
-                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path :d="option.iconPath" />
-                </svg>
+          <template v-for="option in downloadOptions" :key="option.id">
+            <!-- 终端命令类型：点击复制命令 -->
+            <button
+              v-if="option.type === 'command'"
+              type="button"
+              :data-platform="option.id"
+              class="group flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary-200 hover:bg-white hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-white/[0.03] dark:hover:border-primary-400/40 dark:hover:bg-white/[0.06] sm:p-5"
+              @click="handleOptionClick(option)"
+            >
+              <span class="flex min-w-0 items-center gap-4">
+                <span
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-800 shadow-sm ring-1 ring-gray-100 dark:bg-white/8 dark:text-white dark:ring-white/10"
+                >
+                  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path :d="option.iconPath" />
+                  </svg>
+                </span>
+                <span class="min-w-0">
+                  <span class="flex flex-wrap items-center gap-2">
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ option.name }}</span>
+                    <span
+                      v-if="option.id === preferredPlatform"
+                      class="rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-semibold text-primary-700 dark:bg-primary-900/35 dark:text-primary-300"
+                    >
+                      {{ t('home.download.recommended') }}
+                    </span>
+                  </span>
+                  <span class="mt-1 block text-sm text-gray-500 dark:text-white/45">
+                    {{ option.sub }}
+                  </span>
+                  <code class="mt-1.5 block truncate rounded bg-gray-100 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-white/5 dark:text-white/50">
+                    {{ option.url }}
+                  </code>
+                </span>
               </span>
-              <span class="min-w-0">
-                <span class="flex flex-wrap items-center gap-2">
-                  <span class="font-semibold text-gray-900 dark:text-white">{{ option.name }}</span>
-                  <span
-                    v-if="option.id === preferredPlatform"
-                    class="rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-semibold text-primary-700 dark:bg-primary-900/35 dark:text-primary-300"
-                  >
-                    {{ t('home.download.recommended') }}
+              <span
+                class="inline-flex shrink-0 items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-primary-600 dark:bg-white dark:text-gray-950 dark:group-hover:bg-primary-300"
+              >
+                {{ t('home.download.copyCommand') }}
+                <Icon name="clipboard" size="sm" />
+              </span>
+            </button>
+            <!-- 下载链接类型：直接跳转下载 -->
+            <a
+              v-else
+              :href="option.url"
+              :data-platform="option.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 transition hover:-translate-y-0.5 hover:border-primary-200 hover:bg-white hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-white/[0.03] dark:hover:border-primary-400/40 dark:hover:bg-white/[0.06] sm:p-5"
+            >
+              <span class="flex min-w-0 items-center gap-4">
+                <span
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-800 shadow-sm ring-1 ring-gray-100 dark:bg-white/8 dark:text-white dark:ring-white/10"
+                >
+                  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path :d="option.iconPath" />
+                  </svg>
+                </span>
+                <span class="min-w-0">
+                  <span class="flex flex-wrap items-center gap-2">
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ option.name }}</span>
+                    <span
+                      v-if="option.id === preferredPlatform"
+                      class="rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-semibold text-primary-700 dark:bg-primary-900/35 dark:text-primary-300"
+                    >
+                      {{ t('home.download.recommended') }}
+                    </span>
+                  </span>
+                  <span class="mt-1 block text-sm text-gray-500 dark:text-white/45">
+                    {{ option.sub }}
                   </span>
                 </span>
-                <span class="mt-1 block text-sm text-gray-500 dark:text-white/45">
-                  {{ option.sub }}
-                </span>
               </span>
-            </span>
-            <span
-              class="inline-flex shrink-0 items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-primary-600 dark:bg-white dark:text-gray-950 dark:group-hover:bg-primary-300"
-            >
-              {{ t('home.download.cta') }}
-              <Icon name="download" size="sm" />
-            </span>
-          </a>
+              <span
+                class="inline-flex shrink-0 items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-primary-600 dark:bg-white dark:text-gray-950 dark:group-hover:bg-primary-300"
+              >
+                {{ t('home.download.cta') }}
+                <Icon name="download" size="sm" />
+              </span>
+            </a>
+          </template>
         </div>
       </div>
     </div>
@@ -92,10 +135,12 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
+import { useClipboard } from '@/composables/useClipboard'
 import {
   detectPreferredClientPlatform,
   getClientDownloadOptions,
   type ClientDownloadPlatform,
+  type ClientDownloadType,
 } from '@/utils/clientDownloads'
 
 interface DownloadOption {
@@ -103,6 +148,7 @@ interface DownloadOption {
   name: string
   sub: string
   url: string
+  type: ClientDownloadType
   iconPath: string
 }
 
@@ -112,6 +158,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const { copyToClipboard } = useClipboard()
 
 const platformIcons: Record<ClientDownloadPlatform, string> = {
   windows:
@@ -141,4 +188,10 @@ const configuredOptions = computed<DownloadOption[]>(() => {
 })
 
 const downloadOptions = computed(() => configuredOptions.value)
+
+function handleOptionClick(option: DownloadOption) {
+  if (option.type === 'command') {
+    copyToClipboard(option.url, t('home.download.commandCopied'))
+  }
+}
 </script>

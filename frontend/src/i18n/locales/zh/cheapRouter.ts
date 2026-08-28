@@ -27,6 +27,7 @@ export default {
       "description": "一键接入、按量充值、看清每一笔花费。Claude Code、Codex 与 GPT-5.5 共用一个账户、一份余额、一个用量面板，不用再为两套配置、两个接口地址、两份账单头疼。桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置。",
       "primaryNote": "一个桌面端集中使用Claude Code和Codex",
       "downloadPrimary": "立即下载",
+      "installPrimary": "立即安装",
       "connectApi": "自行接入API",
       "startApi": "开始接入API",
       "badgeDiscount": "比官方 API",
@@ -163,10 +164,12 @@ export default {
       "privacyCode": "自动写入本地配置文件，已有设置不会被覆盖",
       "privacyKey": "桌面、Web、移动端共享一份用量和故障信息",
       "cta": "下载",
+      "copyCommand": "复制命令",
+      "commandCopied": "安装命令已复制，请在终端中运行",
       "recommended": "推荐用于当前设备",
       "platforms": {
         "mac": {
-          "sub": "Apple Silicon 与 Intel"
+          "sub": "终端一键安装"
         },
         "windows": {
           "sub": "x64 / ARM64"

@@ -22,8 +22,21 @@
 
       <!-- CTAs -->
       <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+        <!-- 终端命令类型主按钮 -->
+        <button
+          v-if="primaryClientDownloadOption && primaryClientDownloadOption.type === 'command'"
+          type="button"
+          :data-platform="primaryClientDownloadOption.id"
+          data-test="hero-primary-download"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
+          @click="handlePrimaryClick"
+        >
+          <span>{{ t('home.hero.installPrimary') }}</span>
+          <Icon name="clipboard" size="sm" />
+        </button>
+        <!-- 下载链接类型主按钮 -->
         <a
-          v-if="primaryClientDownloadOption"
+          v-else-if="primaryClientDownloadOption"
           :href="primaryClientDownloadOption.url"
           :data-platform="primaryClientDownloadOption.id"
           data-test="hero-primary-download"
@@ -113,6 +126,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import HomeAgentWorkflowPreview from '@/components/home/HomeAgentWorkflowPreview.vue'
 import Icon from '@/components/icons/Icon.vue'
+import { useClipboard } from '@/composables/useClipboard'
 import {
   detectPreferredClientPlatform,
   getClientDownloadOptions,
@@ -128,6 +142,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const { copyToClipboard } = useClipboard()
 
 const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
 const titleAccent = computed(() => t('home.hero.titleAccent').trim())
@@ -144,6 +159,12 @@ const clientDownloadOptions = computed(() =>
 )
 const primaryClientDownloadOption = computed(() => clientDownloadOptions.value[0] ?? null)
 const hasClientDownloads = computed(() => clientDownloadOptions.value.length > 0)
+
+function handlePrimaryClick() {
+  if (primaryClientDownloadOption.value?.type === 'command') {
+    copyToClipboard(primaryClientDownloadOption.value.url, t('home.download.commandCopied'))
+  }
+}
 
 const pills = computed(() => [
   t('home.clientShowcase.pills.darkMode'),

@@ -1,9 +1,12 @@
 export type ClientDownloadPlatform = 'windows' | 'macos'
 
+export type ClientDownloadType = 'download' | 'command'
+
 export interface ClientDownloadOption {
   id: ClientDownloadPlatform
   name: string
   url: string
+  type: ClientDownloadType
 }
 
 interface ClientDownloadUrls {
@@ -53,6 +56,7 @@ export function getClientDownloadOptions(
       id: 'windows',
       name: 'Windows',
       url: windowsUrl,
+      type: 'download',
     })
   }
 
@@ -61,6 +65,7 @@ export function getClientDownloadOptions(
       id: 'macos',
       name: 'macOS',
       url: macosUrl,
+      type: 'command',
     })
   }
 

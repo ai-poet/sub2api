@@ -12,6 +12,12 @@ vi.mock('vue-i18n', async () => {
   }
 })
 
+vi.mock('@/composables/useClipboard', () => ({
+  useClipboard: () => ({
+    copyToClipboard: vi.fn(),
+  }),
+}))
+
 function setPlatform(platform: string, userAgent = '') {
   Object.defineProperty(window.navigator, 'userAgentData', {
     configurable: true,
@@ -43,7 +49,7 @@ describe('HomeDownloadSection', () => {
       }
     })
 
-    expect(wrapper.findAll('a[data-platform]').length).toBe(0)
+    expect(wrapper.findAll('[data-platform]').length).toBe(0)
   })
 
   it('shows both platform downloads and prioritizes Windows for Windows browsers', () => {
@@ -52,18 +58,22 @@ describe('HomeDownloadSection', () => {
     const wrapper = mount(HomeDownloadSection, {
       props: {
         windowsUrl: 'https://downloads.example.com/windows.exe',
-        macosUrl: 'https://downloads.example.com/macos.dmg',
+        macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
       },
       global: {
         stubs: { Icon: true }
       }
     })
 
-    const links = wrapper.findAll('a[data-platform]')
-    expect(links).toHaveLength(2)
-    expect(links[0].attributes('data-platform')).toBe('windows')
-    expect(links[0].attributes('href')).toBe('https://downloads.example.com/windows.exe')
-    expect(links[1].attributes('data-platform')).toBe('macos')
+    const items = wrapper.findAll('[data-platform]')
+    expect(items).toHaveLength(2)
+    // Windows is a download link
+    expect(items[0].attributes('data-platform')).toBe('windows')
+    expect(items[0].element.tagName).toBe('A')
+    expect(items[0].attributes('href')).toBe('https://downloads.example.com/windows.exe')
+    // macOS is a command button
+    expect(items[1].attributes('data-platform')).toBe('macos')
+    expect(items[1].element.tagName).toBe('BUTTON')
   })
 
   it('shows both platform downloads and prioritizes macOS for macOS browsers', () => {
@@ -72,33 +82,37 @@ describe('HomeDownloadSection', () => {
     const wrapper = mount(HomeDownloadSection, {
       props: {
         windowsUrl: 'https://downloads.example.com/windows.exe',
-        macosUrl: 'https://downloads.example.com/macos.dmg',
+        macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
       },
       global: {
         stubs: { Icon: true }
       }
     })
 
-    const links = wrapper.findAll('a[data-platform]')
-    expect(links).toHaveLength(2)
-    expect(links[0].attributes('data-platform')).toBe('macos')
-    expect(links[0].attributes('href')).toBe('https://downloads.example.com/macos.dmg')
-    expect(links[1].attributes('data-platform')).toBe('windows')
+    const items = wrapper.findAll('[data-platform]')
+    expect(items).toHaveLength(2)
+    // macOS is a command button (preferred)
+    expect(items[0].attributes('data-platform')).toBe('macos')
+    expect(items[0].element.tagName).toBe('BUTTON')
+    // Windows is a download link
+    expect(items[1].attributes('data-platform')).toBe('windows')
+    expect(items[1].element.tagName).toBe('A')
   })
 
   it('shows only the configured platform when one URL is present', () => {
     const wrapper = mount(HomeDownloadSection, {
       props: {
         windowsUrl: '',
-        macosUrl: 'https://downloads.example.com/macos.dmg',
+        macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
       },
       global: {
         stubs: { Icon: true }
       }
     })
 
-    const links = wrapper.findAll('a[data-platform]')
-    expect(links).toHaveLength(1)
-    expect(links[0].attributes('data-platform')).toBe('macos')
+    const items = wrapper.findAll('[data-platform]')
+    expect(items).toHaveLength(1)
+    expect(items[0].attributes('data-platform')).toBe('macos')
+    expect(items[0].element.tagName).toBe('BUTTON')
   })
 })

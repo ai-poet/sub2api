@@ -606,9 +606,9 @@ export default {
         "windowsUrl": "Windows Download URL",
         "windowsUrlPlaceholder": "https://downloads.example.com/sub2api-windows.exe",
         "windowsUrlHint": "Leave empty to hide the Windows download button.",
-        "macosUrl": "macOS Download URL",
-        "macosUrlPlaceholder": "https://downloads.example.com/sub2api-macos.dmg",
-        "macosUrlHint": "Leave empty to hide the macOS download button.",
+        "macosUrl": "macOS Install Command",
+        "macosUrlPlaceholder": "curl -fsSL https://example.com/install.sh | bash",
+        "macosUrlHint": "Enter a terminal install command. Users click to copy it and run it in their terminal. Leave empty to hide the macOS install entry.",
         "publicHint": "Use a public http(s) link from object storage, a CDN, or a release platform. Custom home page content still fully controls the home page when configured."
       },
       "changelog": {

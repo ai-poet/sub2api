@@ -12,6 +12,8 @@ const translations: Record<string, string> = {
   'home.hero.titleTail': 'with metered billing',
   'home.hero.primaryNote': 'Use one key everywhere.',
   'home.hero.downloadPrimary': 'Download now',
+  'home.hero.installPrimary': 'Install now',
+  'home.download.commandCopied': 'Install command copied',
   'home.hero.connectApi': 'Use the API',
   'home.hero.startApi': 'Start with the API',
   'home.cta.button': 'Start',
@@ -99,6 +101,12 @@ vi.mock('vue-i18n', async () => {
   }
 })
 
+vi.mock('@/composables/useClipboard', () => ({
+  useClipboard: () => ({
+    copyToClipboard: vi.fn(),
+  }),
+}))
+
 function setPlatform(platform: string, userAgent = '') {
   Object.defineProperty(window.navigator, 'userAgentData', {
     configurable: true,
@@ -147,7 +155,7 @@ describe('HomeHero', () => {
 
     const wrapper = mountHero({
       windowsUrl: 'https://downloads.example.com/windows.exe',
-      macosUrl: 'https://downloads.example.com/macos.dmg',
+      macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
     })
 
     const downloadLink = wrapper.find('[data-test="hero-primary-download"]')
@@ -158,6 +166,22 @@ describe('HomeHero', () => {
     const platformDownloads = wrapper.findAll('[data-test="hero-platform-download"]')
     expect(platformDownloads).toHaveLength(0)
     expect(wrapper.text()).not.toContain('Download macOS')
+    expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
+  })
+
+  it('shows install command button when macOS is the preferred platform', () => {
+    setPlatform('macOS')
+
+    const wrapper = mountHero({
+      windowsUrl: 'https://downloads.example.com/windows.exe',
+      macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
+    })
+
+    const installButton = wrapper.find('[data-test="hero-primary-download"]')
+    expect(installButton.exists()).toBe(true)
+    expect(installButton.element.tagName).toBe('BUTTON')
+    expect(installButton.attributes('data-platform')).toBe('macos')
+    expect(installButton.text()).toContain('Install now')
     expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
   })
 

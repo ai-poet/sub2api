@@ -646,9 +646,9 @@ export default {
         "windowsUrl": "Windows 下载链接",
         "windowsUrlPlaceholder": "https://downloads.example.com/sub2api-windows.exe",
         "windowsUrlHint": "留空则隐藏 Windows 下载按钮。",
-        "macosUrl": "macOS 下载链接",
-        "macosUrlPlaceholder": "https://downloads.example.com/sub2api-macos.dmg",
-        "macosUrlHint": "留空则隐藏 macOS 下载按钮。",
+        "macosUrl": "macOS 安装命令",
+        "macosUrlPlaceholder": "curl -fsSL https://example.com/install.sh | bash",
+        "macosUrlHint": "填写终端安装命令，用户点击复制后在终端中运行。留空则隐藏 macOS 安装入口。",
         "publicHint": "请使用对象存储、CDN 或发布平台提供的公开 http(s) 链接。自定义首页内容仍完全由你填写的 HTML 或 URL 控制。"
       },
       "changelog": {

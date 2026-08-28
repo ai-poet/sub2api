@@ -39,6 +39,7 @@ describe('clientDownloads', () => {
         id: 'windows',
         name: 'Windows',
         url: 'https://downloads.example.com/windows.exe',
+        type: 'download',
       },
     ])
   })
@@ -47,11 +48,13 @@ describe('clientDownloads', () => {
     const options = getClientDownloadOptions(
       {
         windowsUrl: 'https://downloads.example.com/windows.exe',
-        macosUrl: 'https://downloads.example.com/macos.dmg',
+        macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
       },
       'macos' as ClientDownloadPlatform,
     )
 
     expect(options.map((option) => option.id)).toEqual(['macos', 'windows'])
+    expect(options[0].type).toBe('command')
+    expect(options[1].type).toBe('download')
   })
 })

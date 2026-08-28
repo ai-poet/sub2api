@@ -97,10 +97,13 @@
         </label>
         <input
           v-model="form.client_download_macos_url"
-          type="url"
+          type="text"
           class="input font-mono text-sm"
-          placeholder="https://..."
+          :placeholder="t('admin.settings.clientDownloads.macosUrlPlaceholder')"
         />
+        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+          {{ t('admin.settings.clientDownloads.macosUrlHint') }}
+        </p>
       </div>
     </div>
 
