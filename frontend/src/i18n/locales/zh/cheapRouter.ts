@@ -102,7 +102,7 @@ export default {
       },
       "advantages": {
         "tiny": {
-          "title": "安装包只有几十 MB",
+          "title": "安装包只有十几 MB",
           "body": "原生二进制，没有 Electron 套壳"
         },
         "native": {

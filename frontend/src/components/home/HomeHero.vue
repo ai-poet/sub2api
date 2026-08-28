@@ -1,5 +1,5 @@
 <template>
-  <section class="relative w-full overflow-hidden bg-white px-4 pb-12 pt-12 md:px-6 md:pb-16 md:pt-16 dark:bg-[#0f1114]">
+  <section class="relative w-full overflow-hidden bg-white px-4 pt-12 md:px-6 md:pt-16 dark:bg-[#0f1114]">
 
     <div class="mx-auto w-full max-w-[1380px] min-w-0">
 
@@ -23,15 +23,15 @@
       <!-- CLI icons strip -->
       <div class="mt-5 flex flex-wrap items-center gap-2.5">
         <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <PlatformIcon platform="anthropic" size="md" />
           Claude Code
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+          <PlatformIcon platform="openai" size="md" />
           Codex
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <PlatformIcon platform="grok" size="md" />
           Grok
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
@@ -109,7 +109,39 @@
         </router-link>
       </div>
 
-      <!-- API-only card: 提到醒目位置 -->
+      <!-- Note -->
+      <p
+        v-if="hasClientDownloads"
+        class="mt-2 max-w-full text-sm leading-6 text-gray-400 [overflow-wrap:anywhere] dark:text-white/35"
+      >
+        {{ t('home.hero.primaryNote') }}
+      </p>
+    </div>
+
+    <!-- ===== Agent Workflow Preview: 直接嵌入首屏（参考 Cursor 布局） ===== -->
+    <div v-if="hasClientDownloads" data-test="client-showcase" class="mx-auto mt-10 max-w-[1380px] pb-12 md:pb-16">
+      <!-- Feature pills -->
+      <div class="mb-5 flex flex-wrap gap-2">
+        <span v-for="pill in pills" :key="pill" class="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-sm text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+          {{ pill }}
+        </span>
+      </div>
+
+      <HomeAgentWorkflowPreview />
+
+      <!-- Client advantages strip -->
+      <div data-test="client-advantages" class="mt-6 grid gap-3 sm:grid-cols-3">
+        <div
+          v-for="card in advantageCards"
+          :key="card.title"
+          class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"
+        >
+          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">{{ card.title }}</h3>
+          <p class="mt-1.5 text-sm leading-6 text-gray-500 dark:text-white/55">{{ card.body }}</p>
+        </div>
+      </div>
+
+      <!-- API-only card -->
       <div
         data-test="api-only-card"
         class="mt-6 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
@@ -144,49 +176,44 @@
           </a>
         </div>
       </div>
-
-      <!-- Note -->
-      <p
-        v-if="hasClientDownloads"
-        class="mt-2 max-w-full text-sm leading-6 text-gray-400 [overflow-wrap:anywhere] dark:text-white/35"
-      >
-        {{ t('home.hero.primaryNote') }}
-      </p>
     </div>
 
-    <!-- ===== Agent Workflow Preview ===== -->
-    <div v-if="hasClientDownloads" data-test="client-showcase" class="mx-auto mt-12 max-w-[1380px]">
-      <!-- Title & description -->
-      <div class="mb-6">
-        <h2 class="text-2xl font-semibold tracking-[-0.02em] text-[#111] dark:text-white md:text-3xl">
-          {{ t('home.clientShowcase.title') }}
-        </h2>
-        <p class="mt-2 max-w-[44rem] text-base leading-7 text-gray-500 dark:text-white/55">
-          {{ t('home.clientShowcase.description') }}
-        </p>
-      </div>
-
-      <!-- Feature pills -->
-      <div class="mb-6 flex flex-wrap gap-2">
-        <span v-for="pill in pills" :key="pill" class="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-sm text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          {{ pill }}
-        </span>
-      </div>
-
-      <HomeAgentWorkflowPreview />
-
-      <!-- Client advantages strip -->
-      <div data-test="client-advantages" class="mt-6 grid gap-3 sm:grid-cols-3">
-        <div
-          v-for="card in advantageCards"
-          :key="card.title"
-          class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"
-        >
-          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">{{ card.title }}</h3>
-          <p class="mt-1.5 text-sm leading-6 text-gray-500 dark:text-white/55">{{ card.body }}</p>
+    <!-- 无客户端时：API-only 卡片独立显示在首屏 -->
+    <div v-if="!hasClientDownloads" class="mx-auto max-w-[1380px] pb-12 md:pb-16">
+      <div
+        data-test="api-only-card"
+        class="mt-6 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
+      >
+        <div>
+          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">
+            {{ t('home.clientShowcase.apiOnly.title') }}
+          </h3>
+          <p class="mt-1.5 max-w-[38rem] text-sm leading-6 text-gray-500 dark:text-white/55">
+            {{ t('home.clientShowcase.apiOnly.body') }}
+          </p>
+        </div>
+        <div class="flex shrink-0 flex-wrap items-center gap-3">
+          <router-link
+            :to="dashboardPath"
+            data-test="api-only-dashboard"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#111] px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
+          >
+            <span>{{ t('home.clientShowcase.apiOnly.dashboardCta') }}</span>
+            <Icon name="arrowRight" size="sm" />
+          </router-link>
+          <a
+            v-if="docUrl"
+            :href="docUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-test="api-only-docs"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-[#111] transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+          >
+            <span>{{ t('home.clientShowcase.apiOnly.docsCta') }}</span>
+            <Icon name="externalLink" size="sm" />
+          </a>
         </div>
       </div>
-
     </div>
 
   </section>
@@ -197,6 +224,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import HomeAgentWorkflowPreview from '@/components/home/HomeAgentWorkflowPreview.vue'
 import Icon from '@/components/icons/Icon.vue'
+import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import { useClipboard } from '@/composables/useClipboard'
 import {
   detectPreferredClientPlatform,

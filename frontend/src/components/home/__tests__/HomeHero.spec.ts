@@ -27,7 +27,7 @@ const translations: Record<string, string> = {
   'home.clientShowcase.pills.groupSwitch': 'One-click group switch (rate · uptime)',
   'home.clientShowcase.pills.liveBalance': 'Live balance',
   'home.clientShowcase.pills.cliInstall': 'Missing CLI? One-click install',
-  'home.clientShowcase.advantages.tiny.title': 'An installer of just tens of MB',
+  'home.clientShowcase.advantages.tiny.title': 'An installer of just a dozen MB',
   'home.clientShowcase.advantages.tiny.body': 'A single native binary — no Electron shell',
   'home.clientShowcase.advantages.native.title': 'Native-grade smoothness',
   'home.clientShowcase.advantages.native.body': 'Rust + GPUI rendering — zero lag on scroll and input',
@@ -147,6 +147,7 @@ function mountHero(props: Partial<InstanceType<typeof HomeHero>['$props']> = {})
     global: {
       stubs: {
         Icon: true,
+        PlatformIcon: true,
         RouterLink: {
           props: ['to'],
           template: '<a :href="to"><slot /></a>',
@@ -208,20 +209,19 @@ describe('HomeHero', () => {
     expect(wrapper.text()).not.toContain('Use the API')
   })
 
-  it('hides all client-related content when no client download is configured', () => {
+  it('hides client showcase when no client download is configured', () => {
     const wrapper = mountHero()
 
     expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('Relay gateway × agent workbench')
     expect(wrapper.text()).not.toContain('Use one key everywhere.')
+    // API-only card still shows as fallback
+    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(true)
   })
 
-  it('sells the gateway + workbench integration in the showcase copy and pills', () => {
+  it('sells the gateway + workbench integration in the showcase pills', () => {
     const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
 
-    expect(wrapper.text()).toContain('Relay gateway × agent workbench, deeply unified in one desktop client')
-    expect(wrapper.text()).toContain('balance, group rates, and uptime sit right next to your tasks')
     expect(wrapper.text()).toContain('Sign in, routed')
     expect(wrapper.text()).toContain('One-click group switch (rate · uptime)')
     expect(wrapper.text()).toContain('Live balance')
@@ -290,7 +290,7 @@ describe('HomeHero', () => {
     expect(text).toContain('Grok · Pi · More')
   })
 
-  it('renders the advantages strip and the API-only card below the preview', () => {
+  it('renders the advantages strip and the API-only card within the showcase', () => {
     const wrapper = mountHero({
       windowsUrl: 'https://downloads.example.com/windows.exe',
       docUrl: 'https://docs.example.com',
@@ -298,11 +298,22 @@ describe('HomeHero', () => {
 
     const advantages = wrapper.find('[data-test="client-advantages"]')
     expect(advantages.exists()).toBe(true)
-    expect(advantages.text()).toContain('An installer of just tens of MB')
+    expect(advantages.text()).toContain('An installer of just a dozen MB')
     expect(advantages.text()).toContain('A single native binary — no Electron shell')
     expect(advantages.text()).toContain('Native-grade smoothness')
     expect(advantages.text()).toContain('Rust + GPUI rendering — zero lag on scroll and input')
     expect(advantages.text()).toContain('Works out of the box')
+
+    const apiOnly = wrapper.find('[data-test="api-only-card"]')
+    expect(apiOnly.exists()).toBe(true)
+    expect(apiOnly.text()).toContain('Just want the raw API?')
+    expect(apiOnly.find('[data-test="api-only-dashboard"]').attributes('href')).toBe('/dashboard')
+    const docsLink = apiOnly.find('[data-test="api-only-docs"]')
+    expect(docsLink.attributes('href')).toBe('https://docs.example.com')
+  })
+
+  it('shows the API-only card as fallback when no client download is configured', () => {
+    const wrapper = mountHero({ docUrl: 'https://docs.example.com' })
 
     const apiOnly = wrapper.find('[data-test="api-only-card"]')
     expect(apiOnly.exists()).toBe(true)

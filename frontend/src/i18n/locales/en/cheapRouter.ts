@@ -102,7 +102,7 @@ export default {
       },
       "advantages": {
         "tiny": {
-          "title": "An installer of just tens of MB",
+          "title": "An installer of just a dozen MB",
           "body": "A single native binary — no Electron shell"
         },
         "native": {
