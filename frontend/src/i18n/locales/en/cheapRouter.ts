@@ -315,8 +315,8 @@ export default {
           "description": "Each provider shows availability, response speed, and pricing — so when something breaks you know which line is affected and can switch manually or wait for auto-recovery."
         },
         "visibility": {
-          "title": "Errors come with reasons, not just numbers",
-          "description": "Out of balance, credit exhausted, speed-limited, config mismatch, line mismatch, provider down, or protocol incompatibility — each of these seven common failures gets a specific message so you are not staring at a bare error code."
+          "title": "Invoices available",
+          "description": "Every top-up can be invoiced — easy for team reimbursement and finance compliance, and you can issue one yourself on the top-up orders page."
         }
       },
       "trackers": {
@@ -324,13 +324,6 @@ export default {
         "billing": "Balance never expires",
         "visibility": "Multi-account switching"
       }
-    },
-    "cta": {
-      "eyebrow": "GET STARTED",
-      "title": "Claude Code and Codex, set up in one go",
-      "description": "Sign up, top up, and let CheapRouter configure your local tools — three steps and you are running. The full Claude family, Codex, and GPT-5.5 share the same balance, and the dashboard shows exactly which line every charge is billed against.",
-      "button": "Start setup",
-      "stat": "One-click setup · pay-as-you-go · visible usage · friendly pricing"
     },
     "footer": {
       "allRightsReserved": "All rights reserved.",

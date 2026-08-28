@@ -74,7 +74,7 @@ const cards = computed(() => [
   {
     title: t('home.trust.cards.visibility.title'),
     description: t('home.trust.cards.visibility.description'),
-    icon: 'chartBar' as const,
+    icon: 'document' as const,
   },
 ])
 </script>

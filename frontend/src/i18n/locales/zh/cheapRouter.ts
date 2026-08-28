@@ -315,8 +315,8 @@ export default {
           "description": "每个服务商的可用状态、响应速度、价格都摆在台面上，出问题时不抓瞎，知道该切到另一条线路还是等自动恢复。"
         },
         "visibility": {
-          "title": "all in one",
-          "description": "使用我们的服务有 SLA 保障。"
+          "title": "支持开发票",
+          "description": "充值消费均可开具发票，团队报销、财务合规都省心，可以在充值订单页自行开具。"
         }
       },
       "trackers": {
@@ -324,13 +324,6 @@ export default {
         "billing": "余额长期有效",
         "visibility": "多账号切换"
       }
-    },
-    "cta": {
-      "eyebrow": "开始使用",
-      "title": "Claude Code 和 Codex，一次配齐",
-      "description": "注册账户、充值、自动配置好本地工具 — 三步之后就能开始跑。Claude 全系、Codex 与 GPT-5.5 都在同一个余额下，控制台里随时看清楚每一笔花费走的是哪条线路。",
-      "button": "开始配置",
-      "stat": "一键接入 · 按量计费 · 用量透明 · 价格友好"
     },
     "footer": {
       "allRightsReserved": "保留所有权利。",

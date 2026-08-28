@@ -17,7 +17,6 @@ const translations: Record<string, string> = {
   'home.download.commandCopied': 'Install command copied',
   'home.hero.connectApi': 'Use the API',
   'home.hero.startApi': 'Start with the API',
-  'home.cta.button': 'Start',
   'home.goToDashboard': 'Dashboard',
   'home.viewDocs': 'Docs',
   'home.login': 'Login',

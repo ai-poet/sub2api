@@ -60,14 +60,6 @@
       <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
         <HomeTrustSection />
       </HomeReveal>
-
-      <HomeReveal class="px-4 py-8 md:px-6 md:py-12">
-        <HomeFinalCta
-          :doc-url="docUrl"
-          :is-authenticated="isAuthenticated"
-          :dashboard-path="dashboardPath"
-        />
-      </HomeReveal>
     </main>
 
     <HomeFooter
@@ -83,7 +75,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
 import HomePricingSection from '@/components/home/HomePricingSection.vue'
-import HomeFinalCta from '@/components/home/HomeFinalCta.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'
 import HomeHeader from '@/components/home/HomeHeader.vue'
 import HomeHero from '@/components/home/HomeHero.vue'
