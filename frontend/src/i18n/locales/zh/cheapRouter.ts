@@ -34,7 +34,8 @@ export default {
       "tags": {
         "coding": "Claude Code",
         "agent": "Codex",
-        "tools": "Grok · Pi · 更多"
+        "tools": "Grok · Pi · 更多",
+        "more": "更多"
       },
       "stats": {
         "setupValue": "1 步",
@@ -121,9 +122,7 @@ export default {
         "docsCta": "查看接入文档"
       },
       "cta": "注册获取通知",
-      "ctaNote": "注册后可第一时间获取客户端更新",
-      "downloadCta": "下载 {platform} 客户端",
-      "downloadNote": "桌面客户端下载已开放，请选择适合当前设备的安装包"
+      "ctaNote": "注册后可第一时间获取客户端更新"
     },
     "clientWorkflow": {
       "ariaLabel": "CheapRouter 桌面客户端演示：任务执行中一键切换分组线路",
@@ -140,27 +139,27 @@ export default {
       },
       "labels": {
         "read": "读取",
-        "tool": "工具",
-        "thinking": "思考"
+        "list": "列出",
+        "thinking": "思考",
+        "edit": "编辑"
       },
+      "groupSummary": "正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改",
       "rows": {
         "r1": "main.ts",
-        "r2": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`",
+        "r2": "components",
         "r3": "constants.ts",
         "r4": "思考用时 1 秒",
         "r5": "chat.ts",
         "r6": "auth.ts",
-        "r7": "user.ts",
-        "r8": "database.ts",
-        "r9": "changelog.ts",
-        "r10": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\hooks`",
-        "r11": "index.vue",
-        "r12": "auth.ts"
+        "r7": "ChatView.vue",
+        "r8": "user.ts",
+        "r9": "hooks",
+        "r10": "index.vue"
       },
       "composer": {
         "placeholder": "做什么都可以…",
-        "model": "Grok 4.6",
-        "effort": "High",
+        "model": "gpt-5.6-sol",
+        "effort": "高",
         "access": "完全访问",
         "build": "构建",
         "stop": "停止"
@@ -196,41 +195,22 @@ export default {
       "toast": "已切换到 Codex Sale，对新启动的任务生效"
     },
     "download": {
-      "badge": "客户端下载",
-      "title": "下载 CheapRouter 桌面客户端",
-      "description": "安装桌面端后自动帮你配置 Claude Code 和 Codex，安全复用已有本地设置，并把用量和状态集中在一个入口。",
-      "privacyCode": "自动写入本地配置文件，已有设置不会被覆盖",
-      "privacyKey": "桌面、Web、移动端共享一份用量和故障信息",
-      "cta": "下载",
-      "copyCommand": "复制命令",
-      "commandCopied": "安装命令已复制，请在终端中运行",
-      "recommended": "推荐用于当前设备",
-      "platforms": {
-        "mac": {
-          "sub": "终端一键安装"
-        },
-        "windows": {
-          "sub": "x64 / ARM64"
-        },
-        "linux": {
-          "sub": ".deb / .rpm / AppImage"
-        }
-      }
+      "commandCopied": "安装命令已复制，请在终端中运行"
     },
     "value": {
       "overline": "为什么选 CheapRouter",
-      "title": "让 Claude Code 和 Codex 跑起来这件事，更省心",
-      "description": "不是再做一个 IDE，也不是又一个 API 中转站。CheapRouter 把开通账户、充值、配置工具、看用量、查故障这些散落的事，合成一条顺手的路径。",
+      "title": "开箱即用的聚合 AI Agent 供应平台",
+      "description": "不是再做一个 IDE，也不是又一个 API 中转站。CheapRouter 把 Agent 客户端、模型供应、充值计费、用量与故障诊断合成一个平台 — 下载、登录，直接开始跑任务。",
       "items": {
         "economics": {
-          "eyebrow": "01 / 接入快",
-          "title": "一键写好本地配置",
-          "description": "桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置，不会覆盖你已有的设置。"
+          "eyebrow": "01 / 开箱即用",
+          "title": "登录即路由，Agent 一键配齐",
+          "description": "桌面端注册登录后自动配置好 Claude Code、Codex 等 Agent CLI，缺 Node、缺 CLI 一键补齐，不用复制粘贴 JSON 配置，也不会覆盖你已有的本地设置。"
         },
         "reliability": {
           "eyebrow": "02 / 花费看得见",
-          "title": "一个余额面板看清两路消费",
-          "description": "Claude 和 Codex 各自用了多少、还剩多少额度、当前限速状态如何，都在同一处展示，不用再在多个平台之间切。"
+          "title": "一个余额面板看清所有 Agent 消费",
+          "description": "Claude、Codex、Grok 各自用了多少、还剩多少额度、当前限速状态如何，都在同一处展示；各分组倍率与在线率摆在台面上，任务进行中也能一键切到更稳更便宜的线路。"
         },
         "control": {
           "eyebrow": "03 / all in one",

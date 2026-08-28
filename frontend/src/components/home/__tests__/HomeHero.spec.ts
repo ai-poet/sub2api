@@ -6,6 +6,7 @@ const translations: Record<string, string> = {
   'home.hero.tags.coding': 'Claude Code',
   'home.hero.tags.agent': 'Codex',
   'home.hero.tags.tools': 'Grok · Pi · More',
+  'home.hero.tags.more': 'More',
   'home.hero.titleLeadPrimary': 'Price-competitive AI relay',
   'home.hero.titleLeadSecondary': '× Agent desktop client',
   'home.hero.titleAccent': '',
@@ -51,23 +52,23 @@ const translations: Record<string, string> = {
   'home.clientWorkflow.sidebar.project': 'amadeus-system',
   'home.clientWorkflow.sidebar.email': 'admin@cheaprouter.cc',
   'home.clientWorkflow.labels.read': '读取',
-  'home.clientWorkflow.labels.tool': '工具',
+  'home.clientWorkflow.labels.list': '列出',
   'home.clientWorkflow.labels.thinking': '思考',
+  'home.clientWorkflow.labels.edit': '编辑',
+  'home.clientWorkflow.groupSummary': '正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改',
   'home.clientWorkflow.rows.r1': 'main.ts',
-  'home.clientWorkflow.rows.r2': 'List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`',
+  'home.clientWorkflow.rows.r2': 'components',
   'home.clientWorkflow.rows.r3': 'constants.ts',
   'home.clientWorkflow.rows.r4': '思考用时 1 秒',
   'home.clientWorkflow.rows.r5': 'chat.ts',
   'home.clientWorkflow.rows.r6': 'auth.ts',
-  'home.clientWorkflow.rows.r7': 'user.ts',
-  'home.clientWorkflow.rows.r8': 'database.ts',
-  'home.clientWorkflow.rows.r9': 'changelog.ts',
-  'home.clientWorkflow.rows.r10': 'List `D:\\Projects\\amadeus-system\\src\\views\\chat\\hooks`',
-  'home.clientWorkflow.rows.r11': 'index.vue',
-  'home.clientWorkflow.rows.r12': 'auth.ts',
+  'home.clientWorkflow.rows.r7': 'ChatView.vue',
+  'home.clientWorkflow.rows.r8': 'user.ts',
+  'home.clientWorkflow.rows.r9': 'hooks',
+  'home.clientWorkflow.rows.r10': 'index.vue',
   'home.clientWorkflow.composer.placeholder': '做什么都可以…',
-  'home.clientWorkflow.composer.model': 'Grok 4.6',
-  'home.clientWorkflow.composer.effort': 'High',
+  'home.clientWorkflow.composer.model': 'gpt-5.6-sol',
+  'home.clientWorkflow.composer.effort': '高',
   'home.clientWorkflow.composer.access': '完全访问',
   'home.clientWorkflow.composer.build': '构建',
   'home.clientWorkflow.composer.stop': '停止',
@@ -243,11 +244,17 @@ describe('HomeHero', () => {
     // transcript tool rows
     expect(wrapper.text()).toContain('读取')
     expect(wrapper.text()).toContain('main.ts')
-    expect(wrapper.text()).toContain('List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`')
+    expect(wrapper.text()).toContain('正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改')
+    expect(wrapper.text()).toContain('列出')
+    expect(wrapper.text()).toContain('components')
     expect(wrapper.text()).toContain('思考用时 1 秒')
+    expect(wrapper.text()).toContain('编辑')
+    expect(wrapper.text()).toContain('ChatView.vue')
+    expect(wrapper.text()).toContain('+12')
+    expect(wrapper.text()).toContain('-3')
     // composer
     expect(wrapper.text()).toContain('做什么都可以…')
-    expect(wrapper.text()).toContain('Grok 4.6')
+    expect(wrapper.text()).toContain('gpt-5.6-sol')
     expect(wrapper.text()).toContain('完全访问')
     expect(wrapper.text()).toContain('构建')
     // status bar
@@ -279,15 +286,18 @@ describe('HomeHero', () => {
     expect(wrapper.text()).toContain('已切换到 Codex Sale，对新启动的任务生效')
   })
 
-  it('renders the CLI icons strip below the headline', () => {
+  it('renders the CLI icons strip below the headline without a Pi card', () => {
     const wrapper = mountHero()
 
     const text = wrapper.text()
     expect(text).toContain('Claude Code')
     expect(text).toContain('Codex')
     expect(text).toContain('Grok')
-    expect(text).toContain('Pi')
-    expect(text).toContain('Grok · Pi · More')
+    // dashed "more" pill in the icon strip
+    const morePill = wrapper.find('.border-dashed')
+    expect(morePill.exists()).toBe(true)
+    expect(morePill.text()).toBe('+ More')
+    expect(text).not.toContain('+ Grok · Pi · More')
   })
 
   it('renders the advantages strip and the API-only card within the showcase', () => {

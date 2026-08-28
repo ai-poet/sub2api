@@ -45,13 +45,6 @@
         <HomeProofStrip />
       </HomeReveal>
 
-      <HomeReveal v-if="hasClientDownloads" class="px-4 py-8 md:px-6 md:py-12">
-        <HomeDownloadSection
-          :windows-url="clientDownloadWindowsUrl"
-          :macos-url="clientDownloadMacOSUrl"
-        />
-      </HomeReveal>
-
       <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
         <HomeValueSection />
       </HomeReveal>
@@ -89,7 +82,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
-import HomeDownloadSection from '@/components/home/HomeDownloadSection.vue'
 import HomePricingSection from '@/components/home/HomePricingSection.vue'
 import HomeFinalCta from '@/components/home/HomeFinalCta.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'

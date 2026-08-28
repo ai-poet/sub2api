@@ -34,7 +34,8 @@ export default {
       "tags": {
         "coding": "Claude Code",
         "agent": "Codex",
-        "tools": "Grok · Pi · More"
+        "tools": "Grok · Pi · More",
+        "more": "More"
       },
       "stats": {
         "setupValue": "1 step",
@@ -121,9 +122,7 @@ export default {
         "docsCta": "Read the docs"
       },
       "cta": "Get client updates",
-      "ctaNote": "Register to get desktop client updates first.",
-      "downloadCta": "Download {platform}",
-      "downloadNote": "Desktop client downloads are available now."
+      "ctaNote": "Register to get desktop client updates first."
     },
     "clientWorkflow": {
       "ariaLabel": "CheapRouter desktop client demo: switching routing groups with one click while a task is running",
@@ -140,27 +139,27 @@ export default {
       },
       "labels": {
         "read": "读取",
-        "tool": "工具",
-        "thinking": "思考"
+        "list": "列出",
+        "thinking": "思考",
+        "edit": "编辑"
       },
+      "groupSummary": "正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改",
       "rows": {
         "r1": "main.ts",
-        "r2": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`",
+        "r2": "components",
         "r3": "constants.ts",
         "r4": "思考用时 1 秒",
         "r5": "chat.ts",
         "r6": "auth.ts",
-        "r7": "user.ts",
-        "r8": "database.ts",
-        "r9": "changelog.ts",
-        "r10": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\hooks`",
-        "r11": "index.vue",
-        "r12": "auth.ts"
+        "r7": "ChatView.vue",
+        "r8": "user.ts",
+        "r9": "hooks",
+        "r10": "index.vue"
       },
       "composer": {
         "placeholder": "做什么都可以…",
-        "model": "Grok 4.6",
-        "effort": "High",
+        "model": "gpt-5.6-sol",
+        "effort": "高",
         "access": "完全访问",
         "build": "构建",
         "stop": "停止"
@@ -196,41 +195,22 @@ export default {
       "toast": "已切换到 Codex Sale，对新启动的任务生效"
     },
     "download": {
-      "badge": "Desktop client",
-      "title": "Download the CheapRouter desktop client",
-      "description": "Install the desktop app to configure Claude Code and Codex automatically, reuse existing local settings safely, and keep usage status in one place.",
-      "privacyCode": "Auto-writes local config files without overwriting existing settings",
-      "privacyKey": "Desktop, Web, and mobile share the same usage and failure info",
-      "cta": "Download",
-      "copyCommand": "Copy command",
-      "commandCopied": "Install command copied. Paste it in your terminal to run.",
-      "recommended": "Recommended for this device",
-      "platforms": {
-        "mac": {
-          "sub": "One-line terminal install"
-        },
-        "windows": {
-          "sub": "x64 / ARM64"
-        },
-        "linux": {
-          "sub": ".deb / .rpm / AppImage"
-        }
-      }
+      "commandCopied": "Install command copied. Paste it in your terminal to run."
     },
     "value": {
       "overline": "Why CheapRouter",
-      "title": "The boring parts of running Claude Code and Codex, made easy",
-      "description": "Not another IDE, and not just another relay service. CheapRouter pulls together the scattered chores — sign up, top up, configure local tools, watch usage, debug failures — into one smooth path.",
+      "title": "An out-of-the-box, aggregated AI agent platform",
+      "description": "Not another IDE, and not just another relay. CheapRouter folds the agent client, model supply, top-ups, usage, and failure diagnostics into one platform — download, sign in, and start running tasks.",
       "items": {
         "economics": {
-          "eyebrow": "01 / Fast onboarding",
-          "title": "Local config, written for you",
-          "description": "After signing up on the desktop app, Claude Code and Codex are configured for you automatically — no more copy-pasting JSON configs, without overwriting your existing settings."
+          "eyebrow": "01 / Out of the box",
+          "title": "Sign in and you are routed — agents configured in one click",
+          "description": "After signing up, the desktop client configures Claude Code, Codex, and other agent CLIs for you automatically. Missing Node or a missing CLI is fixed in one click — no copy-pasting JSON configs, and your existing local settings stay untouched."
         },
         "reliability": {
           "eyebrow": "02 / Spend you can see",
-          "title": "One balance panel for both tools",
-          "description": "How much Claude and Codex have used, how much credit is left, what the current speed limit looks like — all in one place, no more switching between platforms."
+          "title": "One balance panel for every agent",
+          "description": "How much Claude, Codex, and Grok have each used, how much credit is left, and the current speed-limit state — all in one place. Group rate multipliers and uptime are on the table, so you can hop to a steadier, cheaper line even mid-task."
         },
         "control": {
           "eyebrow": "03 / All in one",
