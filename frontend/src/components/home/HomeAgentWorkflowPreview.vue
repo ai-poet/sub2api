@@ -3,7 +3,7 @@
     class="agent-workflow-preview"
     data-test="agent-workflow-preview"
     role="img"
-    :aria-label="t('home.clientWorkflow.ariaLabel')"
+    :aria-label="t('home.clientWorkflow.ariaLabel', { siteName: props.siteName })"
   >
     <div
       class="relative mx-auto w-full max-w-[1100px] overflow-hidden rounded-xl border border-gray-200 bg-[#F6F5F6] shadow-[0_24px_64px_rgba(15,17,20,0.12)] dark:border-white/10 dark:bg-[#1A1A1A] dark:shadow-[0_24px_64px_rgba(0,0,0,0.45)]"
@@ -286,6 +286,12 @@ import { computed, h, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
+
+const props = withDefaults(defineProps<{
+  siteName: string
+}>(), {
+  siteName: 'CheapRouter',
+})
 
 const { t } = useI18n()
 

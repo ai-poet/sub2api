@@ -20,14 +20,14 @@ export default {
     "navChangelog": "更新日志",
     "hero": {
       "badge": "Claude Code / Codex 一键接入",
-      "titleLeadPrimary": "价格竞争力的 AI 中转站",
+      "titleLeadPrimary": "具有价格竞争力的 AI 中转站",
       "titleLeadSecondary": "× Agent 桌面客户端",
       "titleAccent": "",
       "titleTail": "",
       "description": "深度合一的 Claude Code · Codex · Grok · Pi 桌面 Agent 客户端，登录即路由，余额、分组倍率、在线率一目了然。",
       "primaryNote": "一个桌面端集中管理所有 Agent CLI",
-      "downloadPrimary": "立即下载",
-      "installPrimary": "立即安装",
+      "downloadPrimary": "下载客户端",
+      "installPrimary": "复制安装命令",
       "connectApi": "自行接入API",
       "startApi": "开始接入API",
       "badgeDiscount": "比官方 API",
@@ -126,7 +126,7 @@ export default {
       "ctaNote": "注册后可第一时间获取客户端更新"
     },
     "clientWorkflow": {
-      "ariaLabel": "CheapRouter 桌面客户端演示：任务执行中一键切换分组线路",
+      "ariaLabel": "{siteName} 桌面客户端演示：任务执行中一键切换分组线路",
       "working": "工作中 · {seconds} 秒",
       "balanceBefore": "$999990.44",
       "balanceAfter": "$999990.41",
@@ -199,9 +199,9 @@ export default {
       "commandCopied": "安装命令已复制，请在终端中运行"
     },
     "value": {
-      "overline": "为什么选 CheapRouter",
+      "overline": "为什么选 {siteName}",
       "title": "开箱即用的聚合 AI Agent 供应平台",
-      "description": "不是再做一个 IDE，也不是又一个 API 中转站。CheapRouter 把 Agent 客户端、模型供应、充值计费、用量与故障诊断合成一个平台 — 下载、登录，直接开始跑任务。",
+      "description": "不是再做一个 IDE，也不是又一个 API 中转站。{siteName} 把 Agent 客户端、模型供应、充值计费、用量与故障诊断合成一个平台 — 下载、登录，直接开始跑任务。",
       "items": {
         "economics": {
           "eyebrow": "01 / 开箱即用",
@@ -227,7 +227,7 @@ export default {
       "headers": {
         "feature": "你正在用的方式",
         "official": "常见做法的盲点",
-        "us": "CheapRouter 怎么做"
+        "us": "{siteName} 怎么做",
       },
       "items": {
         "pricing": {
@@ -288,7 +288,7 @@ export default {
           "description": "Gemini、GLM、Qwen 等兼容模型同一个入口接入，价格以控制台当前显示为准，故障原因同样清楚明了。"
         }
       },
-      "note": "不承诺\"全网最低价\"。CheapRouter 关注的是总成本：一个充值入口、用多少扣多少、各线路用量分开看、额度和限速状态一目了然、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。具体折扣随服务商和模型变动，最终扣费以控制台显示价格为准。"
+      "note": "不承诺\"全网最低价\"。{siteName} 关注的是总成本：一个充值入口、用多少扣多少、各线路用量分开看、额度和限速状态一目了然、故障原因清楚 — 让 AI 编码长期跑得起、看得清、出错时找得到原因。具体折扣随服务商和模型变动，最终扣费以控制台显示价格为准。",
     },
     "providers": {
       "title": "把高级模型与本机编码工作流放进同一层服务",
@@ -304,7 +304,7 @@ export default {
     "trust": {
       "overline": "用得放心",
       "title": "钱花在哪、为什么不能用，都看得见",
-      "description": "中转服务最常见的问题是不透明：余额不知道还剩多少、报错不知道哪里坏。CheapRouter 把这些信息显式做出来，让你不用猜。",
+      "description": "中转服务最常见的问题是不透明：余额不知道还剩多少、报错不知道哪里坏。{siteName} 把这些信息显式做出来，让你不用猜。",
       "cards": {
         "gateway": {
           "title": "每条线路分开算",
@@ -334,10 +334,10 @@ export default {
       "title": "隐私政策",
       "backHome": "返回首页",
       "lastUpdated": "最后更新：2026 年 4 月",
-      "intro": "本隐私政策说明 CheapRouter（以下简称\"我们\"）在您使用本平台时如何收集、使用和保护您的信息。我们致力于保护您的隐私，尤其是代码与提示词内容。",
+      "intro": "本隐私政策说明 {siteName}（以下简称\"我们\"）在您使用本平台时如何收集、使用和保护您的信息。我们致力于保护您的隐私，尤其是代码与提示词内容。",
       "pledge": {
         "title": "代码与提示词不被存储，不用于训练",
-        "body": "您通过本平台发送的所有代码内容、提示词及对话均直接转发至官方 API，CheapRouter 不存储、不记录、不分析这些内容，也不会将其用于任何模型训练目的。"
+        "body": "您通过本平台发送的所有代码内容、提示词及对话均直接转发至官方 API，{siteName} 不存储、不记录、不分析这些内容，也不会将其用于任何模型训练目的。",
       },
       "sections": {
         "collection": {
@@ -358,7 +358,7 @@ export default {
         },
         "code": {
           "title": "三、代码与提示词保护",
-          "p1": "您通过 API 发送的所有请求内容（包括代码、提示词、对话消息）均以透明代理方式直接转发至 Anthropic、OpenAI 等官方 API，CheapRouter 不对请求内容进行存储或持久化记录。",
+          "p1": "您通过 API 发送的所有请求内容（包括代码、提示词、对话消息）均以透明代理方式直接转发至 Anthropic、OpenAI 等官方 API，{siteName} 不对请求内容进行存储或持久化记录。",
           "p2": "我们不会将您的代码或提示词用于训练、微调或评估任何机器学习模型，也不会与第三方共享这些内容。"
         },
         "apikey": {
@@ -392,7 +392,7 @@ export default {
     "terms": {
       "title": "服务条款",
       "lastUpdated": "最后更新：2026 年 4 月",
-      "intro": "欢迎使用 CheapRouter。在使用本平台前，请仔细阅读以下服务条款。注册或使用本服务即表示您同意受本条款约束。",
+      "intro": "欢迎使用 {siteName}。在使用本平台前，请仔细阅读以下服务条款。注册或使用本服务即表示您同意受本条款约束。",
       "sections": {
         "eligibility": {
           "title": "一、适用资格",
@@ -407,7 +407,7 @@ export default {
         },
         "service": {
           "title": "三、服务说明",
-          "p1": "CheapRouter 是一个 AI API 聚合代理平台，将您的请求转发至 Anthropic、OpenAI 等官方服务商。我们不对上游服务商的可用性、响应质量或内容负责。",
+          "p1": "{siteName} 是一个 AI API 聚合代理平台，将您的请求转发至 Anthropic、OpenAI 等官方服务商。我们不对上游服务商的可用性、响应质量或内容负责。",
           "p2": "我们保留在提前通知的情况下修改、暂停或终止服务的权利。因上游服务商故障、维护或不可抗力造成的服务中断不在我们的责任范围内。"
         },
         "billing": {
@@ -427,11 +427,11 @@ export default {
         },
         "ip": {
           "title": "六、知识产权",
-          "p1": "平台的界面、代码、品牌标识等知识产权归 CheapRouter 所有。您通过 API 生成的内容归属依据上游服务商的政策确定，平台不主张对生成内容的权利。"
+          "p1": "平台的界面、代码、品牌标识等知识产权归 {siteName} 所有。您通过 API 生成的内容归属依据上游服务商的政策确定，平台不主张对生成内容的权利。",
         },
         "disclaimer": {
           "title": "七、免责声明",
-          "p1": "本服务按\"现状\"提供，不作任何明示或暗示的保证。在法律允许的最大范围内，CheapRouter 不对任何间接、偶然、特殊或后果性损失承担责任，包括但不限于利润损失、数据丢失或业务中断。"
+          "p1": "本服务按\"现状\"提供，不作任何明示或暗示的保证。在法律允许的最大范围内，{siteName} 不对任何间接、偶然、特殊或后果性损失承担责任，包括但不限于利润损失、数据丢失或业务中断。",
         },
         "termination": {
           "title": "八、账户终止",

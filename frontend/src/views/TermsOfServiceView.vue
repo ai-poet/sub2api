@@ -10,21 +10,21 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          {{ t('home.privacy.backHome') }}
+          {{ pt('home.privacy.backHome') }}
         </RouterLink>
-        <span class="text-sm font-medium text-[#111] dark:text-white">{{ t('home.terms.title') }}</span>
+        <span class="text-sm font-medium text-[#111] dark:text-white">{{ pt('home.terms.title') }}</span>
       </div>
     </div>
 
     <!-- Content -->
     <article class="mx-auto max-w-[860px] px-6 py-14">
       <h1 class="text-3xl font-semibold tracking-[-0.03em] text-[#111] dark:text-white">
-        {{ t('home.terms.title') }}
+        {{ pt('home.terms.title') }}
       </h1>
-      <p class="mt-2 text-sm text-[#999] dark:text-white/38">{{ t('home.terms.lastUpdated') }}</p>
+      <p class="mt-2 text-sm text-[#999] dark:text-white/38">{{ pt('home.terms.lastUpdated') }}</p>
 
       <p class="mt-6 text-base leading-8 text-[#5f5850] dark:text-white/65">
-        {{ t('home.terms.intro') }}
+        {{ pt('home.terms.intro') }}
       </p>
 
       <div class="mt-10 space-y-10">
@@ -44,7 +44,7 @@
       <!-- Contact -->
       <div class="mt-10 border-t border-black/8 pt-8 dark:border-white/10">
         <p class="text-sm leading-7 text-[#999] dark:text-white/38">
-          {{ t('home.terms.contact') }}
+          {{ pt('home.terms.contact') }}
         </p>
       </div>
     </article>
@@ -54,73 +54,82 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAppStore } from '@/stores/app'
 
 const { t } = useI18n()
+const appStore = useAppStore()
+
+const siteName = computed(() => {
+  const configuredName = appStore.cachedPublicSettings?.site_name?.trim() || appStore.siteName.trim()
+  return configuredName && configuredName !== 'Sub2API' ? configuredName : 'CheapRouter'
+})
+
+const pt = (key: string) => t(key, { siteName: siteName.value })
 
 const sections = computed(() => [
   {
     id: 'eligibility',
-    title: t('home.terms.sections.eligibility.title'),
-    paragraphs: [t('home.terms.sections.eligibility.p1')],
+    title: pt('home.terms.sections.eligibility.title'),
+    paragraphs: [pt('home.terms.sections.eligibility.p1')],
   },
   {
     id: 'account',
-    title: t('home.terms.sections.account.title'),
-    paragraphs: [t('home.terms.sections.account.p1')],
+    title: pt('home.terms.sections.account.title'),
+    paragraphs: [pt('home.terms.sections.account.p1')],
     items: [
-      t('home.terms.sections.account.i1'),
-      t('home.terms.sections.account.i2'),
-      t('home.terms.sections.account.i3'),
+      pt('home.terms.sections.account.i1'),
+      pt('home.terms.sections.account.i2'),
+      pt('home.terms.sections.account.i3'),
     ],
   },
   {
     id: 'service',
-    title: t('home.terms.sections.service.title'),
+    title: pt('home.terms.sections.service.title'),
     paragraphs: [
-      t('home.terms.sections.service.p1'),
-      t('home.terms.sections.service.p2'),
+      pt('home.terms.sections.service.p1'),
+      pt('home.terms.sections.service.p2'),
     ],
   },
   {
     id: 'billing',
-    title: t('home.terms.sections.billing.title'),
-    paragraphs: [t('home.terms.sections.billing.p1')],
+    title: pt('home.terms.sections.billing.title'),
+    paragraphs: [pt('home.terms.sections.billing.p1')],
     items: [
-      t('home.terms.sections.billing.i1'),
-      t('home.terms.sections.billing.i2'),
-      t('home.terms.sections.billing.i3'),
+      pt('home.terms.sections.billing.i1'),
+      pt('home.terms.sections.billing.i2'),
+      pt('home.terms.sections.billing.i3'),
     ],
   },
   {
     id: 'prohibited',
-    title: t('home.terms.sections.prohibited.title'),
-    paragraphs: [t('home.terms.sections.prohibited.p1')],
+    title: pt('home.terms.sections.prohibited.title'),
+    paragraphs: [pt('home.terms.sections.prohibited.p1')],
     items: [
-      t('home.terms.sections.prohibited.i1'),
-      t('home.terms.sections.prohibited.i2'),
-      t('home.terms.sections.prohibited.i3'),
-      t('home.terms.sections.prohibited.i4'),
+      pt('home.terms.sections.prohibited.i1'),
+      pt('home.terms.sections.prohibited.i2'),
+      pt('home.terms.sections.prohibited.i3'),
+      pt('home.terms.sections.prohibited.i4'),
     ],
   },
   {
     id: 'ip',
-    title: t('home.terms.sections.ip.title'),
-    paragraphs: [t('home.terms.sections.ip.p1')],
+    title: pt('home.terms.sections.ip.title'),
+    paragraphs: [pt('home.terms.sections.ip.p1')],
   },
   {
     id: 'disclaimer',
-    title: t('home.terms.sections.disclaimer.title'),
-    paragraphs: [t('home.terms.sections.disclaimer.p1')],
+    title: pt('home.terms.sections.disclaimer.title'),
+    paragraphs: [pt('home.terms.sections.disclaimer.p1')],
   },
   {
     id: 'termination',
-    title: t('home.terms.sections.termination.title'),
-    paragraphs: [t('home.terms.sections.termination.p1')],
+    title: pt('home.terms.sections.termination.title'),
+    paragraphs: [pt('home.terms.sections.termination.p1')],
   },
   {
     id: 'changes',
-    title: t('home.terms.sections.changes.title'),
-    paragraphs: [t('home.terms.sections.changes.p1')],
+    title: pt('home.terms.sections.changes.title'),
+    paragraphs: [pt('home.terms.sections.changes.p1')],
   },
 ])
 </script>

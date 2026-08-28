@@ -147,7 +147,7 @@
         <span v-if="hasPricing && cnyPerUsd != null">
           {{ t('home.pricingTable.currencyNote', { rate: cnyPerUsd.toFixed(2) }) }}
         </span>
-        {{ t('home.pricingTable.note') }}
+        {{ t('home.pricingTable.note', { siteName: props.siteName }) }}
       </p>
     </div>
   </section>
@@ -159,6 +159,12 @@ import { useI18n } from 'vue-i18n'
 import { fetchPublicCurrencyRates, getPublicPricing, type PublicPricingItem } from '@/api/pricing'
 import { useAppStore } from '@/stores/app'
 import { formatScaled } from '@/utils/pricing'
+
+const props = withDefaults(defineProps<{
+  siteName: string
+}>(), {
+  siteName: 'CheapRouter',
+})
 
 const { t } = useI18n()
 const appStore = useAppStore()

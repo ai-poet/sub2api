@@ -33,6 +33,7 @@
 
     <main class="relative z-10">
       <HomeHero
+        :site-name="siteName"
         :site-subtitle="siteSubtitle"
         :doc-url="docUrl"
         :is-authenticated="isAuthenticated"
@@ -45,20 +46,20 @@
         <HomeProofStrip />
       </HomeReveal>
 
-      <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
-        <HomeValueSection />
+      <HomeReveal v-if="hasClientDownloads" class="px-4 py-12 md:px-6 md:py-16">
+        <HomeValueSection :site-name="siteName" />
       </HomeReveal>
 
       <HomeReveal id="pricing" class="px-4 py-8 md:px-6 md:py-12">
-        <HomePricingSection />
+        <HomePricingSection :site-name="siteName" />
       </HomeReveal>
 
       <HomeReveal class="px-4 pb-8 md:px-6">
-        <HomeComparisonSection />
+        <HomeComparisonSection :site-name="siteName" />
       </HomeReveal>
 
       <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
-        <HomeTrustSection />
+        <HomeTrustSection :site-name="siteName" />
       </HomeReveal>
     </main>
 

@@ -8,7 +8,7 @@
         {{ t('home.trust.title') }}
       </h2>
       <p class="mt-5 max-w-[48rem] text-lg leading-8 text-[#5f5850] dark:text-white/68">
-        {{ t('home.trust.description') }}
+        {{ t('home.trust.description', { siteName: props.siteName }) }}
       </p>
     </div>
 
@@ -45,6 +45,12 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
+
+const props = withDefaults(defineProps<{
+  siteName: string
+}>(), {
+  siteName: 'CheapRouter',
+})
 
 const { t } = useI18n()
 

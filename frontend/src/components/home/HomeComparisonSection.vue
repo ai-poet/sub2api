@@ -14,7 +14,7 @@
         <div class="hidden grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)] bg-[#16181d] px-6 py-4 text-sm font-semibold text-white md:grid">
           <div>{{ t('home.comparison.headers.feature') }}</div>
           <div class="text-white/62">{{ t('home.comparison.headers.official') }}</div>
-          <div class="text-primary-300">{{ t('home.comparison.headers.us') }}</div>
+          <div class="text-primary-300">{{ t('home.comparison.headers.us', { siteName: props.siteName }) }}</div>
         </div>
 
         <div class="divide-y divide-black/8 bg-white/82 dark:divide-white/10 dark:bg-[#14181f]/82">
@@ -34,7 +34,7 @@
             </div>
             <div class="text-sm leading-7 text-[#161616] dark:text-white">
               <div class="mb-1 text-[11px] uppercase tracking-[0.18em] text-primary-600 dark:text-primary-300 md:hidden">
-                {{ t('home.comparison.headers.us') }}
+                {{ t('home.comparison.headers.us', { siteName: props.siteName }) }}
               </div>
               {{ row.us }}
             </div>
@@ -48,6 +48,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+const props = withDefaults(defineProps<{
+  siteName: string
+}>(), {
+  siteName: 'CheapRouter',
+})
 
 const { t } = useI18n()
 

@@ -7,13 +7,13 @@ const translations: Record<string, string> = {
   'home.hero.tags.agent': 'Codex',
   'home.hero.tags.tools': 'Grok · Pi · More',
   'home.hero.tags.more': 'More',
-  'home.hero.titleLeadPrimary': 'Price-competitive AI relay',
+  'home.hero.titleLeadPrimary': 'A price-competitive AI relay',
   'home.hero.titleLeadSecondary': '× Agent desktop client',
   'home.hero.titleAccent': '',
   'home.hero.titleTail': '',
   'home.hero.primaryNote': 'Use one key everywhere.',
-  'home.hero.downloadPrimary': 'Download now',
-  'home.hero.installPrimary': 'Install now',
+  'home.hero.downloadPrimary': 'Download client',
+  'home.hero.installPrimary': 'Copy install command',
   'home.download.commandCopied': 'Install command copied',
   'home.hero.connectApi': 'Use the API',
   'home.hero.startApi': 'Start with the API',
@@ -175,7 +175,7 @@ describe('HomeHero', () => {
     expect(downloadLink.exists()).toBe(true)
     expect(downloadLink.attributes('href')).toBe('https://downloads.example.com/windows.exe')
     expect(downloadLink.attributes('data-platform')).toBe('windows')
-    expect(downloadLink.text()).toContain('Download now')
+    expect(downloadLink.text()).toContain('Download client')
     const platformDownloads = wrapper.findAll('[data-test="hero-platform-download"]')
     expect(platformDownloads).toHaveLength(0)
     expect(wrapper.text()).not.toContain('Download macOS')
@@ -197,7 +197,7 @@ describe('HomeHero', () => {
     expect(installButton.exists()).toBe(true)
     expect(installButton.element.tagName).toBe('BUTTON')
     expect(installButton.attributes('data-platform')).toBe('macos')
-    expect(installButton.text()).toContain('Install now')
+    expect(installButton.text()).toContain('Copy install command')
     expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
   })
 

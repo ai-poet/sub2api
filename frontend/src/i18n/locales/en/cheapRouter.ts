@@ -20,14 +20,14 @@ export default {
     "navChangelog": "Changelog",
     "hero": {
       "badge": "One-click Claude Code / Codex",
-      "titleLeadPrimary": "Price-competitive AI relay",
+      "titleLeadPrimary": "A price-competitive AI relay",
       "titleLeadSecondary": "× Agent desktop client",
       "titleAccent": "",
       "titleTail": "",
       "description": "Deeply unified desktop agent client for Claude Code · Codex · Grok · Pi — sign in and you are routed, with balance, group rates, and uptime at a glance.",
       "primaryNote": "One desktop client for all your agent CLIs",
-      "downloadPrimary": "Download now",
-      "installPrimary": "Install now",
+      "downloadPrimary": "Download client",
+      "installPrimary": "Copy install command",
       "connectApi": "Use the API",
       "startApi": "Start with the API",
       "badgeDiscount": "vs official API",
@@ -126,7 +126,7 @@ export default {
       "ctaNote": "Register to get desktop client updates first."
     },
     "clientWorkflow": {
-      "ariaLabel": "CheapRouter desktop client demo: switching routing groups with one click while a task is running",
+      "ariaLabel": "{siteName} desktop client demo: switching routing groups with one click while a task is running",
       "working": "工作中 · {seconds} 秒",
       "balanceBefore": "$999990.44",
       "balanceAfter": "$999990.41",
@@ -199,9 +199,9 @@ export default {
       "commandCopied": "Install command copied. Paste it in your terminal to run."
     },
     "value": {
-      "overline": "Why CheapRouter",
+      "overline": "Why {siteName}",
       "title": "An out-of-the-box, aggregated AI agent platform",
-      "description": "Not another IDE, and not just another relay. CheapRouter folds the agent client, model supply, top-ups, usage, and failure diagnostics into one platform — download, sign in, and start running tasks.",
+      "description": "Not another IDE, and not just another relay. {siteName} folds the agent client, model supply, top-ups, usage, and failure diagnostics into one platform — download, sign in, and start running tasks.",
       "items": {
         "economics": {
           "eyebrow": "01 / Out of the box",
@@ -227,7 +227,7 @@ export default {
       "headers": {
         "feature": "How you do it today",
         "official": "Where it falls short",
-        "us": "How CheapRouter handles it"
+        "us": "How {siteName} handles it",
       },
       "items": {
         "pricing": {
@@ -288,7 +288,7 @@ export default {
           "description": "Gemini, GLM, Qwen and more compatible models share the same entry; pricing follows what you see in your dashboard, with clear failure messages too."
         }
       },
-      "note": "No \"absolute lowest price\" promise here. CheapRouter focuses on total cost: one place to top up, pay for what you use, usage tracked per line, visible credit and speed limits, and clear failure reasons. Discounts vary by provider and model — final billing follows the price shown in your dashboard."
+      "note": "No \"absolute lowest price\" promise here. {siteName} focuses on total cost: one place to top up, pay for what you use, usage tracked per line, visible credit and speed limits, and clear failure reasons. Discounts vary by provider and model — final billing follows the price shown in your dashboard.",
     },
     "providers": {
       "title": "Premium models and local coding workflows under one service layer",
@@ -304,7 +304,7 @@ export default {
     "trust": {
       "overline": "Run with confidence",
       "title": "See where the money goes and why it cannot run",
-      "description": "The biggest pain with relay services is opacity — you do not know how much balance is left, and you do not know what broke. CheapRouter makes those two things explicit so you do not have to guess.",
+      "description": "The biggest pain with relay services is opacity — you do not know how much balance is left, and you do not know what broke. {siteName} makes those two things explicit so you do not have to guess.",
       "cards": {
         "gateway": {
           "title": "Each line billed separately",
@@ -334,10 +334,10 @@ export default {
       "title": "Privacy Policy",
       "backHome": "Back to home",
       "lastUpdated": "Last updated: April 2026",
-      "intro": "This Privacy Policy explains how CheapRouter (\"we\", \"us\") collects, uses, and protects your information when you use our platform. We are committed to protecting your privacy, especially your code and prompt content.",
+      "intro": "This Privacy Policy explains how {siteName} (\"we\", \"us\") collects, uses, and protects your information when you use our platform. We are committed to protecting your privacy, especially your code and prompt content.",
       "pledge": {
         "title": "Your code and prompts are never stored or used for training",
-        "body": "All code, prompts, and conversation content you send through CheapRouter is forwarded directly to the official upstream API. We do not store, log, or analyze request content, and we never use it for model training or any other purpose."
+        "body": "All code, prompts, and conversation content you send through {siteName} is forwarded directly to the official upstream API. We do not store, log, or analyze request content, and we never use it for model training or any other purpose.",
       },
       "sections": {
         "collection": {
@@ -358,12 +358,12 @@ export default {
         },
         "code": {
           "title": "3. Code & Prompt Protection",
-          "p1": "All request content you send via the API, including code, prompts, and conversation messages, is forwarded transparently to the official Anthropic and OpenAI APIs. CheapRouter does not persist or store request content.",
+          "p1": "All request content you send via the API, including code, prompts, and conversation messages, is forwarded transparently to the official Anthropic and OpenAI APIs. {siteName} does not persist or store request content.",
           "p2": "We will never use your code or prompts to train, fine-tune, or evaluate any machine learning model, and we will not share this content with third parties."
         },
         "apikey": {
           "title": "4. API Key Security",
-          "p1": "API keys you generate on this platform are stored encrypted at rest. Upstream API credentials used to call model providers are managed centrally by the platform and are never exposed to users. Keep your CheapRouter API key safe. If you suspect compromise, reset it immediately in the dashboard."
+          "p1": "API keys you generate on this platform are stored encrypted at rest. Upstream API credentials used to call model providers are managed centrally by the platform and are never exposed to users. Keep your {siteName} API key safe. If you suspect compromise, reset it immediately in the dashboard.",
         },
         "third": {
           "title": "5. Third-Party Services",
@@ -392,7 +392,7 @@ export default {
     "terms": {
       "title": "Terms of Service",
       "lastUpdated": "Last updated: April 2026",
-      "intro": "Welcome to CheapRouter. Please read these Terms of Service carefully before using our platform. By registering or using the service, you agree to be bound by these terms.",
+      "intro": "Welcome to {siteName}. Please read these Terms of Service carefully before using our platform. By registering or using the service, you agree to be bound by these terms.",
       "sections": {
         "eligibility": {
           "title": "1. Eligibility",
@@ -407,7 +407,7 @@ export default {
         },
         "service": {
           "title": "3. Service Description",
-          "p1": "CheapRouter is an AI API aggregation proxy that forwards your requests to official providers such as Anthropic and OpenAI. We are not responsible for the availability, response quality, or content of upstream providers.",
+          "p1": "{siteName} is an AI API aggregation proxy that forwards your requests to official providers such as Anthropic and OpenAI. We are not responsible for the availability, response quality, or content of upstream providers.",
           "p2": "We reserve the right to modify, suspend, or terminate the service with advance notice. Service interruptions caused by upstream provider outages, maintenance, or force majeure events are outside our responsibility."
         },
         "billing": {
@@ -427,11 +427,11 @@ export default {
         },
         "ip": {
           "title": "6. Intellectual Property",
-          "p1": "The platform interface, codebase, and branding are the intellectual property of CheapRouter. Ownership of content generated via the API is governed by the upstream provider policies. We make no claim over generated output."
+          "p1": "The platform interface, codebase, and branding are the intellectual property of {siteName}. Ownership of content generated via the API is governed by the upstream provider policies. We make no claim over generated output.",
         },
         "disclaimer": {
           "title": "7. Disclaimer of Warranties",
-          "p1": "This service is provided \"as is\" without any express or implied warranties. To the maximum extent permitted by law, CheapRouter is not liable for any indirect, incidental, special, or consequential damages, including but not limited to lost profits, data loss, or business interruption."
+          "p1": "This service is provided \"as is\" without any express or implied warranties. To the maximum extent permitted by law, {siteName} is not liable for any indirect, incidental, special, or consequential damages, including but not limited to lost profits, data loss, or business interruption."
         },
         "termination": {
           "title": "8. Account Termination",

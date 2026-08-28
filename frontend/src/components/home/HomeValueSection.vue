@@ -2,13 +2,13 @@
   <section class="mx-auto max-w-[1380px]">
     <div class="max-w-[980px]">
       <p class="text-[11px] uppercase tracking-[0.24em] text-[#7a7268] dark:text-white/42">
-        {{ t('home.value.overline') }}
+        {{ t('home.value.overline', { siteName }) }}
       </p>
       <h2 class="mt-4 max-w-[16ch] text-4xl font-semibold leading-[1.1] tracking-[-0.04em] text-[#111111] dark:text-white md:text-5xl [text-wrap:balance]">
-        {{ t('home.value.title') }}
+        {{ t('home.value.title', { siteName }) }}
       </h2>
       <p class="mt-5 max-w-[48rem] text-lg leading-8 text-[#5f5850] dark:text-white/68">
-        {{ t('home.value.description') }}
+        {{ t('home.value.description', { siteName }) }}
       </p>
     </div>
 
@@ -43,25 +43,31 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 
+const props = withDefaults(defineProps<{
+  siteName: string
+}>(), {
+  siteName: 'CheapRouter',
+})
+
 const { t } = useI18n()
 
 const valueItems = computed(() => [
   {
-    eyebrow: t('home.value.items.economics.eyebrow'),
-    title: t('home.value.items.economics.title'),
-    description: t('home.value.items.economics.description'),
+    eyebrow: t('home.value.items.economics.eyebrow', { siteName: props.siteName }),
+    title: t('home.value.items.economics.title', { siteName: props.siteName }),
+    description: t('home.value.items.economics.description', { siteName: props.siteName }),
     icon: 'dollar' as const,
   },
   {
-    eyebrow: t('home.value.items.reliability.eyebrow'),
-    title: t('home.value.items.reliability.title'),
-    description: t('home.value.items.reliability.description'),
+    eyebrow: t('home.value.items.reliability.eyebrow', { siteName: props.siteName }),
+    title: t('home.value.items.reliability.title', { siteName: props.siteName }),
+    description: t('home.value.items.reliability.description', { siteName: props.siteName }),
     icon: 'server' as const,
   },
   {
-    eyebrow: t('home.value.items.control.eyebrow'),
-    title: t('home.value.items.control.title'),
-    description: t('home.value.items.control.description'),
+    eyebrow: t('home.value.items.control.eyebrow', { siteName: props.siteName }),
+    title: t('home.value.items.control.title', { siteName: props.siteName }),
+    description: t('home.value.items.control.description', { siteName: props.siteName }),
     icon: 'chartBar' as const,
   },
 ])

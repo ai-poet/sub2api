@@ -74,7 +74,7 @@
         >
           <span>{{ t('home.hero.connectApi') }}</span>
           <Icon name="arrowRight" size="sm" />
-          </router-link>
+        </router-link>
         <router-link
           v-if="!primaryClientDownloadOption"
           :to="primaryTo"
@@ -105,6 +105,22 @@
         </router-link>
       </div>
 
+      <!-- macOS install command preview -->
+      <div
+        v-if="primaryClientDownloadOption && primaryClientDownloadOption.type === 'command'"
+        class="mt-4 flex max-w-2xl items-center gap-2 rounded-2xl border border-black/8 bg-[#16181d] p-2 pl-4 font-mono text-sm text-white shadow-sm dark:border-white/10 dark:bg-[#0f1114]"
+        data-test="hero-install-command"
+      >
+        <code class="min-w-0 flex-1 truncate text-white/90">{{ primaryClientDownloadOption.url }}</code>
+        <button
+          type="button"
+          class="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+          @click="handlePrimaryClick"
+        >
+          {{ t('home.hero.installPrimary') }}
+        </button>
+      </div>
+
       <!-- Note -->
       <p
         v-if="hasClientDownloads"
@@ -123,7 +139,7 @@
         </span>
       </div>
 
-      <HomeAgentWorkflowPreview />
+      <HomeAgentWorkflowPreview :site-name="siteName" />
 
       <!-- Client advantages strip -->
       <div data-test="client-advantages" class="mt-6 grid gap-3 sm:grid-cols-3">
@@ -189,14 +205,17 @@ import {
   getClientDownloadOptions,
 } from '@/utils/clientDownloads'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
+  siteName: string
   siteSubtitle: string
   docUrl: string
   isAuthenticated: boolean
   dashboardPath: string
   windowsUrl?: string
   macosUrl?: string
-}>()
+}>(), {
+  siteName: 'CheapRouter',
+})
 
 const { t } = useI18n()
 const { copyToClipboard } = useClipboard()
