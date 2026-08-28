@@ -2,1675 +2,483 @@
   <div
     class="agent-workflow-preview"
     data-test="agent-workflow-preview"
+    role="img"
     :aria-label="t('home.clientWorkflow.ariaLabel')"
   >
-    <div class="paseo-client-shell">
-      <AgentWorkflowSidebar :frame="frame" @select="onSelectWorktree" />
+    <div
+      class="relative mx-auto w-full max-w-[1100px] overflow-hidden rounded-xl border border-gray-200 bg-[#f7f6f4] shadow-[0_24px_64px_rgba(15,17,20,0.12)] dark:border-white/10 dark:bg-[#1a1c1f] dark:shadow-[0_24px_64px_rgba(0,0,0,0.45)]"
+    >
+      <div class="flex items-stretch">
+        <!-- ===== LEFT SIDEBAR ===== -->
+        <aside
+          class="hidden w-[230px] shrink-0 flex-col border-r border-black/[0.06] bg-[#efede9] sm:flex dark:border-white/[0.06] dark:bg-[#151719]"
+        >
+          <!-- Window controls row -->
+          <div class="flex items-center gap-1 px-3 pt-3 text-gray-400 dark:text-white/30">
+            <Glyph :d="glyphs.panelCollapse" class="h-4 w-4" />
+            <span class="flex-1"></span>
+            <Icon name="chevronLeft" size="sm" />
+            <Icon name="chevronRight" size="sm" class="opacity-40" />
+          </div>
 
-      <main class="workspace-column">
-        <header class="screen-header">
-          <div class="header-left">
-            <button class="header-icon-slot" type="button" aria-hidden="true">
-              <Icon name="menu" size="sm" />
-            </button>
-            <div class="header-title-container">
-              <span class="header-title">{{ activeWorktreeName }}</span>
+          <!-- Primary nav -->
+          <nav class="mt-2 space-y-0.5 px-2">
+            <div class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-gray-700 dark:text-white/70">
+              <Icon name="edit" size="sm" class="text-gray-500 dark:text-white/40" />
+              <span>{{ t('home.clientWorkflow.sidebar.newTask') }}</span>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-gray-700 dark:text-white/70">
+              <Icon name="search" size="sm" class="text-gray-500 dark:text-white/40" />
+              <span>{{ t('home.clientWorkflow.sidebar.search') }}</span>
+            </div>
+          </nav>
+
+          <!-- Section: today -->
+          <div class="mt-4 flex items-center px-4 text-[11px] font-medium text-gray-400 dark:text-white/30">
+            <span>{{ t('home.clientWorkflow.sidebar.today') }}</span>
+            <span class="ml-auto flex items-center gap-1.5">
+              <Icon name="arrowsUpDown" size="xs" />
+              <Icon name="more" size="xs" />
+            </span>
+          </div>
+
+          <!-- Active task card -->
+          <div class="mx-2 mt-1 rounded-lg bg-black/[0.06] px-3 py-2 dark:bg-white/[0.07]">
+            <div class="flex items-center justify-between gap-2">
+              <span class="truncate text-[13px] font-medium text-gray-900 dark:text-white">
+                {{ t('home.clientWorkflow.sidebar.taskTitle') }}
+              </span>
+              <span
+                class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-orange-500/25 border-t-orange-500 motion-safe:animate-spin"
+                aria-hidden="true"
+              ></span>
+            </div>
+            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-white/40">
+              <Glyph :d="glyphs.folder" class="h-3 w-3 shrink-0" />
+              <span class="truncate">{{ t('home.clientWorkflow.sidebar.project') }}</span>
+              <span class="shrink-0">{{ t('home.clientWorkflow.working', { seconds: frame.seconds }) }}</span>
             </div>
           </div>
-          <div class="header-right">
-            <span class="header-balance">
-              <Icon name="creditCard" size="sm" />
-              {{ t('home.clientWorkflow.balance') }}
-            </span>
-            <button class="source-control-button" type="button" aria-hidden="true" :title="diffTooltip">
-              <Icon name="clipboard" size="sm" />
-              <span class="diff-add">{{ activeDiff.additions }}</span>
-              <span class="diff-del">{{ activeDiff.deletions }}</span>
-            </button>
-          </div>
-        </header>
 
-        <div class="workspace-tabs-row">
-          <div class="tab-chip active">
-            <span class="tab-focus-indicator"></span>
-            <span class="tab-handle">
-              <span class="tab-icon">
-                <span class="provider-dot">◎</span>
+          <!-- Footer: account -->
+          <div
+            class="mt-auto flex items-center gap-2 border-t border-black/[0.06] px-3 py-2.5 text-[12px] text-gray-500 dark:border-white/[0.06] dark:text-white/40"
+          >
+            <Icon name="cog" size="sm" />
+            <span class="truncate">{{ t('home.clientWorkflow.sidebar.email') }}</span>
+          </div>
+        </aside>
+
+        <!-- ===== MAIN AREA ===== -->
+        <div class="flex min-w-0 flex-1 flex-col">
+          <!-- Titlebar -->
+          <div class="flex items-center justify-between px-4 py-2.5 sm:px-5">
+            <span class="text-[13px] font-semibold text-gray-900 dark:text-white">
+              {{ t('home.clientWorkflow.sidebar.taskTitle') }}
+            </span>
+            <Icon name="infoCircle" size="sm" class="text-gray-400 dark:text-white/30" />
+          </div>
+
+          <!-- Transcript: tool rows -->
+          <div class="flex-1 space-y-1.5 px-4 sm:px-5">
+            <div
+              v-for="(row, i) in rows"
+              :key="i"
+              class="flex items-center gap-2 rounded-lg border border-black/[0.05] bg-white px-3 py-[5px] transition-all duration-300 ease-out dark:border-white/[0.06] dark:bg-white/5"
+              :class="i < frame.visibleRows ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'"
+            >
+              <Glyph :d="row.icon" class="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-white/35" />
+              <span class="shrink-0 text-[12px] font-semibold text-gray-800 dark:text-white/80">{{ row.label }}</span>
+              <span class="truncate text-[12px] text-gray-500 dark:text-white/45">{{ row.text }}</span>
+              <Icon name="chevronRight" size="xs" class="ml-auto shrink-0 text-gray-300 dark:text-white/20" />
+            </div>
+          </div>
+
+          <!-- Working line -->
+          <div class="flex items-center gap-2 px-5 py-2 text-[12px] text-gray-400 dark:text-white/35 sm:px-6">
+            <span class="preview-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span>{{ t('home.clientWorkflow.working', { seconds: frame.seconds }) }}</span>
+          </div>
+
+          <!-- Composer -->
+          <div
+            class="mx-4 rounded-xl border border-black/[0.08] bg-white p-3 shadow-sm sm:mx-5 dark:border-white/10 dark:bg-white/[0.04]"
+          >
+            <div class="px-1 text-[13px] text-gray-400 dark:text-white/30">
+              {{ t('home.clientWorkflow.composer.placeholder') }}
+            </div>
+            <div class="mt-3 flex items-center gap-1 text-[11px] text-gray-500 dark:text-white/45">
+              <span class="flex items-center gap-1.5 rounded-full px-2 py-1">
+                <Glyph :d="glyphs.provider" class="h-3 w-3" />
+                <span class="font-medium text-gray-700 dark:text-white/70">{{ t('home.clientWorkflow.composer.model') }}</span>
+                <Icon name="chevronDown" size="xs" class="text-gray-300 dark:text-white/20" />
               </span>
-              <span class="tab-label">{{ activeWorktreeName || t('home.clientWorkflow.tabAgent') }}</span>
+              <span class="rounded-full px-2 py-1">{{ t('home.clientWorkflow.composer.effort') }}</span>
+              <span class="flex items-center gap-1 rounded-full px-2 py-1">
+                <Icon name="lock" size="xs" />
+                <span>{{ t('home.clientWorkflow.composer.access') }}</span>
+              </span>
+              <span class="hidden items-center gap-1 rounded-full px-2 py-1 sm:flex">
+                <Glyph :d="glyphs.wrench" class="h-3 w-3" />
+                <span>{{ t('home.clientWorkflow.composer.build') }}</span>
+              </span>
+              <span
+                class="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-900 dark:bg-white"
+                :title="t('home.clientWorkflow.composer.stop')"
+              >
+                <span class="h-2.5 w-2.5 rounded-[2px] bg-white dark:bg-gray-900"></span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Status bar -->
+          <div
+            class="mt-3 flex items-center gap-3 border-t border-black/[0.05] px-4 py-2 text-[11px] text-gray-500 sm:px-5 dark:border-white/[0.06] dark:text-white/40"
+          >
+            <span class="flex min-w-0 items-center gap-1">
+              <Glyph :d="glyphs.folder" class="h-3 w-3 shrink-0" />
+              <span class="truncate">{{ t('home.clientWorkflow.statusBar.project') }}</span>
             </span>
-            <button class="tab-close-button" type="button" aria-hidden="true" tabindex="-1">
-              <Icon name="x" size="xs" />
-            </button>
+            <span class="flex shrink-0 items-center gap-1">
+              <Glyph :d="glyphs.display" class="h-3 w-3" />
+              <span>{{ t('home.clientWorkflow.statusBar.local') }}</span>
+            </span>
+            <span class="flex shrink-0 items-center gap-1">
+              <Glyph :d="glyphs.branch" class="h-3 w-3" />
+              <span>{{ t('home.clientWorkflow.statusBar.branch') }}</span>
+            </span>
+            <span
+              class="ml-auto flex shrink-0 items-center gap-1 tabular-nums transition-colors duration-300"
+              :class="frame.balanceUpdated ? 'text-emerald-600 dark:text-emerald-400' : ''"
+            >
+              <Glyph :d="glyphs.wallet" class="h-3 w-3" />
+              <span>{{ balanceText }}</span>
+            </span>
           </div>
-          <button class="new-tab-action-button" type="button" aria-hidden="true">
-            <Icon name="plus" size="sm" />
-          </button>
-          <button class="new-tab-action-button" type="button" aria-hidden="true">
-            <Icon name="terminal" size="sm" />
-          </button>
         </div>
+      </div>
 
-        <AgentWorkflowStream :project-name="previewProjectName" :frame="frame" @replay="restart" />
+      <!-- ===== ACCOUNT MENU OVERLAY ===== -->
+      <div
+        class="absolute bottom-11 left-2 z-20 w-[236px] origin-bottom-left rounded-xl border border-black/10 bg-white p-1.5 shadow-xl transition-all duration-200 ease-out dark:border-white/10 dark:bg-[#232629]"
+        :class="frame.menuOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'"
+        data-test="preview-account-menu"
+      >
+        <div class="px-2.5 pb-1 pt-2 text-[12px] font-semibold text-gray-900 dark:text-white">
+          {{ t('home.clientWorkflow.menu.balance', { amount: balanceText }) }}
+        </div>
+        <div class="rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          {{ t('home.clientWorkflow.menu.topUp') }}
+        </div>
+        <div class="my-1 h-px bg-black/5 dark:bg-white/10"></div>
+        <div class="flex items-center rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          <span>{{ t('home.clientWorkflow.menu.claudeGroup') }}</span>
+          <span class="ml-auto flex items-center gap-0.5 text-gray-400 dark:text-white/35">
+            {{ t('home.clientWorkflow.menu.claudeValue') }}
+            <Icon name="chevronRight" size="xs" />
+          </span>
+        </div>
+        <div
+          class="flex items-center rounded-lg bg-black/[0.05] px-2.5 py-1.5 text-[12px] text-gray-900 dark:bg-white/[0.08] dark:text-white"
+        >
+          <span>{{ t('home.clientWorkflow.menu.codexGroup') }}</span>
+          <span class="ml-auto flex items-center gap-0.5 text-gray-500 dark:text-white/45">
+            {{ frame.saleSelected ? t('home.clientWorkflow.menu.codexValueAfter') : t('home.clientWorkflow.menu.codexValueBefore') }}
+            <Icon name="chevronRight" size="xs" />
+          </span>
+        </div>
+        <div class="flex items-center rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          <span>{{ t('home.clientWorkflow.menu.grokGroup') }}</span>
+          <span class="ml-auto flex items-center gap-0.5 text-gray-400 dark:text-white/35">
+            {{ t('home.clientWorkflow.menu.grokValue') }}
+            <Icon name="chevronRight" size="xs" />
+          </span>
+        </div>
+        <div class="my-1 h-px bg-black/5 dark:bg-white/10"></div>
+        <div class="rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          {{ t('home.clientWorkflow.menu.modelPlaza') }}
+        </div>
+        <div class="rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          {{ t('home.clientWorkflow.menu.usage') }}
+        </div>
+        <div class="my-1 h-px bg-black/5 dark:bg-white/10"></div>
+        <div class="rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          {{ t('home.clientWorkflow.menu.logout') }}
+        </div>
+      </div>
 
-        <footer v-show="frame.liveComposerVisible" class="composer-section">
-          <div class="composer-content">
-            <AgentWorkflowComposer variant="live" :frame="frame" />
-          </div>
-        </footer>
-      </main>
+      <!-- ===== SECOND-LEVEL GROUP SUBMENU ===== -->
+      <div
+        class="absolute bottom-[10rem] left-[244px] z-30 w-[236px] origin-left rounded-xl border border-black/10 bg-white p-1.5 shadow-xl transition-all duration-200 ease-out max-sm:left-auto max-sm:right-2 dark:border-white/10 dark:bg-[#232629]"
+        :class="frame.submenuOpen ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-1 opacity-0'"
+        data-test="preview-group-submenu"
+      >
+        <div class="rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          {{ t('home.clientWorkflow.menu.submenu.default') }}
+        </div>
+        <div class="flex items-center rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          <span>{{ t('home.clientWorkflow.menu.submenu.codexName') }}</span>
+          <span class="ml-1.5 text-[10px] text-gray-400 dark:text-white/30">{{ t('home.clientWorkflow.menu.submenu.codexMeta') }}</span>
+          <Icon v-if="!frame.saleSelected" name="check" size="xs" class="ml-auto text-gray-700 dark:text-white/80" />
+        </div>
+        <div
+          class="flex items-center rounded-lg px-2.5 py-1.5 text-[12px] text-gray-900 dark:text-white"
+          :class="frame.saleFlash ? 'preview-flash' : frame.saleSelected ? 'bg-black/[0.05] dark:bg-white/[0.08]' : ''"
+          data-test="preview-sale-row"
+        >
+          <span>{{ t('home.clientWorkflow.menu.submenu.saleName') }}</span>
+          <span class="ml-1.5 text-[10px] text-gray-400 dark:text-white/30">{{ t('home.clientWorkflow.menu.submenu.saleMeta') }}</span>
+          <Icon v-if="frame.saleSelected" name="check" size="xs" class="ml-auto text-gray-900 dark:text-white" />
+        </div>
+        <div class="flex items-center rounded-lg px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-white/70">
+          <span>{{ t('home.clientWorkflow.menu.submenu.welfareName') }}</span>
+          <span class="ml-1.5 text-[10px] text-gray-400 dark:text-white/30">{{ t('home.clientWorkflow.menu.submenu.welfareMeta') }}</span>
+        </div>
+      </div>
 
-      <AgentWorkflowChangesPanel :frame="frame" />
+      <!-- ===== TOAST ===== -->
+      <div
+        class="absolute bottom-14 left-1/2 z-40 -translate-x-1/2 whitespace-nowrap rounded-full bg-gray-900 px-4 py-2 text-[12px] text-white shadow-lg transition-all duration-300 ease-out max-sm:whitespace-normal dark:bg-white dark:text-gray-900"
+        :class="frame.toastVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-2 opacity-0'"
+        data-test="preview-toast"
+      >
+        {{ t('home.clientWorkflow.toast') }}
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
-import AgentWorkflowChangesPanel from './agent-workflow/AgentWorkflowChangesPanel.vue'
-import AgentWorkflowComposer from './agent-workflow/AgentWorkflowComposer.vue'
-import AgentWorkflowSidebar from './agent-workflow/AgentWorkflowSidebar.vue'
-import AgentWorkflowStream from './agent-workflow/AgentWorkflowStream.vue'
-import { useTimeline } from './agent-workflow/timeline'
-import { selectableWorkspaces } from './agent-workflow/workspaces'
 
 const { t } = useI18n()
 
-const projectNameOptions = [
-  'northstar-dashboard',
-  'atlas-billing',
-  'pulse-console',
-  'forge-workbench',
-  'orbit-admin',
-  'harbor-api',
+/* ============ Inline SVG glyphs (icons Icon.vue does not provide) ============ */
+
+const Glyph = Object.assign(
+  (props: { d: string }) =>
+    h(
+      'svg',
+      {
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        stroke: 'currentColor',
+        'stroke-width': 1.5,
+        'aria-hidden': 'true',
+      },
+      [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: props.d })],
+    ),
+  { props: ['d'] },
+)
+
+const glyphs = {
+  folder:
+    'M2.25 12.75V6.75a2.25 2.25 0 012.25-2.25h4.19c.6 0 1.17.24 1.59.66l1.16 1.18c.42.42.99.66 1.59.66h5.72a2.25 2.25 0 012.25 2.25v7.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25v-4.5z',
+  wrench:
+    'M21.75 6.75a4.5 4.5 0 01-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 11-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 016.336-4.486l-3.276 3.276a3.004 3.004 0 002.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852z',
+  file:
+    'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z',
+  asterisk: 'M12 4.5v15M5.5 8.25l13 7.5M18.5 8.25l-13 7.5',
+  panelCollapse:
+    'M4.5 4.5h15A1.5 1.5 0 0121 6v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5zM9.75 4.5v15',
+  display:
+    'M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25',
+  branch:
+    'M6 5.25a2.25 2.25 0 104.5 0 2.25 2.25 0 00-4.5 0zm2.25 2.25v9m0 0a2.25 2.25 0 102.25 2.25M8.25 16.5a2.25 2.25 0 012.25 2.25m5.25-13.5a2.25 2.25 0 104.5 0 2.25 2.25 0 00-4.5 0zm2.25 2.25a6 6 0 01-6 6',
+  wallet:
+    'M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9v3',
+  provider: 'M18.75 5.25L5.25 18.75M18.75 12.75l-6 6',
+}
+
+/* ============ Transcript rows ============ */
+
+type RowKind = 'read' | 'tool' | 'think'
+
+const ROW_DEFS: Array<{ kind: RowKind; key: string }> = [
+  { kind: 'read', key: 'r1' },
+  { kind: 'tool', key: 'r2' },
+  { kind: 'read', key: 'r3' },
+  { kind: 'think', key: 'r4' },
+  { kind: 'read', key: 'r5' },
+  { kind: 'read', key: 'r6' },
+  { kind: 'read', key: 'r7' },
+  { kind: 'read', key: 'r8' },
+  { kind: 'read', key: 'r9' },
+  { kind: 'tool', key: 'r10' },
+  { kind: 'read', key: 'r11' },
+  { kind: 'read', key: 'r12' },
 ]
 
-const previewProjectName = computed(() => {
-  const index = Math.floor(Math.random() * projectNameOptions.length)
-  return projectNameOptions[index]
+const KIND_LABEL_KEY: Record<RowKind, string> = {
+  read: 'home.clientWorkflow.labels.read',
+  tool: 'home.clientWorkflow.labels.tool',
+  think: 'home.clientWorkflow.labels.thinking',
+}
+
+const KIND_GLYPH: Record<RowKind, string> = {
+  read: glyphs.file,
+  tool: glyphs.wrench,
+  think: glyphs.asterisk,
+}
+
+const rows = computed(() =>
+  ROW_DEFS.map((def) => ({
+    label: t(KIND_LABEL_KEY[def.kind]),
+    text: t(`home.clientWorkflow.rows.${def.key}`),
+    icon: KIND_GLYPH[def.kind],
+  })),
+)
+
+/* ============ Animation timeline ============
+ * ~12s loop, GPU-friendly (translate/opacity only):
+ * 1. tool rows fade in staggered while the spinner spins and seconds tick
+ * 2. pause
+ * 3. account menu pops in, submenu slides out, the check moves to Codex Sale
+ * 4. menu closes, toast confirms the switch, status-bar balance updates
+ * 5. fade back to start
+ * prefers-reduced-motion: renders the static "hero" frame instead.
+ */
+
+const CYCLE_MS = 12000
+const ROW_COUNT = ROW_DEFS.length
+const ROW_START = 500
+const ROW_STAGGER = 250
+const MENU_AT = 4800
+const SUBMENU_AT = 5500
+const SELECT_AT = 6600
+const FLASH_UNTIL = 7400
+const MENU_CLOSE = 7800
+const TOAST_AT = 8100
+const BALANCE_AT = 8300
+const TOAST_UNTIL = 10900
+const RESET_AT = 11400
+// 静态帧：菜单 + 二级分组面板展开、已切到 Codex Sale（reduced motion 使用）
+const STATIC_T = 7500
+
+interface PreviewFrame {
+  visibleRows: number
+  seconds: number
+  menuOpen: boolean
+  submenuOpen: boolean
+  saleSelected: boolean
+  saleFlash: boolean
+  toastVisible: boolean
+  balanceUpdated: boolean
+}
+
+function deriveFrame(tMs: number): PreviewFrame {
+  const resetting = tMs >= RESET_AT
+  return {
+    visibleRows:
+      resetting || tMs < ROW_START
+        ? 0
+        : Math.min(ROW_COUNT, Math.floor((tMs - ROW_START) / ROW_STAGGER) + 1),
+    seconds: 47 + Math.floor(tMs / 1000),
+    menuOpen: tMs >= MENU_AT && tMs < MENU_CLOSE,
+    submenuOpen: tMs >= SUBMENU_AT && tMs < MENU_CLOSE,
+    saleSelected: tMs >= SELECT_AT && !resetting,
+    saleFlash: tMs >= SELECT_AT && tMs < FLASH_UNTIL,
+    toastVisible: tMs >= TOAST_AT && tMs < TOAST_UNTIL,
+    balanceUpdated: tMs >= BALANCE_AT && !resetting,
+  }
+}
+
+const prefersReducedMotion =
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+const frame = ref<PreviewFrame>(deriveFrame(prefersReducedMotion ? STATIC_T : 0))
+
+const balanceText = computed(() =>
+  frame.value.balanceUpdated
+    ? t('home.clientWorkflow.balanceAfter')
+    : t('home.clientWorkflow.balanceBefore'),
+)
+
+let rafId = 0
+let startStamp = 0
+let lastTick = -1000
+
+function loop(now: number) {
+  if (startStamp === 0) startStamp = now
+  const tMs = (now - startStamp) % CYCLE_MS
+  // 100ms 粒度足够驱动所有状态切换，避免每帧重建 frame 对象
+  if (Math.abs(tMs - lastTick) >= 100 || tMs < lastTick) {
+    lastTick = tMs
+    frame.value = deriveFrame(tMs)
+  }
+  rafId = requestAnimationFrame(loop)
+}
+
+onMounted(() => {
+  if (prefersReducedMotion) return
+  if (typeof requestAnimationFrame !== 'function') return
+  rafId = requestAnimationFrame(loop)
 })
 
-// 7 个步骤、5 个工作区（其中最后一个是 creating，selectable 只 4 个）
-const { frame, selectWorktree, restart } = useTimeline(7, selectableWorkspaces.length)
-
-const activeWorkspace = computed(() => selectableWorkspaces[frame.value.activeWorktree] ?? selectableWorkspaces[0])
-const activeWorktreeName = computed(() => activeWorkspace.value?.name ?? '')
-const activeDiff = computed(() => activeWorkspace.value?.diff ?? { additions: '+0', deletions: '-0' })
-const diffTooltip = computed(() => `${activeDiff.value.additions} ${activeDiff.value.deletions}`)
-
-function onSelectWorktree(index: number) {
-  selectWorktree(index)
-}
+onBeforeUnmount(() => {
+  if (rafId) cancelAnimationFrame(rafId)
+})
 </script>
 
-<style>
-.agent-workflow-preview {
-  --surface-0: #181b1a;
-  --surface-1: #1e2120;
-  --surface-2: #272a29;
-  --surface-3: #434645;
-  --surface-4: #595b5b;
-  --surface-sidebar: #141716;
-  --surface-sidebar-hover: #1c1f1e;
-  --foreground: #fafafa;
-  --foreground-muted: #a1a5a4;
-  --border: #252b2a;
-  --border-accent: #2f3534;
-  --accent: #20744a;
-  --accent-bright: #7ccba0;
-  --destructive: #ef4444;
-  --radius-sm: 2px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-2xl: 16px;
-  --content-max: 820px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-2xl);
-  background: var(--surface-0);
-  color: var(--foreground);
-  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.34);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.agent-workflow-preview .paseo-client-shell {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) minmax(280px, 400px);
-  height: clamp(560px, 54vw, 720px);
-  min-height: 0;
-  background: var(--surface-0);
-}
-
-.agent-workflow-preview .paseo-sidebar,
-.agent-workflow-preview .workspace-column,
-.agent-workflow-preview .source-panel {
-  min-width: 0;
-  min-height: 0;
-}
-
-.agent-workflow-preview .paseo-sidebar {
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--border);
-  background: var(--surface-sidebar);
-}
-
-.agent-workflow-preview .desktop-traffic-area {
-  display: flex;
-  width: 78px;
-  height: 45px;
-  align-items: center;
-  gap: 8px;
-  padding-left: 16px;
-}
-
-.agent-workflow-preview .traffic {
-  width: 11px;
-  height: 11px;
-  border-radius: 9999px;
-}
-
-.agent-workflow-preview .traffic-red {
-  background: #ee806a;
-}
-
-.agent-workflow-preview .traffic-yellow {
-  background: #f2c85f;
-}
-
-.agent-workflow-preview .traffic-green {
-  background: #80c76b;
-}
-
-.agent-workflow-preview .sidebar-primary-actions {
-  display: grid;
-  gap: 2px;
-  padding: 8px 8px 4px;
-}
-
-.agent-workflow-preview .sidebar-primary-action,
-.agent-workflow-preview .project-row,
-.agent-workflow-preview .workspace-row,
-.agent-workflow-preview .host-trigger {
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-
-.agent-workflow-preview .workspace-row {
-  width: 100%;
-  cursor: pointer;
-}
-
-.agent-workflow-preview .workspace-row[disabled] {
-  cursor: default;
-}
-
-.agent-workflow-preview .workspace-row:focus-visible {
-  outline: 2px solid var(--accent-bright);
-  outline-offset: -2px;
-}
-
-.agent-workflow-preview .sidebar-primary-action {
-  display: flex;
-  min-height: 28px;
-  align-items: center;
-  gap: 8px;
-  border-radius: var(--radius-md);
-  background: transparent;
-  padding: 6px 8px;
-  color: var(--foreground);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.agent-workflow-preview .sidebar-section {
-  min-height: 0;
-  flex: 1;
-}
-
-.agent-workflow-preview .sidebar-header-row,
-.agent-workflow-preview .sidebar-header-title-row,
-.agent-workflow-preview .sidebar-header-icons,
-.agent-workflow-preview .project-row,
-.agent-workflow-preview .project-row-left,
-.agent-workflow-preview .project-trailing-actions,
-.agent-workflow-preview .workspace-row-main,
-.agent-workflow-preview .workspace-row-left,
-.agent-workflow-preview .workspace-row-right,
-.agent-workflow-preview .sidebar-footer,
-.agent-workflow-preview .footer-icon-row,
-.agent-workflow-preview .host-trigger,
-.agent-workflow-preview .header-left,
-.agent-workflow-preview .header-right,
-.agent-workflow-preview .header-title-container,
-.agent-workflow-preview .workspace-tabs-row,
-.agent-workflow-preview .tab-chip,
-.agent-workflow-preview .message-input-button-row,
-.agent-workflow-preview .status-controls,
-.agent-workflow-preview .mode-badge,
-.agent-workflow-preview .right-button-group,
-.agent-workflow-preview .completion-row,
-.agent-workflow-preview .source-panel-tabs,
-.agent-workflow-preview .source-panel-toolbar,
-.agent-workflow-preview .source-panel-actions,
-.agent-workflow-preview .source-row {
-  display: flex;
-  align-items: center;
-}
-
-.agent-workflow-preview .sidebar-header-row {
-  justify-content: space-between;
-  padding: 12px 12px 4px 16px;
-  user-select: none;
-}
-
-.agent-workflow-preview .sidebar-header-title-row,
-.agent-workflow-preview .project-row-left,
-.agent-workflow-preview .workspace-row-left {
-  min-width: 0;
-  flex: 1;
-  gap: 8px;
-}
-
-.agent-workflow-preview .sidebar-header-title {
-  color: var(--foreground-muted);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.agent-workflow-preview .sidebar-header-icons,
-.agent-workflow-preview .footer-icon-row,
-.agent-workflow-preview .project-trailing-actions {
-  flex-shrink: 0;
-  gap: 4px;
-}
-
-.agent-workflow-preview .sidebar-header-icons button,
-.agent-workflow-preview .footer-icon-row button,
-.agent-workflow-preview .project-new-worktree-button {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--foreground-muted);
-}
-
-.agent-workflow-preview .sidebar-header-icons button {
-  width: 28px;
-  height: 28px;
-}
-
-.agent-workflow-preview .sidebar-header-icons button:hover,
-.agent-workflow-preview .footer-icon-row button:hover,
-.agent-workflow-preview .project-new-worktree-button:hover,
-.agent-workflow-preview .sidebar-primary-action:hover {
-  background: var(--surface-sidebar-hover);
-}
-
-.agent-workflow-preview .sidebar-list {
-  padding: 4px 12px 12px;
-}
-
-.agent-workflow-preview .project-row {
-  min-height: 28px;
-  justify-content: space-between;
-  gap: 4px;
-  border-radius: var(--radius-md);
-  padding: 4px;
-  color: var(--foreground-muted);
-  font-size: 14px;
-}
-
-.agent-workflow-preview .project-icon {
-  display: grid;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--foreground-muted);
-  font-size: 9px;
-}
-
-.agent-workflow-preview .project-title,
-.agent-workflow-preview .workspace-branch-text,
-.agent-workflow-preview .host-trigger-text,
-.agent-workflow-preview .header-title,
-.agent-workflow-preview .tab-label,
-.agent-workflow-preview .mode-badge span,
-.agent-workflow-preview .source-row-title,
-.agent-workflow-preview .source-row-subtitle,
-.agent-workflow-preview .persona-badge,
-.agent-workflow-preview .workspace-meta-row {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agent-workflow-preview .workspace-row {
-  display: block;
-  min-height: 28px;
-  margin-bottom: 2px;
-  border-radius: var(--radius-md);
-  padding: 4px 4px 4px 24px;
-  user-select: none;
-  transition: background-color 320ms ease;
-}
-
-.agent-workflow-preview .sidebar-row-selected,
-.agent-workflow-preview .workspace-row:hover {
-  background: var(--surface-sidebar-hover);
-}
-
-.agent-workflow-preview .workspace-row-main {
-  width: 100%;
-  justify-content: space-between;
-  gap: 4px;
-}
-
-.agent-workflow-preview .workspace-row-right {
-  flex-shrink: 0;
-  gap: 4px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.agent-workflow-preview .workspace-status-dot {
-  position: relative;
-  display: grid;
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 9999px;
-}
-
-.agent-workflow-preview .workspace-status-dot::before {
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  background: var(--accent-bright);
-  content: '';
-}
-
-.agent-workflow-preview .workspace-status-dot.muted::before {
-  background: var(--surface-4);
-}
-
-.agent-workflow-preview .workspace-status-dot.active::before {
-  width: 9px;
-  height: 9px;
-  background: var(--accent-bright);
-  box-shadow: 0 0 0 0 rgba(124, 203, 160, 0.5);
-  animation: agentWorkflowDotPulse 1.6s ease-in-out infinite;
-}
-
-.agent-workflow-preview .workspace-status-dot.creating::before {
-  background: var(--foreground-muted);
-  animation: agentWorkflowDotPulse 1.1s ease-in-out infinite;
-}
-
-.agent-workflow-preview .status-dot-overlay {
-  position: absolute;
-  right: 2px;
-  bottom: 2px;
-  width: 5px;
-  height: 5px;
-  border: 1px solid var(--surface-sidebar);
-  border-radius: 9999px;
-  background: var(--destructive);
-}
-
-.agent-workflow-preview .workspace-branch-text {
-  flex: 1;
-  color: var(--foreground);
-  font-size: 14px;
-  line-height: 18px;
-  opacity: 0.76;
-}
-
-.agent-workflow-preview .workspace-row:hover .workspace-branch-text,
-.agent-workflow-preview .sidebar-row-selected .workspace-branch-text {
-  opacity: 1;
-}
-
-.agent-workflow-preview .persona-badge {
-  max-width: 92px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  padding: 1px 5px;
-  color: var(--foreground-muted);
-  font-size: 10px;
-  line-height: 14px;
-  font-weight: 500;
-}
-
-.agent-workflow-preview .workspace-meta-row {
-  padding-left: 22px;
-  color: var(--foreground-muted);
-  font-size: 11px;
-  line-height: 16px;
-}
-
-.agent-workflow-preview .workspace-creating-text {
-  color: var(--foreground-muted);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.agent-workflow-preview .workspace-script-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #3b82f6;
-}
-
-.agent-workflow-preview .workspace-active-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--accent-bright);
-  animation: agentWorkflowDotPulse 1.6s ease-in-out infinite;
-}
-
-.agent-workflow-preview .diff-add {
-  color: #4ade80;
-}
-
-.agent-workflow-preview .diff-del {
-  color: #ef4444;
-}
-
-.agent-workflow-preview .sidebar-footer {
-  justify-content: space-between;
-  border-top: 1px solid var(--border);
-  padding: 12px 16px;
-}
-
-.agent-workflow-preview .host-trigger {
-  flex: 1;
-  justify-content: flex-start;
-  gap: 8px;
-  border-radius: var(--radius-lg);
-  padding: 4px 8px;
-}
-
-.agent-workflow-preview .host-status-dot {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border-radius: 9999px;
-  background: #4ade80;
-}
-
-.agent-workflow-preview .host-trigger-text {
-  color: var(--foreground-muted);
-  font-size: 14px;
-}
-
-.agent-workflow-preview .workspace-column {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--surface-0);
-}
-
-.agent-workflow-preview .screen-header {
-  display: flex;
-  height: 48px;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-0);
-  padding: 0 8px;
-  user-select: none;
-}
-
-.agent-workflow-preview .header-left {
-  min-width: 0;
-  flex: 1;
-  gap: 8px;
-}
-
-.agent-workflow-preview .header-right {
-  flex-shrink: 0;
-  gap: 8px;
-}
-
-.agent-workflow-preview .header-icon-slot {
-  display: grid;
-  padding: 8px;
-  place-items: center;
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: transparent;
-  color: var(--foreground-muted);
-}
-
-.agent-workflow-preview .header-icon-slot:hover,
-.agent-workflow-preview .header-action-button:hover,
-.agent-workflow-preview .source-control-button:hover {
-  background: var(--surface-2);
-}
-
-.agent-workflow-preview .header-title-container {
-  min-width: 0;
-  flex: 1;
-  gap: 8px;
-  overflow: hidden;
-}
-
-.agent-workflow-preview .header-title {
-  flex-shrink: 1;
-  color: var(--foreground);
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.agent-workflow-preview .header-balance,
-.agent-workflow-preview .header-action-button,
-.agent-workflow-preview .source-control-button {
+<style scoped>
+.preview-dots {
   display: inline-flex;
-  min-height: 30px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--foreground);
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.agent-workflow-preview .header-action-button,
-.agent-workflow-preview .source-control-button {
-  padding: 8px;
-}
-
-.agent-workflow-preview .source-control-button {
-  padding-inline: 12px;
-}
-
-.agent-workflow-preview .workspace-tabs-row {
-  height: 36px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-0);
-  overflow: visible;
-}
-
-.agent-workflow-preview .tab-chip {
-  position: relative;
-  height: 36px;
-  max-width: 260px;
-  min-width: 160px;
-  gap: 4px;
-  border-right: 1px solid var(--border);
-  padding: 8px 12px;
-  color: var(--foreground);
-  user-select: none;
-}
-
-.agent-workflow-preview .tab-handle {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  align-items: center;
-  gap: 4px;
-}
-
-.agent-workflow-preview .tab-icon {
-  flex-shrink: 0;
-  display: inline-flex;
+  gap: 3px;
   align-items: center;
 }
 
-.agent-workflow-preview .tab-focus-indicator {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 2px;
-  background: var(--accent);
-}
-
-.agent-workflow-preview .provider-dot {
-  display: inline-grid;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  place-items: center;
-  font-size: 15px;
-  line-height: 1;
-}
-
-.agent-workflow-preview .tab-label {
-  flex: 1;
-  font-size: 14px;
-  color: var(--foreground-muted);
-  font-weight: 400;
-}
-
-.agent-workflow-preview .tab-chip.active .tab-label,
-.agent-workflow-preview .tab-chip:hover .tab-label {
-  color: var(--foreground);
-}
-
-.agent-workflow-preview .tab-close-button {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--foreground-muted);
-  opacity: 0;
-  transition: opacity 160ms ease, background-color 160ms ease, color 160ms ease;
-}
-
-.agent-workflow-preview .tab-chip:hover .tab-close-button,
-.agent-workflow-preview .tab-chip.active .tab-close-button {
-  opacity: 1;
-}
-
-.agent-workflow-preview .tab-close-button:hover {
-  background: var(--surface-3);
-  color: var(--foreground);
-}
-
-.agent-workflow-preview .new-tab-action-button {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-left: 8px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--foreground-muted);
-}
-
-.agent-workflow-preview .new-tab-action-button:hover {
-  background: var(--surface-2);
-  color: var(--foreground);
-}
-
-.agent-workflow-preview .workspace-pane-content {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.agent-workflow-preview .draft-stage,
-.agent-workflow-preview .stream-stage {
-  position: absolute;
-  inset: 0;
-}
-
-.agent-workflow-preview .draft-stage {
-  display: grid;
-  place-items: center;
-  background: var(--surface-0);
-  padding: 32px 24px;
-  z-index: 2;
-}
-
-.agent-workflow-preview .draft-hero-section {
-  display: grid;
-  width: 100%;
-  max-width: 980px;
-  gap: 24px;
-}
-
-.agent-workflow-preview .draft-hero-section h3 {
-  margin: 0;
-  color: var(--foreground);
-  font-size: clamp(24px, 2.4vw, 34px);
-  font-weight: 500;
-  line-height: 42px;
-  text-align: center;
-}
-
-.agent-workflow-preview .hero-composer {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-0);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.agent-workflow-preview .message-input-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-2xl);
-  background: var(--surface-1);
-  padding: 16px;
-  transition: border-color 200ms ease-in-out, background-color 200ms ease-in-out, box-shadow 200ms ease-in-out;
-}
-
-.agent-workflow-preview .hero-message-input {
-  border-width: 0;
-  background: var(--surface-0);
-  box-shadow: inset 0 0 0 1px transparent;
-}
-
-.agent-workflow-preview .hero-message-input.draft-input-focused {
-  background: #191c1b;
-  box-shadow:
-    inset 0 0 0 1px rgba(124, 203, 160, 0.24),
-    0 0 0 1px rgba(124, 203, 160, 0.14),
-    0 18px 42px rgba(0, 0, 0, 0.26);
-}
-
-.agent-workflow-preview .hero-message-input.draft-input-typing {
-  box-shadow:
-    inset 0 0 0 1px rgba(124, 203, 160, 0.34),
-    0 0 0 1px rgba(124, 203, 160, 0.2),
-    0 18px 46px rgba(0, 0, 0, 0.32);
-}
-
-.agent-workflow-preview .hero-message-input.draft-input-submitted {
-  background: #1b201e;
-  box-shadow:
-    inset 0 0 0 1px rgba(124, 203, 160, 0.4),
-    0 0 0 3px rgba(32, 116, 74, 0.18),
-    0 20px 52px rgba(0, 0, 0, 0.36);
-}
-
-.agent-workflow-preview .text-input-scroll-wrapper {
-  position: relative;
-  min-height: 46px;
-  color: var(--foreground);
-  font-size: 16px;
-  line-height: 22.4px;
-}
-
-.agent-workflow-preview .hero-message-input .text-input-scroll-wrapper {
-  padding-right: 70px;
-}
-
-.agent-workflow-preview .typed-prompt {
-  display: inline-block;
-  min-height: 22px;
-  vertical-align: top;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-.agent-workflow-preview .draft-input-typing .typed-prompt {
-  color: #fff;
-}
-
-.agent-workflow-preview .typing-caret {
-  display: inline-block;
-  width: 2px;
-  height: 20px;
-  margin-left: 1px;
-  background: var(--foreground);
-  vertical-align: -4px;
-}
-
-.agent-workflow-preview .draft-placeholder {
-  position: absolute;
-  inset: 0 70px auto 0;
-  display: block;
-  max-width: none;
-  pointer-events: none;
-}
-
-.agent-workflow-preview .draft-enter-key {
-  position: absolute;
-  top: -2px;
-  right: 0;
-  display: inline-flex;
-  height: 26px;
-  min-width: 54px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-md);
-  background: var(--surface-1);
-  color: var(--foreground-muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0;
-  line-height: 1;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.18);
-  transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
-}
-
-.agent-workflow-preview .draft-enter-key.active {
-  border-color: rgba(124, 203, 160, 0.62);
-  background: rgba(32, 116, 74, 0.36);
-  color: #fff;
-}
-
-.agent-workflow-preview .message-input-button-row {
-  justify-content: space-between;
-  gap: 12px;
-  margin-inline: -6px;
-}
-
-.agent-workflow-preview .status-controls {
-  min-width: 0;
-  flex: 1;
-  gap: 4px;
-  overflow: hidden;
-}
-
-.agent-workflow-preview .attach-button,
-.agent-workflow-preview .voice-button,
-.agent-workflow-preview .send-button,
-.agent-workflow-preview .mode-icon-badge {
-  display: inline-grid;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 0;
+.preview-dots i {
+  width: 3px;
+  height: 3px;
   border-radius: 9999px;
-  background: transparent;
-  color: var(--foreground-muted);
-}
-
-.agent-workflow-preview .send-button {
-  margin-left: 4px;
-  background: var(--accent);
-  color: #fff;
-}
-
-.agent-workflow-preview .mode-badge {
-  min-width: 0;
-  max-width: 220px;
-  height: 28px;
-  flex-shrink: 1;
-  gap: 4px;
-  border-radius: var(--radius-2xl);
-  padding-inline: 8px;
-  color: var(--foreground-muted);
-  font-size: 14px;
-}
-
-.agent-workflow-preview .mode-badge.cloud-group {
-  max-width: 260px;
-  flex-shrink: 2;
-}
-
-.agent-workflow-preview button.mode-badge {
-  cursor: pointer;
-  border: 0;
-  font: inherit;
-}
-
-.agent-workflow-preview .mode-badge-active,
-.agent-workflow-preview .mode-badge:focus-visible {
-  background: var(--surface-2);
-  outline: none;
-}
-
-.agent-workflow-preview .mode-badge.tone-danger svg {
-  color: var(--destructive);
-}
-
-.agent-workflow-preview .mode-badge.tone-info svg {
-  color: #60a5fa;
-}
-
-.agent-workflow-preview .mode-badge.tone-success svg {
-  color: #4ade80;
-}
-
-.agent-workflow-preview .mode-badge.tone-muted svg {
-  color: var(--foreground-muted);
-}
-
-.agent-workflow-preview .select-menu-anchor {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 1;
-  min-width: 0;
-}
-
-.agent-workflow-preview .select-menu {
-  position: absolute;
-  left: 0;
-  z-index: 30;
-  display: grid;
-  width: max-content;
-  min-width: 180px;
-  max-width: 280px;
-  gap: 2px;
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-lg);
-  background: var(--surface-1);
-  padding: 4px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
-  animation: agentWorkflowMenuIn 140ms ease-out;
-}
-
-.agent-workflow-preview .select-menu-option {
-  display: grid;
-  gap: 2px;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.agent-workflow-preview .select-menu-option:hover,
-.agent-workflow-preview .select-menu-option:focus-visible {
-  background: var(--surface-2);
-  outline: none;
-}
-
-.agent-workflow-preview .select-menu-option-active {
-  background: var(--surface-2);
-}
-
-.agent-workflow-preview .select-menu-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.agent-workflow-preview .select-menu-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  flex-shrink: 0;
-}
-
-.agent-workflow-preview .select-menu-dot.dot-amber { background: #fbbf24; }
-.agent-workflow-preview .select-menu-dot.dot-blue { background: #60a5fa; }
-.agent-workflow-preview .select-menu-dot.dot-violet { background: #a78bfa; }
-.agent-workflow-preview .select-menu-dot.dot-red { background: var(--destructive); }
-
-.agent-workflow-preview .select-menu-description {
-  color: var(--foreground-muted);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-@keyframes agentWorkflowMenuIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.agent-workflow-preview .mode-badge:hover,
-.agent-workflow-preview .mode-icon-badge:hover,
-.agent-workflow-preview .attach-button:hover,
-.agent-workflow-preview .voice-button:hover {
-  background: var(--surface-2);
-}
-
-.agent-workflow-preview .mode-icon-badge svg {
-  color: #fbbf24;
-}
-
-.agent-workflow-preview .right-button-group {
-  flex-shrink: 0;
-  gap: 4px;
-}
-
-.agent-workflow-preview .stream-stage {
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px;
-}
-
-.agent-workflow-preview .stream-content-wrapper {
-  display: grid;
-  width: 100%;
-  max-width: var(--content-max);
-  margin: 0 auto;
-  gap: 8px;
-  padding-bottom: 172px;
-}
-
-.agent-workflow-preview .user-message {
-  display: flex;
-  justify-content: flex-end;
-  padding-inline: 8px;
-  animation: agentWorkflowRowIn 280ms ease-out;
-}
-
-.agent-workflow-preview .user-bubble {
-  max-width: 100%;
-  min-width: 0;
-  border-radius: var(--radius-2xl);
-  border-top-right-radius: var(--radius-sm);
-  background: var(--surface-2);
-  padding: 16px;
-  color: var(--foreground);
-  font-size: 16px;
-  line-height: 22px;
-  overflow-wrap: anywhere;
-}
-
-.agent-workflow-preview .assistant-message {
-  display: grid;
-  gap: 10px;
-  padding: 12px 8px;
-  color: var(--foreground);
-  font-size: 16px;
-  line-height: 22px;
-  min-height: 22px;
-}
-
-.agent-workflow-preview .assistant-message.final {
-  animation: agentWorkflowRowIn 280ms ease-out;
-}
-
-.agent-workflow-preview .assistant-message p {
-  margin: 0;
-}
-
-.agent-workflow-preview .stream-line {
-  display: inline;
-  overflow-wrap: anywhere;
-}
-
-.agent-workflow-preview .stream-caret {
-  display: inline-block;
-  width: 2px;
-  height: 18px;
-  margin-left: 3px;
-  background: var(--foreground);
-  vertical-align: -3px;
-  animation: agentWorkflowCaretBlink 1s steps(1) infinite;
-}
-
-.agent-workflow-preview .agent-status-row {
-  display: flex;
-  gap: 8px;
-  padding: 6px 8px 2px;
-  color: var(--foreground-muted);
-  font-size: 14px;
-  animation: agentWorkflowRowIn 240ms ease-out;
-}
-
-.agent-workflow-preview .working-dots {
-  display: inline-flex;
-  height: 16px;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 4px;
-}
-
-.agent-workflow-preview .working-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--foreground-muted);
+  background: currentColor;
   opacity: 0.3;
-  animation: agentWorkflowWorkingDot 1.2s ease-in-out infinite;
 }
 
-.agent-workflow-preview .working-dot:nth-child(2) {
-  animation-delay: 0.16s;
-}
-
-.agent-workflow-preview .working-dot:nth-child(3) {
-  animation-delay: 0.32s;
-}
-
-.agent-workflow-preview .working-text {
-  background: linear-gradient(
-    100deg,
-    var(--foreground-muted) 0%,
-    var(--foreground-muted) 35%,
-    var(--foreground) 50%,
-    var(--foreground-muted) 65%,
-    var(--foreground-muted) 100%
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: agentWorkflowShimmer 2s linear infinite;
-}
-
-.agent-workflow-preview .tool-sequence {
-  display: grid;
-  gap: 4px;
-}
-
-.agent-workflow-preview .tool-call-row {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: var(--radius-md);
-  padding: 4px 6px;
-  color: var(--foreground-muted);
-  font-size: 14px;
-  animation: agentWorkflowRowIn 260ms ease-out;
-}
-
-.agent-workflow-preview .tool-call-row.running {
-  background: var(--surface-1);
-}
-
-.agent-workflow-preview .tool-status-dot {
-  position: relative;
-  width: 7px;
-  height: 7px;
-  flex-shrink: 0;
-  border-radius: 9999px;
-  background: var(--surface-4);
-}
-
-.agent-workflow-preview .tool-status-dot.running {
-  background: #fbbf24;
-  animation: agentWorkflowToolPing 1.1s ease-out infinite;
-}
-
-.agent-workflow-preview .tool-status-dot.done {
-  background: #4ade80;
-}
-
-.agent-workflow-preview .tool-label {
-  flex-shrink: 0;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.agent-workflow-preview .tool-call-row strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--foreground-muted);
-  font: inherit;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agent-workflow-preview .tool-done-check {
-  margin-left: auto;
-  flex-shrink: 0;
-  color: #4ade80;
-}
-
-.agent-workflow-preview .completion-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--accent-bright);
-  font-size: 14px;
-}
-
-.agent-workflow-preview .replay-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  margin: 4px 8px;
-  border: 1px solid var(--border-accent);
-  border-radius: 999px;
-  background: var(--surface-1);
-  padding: 6px 12px;
-  color: var(--foreground-muted);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
-  animation: agentWorkflowRowIn 280ms ease-out;
-}
-
-.agent-workflow-preview .replay-pill:hover {
-  background: var(--surface-2);
-  color: var(--foreground);
-  border-color: var(--surface-3);
-}
-
-.agent-workflow-preview .replay-pill:focus-visible {
-  outline: 2px solid var(--accent-bright);
-  outline-offset: 2px;
-}
-
-.agent-workflow-preview .live-message-input {
-  animation: agentWorkflowRowIn 280ms ease-out;
-}
-
-.agent-workflow-preview .composer-section {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 5;
-  background: var(--surface-0);
-}
-
-.agent-workflow-preview .composer-content {
-  width: 100%;
-  max-width: var(--content-max);
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.agent-workflow-preview .live-message-input {
-  animation: agentWorkflowRowIn 280ms ease-out;
-}
-
-.agent-workflow-preview .composer-placeholder {
-  display: block;
-  overflow: hidden;
-  max-width: calc(100% - 112px);
-  color: var(--surface-4);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agent-workflow-preview .focus-hint {
-  position: absolute;
-  top: 0;
-  right: 0;
-  color: var(--foreground-muted);
-  font-size: 12px;
-  opacity: 0.5;
-}
-
-.agent-workflow-preview .mic-icon {
-  position: relative;
-  width: 10px;
-  height: 16px;
-  border: 1.5px solid currentColor;
-  border-radius: 999px;
-}
-
-.agent-workflow-preview .mic-icon::after {
-  position: absolute;
-  right: -4px;
-  bottom: -5px;
-  left: -4px;
-  height: 7px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  border-left: 1.5px solid currentColor;
-  border-radius: 0 0 8px 8px;
-  content: '';
-}
-
-.agent-workflow-preview .source-panel {
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid var(--border);
-  background: var(--surface-0);
-}
-
-.agent-workflow-preview .source-panel-header {
-  height: 48px;
-  border-bottom: 1px solid var(--border);
-  padding: 6px 8px;
-}
-
-.agent-workflow-preview .source-panel-tabs {
-  gap: 4px;
-}
-
-.agent-workflow-preview .source-panel-tabs button {
-  height: 36px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  padding-inline: 12px;
-  color: var(--foreground-muted);
-  font-size: 14px;
-}
-
-.agent-workflow-preview .source-panel-tabs button.active {
-  background: var(--surface-2);
-  color: var(--foreground);
-}
-
-.agent-workflow-preview .source-panel-toolbar {
-  height: 36px;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  padding-inline: 12px;
-  color: var(--foreground-muted);
-  font-size: 14px;
-}
-
-.agent-workflow-preview .source-panel-actions {
-  gap: 8px;
-}
-
-.agent-workflow-preview .source-list {
-  min-height: 0;
-  overflow: hidden;
-  padding: 8px;
-}
-
-.agent-workflow-preview .source-row {
-  min-width: 0;
-  gap: 8px;
-  border-radius: var(--radius-md);
-  padding: 8px;
-  color: var(--foreground-muted);
-  opacity: 1;
-}
-
-.agent-workflow-preview .source-row:hover {
-  background: var(--surface-1);
-}
-
-.agent-workflow-preview .source-row-copy {
-  display: grid;
-  min-width: 0;
-  flex: 1;
-  gap: 2px;
-}
-
-.agent-workflow-preview .source-row-title {
-  color: var(--foreground);
-  font-size: 14px;
-}
-
-.agent-workflow-preview .source-row-subtitle {
-  color: var(--foreground-muted);
-  font-size: 12px;
-}
-
-@keyframes agentWorkflowRowIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes agentWorkflowWorkingDot {
-  0%, 100% { opacity: 0.3; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(-6px); }
-}
-
-@keyframes agentWorkflowShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-@keyframes agentWorkflowToolPing {
-  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5); }
-  70%, 100% { box-shadow: 0 0 0 5px rgba(251, 191, 36, 0); }
-}
-
-@keyframes agentWorkflowDotPulse {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; }
-}
-
-@media (max-width: 1120px) {
-  .agent-workflow-preview .paseo-client-shell {
-    grid-template-columns: 280px minmax(0, 1fr);
+@media (prefers-reduced-motion: no-preference) {
+  .preview-dots i {
+    animation: preview-dot-pulse 1.2s ease-in-out infinite;
   }
 
-  .agent-workflow-preview .source-panel {
-    display: none;
+  .preview-dots i:nth-child(2) {
+    animation-delay: 0.2s;
   }
 
-  .agent-workflow-preview .header-balance,
-  .agent-workflow-preview .header-action-button {
-    display: none;
+  .preview-dots i:nth-child(3) {
+    animation-delay: 0.4s;
   }
 }
 
-@media (max-width: 720px) {
-  .agent-workflow-preview {
-    border-radius: var(--radius-lg);
+@keyframes preview-dot-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
   }
-
-  .agent-workflow-preview .paseo-client-shell {
-    display: grid;
-    grid-template-columns: 104px minmax(0, 1fr);
-    height: 560px;
-  }
-
-  .agent-workflow-preview .paseo-sidebar {
-    display: flex;
-  }
-
-  .agent-workflow-preview .desktop-traffic-area,
-  .agent-workflow-preview .sidebar-primary-actions,
-  .agent-workflow-preview .sidebar-header-icons,
-  .agent-workflow-preview .sidebar-footer,
-  .agent-workflow-preview .project-trailing-actions,
-  .agent-workflow-preview .workspace-meta-row,
-  .agent-workflow-preview .persona-badge,
-  .agent-workflow-preview .workspace-row-right {
-    display: none;
-  }
-
-  .agent-workflow-preview .sidebar-header-row {
-    padding: 10px 8px 4px;
-  }
-
-  .agent-workflow-preview .sidebar-header-title {
-    font-size: 12px;
-  }
-
-  .agent-workflow-preview .sidebar-list {
-    padding: 4px;
-  }
-
-  .agent-workflow-preview .project-row {
-    padding: 4px 2px;
-  }
-
-  .agent-workflow-preview .project-title,
-  .agent-workflow-preview .workspace-branch-text {
-    font-size: 11px;
-  }
-
-  .agent-workflow-preview .workspace-row {
-    padding-left: 4px;
-    padding-right: 2px;
-  }
-
-  .agent-workflow-preview .workspace-status-dot {
-    width: 12px;
-  }
-
-  .agent-workflow-preview .workspace-status-dot::before {
-    width: 6px;
-    height: 6px;
-  }
-
-  .agent-workflow-preview .source-panel {
-    display: none;
-  }
-
-  .agent-workflow-preview .workspace-column {
-    height: 100%;
-  }
-
-  .agent-workflow-preview .screen-header {
-    height: 56px;
-    padding: 8px;
-  }
-
-  .agent-workflow-preview .header-title-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-  }
-
-  .agent-workflow-preview .header-title {
-    max-width: 160px;
-    font-size: 14px;
-  }
-
-  .agent-workflow-preview .header-right {
-    display: none;
-  }
-
-  .agent-workflow-preview .tab-chip {
-    max-width: calc(100vw - 166px);
-    min-width: 0;
-  }
-
-  .agent-workflow-preview .draft-stage {
-    padding: 24px 12px;
-  }
-
-  .agent-workflow-preview .draft-hero-section h3 {
-    font-size: 24px;
-    line-height: 30px;
-  }
-
-  .agent-workflow-preview .stream-stage {
-    padding: 10px 8px;
-  }
-
-  .agent-workflow-preview .stream-content-wrapper {
-    gap: 4px;
-    padding-bottom: 20px;
-  }
-
-  .agent-workflow-preview .user-bubble,
-  .agent-workflow-preview .assistant-message {
-    font-size: 14px;
-    line-height: 20px;
-  }
-
-  .agent-workflow-preview .user-bubble {
-    max-height: 58px;
-    padding: 10px 12px;
-  }
-
-  .agent-workflow-preview .assistant-message {
-    gap: 6px;
-    padding: 6px 8px;
-  }
-
-  .agent-workflow-preview .agent-status-row {
-    padding-block: 4px 0;
-    font-size: 13px;
-  }
-
-  .agent-workflow-preview .tool-call-row {
-    font-size: 13px;
-  }
-
-  .agent-workflow-preview .composer-content {
-    padding: 12px;
-  }
-
-  .agent-workflow-preview .composer-section {
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .agent-workflow-preview .message-input-wrapper {
-    padding: 12px;
-  }
-
-  .agent-workflow-preview .message-input-button-row {
-    align-items: flex-end;
-    gap: 8px;
-  }
-
-  .agent-workflow-preview .status-controls {
-    flex-wrap: wrap;
-    row-gap: 2px;
-  }
-
-  .agent-workflow-preview .text-input-scroll-wrapper {
-    min-height: 42px;
-    font-size: 14px;
-    line-height: 20px;
-  }
-
-  .agent-workflow-preview .attach-button {
-    width: 24px;
-    height: 24px;
-  }
-
-  .agent-workflow-preview .mode-badge {
-    height: 24px;
-    padding-inline: 5px;
-    font-size: 11px;
-  }
-
-  .agent-workflow-preview .mode-badge.cloud-group {
-    max-width: 66px;
-  }
-
-  .agent-workflow-preview .mode-badge:nth-of-type(2) {
-    max-width: 112px;
-  }
-
-  .agent-workflow-preview .mode-badge:nth-of-type(3) {
-    max-width: 78px;
-  }
-
-  .agent-workflow-preview .mode-badge:nth-of-type(4) {
-    max-width: 74px;
-  }
-
-  .agent-workflow-preview .mode-icon-badge,
-  .agent-workflow-preview .voice-button {
-    display: none;
+  40% {
+    opacity: 0.9;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .agent-workflow-preview .working-dot,
-  .agent-workflow-preview .working-text,
-  .agent-workflow-preview .stream-caret,
-  .agent-workflow-preview .tool-status-dot,
-  .agent-workflow-preview .workspace-active-dot,
-  .agent-workflow-preview .workspace-status-dot.active::before,
-  .agent-workflow-preview .workspace-status-dot.creating::before,
-  .agent-workflow-preview .user-message,
-  .agent-workflow-preview .assistant-message.final,
-  .agent-workflow-preview .agent-status-row,
-  .agent-workflow-preview .tool-call-row,
-  .agent-workflow-preview .live-message-input {
-    animation: none;
-  }
+.preview-flash {
+  animation: preview-row-flash 0.8s ease-out 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
 
-  .agent-workflow-preview .working-dot {
-    opacity: 0.6;
-  }
+:global(.dark) .preview-flash {
+  background-color: rgba(255, 255, 255, 0.08);
+}
 
-  .agent-workflow-preview .working-text {
-    -webkit-text-fill-color: var(--foreground-muted);
+@keyframes preview-row-flash {
+  0% {
+    background-color: rgba(249, 115, 22, 0.22);
   }
-
-  .agent-workflow-preview .tool-status-dot.running {
-    background: #fbbf24;
-  }
-
-  .agent-workflow-preview .workspace-row {
-    transition: none;
+  100% {
+    background-color: rgba(0, 0, 0, 0.05);
   }
 }
 </style>

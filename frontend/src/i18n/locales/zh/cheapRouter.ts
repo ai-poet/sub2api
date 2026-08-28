@@ -91,13 +91,33 @@ export default {
     },
     "clientShowcase": {
       "badge": "客户端预览",
-      "title": "整合Claude Code和Codex双边能力的Agent客户端 国内下载即用",
-      "description": "多个Agent通过Worktree并行工作 · Claude 和 Codex 同屏使用 · 文件变更追踪 · 消费透明",
+      "title": "中转站 × Agent 工作台，深度合一的桌面客户端",
+      "description": "登录即路由——网关密钥自动写进每个 CLI 的全局配置；余额、分组倍率、在线率就在任务旁边，跑着任务随手换到更便宜更稳的线路。",
       "pills": {
-        "darkMode": "深色主题",
-        "workspace": "Workspace 管理",
-        "terminal": "内置终端",
-        "parallel": "并行多开"
+        "autoRoute": "登录即路由",
+        "groupSwitch": "分组一键切换（倍率·在线率）",
+        "liveBalance": "余额实时可见",
+        "cliInstall": "缺 CLI 一键安装"
+      },
+      "advantages": {
+        "tiny": {
+          "title": "安装包只有几十 MB",
+          "body": "原生二进制，没有 Electron 套壳"
+        },
+        "native": {
+          "title": "原生级流畅",
+          "body": "Rust + GPUI 渲染，滚动和输入零迟滞"
+        },
+        "ready": {
+          "title": "开箱即用",
+          "body": "登录即路由，缺 Node 缺 CLI 一键补齐"
+        }
+      },
+      "apiOnly": {
+        "title": "只想直接接 API？",
+        "body": "注册拿密钥，OpenAI/Anthropic 兼容端点直连，兼容各类三方客户端。",
+        "dashboardCta": "获取 API 密钥",
+        "docsCta": "查看接入文档"
       },
       "cta": "注册获取通知",
       "ctaNote": "注册后可第一时间获取客户端更新",
@@ -105,56 +125,74 @@ export default {
       "downloadNote": "桌面客户端下载已开放，请选择适合当前设备的安装包"
     },
     "clientWorkflow": {
-      "ariaLabel": "CheapRouter Agent 工作流动画预览",
-      "windowTitle": "CheapRouter Client",
-      "connected": "Daemon connected",
-      "sidebarSubtitle": "本地 Agent 控制台",
-      "workspaces": "Workspaces",
-      "workspaceName": "新建工作区",
-      "workspaceDocs": "client 样式源",
-      "newWorktree": "新建 WorkTree",
-      "creatingWorktree": "创建中",
-      "agents": "Agents",
-      "draftAgent": "Draft agent",
-      "runningAgent": "Agent 正在执行",
-      "branch": "main",
-      "balance": "余额 ¥128.40",
-      "terminal": "Terminal",
-      "tabDraft": "New agent",
-      "tabAgent": "Agent 工作流预览",
-      "emptyTitle": "要在 {project} 中构建什么？",
-      "emptyCopy": "桌面端保留你的本地代码，只把 Claude Code 和 Codex 的运行状态集中展示。",
-      "composerTitle": "What should the agent build?",
-      "provider": "Claude",
-      "group": "Claude",
-      "model": "Opus 4.8 1M",
-      "mode": "Bypass",
-      "thinking": "Medium",
-      "prompt": "创建工作区，接入计费看板，并验证 Claude Agent 执行流。",
-      "runningStatus": "Agent 正在用 Claude / Opus 4.8 1M 流式输出...",
-      "workingRead": "正在读取工作区文件",
-      "workingEdit": "正在修改看板与状态",
-      "workingVerify": "正在运行验证",
-      "streamThinking": "正在读取工作区文件，并规划计费看板改造...",
-      "requestTitle": "Agent request",
-      "requestBody": "允许 Agent 检查本地文件并运行验证命令。",
-      "permissionQuestion": "允许继续执行吗？",
-      "requestDeny": "Deny",
-      "requestApproved": "Allow",
-      "toolInspect": "读取工作区文件",
-      "toolEdit": "应用看板改造",
-      "toolTerminal": "运行验证命令",
-      "streamStepOne": "已更新看板卡片，并把用量摘要接入工作区状态。",
-      "streamStepTwo": "已在桌面工作流里验证 Agent 请求、文件变更和终端状态。",
-      "streamComplete": "完成：Claude Agent 工作流已执行",
-      "replay": "重新播放",
-      "filesChanged": "Files changed",
-      "terminalRun": "Checks",
-      "typecheckDone": "typecheck passed",
-      "buildDone": "production build ready",
-      "spendTitle": "透明消费",
-      "spendInput": "Input tokens",
-      "spendOutput": "Output tokens"
+      "ariaLabel": "CheapRouter 桌面客户端演示：任务执行中一键切换分组线路",
+      "working": "工作中 · {seconds} 秒",
+      "balanceBefore": "$999990.44",
+      "balanceAfter": "$999990.41",
+      "sidebar": {
+        "newTask": "新建任务",
+        "search": "搜索",
+        "today": "今天",
+        "taskTitle": "在吗",
+        "project": "amadeus-system",
+        "email": "huzw1995{'@'}163.com"
+      },
+      "labels": {
+        "read": "读取",
+        "tool": "工具",
+        "thinking": "思考"
+      },
+      "rows": {
+        "r1": "main.ts",
+        "r2": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`",
+        "r3": "constants.ts",
+        "r4": "思考用时 1 秒",
+        "r5": "chat.ts",
+        "r6": "auth.ts",
+        "r7": "user.ts",
+        "r8": "database.ts",
+        "r9": "changelog.ts",
+        "r10": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\hooks`",
+        "r11": "index.vue",
+        "r12": "auth.ts"
+      },
+      "composer": {
+        "placeholder": "做什么都可以…",
+        "model": "Grok 4.6",
+        "effort": "High",
+        "access": "完全访问",
+        "build": "构建",
+        "stop": "停止"
+      },
+      "statusBar": {
+        "project": "amadeus-system",
+        "local": "本地",
+        "branch": "my_feature"
+      },
+      "menu": {
+        "balance": "余额 {amount}",
+        "topUp": "充值",
+        "claudeGroup": "Claude Code 分组",
+        "claudeValue": "Claude Sale",
+        "codexGroup": "Codex 分组",
+        "codexValueBefore": "Codex",
+        "codexValueAfter": "Codex Sale",
+        "grokGroup": "Grok 分组",
+        "grokValue": "Grok",
+        "modelPlaza": "模型广场",
+        "usage": "使用记录",
+        "logout": "退出登录",
+        "submenu": {
+          "default": "账号默认",
+          "codexName": "Codex",
+          "codexMeta": "×0.29 · 96.2%",
+          "saleName": "Codex Sale",
+          "saleMeta": "×0.19 · 86.4%",
+          "welfareName": "Codex 福利分组",
+          "welfareMeta": "×0.09 · 69.3%"
+        }
+      },
+      "toast": "已切换到 Codex Sale，对新启动的任务生效"
     },
     "download": {
       "badge": "客户端下载",

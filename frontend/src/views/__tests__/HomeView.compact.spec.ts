@@ -46,6 +46,10 @@ function mountHome(settings: Record<string, unknown> = {}) {
         RouterLink: RouterLinkStub,
         LocaleSwitcher: { template: '<div data-testid="locale-switcher" />' },
         Icon: { template: '<span data-testid="icon" />' },
+        // HomePricingSection 直接从 '@/stores/app' 取 store（绕过本测试对 '@/stores'
+        // 的 mock），挂载时会因缺少激活的 Pinia 抛错。本测试只关心 compact 模式的
+        // 路由行为，直接 stub 掉价格区块。
+        HomePricingSection: { template: '<section data-testid="pricing-section-stub" />' },
       },
     },
   })
