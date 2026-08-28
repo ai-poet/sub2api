@@ -92,13 +92,33 @@ export default {
     },
     "clientShowcase": {
       "badge": "Client preview",
-      "title": "An agent client that brings Claude Code and Codex together. Download-ready in China",
-      "description": "Multiple agents working in parallel through worktrees · Claude and Codex side by side · File change tracking · Transparent spend",
+      "title": "Relay gateway × agent workbench, deeply unified in one desktop client",
+      "description": "Sign in and you are routed — the gateway key is written into every CLI's global config automatically. Balance, group rate multipliers, and uptime sit right next to your tasks, so you can hop to a cheaper, steadier route while a task is still running.",
       "pills": {
-        "darkMode": "Dark theme",
-        "workspace": "Workspace management",
-        "terminal": "Built-in terminal",
-        "parallel": "Parallel agents"
+        "autoRoute": "Sign in, routed",
+        "groupSwitch": "One-click group switch (rate · uptime)",
+        "liveBalance": "Live balance",
+        "cliInstall": "Missing CLI? One-click install"
+      },
+      "advantages": {
+        "tiny": {
+          "title": "An installer of just tens of MB",
+          "body": "A single native binary — no Electron shell"
+        },
+        "native": {
+          "title": "Native-grade smoothness",
+          "body": "Rust + GPUI rendering — zero lag on scroll and input"
+        },
+        "ready": {
+          "title": "Works out of the box",
+          "body": "Sign in and you are routed; missing Node or a CLI is fixed in one click"
+        }
+      },
+      "apiOnly": {
+        "title": "Just want the raw API?",
+        "body": "Register for a key and call the OpenAI/Anthropic-compatible endpoints directly — works with third-party clients of every kind.",
+        "dashboardCta": "Get an API key",
+        "docsCta": "Read the docs"
       },
       "cta": "Get client updates",
       "ctaNote": "Register to get desktop client updates first.",
@@ -106,56 +126,74 @@ export default {
       "downloadNote": "Desktop client downloads are available now."
     },
     "clientWorkflow": {
-      "ariaLabel": "Animated CheapRouter agent workflow preview",
-      "windowTitle": "CheapRouter Client",
-      "connected": "Daemon connected",
-      "sidebarSubtitle": "Local agent console",
-      "workspaces": "Workspaces",
-      "workspaceName": "New workspace",
-      "workspaceDocs": "Client style source",
-      "newWorktree": "New WorkTree",
-      "creatingWorktree": "Creating",
-      "agents": "Agents",
-      "draftAgent": "Draft agent",
-      "runningAgent": "Agent running",
-      "branch": "main",
-      "balance": "Balance ¥128.40",
-      "terminal": "Terminal",
-      "tabDraft": "New agent",
-      "tabAgent": "Agent workflow preview",
-      "emptyTitle": "What do you want to build in {project}?",
-      "emptyCopy": "Your code stays local while Claude Code and Codex runs are visible in one desktop app.",
-      "composerTitle": "What should the agent build?",
-      "provider": "Claude",
-      "group": "Claude",
-      "model": "Opus 4.8 1M",
-      "mode": "Bypass",
-      "thinking": "Medium",
-      "prompt": "Create a workspace, wire the billing dashboard, and verify the Claude agent flow.",
-      "runningStatus": "Agent is streaming with Claude / Opus 4.8 1M...",
-      "workingRead": "Reading workspace files",
-      "workingEdit": "Editing dashboard and store",
-      "workingVerify": "Running verification",
-      "streamThinking": "Reading the workspace files and planning the billing dashboard changes...",
-      "requestTitle": "Agent request",
-      "requestBody": "Allow the agent to inspect local files and run the verification command.",
-      "permissionQuestion": "Allow this action?",
-      "requestDeny": "Deny",
-      "requestApproved": "Allow",
-      "toolInspect": "Read workspace files",
-      "toolEdit": "Apply dashboard changes",
-      "toolTerminal": "Run verification",
-      "streamStepOne": "Updated the dashboard cards and connected the usage summary to the workspace state.",
-      "streamStepTwo": "Verified the agent request, file changes, and terminal status inside the desktop workflow.",
-      "streamComplete": "Done: Claude agent workflow completed",
-      "replay": "Replay",
-      "filesChanged": "Files changed",
-      "terminalRun": "Checks",
-      "typecheckDone": "typecheck passed",
-      "buildDone": "production build ready",
-      "spendTitle": "Transparent spend",
-      "spendInput": "Input tokens",
-      "spendOutput": "Output tokens"
+      "ariaLabel": "CheapRouter desktop client demo: switching routing groups with one click while a task is running",
+      "working": "工作中 · {seconds} 秒",
+      "balanceBefore": "$999990.44",
+      "balanceAfter": "$999990.41",
+      "sidebar": {
+        "newTask": "新建任务",
+        "search": "搜索",
+        "today": "今天",
+        "taskTitle": "在吗",
+        "project": "amadeus-system",
+        "email": "huzw1995{'@'}163.com"
+      },
+      "labels": {
+        "read": "读取",
+        "tool": "工具",
+        "thinking": "思考"
+      },
+      "rows": {
+        "r1": "main.ts",
+        "r2": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`",
+        "r3": "constants.ts",
+        "r4": "思考用时 1 秒",
+        "r5": "chat.ts",
+        "r6": "auth.ts",
+        "r7": "user.ts",
+        "r8": "database.ts",
+        "r9": "changelog.ts",
+        "r10": "List `D:\\Projects\\amadeus-system\\src\\views\\chat\\hooks`",
+        "r11": "index.vue",
+        "r12": "auth.ts"
+      },
+      "composer": {
+        "placeholder": "做什么都可以…",
+        "model": "Grok 4.6",
+        "effort": "High",
+        "access": "完全访问",
+        "build": "构建",
+        "stop": "停止"
+      },
+      "statusBar": {
+        "project": "amadeus-system",
+        "local": "本地",
+        "branch": "my_feature"
+      },
+      "menu": {
+        "balance": "余额 {amount}",
+        "topUp": "充值",
+        "claudeGroup": "Claude Code 分组",
+        "claudeValue": "Claude Sale",
+        "codexGroup": "Codex 分组",
+        "codexValueBefore": "Codex",
+        "codexValueAfter": "Codex Sale",
+        "grokGroup": "Grok 分组",
+        "grokValue": "Grok",
+        "modelPlaza": "模型广场",
+        "usage": "使用记录",
+        "logout": "退出登录",
+        "submenu": {
+          "default": "账号默认",
+          "codexName": "Codex",
+          "codexMeta": "×0.29 · 96.2%",
+          "saleName": "Codex Sale",
+          "saleMeta": "×0.19 · 86.4%",
+          "welfareName": "Codex 福利分组",
+          "welfareMeta": "×0.09 · 69.3%"
+        }
+      },
+      "toast": "已切换到 Codex Sale，对新启动的任务生效"
     },
     "download": {
       "badge": "Desktop client",

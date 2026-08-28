@@ -20,69 +20,80 @@ const translations: Record<string, string> = {
   'home.goToDashboard': 'Dashboard',
   'home.viewDocs': 'Docs',
   'home.login': 'Login',
-  'home.clientShowcase.title': 'An agent client that brings Claude Code and Codex together. Download-ready in China',
+  'home.clientShowcase.title': 'Relay gateway × agent workbench, deeply unified in one desktop client',
   'home.clientShowcase.description':
-    'Run multiple agent tasks in parallel across workspaces without switching windows.',
-  'home.clientShowcase.pills.darkMode': 'Dark theme',
-  'home.clientShowcase.pills.workspace': 'Workspace management',
-  'home.clientShowcase.pills.terminal': 'Built-in terminal',
-  'home.clientShowcase.pills.parallel': 'Parallel agents',
-  'home.clientShowcase.downloadCta': 'Download {platform}',
-  'home.clientWorkflow.ariaLabel': 'Animated agent workflow',
-  'home.clientWorkflow.windowTitle': 'CheapRouter Client',
-  'home.clientWorkflow.connected': 'Daemon connected',
-  'home.clientWorkflow.sidebarSubtitle': 'Local agent console',
-  'home.clientWorkflow.workspaces': 'Workspaces',
-  'home.clientWorkflow.workspaceName': 'New workspace',
-  'home.clientWorkflow.workspaceDocs': 'Client style source',
-  'home.clientWorkflow.newWorktree': 'New WorkTree',
-  'home.clientWorkflow.creatingWorktree': 'Creating',
-  'home.clientWorkflow.agents': 'Agents',
-  'home.clientWorkflow.draftAgent': 'Draft agent',
-  'home.clientWorkflow.runningAgent': 'Agent running',
-  'home.clientWorkflow.branch': 'main',
-  'home.clientWorkflow.balance': 'Balance ¥128.40',
-  'home.clientWorkflow.terminal': 'Terminal',
-  'home.clientWorkflow.tabDraft': 'New agent',
-  'home.clientWorkflow.tabAgent': 'Agent workflow preview',
-  'home.clientWorkflow.emptyTitle': 'What do you want to build in {project}?',
-  'home.clientWorkflow.emptyCopy':
-    'Your code stays local while Claude Code and Codex runs are visible in one desktop app.',
-  'home.clientWorkflow.composerTitle': 'What should the agent build?',
-  'home.clientWorkflow.provider': 'Claude',
-  'home.clientWorkflow.group': 'Claude',
-  'home.clientWorkflow.model': 'Opus 4.8 1M',
-  'home.clientWorkflow.mode': 'Bypass',
-  'home.clientWorkflow.thinking': 'Medium',
-  'home.clientWorkflow.prompt': 'Create a workspace, wire the billing dashboard, and verify the Claude agent flow.',
-  'home.clientWorkflow.runningStatus': 'Agent is streaming with Claude / Opus 4.8 1M...',
-  'home.clientWorkflow.workingRead': 'Reading workspace files',
-  'home.clientWorkflow.workingEdit': 'Editing dashboard and store',
-  'home.clientWorkflow.workingVerify': 'Running verification',
-  'home.clientWorkflow.streamThinking':
-    'Reading the workspace files and planning the billing dashboard changes...',
-  'home.clientWorkflow.requestTitle': 'Agent request',
-  'home.clientWorkflow.requestBody':
-    'Allow the agent to inspect local files and run the verification command.',
-  'home.clientWorkflow.permissionQuestion': 'Allow this action?',
-  'home.clientWorkflow.requestDeny': 'Deny',
-  'home.clientWorkflow.requestApproved': 'Allow',
-  'home.clientWorkflow.toolInspect': 'Read workspace files',
-  'home.clientWorkflow.toolEdit': 'Apply dashboard changes',
-  'home.clientWorkflow.toolTerminal': 'Run verification',
-  'home.clientWorkflow.streamStepOne':
-    'Updated the dashboard cards and connected the usage summary to the workspace state.',
-  'home.clientWorkflow.streamStepTwo':
-    'Verified the agent request, file changes, and terminal status inside the desktop workflow.',
-  'home.clientWorkflow.streamComplete': 'Done: Claude agent workflow completed',
-  'home.clientWorkflow.replay': 'Replay',
-  'home.clientWorkflow.filesChanged': 'Files changed',
-  'home.clientWorkflow.terminalRun': 'Checks',
-  'home.clientWorkflow.typecheckDone': 'typecheck passed',
-  'home.clientWorkflow.buildDone': 'production build ready',
-  'home.clientWorkflow.spendTitle': 'Transparent spend',
-  'home.clientWorkflow.spendInput': 'Input tokens',
-  'home.clientWorkflow.spendOutput': 'Output tokens',
+    'Sign in and you are routed — balance, group rates, and uptime sit right next to your tasks.',
+  'home.clientShowcase.pills.autoRoute': 'Sign in, routed',
+  'home.clientShowcase.pills.groupSwitch': 'One-click group switch (rate · uptime)',
+  'home.clientShowcase.pills.liveBalance': 'Live balance',
+  'home.clientShowcase.pills.cliInstall': 'Missing CLI? One-click install',
+  'home.clientShowcase.advantages.tiny.title': 'An installer of just tens of MB',
+  'home.clientShowcase.advantages.tiny.body': 'A single native binary — no Electron shell',
+  'home.clientShowcase.advantages.native.title': 'Native-grade smoothness',
+  'home.clientShowcase.advantages.native.body': 'Rust + GPUI rendering — zero lag on scroll and input',
+  'home.clientShowcase.advantages.ready.title': 'Works out of the box',
+  'home.clientShowcase.advantages.ready.body':
+    'Sign in and you are routed; missing Node or a CLI is fixed in one click',
+  'home.clientShowcase.apiOnly.title': 'Just want the raw API?',
+  'home.clientShowcase.apiOnly.body':
+    'Register for a key and call the OpenAI/Anthropic-compatible endpoints directly.',
+  'home.clientShowcase.apiOnly.dashboardCta': 'Get an API key',
+  'home.clientShowcase.apiOnly.docsCta': 'Read the docs',
+  'home.clientWorkflow.ariaLabel':
+    'CheapRouter desktop client demo: switching routing groups with one click',
+  'home.clientWorkflow.working': '工作中 · {seconds} 秒',
+  'home.clientWorkflow.balanceBefore': '$999990.44',
+  'home.clientWorkflow.balanceAfter': '$999990.41',
+  'home.clientWorkflow.sidebar.newTask': '新建任务',
+  'home.clientWorkflow.sidebar.search': '搜索',
+  'home.clientWorkflow.sidebar.today': '今天',
+  'home.clientWorkflow.sidebar.taskTitle': '在吗',
+  'home.clientWorkflow.sidebar.project': 'amadeus-system',
+  'home.clientWorkflow.sidebar.email': 'huzw1995@163.com',
+  'home.clientWorkflow.labels.read': '读取',
+  'home.clientWorkflow.labels.tool': '工具',
+  'home.clientWorkflow.labels.thinking': '思考',
+  'home.clientWorkflow.rows.r1': 'main.ts',
+  'home.clientWorkflow.rows.r2': 'List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`',
+  'home.clientWorkflow.rows.r3': 'constants.ts',
+  'home.clientWorkflow.rows.r4': '思考用时 1 秒',
+  'home.clientWorkflow.rows.r5': 'chat.ts',
+  'home.clientWorkflow.rows.r6': 'auth.ts',
+  'home.clientWorkflow.rows.r7': 'user.ts',
+  'home.clientWorkflow.rows.r8': 'database.ts',
+  'home.clientWorkflow.rows.r9': 'changelog.ts',
+  'home.clientWorkflow.rows.r10': 'List `D:\\Projects\\amadeus-system\\src\\views\\chat\\hooks`',
+  'home.clientWorkflow.rows.r11': 'index.vue',
+  'home.clientWorkflow.rows.r12': 'auth.ts',
+  'home.clientWorkflow.composer.placeholder': '做什么都可以…',
+  'home.clientWorkflow.composer.model': 'Grok 4.6',
+  'home.clientWorkflow.composer.effort': 'High',
+  'home.clientWorkflow.composer.access': '完全访问',
+  'home.clientWorkflow.composer.build': '构建',
+  'home.clientWorkflow.composer.stop': '停止',
+  'home.clientWorkflow.statusBar.project': 'amadeus-system',
+  'home.clientWorkflow.statusBar.local': '本地',
+  'home.clientWorkflow.statusBar.branch': 'my_feature',
+  'home.clientWorkflow.menu.balance': '余额 {amount}',
+  'home.clientWorkflow.menu.topUp': '充值',
+  'home.clientWorkflow.menu.claudeGroup': 'Claude Code 分组',
+  'home.clientWorkflow.menu.claudeValue': 'Claude Sale',
+  'home.clientWorkflow.menu.codexGroup': 'Codex 分组',
+  'home.clientWorkflow.menu.codexValueBefore': 'Codex',
+  'home.clientWorkflow.menu.codexValueAfter': 'Codex Sale',
+  'home.clientWorkflow.menu.grokGroup': 'Grok 分组',
+  'home.clientWorkflow.menu.grokValue': 'Grok',
+  'home.clientWorkflow.menu.modelPlaza': '模型广场',
+  'home.clientWorkflow.menu.usage': '使用记录',
+  'home.clientWorkflow.menu.logout': '退出登录',
+  'home.clientWorkflow.menu.submenu.default': '账号默认',
+  'home.clientWorkflow.menu.submenu.codexName': 'Codex',
+  'home.clientWorkflow.menu.submenu.codexMeta': '×0.29 · 96.2%',
+  'home.clientWorkflow.menu.submenu.saleName': 'Codex Sale',
+  'home.clientWorkflow.menu.submenu.saleMeta': '×0.19 · 86.4%',
+  'home.clientWorkflow.menu.submenu.welfareName': 'Codex 福利分组',
+  'home.clientWorkflow.menu.submenu.welfareMeta': '×0.09 · 69.3%',
+  'home.clientWorkflow.toast': '已切换到 Codex Sale，对新启动的任务生效',
 }
 
 vi.mock('vue-i18n', async () => {
@@ -90,10 +101,10 @@ vi.mock('vue-i18n', async () => {
   return {
     ...actual,
     useI18n: () => ({
-      t: (key: string, params?: Record<string, string>) => {
+      t: (key: string, params?: Record<string, string | number>) => {
         const message = translations[key] || key
         return Object.entries(params || {}).reduce(
-          (result, [name, value]) => result.replace(`{${name}}`, value),
+          (result, [name, value]) => result.replace(`{${name}}`, String(value)),
           message,
         )
       },
@@ -202,52 +213,99 @@ describe('HomeHero', () => {
 
     expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('An agent client that brings Claude Code and Codex together')
+    expect(wrapper.text()).not.toContain('Relay gateway × agent workbench')
     expect(wrapper.text()).not.toContain('Use one key everywhere.')
   })
 
-  it('highlights parallel agent runs in the client preview copy and pills', () => {
+  it('sells the gateway + workbench integration in the showcase copy and pills', () => {
     const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
 
-    expect(wrapper.text()).toContain('An agent client that brings Claude Code and Codex together')
-    expect(wrapper.text()).toContain('Run multiple agent tasks in parallel')
-    expect(wrapper.text()).toContain('Parallel agents')
-    expect(wrapper.text()).not.toContain('Cross-device sync')
+    expect(wrapper.text()).toContain('Relay gateway × agent workbench, deeply unified in one desktop client')
+    expect(wrapper.text()).toContain('balance, group rates, and uptime sit right next to your tasks')
+    expect(wrapper.text()).toContain('Sign in, routed')
+    expect(wrapper.text()).toContain('One-click group switch (rate · uptime)')
+    expect(wrapper.text()).toContain('Live balance')
+    expect(wrapper.text()).toContain('Missing CLI? One-click install')
+    expect(wrapper.text()).not.toContain('Dark theme')
+    expect(wrapper.text()).not.toContain('Parallel agents')
   })
 
-  it('renders the animated agent workflow preview instead of the static product image', () => {
+  it('renders the CheapRouter desktop client mockup with transcript, composer and status bar', () => {
     const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
 
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(true)
     expect(wrapper.find('img[src="/product.png"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('What do you want to build in')
-    expect(wrapper.text()).not.toContain('What do you want to build in sub2api?')
-    expect(wrapper.text()).toContain('Claude')
-    expect(wrapper.text()).toContain('Opus 4.8 1M')
-    expect(wrapper.text()).toContain('Bypass')
-    expect(wrapper.text()).toContain('Medium')
-    expect(wrapper.text()).toContain('homepage-billing')
-    expect(wrapper.text()).toContain('pricing-copy')
-    expect(wrapper.text()).toContain('api-metering')
-    expect(wrapper.text()).toContain('new-agent-flow')
-    expect(wrapper.text()).toContain('Creating')
-    expect(wrapper.text()).toContain('Reviewer')
-    expect(wrapper.text()).toContain('Message the agent, tag @files')
-    expect(wrapper.text()).toContain('Changes')
-    // 流式完成回执不再渲染（去掉 "Done" 完成行）
-    expect(wrapper.text()).not.toContain('Done: Claude agent workflow completed')
-    // Bypass 模式下不再展示权限确认卡片
-    expect(wrapper.text()).not.toContain('Agent request')
-    expect(wrapper.text()).not.toContain('Allow this action?')
-    expect(wrapper.text()).not.toContain('Client preview')
-    expect(wrapper.text()).not.toContain('客户端界面预览')
+    // sidebar
+    expect(wrapper.text()).toContain('新建任务')
+    expect(wrapper.text()).toContain('在吗')
+    expect(wrapper.text()).toContain('amadeus-system')
+    expect(wrapper.text()).toContain('huzw1995@163.com')
+    // transcript tool rows
+    expect(wrapper.text()).toContain('读取')
+    expect(wrapper.text()).toContain('main.ts')
+    expect(wrapper.text()).toContain('List `D:\\Projects\\amadeus-system\\src\\views\\chat\\components`')
+    expect(wrapper.text()).toContain('思考用时 1 秒')
+    // composer
+    expect(wrapper.text()).toContain('做什么都可以…')
+    expect(wrapper.text()).toContain('Grok 4.6')
+    expect(wrapper.text()).toContain('完全访问')
+    expect(wrapper.text()).toContain('构建')
+    // status bar
+    expect(wrapper.text()).toContain('本地')
+    expect(wrapper.text()).toContain('my_feature')
+    expect(wrapper.text()).toContain('$999990.4')
+    // old mockup is gone
+    expect(wrapper.text()).not.toContain('Daemon connected')
+    expect(wrapper.text()).not.toContain('Opus 4.8 1M')
+    expect(wrapper.text()).not.toContain('homepage-billing')
   })
 
-  it('lets a viewer click any selectable workspace and replay the stream', async () => {
+  it('shows the group-switch account menu with rate multipliers and uptime', () => {
     const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
-    const target = wrapper.find('[data-test="workspace-row-pricing-copy"]')
-    expect(target.exists()).toBe(true)
-    await target.trigger('click')
-    expect(target.attributes('aria-pressed')).toBe('true')
+
+    expect(wrapper.find('[data-test="preview-account-menu"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="preview-group-submenu"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('充值')
+    expect(wrapper.text()).toContain('Claude Code 分组')
+    expect(wrapper.text()).toContain('Codex 分组')
+    expect(wrapper.text()).toContain('Grok 分组')
+    expect(wrapper.text()).toContain('账号默认')
+    expect(wrapper.text()).toContain('×0.29 · 96.2%')
+    expect(wrapper.text()).toContain('×0.19 · 86.4%')
+    expect(wrapper.text()).toContain('×0.09 · 69.3%')
+    expect(wrapper.text()).toContain('模型广场')
+    expect(wrapper.text()).toContain('使用记录')
+    expect(wrapper.text()).toContain('退出登录')
+    expect(wrapper.text()).toContain('已切换到 Codex Sale，对新启动的任务生效')
+  })
+
+  it('renders the advantages strip and the API-only card below the preview', () => {
+    const wrapper = mountHero({
+      windowsUrl: 'https://downloads.example.com/windows.exe',
+      docUrl: 'https://docs.example.com',
+    })
+
+    const advantages = wrapper.find('[data-test="client-advantages"]')
+    expect(advantages.exists()).toBe(true)
+    expect(advantages.text()).toContain('An installer of just tens of MB')
+    expect(advantages.text()).toContain('A single native binary — no Electron shell')
+    expect(advantages.text()).toContain('Native-grade smoothness')
+    expect(advantages.text()).toContain('Rust + GPUI rendering — zero lag on scroll and input')
+    expect(advantages.text()).toContain('Works out of the box')
+
+    const apiOnly = wrapper.find('[data-test="api-only-card"]')
+    expect(apiOnly.exists()).toBe(true)
+    expect(apiOnly.text()).toContain('Just want the raw API?')
+    expect(apiOnly.find('[data-test="api-only-dashboard"]').attributes('href')).toBe('/dashboard')
+    const docsLink = apiOnly.find('[data-test="api-only-docs"]')
+    expect(docsLink.attributes('href')).toBe('https://docs.example.com')
+  })
+
+  it('hides the API-only docs link when no doc url is configured', () => {
+    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
+
+    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="api-only-docs"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="api-only-dashboard"]').attributes('href')).toBe('/dashboard')
   })
 })

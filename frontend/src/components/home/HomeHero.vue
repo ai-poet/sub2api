@@ -116,6 +116,54 @@
 
       <HomeAgentWorkflowPreview />
 
+      <!-- Client advantages strip -->
+      <div data-test="client-advantages" class="mt-6 grid gap-3 sm:grid-cols-3">
+        <div
+          v-for="card in advantageCards"
+          :key="card.title"
+          class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"
+        >
+          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">{{ card.title }}</h3>
+          <p class="mt-1.5 text-sm leading-6 text-gray-500 dark:text-white/55">{{ card.body }}</p>
+        </div>
+      </div>
+
+      <!-- API-only card -->
+      <div
+        data-test="api-only-card"
+        class="mt-3 flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
+      >
+        <div>
+          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">
+            {{ t('home.clientShowcase.apiOnly.title') }}
+          </h3>
+          <p class="mt-1.5 max-w-[38rem] text-sm leading-6 text-gray-500 dark:text-white/55">
+            {{ t('home.clientShowcase.apiOnly.body') }}
+          </p>
+        </div>
+        <div class="flex shrink-0 flex-wrap items-center gap-3">
+          <router-link
+            :to="dashboardPath"
+            data-test="api-only-dashboard"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#111] px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
+          >
+            <span>{{ t('home.clientShowcase.apiOnly.dashboardCta') }}</span>
+            <Icon name="arrowRight" size="sm" />
+          </router-link>
+          <a
+            v-if="docUrl"
+            :href="docUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-test="api-only-docs"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-[#111] transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+          >
+            <span>{{ t('home.clientShowcase.apiOnly.docsCta') }}</span>
+            <Icon name="externalLink" size="sm" />
+          </a>
+        </div>
+      </div>
+
     </div>
 
   </section>
@@ -167,9 +215,24 @@ function handlePrimaryClick() {
 }
 
 const pills = computed(() => [
-  t('home.clientShowcase.pills.darkMode'),
-  t('home.clientShowcase.pills.workspace'),
-  t('home.clientShowcase.pills.terminal'),
-  t('home.clientShowcase.pills.parallel'),
+  t('home.clientShowcase.pills.autoRoute'),
+  t('home.clientShowcase.pills.groupSwitch'),
+  t('home.clientShowcase.pills.liveBalance'),
+  t('home.clientShowcase.pills.cliInstall'),
+])
+
+const advantageCards = computed(() => [
+  {
+    title: t('home.clientShowcase.advantages.tiny.title'),
+    body: t('home.clientShowcase.advantages.tiny.body'),
+  },
+  {
+    title: t('home.clientShowcase.advantages.native.title'),
+    body: t('home.clientShowcase.advantages.native.body'),
+  },
+  {
+    title: t('home.clientShowcase.advantages.ready.title'),
+    body: t('home.clientShowcase.advantages.ready.body'),
+  },
 ])
 </script>
