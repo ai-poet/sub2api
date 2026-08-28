@@ -2325,12 +2325,7 @@ func applyForkSettingsFromRequest(
 	if req.ClientDownloadMacOSURL != nil {
 		macosURL = strings.TrimSpace(*req.ClientDownloadMacOSURL)
 	}
-	if macosURL != "" {
-		if err := config.ValidateAbsoluteHTTPURL(macosURL); err != nil {
-			response.BadRequest(c, "macOS client download URL must be an absolute http(s) URL")
-			return false
-		}
-	}
+	// macOS 字段存储的是终端安装命令，而非下载 URL，因此不做 URL 格式校验。
 	settings.ClientDownloadMacOSURL = macosURL
 
 	settings.GroupStatusEnabled = previous.GroupStatusEnabled
