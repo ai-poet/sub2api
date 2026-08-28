@@ -14,7 +14,7 @@
       <h1 class="mt-6 max-w-full text-[clamp(1.95rem,7.8vw,5rem)] font-black leading-[1.06] tracking-[-0.04em] [overflow-wrap:anywhere] [text-wrap:balance] sm:text-[clamp(2.6rem,6vw,5rem)]">
         <span class="block text-[#111] dark:text-white">
           <span class="block sm:inline">{{ t('home.hero.titleLeadPrimary') }}</span>
-          <span class="block sm:ml-[0.18em] sm:inline">{{ t('home.hero.titleLeadSecondary') }}</span>
+          <span v-if="hasClientDownloads" class="block sm:ml-[0.18em] sm:inline">{{ t('home.hero.titleLeadSecondary') }}</span>
         </span>
         <span v-if="titleAccent" class="block text-primary-600 dark:text-primary-400">{{ titleAccent }}</span>
         <span v-if="titleTail" class="block text-[#111] dark:text-white">{{ titleTail }}</span>
@@ -174,44 +174,6 @@
       </div>
     </div>
 
-    <!-- 无客户端时：API-only 卡片独立显示在首屏 -->
-    <div v-if="!hasClientDownloads" class="mx-auto max-w-[1380px] pb-12 md:pb-16">
-      <div
-        data-test="api-only-card"
-        class="mt-6 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
-      >
-        <div>
-          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">
-            {{ t('home.clientShowcase.apiOnly.title') }}
-          </h3>
-          <p class="mt-1.5 max-w-[38rem] text-sm leading-6 text-gray-500 dark:text-white/55">
-            {{ t('home.clientShowcase.apiOnly.body') }}
-          </p>
-        </div>
-        <div class="flex shrink-0 flex-wrap items-center gap-3">
-          <router-link
-            :to="dashboardPath"
-            data-test="api-only-dashboard"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#111] px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
-          >
-            <span>{{ t('home.clientShowcase.apiOnly.dashboardCta') }}</span>
-            <Icon name="arrowRight" size="sm" />
-          </router-link>
-          <a
-            v-if="docUrl"
-            :href="docUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-test="api-only-docs"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-[#111] transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          >
-            <span>{{ t('home.clientShowcase.apiOnly.docsCta') }}</span>
-            <Icon name="externalLink" size="sm" />
-          </a>
-        </div>
-      </div>
-    </div>
-
   </section>
 </template>
 
@@ -266,6 +228,7 @@ const pills = computed(() => [
   t('home.clientShowcase.pills.groupSwitch'),
   t('home.clientShowcase.pills.liveBalance'),
   t('home.clientShowcase.pills.cliInstall'),
+  t('home.clientShowcase.pills.aggregate'),
 ])
 
 const advantageCards = computed(() => [

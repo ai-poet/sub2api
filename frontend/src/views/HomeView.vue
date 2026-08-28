@@ -94,7 +94,6 @@ import HomeValueSection from '@/components/home/HomeValueSection.vue'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
-const homeDocumentTitle = 'CheapRouter - Claude Code / Codex 一键接入 · 按量计费'
 let titleSyncTimer: number | undefined
 
 const siteName = computed(() => {
@@ -132,7 +131,7 @@ const userInitial = computed(() => {
 })
 
 function applyHomeDocumentTitle() {
-  document.title = homeDocumentTitle
+  document.title = `${siteName.value} - Claude Code / Codex 一键接入 · 按量计费`
 }
 
 watch(

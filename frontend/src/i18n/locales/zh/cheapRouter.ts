@@ -20,7 +20,7 @@ export default {
     "navChangelog": "更新日志",
     "hero": {
       "badge": "Claude Code / Codex 一键接入",
-      "titleLeadPrimary": "极具价格竞争力的 AI 中转站",
+      "titleLeadPrimary": "价格竞争力的 AI 中转站",
       "titleLeadSecondary": "× Agent 桌面客户端",
       "titleAccent": "",
       "titleTail": "",
@@ -99,7 +99,8 @@ export default {
         "autoRoute": "登录即路由",
         "groupSwitch": "分组一键切换（倍率·在线率）",
         "liveBalance": "余额实时可见",
-        "cliInstall": "缺 CLI 一键安装"
+        "cliInstall": "缺 CLI 一键安装",
+        "aggregate": "主流 AI 工具聚合使用"
       },
       "advantages": {
         "tiny": {

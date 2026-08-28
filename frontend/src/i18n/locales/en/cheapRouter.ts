@@ -99,7 +99,8 @@ export default {
         "autoRoute": "Sign in, routed",
         "groupSwitch": "One-click group switch (rate · uptime)",
         "liveBalance": "Live balance",
-        "cliInstall": "Missing CLI? One-click install"
+        "cliInstall": "Missing CLI? One-click install",
+        "aggregate": "Mainstream AI tools in one place"
       },
       "advantages": {
         "tiny": {

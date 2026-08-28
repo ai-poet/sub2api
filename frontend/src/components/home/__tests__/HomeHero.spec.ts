@@ -28,6 +28,7 @@ const translations: Record<string, string> = {
   'home.clientShowcase.pills.groupSwitch': 'One-click group switch (rate · uptime)',
   'home.clientShowcase.pills.liveBalance': 'Live balance',
   'home.clientShowcase.pills.cliInstall': 'Missing CLI? One-click install',
+  'home.clientShowcase.pills.aggregate': 'Mainstream AI tools in one place',
   'home.clientShowcase.advantages.tiny.title': 'An installer of just a dozen MB',
   'home.clientShowcase.advantages.tiny.body': 'A single native binary — no Electron shell',
   'home.clientShowcase.advantages.native.title': 'Native-grade smoothness',
@@ -180,6 +181,9 @@ describe('HomeHero', () => {
     expect(platformDownloads).toHaveLength(0)
     expect(wrapper.text()).not.toContain('Download macOS')
     expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
+    // 配置了客户端下载地址时：标题附带 Agent 桌面客户端副标题
+    expect(wrapper.text()).toContain('Price-competitive AI relay')
+    expect(wrapper.text()).toContain('× Agent desktop client')
   })
 
   it('shows install command button when macOS is the preferred platform', () => {
@@ -210,14 +214,18 @@ describe('HomeHero', () => {
     expect(wrapper.text()).not.toContain('Use the API')
   })
 
-  it('hides client showcase when no client download is configured', () => {
+  it('hides client-related info and the API-only card when no client download is configured', () => {
     const wrapper = mountHero()
 
     expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('Use one key everywhere.')
-    // API-only card still shows as fallback
-    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(true)
+    // 无客户端下载地址时：标题只保留中转站主线；CLI 图标条保留展示
+    expect(wrapper.text()).toContain('Price-competitive AI relay')
+    expect(wrapper.text()).not.toContain('× Agent desktop client')
+    expect(wrapper.find('.border-dashed').exists()).toBe(true)
+    // API-only card is hidden too
+    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(false)
   })
 
   it('sells the gateway + workbench integration in the showcase pills', () => {
@@ -227,6 +235,7 @@ describe('HomeHero', () => {
     expect(wrapper.text()).toContain('One-click group switch (rate · uptime)')
     expect(wrapper.text()).toContain('Live balance')
     expect(wrapper.text()).toContain('Missing CLI? One-click install')
+    expect(wrapper.text()).toContain('Mainstream AI tools in one place')
     expect(wrapper.text()).not.toContain('Dark theme')
     expect(wrapper.text()).not.toContain('Parallel agents')
   })
@@ -287,7 +296,7 @@ describe('HomeHero', () => {
   })
 
   it('renders the CLI icons strip below the headline without a Pi card', () => {
-    const wrapper = mountHero()
+    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
 
     const text = wrapper.text()
     expect(text).toContain('Claude Code')
@@ -322,15 +331,11 @@ describe('HomeHero', () => {
     expect(docsLink.attributes('href')).toBe('https://docs.example.com')
   })
 
-  it('shows the API-only card as fallback when no client download is configured', () => {
+  it('hides the API-only card when no client download is configured', () => {
     const wrapper = mountHero({ docUrl: 'https://docs.example.com' })
 
-    const apiOnly = wrapper.find('[data-test="api-only-card"]')
-    expect(apiOnly.exists()).toBe(true)
-    expect(apiOnly.text()).toContain('Just want the raw API?')
-    expect(apiOnly.find('[data-test="api-only-dashboard"]').attributes('href')).toBe('/dashboard')
-    const docsLink = apiOnly.find('[data-test="api-only-docs"]')
-    expect(docsLink.attributes('href')).toBe('https://docs.example.com')
+    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Just want the raw API?')
   })
 
   it('hides the API-only docs link when no doc url is configured', () => {
