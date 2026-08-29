@@ -327,9 +327,10 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 		return
 	}
-	emailVerificationRequired := h != nil && h.authService != nil && h.authService.IsEmailVerifyEnabled(c.Request.Context())
-	forceEmailOnSignup := h.isForceEmailOnThirdPartySignup(c.Request.Context())
-	if compatEmailUser == nil && !emailVerificationRequired && !forceEmailOnSignup {
+	// 新用户(无撞号)完全直登,与 fork 的 GitHub OAuth 行为一致:
+	// 不读 email_verify_enabled / force_email_on_third_party_signup 两个开关,
+	// 合成邮箱账号直接激活。想让用户补真实邮箱,走登录后的「账号绑定」页。
+	if compatEmailUser == nil {
 		if err := h.ensureBackendModeAllowsNewUserLogin(c.Request.Context()); err != nil {
 			redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 			return
@@ -375,6 +376,25 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 			redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 			return
 		}
+		// 需要邀请码:创建只承载邀请码的 pending session(与微信 invitation 形态一致),
+		// 前端只弹邀请码输入框,补完后仍是合成邮箱直登,不进补邮箱流程。
+		if err := h.createOAuthPendingSession(c, oauthPendingSessionPayload{
+			Intent:                 oauthIntentLogin,
+			Identity:               identityKey,
+			ResolvedEmail:          email,
+			RedirectTo:             redirectTo,
+			BrowserSessionKey:      browserSessionKey,
+			UpstreamIdentityClaims: upstreamClaims,
+			CompletionResponse: map[string]any{
+				"redirect": redirectTo,
+				"error":    "invitation_required",
+			},
+		}); err != nil {
+			redirectOAuthError(c, frontendCallback, "session_error", "failed to continue oauth login", "")
+			return
+		}
+		redirectToFrontendCallback(c, frontendCallback)
+		return
 	}
 	if err := h.createLinuxDoOAuthChoicePendingSession(
 		c,
@@ -386,8 +406,6 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		upstreamClaims,
 		compatEmail,
 		compatEmailUser,
-		emailVerificationRequired,
-		forceEmailOnSignup,
 	); err != nil {
 		redirectOAuthError(c, frontendCallback, "session_error", "failed to continue oauth login", "")
 		return
@@ -437,8 +455,6 @@ func (h *AuthHandler) createLinuxDoOAuthChoicePendingSession(
 	upstreamClaims map[string]any,
 	compatEmail string,
 	compatEmailUser *dbent.User,
-	emailVerificationRequired bool,
-	forceEmailOnSignup bool,
 ) error {
 	suggestionEmail := strings.TrimSpace(suggestedEmail)
 	canonicalEmail := strings.TrimSpace(resolvedEmail)
@@ -455,7 +471,7 @@ func (h *AuthHandler) createLinuxDoOAuthChoicePendingSession(
 		"existing_account_email":    "",
 		"existing_account_bindable": false,
 		"create_account_allowed":    true,
-		"force_email_on_signup":     forceEmailOnSignup,
+		"force_email_on_signup":     false,
 		"choice_reason":             "third_party_signup",
 	}
 	if strings.TrimSpace(compatEmail) != "" {
@@ -469,21 +485,6 @@ func (h *AuthHandler) createLinuxDoOAuthChoicePendingSession(
 		completionResponse["choice_reason"] = "compat_email_match"
 		resolvedChoiceEmail = strings.TrimSpace(compatEmailUser.Email)
 	}
-	if forceEmailOnSignup && compatEmailUser == nil {
-		completionResponse["choice_reason"] = "force_email_on_signup"
-	}
-	if (emailVerificationRequired || forceEmailOnSignup) && compatEmailUser == nil {
-		completionResponse["step"] = "create_account_required"
-		completionResponse["email_binding_required"] = true
-		completionResponse["force_email_on_signup"] = true
-		if emailVerificationRequired {
-			completionResponse["choice_reason"] = "email_verification_required"
-		}
-		delete(completionResponse, "email")
-		delete(completionResponse, "resolved_email")
-		resolvedChoiceEmail = ""
-	}
-
 	var targetUserID *int64
 	if compatEmailUser != nil && compatEmailUser.ID > 0 {
 		targetUserID = &compatEmailUser.ID

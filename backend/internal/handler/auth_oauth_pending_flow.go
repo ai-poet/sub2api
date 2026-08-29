@@ -429,6 +429,13 @@ func (h *AuthHandler) legacyCompleteRegistrationSessionStatus(
 		return session, true, nil
 	}
 
+	// LinuxDo 新用户与 GitHub 同为合成邮箱直登:邀请码补完不再受
+	// email_verify_enabled / force_email_on_third_party_signup 回拉进绑邮箱流程。
+	// choice/bind session 因 step 非空已在上面被拦,此旁路不放行误提交。
+	if strings.EqualFold(strings.TrimSpace(session.ProviderType), "linuxdo") {
+		return session, false, nil
+	}
+
 	emailVerificationRequired := h != nil && h.authService != nil && h.authService.IsEmailVerifyEnabled(c.Request.Context())
 	forceEmailOnSignup := h.isForceEmailOnThirdPartySignup(c.Request.Context())
 	if !emailVerificationRequired && !forceEmailOnSignup {

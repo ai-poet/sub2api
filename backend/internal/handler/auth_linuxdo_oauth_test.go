@@ -600,7 +600,7 @@ func TestLinuxDoOAuthCallbackCreatesBindPendingSessionForCompatEmailUser(t *test
 	require.False(t, hasAccessToken)
 }
 
-func TestLinuxDoOAuthCallbackCreatesChoicePendingSessionWhenSignupRequiresInvite(t *testing.T) {
+func TestLinuxDoOAuthCallbackCreatesInvitationPendingSessionWhenSignupRequiresInvite(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/token":
@@ -655,15 +655,17 @@ func TestLinuxDoOAuthCallbackCreatesChoicePendingSessionWhenSignupRequiresInvite
 	require.NoError(t, err)
 	require.Equal(t, oauthIntentLogin, session.Intent)
 	require.Nil(t, session.TargetUserID)
+	require.Equal(t, "linuxdo-654@linuxdo-connect.invalid", session.ResolvedEmail)
 
+	// 仅承载邀请码的 session:无 step,前端只弹邀请码输入框而非补邮箱流程。
 	completion, ok := session.LocalFlowState[oauthCompletionResponseKey].(map[string]any)
 	require.True(t, ok)
-	require.Equal(t, oauthPendingChoiceStep, completion["step"])
+	require.NotContains(t, completion, "step")
 	require.Equal(t, "/dashboard", completion["redirect"])
-	require.Equal(t, "third_party_signup", completion["choice_reason"])
+	require.Equal(t, "invitation_required", completion["error"])
 }
 
-func TestLinuxDoOAuthCallbackEmailVerificationCompletesWithBoundEmail(t *testing.T) {
+func TestLinuxDoOAuthCallbackEmailVerificationEnabledStillLogsInDirectly(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/token":
@@ -705,49 +707,24 @@ func TestLinuxDoOAuthCallbackEmailVerificationCompletesWithBoundEmail(t *testing
 
 	handler.LinuxDoOAuthCallback(c)
 
+	// 核心回归:即使站点开启「注册邮箱验证」,LinuxDo 新用户也直接以合成邮箱登录,
+	// 不创建 pending session(与 GitHub OAuth 行为一致)。
 	require.Equal(t, http.StatusFound, recorder.Code)
-	require.Equal(t, "/auth/linuxdo/callback", recorder.Header().Get("Location"))
-	sessionCookie := findCookie(recorder.Result().Cookies(), oauthPendingSessionCookieName)
-	require.NotNil(t, sessionCookie)
+	location := recorder.Header().Get("Location")
+	require.Contains(t, location, "/auth/linuxdo/callback#")
+	require.Contains(t, location, "access_token=")
+	require.Contains(t, location, "refresh_token=")
+	fragmentValues := parseOAuthRedirectFragment(t, location)
+	require.Equal(t, "/dashboard", fragmentValues.Get("redirect"))
+	requireCookieCleared(t, recorder, oauthPendingSessionCookieName)
+	requireCookieCleared(t, recorder, oauthPendingBrowserCookieName)
 
 	ctx := context.Background()
-	session, err := client.PendingAuthSession.Query().
-		Where(pendingauthsession.SessionTokenEQ(decodeCookieValueForTest(t, sessionCookie.Value))).
-		Only(ctx)
-	require.NoError(t, err)
-	require.Equal(t, oauthIntentLogin, session.Intent)
-	require.Nil(t, session.TargetUserID)
-	require.Empty(t, session.ResolvedEmail)
-	require.Equal(t, "linuxdo-email-verify-123@linuxdo-connect.invalid", session.UpstreamIdentityClaims["email"])
-
-	completion, ok := session.LocalFlowState[oauthCompletionResponseKey].(map[string]any)
-	require.True(t, ok)
-	require.Equal(t, "create_account_required", completion["step"])
-	require.Equal(t, true, completion["email_binding_required"])
-	require.Equal(t, true, completion["force_email_on_signup"])
-	require.Equal(t, "email_verification_required", completion["choice_reason"])
-	require.NotContains(t, completion, "email")
-	require.NotContains(t, completion, "resolved_email")
-
-	createRecorder := httptest.NewRecorder()
-	createCtx, _ := gin.CreateTestContext(createRecorder)
-	body := bytes.NewBufferString(`{"email":"fresh@example.com","verify_code":"246810","password":"secret-123","adopt_display_name":false,"adopt_avatar":false}`)
-	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/oauth/pending/create-account", body)
-	createReq.Header.Set("Content-Type", "application/json")
-	createReq.AddCookie(sessionCookie)
-	createReq.AddCookie(&http.Cookie{Name: oauthPendingBrowserCookieName, Value: encodeCookieValue("browser-email")})
-	createCtx.Request = createReq
-
-	handler.CreatePendingOAuthAccount(createCtx)
-
-	require.Equal(t, http.StatusOK, createRecorder.Code)
-	responseData := decodeJSONBody(t, createRecorder)
-	require.NotEmpty(t, responseData["access_token"])
-
 	userEntity, err := client.User.Query().
-		Where(dbuser.EmailEQ("fresh@example.com")).
+		Where(dbuser.EmailEQ("linuxdo-email-verify-123@linuxdo-connect.invalid")).
 		Only(ctx)
 	require.NoError(t, err)
+	require.Equal(t, "linuxdo_email", userEntity.Username)
 	require.Equal(t, "linuxdo", userEntity.SignupSource)
 
 	identity, err := client.AuthIdentity.Query().
@@ -760,9 +737,9 @@ func TestLinuxDoOAuthCallbackEmailVerificationCompletesWithBoundEmail(t *testing
 	require.NoError(t, err)
 	require.Equal(t, userEntity.ID, identity.UserID)
 
-	storedSession, err := client.PendingAuthSession.Get(ctx, session.ID)
+	sessionCount, err := client.PendingAuthSession.Query().Count(ctx)
 	require.NoError(t, err)
-	require.NotNil(t, storedSession.ConsumedAt)
+	require.Zero(t, sessionCount)
 }
 
 func TestLinuxDoOAuthCallbackDirectlyLogsInNewUserWhenEmailVerificationDisabled(t *testing.T) {
@@ -992,6 +969,62 @@ func TestCompleteLinuxDoOAuthRegistrationAppliesPendingAdoptionDecision(t *testi
 	consumed, err := client.PendingAuthSession.Query().
 		Where(pendingauthsession.IDEQ(session.ID)).
 		Only(ctx)
+	require.NoError(t, err)
+	require.NotNil(t, consumed.ConsumedAt)
+}
+
+func TestCompleteLinuxDoOAuthRegistrationIgnoresEmailTogglesForInvitationSession(t *testing.T) {
+	// Edit 回归:两个邮箱开关同时开启时,LinuxDo 邀请码补完不再被
+	// legacyCompleteRegistrationSessionStatus 拉回绑邮箱流程,直接发 token。
+	handler, client := newOAuthPendingFlowTestHandlerWithDependencies(t, oauthPendingFlowTestHandlerOptions{
+		emailVerifyEnabled: true,
+		settingValues: map[string]string{
+			service.SettingKeyForceEmailOnThirdPartySignup: "true",
+		},
+	})
+	ctx := context.Background()
+
+	session, err := client.PendingAuthSession.Create().
+		SetSessionToken("linuxdo-invite-toggle-session").
+		SetIntent("login").
+		SetProviderType("linuxdo").
+		SetProviderKey("linuxdo").
+		SetProviderSubject("invite-toggle-1").
+		SetResolvedEmail("linuxdo-invite-toggle-1@linuxdo-connect.invalid").
+		SetBrowserSessionKey("linuxdo-invite-toggle-browser").
+		SetUpstreamIdentityClaims(map[string]any{"username": "linuxdo_invitee"}).
+		SetLocalFlowState(map[string]any{
+			oauthCompletionResponseKey: map[string]any{
+				"redirect": "/dashboard",
+				"error":    "invitation_required",
+			},
+		}).
+		SetExpiresAt(time.Now().UTC().Add(10 * time.Minute)).
+		Save(ctx)
+	require.NoError(t, err)
+
+	body := bytes.NewBufferString(`{"invitation_code":"invite-toggle","adopt_display_name":false,"adopt_avatar":false}`)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/oauth/linuxdo/complete-registration", body)
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: oauthPendingSessionCookieName, Value: encodeCookieValue(session.SessionToken)})
+	req.AddCookie(&http.Cookie{Name: oauthPendingBrowserCookieName, Value: encodeCookieValue("linuxdo-invite-toggle-browser")})
+	c.Request = req
+
+	handler.CompleteLinuxDoOAuthRegistration(c)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	responseData := decodeJSONBody(t, recorder)
+	require.NotEmpty(t, responseData["access_token"])
+
+	userEntity, err := client.User.Query().
+		Where(dbuser.EmailEQ(session.ResolvedEmail)).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "linuxdo", userEntity.SignupSource)
+
+	consumed, err := client.PendingAuthSession.Get(ctx, session.ID)
 	require.NoError(t, err)
 	require.NotNil(t, consumed.ConsumedAt)
 }
