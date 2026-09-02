@@ -33,6 +33,8 @@ interface AdminOrder {
   refundRequestedAt?: string | null;
   refundRequestReason?: string | null;
   refundAmount?: number | null;
+  bonusAmount?: number | null;
+  promotionName?: string | null;
 }
 
 interface AdminOrderDetail extends AdminOrder {
@@ -496,6 +498,7 @@ function AdminContent() {
           requestedAmount={refundOrder.refundAmount ?? refundOrder.payAmount ?? refundOrder.amount}
           orderType={refundOrder.orderType}
           userBalance={refundUserBalance}
+          bonusAmount={refundOrder.bonusAmount ?? undefined}
           subscriptionDays={refundOrder.subscriptionDays ?? undefined}
           subscriptionRemainingDays={refundSubRemainingDays}
           defaultDeductBalance={defaultDeductBalance}

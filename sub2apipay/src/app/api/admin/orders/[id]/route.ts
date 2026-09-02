@@ -28,5 +28,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     payAmount: order.payAmount ? Number(order.payAmount) : null,
     feeRate: order.feeRate ? Number(order.feeRate) : null,
     refundAmount: order.refundAmount ? Number(order.refundAmount) : null,
+    bonusAmount: order.bonusAmount ? Number(order.bonusAmount) : null,
   });
 }

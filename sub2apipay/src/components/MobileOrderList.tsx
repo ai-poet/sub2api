@@ -119,7 +119,20 @@ export default function MobileOrderList({
               ].join(' ')}
             >
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-semibold">{formatOrderAmount(order)}</span>
+                <span className="flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold">{formatOrderAmount(order)}</span>
+                  {order.bonusAmount != null && order.bonusAmount > 0 && (
+                    <span
+                      className={[
+                        'rounded-full px-2 py-0.5 text-xs font-medium',
+                        isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700',
+                      ].join(' ')}
+                      title={order.promotionName ?? undefined}
+                    >
+                      {locale === 'en' ? `Bonus +$${order.bonusAmount.toFixed(2)}` : `赠送 +$${order.bonusAmount.toFixed(2)}`}
+                    </span>
+                  )}
+                </span>
                 <span
                   className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}
                 >

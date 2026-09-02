@@ -5,6 +5,11 @@ import type { Locale } from '@/lib/locale';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
 import { buildOrderStatusUrl } from '@/lib/order/status-url';
 
+interface CreditInfo {
+  amount: number;
+  bonusAmount: number;
+}
+
 interface OrderStatusProps {
   orderId: string;
   order: PublicOrderStatusSnapshot;
@@ -13,22 +18,32 @@ interface OrderStatusProps {
   onStateChange?: (order: PublicOrderStatusSnapshot) => void;
   dark?: boolean;
   locale?: Locale;
+  /** 到账金额（USD，不含赠送） */
+  amount?: number;
+  /** 充值活动赠送的到账金额（USD） */
+  bonusAmount?: number;
 }
 
-function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDark = false) {
+function getStatusConfig(order: PublicOrderStatusSnapshot, locale: Locale, isDark = false, credit?: CreditInfo) {
   if (order.rechargeSuccess) {
+    const bonusNote =
+      credit && credit.bonusAmount > 0
+        ? locale === 'en'
+          ? ` Total credited $${(credit.amount + credit.bonusAmount).toFixed(2)}, including a $${credit.bonusAmount.toFixed(2)} promotion bonus.`
+          : ` 实际到账 $${(credit.amount + credit.bonusAmount).toFixed(2)}，其中活动赠送 $${credit.bonusAmount.toFixed(2)}。`
+        : '';
     return locale === 'en'
       ? {
           label: 'Recharge Successful',
           color: isDark ? 'text-green-400' : 'text-green-600',
           icon: '✓',
-          message: 'Your balance has been credited. Thank you for your payment.',
+          message: `Your balance has been credited. Thank you for your payment.${bonusNote}`,
         }
       : {
           label: '充值成功',
           color: isDark ? 'text-green-400' : 'text-green-600',
           icon: '✓',
-          message: '余额已到账，感谢您的充值！',
+          message: `余额已到账，感谢您的充值！${bonusNote}`,
         };
   }
 
@@ -151,8 +166,12 @@ export default function OrderStatus({
   onStateChange,
   dark = false,
   locale = 'zh',
+  amount,
+  bonusAmount = 0,
 }: OrderStatusProps) {
   const [currentOrder, setCurrentOrder] = useState(order);
+  const creditInfo: CreditInfo | undefined =
+    typeof amount === 'number' && bonusAmount > 0 ? { amount, bonusAmount } : undefined;
   const onStateChangeRef = useRef(onStateChange);
   useEffect(() => {
     onStateChangeRef.current = onStateChange;
@@ -191,7 +210,7 @@ export default function OrderStatus({
     };
   }, [orderId, currentOrder.paymentSuccess, currentOrder.rechargeSuccess, statusAccessToken]);
 
-  const config = getStatusConfig(currentOrder, locale, dark);
+  const config = getStatusConfig(currentOrder, locale, dark, creditInfo);
   const doneLabel = locale === 'en' ? 'Done' : '完成';
   const backLabel = locale === 'en' ? 'Back to Recharge' : '返回充值';
 

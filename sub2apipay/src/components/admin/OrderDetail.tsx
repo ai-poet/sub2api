@@ -47,6 +47,8 @@ interface OrderDetailProps {
     planId?: string | null;
     subscriptionGroupId?: number | null;
     subscriptionDays?: number | null;
+    bonusAmount?: number | null;
+    promotionName?: string | null;
     auditLogs: AuditLog[];
   };
   onClose: () => void;
@@ -194,6 +196,17 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
       { label: text.refundRequestedAt, value: order.refundRequestedAt ? formatCreatedAt(order.refundRequestedAt, locale) : '-' },
       { label: text.refundRequestReason, value: order.refundRequestReason || '-' },
       { label: text.refundRequestedBy, value: order.refundRequestedBy != null ? String(order.refundRequestedBy) : '-' },
+    );
+  }
+
+  if (order.bonusAmount != null && order.bonusAmount > 0) {
+    fields.push(
+      { label: locale === 'en' ? 'Promotion Bonus (USD)' : '活动赠送（USD）', value: `$${order.bonusAmount.toFixed(2)}` },
+      { label: locale === 'en' ? 'Promotion' : '参与活动', value: order.promotionName || '-' },
+      {
+        label: locale === 'en' ? 'Total Credited (USD)' : '实际到账（USD）',
+        value: `$${(order.amount + order.bonusAmount).toFixed(2)}`,
+      },
     );
   }
 

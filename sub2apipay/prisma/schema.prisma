@@ -51,6 +51,14 @@ model Order {
   subscriptionDays    Int?               @map("subscription_days")
   providerInstanceId  String?  @map("provider_instance_id")
 
+  // ── 充值活动快照（充 X 送 Y）──
+  /// 活动赠送的到账金额（USD），履约时与 amount 一起入账；退款时一并扣回。
+  bonusAmount   Decimal?           @db.Decimal(10, 2) @map("bonus_amount")
+  promotionId   String?            @map("promotion_id")
+  promotion     RechargePromotion? @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  /// 下单时的活动名称快照，活动删除后订单仍可展示。
+  promotionName String?            @map("promotion_name")
+
   auditLogs      AuditLog[]
   invoiceRequest InvoiceRequest?
   invoiceOrder   InvoiceRequestOrder?
@@ -62,6 +70,7 @@ model Order {
   @@index([paidAt])
   @@index([paymentType, paidAt])
   @@index([orderType])
+  @@index([promotionId])
   @@map("orders")
 }
 
@@ -134,6 +143,32 @@ model SubscriptionPlan {
 
   @@index([forSale, sortOrder])
   @@map("subscription_plans")
+}
+
+// ── 充值活动（充 X 送 Y，赠送直接计入余额） ──
+/// 门槛按到账金额（USD）判断；多个活动同时满足时不叠加，取赠送最高者。
+/// 名额按引用该活动且状态不为 CANCELLED/EXPIRED 的订单数统计（下单即占用）。
+model RechargePromotion {
+  id           String    @id @default(cuid())
+  name         String
+  description  String?   @db.Text
+  minAmount    Decimal   @db.Decimal(10, 2) @map("min_amount")
+  bonusType    String    @default("fixed") @map("bonus_type") // fixed | percent
+  bonusValue   Decimal   @db.Decimal(10, 2) @map("bonus_value") // fixed: USD; percent: 百分比
+  maxBonus     Decimal?  @db.Decimal(10, 2) @map("max_bonus") // percent 封顶，可空
+  startsAt     DateTime? @map("starts_at")
+  endsAt       DateTime? @map("ends_at")
+  perUserLimit Int       @default(0) @map("per_user_limit") // 0 = 不限
+  totalLimit   Int       @default(0) @map("total_limit") // 0 = 不限
+  enabled      Boolean   @default(true)
+  sortOrder    Int       @default(0) @map("sort_order")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@index([enabled, sortOrder])
+  @@map("recharge_promotions")
 }
 
 // ── 系统配置 ──

@@ -84,6 +84,12 @@ vi.mock('@/lib/payment/visibility', () => ({
   getVisiblePaymentTypes: (...args: unknown[]) => mockGetVisiblePaymentTypes(...args),
 }));
 
+const mockListAvailablePromotionsForUser = vi.fn();
+
+vi.mock('@/lib/promotion/service', () => ({
+  listAvailablePromotionsForUser: (...args: unknown[]) => mockListAvailablePromotionsForUser(...args),
+}));
+
 vi.mock('@/lib/payment/resolve-enabled-types', () => ({
   resolveEnabledPaymentTypes: (supported: string[], configured: string | undefined) => {
     if (!configured || configured.trim() === '') return supported;
@@ -113,6 +119,7 @@ describe('GET /api/user', () => {
     mockGetSupportedTypes.mockReturnValue(['alipay', 'wxpay', 'stripe']);
     mockFindManyProviderInstances.mockResolvedValue([]);
     mockGetVisiblePaymentTypes.mockResolvedValue(['alipay', 'wxpay', 'stripe']);
+    mockListAvailablePromotionsForUser.mockResolvedValue([]);
     mockQueryMethodLimits.mockResolvedValue({
       alipay: { maxDailyAmount: 1000 },
       wxpay: { maxDailyAmount: 1000 },
@@ -231,6 +238,40 @@ describe('GET /api/user', () => {
     const response = await GET(createRequest());
     const data = await response.json();
     expect(data.config.balanceDisabled).toBe(true);
+    // 余额充值关闭时不查询充值活动
+    expect(mockListAvailablePromotionsForUser).not.toHaveBeenCalled();
+    expect(data.config.promotions).toEqual([]);
+  });
+
+  it('passes through available recharge promotions', async () => {
+    const promo = {
+      id: 'promo-1',
+      name: '充100送10',
+      description: null,
+      minAmount: 100,
+      bonusType: 'fixed',
+      bonusValue: 10,
+      maxBonus: null,
+      sortOrder: 0,
+      startsAt: null,
+      endsAt: null,
+      available: true,
+    };
+    mockListAvailablePromotionsForUser.mockResolvedValue([promo]);
+
+    const response = await GET(createRequest());
+    const data = await response.json();
+    expect(mockListAvailablePromotionsForUser).toHaveBeenCalledWith(1);
+    expect(data.config.promotions).toEqual([promo]);
+  });
+
+  it('falls back to empty promotions when the lookup fails', async () => {
+    mockListAvailablePromotionsForUser.mockRejectedValue(new Error('db down'));
+
+    const response = await GET(createRequest());
+    const data = await response.json();
+    expect(response.status).toBe(200);
+    expect(data.config.promotions).toEqual([]);
   });
 
   it('defaults maxPendingOrders to 3 when config is missing', async () => {

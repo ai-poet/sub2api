@@ -7,6 +7,8 @@ import { getPaymentDisplayInfo } from '@/lib/pay-utils';
 import { resolveLocale } from '@/lib/locale';
 import { getSystemConfig } from '@/lib/system-config';
 import { getVisiblePaymentTypes } from '@/lib/payment/visibility';
+import { listAvailablePromotionsForUser } from '@/lib/promotion/service';
+import type { PublicPromotion } from '@/lib/promotion/calc';
 import {
   DEFAULT_BALANCE_CREDIT_CNY_PER_USD,
   DEFAULT_USD_EXCHANGE_RATE,
@@ -100,6 +102,16 @@ export async function GET(request: NextRequest) {
       balanceCreditCnyPerUsd,
     } = await configPromise;
 
+    // 充值活动：只在余额充值开放时查询；查询失败不影响其余配置
+    let promotions: PublicPromotion[] = [];
+    if (!balanceDisabled) {
+      try {
+        promotions = await listAvailablePromotionsForUser(tokenUser.id);
+      } catch (error) {
+        console.error('Failed to load recharge promotions:', error instanceof Error ? error.message : String(error));
+      }
+    }
+
     // 收集 sublabel 覆盖
     const sublabelOverrides: Record<string, string> = {};
 
@@ -156,6 +168,7 @@ export async function GET(request: NextRequest) {
         balanceDisabled,
         maxPendingOrders,
         sublabelOverrides: Object.keys(sublabelOverrides).length > 0 ? sublabelOverrides : null,
+        promotions,
       },
     });
   } catch (error) {

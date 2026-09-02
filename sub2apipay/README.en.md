@@ -345,6 +345,7 @@ The admin panel is authenticated via the `token` URL parameter (set to the `ADMI
 | Orders         | `https://pay.example.com/admin/orders`         | Filter by status, paginate, view details, retry/cancel/refund |
 | Dashboard      | `https://pay.example.com/admin/dashboard`      | Revenue stats, order trends, payment method breakdown         |
 | Payment Config | `https://pay.example.com/admin/payment-config` | Provider management, instance config, limits, online settings |
+| Promotions     | `https://pay.example.com/admin/promotions`     | "Top up X, get Y" campaigns (fixed/percent bonus, period, per-user and total limits) |
 | Channels       | `https://pay.example.com/admin/channels`       | Configure API channels & rates, sync from Sub2API             |
 | Subscriptions  | `https://pay.example.com/admin/subscriptions`  | Manage subscription plans & user subscriptions                |
 
@@ -432,6 +433,10 @@ Authenticated via `token` parameter set to `ADMIN_TOKEN`.
 | `POST`   | `/api/admin/subscription-plans`     | Create subscription plan             |
 | `PUT`    | `/api/admin/subscription-plans/:id` | Update subscription plan             |
 | `DELETE` | `/api/admin/subscription-plans/:id` | Delete subscription plan             |
+| `GET`    | `/api/admin/promotions`             | Top-up promotion list (with usage)   |
+| `POST`   | `/api/admin/promotions`             | Create top-up promotion              |
+| `PUT`    | `/api/admin/promotions/:id`         | Update top-up promotion              |
+| `DELETE` | `/api/admin/promotions/:id`         | Delete top-up promotion              |
 | `GET`    | `/api/admin/subscriptions`          | User subscription records            |
 | `GET`    | `/api/admin/config`                 | Get system configuration             |
 | `PUT`    | `/api/admin/config`                 | Update system configuration          |

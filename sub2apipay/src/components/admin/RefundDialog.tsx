@@ -11,6 +11,8 @@ interface RefundDialogProps {
   subscriptionDays?: number;
   subscriptionRemainingDays?: number;
   requestedAmount?: number | null;
+  /** 充值活动赠送额（USD），退款时会一并从余额扣回 */
+  bonusAmount?: number;
   defaultDeductBalance?: boolean;
   onConfirm: (reason: string, force: boolean, deductBalance: boolean, amount?: number) => Promise<void>;
   onCancel: () => void;
@@ -28,6 +30,7 @@ export default function RefundDialog({
   subscriptionDays,
   subscriptionRemainingDays,
   requestedAmount,
+  bonusAmount = 0,
   defaultDeductBalance = true,
   onConfirm,
   onCancel,
@@ -123,7 +126,9 @@ export default function RefundDialog({
     }
   };
 
-  const balanceInsufficient = !isSub && userBalance != null && userBalance < amount;
+  // 活动赠送额会随退款一并扣回，余额需覆盖“退款额 + 赠送额”
+  const bonusClawback = !isSub && bonusAmount > 0 ? bonusAmount : 0;
+  const balanceInsufficient = !isSub && userBalance != null && userBalance < amount + bonusClawback;
   const daysInsufficient =
     isSub &&
     subscriptionRemainingDays != null &&
@@ -193,6 +198,20 @@ export default function RefundDialog({
                 <div className={dark ? 'text-slate-400' : 'text-gray-500'}>{text.subDays}</div>
                 <div className="mt-1 font-semibold">{subscriptionDays}</div>
               </div>
+            </div>
+          )}
+
+          {/* 活动赠送扣回提示 */}
+          {deductBalance && bonusClawback > 0 && (
+            <div
+              className={[
+                'rounded-lg p-3 text-sm',
+                dark ? 'bg-emerald-900/30 text-emerald-300' : 'bg-emerald-50 text-emerald-700',
+              ].join(' ')}
+            >
+              {locale === 'en'
+                ? `This order includes a $${bonusClawback.toFixed(2)} promotion bonus, which will also be deducted from the user's balance.`
+                : `该订单含活动赠送 $${bonusClawback.toFixed(2)}，退款时将一并从用户余额扣回。`}
             </div>
           )}
 

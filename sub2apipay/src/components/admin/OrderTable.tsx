@@ -23,6 +23,8 @@ interface Order {
   refundRequestedAt?: string | null;
   refundRequestReason?: string | null;
   refundAmount?: number | null;
+  bonusAmount?: number | null;
+  promotionName?: string | null;
 }
 
 interface OrderTableProps {
@@ -128,6 +130,14 @@ export default function OrderTable({
               >
                 {currency}
                 {order.amount.toFixed(2)}
+                {order.bonusAmount != null && order.bonusAmount > 0 && (
+                  <div
+                    className={`text-xs font-normal ${dark ? 'text-emerald-300' : 'text-emerald-600'}`}
+                    title={order.promotionName ?? undefined}
+                  >
+                    {locale === 'en' ? 'Bonus' : '赠送'} +${order.bonusAmount.toFixed(2)}
+                  </div>
+                )}
               </td>
               <td className="whitespace-nowrap px-4 py-3 text-sm">
                 <span

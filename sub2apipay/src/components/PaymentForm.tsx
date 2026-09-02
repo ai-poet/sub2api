@@ -1,9 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { PAYMENT_TYPE_META, getPaymentIconType, getPaymentMeta, getPaymentDisplayInfo } from '@/lib/pay-utils';
 import { convertUsdBalanceToCnyPayment, getSettlementDisplay, isStablecoinPaymentType } from '@/lib/currency';
+import {
+  formatAmount,
+  mergeQuickAmounts,
+  nextPromotionHint,
+  pickBestPromotion,
+  type PublicPromotion,
+} from '@/lib/promotion/calc';
+import PromotionBanner from '@/components/PromotionBanner';
 
 export interface MethodLimitInfo {
   available: boolean;
@@ -34,6 +42,8 @@ interface PaymentFormProps {
   locale?: Locale;
   /** 固定金额模式：隐藏金额选择，只显示支付方式和提交按钮 */
   fixedAmount?: number;
+  /** 进行中的充值活动（由 /api/user 下发，服务端下单时会重新计算，这里只做预览） */
+  promotions?: PublicPromotion[];
 }
 
 const QUICK_AMOUNTS = [10, 20, 50, 100, 200, 500, 1000, 2000];
@@ -60,6 +70,7 @@ export default function PaymentForm({
   pendingCount = 0,
   locale = 'zh',
   fixedAmount,
+  promotions,
 }: PaymentFormProps) {
   const [amount, setAmount] = useState<number | ''>(fixedAmount ?? '');
   const [paymentType, setPaymentType] = useState(enabledPaymentTypes[0] || 'alipay');
@@ -118,6 +129,24 @@ export default function PaymentForm({
     selectedAmount <= effectiveMax &&
     hasValidCentPrecision(selectedAmount) &&
     isMethodAvailable;
+
+  // ── 充值活动预览（服务端下单时会重新计算，以服务端为准） ──
+  const activePromos = useMemo(() => (promotions ?? []).filter((p) => p.available), [promotions]);
+  const quickAmounts = useMemo(
+    () =>
+      mergeQuickAmounts(
+        QUICK_AMOUNTS,
+        activePromos.map((p) => p.minAmount),
+        effectiveMin,
+        effectiveMax,
+      ),
+    [activePromos, effectiveMin, effectiveMax],
+  );
+  const bonusMatch = selectedAmount > 0 ? pickBestPromotion(selectedAmount, activePromos) : null;
+  const bonusAmount = bonusMatch?.bonus ?? 0;
+  const creditedTotal = Math.round((selectedAmount + bonusAmount) * 100) / 100;
+  const promotionHint = selectedAmount > 0 && activePromos.length > 0 ? nextPromotionHint(selectedAmount, activePromos) : null;
+
   const creditedAmountLabel = locale === 'en' ? 'Credited Balance (USD)' : '到账金额（USD）';
   const payAmountLabel =
     locale === 'en'
@@ -227,6 +256,11 @@ export default function PaymentForm({
         )}
       </div>
 
+      {/* 充值活动 */}
+      {promotions && promotions.length > 0 && (
+        <PromotionBanner promotions={promotions} isDark={dark} locale={locale} />
+      )}
+
       {fixedAmount ? (
         <div
           className={[
@@ -248,24 +282,35 @@ export default function PaymentForm({
               {creditedAmountLabel}
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {QUICK_AMOUNTS.filter((val) => val >= effectiveMin && val <= effectiveMax).map((val) => (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => handleQuickAmount(val)}
-                  className={`rounded-lg border-2 px-4 py-3 text-center font-medium transition-colors ${
-                    amount === val
-                      ? dark
-                        ? 'border-blue-500 bg-blue-900/40 text-blue-300'
-                        : 'border-blue-500 bg-blue-50 text-blue-700'
-                      : dark
-                        ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  ${val}
-                </button>
-              ))}
+              {quickAmounts.map((val) => {
+                const quickBonus = activePromos.length > 0 ? pickBestPromotion(val, activePromos) : null;
+                return (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => handleQuickAmount(val)}
+                    className={`relative rounded-lg border-2 px-4 py-3 text-center font-medium transition-colors ${
+                      amount === val
+                        ? dark
+                          ? 'border-blue-500 bg-blue-900/40 text-blue-300'
+                          : 'border-blue-500 bg-blue-50 text-blue-700'
+                        : dark
+                          ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    ${formatAmount(val)}
+                    {quickBonus && (
+                      <span
+                        className="absolute -right-1.5 -top-2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white shadow"
+                        title={quickBonus.rule.name}
+                      >
+                        +${formatAmount(quickBonus.bonus)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -296,6 +341,13 @@ export default function PaymentForm({
                 ].join(' ')}
               />
             </div>
+            {promotionHint && (
+              <p className={['mt-2 text-xs', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>
+                {locale === 'en'
+                  ? `Add $${formatAmount(promotionHint.needMore)} more to reach $${formatAmount(promotionHint.threshold)} and get a $${formatAmount(promotionHint.bonus)} bonus (${promotionHint.rule.name})`
+                  : `再充 $${formatAmount(promotionHint.needMore)} 满 $${formatAmount(promotionHint.threshold)} 即可享「${promotionHint.rule.name}」，赠送 $${formatAmount(promotionHint.bonus)}`}
+              </p>
+            )}
           </div>
         </>
       )}
@@ -404,6 +456,27 @@ export default function PaymentForm({
             <span>{creditedAmountLabel}</span>
             <span>${selectedAmount.toFixed(2)}</span>
           </div>
+          {bonusMatch && bonusAmount > 0 && (
+            <>
+              <div
+                className={['mt-1.5 flex items-center justify-between', dark ? 'text-emerald-300' : 'text-emerald-600'].join(
+                  ' ',
+                )}
+              >
+                <span>
+                  {locale === 'en' ? 'Promotion Bonus' : '活动赠送'}
+                  <span className={['ml-1 text-xs', dark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                    ({bonusMatch.rule.name})
+                  </span>
+                </span>
+                <span>+${bonusAmount.toFixed(2)}</span>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between font-medium">
+                <span>{locale === 'en' ? 'Total Credited (USD)' : '实际到账（USD）'}</span>
+                <span className={dark ? 'text-emerald-300' : 'text-emerald-600'}>${creditedTotal.toFixed(2)}</span>
+              </div>
+            </>
+          )}
           <div
             className={[
               'mt-1.5 flex items-center justify-between border-t pt-1.5 font-medium',

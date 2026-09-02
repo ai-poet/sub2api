@@ -140,13 +140,15 @@ export default function OrderTable({
   }, [refundOrder, submittingId]);
 
   const parsedRefundAmount = Number(refundAmount);
+  // 活动赠送额会随退款一并扣回，所以余额必须覆盖“退款额 + 赠送额”
+  const refundBonus = refundOrder?.bonusAmount != null && refundOrder.bonusAmount > 0 ? refundOrder.bonusAmount : 0;
   const amountError = !refundOrder
     ? ''
     : !Number.isFinite(parsedRefundAmount) || parsedRefundAmount <= 0
       ? text.refundAmountInvalid
       : parsedRefundAmount > refundOrder.amount
         ? text.refundAmountExceedOrder
-        : parsedRefundAmount > userBalance
+        : parsedRefundAmount + refundBonus > userBalance
           ? text.refundAmountExceedBalance
           : '';
 
@@ -267,7 +269,20 @@ export default function OrderTable({
                     </div>
                   )}
                   <div className="font-medium">#{order.id.slice(0, 12)}</div>
-                  <div className="font-semibold">{formatOrderAmount(order)}</div>
+                  <div className="font-semibold">
+                    {formatOrderAmount(order)}
+                    {order.bonusAmount != null && order.bonusAmount > 0 && (
+                      <span
+                        className={[
+                          'ml-2 rounded-full px-2 py-0.5 text-xs font-medium',
+                          isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700',
+                        ].join(' ')}
+                        title={order.promotionName ?? undefined}
+                      >
+                        {locale === 'en' ? `Bonus +$${order.bonusAmount.toFixed(2)}` : `赠送 +$${order.bonusAmount.toFixed(2)}`}
+                      </span>
+                    )}
+                  </div>
                   <div>{getPaymentDisplayInfo(order.paymentType, locale).channel}</div>
                   <div>
                     <span className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}>
@@ -382,7 +397,7 @@ export default function OrderTable({
                 <input
                   type="number"
                   min="0.01"
-                  max={Math.min(refundOrder.amount, userBalance).toFixed(2)}
+                  max={Math.max(0, Math.min(refundOrder.amount, userBalance - refundBonus)).toFixed(2)}
                   step="0.01"
                   value={refundAmount}
                   onChange={(e) => setRefundAmount(e.target.value)}
@@ -392,6 +407,13 @@ export default function OrderTable({
                   ].join(' ')}
                 />
                 {amountError && <div className={['mt-1 text-xs', isDark ? 'text-red-400' : 'text-red-600'].join(' ')}>{amountError}</div>}
+                {refundBonus > 0 && (
+                  <div className={['mt-1 text-xs', isDark ? 'text-emerald-300' : 'text-emerald-700'].join(' ')}>
+                    {locale === 'en'
+                      ? `This order includes a $${refundBonus.toFixed(2)} promotion bonus, which will be deducted along with the refund.`
+                      : `该订单含活动赠送 $${refundBonus.toFixed(2)}，退款时将一并从余额扣回。`}
+                  </div>
+                )}
               </div>
 
               <div>

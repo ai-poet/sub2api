@@ -27,6 +27,7 @@ import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/l
 import { createProviderFromInstance } from '@/lib/payment/provider-factory';
 import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
 import { applyRefundToInvoice } from '@/lib/invoice/service';
+import { resolvePromotionForOrder } from '@/lib/promotion/service';
 
 const DEFAULT_MAX_PENDING_ORDERS = 3;
 /** Decimal(10,2) 允许的最大金额 */
@@ -56,6 +57,9 @@ export interface CreateOrderResult {
   amount: number;
   payAmount: number;
   feeRate: number;
+  /** 充值活动赠送的到账金额（USD），无活动为 0 */
+  bonusAmount: number;
+  promotionName: string | null;
   status: string;
   paymentType: PaymentType;
   userName: string;
@@ -450,6 +454,10 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       }
     }
 
+    // 充值活动：在事务内决定赠送额并快照到订单（客户端预览不可信）
+    const promotion =
+      orderType === 'balance' ? await resolvePromotionForOrder(tx, input.userId, input.amount) : null;
+
     const created = await tx.order.create({
       data: {
         userId: input.userId,
@@ -472,6 +480,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         subscriptionDays: subscriptionPlan
           ? computeValidityDays(subscriptionPlan.validityDays, subscriptionPlan.validityUnit as ValidityUnit)
           : null,
+        bonusAmount: promotion ? new Prisma.Decimal(promotion.bonusAmount.toFixed(2)) : null,
+        promotionId: promotion?.promotionId ?? null,
+        promotionName: promotion?.promotionName ?? null,
       },
     });
 
@@ -481,7 +492,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       data: { rechargeCode },
     });
 
-    return { ...created, rechargeCode };
+    return { ...created, rechargeCode, promotion };
   });
 
   try {
@@ -529,7 +540,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
     // 同源模式下，回调地址统一按当前请求 origin 生成。
     let notifyUrl: string | undefined;
-    let returnUrl: string | undefined = orderResultUrl;
+    const returnUrl: string | undefined = orderResultUrl;
     if (actualProvider.providerKey === 'easypay') {
       notifyUrl = `${appUrl}/api/easy-pay/notify${selectedInstanceId ? `?inst=${selectedInstanceId}` : ''}`;
     } else if (actualProvider.providerKey === 'alipay') {
@@ -590,6 +601,11 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
             planName: subscriptionPlan.name,
             groupId: subscriptionPlan.groupId,
           }),
+          ...(order.promotion && {
+            promotionId: order.promotion.promotionId,
+            promotionName: order.promotion.promotionName,
+            bonusAmount: order.promotion.bonusAmount,
+          }),
         }),
         operator: `user:${input.userId}`,
       },
@@ -600,6 +616,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       amount: input.amount,
       payAmount: payAmountNum,
       feeRate,
+      bonusAmount: order.promotion?.bonusAmount ?? 0,
+      promotionName: order.promotion?.promotionName ?? null,
       status: ORDER_STATUS.PENDING,
       paymentType: input.paymentType,
       userName: user.username,
@@ -1074,12 +1092,15 @@ export async function executeRecharge(orderId: string): Promise<void> {
   }
 
   try {
-    await createAndRedeem(
-      order.rechargeCode,
-      Number(order.amount),
-      order.userId,
-      `payment center recharge order:${orderId}`,
-    );
+    // 充值活动赠送额与到账金额合并为一次兑换入账（接口按 rechargeCode 幂等）
+    const bonusAmount = Number(order.bonusAmount ?? 0);
+    const creditedTotal = Math.round((Number(order.amount) + bonusAmount) * 100) / 100;
+    const notes =
+      bonusAmount > 0
+        ? `payment center recharge order:${orderId} | bonus ${bonusAmount.toFixed(2)} (${order.promotionName ?? order.promotionId ?? 'promotion'})`
+        : `payment center recharge order:${orderId}`;
+
+    await createAndRedeem(order.rechargeCode, creditedTotal, order.userId, notes);
 
     await prisma.order.updateMany({
       where: { id: orderId, status: ORDER_STATUS.RECHARGING },
@@ -1090,7 +1111,16 @@ export async function executeRecharge(orderId: string): Promise<void> {
       data: {
         orderId,
         action: 'RECHARGE_SUCCESS',
-        detail: JSON.stringify({ rechargeCode: order.rechargeCode, amount: Number(order.amount) }),
+        detail: JSON.stringify({
+          rechargeCode: order.rechargeCode,
+          amount: Number(order.amount),
+          ...(bonusAmount > 0 && {
+            bonusAmount,
+            creditedTotal,
+            promotionId: order.promotionId ?? null,
+            promotionName: order.promotionName ?? null,
+          }),
+        }),
         operator: 'system',
       },
     });
@@ -1285,11 +1315,19 @@ export async function requestRefund(input: RefundRequestInput): Promise<{ succes
     );
   }
 
+  // 活动赠送额会随退款一并扣回，余额需覆盖“退款额 + 赠送额”
+  const bonusClawback = Number(order.bonusAmount ?? 0);
   const user = await getUser(order.userId);
-  if (user.balance < refundAmount) {
+  if (user.balance < refundAmount + bonusClawback) {
     throw new OrderError(
       'BALANCE_NOT_ENOUGH',
-      message(locale, '退款金额不能超过当前余额', 'Refund amount cannot exceed current balance'),
+      bonusClawback > 0
+        ? message(
+            locale,
+            `退款金额加活动赠送额（$${bonusClawback.toFixed(2)}）不能超过当前余额`,
+            `Refund amount plus the promotion bonus ($${bonusClawback.toFixed(2)}) cannot exceed current balance`,
+          )
+        : message(locale, '退款金额不能超过当前余额', 'Refund amount cannot exceed current balance'),
       400,
     );
   }
@@ -1371,6 +1409,8 @@ async function prepareDeduction(
     userId: number;
     orderType: string | null;
     amount: Prisma.Decimal;
+    /** 充值活动赠送额：退款时一并扣回（全额/部分退款均扣回全部赠送） */
+    bonusAmount?: Prisma.Decimal | null;
     subscriptionGroupId: number | null;
     subscriptionDays: number | null;
   },
@@ -1381,7 +1421,8 @@ async function prepareDeduction(
 ): Promise<DeductionPlan | RefundResult> {
   if (!deductBalance) return { type: 'none', balanceAmount: 0, subscriptionDays: 0, subscriptionId: null };
 
-  const rechargeAmount = overrideAmount ?? Number(order.amount);
+  const bonusClawback = order.orderType === 'balance' ? Number(order.bonusAmount ?? 0) : 0;
+  const rechargeAmount = (overrideAmount ?? Number(order.amount)) + bonusClawback;
 
   if (order.orderType === 'subscription') {
     if (!order.subscriptionGroupId || !order.subscriptionDays) {
@@ -1694,6 +1735,9 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
           deductBalance,
           balanceDeducted: plan.balanceAmount,
           subscriptionDaysDeducted: plan.subscriptionDays,
+          // 充值活动赠送额随退款一并扣回（未扣余额时为 0）
+          bonusClawedBack:
+            deductBalance && order.orderType === 'balance' ? Number(order.bonusAmount ?? 0) : 0,
         }),
         operator: 'admin',
       },

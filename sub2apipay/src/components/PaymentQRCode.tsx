@@ -20,6 +20,8 @@ interface PaymentQRCodeProps {
   paymentType?: string;
   amount: number;
   payAmount?: number;
+  /** 充值活动赠送的到账金额（USD） */
+  bonusAmount?: number;
   orderType?: 'balance' | 'subscription';
   usdExchangeRate?: number | null;
   expiresAt: string;
@@ -46,6 +48,7 @@ export default function PaymentQRCode({
   paymentType,
   amount,
   payAmount: payAmountProp,
+  bonusAmount = 0,
   orderType = 'balance',
   usdExchangeRate,
   expiresAt,
@@ -61,6 +64,8 @@ export default function PaymentQRCode({
   const settlementDisplay = getSettlementDisplay(displayAmountCny, paymentType, usdExchangeRate);
   const isBalanceOrder = orderType === 'balance';
   const showCreditedAmount = isBalanceOrder;
+  const hasBonus = isBalanceOrder && bonusAmount > 0;
+  const creditedTotal = Math.round((amount + (hasBonus ? bonusAmount : 0)) * 100) / 100;
   const [timeLeft, setTimeLeft] = useState('');
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(Infinity);
   const [expired, setExpired] = useState(false);
@@ -428,7 +433,14 @@ export default function PaymentQRCode({
         {showCreditedAmount && (
           <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
             {t.credited}
-            {amount.toFixed(2)}
+            {creditedTotal.toFixed(2)}
+            {hasBonus && (
+              <span className={['ml-1', dark ? 'text-emerald-300' : 'text-emerald-600'].join(' ')}>
+                {locale === 'en'
+                  ? `(incl. $${bonusAmount.toFixed(2)} promotion bonus)`
+                  : `（含活动赠送 $${bonusAmount.toFixed(2)}）`}
+              </span>
+            )}
           </div>
         )}
         {settlementDisplay.currency === 'USD' && settlementDisplay.exchangeRate && (

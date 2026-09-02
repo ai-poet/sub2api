@@ -915,4 +915,36 @@ describe('processRefund', () => {
     // 余额扣减使用 amount（rechargeAmount）
     expect(mockSubtractBalance).toHaveBeenCalledWith(42, 100, expect.any(String), expect.any(String));
   });
+
+  // ── 充值活动赠送：退款时一并扣回 ──
+  it('含活动赠送的订单退款时一并扣回赠送额', async () => {
+    const order = makeOrder({ bonusAmount: new Prisma.Decimal('20.00'), promotionName: '充100送20' });
+    mockOrderFindUnique.mockResolvedValue(order);
+    mockGetUser.mockResolvedValue({ id: 42, balance: 500, status: 'active' });
+
+    const result = await processRefund({ orderId: 'order-001', deductBalance: true });
+
+    expect(result.success).toBe(true);
+    expect(result.balanceDeducted).toBe(120);
+    expect(mockSubtractBalance).toHaveBeenCalledWith(42, 120, expect.any(String), expect.any(String));
+    // 网关仍按实付金额退
+    expect(mockProviderRefund).toHaveBeenCalledWith(expect.objectContaining({ amount: 103 }));
+    const successLog = mockAuditLogCreate.mock.calls
+      .map((call) => call[0].data)
+      .find((data) => data.action === 'REFUND_SUCCESS');
+    expect(JSON.parse(successLog.detail)).toMatchObject({ bonusClawedBack: 20, balanceDeducted: 120 });
+  });
+
+  it('部分退款也扣回全部赠送额，并受余额封顶', async () => {
+    const order = makeOrder({ bonusAmount: new Prisma.Decimal('20.00') });
+    mockOrderFindUnique.mockResolvedValue(order);
+    mockGetUser.mockResolvedValue({ id: 42, balance: 45, status: 'active' });
+
+    const result = await processRefund({ orderId: 'order-001', amount: 30, deductBalance: true });
+
+    expect(result.success).toBe(true);
+    // 30 + 20 = 50 > 余额 45 → 扣到 45
+    expect(result.balanceDeducted).toBe(45);
+    expect(mockSubtractBalance).toHaveBeenCalledWith(42, 45, expect.any(String), expect.any(String));
+  });
 });

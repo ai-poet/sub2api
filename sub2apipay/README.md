@@ -345,6 +345,7 @@ Sub2API **v0.1.88** 及以上版本会自动拼接以下参数，无需手动添
 | 订单管理 | `https://pay.example.com/admin/orders`         | 按状态筛选、分页浏览、订单详情、重试/取消/退款 |
 | 数据概览 | `https://pay.example.com/admin/dashboard`      | 收入统计、订单趋势、支付方式分布               |
 | 支付配置 | `https://pay.example.com/admin/payment-config` | 服务商管理、实例配置、限额、业务参数在线调整   |
+| 充值活动 | `https://pay.example.com/admin/promotions`     | 配置「充 X 送 Y」活动（固定/比例赠送、有效期、每人次数、总名额） |
 | 渠道管理 | `https://pay.example.com/admin/channels`       | 配置 API 渠道与倍率，支持从 Sub2API 同步       |
 | 订阅管理 | `https://pay.example.com/admin/subscriptions`  | 管理订阅套餐与用户订阅                         |
 
@@ -432,6 +433,10 @@ Sub2API **v0.1.88** 及以上版本会自动拼接以下参数，无需手动添
 | `POST`   | `/api/admin/subscription-plans`     | 创建订阅套餐               |
 | `PUT`    | `/api/admin/subscription-plans/:id` | 更新订阅套餐               |
 | `DELETE` | `/api/admin/subscription-plans/:id` | 删除订阅套餐               |
+| `GET`    | `/api/admin/promotions`             | 充值活动列表（含使用统计） |
+| `POST`   | `/api/admin/promotions`             | 创建充值活动               |
+| `PUT`    | `/api/admin/promotions/:id`         | 更新充值活动               |
+| `DELETE` | `/api/admin/promotions/:id`         | 删除充值活动               |
 | `GET`    | `/api/admin/subscriptions`          | 用户订阅记录列表           |
 | `GET`    | `/api/admin/config`                 | 获取系统配置               |
 | `PUT`    | `/api/admin/config`                 | 更新系统配置               |

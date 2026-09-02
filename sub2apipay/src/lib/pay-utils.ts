@@ -27,6 +27,9 @@ export interface MyOrder {
   refundRequestedAt?: string | null;
   refundRequestReason?: string | null;
   refundAmount?: number | null;
+  /** 充值活动赠送的到账金额（USD），退款时一并扣回。 */
+  bonusAmount?: number | null;
+  promotionName?: string | null;
   canRefundRequest?: boolean;
   canRequestInvoice?: boolean;
   invoiceIneligibleReason?: string | null;

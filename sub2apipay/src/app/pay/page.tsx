@@ -17,6 +17,7 @@ import SubscriptionPlanCard from '@/components/SubscriptionPlanCard';
 import SubscriptionConfirm from '@/components/SubscriptionConfirm';
 import UserSubscriptions from '@/components/UserSubscriptions';
 import PurchaseFlow from '@/components/PurchaseFlow';
+import PromotionBanner from '@/components/PromotionBanner';
 import { getRechargeAccessHint } from '@/lib/branding';
 import { resolveLocale, pickLocaleText, applyLocaleToSearchParams } from '@/lib/locale';
 import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrder } from '@/lib/pay-utils';
@@ -27,6 +28,7 @@ import type { MethodLimitInfo } from '@/components/PaymentForm';
 import type { ChannelInfo } from '@/components/ChannelGrid';
 import type { PlanInfo } from '@/components/SubscriptionPlanCard';
 import type { UserSub } from '@/components/UserSubscriptions';
+import type { PublicPromotion } from '@/lib/promotion/calc';
 
 interface OrderResult {
   orderId: string;
@@ -40,6 +42,9 @@ interface OrderResult {
   clientSecret?: string | null;
   expiresAt: string;
   statusAccessToken: string;
+  /** 充值活动赠送的到账金额（USD），以服务端下单结果为准 */
+  bonusAmount?: number;
+  promotionName?: string | null;
 }
 
 interface AppConfig {
@@ -55,6 +60,7 @@ interface AppConfig {
   stripePublishableKey?: string | null;
   balanceDisabled?: boolean;
   maxPendingOrders?: number;
+  promotions?: PublicPromotion[];
 }
 
 function PayContent() {
@@ -238,6 +244,7 @@ function PayContent() {
             stripePublishableKey: cfgData.config.stripePublishableKey ?? null,
             balanceDisabled: cfgData.config.balanceDisabled ?? false,
             maxPendingOrders: cfgData.config.maxPendingOrders ?? 3,
+            promotions: Array.isArray(cfgData.config.promotions) ? cfgData.config.promotions : [],
           });
           if (cfgData.config.sublabelOverrides) {
             applySublabelOverrides(cfgData.config.sublabelOverrides);
@@ -530,6 +537,8 @@ function PayContent() {
         amount: data.amount,
         payAmount: data.payAmount,
         orderType: 'balance',
+        bonusAmount: typeof data.bonusAmount === 'number' ? data.bonusAmount : 0,
+        promotionName: typeof data.promotionName === 'string' ? data.promotionName : null,
         status: data.status,
         paymentType: data.paymentType || paymentType,
         payUrl: data.payUrl,
@@ -895,6 +904,15 @@ function PayContent() {
                       </div>
                     </div>
 
+                    {hasChannels && (config.promotions?.length ?? 0) > 0 && (
+                      <PromotionBanner
+                        promotions={config.promotions ?? []}
+                        isDark={isDark}
+                        locale={locale}
+                        className="mb-6"
+                      />
+                    )}
+
                     {hasChannels ? (
                       <ChannelGrid
                         channels={channels}
@@ -920,6 +938,7 @@ function PayContent() {
                         pendingBlocked={pendingBlocked}
                         pendingCount={pendingCount}
                         locale={locale}
+                        promotions={config.promotions}
                       />
                     )}
 
@@ -1022,6 +1041,7 @@ function PayContent() {
                 pendingBlocked={pendingBlocked}
                 pendingCount={pendingCount}
                 locale={locale}
+                promotions={config.promotions}
               />
               {renderHelpSection()}
             </div>
@@ -1065,6 +1085,7 @@ function PayContent() {
                     pendingBlocked={pendingBlocked}
                     pendingCount={pendingCount}
                     locale={locale}
+                    promotions={config.promotions}
                   />
                 ) : (
                   <MobileOrderList
@@ -1099,6 +1120,7 @@ function PayContent() {
                       pendingBlocked={pendingBlocked}
                       pendingCount={pendingCount}
                       locale={locale}
+                      promotions={config.promotions}
                     />
                   </div>
                   <div className="space-y-4">
@@ -1201,6 +1223,7 @@ function PayContent() {
             paymentType={orderResult.paymentType}
             amount={orderResult.amount}
             payAmount={orderResult.payAmount}
+            bonusAmount={orderResult.bonusAmount}
             orderType={orderResult.orderType}
             usdExchangeRate={config.usdExchangeRate}
             expiresAt={orderResult.expiresAt}
@@ -1226,6 +1249,8 @@ function PayContent() {
           onBack={handleBack}
           dark={isDark}
           locale={locale}
+          amount={orderResult.amount}
+          bonusAmount={orderResult.bonusAmount}
         />
       )}
 

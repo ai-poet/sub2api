@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { path: '/admin', label: { zh: '支付统计', en: 'Overview' } },
   { path: '/admin/orders', label: { zh: '订单管理', en: 'Orders' } },
   { path: '/admin/invoices', label: { zh: '发票管理', en: 'Invoices' } },
+  { path: '/admin/promotions', label: { zh: '充值活动', en: 'Promotions' } },
   { path: '/admin/payment-config', label: { zh: '支付配置', en: 'Payment Config' } },
 ];
 
