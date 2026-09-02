@@ -19,6 +19,7 @@ type AdminHandlers struct {
 	GeminiOAuth           *admin.GeminiOAuthHandler
 	AntigravityOAuth      *admin.AntigravityOAuthHandler
 	GrokOAuth             *admin.GrokOAuthHandler
+	CNProvider            *admin.CNProviderHandler
 	Proxy                 *admin.ProxyHandler
 	Redeem                *admin.RedeemHandler
 	Promo                 *admin.PromoHandler
@@ -38,6 +39,7 @@ type AdminHandlers struct {
 	PromptAudit           *securityaudit.PromptAdminHandler
 	Compliance            *admin.ComplianceHandler
 	AuditLog              *admin.AuditLogHandler
+	Plugin                *admin.PluginHandler
 }
 
 // Handlers contains all HTTP handlers

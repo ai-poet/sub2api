@@ -55,6 +55,7 @@ function createPublicSettings(overrides: Partial<PublicSettings> = {}): PublicSe
     channel_monitor_enabled: true,
     channel_monitor_default_interval_seconds: 60,
     available_channels_enabled: false,
+    plugin_management_enabled: false,
     service_quota_enabled: false,
     affiliate_enabled: false,
     // fork 自有字段：与 applySettings 的归一化默认值保持一致，

@@ -98,6 +98,7 @@ var ProviderSet = wire.NewSet(
 	NewUserGroupRateRepository,
 	NewErrorPassthroughRepository,
 	NewTLSFingerprintProfileRepository,
+	NewPluginRepository,
 	NewChannelRepository,
 	NewContentModerationRepository,
 	NewUserPlatformQuotaRepository,     // T14: user × platform quota
