@@ -187,6 +187,20 @@ func (_u *GroupStatusConfigUpdate) AddSlowLatencyMs(v int64) *GroupStatusConfigU
 	return _u
 }
 
+// SetNotifyEnabled sets the "notify_enabled" field.
+func (_u *GroupStatusConfigUpdate) SetNotifyEnabled(v bool) *GroupStatusConfigUpdate {
+	_u.mutation.SetNotifyEnabled(v)
+	return _u
+}
+
+// SetNillableNotifyEnabled sets the "notify_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableNotifyEnabled(v *bool) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetNotifyEnabled(*v)
+	}
+	return _u
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_u *GroupStatusConfigUpdate) Mutation() *GroupStatusConfigMutation {
 	return _u.mutation
@@ -283,6 +297,9 @@ func (_u *GroupStatusConfigUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.AddedSlowLatencyMs(); ok {
 		_spec.AddField(groupstatusconfig.FieldSlowLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.NotifyEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldNotifyEnabled, field.TypeBool, value)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -462,6 +479,20 @@ func (_u *GroupStatusConfigUpdateOne) AddSlowLatencyMs(v int64) *GroupStatusConf
 	return _u
 }
 
+// SetNotifyEnabled sets the "notify_enabled" field.
+func (_u *GroupStatusConfigUpdateOne) SetNotifyEnabled(v bool) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetNotifyEnabled(v)
+	return _u
+}
+
+// SetNillableNotifyEnabled sets the "notify_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableNotifyEnabled(v *bool) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetNotifyEnabled(*v)
+	}
+	return _u
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_u *GroupStatusConfigUpdateOne) Mutation() *GroupStatusConfigMutation {
 	return _u.mutation
@@ -588,6 +619,9 @@ func (_u *GroupStatusConfigUpdateOne) sqlSave(ctx context.Context) (_node *Group
 	}
 	if value, ok := _u.mutation.AddedSlowLatencyMs(); ok {
 		_spec.AddField(groupstatusconfig.FieldSlowLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.NotifyEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldNotifyEnabled, field.TypeBool, value)
 	}
 	_node = &GroupStatusConfig{config: _u.config}
 	_spec.Assign = _node.assignValues

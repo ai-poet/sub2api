@@ -399,7 +399,9 @@ export default {
         "disabled": "Disabled",
         "waiting": "Waiting",
         "notConfigured": "Not Configured",
-        "footerHint": "\"Probe now\" saves the current form first and then runs a probe immediately."
+        "footerHint": "\"Probe now\" saves the current form first and then runs a probe immediately.",
+        "notifyEnabled": "Push on down / recovery",
+        "notifyEnabledHint": "Only effective when Server酱³ push is enabled in site settings; turn off to silence this group."
       },
       "openaiMessages": {
         "defaultModel": "Default mapped model",
@@ -519,6 +521,23 @@ export default {
       "site": {
         "groupStatusEnabled": "Enable Model Status",
         "groupStatusEnabledDescription": "When enabled, regular users can see the \"Model Status\" menu and use the corresponding runtime status APIs.",
+        "groupStatusNotify": {
+          "title": "Server酱³ Push",
+          "description": "Push a notification when a group's stable status turns red or recovers from red. Enable this switch and fill in the UID and SendKey; each group can opt out in its runtime status config.",
+          "enabled": "Enable Server酱³ push",
+          "uid": "UID",
+          "uidPlaceholder": "e.g. 12345",
+          "uidHint": "Push host is {uid}.push.ft07.com; only letters, digits, - and _ are allowed.",
+          "sendkey": "SendKey",
+          "sendkeyPlaceholder": "sctp...",
+          "sendkeyConfiguredPlaceholder": "Configured. Leave empty to keep the current value.",
+          "sendkeyHint": "Stored on the backend only and never echoed back.",
+          "test": "Send test push",
+          "testing": "Sending...",
+          "testHint": "Uses the UID / SendKey above; an empty SendKey falls back to the saved one.",
+          "testSucceeded": "Test push sent",
+          "testFailed": "Test push failed"
+        },
         "communityQRCodePlaceholder": "Paste the QR image base64 or URL",
         "communityQRCode": "Community Group QR Code",
         "uploadQRCode": "Upload QR Code",

@@ -35,6 +35,8 @@ const (
 	FieldTimeoutSeconds = "timeout_seconds"
 	// FieldSlowLatencyMs holds the string denoting the slow_latency_ms field in the database.
 	FieldSlowLatencyMs = "slow_latency_ms"
+	// FieldNotifyEnabled holds the string denoting the notify_enabled field in the database.
+	FieldNotifyEnabled = "notify_enabled"
 	// Table holds the table name of the groupstatusconfig in the database.
 	Table = "group_status_configs"
 )
@@ -53,6 +55,7 @@ var Columns = []string{
 	FieldIntervalSeconds,
 	FieldTimeoutSeconds,
 	FieldSlowLatencyMs,
+	FieldNotifyEnabled,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -88,6 +91,8 @@ var (
 	DefaultTimeoutSeconds int
 	// DefaultSlowLatencyMs holds the default value on creation for the "slow_latency_ms" field.
 	DefaultSlowLatencyMs int64
+	// DefaultNotifyEnabled holds the default value on creation for the "notify_enabled" field.
+	DefaultNotifyEnabled bool
 )
 
 // OrderOption defines the ordering options for the GroupStatusConfig queries.
@@ -146,4 +151,9 @@ func ByTimeoutSeconds(opts ...sql.OrderTermOption) OrderOption {
 // BySlowLatencyMs orders the results by the slow_latency_ms field.
 func BySlowLatencyMs(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSlowLatencyMs, opts...).ToFunc()
+}
+
+// ByNotifyEnabled orders the results by the notify_enabled field.
+func ByNotifyEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNotifyEnabled, opts...).ToFunc()
 }

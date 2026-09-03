@@ -340,6 +340,12 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyClientDownloadWindowsURL] = strings.TrimSpace(settings.ClientDownloadWindowsURL)
 	updates[SettingKeyClientDownloadMacOSURL] = strings.TrimSpace(settings.ClientDownloadMacOSURL)
 	updates[SettingKeyGroupStatusEnabled] = strconv.FormatBool(settings.GroupStatusEnabled)
+	updates[SettingKeyGroupStatusNotifyServerChanEnabled] = strconv.FormatBool(settings.GroupStatusNotifyServerChanEnabled)
+	updates[SettingKeyGroupStatusNotifyServerChanUID] = strings.TrimSpace(settings.GroupStatusNotifyServerChanUID)
+	// SendKey 留空表示保留已保存的密钥
+	if settings.GroupStatusNotifyServerChanSendKey != "" {
+		updates[SettingKeyGroupStatusNotifyServerChanSendKey] = strings.TrimSpace(settings.GroupStatusNotifyServerChanSendKey)
+	}
 	updates[SettingKeyCommunityQRCode] = settings.CommunityQRCode
 	updates[SettingKeyCommunityGroupURL] = strings.TrimSpace(settings.CommunityGroupURL)
 	// SystemSettings 里存的是原始 JSON 字符串，先解析校验再归一化写回

@@ -43,6 +43,18 @@
           <Toggle v-model="form.enabled" />
         </div>
 
+        <div class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-4 dark:border-dark-700">
+          <div>
+            <div class="font-medium text-gray-900 dark:text-white">
+              {{ t('admin.groups.runtimeStatus.notifyEnabled') }}
+            </div>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.groups.runtimeStatus.notifyEnabledHint') }}
+            </p>
+          </div>
+          <Toggle v-model="form.notify_enabled" />
+        </div>
+
         <div class="grid gap-5 md:grid-cols-2">
           <div>
             <label class="input-label">{{ t('admin.groups.runtimeStatus.probeModel') }}</label>
@@ -304,6 +316,7 @@ const form = reactive({
   interval_seconds: 60,
   timeout_seconds: 30,
   slow_latency_ms: 15000,
+  notify_enabled: true,
 })
 
 const dialogTitle = computed(() => {
@@ -382,6 +395,7 @@ function resetForm() {
   form.interval_seconds = 60
   form.timeout_seconds = 30
   form.slow_latency_ms = 15000
+  form.notify_enabled = true
   expectedKeywordsText.value = ''
 }
 
@@ -394,6 +408,7 @@ function applyView(view: GroupStatusAdminView) {
   form.interval_seconds = view.config.interval_seconds
   form.timeout_seconds = view.config.timeout_seconds
   form.slow_latency_ms = view.config.slow_latency_ms
+  form.notify_enabled = view.config.notify_enabled !== false
   expectedKeywordsText.value = joinRuntimeKeywordsText(view.config.expected_keywords)
 }
 
@@ -427,6 +442,7 @@ async function saveRuntimeStatus(showToast = true): Promise<GroupStatusAdminView
       interval_seconds: Math.max(10, Math.round(Number(form.interval_seconds) || 60)),
       timeout_seconds: Math.max(1, Math.round(Number(form.timeout_seconds) || 30)),
       slow_latency_ms: Math.max(100, Math.round(Number(form.slow_latency_ms) || 15000)),
+      notify_enabled: form.notify_enabled,
     })
     applyView(view)
     if (showToast) {

@@ -40,6 +40,8 @@ type GroupStatusConfig struct {
 	TimeoutSeconds int `json:"timeout_seconds,omitempty"`
 	// SlowLatencyMs holds the value of the "slow_latency_ms" field.
 	SlowLatencyMs int64 `json:"slow_latency_ms,omitempty"`
+	// NotifyEnabled holds the value of the "notify_enabled" field.
+	NotifyEnabled bool `json:"notify_enabled,omitempty"`
 	selectValues  sql.SelectValues
 }
 
@@ -50,7 +52,7 @@ func (*GroupStatusConfig) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case groupstatusconfig.FieldExpectedKeywords:
 			values[i] = new([]byte)
-		case groupstatusconfig.FieldEnabled:
+		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled:
 			values[i] = new(sql.NullBool)
 		case groupstatusconfig.FieldID, groupstatusconfig.FieldGroupID, groupstatusconfig.FieldIntervalSeconds, groupstatusconfig.FieldTimeoutSeconds, groupstatusconfig.FieldSlowLatencyMs:
 			values[i] = new(sql.NullInt64)
@@ -147,6 +149,12 @@ func (_m *GroupStatusConfig) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.SlowLatencyMs = value.Int64
 			}
+		case groupstatusconfig.FieldNotifyEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field notify_enabled", values[i])
+			} else if value.Valid {
+				_m.NotifyEnabled = value.Bool
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -215,6 +223,9 @@ func (_m *GroupStatusConfig) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("slow_latency_ms=")
 	builder.WriteString(fmt.Sprintf("%v", _m.SlowLatencyMs))
+	builder.WriteString(", ")
+	builder.WriteString("notify_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.NotifyEnabled))
 	builder.WriteByte(')')
 	return builder.String()
 }

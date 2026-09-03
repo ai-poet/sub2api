@@ -160,6 +160,20 @@ func (_c *GroupStatusConfigCreate) SetNillableSlowLatencyMs(v *int64) *GroupStat
 	return _c
 }
 
+// SetNotifyEnabled sets the "notify_enabled" field.
+func (_c *GroupStatusConfigCreate) SetNotifyEnabled(v bool) *GroupStatusConfigCreate {
+	_c.mutation.SetNotifyEnabled(v)
+	return _c
+}
+
+// SetNillableNotifyEnabled sets the "notify_enabled" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableNotifyEnabled(v *bool) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetNotifyEnabled(*v)
+	}
+	return _c
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_c *GroupStatusConfigCreate) Mutation() *GroupStatusConfigMutation {
 	return _c.mutation
@@ -235,6 +249,10 @@ func (_c *GroupStatusConfigCreate) defaults() {
 		v := groupstatusconfig.DefaultSlowLatencyMs
 		_c.mutation.SetSlowLatencyMs(v)
 	}
+	if _, ok := _c.mutation.NotifyEnabled(); !ok {
+		v := groupstatusconfig.DefaultNotifyEnabled
+		_c.mutation.SetNotifyEnabled(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -271,6 +289,9 @@ func (_c *GroupStatusConfigCreate) check() error {
 	}
 	if _, ok := _c.mutation.SlowLatencyMs(); !ok {
 		return &ValidationError{Name: "slow_latency_ms", err: errors.New(`ent: missing required field "GroupStatusConfig.slow_latency_ms"`)}
+	}
+	if _, ok := _c.mutation.NotifyEnabled(); !ok {
+		return &ValidationError{Name: "notify_enabled", err: errors.New(`ent: missing required field "GroupStatusConfig.notify_enabled"`)}
 	}
 	return nil
 }
@@ -342,6 +363,10 @@ func (_c *GroupStatusConfigCreate) createSpec() (*GroupStatusConfig, *sqlgraph.C
 	if value, ok := _c.mutation.SlowLatencyMs(); ok {
 		_spec.SetField(groupstatusconfig.FieldSlowLatencyMs, field.TypeInt64, value)
 		_node.SlowLatencyMs = value
+	}
+	if value, ok := _c.mutation.NotifyEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldNotifyEnabled, field.TypeBool, value)
+		_node.NotifyEnabled = value
 	}
 	return _node, _spec
 }
@@ -536,6 +561,18 @@ func (u *GroupStatusConfigUpsert) UpdateSlowLatencyMs() *GroupStatusConfigUpsert
 // AddSlowLatencyMs adds v to the "slow_latency_ms" field.
 func (u *GroupStatusConfigUpsert) AddSlowLatencyMs(v int64) *GroupStatusConfigUpsert {
 	u.Add(groupstatusconfig.FieldSlowLatencyMs, v)
+	return u
+}
+
+// SetNotifyEnabled sets the "notify_enabled" field.
+func (u *GroupStatusConfigUpsert) SetNotifyEnabled(v bool) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldNotifyEnabled, v)
+	return u
+}
+
+// UpdateNotifyEnabled sets the "notify_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateNotifyEnabled() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldNotifyEnabled)
 	return u
 }
 
@@ -749,6 +786,20 @@ func (u *GroupStatusConfigUpsertOne) AddSlowLatencyMs(v int64) *GroupStatusConfi
 func (u *GroupStatusConfigUpsertOne) UpdateSlowLatencyMs() *GroupStatusConfigUpsertOne {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateSlowLatencyMs()
+	})
+}
+
+// SetNotifyEnabled sets the "notify_enabled" field.
+func (u *GroupStatusConfigUpsertOne) SetNotifyEnabled(v bool) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetNotifyEnabled(v)
+	})
+}
+
+// UpdateNotifyEnabled sets the "notify_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateNotifyEnabled() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateNotifyEnabled()
 	})
 }
 
@@ -1128,6 +1179,20 @@ func (u *GroupStatusConfigUpsertBulk) AddSlowLatencyMs(v int64) *GroupStatusConf
 func (u *GroupStatusConfigUpsertBulk) UpdateSlowLatencyMs() *GroupStatusConfigUpsertBulk {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateSlowLatencyMs()
+	})
+}
+
+// SetNotifyEnabled sets the "notify_enabled" field.
+func (u *GroupStatusConfigUpsertBulk) SetNotifyEnabled(v bool) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetNotifyEnabled(v)
+	})
+}
+
+// UpdateNotifyEnabled sets the "notify_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateNotifyEnabled() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateNotifyEnabled()
 	})
 }
 

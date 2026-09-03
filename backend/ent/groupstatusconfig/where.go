@@ -104,6 +104,11 @@ func SlowLatencyMs(v int64) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSlowLatencyMs, v))
 }
 
+// NotifyEnabled applies equality check predicate on the "notify_enabled" field. It's identical to NotifyEnabledEQ.
+func NotifyEnabled(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldNotifyEnabled, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldCreatedAt, v))
@@ -547,6 +552,16 @@ func SlowLatencyMsLT(v int64) predicate.GroupStatusConfig {
 // SlowLatencyMsLTE applies the LTE predicate on the "slow_latency_ms" field.
 func SlowLatencyMsLTE(v int64) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldLTE(FieldSlowLatencyMs, v))
+}
+
+// NotifyEnabledEQ applies the EQ predicate on the "notify_enabled" field.
+func NotifyEnabledEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldNotifyEnabled, v))
+}
+
+// NotifyEnabledNEQ applies the NEQ predicate on the "notify_enabled" field.
+func NotifyEnabledNEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldNotifyEnabled, v))
 }
 
 // And groups predicates with the AND operator between them.

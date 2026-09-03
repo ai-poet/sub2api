@@ -60,6 +60,8 @@ type SettingHandler struct {
 	notificationEmailService *service.NotificationEmailService
 	totpService              *service.TotpService
 	userService              *service.UserService
+	// fork 自有：分组运行状态 Server酱³ 测试推送
+	groupStatusNotify groupStatusNotifyTester
 }
 
 // NewSettingHandler 创建系统设置处理器
@@ -126,6 +128,9 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		ClientDownloadWindowsURL:                               settings.ClientDownloadWindowsURL,
 		ClientDownloadMacOSURL:                                 settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
+		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
+		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
+		GroupStatusNotifyServerChanSendKeyConfigured:           settings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
 		CommunityGroupURL:                                      settings.CommunityGroupURL,
 		ClientChangelogEntries:                                 dto.ParseClientChangelogEntries(settings.ClientChangelogEntries),

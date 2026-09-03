@@ -22655,6 +22655,7 @@ type GroupStatusConfigMutation struct {
 	addtimeout_seconds      *int
 	slow_latency_ms         *int64
 	addslow_latency_ms      *int64
+	notify_enabled          *bool
 	clearedFields           map[string]struct{}
 	done                    bool
 	oldValue                func(context.Context) (*GroupStatusConfig, error)
@@ -23250,6 +23251,42 @@ func (m *GroupStatusConfigMutation) ResetSlowLatencyMs() {
 	m.addslow_latency_ms = nil
 }
 
+// SetNotifyEnabled sets the "notify_enabled" field.
+func (m *GroupStatusConfigMutation) SetNotifyEnabled(b bool) {
+	m.notify_enabled = &b
+}
+
+// NotifyEnabled returns the value of the "notify_enabled" field in the mutation.
+func (m *GroupStatusConfigMutation) NotifyEnabled() (r bool, exists bool) {
+	v := m.notify_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotifyEnabled returns the old "notify_enabled" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldNotifyEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotifyEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotifyEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotifyEnabled: %w", err)
+	}
+	return oldValue.NotifyEnabled, nil
+}
+
+// ResetNotifyEnabled resets all changes to the "notify_enabled" field.
+func (m *GroupStatusConfigMutation) ResetNotifyEnabled() {
+	m.notify_enabled = nil
+}
+
 // Where appends a list predicates to the GroupStatusConfigMutation builder.
 func (m *GroupStatusConfigMutation) Where(ps ...predicate.GroupStatusConfig) {
 	m.predicates = append(m.predicates, ps...)
@@ -23284,7 +23321,7 @@ func (m *GroupStatusConfigMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusConfigMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusconfig.FieldCreatedAt)
 	}
@@ -23318,6 +23355,9 @@ func (m *GroupStatusConfigMutation) Fields() []string {
 	if m.slow_latency_ms != nil {
 		fields = append(fields, groupstatusconfig.FieldSlowLatencyMs)
 	}
+	if m.notify_enabled != nil {
+		fields = append(fields, groupstatusconfig.FieldNotifyEnabled)
+	}
 	return fields
 }
 
@@ -23348,6 +23388,8 @@ func (m *GroupStatusConfigMutation) Field(name string) (ent.Value, bool) {
 		return m.TimeoutSeconds()
 	case groupstatusconfig.FieldSlowLatencyMs:
 		return m.SlowLatencyMs()
+	case groupstatusconfig.FieldNotifyEnabled:
+		return m.NotifyEnabled()
 	}
 	return nil, false
 }
@@ -23379,6 +23421,8 @@ func (m *GroupStatusConfigMutation) OldField(ctx context.Context, name string) (
 		return m.OldTimeoutSeconds(ctx)
 	case groupstatusconfig.FieldSlowLatencyMs:
 		return m.OldSlowLatencyMs(ctx)
+	case groupstatusconfig.FieldNotifyEnabled:
+		return m.OldNotifyEnabled(ctx)
 	}
 	return nil, fmt.Errorf("unknown GroupStatusConfig field %s", name)
 }
@@ -23464,6 +23508,13 @@ func (m *GroupStatusConfigMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSlowLatencyMs(v)
+		return nil
+	case groupstatusconfig.FieldNotifyEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotifyEnabled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig field %s", name)
@@ -23597,6 +23648,9 @@ func (m *GroupStatusConfigMutation) ResetField(name string) error {
 		return nil
 	case groupstatusconfig.FieldSlowLatencyMs:
 		m.ResetSlowLatencyMs()
+		return nil
+	case groupstatusconfig.FieldNotifyEnabled:
+		m.ResetNotifyEnabled()
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig field %s", name)

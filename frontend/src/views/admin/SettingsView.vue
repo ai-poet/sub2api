@@ -8486,6 +8486,7 @@ type SettingsForm = Omit<
   oidc_connect_client_secret: string;
   github_oauth_client_secret: string;
   google_oauth_client_secret: string;
+  group_status_notify_serverchan_sendkey: string;
   force_email_on_third_party_signup: boolean;
   openai_low_upstream_rate_priority_enabled: boolean;
   openai_oauth_scheduling_rate_multiplier: number;
@@ -8793,6 +8794,10 @@ const form = reactive<SettingsForm>({
   client_download_windows_url: "",
   client_download_macos_url: "",
   group_status_enabled: false,
+  group_status_notify_serverchan_enabled: false,
+  group_status_notify_serverchan_uid: "",
+  group_status_notify_serverchan_sendkey: "",
+  group_status_notify_serverchan_sendkey_configured: false,
   community_qr_code: "",
   community_group_url: "",
   client_changelog_entries: [] as ClientChangelogEntry[],
@@ -9832,6 +9837,7 @@ async function loadSettings() {
     form.linuxdo_connect_client_secret = "";
     form.dingtalk_connect_client_secret = "";
     form.github_oauth_client_secret = "";
+    form.group_status_notify_serverchan_sendkey = "";
     form.google_oauth_client_secret = "";
     form.wechat_connect_app_secret = "";
     form.wechat_connect_open_app_secret = "";
@@ -10449,6 +10455,12 @@ async function saveSettings() {
       client_download_windows_url: form.client_download_windows_url,
       client_download_macos_url: form.client_download_macos_url,
       group_status_enabled: form.group_status_enabled,
+      group_status_notify_serverchan_enabled:
+        form.group_status_notify_serverchan_enabled,
+      group_status_notify_serverchan_uid:
+        form.group_status_notify_serverchan_uid,
+      group_status_notify_serverchan_sendkey:
+        form.group_status_notify_serverchan_sendkey || undefined,
       community_qr_code: form.community_qr_code,
       community_group_url: form.community_group_url,
       client_changelog_entries: form.client_changelog_entries,
@@ -10527,6 +10539,7 @@ async function saveSettings() {
     form.linuxdo_connect_client_secret = "";
     form.dingtalk_connect_client_secret = "";
     form.github_oauth_client_secret = "";
+    form.group_status_notify_serverchan_sendkey = "";
     form.google_oauth_client_secret = "";
     form.wechat_connect_app_secret = "";
     form.wechat_connect_open_app_secret = "";

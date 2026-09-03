@@ -521,6 +521,7 @@ export async function updateRuntimeStatus(
     interval_seconds: number
     timeout_seconds: number
     slow_latency_ms: number
+    notify_enabled: boolean
   }
 ): Promise<GroupStatusAdminView> {
   const { data } = await apiClient.put<GroupStatusAdminView>(

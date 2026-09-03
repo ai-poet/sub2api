@@ -1007,6 +1007,10 @@ func init() {
 	groupstatusconfigDescSlowLatencyMs := groupstatusconfigFields[8].Descriptor()
 	// groupstatusconfig.DefaultSlowLatencyMs holds the default value on creation for the slow_latency_ms field.
 	groupstatusconfig.DefaultSlowLatencyMs = groupstatusconfigDescSlowLatencyMs.Default.(int64)
+	// groupstatusconfigDescNotifyEnabled is the schema descriptor for notify_enabled field.
+	groupstatusconfigDescNotifyEnabled := groupstatusconfigFields[9].Descriptor()
+	// groupstatusconfig.DefaultNotifyEnabled holds the default value on creation for the notify_enabled field.
+	groupstatusconfig.DefaultNotifyEnabled = groupstatusconfigDescNotifyEnabled.Default.(bool)
 	groupstatuseventFields := schema.GroupStatusEvent{}.Fields()
 	_ = groupstatuseventFields
 	// groupstatuseventDescFromStatus is the schema descriptor for from_status field.

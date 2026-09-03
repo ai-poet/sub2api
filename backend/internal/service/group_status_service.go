@@ -71,6 +71,16 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 		return nil, err
 	}
 
+	// notify_enabled 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认开启
+	if input != nil && input.NotifyEnabled == nil {
+		if prev, err := s.repo.GetConfig(ctx, groupID); err == nil && prev != nil {
+			merged := *input
+			notifyEnabled := prev.NotifyEnabled
+			merged.NotifyEnabled = &notifyEnabled
+			input = &merged
+		}
+	}
+
 	cfg, err := NormalizeGroupStatusConfig(group, input)
 	if err != nil {
 		return nil, err

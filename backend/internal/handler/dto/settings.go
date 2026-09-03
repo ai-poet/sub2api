@@ -157,27 +157,30 @@ type SystemSettings struct {
 	GoogleOAuthRedirectURL            string `json:"google_oauth_redirect_url"`
 	GoogleOAuthFrontendRedirectURL    string `json:"google_oauth_frontend_redirect_url"`
 
-	SiteName                     string           `json:"site_name"`
-	SiteLogo                     string           `json:"site_logo"`
-	SiteSubtitle                 string           `json:"site_subtitle"`
-	APIBaseURL                   string           `json:"api_base_url"`
-	ContactInfo                  string           `json:"contact_info"`
-	DocURL                       string           `json:"doc_url"`
-	HomeContent                  string           `json:"home_content"`
-	CompactHomeEnabled           bool             `json:"compact_home_enabled"`
-	HideCcsImportButton          bool             `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled  bool             `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL      string           `json:"purchase_subscription_url"`
-	TableDefaultPageSize         int              `json:"table_default_page_size"`
-	TablePageSizeOptions         []int            `json:"table_page_size_options"`
-	CustomMenuItems              []CustomMenuItem `json:"custom_menu_items"`
-	CustomEndpoints              []CustomEndpoint `json:"custom_endpoints"`
-	PurchaseSubscriptionOpenMode string           `json:"purchase_subscription_open_mode"` // iframe or new_window
-	ClientDownloadWindowsURL     string           `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL       string           `json:"client_download_macos_url"`
-	GroupStatusEnabled           bool             `json:"group_status_enabled"`
-	CommunityQRCode              string           `json:"community_qr_code"`
-	CommunityGroupURL            string           `json:"community_group_url"`
+	SiteName                                     string           `json:"site_name"`
+	SiteLogo                                     string           `json:"site_logo"`
+	SiteSubtitle                                 string           `json:"site_subtitle"`
+	APIBaseURL                                   string           `json:"api_base_url"`
+	ContactInfo                                  string           `json:"contact_info"`
+	DocURL                                       string           `json:"doc_url"`
+	HomeContent                                  string           `json:"home_content"`
+	CompactHomeEnabled                           bool             `json:"compact_home_enabled"`
+	HideCcsImportButton                          bool             `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled                  bool             `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL                      string           `json:"purchase_subscription_url"`
+	TableDefaultPageSize                         int              `json:"table_default_page_size"`
+	TablePageSizeOptions                         []int            `json:"table_page_size_options"`
+	CustomMenuItems                              []CustomMenuItem `json:"custom_menu_items"`
+	CustomEndpoints                              []CustomEndpoint `json:"custom_endpoints"`
+	PurchaseSubscriptionOpenMode                 string           `json:"purchase_subscription_open_mode"` // iframe or new_window
+	ClientDownloadWindowsURL                     string           `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL                       string           `json:"client_download_macos_url"`
+	GroupStatusEnabled                           bool             `json:"group_status_enabled"`
+	GroupStatusNotifyServerChanEnabled           bool             `json:"group_status_notify_serverchan_enabled"`
+	GroupStatusNotifyServerChanUID               string           `json:"group_status_notify_serverchan_uid"`
+	GroupStatusNotifyServerChanSendKeyConfigured bool             `json:"group_status_notify_serverchan_sendkey_configured"`
+	CommunityQRCode                              string           `json:"community_qr_code"`
+	CommunityGroupURL                            string           `json:"community_group_url"`
 
 	DefaultConcurrency   int                          `json:"default_concurrency"`
 	DefaultBalance       float64                      `json:"default_balance"`

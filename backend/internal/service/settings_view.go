@@ -168,8 +168,13 @@ type SystemSettings struct {
 	ClientDownloadWindowsURL     string
 	ClientDownloadMacOSURL       string
 	GroupStatusEnabled           bool
-	CommunityQRCode              string // 交流群二维码图片 (base64)
-	CommunityGroupURL            string // 交流群链接/群号
+	// 分组运行状态 → Server酱³ 推送（fork 自有）；SendKey 只用于写入，读取侧只暴露 Configured
+	GroupStatusNotifyServerChanEnabled           bool
+	GroupStatusNotifyServerChanUID               string
+	GroupStatusNotifyServerChanSendKey           string
+	GroupStatusNotifyServerChanSendKeyConfigured bool
+	CommunityQRCode                              string // 交流群二维码图片 (base64)
+	CommunityGroupURL                            string // 交流群链接/群号
 
 	DefaultConcurrency          int
 	DefaultBalance              float64

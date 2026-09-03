@@ -399,7 +399,9 @@ export default {
         "disabled": "未启用",
         "waiting": "等待探测",
         "notConfigured": "未配置",
-        "footerHint": "“立即探测”会先保存当前配置，再立即执行一次探测。"
+        "footerHint": "“立即探测”会先保存当前配置，再立即执行一次探测。",
+        "notifyEnabled": "变红 / 恢复时推送提醒",
+        "notifyEnabledHint": "仅当站点设置中已启用 Server酱³ 推送时生效；关闭后本分组的状态变化不再推送。"
       },
       "openaiMessages": {
         "defaultModel": "默认映射模型",
@@ -559,6 +561,23 @@ export default {
       "site": {
         "groupStatusEnabled": "开放模型运行状态",
         "groupStatusEnabledDescription": "开启后，普通用户侧边栏会显示“模型运行状态”菜单，并开放对应用户接口。",
+        "groupStatusNotify": {
+          "title": "Server酱³ 推送",
+          "description": "分组运行状态稳定变红 / 从红恢复时推送提醒。需开启此开关并填写 UID 与 SendKey；各分组可在运行状态配置中单独关闭。",
+          "enabled": "启用 Server酱³ 推送",
+          "uid": "UID",
+          "uidPlaceholder": "例如：12345",
+          "uidHint": "推送域名为 {uid}.push.ft07.com，只允许字母、数字、- 和 _。",
+          "sendkey": "SendKey",
+          "sendkeyPlaceholder": "sctp...",
+          "sendkeyConfiguredPlaceholder": "已配置，留空保留当前值",
+          "sendkeyHint": "仅保存在后端，不会回显。",
+          "test": "发送测试推送",
+          "testing": "发送中...",
+          "testHint": "测试会使用上方填写的 UID / SendKey；SendKey 留空时使用已保存的值。",
+          "testSucceeded": "测试推送已发送",
+          "testFailed": "测试推送失败"
+        },
         "communityQRCodePlaceholder": "粘贴二维码图片的 base64 或 URL",
         "communityQRCode": "交流群二维码",
         "uploadQRCode": "上传二维码",

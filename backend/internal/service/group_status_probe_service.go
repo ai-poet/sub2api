@@ -27,6 +27,21 @@ type GroupStatusProbeService struct {
 	accountTestSvc   *AccountTestService
 	gatewaySvc       *GatewayService
 	openAIGatewaySvc *OpenAIGatewayService
+	// notifier 在稳定状态切换（down / up）时收到通知；可为空
+	notifier groupStatusTransitionNotifier
+}
+
+// groupStatusTransitionNotifier 消费探测落库后产生的稳定状态切换事件（如 Server酱³ 推送）。
+type groupStatusTransitionNotifier interface {
+	NotifyTransition(group *Group, cfg *GroupStatusConfig, event *GroupStatusEvent)
+}
+
+// SetTransitionNotifier 挂上状态切换通知器；传 nil 表示不通知。
+func (s *GroupStatusProbeService) SetTransitionNotifier(n groupStatusTransitionNotifier) {
+	if s == nil {
+		return
+	}
+	s.notifier = n
 }
 
 func NewGroupStatusProbeService(
@@ -347,6 +362,10 @@ func (s *GroupStatusProbeService) saveProbeExecution(ctx context.Context, group 
 	state, event, err := s.repo.SaveProbeResult(ctx, result)
 	if err != nil {
 		return nil, err
+	}
+	// 稳定状态切换（变红 / 恢复）→ 异步推送；notifier 内部自行判断是否发送
+	if event != nil && s.notifier != nil {
+		s.notifier.NotifyTransition(group, cfg, event)
 	}
 	return &GroupStatusProbeExecution{
 		Group:   group,

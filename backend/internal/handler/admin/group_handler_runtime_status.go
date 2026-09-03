@@ -23,6 +23,8 @@ type UpdateRuntimeStatusRequest struct {
 	IntervalSeconds  int      `json:"interval_seconds"`
 	TimeoutSeconds   int      `json:"timeout_seconds"`
 	SlowLatencyMS    int64    `json:"slow_latency_ms"`
+	// 为 nil 时保留已保存的值（省略 = 保持现值）
+	NotifyEnabled *bool `json:"notify_enabled"`
 }
 
 // GetRuntimeStatus handles loading runtime status config for a group.
@@ -63,6 +65,7 @@ func (h *GroupHandler) UpdateRuntimeStatus(c *gin.Context) {
 		IntervalSeconds:  req.IntervalSeconds,
 		TimeoutSeconds:   req.TimeoutSeconds,
 		SlowLatencyMS:    req.SlowLatencyMS,
+		NotifyEnabled:    req.NotifyEnabled,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

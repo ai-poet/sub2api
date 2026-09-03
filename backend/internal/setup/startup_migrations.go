@@ -24,7 +24,16 @@ const startupMigrationTimeout = 10 * time.Minute
 //
 // 重复执行是安全的：迁移器持有 PostgreSQL advisory lock（多实例只有一个执行），
 // 按文件名记录已应用的迁移，并用 SHA256 校验和防止已应用文件被篡改。
+//
+// SKIP_SETUP=true 的实例被视为只读接入一个已初始化的库（例如多个实例共用一套
+// PostgreSQL，只由其中一个负责升级）：除了跳过安装流程，这里也整体跳过，
+// 连数据库连接都不建立，保证该实例不会对 schema 做任何改动。
+// 代价是这类实例要求库的 schema 不低于其镜像版本，否则启动后会因缺列报错。
 func MigrateOnStartup(cfg *config.Config) error {
+	if skipSetupEnabled() {
+		logger.LegacyPrintf("setup", "%s", "SKIP_SETUP enabled, skipping startup database migrations")
+		return nil
+	}
 	if cfg == nil {
 		return fmt.Errorf("nil config")
 	}

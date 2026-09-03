@@ -488,6 +488,10 @@ export interface SystemSettings {
   client_download_windows_url: string
   client_download_macos_url: string
   group_status_enabled: boolean
+  // 分组运行状态 → Server酱³ 推送（fork 自有）；sendkey 只写不读
+  group_status_notify_serverchan_enabled: boolean
+  group_status_notify_serverchan_uid: string
+  group_status_notify_serverchan_sendkey_configured: boolean
   community_qr_code: string
   community_group_url: string
   client_changelog_entries: ClientChangelogEntry[]
@@ -749,6 +753,9 @@ export interface UpdateSettingsRequest {
   client_download_windows_url?: string;
   client_download_macos_url?: string;
   group_status_enabled?: boolean;
+  group_status_notify_serverchan_enabled?: boolean;
+  group_status_notify_serverchan_uid?: string;
+  group_status_notify_serverchan_sendkey?: string;
   community_qr_code?: string;
   community_group_url?: string;
   client_changelog_entries?: ClientChangelogEntry[];
@@ -1116,6 +1123,22 @@ export async function sendTestEmail(
 ): Promise<{ message: string }> {
   const { data } = await apiClient.post<{ message: string }>(
     "/admin/settings/send-test-email",
+    request,
+  );
+  return data;
+}
+
+// ==================== Group Status Notify (fork) ====================
+
+/**
+ * 发送一条 Server酱³ 测试推送；uid / sendkey 留空时使用后端已保存的配置
+ */
+export async function testGroupStatusNotify(request: {
+  uid?: string;
+  sendkey?: string;
+}): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(
+    "/admin/settings/group-status-notify/test",
     request,
   );
   return data;
@@ -1561,6 +1584,7 @@ export const settingsAPI = {
   updateSettings,
   testSmtpConnection,
   sendTestEmail,
+  testGroupStatusNotify,
   getEmailTemplates,
   getEmailTemplate,
   updateEmailTemplate,

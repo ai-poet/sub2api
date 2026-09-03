@@ -42,6 +42,8 @@ func (GroupStatusConfig) Fields() []ent.Field {
 		field.Int("interval_seconds").Default(60),
 		field.Int("timeout_seconds").Default(30),
 		field.Int64("slow_latency_ms").Default(15000),
+		// 稳定状态变红 / 从红恢复时是否推送提醒（Server酱³）
+		field.Bool("notify_enabled").Default(true),
 	}
 }
 

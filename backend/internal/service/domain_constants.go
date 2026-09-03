@@ -421,6 +421,11 @@ const (
 
 	SettingKeyGroupStatusEnabled = "group_status_enabled"
 
+	// 分组运行状态 → Server酱³ 推送（本 fork 自有功能）
+	SettingKeyGroupStatusNotifyServerChanEnabled = "group_status_notify_serverchan_enabled"
+	SettingKeyGroupStatusNotifyServerChanUID     = "group_status_notify_serverchan_uid"
+	SettingKeyGroupStatusNotifyServerChanSendKey = "group_status_notify_serverchan_sendkey"
+
 	// =========================
 	// Ops Monitoring (vNext)
 	// =========================

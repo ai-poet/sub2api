@@ -22,7 +22,7 @@ func NewGroupStatusRepository(db *sql.DB) service.GroupStatusRepository {
 func (r *groupStatusRepository) GetConfig(ctx context.Context, groupID int64) (*service.GroupStatusConfig, error) {
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
-		       interval_seconds, timeout_seconds, slow_latency_ms, created_at, updated_at
+		       interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled, created_at, updated_at
 		FROM group_status_configs
 		WHERE group_id = $1
 	`, groupID)
@@ -40,9 +40,9 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 	row := r.db.QueryRowContext(ctx, `
 		INSERT INTO group_status_configs (
 			group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
-			interval_seconds, timeout_seconds, slow_latency_ms, created_at, updated_at
+			interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, NOW(), NOW())
 		ON CONFLICT (group_id) DO UPDATE SET
 			enabled = EXCLUDED.enabled,
 			probe_model = EXCLUDED.probe_model,
@@ -52,11 +52,13 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 			interval_seconds = EXCLUDED.interval_seconds,
 			timeout_seconds = EXCLUDED.timeout_seconds,
 			slow_latency_ms = EXCLUDED.slow_latency_ms,
+			notify_enabled = EXCLUDED.notify_enabled,
 			updated_at = NOW()
 		RETURNING id, group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
-		          interval_seconds, timeout_seconds, slow_latency_ms, created_at, updated_at
+		          interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled, created_at, updated_at
 	`, config.GroupID, config.Enabled, config.ProbeModel, config.ProbePrompt, config.ValidationMode,
-		mustJSON(config.ExpectedKeywords), config.IntervalSeconds, config.TimeoutSeconds, config.SlowLatencyMS)
+		mustJSON(config.ExpectedKeywords), config.IntervalSeconds, config.TimeoutSeconds, config.SlowLatencyMS,
+		config.NotifyEnabled)
 	return scanGroupStatusConfig(row)
 }
 
@@ -66,7 +68,7 @@ func (r *groupStatusRepository) ListDueConfigs(ctx context.Context, now time.Tim
 	}
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT c.id, c.group_id, c.enabled, c.probe_model, c.probe_prompt, c.validation_mode, c.expected_keywords,
-		       c.interval_seconds, c.timeout_seconds, c.slow_latency_ms, c.created_at, c.updated_at
+		       c.interval_seconds, c.timeout_seconds, c.slow_latency_ms, c.notify_enabled, c.created_at, c.updated_at
 		FROM group_status_configs c
 		LEFT JOIN group_status_states s ON s.group_id = c.group_id
 		WHERE c.enabled = TRUE
@@ -364,7 +366,7 @@ func scanGroupStatusConfig(row scannable) (*service.GroupStatusConfig, error) {
 	cfg := &service.GroupStatusConfig{}
 	if err := row.Scan(
 		&cfg.ID, &cfg.GroupID, &cfg.Enabled, &cfg.ProbeModel, &cfg.ProbePrompt, &cfg.ValidationMode, &keywordsRaw,
-		&cfg.IntervalSeconds, &cfg.TimeoutSeconds, &cfg.SlowLatencyMS, &cfg.CreatedAt, &cfg.UpdatedAt,
+		&cfg.IntervalSeconds, &cfg.TimeoutSeconds, &cfg.SlowLatencyMS, &cfg.NotifyEnabled, &cfg.CreatedAt, &cfg.UpdatedAt,
 	); err != nil {
 		return nil, err
 	}

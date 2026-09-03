@@ -2450,6 +2450,7 @@ export interface GroupStatusConfig {
   interval_seconds: number
   timeout_seconds: number
   slow_latency_ms: number
+  notify_enabled: boolean
   created_at: string
   updated_at: string
 }

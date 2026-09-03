@@ -48,6 +48,7 @@ type GroupStatusConfig struct {
 	IntervalSeconds  int       `json:"interval_seconds"`
 	TimeoutSeconds   int       `json:"timeout_seconds"`
 	SlowLatencyMS    int64     `json:"slow_latency_ms"`
+	NotifyEnabled    bool      `json:"notify_enabled"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 }
@@ -178,6 +179,8 @@ type GroupStatusConfigUpsertInput struct {
 	IntervalSeconds  int
 	TimeoutSeconds   int
 	SlowLatencyMS    int64
+	// NotifyEnabled 为 nil 表示请求未携带，保留已保存的值
+	NotifyEnabled *bool
 }
 
 type AvailableGroupReader interface {
@@ -204,6 +207,7 @@ func DefaultGroupStatusConfig(group *Group) *GroupStatusConfig {
 		IntervalSeconds:  groupStatusDefaultIntervalSeconds,
 		TimeoutSeconds:   groupStatusDefaultTimeoutSeconds,
 		SlowLatencyMS:    groupStatusDefaultSlowLatencyMS,
+		NotifyEnabled:    true,
 	}
 }
 
@@ -253,6 +257,9 @@ func NormalizeGroupStatusConfig(group *Group, input *GroupStatusConfigUpsertInpu
 	cfg.IntervalSeconds = input.IntervalSeconds
 	cfg.TimeoutSeconds = input.TimeoutSeconds
 	cfg.SlowLatencyMS = input.SlowLatencyMS
+	if input.NotifyEnabled != nil {
+		cfg.NotifyEnabled = *input.NotifyEnabled
+	}
 	if err := ValidateGroupStatusConfig(cfg); err != nil {
 		return nil, err
 	}

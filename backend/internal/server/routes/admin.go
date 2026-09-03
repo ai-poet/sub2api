@@ -562,6 +562,8 @@ func registerSettingsRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		adminSettings.PUT("", h.Admin.Setting.UpdateSettings)
 		adminSettings.POST("/test-smtp", h.Admin.Setting.TestSMTPConnection)
 		adminSettings.POST("/send-test-email", h.Admin.Setting.SendTestEmail)
+		// fork 自有：分组运行状态 Server酱³ 测试推送
+		adminSettings.POST("/group-status-notify/test", h.Admin.Setting.TestGroupStatusNotify)
 		adminSettings.GET("/email-templates", h.Admin.Setting.ListEmailTemplates)
 		adminSettings.POST("/email-template-preview", h.Admin.Setting.PreviewEmailTemplate)
 		adminSettings.GET("/email-templates/:event/:locale", h.Admin.Setting.GetEmailTemplate)

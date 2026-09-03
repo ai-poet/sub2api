@@ -23,13 +23,16 @@ import (
 // UpdateSettingsRequest 更新设置请求
 type UpdateSettingsRequest struct {
 	// fork 自有设置
-	PurchaseSubscriptionOpenMode *string                         `json:"purchase_subscription_open_mode"`
-	ClientDownloadWindowsURL     *string                         `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL       *string                         `json:"client_download_macos_url"`
-	GroupStatusEnabled           *bool                           `json:"group_status_enabled"`
-	CommunityQRCode              *string                         `json:"community_qr_code"`
-	CommunityGroupURL            *string                         `json:"community_group_url"`
-	ClientChangelogEntries       *[]service.ClientChangelogEntry `json:"client_changelog_entries"`
+	PurchaseSubscriptionOpenMode       *string                         `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL           *string                         `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL             *string                         `json:"client_download_macos_url"`
+	GroupStatusEnabled                 *bool                           `json:"group_status_enabled"`
+	GroupStatusNotifyServerChanEnabled *bool                           `json:"group_status_notify_serverchan_enabled"`
+	GroupStatusNotifyServerChanUID     *string                         `json:"group_status_notify_serverchan_uid"`
+	GroupStatusNotifyServerChanSendKey *string                         `json:"group_status_notify_serverchan_sendkey"`
+	CommunityQRCode                    *string                         `json:"community_qr_code"`
+	CommunityGroupURL                  *string                         `json:"community_group_url"`
+	ClientChangelogEntries             *[]service.ClientChangelogEntry `json:"client_changelog_entries"`
 
 	// 注册设置
 	RegistrationEnabled                 bool                         `json:"registration_enabled"`
@@ -1990,6 +1993,9 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		ClientDownloadWindowsURL:                               settings.ClientDownloadWindowsURL,
 		ClientDownloadMacOSURL:                                 settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
+		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
+		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
+		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
 		CommunityGroupURL:                                      settings.CommunityGroupURL,
 		ClientChangelogEntries:                                 dto.ParseClientChangelogEntries(updatedSettings.ClientChangelogEntries),
@@ -2356,6 +2362,26 @@ func applyForkSettingsFromRequest(
 	settings.GroupStatusEnabled = previous.GroupStatusEnabled
 	if req.GroupStatusEnabled != nil {
 		settings.GroupStatusEnabled = *req.GroupStatusEnabled
+	}
+
+	// 分组运行状态 → Server酱³ 推送
+	settings.GroupStatusNotifyServerChanEnabled = previous.GroupStatusNotifyServerChanEnabled
+	if req.GroupStatusNotifyServerChanEnabled != nil {
+		settings.GroupStatusNotifyServerChanEnabled = *req.GroupStatusNotifyServerChanEnabled
+	}
+	settings.GroupStatusNotifyServerChanUID = previous.GroupStatusNotifyServerChanUID
+	if req.GroupStatusNotifyServerChanUID != nil {
+		settings.GroupStatusNotifyServerChanUID = strings.TrimSpace(*req.GroupStatusNotifyServerChanUID)
+	}
+	if settings.GroupStatusNotifyServerChanUID != "" {
+		if err := service.ValidateServerChanUID(settings.GroupStatusNotifyServerChanUID); err != nil {
+			response.BadRequest(c, "Server酱 UID may only contain letters, digits, '-' or '_'")
+			return false
+		}
+	}
+	// SendKey 只在请求携带非空值时写入；留空表示保留已保存的密钥（见 setting_update.go）
+	if req.GroupStatusNotifyServerChanSendKey != nil {
+		settings.GroupStatusNotifyServerChanSendKey = strings.TrimSpace(*req.GroupStatusNotifyServerChanSendKey)
 	}
 
 	settings.CommunityQRCode = previous.CommunityQRCode

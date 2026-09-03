@@ -845,6 +845,7 @@ var (
 		{Name: "interval_seconds", Type: field.TypeInt, Default: 60},
 		{Name: "timeout_seconds", Type: field.TypeInt, Default: 30},
 		{Name: "slow_latency_ms", Type: field.TypeInt64, Default: 15000},
+		{Name: "notify_enabled", Type: field.TypeBool, Default: true},
 	}
 	// GroupStatusConfigsTable holds the schema information for the "group_status_configs" table.
 	GroupStatusConfigsTable = &schema.Table{
