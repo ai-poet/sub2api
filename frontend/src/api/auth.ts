@@ -694,6 +694,20 @@ export async function completeGitHubOAuthRegistration(
   return data
 }
 
+/**
+ * Mint a token pair for the native desktop app, in a session family of its
+ * own.
+ *
+ * The desktop must never be handed this browser's refresh token: the service
+ * rotates refresh tokens on every renewal, so two holders of one token sign
+ * each other out - the desktop appeared to "lose" its login whenever this tab
+ * refreshed first.
+ */
+export async function createDesktopSession(): Promise<RefreshTokenResponse> {
+  const { data } = await apiClient.post<RefreshTokenResponse>('/auth/desktop-session')
+  return data
+}
+
 export const authAPI = {
   login,
   login2FA,
@@ -718,6 +732,7 @@ export const authAPI = {
   resetPassword,
   refreshToken,
   revokeAllSessions,
+  createDesktopSession,
   getPendingOAuthBindLoginKind,
   isPendingOAuthCreateAccountRequired,
   hasPendingOAuthSuggestedProfile,

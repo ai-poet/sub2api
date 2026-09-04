@@ -40,9 +40,14 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { AuthLayout } from '@/components/layout'
 import { keysAPI, userGroupsAPI } from '@/api'
-import { getAuthToken, getRefreshToken, getTokenExpiresAt } from '@/api/auth'
+import { authAPI, getAuthToken } from '@/api/auth'
 import { clearStoredOAuthReturnPath, rememberOAuthReturnPath } from '@/utils/auth-redirect'
-import { buildPaseoCallbackUrl, normalizePaseoEndpoint, resolveCallbackTarget } from './paseo-bridge'
+import {
+  buildPaseoCallbackUrl,
+  normalizePaseoEndpoint,
+  payloadFromDesktopSession,
+  resolveCallbackTarget
+} from './paseo-bridge'
 import type { ApiKey, Group, GroupPlatform } from '@/types'
 
 const route = useRoute()
@@ -171,29 +176,12 @@ onMounted(async () => {
     statusMessage.value = 'Preparing Claude Code and Codex routes...'
     const preparedKeys = await ensurePaseoKeys()
 
-    const nextAccessToken = getAuthToken()
-    const refreshToken = getRefreshToken()
-    const expiresAt = getTokenExpiresAt()
-
-    if (
-      !nextAccessToken ||
-      !refreshToken ||
-      expiresAt === null ||
-      !Number.isFinite(expiresAt) ||
-      !preparedKeys.apiKey
-    ) {
-      throw new Error('Missing token or API key state after browser login.')
-    }
-
-    const payload = {
-      accessToken: nextAccessToken,
-      refreshToken,
-      expiresAt,
-      apiKey: preparedKeys.apiKey,
-      claudeApiKey: preparedKeys.claudeApiKey,
-      codexApiKey: preparedKeys.codexApiKey,
-      endpoint: endpoint.value,
-    }
+    // A session of the desktop's own. Handing over this tab's tokens left two
+    // holders of one refresh token, and the service's rotation then signed
+    // out whichever of them renewed second - the desktop, usually.
+    statusMessage.value = 'Creating a session for the app...'
+    const session = await authAPI.createDesktopSession()
+    const payload = payloadFromDesktopSession(session, preparedKeys, endpoint.value)
     const target = callbackTarget.value
     callbackUrl.value = buildPaseoCallbackUrl(payload, { callbackBase: target.base })
 

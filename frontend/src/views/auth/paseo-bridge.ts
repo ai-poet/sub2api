@@ -76,6 +76,53 @@ export function resolveCallbackTarget(redirectTo?: string | null): CallbackTarge
   return { base: CALLBACK_SCHEME, legacyFallback: LEGACY_CALLBACK_SCHEME }
 }
 
+/** A token pair minted for the desktop by `POST /auth/desktop-session`. */
+export interface DesktopSession {
+  access_token: string
+  refresh_token: string
+  /** Access-token lifetime in seconds. */
+  expires_in: number
+}
+
+/** The gateway keys the bridge prepared for the desktop's CLIs. */
+export interface DesktopSessionKeys {
+  apiKey: string
+  claudeApiKey?: string | null
+  codexApiKey?: string | null
+}
+
+/**
+ * The callback payload from a desktop session of its own - never from this
+ * browser's tokens. Rejects an incomplete answer instead of delivering it,
+ * because the desktop would store empty tokens and sign out on next launch
+ * with nothing to explain why.
+ */
+export function payloadFromDesktopSession(
+  session: DesktopSession,
+  keys: DesktopSessionKeys,
+  endpoint: string,
+  now: number = Date.now()
+): PaseoCallbackPayload {
+  const accessToken = (session.access_token ?? '').trim()
+  const refreshToken = (session.refresh_token ?? '').trim()
+  const expiresIn = Number(session.expires_in)
+  if (!accessToken || !refreshToken || !Number.isFinite(expiresIn) || expiresIn <= 0) {
+    throw new Error('The service did not return a complete desktop session.')
+  }
+  if (!keys.apiKey?.trim()) {
+    throw new Error('Missing API key state after browser login.')
+  }
+  return {
+    accessToken,
+    refreshToken,
+    expiresAt: now + expiresIn * 1000,
+    apiKey: keys.apiKey.trim(),
+    claudeApiKey: keys.claudeApiKey ?? null,
+    codexApiKey: keys.codexApiKey ?? null,
+    endpoint: normalizePaseoEndpoint(endpoint)
+  }
+}
+
 export function buildPaseoCallbackUrl(
   payload: PaseoCallbackPayload,
   options?: {

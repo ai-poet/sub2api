@@ -263,6 +263,8 @@ func RegisterAuthRoutes(
 	authenticated.Use(panelRateLimiter.Global())
 	{
 		authenticated.GET("/auth/me", h.Auth.GetCurrentUser)
+		// 桌面端桥接登录：为原生客户端签发独立会话家族的 token 对，避免与浏览器共用 refresh token
+		authenticated.POST("/auth/desktop-session", h.Auth.CreateDesktopSession)
 		// 撤销所有会话（需要认证）
 		authenticated.POST("/auth/revoke-all-sessions", h.Auth.RevokeAllSessions)
 		authenticated.POST("/auth/oauth/bind-token", h.Auth.PrepareOAuthBindAccessTokenCookie)

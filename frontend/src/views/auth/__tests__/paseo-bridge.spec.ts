@@ -3,11 +3,57 @@ import {
   buildPaseoCallbackUrl,
   CALLBACK_SCHEME,
   LEGACY_CALLBACK_SCHEME,
+  payloadFromDesktopSession,
   resolveCallbackTarget,
   resolveExpiresInSeconds
 } from '../paseo-bridge'
 
 describe('paseo-bridge', () => {
+  it('builds the payload from a desktop session of its own, not the browser tokens', () => {
+    const payload = payloadFromDesktopSession(
+      { access_token: ' desktop-at ', refresh_token: 'rt_desktop', expires_in: 900 },
+      { apiKey: 'sk-live', claudeApiKey: 'sk-claude', codexApiKey: null },
+      'https://api.example.com/',
+      1_710_000_000_000
+    )
+
+    expect(payload).toEqual({
+      accessToken: 'desktop-at',
+      refreshToken: 'rt_desktop',
+      expiresAt: 1_710_000_900_000,
+      apiKey: 'sk-live',
+      claudeApiKey: 'sk-claude',
+      codexApiKey: null,
+      endpoint: 'https://api.example.com'
+    })
+    expect(
+      buildPaseoCallbackUrl(payload, {
+        now: 1_710_000_000_000,
+        callbackBase: 'http://127.0.0.1:5/callback'
+      })
+    ).toContain('refresh_token=rt_desktop&expires_in=900')
+  })
+
+  it('refuses an incomplete desktop session rather than delivering empty tokens', () => {
+    const keys = { apiKey: 'sk-live' }
+    const origin = 'https://a.org'
+    expect(() =>
+      payloadFromDesktopSession({ access_token: '', refresh_token: 'rt', expires_in: 900 }, keys, origin)
+    ).toThrow(/complete desktop session/)
+    expect(() =>
+      payloadFromDesktopSession({ access_token: 'at', refresh_token: '', expires_in: 900 }, keys, origin)
+    ).toThrow(/complete desktop session/)
+    expect(() =>
+      payloadFromDesktopSession({ access_token: 'at', refresh_token: 'rt', expires_in: 0 }, keys, origin)
+    ).toThrow(/complete desktop session/)
+    expect(() =>
+      payloadFromDesktopSession(
+        { access_token: 'at', refresh_token: 'rt', expires_in: 900 },
+        { apiKey: ' ' },
+        origin
+      )
+    ).toThrow(/API key/)
+  })
   it('builds a callback url with tokens, scoped api keys, and endpoint', () => {
     const url = buildPaseoCallbackUrl(
       {
