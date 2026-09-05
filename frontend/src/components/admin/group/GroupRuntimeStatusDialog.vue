@@ -136,6 +136,143 @@
           </div>
         </div>
 
+        <div
+          v-if="group.platform === 'openai'"
+          class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-dark-700"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="font-medium text-gray-900 dark:text-white">
+                {{ t('admin.groups.runtimeStatus.solJuice.title') }}
+              </div>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.solJuice.hint') }}
+              </p>
+            </div>
+            <Toggle v-model="form.sol_juice_enabled" />
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <div>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.solJuice.intervalSeconds') }}</label>
+              <input
+                v-model.number="form.sol_juice_interval_seconds"
+                type="number"
+                min="300"
+                step="60"
+                class="input"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.solJuice.model') }}</label>
+              <input
+                v-model.trim="form.sol_juice_model"
+                type="text"
+                class="input"
+                :placeholder="t('admin.groups.runtimeStatus.solJuice.modelPlaceholder')"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ t('admin.groups.runtimeStatus.solJuice.latestResult') }}
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              :disabled="loading || saving || probing || solJuiceProbing"
+              @click="handleSolJuiceProbe"
+            >
+              <span
+                v-if="solJuiceProbing"
+                class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+              ></span>
+              {{ solJuiceProbing ? t('admin.groups.runtimeStatus.solJuice.probing') : t('admin.groups.runtimeStatus.solJuice.probeNow') }}
+            </button>
+          </div>
+
+          <div v-if="summary.sol_juice_checked_at" class="space-y-3">
+            <div class="grid gap-3 md:grid-cols-4">
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.solJuice.status') }}
+                </div>
+                <div class="mt-1">
+                  <span :class="['badge', getSolJuiceBadgeClass(solJuiceDisplayStatus)]">
+                    {{ t(`admin.groups.runtimeStatus.solJuice.statuses.${solJuiceDisplayStatus}`) }}
+                  </span>
+                </div>
+              </div>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.solJuice.value') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ summary.sol_juice_value || '-' }}
+                </div>
+              </div>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.solJuice.checkedAt') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ formatDateTime(summary.sol_juice_checked_at) }}
+                </div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {{ formatRelativeTime(summary.sol_juice_checked_at) }}
+                </div>
+              </div>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.solJuice.tokens') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ summary.sol_juice_input_tokens }} / {{ summary.sol_juice_output_tokens }}
+                </div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.solJuice.reasoningTokens') }}: {{ summary.sol_juice_reasoning_tokens }}
+                </div>
+              </div>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.solJuice.lastCost') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ formatUsd(summary.sol_juice_last_cost_usd) }}
+                </div>
+              </div>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.solJuice.monthlyEstimate') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ formatUsd(solJuiceMonthlyCost, 2) }}
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-if="summary.sol_juice_detail"
+              class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
+            >
+              <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.solJuice.detail') }}
+              </div>
+              <pre class="mt-2 whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-gray-200">{{ summary.sol_juice_detail }}</pre>
+            </div>
+          </div>
+          <div
+            v-else
+            class="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500 dark:border-dark-700 dark:text-gray-400"
+          >
+            {{ t('admin.groups.runtimeStatus.solJuice.latestResultEmpty') }}
+          </div>
+        </div>
+
         <div class="rounded-xl border border-gray-200 p-4 dark:border-dark-700">
           <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
@@ -278,9 +415,13 @@ import type {
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
+  estimateSolJuiceMonthlyCostUsd,
   formatGroupRuntimeLatency,
+  formatUsd,
   getGroupRuntimeStatusBadgeClass,
+  getSolJuiceBadgeClass,
   joinRuntimeKeywordsText,
+  normalizeSolJuiceStatus,
   normalizeGroupRuntimeStatus,
   shouldShowRuntimeKeywordEditor,
   splitRuntimeKeywordsText,
@@ -317,7 +458,12 @@ const form = reactive({
   timeout_seconds: 30,
   slow_latency_ms: 15000,
   notify_enabled: true,
+  sol_juice_enabled: false,
+  sol_juice_interval_seconds: 900,
+  sol_juice_model: 'gpt-5.6-sol',
 })
+
+const solJuiceProbing = ref(false)
 
 const dialogTitle = computed(() => {
   if (!props.group) {
@@ -356,9 +502,30 @@ const summary = computed<GroupStatusSummary>(() => {
     error_detail: '',
     observed_at: null,
     consecutive_down: 0,
-    consecutive_non_down: 0
+    consecutive_non_down: 0,
+    sol_juice_enabled: false,
+    sol_juice_model: '',
+    sol_juice_interval_seconds: 900,
+    sol_juice_status: '',
+    sol_juice_stable_status: '',
+    sol_juice_value: '',
+    sol_juice_detail: '',
+    sol_juice_checked_at: null,
+    sol_juice_consecutive_mismatch: 0,
+    sol_juice_input_tokens: 0,
+    sol_juice_output_tokens: 0,
+    sol_juice_reasoning_tokens: 0,
+    sol_juice_last_cost_usd: 0
   }
 })
+
+const solJuiceDisplayStatus = computed(() =>
+  normalizeSolJuiceStatus(summary.value.sol_juice_stable_status || summary.value.sol_juice_status)
+)
+
+const solJuiceMonthlyCost = computed(() =>
+  estimateSolJuiceMonthlyCostUsd(summary.value.sol_juice_last_cost_usd, Number(form.sol_juice_interval_seconds) || 0)
+)
 
 const summaryStatus = computed(() => {
   if (!form.enabled) {
@@ -396,6 +563,9 @@ function resetForm() {
   form.timeout_seconds = 30
   form.slow_latency_ms = 15000
   form.notify_enabled = true
+  form.sol_juice_enabled = false
+  form.sol_juice_interval_seconds = 900
+  form.sol_juice_model = 'gpt-5.6-sol'
   expectedKeywordsText.value = ''
 }
 
@@ -409,6 +579,9 @@ function applyView(view: GroupStatusAdminView) {
   form.timeout_seconds = view.config.timeout_seconds
   form.slow_latency_ms = view.config.slow_latency_ms
   form.notify_enabled = view.config.notify_enabled !== false
+  form.sol_juice_enabled = view.config.sol_juice_enabled === true
+  form.sol_juice_interval_seconds = view.config.sol_juice_interval_seconds || 900
+  form.sol_juice_model = view.config.sol_juice_model || 'gpt-5.6-sol'
   expectedKeywordsText.value = joinRuntimeKeywordsText(view.config.expected_keywords)
 }
 
@@ -443,6 +616,9 @@ async function saveRuntimeStatus(showToast = true): Promise<GroupStatusAdminView
       timeout_seconds: Math.max(1, Math.round(Number(form.timeout_seconds) || 30)),
       slow_latency_ms: Math.max(100, Math.round(Number(form.slow_latency_ms) || 15000)),
       notify_enabled: form.notify_enabled,
+      sol_juice_enabled: form.sol_juice_enabled,
+      sol_juice_interval_seconds: Math.max(300, Math.round(Number(form.sol_juice_interval_seconds) || 900)),
+      sol_juice_model: form.sol_juice_model.trim() || 'gpt-5.6-sol',
     })
     applyView(view)
     if (showToast) {
@@ -485,6 +661,29 @@ async function handleProbe() {
     appStore.showError(error?.message || t('admin.groups.runtimeStatus.probeFailed'))
   } finally {
     probing.value = false
+  }
+}
+
+async function handleSolJuiceProbe() {
+  if (!props.group) {
+    return
+  }
+
+  const saved = await saveRuntimeStatus(false)
+  if (!saved) {
+    return
+  }
+
+  solJuiceProbing.value = true
+  try {
+    const view = await adminAPI.groups.probeRuntimeStatusSolJuice(props.group.id)
+    applyView(view)
+    appStore.showSuccess(t('admin.groups.runtimeStatus.solJuice.probeSucceeded'))
+    emit('updated')
+  } catch (error: any) {
+    appStore.showError(error?.message || t('admin.groups.runtimeStatus.solJuice.probeFailed'))
+  } finally {
+    solJuiceProbing.value = false
   }
 }
 

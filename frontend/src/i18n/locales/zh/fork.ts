@@ -259,7 +259,20 @@ export default {
     },
     "eventTypes": {
       "up": "恢复",
-      "down": "中断"
+      "down": "中断",
+      "sol_juice_mismatch": "疑似非 Sol",
+      "sol_juice_recovered": "Sol 验证恢复"
+    },
+    "solJuice": {
+      "pass": "Sol ✓",
+      "mismatch": "非 Sol",
+      "pending": "Sol 待验证",
+      "statuses": {
+        "pass": "Sol 验证通过",
+        "mismatch": "非 Sol",
+        "inconclusive": "证据不足",
+        "unknown": "待验证"
+      }
     }
   },
   "nav": {
@@ -401,7 +414,34 @@ export default {
         "notConfigured": "未配置",
         "footerHint": "“立即探测”会先保存当前配置，再立即执行一次探测。",
         "notifyEnabled": "变红 / 恢复时推送提醒",
-        "notifyEnabledHint": "仅当站点设置中已启用 Server酱³ 推送时生效；关闭后本分组的状态变化不再推送。"
+        "notifyEnabledHint": "仅当站点设置中已启用 Server酱³ 推送时生效；关闭后本分组的状态变化不再推送。",
+        "solJuice": {
+          "title": "纯 Sol 验证（Juice 指纹）",
+          "hint": "向本分组的 OpenAI 账号发一条 reasoning=high 的请求读取模型内部 Juice 预算：Sol 应回 40，回 32 / 48 等即为其他型号。连续 2 次非 Sol（首次会立即复测）才判定并推送，不影响在线率。每次约 $0.006–0.045（主要是 reasoning token），请勿把间隔设得太短。",
+          "intervalSeconds": "验证间隔（秒，最小 300）",
+          "model": "请求模型名",
+          "modelPlaceholder": "gpt-5.6-sol",
+          "latestResult": "最近一次验证",
+          "latestResultEmpty": "尚未验证。保存后等待调度，或点击“立即验证”。",
+          "status": "结论",
+          "value": "Juice 值",
+          "checkedAt": "验证时间",
+          "tokens": "Token（输入 / 输出）",
+          "reasoningTokens": "其中 reasoning",
+          "lastCost": "最近一次成本",
+          "monthlyEstimate": "按当前间隔折算每月",
+          "detail": "说明",
+          "probeNow": "立即验证",
+          "probing": "验证中...",
+          "probeSucceeded": "Sol 验证已完成",
+          "probeFailed": "Sol 验证失败",
+          "statuses": {
+            "pass": "Sol 验证通过",
+            "mismatch": "非 Sol",
+            "inconclusive": "证据不足",
+            "unknown": "待验证"
+          }
+        }
       },
       "openaiMessages": {
         "defaultModel": "默认映射模型",

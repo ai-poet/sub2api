@@ -45,7 +45,25 @@ type GroupStatusState struct {
 	ConsecutiveDown int `json:"consecutive_down,omitempty"`
 	// ConsecutiveNonDown holds the value of the "consecutive_non_down" field.
 	ConsecutiveNonDown int `json:"consecutive_non_down,omitempty"`
-	selectValues       sql.SelectValues
+	// SolJuiceStatus holds the value of the "sol_juice_status" field.
+	SolJuiceStatus string `json:"sol_juice_status,omitempty"`
+	// SolJuiceStableStatus holds the value of the "sol_juice_stable_status" field.
+	SolJuiceStableStatus string `json:"sol_juice_stable_status,omitempty"`
+	// SolJuiceValue holds the value of the "sol_juice_value" field.
+	SolJuiceValue string `json:"sol_juice_value,omitempty"`
+	// SolJuiceDetail holds the value of the "sol_juice_detail" field.
+	SolJuiceDetail *string `json:"sol_juice_detail,omitempty"`
+	// SolJuiceCheckedAt holds the value of the "sol_juice_checked_at" field.
+	SolJuiceCheckedAt *time.Time `json:"sol_juice_checked_at,omitempty"`
+	// SolJuiceConsecutiveMismatch holds the value of the "sol_juice_consecutive_mismatch" field.
+	SolJuiceConsecutiveMismatch int `json:"sol_juice_consecutive_mismatch,omitempty"`
+	// SolJuiceInputTokens holds the value of the "sol_juice_input_tokens" field.
+	SolJuiceInputTokens int64 `json:"sol_juice_input_tokens,omitempty"`
+	// SolJuiceOutputTokens holds the value of the "sol_juice_output_tokens" field.
+	SolJuiceOutputTokens int64 `json:"sol_juice_output_tokens,omitempty"`
+	// SolJuiceReasoningTokens holds the value of the "sol_juice_reasoning_tokens" field.
+	SolJuiceReasoningTokens int64 `json:"sol_juice_reasoning_tokens,omitempty"`
+	selectValues            sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -53,11 +71,11 @@ func (*GroupStatusState) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown:
+		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown, groupstatusstate.FieldSolJuiceConsecutiveMismatch, groupstatusstate.FieldSolJuiceInputTokens, groupstatusstate.FieldSolJuiceOutputTokens, groupstatusstate.FieldSolJuiceReasoningTokens:
 			values[i] = new(sql.NullInt64)
-		case groupstatusstate.FieldLatestStatus, groupstatusstate.FieldStableStatus, groupstatusstate.FieldResponseExcerpt, groupstatusstate.FieldSubStatus, groupstatusstate.FieldErrorDetail:
+		case groupstatusstate.FieldLatestStatus, groupstatusstate.FieldStableStatus, groupstatusstate.FieldResponseExcerpt, groupstatusstate.FieldSubStatus, groupstatusstate.FieldErrorDetail, groupstatusstate.FieldSolJuiceStatus, groupstatusstate.FieldSolJuiceStableStatus, groupstatusstate.FieldSolJuiceValue, groupstatusstate.FieldSolJuiceDetail:
 			values[i] = new(sql.NullString)
-		case groupstatusstate.FieldCreatedAt, groupstatusstate.FieldUpdatedAt, groupstatusstate.FieldObservedAt:
+		case groupstatusstate.FieldCreatedAt, groupstatusstate.FieldUpdatedAt, groupstatusstate.FieldObservedAt, groupstatusstate.FieldSolJuiceCheckedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -169,6 +187,62 @@ func (_m *GroupStatusState) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ConsecutiveNonDown = int(value.Int64)
 			}
+		case groupstatusstate.FieldSolJuiceStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_status", values[i])
+			} else if value.Valid {
+				_m.SolJuiceStatus = value.String
+			}
+		case groupstatusstate.FieldSolJuiceStableStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_stable_status", values[i])
+			} else if value.Valid {
+				_m.SolJuiceStableStatus = value.String
+			}
+		case groupstatusstate.FieldSolJuiceValue:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_value", values[i])
+			} else if value.Valid {
+				_m.SolJuiceValue = value.String
+			}
+		case groupstatusstate.FieldSolJuiceDetail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_detail", values[i])
+			} else if value.Valid {
+				_m.SolJuiceDetail = new(string)
+				*_m.SolJuiceDetail = value.String
+			}
+		case groupstatusstate.FieldSolJuiceCheckedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_checked_at", values[i])
+			} else if value.Valid {
+				_m.SolJuiceCheckedAt = new(time.Time)
+				*_m.SolJuiceCheckedAt = value.Time
+			}
+		case groupstatusstate.FieldSolJuiceConsecutiveMismatch:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_consecutive_mismatch", values[i])
+			} else if value.Valid {
+				_m.SolJuiceConsecutiveMismatch = int(value.Int64)
+			}
+		case groupstatusstate.FieldSolJuiceInputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_input_tokens", values[i])
+			} else if value.Valid {
+				_m.SolJuiceInputTokens = value.Int64
+			}
+		case groupstatusstate.FieldSolJuiceOutputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_output_tokens", values[i])
+			} else if value.Valid {
+				_m.SolJuiceOutputTokens = value.Int64
+			}
+		case groupstatusstate.FieldSolJuiceReasoningTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_reasoning_tokens", values[i])
+			} else if value.Valid {
+				_m.SolJuiceReasoningTokens = value.Int64
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -256,6 +330,37 @@ func (_m *GroupStatusState) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("consecutive_non_down=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ConsecutiveNonDown))
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_status=")
+	builder.WriteString(_m.SolJuiceStatus)
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_stable_status=")
+	builder.WriteString(_m.SolJuiceStableStatus)
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_value=")
+	builder.WriteString(_m.SolJuiceValue)
+	builder.WriteString(", ")
+	if v := _m.SolJuiceDetail; v != nil {
+		builder.WriteString("sol_juice_detail=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.SolJuiceCheckedAt; v != nil {
+		builder.WriteString("sol_juice_checked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_consecutive_mismatch=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceConsecutiveMismatch))
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_input_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceInputTokens))
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_output_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceOutputTokens))
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_reasoning_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceReasoningTokens))
 	builder.WriteByte(')')
 	return builder.String()
 }

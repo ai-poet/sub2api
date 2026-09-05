@@ -27,6 +27,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
@@ -76,6 +77,7 @@ const (
 	TypeGroup                    = "Group"
 	TypeGroupStatusConfig        = "GroupStatusConfig"
 	TypeGroupStatusEvent         = "GroupStatusEvent"
+	TypeGroupStatusJuiceRecord   = "GroupStatusJuiceRecord"
 	TypeGroupStatusRecord        = "GroupStatusRecord"
 	TypeGroupStatusState         = "GroupStatusState"
 	TypeIdempotencyRecord        = "IdempotencyRecord"
@@ -22636,30 +22638,34 @@ func (m *GroupMutation) ResetEdge(name string) error {
 // GroupStatusConfigMutation represents an operation that mutates the GroupStatusConfig nodes in the graph.
 type GroupStatusConfigMutation struct {
 	config
-	op                      Op
-	typ                     string
-	id                      *int64
-	created_at              *time.Time
-	updated_at              *time.Time
-	group_id                *int64
-	addgroup_id             *int64
-	enabled                 *bool
-	probe_model             *string
-	probe_prompt            *string
-	validation_mode         *string
-	expected_keywords       *[]string
-	appendexpected_keywords []string
-	interval_seconds        *int
-	addinterval_seconds     *int
-	timeout_seconds         *int
-	addtimeout_seconds      *int
-	slow_latency_ms         *int64
-	addslow_latency_ms      *int64
-	notify_enabled          *bool
-	clearedFields           map[string]struct{}
-	done                    bool
-	oldValue                func(context.Context) (*GroupStatusConfig, error)
-	predicates              []predicate.GroupStatusConfig
+	op                            Op
+	typ                           string
+	id                            *int64
+	created_at                    *time.Time
+	updated_at                    *time.Time
+	group_id                      *int64
+	addgroup_id                   *int64
+	enabled                       *bool
+	probe_model                   *string
+	probe_prompt                  *string
+	validation_mode               *string
+	expected_keywords             *[]string
+	appendexpected_keywords       []string
+	interval_seconds              *int
+	addinterval_seconds           *int
+	timeout_seconds               *int
+	addtimeout_seconds            *int
+	slow_latency_ms               *int64
+	addslow_latency_ms            *int64
+	notify_enabled                *bool
+	sol_juice_enabled             *bool
+	sol_juice_interval_seconds    *int
+	addsol_juice_interval_seconds *int
+	sol_juice_model               *string
+	clearedFields                 map[string]struct{}
+	done                          bool
+	oldValue                      func(context.Context) (*GroupStatusConfig, error)
+	predicates                    []predicate.GroupStatusConfig
 }
 
 var _ ent.Mutation = (*GroupStatusConfigMutation)(nil)
@@ -23287,6 +23293,134 @@ func (m *GroupStatusConfigMutation) ResetNotifyEnabled() {
 	m.notify_enabled = nil
 }
 
+// SetSolJuiceEnabled sets the "sol_juice_enabled" field.
+func (m *GroupStatusConfigMutation) SetSolJuiceEnabled(b bool) {
+	m.sol_juice_enabled = &b
+}
+
+// SolJuiceEnabled returns the value of the "sol_juice_enabled" field in the mutation.
+func (m *GroupStatusConfigMutation) SolJuiceEnabled() (r bool, exists bool) {
+	v := m.sol_juice_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceEnabled returns the old "sol_juice_enabled" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldSolJuiceEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceEnabled: %w", err)
+	}
+	return oldValue.SolJuiceEnabled, nil
+}
+
+// ResetSolJuiceEnabled resets all changes to the "sol_juice_enabled" field.
+func (m *GroupStatusConfigMutation) ResetSolJuiceEnabled() {
+	m.sol_juice_enabled = nil
+}
+
+// SetSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field.
+func (m *GroupStatusConfigMutation) SetSolJuiceIntervalSeconds(i int) {
+	m.sol_juice_interval_seconds = &i
+	m.addsol_juice_interval_seconds = nil
+}
+
+// SolJuiceIntervalSeconds returns the value of the "sol_juice_interval_seconds" field in the mutation.
+func (m *GroupStatusConfigMutation) SolJuiceIntervalSeconds() (r int, exists bool) {
+	v := m.sol_juice_interval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceIntervalSeconds returns the old "sol_juice_interval_seconds" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldSolJuiceIntervalSeconds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceIntervalSeconds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceIntervalSeconds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceIntervalSeconds: %w", err)
+	}
+	return oldValue.SolJuiceIntervalSeconds, nil
+}
+
+// AddSolJuiceIntervalSeconds adds i to the "sol_juice_interval_seconds" field.
+func (m *GroupStatusConfigMutation) AddSolJuiceIntervalSeconds(i int) {
+	if m.addsol_juice_interval_seconds != nil {
+		*m.addsol_juice_interval_seconds += i
+	} else {
+		m.addsol_juice_interval_seconds = &i
+	}
+}
+
+// AddedSolJuiceIntervalSeconds returns the value that was added to the "sol_juice_interval_seconds" field in this mutation.
+func (m *GroupStatusConfigMutation) AddedSolJuiceIntervalSeconds() (r int, exists bool) {
+	v := m.addsol_juice_interval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSolJuiceIntervalSeconds resets all changes to the "sol_juice_interval_seconds" field.
+func (m *GroupStatusConfigMutation) ResetSolJuiceIntervalSeconds() {
+	m.sol_juice_interval_seconds = nil
+	m.addsol_juice_interval_seconds = nil
+}
+
+// SetSolJuiceModel sets the "sol_juice_model" field.
+func (m *GroupStatusConfigMutation) SetSolJuiceModel(s string) {
+	m.sol_juice_model = &s
+}
+
+// SolJuiceModel returns the value of the "sol_juice_model" field in the mutation.
+func (m *GroupStatusConfigMutation) SolJuiceModel() (r string, exists bool) {
+	v := m.sol_juice_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceModel returns the old "sol_juice_model" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldSolJuiceModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceModel: %w", err)
+	}
+	return oldValue.SolJuiceModel, nil
+}
+
+// ResetSolJuiceModel resets all changes to the "sol_juice_model" field.
+func (m *GroupStatusConfigMutation) ResetSolJuiceModel() {
+	m.sol_juice_model = nil
+}
+
 // Where appends a list predicates to the GroupStatusConfigMutation builder.
 func (m *GroupStatusConfigMutation) Where(ps ...predicate.GroupStatusConfig) {
 	m.predicates = append(m.predicates, ps...)
@@ -23321,7 +23455,7 @@ func (m *GroupStatusConfigMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusConfigMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 15)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusconfig.FieldCreatedAt)
 	}
@@ -23358,6 +23492,15 @@ func (m *GroupStatusConfigMutation) Fields() []string {
 	if m.notify_enabled != nil {
 		fields = append(fields, groupstatusconfig.FieldNotifyEnabled)
 	}
+	if m.sol_juice_enabled != nil {
+		fields = append(fields, groupstatusconfig.FieldSolJuiceEnabled)
+	}
+	if m.sol_juice_interval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldSolJuiceIntervalSeconds)
+	}
+	if m.sol_juice_model != nil {
+		fields = append(fields, groupstatusconfig.FieldSolJuiceModel)
+	}
 	return fields
 }
 
@@ -23390,6 +23533,12 @@ func (m *GroupStatusConfigMutation) Field(name string) (ent.Value, bool) {
 		return m.SlowLatencyMs()
 	case groupstatusconfig.FieldNotifyEnabled:
 		return m.NotifyEnabled()
+	case groupstatusconfig.FieldSolJuiceEnabled:
+		return m.SolJuiceEnabled()
+	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
+		return m.SolJuiceIntervalSeconds()
+	case groupstatusconfig.FieldSolJuiceModel:
+		return m.SolJuiceModel()
 	}
 	return nil, false
 }
@@ -23423,6 +23572,12 @@ func (m *GroupStatusConfigMutation) OldField(ctx context.Context, name string) (
 		return m.OldSlowLatencyMs(ctx)
 	case groupstatusconfig.FieldNotifyEnabled:
 		return m.OldNotifyEnabled(ctx)
+	case groupstatusconfig.FieldSolJuiceEnabled:
+		return m.OldSolJuiceEnabled(ctx)
+	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
+		return m.OldSolJuiceIntervalSeconds(ctx)
+	case groupstatusconfig.FieldSolJuiceModel:
+		return m.OldSolJuiceModel(ctx)
 	}
 	return nil, fmt.Errorf("unknown GroupStatusConfig field %s", name)
 }
@@ -23516,6 +23671,27 @@ func (m *GroupStatusConfigMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetNotifyEnabled(v)
 		return nil
+	case groupstatusconfig.FieldSolJuiceEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceEnabled(v)
+		return nil
+	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceIntervalSeconds(v)
+		return nil
+	case groupstatusconfig.FieldSolJuiceModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceModel(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig field %s", name)
 }
@@ -23536,6 +23712,9 @@ func (m *GroupStatusConfigMutation) AddedFields() []string {
 	if m.addslow_latency_ms != nil {
 		fields = append(fields, groupstatusconfig.FieldSlowLatencyMs)
 	}
+	if m.addsol_juice_interval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldSolJuiceIntervalSeconds)
+	}
 	return fields
 }
 
@@ -23552,6 +23731,8 @@ func (m *GroupStatusConfigMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedTimeoutSeconds()
 	case groupstatusconfig.FieldSlowLatencyMs:
 		return m.AddedSlowLatencyMs()
+	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
+		return m.AddedSolJuiceIntervalSeconds()
 	}
 	return nil, false
 }
@@ -23588,6 +23769,13 @@ func (m *GroupStatusConfigMutation) AddField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddSlowLatencyMs(v)
+		return nil
+	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSolJuiceIntervalSeconds(v)
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig numeric field %s", name)
@@ -23651,6 +23839,15 @@ func (m *GroupStatusConfigMutation) ResetField(name string) error {
 		return nil
 	case groupstatusconfig.FieldNotifyEnabled:
 		m.ResetNotifyEnabled()
+		return nil
+	case groupstatusconfig.FieldSolJuiceEnabled:
+		m.ResetSolJuiceEnabled()
+		return nil
+	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
+		m.ResetSolJuiceIntervalSeconds()
+		return nil
+	case groupstatusconfig.FieldSolJuiceModel:
+		m.ResetSolJuiceModel()
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig field %s", name)
@@ -24767,6 +24964,1403 @@ func (m *GroupStatusEventMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown GroupStatusEvent edge %s", name)
 }
 
+// GroupStatusJuiceRecordMutation represents an operation that mutates the GroupStatusJuiceRecord nodes in the graph.
+type GroupStatusJuiceRecordMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *int64
+	group_id            *int64
+	addgroup_id         *int64
+	config_id           *int64
+	addconfig_id        *int64
+	model               *string
+	effort              *string
+	classification      *string
+	normalized_value    *string
+	answer_excerpt      *string
+	http_code           *int
+	addhttp_code        *int
+	latency_ms          *int64
+	addlatency_ms       *int64
+	input_tokens        *int64
+	addinput_tokens     *int64
+	output_tokens       *int64
+	addoutput_tokens    *int64
+	reasoning_tokens    *int64
+	addreasoning_tokens *int64
+	error_detail        *string
+	observed_at         *time.Time
+	created_at          *time.Time
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*GroupStatusJuiceRecord, error)
+	predicates          []predicate.GroupStatusJuiceRecord
+}
+
+var _ ent.Mutation = (*GroupStatusJuiceRecordMutation)(nil)
+
+// groupstatusjuicerecordOption allows management of the mutation configuration using functional options.
+type groupstatusjuicerecordOption func(*GroupStatusJuiceRecordMutation)
+
+// newGroupStatusJuiceRecordMutation creates new mutation for the GroupStatusJuiceRecord entity.
+func newGroupStatusJuiceRecordMutation(c config, op Op, opts ...groupstatusjuicerecordOption) *GroupStatusJuiceRecordMutation {
+	m := &GroupStatusJuiceRecordMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupStatusJuiceRecord,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupStatusJuiceRecordID sets the ID field of the mutation.
+func withGroupStatusJuiceRecordID(id int64) groupstatusjuicerecordOption {
+	return func(m *GroupStatusJuiceRecordMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupStatusJuiceRecord
+		)
+		m.oldValue = func(ctx context.Context) (*GroupStatusJuiceRecord, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupStatusJuiceRecord.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupStatusJuiceRecord sets the old GroupStatusJuiceRecord of the mutation.
+func withGroupStatusJuiceRecord(node *GroupStatusJuiceRecord) groupstatusjuicerecordOption {
+	return func(m *GroupStatusJuiceRecordMutation) {
+		m.oldValue = func(context.Context) (*GroupStatusJuiceRecord, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupStatusJuiceRecordMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupStatusJuiceRecordMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupStatusJuiceRecordMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupStatusJuiceRecordMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupStatusJuiceRecord.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *GroupStatusJuiceRecordMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldGroupID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *GroupStatusJuiceRecordMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *GroupStatusJuiceRecordMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+}
+
+// SetConfigID sets the "config_id" field.
+func (m *GroupStatusJuiceRecordMutation) SetConfigID(i int64) {
+	m.config_id = &i
+	m.addconfig_id = nil
+}
+
+// ConfigID returns the value of the "config_id" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) ConfigID() (r int64, exists bool) {
+	v := m.config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigID returns the old "config_id" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldConfigID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigID: %w", err)
+	}
+	return oldValue.ConfigID, nil
+}
+
+// AddConfigID adds i to the "config_id" field.
+func (m *GroupStatusJuiceRecordMutation) AddConfigID(i int64) {
+	if m.addconfig_id != nil {
+		*m.addconfig_id += i
+	} else {
+		m.addconfig_id = &i
+	}
+}
+
+// AddedConfigID returns the value that was added to the "config_id" field in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedConfigID() (r int64, exists bool) {
+	v := m.addconfig_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConfigID resets all changes to the "config_id" field.
+func (m *GroupStatusJuiceRecordMutation) ResetConfigID() {
+	m.config_id = nil
+	m.addconfig_id = nil
+}
+
+// SetModel sets the "model" field.
+func (m *GroupStatusJuiceRecordMutation) SetModel(s string) {
+	m.model = &s
+}
+
+// Model returns the value of the "model" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) Model() (r string, exists bool) {
+	v := m.model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModel returns the old "model" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModel: %w", err)
+	}
+	return oldValue.Model, nil
+}
+
+// ResetModel resets all changes to the "model" field.
+func (m *GroupStatusJuiceRecordMutation) ResetModel() {
+	m.model = nil
+}
+
+// SetEffort sets the "effort" field.
+func (m *GroupStatusJuiceRecordMutation) SetEffort(s string) {
+	m.effort = &s
+}
+
+// Effort returns the value of the "effort" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) Effort() (r string, exists bool) {
+	v := m.effort
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEffort returns the old "effort" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldEffort(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEffort is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEffort requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEffort: %w", err)
+	}
+	return oldValue.Effort, nil
+}
+
+// ResetEffort resets all changes to the "effort" field.
+func (m *GroupStatusJuiceRecordMutation) ResetEffort() {
+	m.effort = nil
+}
+
+// SetClassification sets the "classification" field.
+func (m *GroupStatusJuiceRecordMutation) SetClassification(s string) {
+	m.classification = &s
+}
+
+// Classification returns the value of the "classification" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) Classification() (r string, exists bool) {
+	v := m.classification
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClassification returns the old "classification" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldClassification(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClassification is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClassification requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClassification: %w", err)
+	}
+	return oldValue.Classification, nil
+}
+
+// ResetClassification resets all changes to the "classification" field.
+func (m *GroupStatusJuiceRecordMutation) ResetClassification() {
+	m.classification = nil
+}
+
+// SetNormalizedValue sets the "normalized_value" field.
+func (m *GroupStatusJuiceRecordMutation) SetNormalizedValue(s string) {
+	m.normalized_value = &s
+}
+
+// NormalizedValue returns the value of the "normalized_value" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) NormalizedValue() (r string, exists bool) {
+	v := m.normalized_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNormalizedValue returns the old "normalized_value" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldNormalizedValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNormalizedValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNormalizedValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNormalizedValue: %w", err)
+	}
+	return oldValue.NormalizedValue, nil
+}
+
+// ResetNormalizedValue resets all changes to the "normalized_value" field.
+func (m *GroupStatusJuiceRecordMutation) ResetNormalizedValue() {
+	m.normalized_value = nil
+}
+
+// SetAnswerExcerpt sets the "answer_excerpt" field.
+func (m *GroupStatusJuiceRecordMutation) SetAnswerExcerpt(s string) {
+	m.answer_excerpt = &s
+}
+
+// AnswerExcerpt returns the value of the "answer_excerpt" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) AnswerExcerpt() (r string, exists bool) {
+	v := m.answer_excerpt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAnswerExcerpt returns the old "answer_excerpt" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldAnswerExcerpt(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAnswerExcerpt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAnswerExcerpt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAnswerExcerpt: %w", err)
+	}
+	return oldValue.AnswerExcerpt, nil
+}
+
+// ClearAnswerExcerpt clears the value of the "answer_excerpt" field.
+func (m *GroupStatusJuiceRecordMutation) ClearAnswerExcerpt() {
+	m.answer_excerpt = nil
+	m.clearedFields[groupstatusjuicerecord.FieldAnswerExcerpt] = struct{}{}
+}
+
+// AnswerExcerptCleared returns if the "answer_excerpt" field was cleared in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AnswerExcerptCleared() bool {
+	_, ok := m.clearedFields[groupstatusjuicerecord.FieldAnswerExcerpt]
+	return ok
+}
+
+// ResetAnswerExcerpt resets all changes to the "answer_excerpt" field.
+func (m *GroupStatusJuiceRecordMutation) ResetAnswerExcerpt() {
+	m.answer_excerpt = nil
+	delete(m.clearedFields, groupstatusjuicerecord.FieldAnswerExcerpt)
+}
+
+// SetHTTPCode sets the "http_code" field.
+func (m *GroupStatusJuiceRecordMutation) SetHTTPCode(i int) {
+	m.http_code = &i
+	m.addhttp_code = nil
+}
+
+// HTTPCode returns the value of the "http_code" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) HTTPCode() (r int, exists bool) {
+	v := m.http_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHTTPCode returns the old "http_code" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldHTTPCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHTTPCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHTTPCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHTTPCode: %w", err)
+	}
+	return oldValue.HTTPCode, nil
+}
+
+// AddHTTPCode adds i to the "http_code" field.
+func (m *GroupStatusJuiceRecordMutation) AddHTTPCode(i int) {
+	if m.addhttp_code != nil {
+		*m.addhttp_code += i
+	} else {
+		m.addhttp_code = &i
+	}
+}
+
+// AddedHTTPCode returns the value that was added to the "http_code" field in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedHTTPCode() (r int, exists bool) {
+	v := m.addhttp_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearHTTPCode clears the value of the "http_code" field.
+func (m *GroupStatusJuiceRecordMutation) ClearHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	m.clearedFields[groupstatusjuicerecord.FieldHTTPCode] = struct{}{}
+}
+
+// HTTPCodeCleared returns if the "http_code" field was cleared in this mutation.
+func (m *GroupStatusJuiceRecordMutation) HTTPCodeCleared() bool {
+	_, ok := m.clearedFields[groupstatusjuicerecord.FieldHTTPCode]
+	return ok
+}
+
+// ResetHTTPCode resets all changes to the "http_code" field.
+func (m *GroupStatusJuiceRecordMutation) ResetHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	delete(m.clearedFields, groupstatusjuicerecord.FieldHTTPCode)
+}
+
+// SetLatencyMs sets the "latency_ms" field.
+func (m *GroupStatusJuiceRecordMutation) SetLatencyMs(i int64) {
+	m.latency_ms = &i
+	m.addlatency_ms = nil
+}
+
+// LatencyMs returns the value of the "latency_ms" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) LatencyMs() (r int64, exists bool) {
+	v := m.latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatencyMs returns the old "latency_ms" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatencyMs: %w", err)
+	}
+	return oldValue.LatencyMs, nil
+}
+
+// AddLatencyMs adds i to the "latency_ms" field.
+func (m *GroupStatusJuiceRecordMutation) AddLatencyMs(i int64) {
+	if m.addlatency_ms != nil {
+		*m.addlatency_ms += i
+	} else {
+		m.addlatency_ms = &i
+	}
+}
+
+// AddedLatencyMs returns the value that was added to the "latency_ms" field in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedLatencyMs() (r int64, exists bool) {
+	v := m.addlatency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatencyMs clears the value of the "latency_ms" field.
+func (m *GroupStatusJuiceRecordMutation) ClearLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	m.clearedFields[groupstatusjuicerecord.FieldLatencyMs] = struct{}{}
+}
+
+// LatencyMsCleared returns if the "latency_ms" field was cleared in this mutation.
+func (m *GroupStatusJuiceRecordMutation) LatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusjuicerecord.FieldLatencyMs]
+	return ok
+}
+
+// ResetLatencyMs resets all changes to the "latency_ms" field.
+func (m *GroupStatusJuiceRecordMutation) ResetLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	delete(m.clearedFields, groupstatusjuicerecord.FieldLatencyMs)
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) SetInputTokens(i int64) {
+	m.input_tokens = &i
+	m.addinput_tokens = nil
+}
+
+// InputTokens returns the value of the "input_tokens" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) InputTokens() (r int64, exists bool) {
+	v := m.input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInputTokens returns the old "input_tokens" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldInputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInputTokens: %w", err)
+	}
+	return oldValue.InputTokens, nil
+}
+
+// AddInputTokens adds i to the "input_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) AddInputTokens(i int64) {
+	if m.addinput_tokens != nil {
+		*m.addinput_tokens += i
+	} else {
+		m.addinput_tokens = &i
+	}
+}
+
+// AddedInputTokens returns the value that was added to the "input_tokens" field in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedInputTokens() (r int64, exists bool) {
+	v := m.addinput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetInputTokens resets all changes to the "input_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) ResetInputTokens() {
+	m.input_tokens = nil
+	m.addinput_tokens = nil
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) SetOutputTokens(i int64) {
+	m.output_tokens = &i
+	m.addoutput_tokens = nil
+}
+
+// OutputTokens returns the value of the "output_tokens" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) OutputTokens() (r int64, exists bool) {
+	v := m.output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutputTokens returns the old "output_tokens" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldOutputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutputTokens: %w", err)
+	}
+	return oldValue.OutputTokens, nil
+}
+
+// AddOutputTokens adds i to the "output_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) AddOutputTokens(i int64) {
+	if m.addoutput_tokens != nil {
+		*m.addoutput_tokens += i
+	} else {
+		m.addoutput_tokens = &i
+	}
+}
+
+// AddedOutputTokens returns the value that was added to the "output_tokens" field in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedOutputTokens() (r int64, exists bool) {
+	v := m.addoutput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOutputTokens resets all changes to the "output_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) ResetOutputTokens() {
+	m.output_tokens = nil
+	m.addoutput_tokens = nil
+}
+
+// SetReasoningTokens sets the "reasoning_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) SetReasoningTokens(i int64) {
+	m.reasoning_tokens = &i
+	m.addreasoning_tokens = nil
+}
+
+// ReasoningTokens returns the value of the "reasoning_tokens" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) ReasoningTokens() (r int64, exists bool) {
+	v := m.reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReasoningTokens returns the old "reasoning_tokens" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldReasoningTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReasoningTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReasoningTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReasoningTokens: %w", err)
+	}
+	return oldValue.ReasoningTokens, nil
+}
+
+// AddReasoningTokens adds i to the "reasoning_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) AddReasoningTokens(i int64) {
+	if m.addreasoning_tokens != nil {
+		*m.addreasoning_tokens += i
+	} else {
+		m.addreasoning_tokens = &i
+	}
+}
+
+// AddedReasoningTokens returns the value that was added to the "reasoning_tokens" field in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedReasoningTokens() (r int64, exists bool) {
+	v := m.addreasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReasoningTokens resets all changes to the "reasoning_tokens" field.
+func (m *GroupStatusJuiceRecordMutation) ResetReasoningTokens() {
+	m.reasoning_tokens = nil
+	m.addreasoning_tokens = nil
+}
+
+// SetErrorDetail sets the "error_detail" field.
+func (m *GroupStatusJuiceRecordMutation) SetErrorDetail(s string) {
+	m.error_detail = &s
+}
+
+// ErrorDetail returns the value of the "error_detail" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) ErrorDetail() (r string, exists bool) {
+	v := m.error_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorDetail returns the old "error_detail" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldErrorDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorDetail: %w", err)
+	}
+	return oldValue.ErrorDetail, nil
+}
+
+// ClearErrorDetail clears the value of the "error_detail" field.
+func (m *GroupStatusJuiceRecordMutation) ClearErrorDetail() {
+	m.error_detail = nil
+	m.clearedFields[groupstatusjuicerecord.FieldErrorDetail] = struct{}{}
+}
+
+// ErrorDetailCleared returns if the "error_detail" field was cleared in this mutation.
+func (m *GroupStatusJuiceRecordMutation) ErrorDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusjuicerecord.FieldErrorDetail]
+	return ok
+}
+
+// ResetErrorDetail resets all changes to the "error_detail" field.
+func (m *GroupStatusJuiceRecordMutation) ResetErrorDetail() {
+	m.error_detail = nil
+	delete(m.clearedFields, groupstatusjuicerecord.FieldErrorDetail)
+}
+
+// SetObservedAt sets the "observed_at" field.
+func (m *GroupStatusJuiceRecordMutation) SetObservedAt(t time.Time) {
+	m.observed_at = &t
+}
+
+// ObservedAt returns the value of the "observed_at" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) ObservedAt() (r time.Time, exists bool) {
+	v := m.observed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObservedAt returns the old "observed_at" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldObservedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObservedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObservedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObservedAt: %w", err)
+	}
+	return oldValue.ObservedAt, nil
+}
+
+// ResetObservedAt resets all changes to the "observed_at" field.
+func (m *GroupStatusJuiceRecordMutation) ResetObservedAt() {
+	m.observed_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GroupStatusJuiceRecordMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GroupStatusJuiceRecordMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GroupStatusJuiceRecord entity.
+// If the GroupStatusJuiceRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusJuiceRecordMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GroupStatusJuiceRecordMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// Where appends a list predicates to the GroupStatusJuiceRecordMutation builder.
+func (m *GroupStatusJuiceRecordMutation) Where(ps ...predicate.GroupStatusJuiceRecord) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupStatusJuiceRecordMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupStatusJuiceRecordMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupStatusJuiceRecord, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupStatusJuiceRecordMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupStatusJuiceRecordMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupStatusJuiceRecord).
+func (m *GroupStatusJuiceRecordMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupStatusJuiceRecordMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.group_id != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldGroupID)
+	}
+	if m.config_id != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldConfigID)
+	}
+	if m.model != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldModel)
+	}
+	if m.effort != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldEffort)
+	}
+	if m.classification != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldClassification)
+	}
+	if m.normalized_value != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldNormalizedValue)
+	}
+	if m.answer_excerpt != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldAnswerExcerpt)
+	}
+	if m.http_code != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldHTTPCode)
+	}
+	if m.latency_ms != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldLatencyMs)
+	}
+	if m.input_tokens != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldInputTokens)
+	}
+	if m.output_tokens != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldOutputTokens)
+	}
+	if m.reasoning_tokens != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldReasoningTokens)
+	}
+	if m.error_detail != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldErrorDetail)
+	}
+	if m.observed_at != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldObservedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupStatusJuiceRecordMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusjuicerecord.FieldGroupID:
+		return m.GroupID()
+	case groupstatusjuicerecord.FieldConfigID:
+		return m.ConfigID()
+	case groupstatusjuicerecord.FieldModel:
+		return m.Model()
+	case groupstatusjuicerecord.FieldEffort:
+		return m.Effort()
+	case groupstatusjuicerecord.FieldClassification:
+		return m.Classification()
+	case groupstatusjuicerecord.FieldNormalizedValue:
+		return m.NormalizedValue()
+	case groupstatusjuicerecord.FieldAnswerExcerpt:
+		return m.AnswerExcerpt()
+	case groupstatusjuicerecord.FieldHTTPCode:
+		return m.HTTPCode()
+	case groupstatusjuicerecord.FieldLatencyMs:
+		return m.LatencyMs()
+	case groupstatusjuicerecord.FieldInputTokens:
+		return m.InputTokens()
+	case groupstatusjuicerecord.FieldOutputTokens:
+		return m.OutputTokens()
+	case groupstatusjuicerecord.FieldReasoningTokens:
+		return m.ReasoningTokens()
+	case groupstatusjuicerecord.FieldErrorDetail:
+		return m.ErrorDetail()
+	case groupstatusjuicerecord.FieldObservedAt:
+		return m.ObservedAt()
+	case groupstatusjuicerecord.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupStatusJuiceRecordMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupstatusjuicerecord.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case groupstatusjuicerecord.FieldConfigID:
+		return m.OldConfigID(ctx)
+	case groupstatusjuicerecord.FieldModel:
+		return m.OldModel(ctx)
+	case groupstatusjuicerecord.FieldEffort:
+		return m.OldEffort(ctx)
+	case groupstatusjuicerecord.FieldClassification:
+		return m.OldClassification(ctx)
+	case groupstatusjuicerecord.FieldNormalizedValue:
+		return m.OldNormalizedValue(ctx)
+	case groupstatusjuicerecord.FieldAnswerExcerpt:
+		return m.OldAnswerExcerpt(ctx)
+	case groupstatusjuicerecord.FieldHTTPCode:
+		return m.OldHTTPCode(ctx)
+	case groupstatusjuicerecord.FieldLatencyMs:
+		return m.OldLatencyMs(ctx)
+	case groupstatusjuicerecord.FieldInputTokens:
+		return m.OldInputTokens(ctx)
+	case groupstatusjuicerecord.FieldOutputTokens:
+		return m.OldOutputTokens(ctx)
+	case groupstatusjuicerecord.FieldReasoningTokens:
+		return m.OldReasoningTokens(ctx)
+	case groupstatusjuicerecord.FieldErrorDetail:
+		return m.OldErrorDetail(ctx)
+	case groupstatusjuicerecord.FieldObservedAt:
+		return m.OldObservedAt(ctx)
+	case groupstatusjuicerecord.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupStatusJuiceRecord field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusJuiceRecordMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusjuicerecord.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case groupstatusjuicerecord.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigID(v)
+		return nil
+	case groupstatusjuicerecord.FieldModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModel(v)
+		return nil
+	case groupstatusjuicerecord.FieldEffort:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEffort(v)
+		return nil
+	case groupstatusjuicerecord.FieldClassification:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClassification(v)
+		return nil
+	case groupstatusjuicerecord.FieldNormalizedValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNormalizedValue(v)
+		return nil
+	case groupstatusjuicerecord.FieldAnswerExcerpt:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAnswerExcerpt(v)
+		return nil
+	case groupstatusjuicerecord.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHTTPCode(v)
+		return nil
+	case groupstatusjuicerecord.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatencyMs(v)
+		return nil
+	case groupstatusjuicerecord.FieldInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInputTokens(v)
+		return nil
+	case groupstatusjuicerecord.FieldOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutputTokens(v)
+		return nil
+	case groupstatusjuicerecord.FieldReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReasoningTokens(v)
+		return nil
+	case groupstatusjuicerecord.FieldErrorDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorDetail(v)
+		return nil
+	case groupstatusjuicerecord.FieldObservedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObservedAt(v)
+		return nil
+	case groupstatusjuicerecord.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusJuiceRecord field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedFields() []string {
+	var fields []string
+	if m.addgroup_id != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldGroupID)
+	}
+	if m.addconfig_id != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldConfigID)
+	}
+	if m.addhttp_code != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldHTTPCode)
+	}
+	if m.addlatency_ms != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldLatencyMs)
+	}
+	if m.addinput_tokens != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldInputTokens)
+	}
+	if m.addoutput_tokens != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldOutputTokens)
+	}
+	if m.addreasoning_tokens != nil {
+		fields = append(fields, groupstatusjuicerecord.FieldReasoningTokens)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupStatusJuiceRecordMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusjuicerecord.FieldGroupID:
+		return m.AddedGroupID()
+	case groupstatusjuicerecord.FieldConfigID:
+		return m.AddedConfigID()
+	case groupstatusjuicerecord.FieldHTTPCode:
+		return m.AddedHTTPCode()
+	case groupstatusjuicerecord.FieldLatencyMs:
+		return m.AddedLatencyMs()
+	case groupstatusjuicerecord.FieldInputTokens:
+		return m.AddedInputTokens()
+	case groupstatusjuicerecord.FieldOutputTokens:
+		return m.AddedOutputTokens()
+	case groupstatusjuicerecord.FieldReasoningTokens:
+		return m.AddedReasoningTokens()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusJuiceRecordMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusjuicerecord.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case groupstatusjuicerecord.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfigID(v)
+		return nil
+	case groupstatusjuicerecord.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHTTPCode(v)
+		return nil
+	case groupstatusjuicerecord.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatencyMs(v)
+		return nil
+	case groupstatusjuicerecord.FieldInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddInputTokens(v)
+		return nil
+	case groupstatusjuicerecord.FieldOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOutputTokens(v)
+		return nil
+	case groupstatusjuicerecord.FieldReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReasoningTokens(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusJuiceRecord numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupStatusJuiceRecordMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(groupstatusjuicerecord.FieldAnswerExcerpt) {
+		fields = append(fields, groupstatusjuicerecord.FieldAnswerExcerpt)
+	}
+	if m.FieldCleared(groupstatusjuicerecord.FieldHTTPCode) {
+		fields = append(fields, groupstatusjuicerecord.FieldHTTPCode)
+	}
+	if m.FieldCleared(groupstatusjuicerecord.FieldLatencyMs) {
+		fields = append(fields, groupstatusjuicerecord.FieldLatencyMs)
+	}
+	if m.FieldCleared(groupstatusjuicerecord.FieldErrorDetail) {
+		fields = append(fields, groupstatusjuicerecord.FieldErrorDetail)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupStatusJuiceRecordMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupStatusJuiceRecordMutation) ClearField(name string) error {
+	switch name {
+	case groupstatusjuicerecord.FieldAnswerExcerpt:
+		m.ClearAnswerExcerpt()
+		return nil
+	case groupstatusjuicerecord.FieldHTTPCode:
+		m.ClearHTTPCode()
+		return nil
+	case groupstatusjuicerecord.FieldLatencyMs:
+		m.ClearLatencyMs()
+		return nil
+	case groupstatusjuicerecord.FieldErrorDetail:
+		m.ClearErrorDetail()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusJuiceRecord nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupStatusJuiceRecordMutation) ResetField(name string) error {
+	switch name {
+	case groupstatusjuicerecord.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case groupstatusjuicerecord.FieldConfigID:
+		m.ResetConfigID()
+		return nil
+	case groupstatusjuicerecord.FieldModel:
+		m.ResetModel()
+		return nil
+	case groupstatusjuicerecord.FieldEffort:
+		m.ResetEffort()
+		return nil
+	case groupstatusjuicerecord.FieldClassification:
+		m.ResetClassification()
+		return nil
+	case groupstatusjuicerecord.FieldNormalizedValue:
+		m.ResetNormalizedValue()
+		return nil
+	case groupstatusjuicerecord.FieldAnswerExcerpt:
+		m.ResetAnswerExcerpt()
+		return nil
+	case groupstatusjuicerecord.FieldHTTPCode:
+		m.ResetHTTPCode()
+		return nil
+	case groupstatusjuicerecord.FieldLatencyMs:
+		m.ResetLatencyMs()
+		return nil
+	case groupstatusjuicerecord.FieldInputTokens:
+		m.ResetInputTokens()
+		return nil
+	case groupstatusjuicerecord.FieldOutputTokens:
+		m.ResetOutputTokens()
+		return nil
+	case groupstatusjuicerecord.FieldReasoningTokens:
+		m.ResetReasoningTokens()
+		return nil
+	case groupstatusjuicerecord.FieldErrorDetail:
+		m.ResetErrorDetail()
+		return nil
+	case groupstatusjuicerecord.FieldObservedAt:
+		m.ResetObservedAt()
+		return nil
+	case groupstatusjuicerecord.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusJuiceRecord field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupStatusJuiceRecordMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupStatusJuiceRecordMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupStatusJuiceRecordMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupStatusJuiceRecordMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupStatusJuiceRecordMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupStatusJuiceRecordMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusJuiceRecord unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupStatusJuiceRecordMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusJuiceRecord edge %s", name)
+}
+
 // GroupStatusRecordMutation represents an operation that mutates the GroupStatusRecord nodes in the graph.
 type GroupStatusRecordMutation struct {
 	config
@@ -25798,33 +27392,46 @@ func (m *GroupStatusRecordMutation) ResetEdge(name string) error {
 // GroupStatusStateMutation represents an operation that mutates the GroupStatusState nodes in the graph.
 type GroupStatusStateMutation struct {
 	config
-	op                      Op
-	typ                     string
-	id                      *int64
-	created_at              *time.Time
-	updated_at              *time.Time
-	group_id                *int64
-	addgroup_id             *int64
-	config_id               *int64
-	addconfig_id            *int64
-	latest_status           *string
-	stable_status           *string
-	response_excerpt        *string
-	latency_ms              *int64
-	addlatency_ms           *int64
-	http_code               *int
-	addhttp_code            *int
-	sub_status              *string
-	error_detail            *string
-	observed_at             *time.Time
-	consecutive_down        *int
-	addconsecutive_down     *int
-	consecutive_non_down    *int
-	addconsecutive_non_down *int
-	clearedFields           map[string]struct{}
-	done                    bool
-	oldValue                func(context.Context) (*GroupStatusState, error)
-	predicates              []predicate.GroupStatusState
+	op                                Op
+	typ                               string
+	id                                *int64
+	created_at                        *time.Time
+	updated_at                        *time.Time
+	group_id                          *int64
+	addgroup_id                       *int64
+	config_id                         *int64
+	addconfig_id                      *int64
+	latest_status                     *string
+	stable_status                     *string
+	response_excerpt                  *string
+	latency_ms                        *int64
+	addlatency_ms                     *int64
+	http_code                         *int
+	addhttp_code                      *int
+	sub_status                        *string
+	error_detail                      *string
+	observed_at                       *time.Time
+	consecutive_down                  *int
+	addconsecutive_down               *int
+	consecutive_non_down              *int
+	addconsecutive_non_down           *int
+	sol_juice_status                  *string
+	sol_juice_stable_status           *string
+	sol_juice_value                   *string
+	sol_juice_detail                  *string
+	sol_juice_checked_at              *time.Time
+	sol_juice_consecutive_mismatch    *int
+	addsol_juice_consecutive_mismatch *int
+	sol_juice_input_tokens            *int64
+	addsol_juice_input_tokens         *int64
+	sol_juice_output_tokens           *int64
+	addsol_juice_output_tokens        *int64
+	sol_juice_reasoning_tokens        *int64
+	addsol_juice_reasoning_tokens     *int64
+	clearedFields                     map[string]struct{}
+	done                              bool
+	oldValue                          func(context.Context) (*GroupStatusState, error)
+	predicates                        []predicate.GroupStatusState
 }
 
 var _ ent.Mutation = (*GroupStatusStateMutation)(nil)
@@ -26616,6 +28223,436 @@ func (m *GroupStatusStateMutation) ResetConsecutiveNonDown() {
 	m.addconsecutive_non_down = nil
 }
 
+// SetSolJuiceStatus sets the "sol_juice_status" field.
+func (m *GroupStatusStateMutation) SetSolJuiceStatus(s string) {
+	m.sol_juice_status = &s
+}
+
+// SolJuiceStatus returns the value of the "sol_juice_status" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceStatus() (r string, exists bool) {
+	v := m.sol_juice_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceStatus returns the old "sol_juice_status" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceStatus: %w", err)
+	}
+	return oldValue.SolJuiceStatus, nil
+}
+
+// ResetSolJuiceStatus resets all changes to the "sol_juice_status" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceStatus() {
+	m.sol_juice_status = nil
+}
+
+// SetSolJuiceStableStatus sets the "sol_juice_stable_status" field.
+func (m *GroupStatusStateMutation) SetSolJuiceStableStatus(s string) {
+	m.sol_juice_stable_status = &s
+}
+
+// SolJuiceStableStatus returns the value of the "sol_juice_stable_status" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceStableStatus() (r string, exists bool) {
+	v := m.sol_juice_stable_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceStableStatus returns the old "sol_juice_stable_status" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceStableStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceStableStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceStableStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceStableStatus: %w", err)
+	}
+	return oldValue.SolJuiceStableStatus, nil
+}
+
+// ResetSolJuiceStableStatus resets all changes to the "sol_juice_stable_status" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceStableStatus() {
+	m.sol_juice_stable_status = nil
+}
+
+// SetSolJuiceValue sets the "sol_juice_value" field.
+func (m *GroupStatusStateMutation) SetSolJuiceValue(s string) {
+	m.sol_juice_value = &s
+}
+
+// SolJuiceValue returns the value of the "sol_juice_value" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceValue() (r string, exists bool) {
+	v := m.sol_juice_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceValue returns the old "sol_juice_value" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceValue: %w", err)
+	}
+	return oldValue.SolJuiceValue, nil
+}
+
+// ResetSolJuiceValue resets all changes to the "sol_juice_value" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceValue() {
+	m.sol_juice_value = nil
+}
+
+// SetSolJuiceDetail sets the "sol_juice_detail" field.
+func (m *GroupStatusStateMutation) SetSolJuiceDetail(s string) {
+	m.sol_juice_detail = &s
+}
+
+// SolJuiceDetail returns the value of the "sol_juice_detail" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceDetail() (r string, exists bool) {
+	v := m.sol_juice_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceDetail returns the old "sol_juice_detail" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceDetail: %w", err)
+	}
+	return oldValue.SolJuiceDetail, nil
+}
+
+// ClearSolJuiceDetail clears the value of the "sol_juice_detail" field.
+func (m *GroupStatusStateMutation) ClearSolJuiceDetail() {
+	m.sol_juice_detail = nil
+	m.clearedFields[groupstatusstate.FieldSolJuiceDetail] = struct{}{}
+}
+
+// SolJuiceDetailCleared returns if the "sol_juice_detail" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) SolJuiceDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldSolJuiceDetail]
+	return ok
+}
+
+// ResetSolJuiceDetail resets all changes to the "sol_juice_detail" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceDetail() {
+	m.sol_juice_detail = nil
+	delete(m.clearedFields, groupstatusstate.FieldSolJuiceDetail)
+}
+
+// SetSolJuiceCheckedAt sets the "sol_juice_checked_at" field.
+func (m *GroupStatusStateMutation) SetSolJuiceCheckedAt(t time.Time) {
+	m.sol_juice_checked_at = &t
+}
+
+// SolJuiceCheckedAt returns the value of the "sol_juice_checked_at" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceCheckedAt() (r time.Time, exists bool) {
+	v := m.sol_juice_checked_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceCheckedAt returns the old "sol_juice_checked_at" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceCheckedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceCheckedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceCheckedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceCheckedAt: %w", err)
+	}
+	return oldValue.SolJuiceCheckedAt, nil
+}
+
+// ClearSolJuiceCheckedAt clears the value of the "sol_juice_checked_at" field.
+func (m *GroupStatusStateMutation) ClearSolJuiceCheckedAt() {
+	m.sol_juice_checked_at = nil
+	m.clearedFields[groupstatusstate.FieldSolJuiceCheckedAt] = struct{}{}
+}
+
+// SolJuiceCheckedAtCleared returns if the "sol_juice_checked_at" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) SolJuiceCheckedAtCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldSolJuiceCheckedAt]
+	return ok
+}
+
+// ResetSolJuiceCheckedAt resets all changes to the "sol_juice_checked_at" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceCheckedAt() {
+	m.sol_juice_checked_at = nil
+	delete(m.clearedFields, groupstatusstate.FieldSolJuiceCheckedAt)
+}
+
+// SetSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) SetSolJuiceConsecutiveMismatch(i int) {
+	m.sol_juice_consecutive_mismatch = &i
+	m.addsol_juice_consecutive_mismatch = nil
+}
+
+// SolJuiceConsecutiveMismatch returns the value of the "sol_juice_consecutive_mismatch" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceConsecutiveMismatch() (r int, exists bool) {
+	v := m.sol_juice_consecutive_mismatch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceConsecutiveMismatch returns the old "sol_juice_consecutive_mismatch" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceConsecutiveMismatch(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceConsecutiveMismatch is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceConsecutiveMismatch requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceConsecutiveMismatch: %w", err)
+	}
+	return oldValue.SolJuiceConsecutiveMismatch, nil
+}
+
+// AddSolJuiceConsecutiveMismatch adds i to the "sol_juice_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) AddSolJuiceConsecutiveMismatch(i int) {
+	if m.addsol_juice_consecutive_mismatch != nil {
+		*m.addsol_juice_consecutive_mismatch += i
+	} else {
+		m.addsol_juice_consecutive_mismatch = &i
+	}
+}
+
+// AddedSolJuiceConsecutiveMismatch returns the value that was added to the "sol_juice_consecutive_mismatch" field in this mutation.
+func (m *GroupStatusStateMutation) AddedSolJuiceConsecutiveMismatch() (r int, exists bool) {
+	v := m.addsol_juice_consecutive_mismatch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSolJuiceConsecutiveMismatch resets all changes to the "sol_juice_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceConsecutiveMismatch() {
+	m.sol_juice_consecutive_mismatch = nil
+	m.addsol_juice_consecutive_mismatch = nil
+}
+
+// SetSolJuiceInputTokens sets the "sol_juice_input_tokens" field.
+func (m *GroupStatusStateMutation) SetSolJuiceInputTokens(i int64) {
+	m.sol_juice_input_tokens = &i
+	m.addsol_juice_input_tokens = nil
+}
+
+// SolJuiceInputTokens returns the value of the "sol_juice_input_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceInputTokens() (r int64, exists bool) {
+	v := m.sol_juice_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceInputTokens returns the old "sol_juice_input_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceInputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceInputTokens: %w", err)
+	}
+	return oldValue.SolJuiceInputTokens, nil
+}
+
+// AddSolJuiceInputTokens adds i to the "sol_juice_input_tokens" field.
+func (m *GroupStatusStateMutation) AddSolJuiceInputTokens(i int64) {
+	if m.addsol_juice_input_tokens != nil {
+		*m.addsol_juice_input_tokens += i
+	} else {
+		m.addsol_juice_input_tokens = &i
+	}
+}
+
+// AddedSolJuiceInputTokens returns the value that was added to the "sol_juice_input_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedSolJuiceInputTokens() (r int64, exists bool) {
+	v := m.addsol_juice_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSolJuiceInputTokens resets all changes to the "sol_juice_input_tokens" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceInputTokens() {
+	m.sol_juice_input_tokens = nil
+	m.addsol_juice_input_tokens = nil
+}
+
+// SetSolJuiceOutputTokens sets the "sol_juice_output_tokens" field.
+func (m *GroupStatusStateMutation) SetSolJuiceOutputTokens(i int64) {
+	m.sol_juice_output_tokens = &i
+	m.addsol_juice_output_tokens = nil
+}
+
+// SolJuiceOutputTokens returns the value of the "sol_juice_output_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceOutputTokens() (r int64, exists bool) {
+	v := m.sol_juice_output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceOutputTokens returns the old "sol_juice_output_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceOutputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceOutputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceOutputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceOutputTokens: %w", err)
+	}
+	return oldValue.SolJuiceOutputTokens, nil
+}
+
+// AddSolJuiceOutputTokens adds i to the "sol_juice_output_tokens" field.
+func (m *GroupStatusStateMutation) AddSolJuiceOutputTokens(i int64) {
+	if m.addsol_juice_output_tokens != nil {
+		*m.addsol_juice_output_tokens += i
+	} else {
+		m.addsol_juice_output_tokens = &i
+	}
+}
+
+// AddedSolJuiceOutputTokens returns the value that was added to the "sol_juice_output_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedSolJuiceOutputTokens() (r int64, exists bool) {
+	v := m.addsol_juice_output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSolJuiceOutputTokens resets all changes to the "sol_juice_output_tokens" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceOutputTokens() {
+	m.sol_juice_output_tokens = nil
+	m.addsol_juice_output_tokens = nil
+}
+
+// SetSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) SetSolJuiceReasoningTokens(i int64) {
+	m.sol_juice_reasoning_tokens = &i
+	m.addsol_juice_reasoning_tokens = nil
+}
+
+// SolJuiceReasoningTokens returns the value of the "sol_juice_reasoning_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) SolJuiceReasoningTokens() (r int64, exists bool) {
+	v := m.sol_juice_reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSolJuiceReasoningTokens returns the old "sol_juice_reasoning_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldSolJuiceReasoningTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSolJuiceReasoningTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSolJuiceReasoningTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSolJuiceReasoningTokens: %w", err)
+	}
+	return oldValue.SolJuiceReasoningTokens, nil
+}
+
+// AddSolJuiceReasoningTokens adds i to the "sol_juice_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) AddSolJuiceReasoningTokens(i int64) {
+	if m.addsol_juice_reasoning_tokens != nil {
+		*m.addsol_juice_reasoning_tokens += i
+	} else {
+		m.addsol_juice_reasoning_tokens = &i
+	}
+}
+
+// AddedSolJuiceReasoningTokens returns the value that was added to the "sol_juice_reasoning_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedSolJuiceReasoningTokens() (r int64, exists bool) {
+	v := m.addsol_juice_reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSolJuiceReasoningTokens resets all changes to the "sol_juice_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) ResetSolJuiceReasoningTokens() {
+	m.sol_juice_reasoning_tokens = nil
+	m.addsol_juice_reasoning_tokens = nil
+}
+
 // Where appends a list predicates to the GroupStatusStateMutation builder.
 func (m *GroupStatusStateMutation) Where(ps ...predicate.GroupStatusState) {
 	m.predicates = append(m.predicates, ps...)
@@ -26650,7 +28687,7 @@ func (m *GroupStatusStateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusStateMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 23)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusstate.FieldCreatedAt)
 	}
@@ -26693,6 +28730,33 @@ func (m *GroupStatusStateMutation) Fields() []string {
 	if m.consecutive_non_down != nil {
 		fields = append(fields, groupstatusstate.FieldConsecutiveNonDown)
 	}
+	if m.sol_juice_status != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceStatus)
+	}
+	if m.sol_juice_stable_status != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceStableStatus)
+	}
+	if m.sol_juice_value != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceValue)
+	}
+	if m.sol_juice_detail != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceDetail)
+	}
+	if m.sol_juice_checked_at != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceCheckedAt)
+	}
+	if m.sol_juice_consecutive_mismatch != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceConsecutiveMismatch)
+	}
+	if m.sol_juice_input_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceInputTokens)
+	}
+	if m.sol_juice_output_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceOutputTokens)
+	}
+	if m.sol_juice_reasoning_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceReasoningTokens)
+	}
 	return fields
 }
 
@@ -26729,6 +28793,24 @@ func (m *GroupStatusStateMutation) Field(name string) (ent.Value, bool) {
 		return m.ConsecutiveDown()
 	case groupstatusstate.FieldConsecutiveNonDown:
 		return m.ConsecutiveNonDown()
+	case groupstatusstate.FieldSolJuiceStatus:
+		return m.SolJuiceStatus()
+	case groupstatusstate.FieldSolJuiceStableStatus:
+		return m.SolJuiceStableStatus()
+	case groupstatusstate.FieldSolJuiceValue:
+		return m.SolJuiceValue()
+	case groupstatusstate.FieldSolJuiceDetail:
+		return m.SolJuiceDetail()
+	case groupstatusstate.FieldSolJuiceCheckedAt:
+		return m.SolJuiceCheckedAt()
+	case groupstatusstate.FieldSolJuiceConsecutiveMismatch:
+		return m.SolJuiceConsecutiveMismatch()
+	case groupstatusstate.FieldSolJuiceInputTokens:
+		return m.SolJuiceInputTokens()
+	case groupstatusstate.FieldSolJuiceOutputTokens:
+		return m.SolJuiceOutputTokens()
+	case groupstatusstate.FieldSolJuiceReasoningTokens:
+		return m.SolJuiceReasoningTokens()
 	}
 	return nil, false
 }
@@ -26766,6 +28848,24 @@ func (m *GroupStatusStateMutation) OldField(ctx context.Context, name string) (e
 		return m.OldConsecutiveDown(ctx)
 	case groupstatusstate.FieldConsecutiveNonDown:
 		return m.OldConsecutiveNonDown(ctx)
+	case groupstatusstate.FieldSolJuiceStatus:
+		return m.OldSolJuiceStatus(ctx)
+	case groupstatusstate.FieldSolJuiceStableStatus:
+		return m.OldSolJuiceStableStatus(ctx)
+	case groupstatusstate.FieldSolJuiceValue:
+		return m.OldSolJuiceValue(ctx)
+	case groupstatusstate.FieldSolJuiceDetail:
+		return m.OldSolJuiceDetail(ctx)
+	case groupstatusstate.FieldSolJuiceCheckedAt:
+		return m.OldSolJuiceCheckedAt(ctx)
+	case groupstatusstate.FieldSolJuiceConsecutiveMismatch:
+		return m.OldSolJuiceConsecutiveMismatch(ctx)
+	case groupstatusstate.FieldSolJuiceInputTokens:
+		return m.OldSolJuiceInputTokens(ctx)
+	case groupstatusstate.FieldSolJuiceOutputTokens:
+		return m.OldSolJuiceOutputTokens(ctx)
+	case groupstatusstate.FieldSolJuiceReasoningTokens:
+		return m.OldSolJuiceReasoningTokens(ctx)
 	}
 	return nil, fmt.Errorf("unknown GroupStatusState field %s", name)
 }
@@ -26873,6 +28973,69 @@ func (m *GroupStatusStateMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetConsecutiveNonDown(v)
 		return nil
+	case groupstatusstate.FieldSolJuiceStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceStatus(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceStableStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceStableStatus(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceValue(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceDetail(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceCheckedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceCheckedAt(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceConsecutiveMismatch:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceConsecutiveMismatch(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceInputTokens(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceOutputTokens(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSolJuiceReasoningTokens(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState field %s", name)
 }
@@ -26899,6 +29062,18 @@ func (m *GroupStatusStateMutation) AddedFields() []string {
 	if m.addconsecutive_non_down != nil {
 		fields = append(fields, groupstatusstate.FieldConsecutiveNonDown)
 	}
+	if m.addsol_juice_consecutive_mismatch != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceConsecutiveMismatch)
+	}
+	if m.addsol_juice_input_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceInputTokens)
+	}
+	if m.addsol_juice_output_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceOutputTokens)
+	}
+	if m.addsol_juice_reasoning_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldSolJuiceReasoningTokens)
+	}
 	return fields
 }
 
@@ -26919,6 +29094,14 @@ func (m *GroupStatusStateMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedConsecutiveDown()
 	case groupstatusstate.FieldConsecutiveNonDown:
 		return m.AddedConsecutiveNonDown()
+	case groupstatusstate.FieldSolJuiceConsecutiveMismatch:
+		return m.AddedSolJuiceConsecutiveMismatch()
+	case groupstatusstate.FieldSolJuiceInputTokens:
+		return m.AddedSolJuiceInputTokens()
+	case groupstatusstate.FieldSolJuiceOutputTokens:
+		return m.AddedSolJuiceOutputTokens()
+	case groupstatusstate.FieldSolJuiceReasoningTokens:
+		return m.AddedSolJuiceReasoningTokens()
 	}
 	return nil, false
 }
@@ -26970,6 +29153,34 @@ func (m *GroupStatusStateMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddConsecutiveNonDown(v)
 		return nil
+	case groupstatusstate.FieldSolJuiceConsecutiveMismatch:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSolJuiceConsecutiveMismatch(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSolJuiceInputTokens(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSolJuiceOutputTokens(v)
+		return nil
+	case groupstatusstate.FieldSolJuiceReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSolJuiceReasoningTokens(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState numeric field %s", name)
 }
@@ -26992,6 +29203,12 @@ func (m *GroupStatusStateMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(groupstatusstate.FieldObservedAt) {
 		fields = append(fields, groupstatusstate.FieldObservedAt)
+	}
+	if m.FieldCleared(groupstatusstate.FieldSolJuiceDetail) {
+		fields = append(fields, groupstatusstate.FieldSolJuiceDetail)
+	}
+	if m.FieldCleared(groupstatusstate.FieldSolJuiceCheckedAt) {
+		fields = append(fields, groupstatusstate.FieldSolJuiceCheckedAt)
 	}
 	return fields
 }
@@ -27021,6 +29238,12 @@ func (m *GroupStatusStateMutation) ClearField(name string) error {
 		return nil
 	case groupstatusstate.FieldObservedAt:
 		m.ClearObservedAt()
+		return nil
+	case groupstatusstate.FieldSolJuiceDetail:
+		m.ClearSolJuiceDetail()
+		return nil
+	case groupstatusstate.FieldSolJuiceCheckedAt:
+		m.ClearSolJuiceCheckedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState nullable field %s", name)
@@ -27071,6 +29294,33 @@ func (m *GroupStatusStateMutation) ResetField(name string) error {
 		return nil
 	case groupstatusstate.FieldConsecutiveNonDown:
 		m.ResetConsecutiveNonDown()
+		return nil
+	case groupstatusstate.FieldSolJuiceStatus:
+		m.ResetSolJuiceStatus()
+		return nil
+	case groupstatusstate.FieldSolJuiceStableStatus:
+		m.ResetSolJuiceStableStatus()
+		return nil
+	case groupstatusstate.FieldSolJuiceValue:
+		m.ResetSolJuiceValue()
+		return nil
+	case groupstatusstate.FieldSolJuiceDetail:
+		m.ResetSolJuiceDetail()
+		return nil
+	case groupstatusstate.FieldSolJuiceCheckedAt:
+		m.ResetSolJuiceCheckedAt()
+		return nil
+	case groupstatusstate.FieldSolJuiceConsecutiveMismatch:
+		m.ResetSolJuiceConsecutiveMismatch()
+		return nil
+	case groupstatusstate.FieldSolJuiceInputTokens:
+		m.ResetSolJuiceInputTokens()
+		return nil
+	case groupstatusstate.FieldSolJuiceOutputTokens:
+		m.ResetSolJuiceOutputTokens()
+		return nil
+	case groupstatusstate.FieldSolJuiceReasoningTokens:
+		m.ResetSolJuiceReasoningTokens()
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState field %s", name)

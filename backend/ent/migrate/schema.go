@@ -846,6 +846,9 @@ var (
 		{Name: "timeout_seconds", Type: field.TypeInt, Default: 30},
 		{Name: "slow_latency_ms", Type: field.TypeInt64, Default: 15000},
 		{Name: "notify_enabled", Type: field.TypeBool, Default: true},
+		{Name: "sol_juice_enabled", Type: field.TypeBool, Default: false},
+		{Name: "sol_juice_interval_seconds", Type: field.TypeInt, Default: 900},
+		{Name: "sol_juice_model", Type: field.TypeString, Default: "gpt-5.6-sol"},
 	}
 	// GroupStatusConfigsTable holds the schema information for the "group_status_configs" table.
 	GroupStatusConfigsTable = &schema.Table{
@@ -903,6 +906,38 @@ var (
 			},
 		},
 	}
+	// GroupStatusJuiceRecordsColumns holds the columns for the "group_status_juice_records" table.
+	GroupStatusJuiceRecordsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "group_id", Type: field.TypeInt64},
+		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "model", Type: field.TypeString, Default: ""},
+		{Name: "effort", Type: field.TypeString, Default: "high"},
+		{Name: "classification", Type: field.TypeString},
+		{Name: "normalized_value", Type: field.TypeString, Default: ""},
+		{Name: "answer_excerpt", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "http_code", Type: field.TypeInt, Nullable: true},
+		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "input_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "output_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "observed_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// GroupStatusJuiceRecordsTable holds the schema information for the "group_status_juice_records" table.
+	GroupStatusJuiceRecordsTable = &schema.Table{
+		Name:       "group_status_juice_records",
+		Columns:    GroupStatusJuiceRecordsColumns,
+		PrimaryKey: []*schema.Column{GroupStatusJuiceRecordsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusjuicerecord_group_id_observed_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusJuiceRecordsColumns[1], GroupStatusJuiceRecordsColumns[14]},
+			},
+		},
+	}
 	// GroupStatusRecordsColumns holds the columns for the "group_status_records" table.
 	GroupStatusRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -952,6 +987,15 @@ var (
 		{Name: "observed_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "consecutive_down", Type: field.TypeInt, Default: 0},
 		{Name: "consecutive_non_down", Type: field.TypeInt, Default: 0},
+		{Name: "sol_juice_status", Type: field.TypeString, Default: ""},
+		{Name: "sol_juice_stable_status", Type: field.TypeString, Default: ""},
+		{Name: "sol_juice_value", Type: field.TypeString, Default: ""},
+		{Name: "sol_juice_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "sol_juice_checked_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "sol_juice_consecutive_mismatch", Type: field.TypeInt, Default: 0},
+		{Name: "sol_juice_input_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "sol_juice_output_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "sol_juice_reasoning_tokens", Type: field.TypeInt64, Default: 0},
 	}
 	// GroupStatusStatesTable holds the schema information for the "group_status_states" table.
 	GroupStatusStatesTable = &schema.Table{
@@ -1919,6 +1963,7 @@ var (
 		GroupsTable,
 		GroupStatusConfigsTable,
 		GroupStatusEventsTable,
+		GroupStatusJuiceRecordsTable,
 		GroupStatusRecordsTable,
 		GroupStatusStatesTable,
 		IdempotencyRecordsTable,
@@ -1999,6 +2044,9 @@ func init() {
 	}
 	GroupStatusEventsTable.Annotation = &entsql.Annotation{
 		Table: "group_status_events",
+	}
+	GroupStatusJuiceRecordsTable.Annotation = &entsql.Annotation{
+		Table: "group_status_juice_records",
 	}
 	GroupStatusRecordsTable.Annotation = &entsql.Annotation{
 		Table: "group_status_records",

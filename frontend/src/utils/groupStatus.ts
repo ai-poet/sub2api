@@ -116,3 +116,73 @@ export function shortenRuntimeExcerpt(text?: string | null, maxLength: number = 
   }
   return `${trimmed.slice(0, maxLength).trimEnd()}...`
 }
+
+// ==================== 纯 Sol 验证（Juice 指纹探测） ====================
+
+export type NormalizedSolJuiceStatus = 'pass' | 'mismatch' | 'inconclusive' | 'unknown'
+
+export function normalizeSolJuiceStatus(status?: string | null): NormalizedSolJuiceStatus {
+  switch (status) {
+    case 'pass':
+    case 'mismatch':
+    case 'inconclusive':
+      return status
+    default:
+      return 'unknown'
+  }
+}
+
+export function getSolJuiceBadgeClass(status?: string | null): string {
+  switch (normalizeSolJuiceStatus(status)) {
+    case 'pass':
+      return 'badge-success'
+    case 'mismatch':
+      return 'badge-danger'
+    case 'inconclusive':
+      return 'badge-warning'
+    default:
+      return 'badge-gray'
+  }
+}
+
+export function isSolJuiceEvent(eventType?: string | null): boolean {
+  return eventType === 'sol_juice_mismatch' || eventType === 'sol_juice_recovered'
+}
+
+export function getGroupRuntimeEventBadgeClass(eventType?: string | null): string {
+  switch (eventType) {
+    case 'down':
+    case 'sol_juice_mismatch':
+      return 'badge-danger'
+    case 'up':
+    case 'sol_juice_recovered':
+      return 'badge-success'
+    default:
+      return 'badge-gray'
+  }
+}
+
+export function formatUsd(value?: number | null, digits: number = 4): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return '-'
+  }
+  return `$${value.toFixed(digits)}`
+}
+
+// 按当前间隔把最近一次成本折算成每月（30 天）估算；没有样本时返回 null
+export function estimateSolJuiceMonthlyCostUsd(
+  lastCostUsd?: number | null,
+  intervalSeconds?: number | null
+): number | null {
+  if (
+    lastCostUsd === null ||
+    lastCostUsd === undefined ||
+    !Number.isFinite(lastCostUsd) ||
+    lastCostUsd <= 0 ||
+    !intervalSeconds ||
+    intervalSeconds <= 0
+  ) {
+    return null
+  }
+  return lastCostUsd * ((30 * 86400) / intervalSeconds)
+}

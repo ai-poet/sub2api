@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -56,7 +57,11 @@ func (s *GroupStatusService) GetAdminView(ctx context.Context, groupID int64) (*
 		summary.GroupID = groupID
 		summary.Enabled = cfg.Enabled
 		summary.ProbeModel = cfg.ProbeModel
+		summary.SolJuiceEnabled = cfg.SolJuiceEnabled
+		summary.SolJuiceModel = cfg.SolJuiceModel
+		summary.SolJuiceIntervalSeconds = cfg.SolJuiceIntervalSeconds
 	}
+	decorateSolJuiceSummary(&summary)
 
 	return &GroupStatusAdminView{
 		Group:   group,
@@ -71,12 +76,24 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 		return nil, err
 	}
 
-	// notify_enabled 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认开启
-	if input != nil && input.NotifyEnabled == nil {
+	// notify_enabled / sol_juice_* 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认值
+	if input != nil && (input.NotifyEnabled == nil || input.SolJuiceEnabled == nil) {
 		if prev, err := s.repo.GetConfig(ctx, groupID); err == nil && prev != nil {
 			merged := *input
-			notifyEnabled := prev.NotifyEnabled
-			merged.NotifyEnabled = &notifyEnabled
+			if merged.NotifyEnabled == nil {
+				notifyEnabled := prev.NotifyEnabled
+				merged.NotifyEnabled = &notifyEnabled
+			}
+			if merged.SolJuiceEnabled == nil {
+				solJuiceEnabled := prev.SolJuiceEnabled
+				merged.SolJuiceEnabled = &solJuiceEnabled
+				if merged.SolJuiceIntervalSeconds <= 0 {
+					merged.SolJuiceIntervalSeconds = prev.SolJuiceIntervalSeconds
+				}
+				if strings.TrimSpace(merged.SolJuiceModel) == "" {
+					merged.SolJuiceModel = prev.SolJuiceModel
+				}
+			}
 			input = &merged
 		}
 	}
@@ -101,7 +118,14 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 }
 
 func (s *GroupStatusService) ListAdminSummaries(ctx context.Context) ([]GroupStatusSummary, error) {
-	return s.repo.ListAllSummaries(ctx)
+	summaries, err := s.repo.ListAllSummaries(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range summaries {
+		decorateSolJuiceSummary(&summaries[i])
+	}
+	return summaries, nil
 }
 
 func (s *GroupStatusService) ListUserStatuses(ctx context.Context, userID int64) ([]GroupStatusListItem, error) {
@@ -160,6 +184,7 @@ func (s *GroupStatusService) ListUserStatuses(ctx context.Context, userID int64)
 			continue
 		}
 		summary := summaryMap[groupID]
+		decorateSolJuiceSummary(&summary)
 		items = append(items, GroupStatusListItem{
 			Group:          group,
 			Summary:        summary,

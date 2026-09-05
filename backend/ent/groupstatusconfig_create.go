@@ -174,6 +174,48 @@ func (_c *GroupStatusConfigCreate) SetNillableNotifyEnabled(v *bool) *GroupStatu
 	return _c
 }
 
+// SetSolJuiceEnabled sets the "sol_juice_enabled" field.
+func (_c *GroupStatusConfigCreate) SetSolJuiceEnabled(v bool) *GroupStatusConfigCreate {
+	_c.mutation.SetSolJuiceEnabled(v)
+	return _c
+}
+
+// SetNillableSolJuiceEnabled sets the "sol_juice_enabled" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableSolJuiceEnabled(v *bool) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetSolJuiceEnabled(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field.
+func (_c *GroupStatusConfigCreate) SetSolJuiceIntervalSeconds(v int) *GroupStatusConfigCreate {
+	_c.mutation.SetSolJuiceIntervalSeconds(v)
+	return _c
+}
+
+// SetNillableSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableSolJuiceIntervalSeconds(v *int) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetSolJuiceIntervalSeconds(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceModel sets the "sol_juice_model" field.
+func (_c *GroupStatusConfigCreate) SetSolJuiceModel(v string) *GroupStatusConfigCreate {
+	_c.mutation.SetSolJuiceModel(v)
+	return _c
+}
+
+// SetNillableSolJuiceModel sets the "sol_juice_model" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableSolJuiceModel(v *string) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetSolJuiceModel(*v)
+	}
+	return _c
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_c *GroupStatusConfigCreate) Mutation() *GroupStatusConfigMutation {
 	return _c.mutation
@@ -253,6 +295,18 @@ func (_c *GroupStatusConfigCreate) defaults() {
 		v := groupstatusconfig.DefaultNotifyEnabled
 		_c.mutation.SetNotifyEnabled(v)
 	}
+	if _, ok := _c.mutation.SolJuiceEnabled(); !ok {
+		v := groupstatusconfig.DefaultSolJuiceEnabled
+		_c.mutation.SetSolJuiceEnabled(v)
+	}
+	if _, ok := _c.mutation.SolJuiceIntervalSeconds(); !ok {
+		v := groupstatusconfig.DefaultSolJuiceIntervalSeconds
+		_c.mutation.SetSolJuiceIntervalSeconds(v)
+	}
+	if _, ok := _c.mutation.SolJuiceModel(); !ok {
+		v := groupstatusconfig.DefaultSolJuiceModel
+		_c.mutation.SetSolJuiceModel(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -292,6 +346,15 @@ func (_c *GroupStatusConfigCreate) check() error {
 	}
 	if _, ok := _c.mutation.NotifyEnabled(); !ok {
 		return &ValidationError{Name: "notify_enabled", err: errors.New(`ent: missing required field "GroupStatusConfig.notify_enabled"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceEnabled(); !ok {
+		return &ValidationError{Name: "sol_juice_enabled", err: errors.New(`ent: missing required field "GroupStatusConfig.sol_juice_enabled"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceIntervalSeconds(); !ok {
+		return &ValidationError{Name: "sol_juice_interval_seconds", err: errors.New(`ent: missing required field "GroupStatusConfig.sol_juice_interval_seconds"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceModel(); !ok {
+		return &ValidationError{Name: "sol_juice_model", err: errors.New(`ent: missing required field "GroupStatusConfig.sol_juice_model"`)}
 	}
 	return nil
 }
@@ -367,6 +430,18 @@ func (_c *GroupStatusConfigCreate) createSpec() (*GroupStatusConfig, *sqlgraph.C
 	if value, ok := _c.mutation.NotifyEnabled(); ok {
 		_spec.SetField(groupstatusconfig.FieldNotifyEnabled, field.TypeBool, value)
 		_node.NotifyEnabled = value
+	}
+	if value, ok := _c.mutation.SolJuiceEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceEnabled, field.TypeBool, value)
+		_node.SolJuiceEnabled = value
+	}
+	if value, ok := _c.mutation.SolJuiceIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceIntervalSeconds, field.TypeInt, value)
+		_node.SolJuiceIntervalSeconds = value
+	}
+	if value, ok := _c.mutation.SolJuiceModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
+		_node.SolJuiceModel = value
 	}
 	return _node, _spec
 }
@@ -573,6 +648,48 @@ func (u *GroupStatusConfigUpsert) SetNotifyEnabled(v bool) *GroupStatusConfigUps
 // UpdateNotifyEnabled sets the "notify_enabled" field to the value that was provided on create.
 func (u *GroupStatusConfigUpsert) UpdateNotifyEnabled() *GroupStatusConfigUpsert {
 	u.SetExcluded(groupstatusconfig.FieldNotifyEnabled)
+	return u
+}
+
+// SetSolJuiceEnabled sets the "sol_juice_enabled" field.
+func (u *GroupStatusConfigUpsert) SetSolJuiceEnabled(v bool) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldSolJuiceEnabled, v)
+	return u
+}
+
+// UpdateSolJuiceEnabled sets the "sol_juice_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateSolJuiceEnabled() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldSolJuiceEnabled)
+	return u
+}
+
+// SetSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field.
+func (u *GroupStatusConfigUpsert) SetSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldSolJuiceIntervalSeconds, v)
+	return u
+}
+
+// UpdateSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateSolJuiceIntervalSeconds() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldSolJuiceIntervalSeconds)
+	return u
+}
+
+// AddSolJuiceIntervalSeconds adds v to the "sol_juice_interval_seconds" field.
+func (u *GroupStatusConfigUpsert) AddSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpsert {
+	u.Add(groupstatusconfig.FieldSolJuiceIntervalSeconds, v)
+	return u
+}
+
+// SetSolJuiceModel sets the "sol_juice_model" field.
+func (u *GroupStatusConfigUpsert) SetSolJuiceModel(v string) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldSolJuiceModel, v)
+	return u
+}
+
+// UpdateSolJuiceModel sets the "sol_juice_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateSolJuiceModel() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldSolJuiceModel)
 	return u
 }
 
@@ -800,6 +917,55 @@ func (u *GroupStatusConfigUpsertOne) SetNotifyEnabled(v bool) *GroupStatusConfig
 func (u *GroupStatusConfigUpsertOne) UpdateNotifyEnabled() *GroupStatusConfigUpsertOne {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateNotifyEnabled()
+	})
+}
+
+// SetSolJuiceEnabled sets the "sol_juice_enabled" field.
+func (u *GroupStatusConfigUpsertOne) SetSolJuiceEnabled(v bool) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetSolJuiceEnabled(v)
+	})
+}
+
+// UpdateSolJuiceEnabled sets the "sol_juice_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateSolJuiceEnabled() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateSolJuiceEnabled()
+	})
+}
+
+// SetSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field.
+func (u *GroupStatusConfigUpsertOne) SetSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetSolJuiceIntervalSeconds(v)
+	})
+}
+
+// AddSolJuiceIntervalSeconds adds v to the "sol_juice_interval_seconds" field.
+func (u *GroupStatusConfigUpsertOne) AddSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.AddSolJuiceIntervalSeconds(v)
+	})
+}
+
+// UpdateSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateSolJuiceIntervalSeconds() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateSolJuiceIntervalSeconds()
+	})
+}
+
+// SetSolJuiceModel sets the "sol_juice_model" field.
+func (u *GroupStatusConfigUpsertOne) SetSolJuiceModel(v string) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetSolJuiceModel(v)
+	})
+}
+
+// UpdateSolJuiceModel sets the "sol_juice_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateSolJuiceModel() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateSolJuiceModel()
 	})
 }
 
@@ -1193,6 +1359,55 @@ func (u *GroupStatusConfigUpsertBulk) SetNotifyEnabled(v bool) *GroupStatusConfi
 func (u *GroupStatusConfigUpsertBulk) UpdateNotifyEnabled() *GroupStatusConfigUpsertBulk {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateNotifyEnabled()
+	})
+}
+
+// SetSolJuiceEnabled sets the "sol_juice_enabled" field.
+func (u *GroupStatusConfigUpsertBulk) SetSolJuiceEnabled(v bool) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetSolJuiceEnabled(v)
+	})
+}
+
+// UpdateSolJuiceEnabled sets the "sol_juice_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateSolJuiceEnabled() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateSolJuiceEnabled()
+	})
+}
+
+// SetSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field.
+func (u *GroupStatusConfigUpsertBulk) SetSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetSolJuiceIntervalSeconds(v)
+	})
+}
+
+// AddSolJuiceIntervalSeconds adds v to the "sol_juice_interval_seconds" field.
+func (u *GroupStatusConfigUpsertBulk) AddSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.AddSolJuiceIntervalSeconds(v)
+	})
+}
+
+// UpdateSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateSolJuiceIntervalSeconds() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateSolJuiceIntervalSeconds()
+	})
+}
+
+// SetSolJuiceModel sets the "sol_juice_model" field.
+func (u *GroupStatusConfigUpsertBulk) SetSolJuiceModel(v string) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetSolJuiceModel(v)
+	})
+}
+
+// UpdateSolJuiceModel sets the "sol_juice_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateSolJuiceModel() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateSolJuiceModel()
 	})
 }
 

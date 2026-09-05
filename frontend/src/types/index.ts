@@ -2437,7 +2437,11 @@ export interface ClientChangelogEntry {
 
 export type GroupStatusValidationMode = 'non_empty' | 'keywords_any' | 'keywords_all'
 
-export type GroupStatusEventType = 'up' | 'down'
+export type GroupStatusEventType = 'up' | 'down' | 'sol_juice_mismatch' | 'sol_juice_recovered'
+
+// 纯 Sol 验证（Juice 指纹探测）
+export type SolJuiceStatus = '' | 'pass' | 'mismatch' | 'inconclusive'
+export type SolJuiceStableStatus = '' | 'pass' | 'mismatch'
 
 export interface GroupStatusConfig {
   id: number
@@ -2451,6 +2455,9 @@ export interface GroupStatusConfig {
   timeout_seconds: number
   slow_latency_ms: number
   notify_enabled: boolean
+  sol_juice_enabled: boolean
+  sol_juice_interval_seconds: number
+  sol_juice_model: string
   created_at: string
   updated_at: string
 }
@@ -2470,6 +2477,19 @@ export interface GroupStatusSummary {
   observed_at: string | null
   consecutive_down: number
   consecutive_non_down: number
+  sol_juice_enabled: boolean
+  sol_juice_model: string
+  sol_juice_interval_seconds: number
+  sol_juice_status: SolJuiceStatus
+  sol_juice_stable_status: SolJuiceStableStatus
+  sol_juice_value: string
+  sol_juice_detail: string
+  sol_juice_checked_at: string | null
+  sol_juice_consecutive_mismatch: number
+  sol_juice_input_tokens: number
+  sol_juice_output_tokens: number
+  sol_juice_reasoning_tokens: number
+  sol_juice_last_cost_usd: number
 }
 
 export interface GroupStatusAdminView {
@@ -2507,8 +2527,9 @@ export interface GroupStatusEvent {
   group_id: number
   config_id: number
   event_type: GroupStatusEventType
-  from_status: GroupRuntimeStatus | ''
-  to_status: GroupRuntimeStatus | ''
+  // 存活事件为 up/degraded/down，Juice 事件为 pass/mismatch
+  from_status: string
+  to_status: string
   latency_ms: number | null
   http_code: number | null
   sub_status: string

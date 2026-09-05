@@ -27,6 +27,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
@@ -123,6 +124,7 @@ func checkColumn(t, c string) error {
 			group.Table:                    group.ValidColumn,
 			groupstatusconfig.Table:        groupstatusconfig.ValidColumn,
 			groupstatusevent.Table:         groupstatusevent.ValidColumn,
+			groupstatusjuicerecord.Table:   groupstatusjuicerecord.ValidColumn,
 			groupstatusrecord.Table:        groupstatusrecord.ValidColumn,
 			groupstatusstate.Table:         groupstatusstate.ValidColumn,
 			idempotencyrecord.Table:        idempotencyrecord.ValidColumn,

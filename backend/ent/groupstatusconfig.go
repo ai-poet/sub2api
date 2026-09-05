@@ -42,6 +42,12 @@ type GroupStatusConfig struct {
 	SlowLatencyMs int64 `json:"slow_latency_ms,omitempty"`
 	// NotifyEnabled holds the value of the "notify_enabled" field.
 	NotifyEnabled bool `json:"notify_enabled,omitempty"`
+	// SolJuiceEnabled holds the value of the "sol_juice_enabled" field.
+	SolJuiceEnabled bool `json:"sol_juice_enabled,omitempty"`
+	// SolJuiceIntervalSeconds holds the value of the "sol_juice_interval_seconds" field.
+	SolJuiceIntervalSeconds int `json:"sol_juice_interval_seconds,omitempty"`
+	// SolJuiceModel holds the value of the "sol_juice_model" field.
+	SolJuiceModel string `json:"sol_juice_model,omitempty"`
 	selectValues  sql.SelectValues
 }
 
@@ -52,11 +58,11 @@ func (*GroupStatusConfig) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case groupstatusconfig.FieldExpectedKeywords:
 			values[i] = new([]byte)
-		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled:
+		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled, groupstatusconfig.FieldSolJuiceEnabled:
 			values[i] = new(sql.NullBool)
-		case groupstatusconfig.FieldID, groupstatusconfig.FieldGroupID, groupstatusconfig.FieldIntervalSeconds, groupstatusconfig.FieldTimeoutSeconds, groupstatusconfig.FieldSlowLatencyMs:
+		case groupstatusconfig.FieldID, groupstatusconfig.FieldGroupID, groupstatusconfig.FieldIntervalSeconds, groupstatusconfig.FieldTimeoutSeconds, groupstatusconfig.FieldSlowLatencyMs, groupstatusconfig.FieldSolJuiceIntervalSeconds:
 			values[i] = new(sql.NullInt64)
-		case groupstatusconfig.FieldProbeModel, groupstatusconfig.FieldProbePrompt, groupstatusconfig.FieldValidationMode:
+		case groupstatusconfig.FieldProbeModel, groupstatusconfig.FieldProbePrompt, groupstatusconfig.FieldValidationMode, groupstatusconfig.FieldSolJuiceModel:
 			values[i] = new(sql.NullString)
 		case groupstatusconfig.FieldCreatedAt, groupstatusconfig.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -155,6 +161,24 @@ func (_m *GroupStatusConfig) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.NotifyEnabled = value.Bool
 			}
+		case groupstatusconfig.FieldSolJuiceEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_enabled", values[i])
+			} else if value.Valid {
+				_m.SolJuiceEnabled = value.Bool
+			}
+		case groupstatusconfig.FieldSolJuiceIntervalSeconds:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_interval_seconds", values[i])
+			} else if value.Valid {
+				_m.SolJuiceIntervalSeconds = int(value.Int64)
+			}
+		case groupstatusconfig.FieldSolJuiceModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sol_juice_model", values[i])
+			} else if value.Valid {
+				_m.SolJuiceModel = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -226,6 +250,15 @@ func (_m *GroupStatusConfig) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("notify_enabled=")
 	builder.WriteString(fmt.Sprintf("%v", _m.NotifyEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_interval_seconds=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceIntervalSeconds))
+	builder.WriteString(", ")
+	builder.WriteString("sol_juice_model=")
+	builder.WriteString(_m.SolJuiceModel)
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -502,6 +502,7 @@ export const groupsAPI = {
   getRuntimeStatus,
   updateRuntimeStatus,
   probeRuntimeStatus,
+  probeRuntimeStatusSolJuice,
   getRuntimeStatusSummary
 }
 
@@ -522,11 +523,21 @@ export async function updateRuntimeStatus(
     timeout_seconds: number
     slow_latency_ms: number
     notify_enabled: boolean
+    sol_juice_enabled?: boolean
+    sol_juice_interval_seconds?: number
+    sol_juice_model?: string
   }
 ): Promise<GroupStatusAdminView> {
   const { data } = await apiClient.put<GroupStatusAdminView>(
     `/admin/groups/${id}/runtime-status`,
     payload
+  )
+  return data
+}
+
+export async function probeRuntimeStatusSolJuice(id: number): Promise<GroupStatusAdminView> {
+  const { data } = await apiClient.post<GroupStatusAdminView>(
+    `/admin/groups/${id}/runtime-status/sol-juice/probe`
   )
   return data
 }

@@ -44,6 +44,8 @@ type Tx struct {
 	GroupStatusConfig *GroupStatusConfigClient
 	// GroupStatusEvent is the client for interacting with the GroupStatusEvent builders.
 	GroupStatusEvent *GroupStatusEventClient
+	// GroupStatusJuiceRecord is the client for interacting with the GroupStatusJuiceRecord builders.
+	GroupStatusJuiceRecord *GroupStatusJuiceRecordClient
 	// GroupStatusRecord is the client for interacting with the GroupStatusRecord builders.
 	GroupStatusRecord *GroupStatusRecordClient
 	// GroupStatusState is the client for interacting with the GroupStatusState builders.
@@ -232,6 +234,7 @@ func (tx *Tx) init() {
 	tx.Group = NewGroupClient(tx.config)
 	tx.GroupStatusConfig = NewGroupStatusConfigClient(tx.config)
 	tx.GroupStatusEvent = NewGroupStatusEventClient(tx.config)
+	tx.GroupStatusJuiceRecord = NewGroupStatusJuiceRecordClient(tx.config)
 	tx.GroupStatusRecord = NewGroupStatusRecordClient(tx.config)
 	tx.GroupStatusState = NewGroupStatusStateClient(tx.config)
 	tx.IdempotencyRecord = NewIdempotencyRecordClient(tx.config)

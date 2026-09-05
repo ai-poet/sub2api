@@ -116,6 +116,13 @@
                       <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(item))]">
                         {{ getSummaryStatusText(item.summary) }}
                       </span>
+                      <span
+                        v-if="item.summary.sol_juice_enabled"
+                        :class="['badge', getSolJuiceBadgeClass(getSolJuiceStatus(item.summary))]"
+                        :title="item.summary.sol_juice_checked_at ? formatDateTime(item.summary.sol_juice_checked_at) : ''"
+                      >
+                        {{ getSolJuiceText(item.summary) }}
+                      </span>
                     </div>
 
                     <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
@@ -225,9 +232,18 @@
               {{ t(`admin.groups.platforms.${selectedItem.group.platform}`) }} · #{{ getGroupId(selectedItem) }}
             </div>
           </div>
-          <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(selectedItem))]">
-            {{ getSummaryStatusText(selectedItem.summary) }}
-          </span>
+          <div class="flex flex-wrap items-center gap-2">
+            <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(selectedItem))]">
+              {{ getSummaryStatusText(selectedItem.summary) }}
+            </span>
+            <span
+              v-if="selectedItem.summary.sol_juice_enabled"
+              :class="['badge', getSolJuiceBadgeClass(getSolJuiceStatus(selectedItem.summary))]"
+              :title="selectedItem.summary.sol_juice_checked_at ? formatDateTime(selectedItem.summary.sol_juice_checked_at) : ''"
+            >
+              {{ getSolJuiceText(selectedItem.summary) }}
+            </span>
+          </div>
         </div>
 
         <div class="grid gap-4 md:grid-cols-4">
@@ -352,7 +368,7 @@
                 >
                   <div class="flex items-start justify-between gap-3">
                     <div class="flex items-center gap-2">
-                      <span :class="['badge', getGroupRuntimeStatusBadgeClass(event.event_type === 'down' ? 'down' : 'up')]">
+                      <span :class="['badge', getGroupRuntimeEventBadgeClass(event.event_type)]">
                         {{ t(`modelStatus.eventTypes.${event.event_type}`) }}
                       </span>
                       <span class="text-xs text-gray-500 dark:text-gray-400">
@@ -365,12 +381,12 @@
                   </div>
 
                   <div class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span :class="['badge', getGroupRuntimeStatusBadgeClass(event.from_status || 'unknown')]">
-                      {{ t(`modelStatus.statuses.${normalizeGroupRuntimeStatus(event.from_status)}`) }}
+                    <span :class="['badge', getEventStatusBadgeClass(event, event.from_status)]">
+                      {{ getEventStatusLabel(event, event.from_status) }}
                     </span>
                     <Icon name="arrowRight" size="xs" />
-                    <span :class="['badge', getGroupRuntimeStatusBadgeClass(event.to_status || 'unknown')]">
-                      {{ t(`modelStatus.statuses.${normalizeGroupRuntimeStatus(event.to_status)}`) }}
+                    <span :class="['badge', getEventStatusBadgeClass(event, event.to_status)]">
+                      {{ getEventStatusLabel(event, event.to_status) }}
                     </span>
                   </div>
 
@@ -427,13 +443,18 @@ import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
   formatGroupRuntimeAvailability,
   formatGroupRuntimeLatency,
+  getGroupRuntimeEventBadgeClass,
   getGroupRuntimeStatusBadgeClass,
   getGroupRuntimeStatusBarClass,
   getGroupRuntimeStatusSurfaceClass,
+  getSolJuiceBadgeClass,
+  isSolJuiceEvent,
   normalizeGroupRuntimeStatus,
+  normalizeSolJuiceStatus,
   sanitizeRuntimeErrorDetail,
   shortenRuntimeExcerpt,
 } from '@/utils/groupStatus'
+import type { NormalizedSolJuiceStatus } from '@/utils/groupStatus'
 
 const POLL_INTERVAL_MS = 30_000
 const HEARTBEAT_RECORD_COUNT = 24
@@ -579,6 +600,35 @@ function getRowHeartbeatCells(item: GroupStatusListItem): RowHeartbeatCell[] {
     rowHeartbeatMap.value.get(getGroupId(item)) ??
     buildRowHeartbeatCells([])
   )
+}
+
+function getSolJuiceStatus(summary: GroupStatusListItem['summary']): NormalizedSolJuiceStatus {
+  return normalizeSolJuiceStatus(summary.sol_juice_stable_status || summary.sol_juice_status)
+}
+
+function getSolJuiceText(summary: GroupStatusListItem['summary']): string {
+  const status = getSolJuiceStatus(summary)
+  if (status === 'pass') {
+    return t('modelStatus.solJuice.pass')
+  }
+  if (status === 'mismatch') {
+    return t('modelStatus.solJuice.mismatch')
+  }
+  return t('modelStatus.solJuice.pending')
+}
+
+function getEventStatusBadgeClass(event: { event_type: string }, status: string): string {
+  if (isSolJuiceEvent(event.event_type)) {
+    return getSolJuiceBadgeClass(status)
+  }
+  return getGroupRuntimeStatusBadgeClass(status || 'unknown')
+}
+
+function getEventStatusLabel(event: { event_type: string }, status: string): string {
+  if (isSolJuiceEvent(event.event_type)) {
+    return t(`modelStatus.solJuice.statuses.${normalizeSolJuiceStatus(status)}`)
+  }
+  return t(`modelStatus.statuses.${normalizeGroupRuntimeStatus(status)}`)
 }
 
 function getSummaryStatusText(summary: GroupStatusListItem['summary']): string {

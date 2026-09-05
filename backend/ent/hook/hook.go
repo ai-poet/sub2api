@@ -189,6 +189,18 @@ func (f GroupStatusEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupStatusEventMutation", m)
 }
 
+// The GroupStatusJuiceRecordFunc type is an adapter to allow the use of ordinary
+// function as GroupStatusJuiceRecord mutator.
+type GroupStatusJuiceRecordFunc func(context.Context, *ent.GroupStatusJuiceRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GroupStatusJuiceRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GroupStatusJuiceRecordMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupStatusJuiceRecordMutation", m)
+}
+
 // The GroupStatusRecordFunc type is an adapter to allow the use of ordinary
 // function as GroupStatusRecord mutator.
 type GroupStatusRecordFunc func(context.Context, *ent.GroupStatusRecordMutation) (ent.Value, error)

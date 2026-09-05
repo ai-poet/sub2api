@@ -20,6 +20,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
@@ -1011,6 +1012,18 @@ func init() {
 	groupstatusconfigDescNotifyEnabled := groupstatusconfigFields[9].Descriptor()
 	// groupstatusconfig.DefaultNotifyEnabled holds the default value on creation for the notify_enabled field.
 	groupstatusconfig.DefaultNotifyEnabled = groupstatusconfigDescNotifyEnabled.Default.(bool)
+	// groupstatusconfigDescSolJuiceEnabled is the schema descriptor for sol_juice_enabled field.
+	groupstatusconfigDescSolJuiceEnabled := groupstatusconfigFields[10].Descriptor()
+	// groupstatusconfig.DefaultSolJuiceEnabled holds the default value on creation for the sol_juice_enabled field.
+	groupstatusconfig.DefaultSolJuiceEnabled = groupstatusconfigDescSolJuiceEnabled.Default.(bool)
+	// groupstatusconfigDescSolJuiceIntervalSeconds is the schema descriptor for sol_juice_interval_seconds field.
+	groupstatusconfigDescSolJuiceIntervalSeconds := groupstatusconfigFields[11].Descriptor()
+	// groupstatusconfig.DefaultSolJuiceIntervalSeconds holds the default value on creation for the sol_juice_interval_seconds field.
+	groupstatusconfig.DefaultSolJuiceIntervalSeconds = groupstatusconfigDescSolJuiceIntervalSeconds.Default.(int)
+	// groupstatusconfigDescSolJuiceModel is the schema descriptor for sol_juice_model field.
+	groupstatusconfigDescSolJuiceModel := groupstatusconfigFields[12].Descriptor()
+	// groupstatusconfig.DefaultSolJuiceModel holds the default value on creation for the sol_juice_model field.
+	groupstatusconfig.DefaultSolJuiceModel = groupstatusconfigDescSolJuiceModel.Default.(string)
 	groupstatuseventFields := schema.GroupStatusEvent{}.Fields()
 	_ = groupstatuseventFields
 	// groupstatuseventDescFromStatus is the schema descriptor for from_status field.
@@ -1029,6 +1042,36 @@ func init() {
 	groupstatuseventDescCreatedAt := groupstatuseventFields[10].Descriptor()
 	// groupstatusevent.DefaultCreatedAt holds the default value on creation for the created_at field.
 	groupstatusevent.DefaultCreatedAt = groupstatuseventDescCreatedAt.Default.(func() time.Time)
+	groupstatusjuicerecordFields := schema.GroupStatusJuiceRecord{}.Fields()
+	_ = groupstatusjuicerecordFields
+	// groupstatusjuicerecordDescModel is the schema descriptor for model field.
+	groupstatusjuicerecordDescModel := groupstatusjuicerecordFields[2].Descriptor()
+	// groupstatusjuicerecord.DefaultModel holds the default value on creation for the model field.
+	groupstatusjuicerecord.DefaultModel = groupstatusjuicerecordDescModel.Default.(string)
+	// groupstatusjuicerecordDescEffort is the schema descriptor for effort field.
+	groupstatusjuicerecordDescEffort := groupstatusjuicerecordFields[3].Descriptor()
+	// groupstatusjuicerecord.DefaultEffort holds the default value on creation for the effort field.
+	groupstatusjuicerecord.DefaultEffort = groupstatusjuicerecordDescEffort.Default.(string)
+	// groupstatusjuicerecordDescNormalizedValue is the schema descriptor for normalized_value field.
+	groupstatusjuicerecordDescNormalizedValue := groupstatusjuicerecordFields[5].Descriptor()
+	// groupstatusjuicerecord.DefaultNormalizedValue holds the default value on creation for the normalized_value field.
+	groupstatusjuicerecord.DefaultNormalizedValue = groupstatusjuicerecordDescNormalizedValue.Default.(string)
+	// groupstatusjuicerecordDescInputTokens is the schema descriptor for input_tokens field.
+	groupstatusjuicerecordDescInputTokens := groupstatusjuicerecordFields[9].Descriptor()
+	// groupstatusjuicerecord.DefaultInputTokens holds the default value on creation for the input_tokens field.
+	groupstatusjuicerecord.DefaultInputTokens = groupstatusjuicerecordDescInputTokens.Default.(int64)
+	// groupstatusjuicerecordDescOutputTokens is the schema descriptor for output_tokens field.
+	groupstatusjuicerecordDescOutputTokens := groupstatusjuicerecordFields[10].Descriptor()
+	// groupstatusjuicerecord.DefaultOutputTokens holds the default value on creation for the output_tokens field.
+	groupstatusjuicerecord.DefaultOutputTokens = groupstatusjuicerecordDescOutputTokens.Default.(int64)
+	// groupstatusjuicerecordDescReasoningTokens is the schema descriptor for reasoning_tokens field.
+	groupstatusjuicerecordDescReasoningTokens := groupstatusjuicerecordFields[11].Descriptor()
+	// groupstatusjuicerecord.DefaultReasoningTokens holds the default value on creation for the reasoning_tokens field.
+	groupstatusjuicerecord.DefaultReasoningTokens = groupstatusjuicerecordDescReasoningTokens.Default.(int64)
+	// groupstatusjuicerecordDescCreatedAt is the schema descriptor for created_at field.
+	groupstatusjuicerecordDescCreatedAt := groupstatusjuicerecordFields[14].Descriptor()
+	// groupstatusjuicerecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupstatusjuicerecord.DefaultCreatedAt = groupstatusjuicerecordDescCreatedAt.Default.(func() time.Time)
 	groupstatusrecordFields := schema.GroupStatusRecord{}.Fields()
 	_ = groupstatusrecordFields
 	// groupstatusrecordDescSubStatus is the schema descriptor for sub_status field.
@@ -1074,6 +1117,34 @@ func init() {
 	groupstatusstateDescConsecutiveNonDown := groupstatusstateFields[11].Descriptor()
 	// groupstatusstate.DefaultConsecutiveNonDown holds the default value on creation for the consecutive_non_down field.
 	groupstatusstate.DefaultConsecutiveNonDown = groupstatusstateDescConsecutiveNonDown.Default.(int)
+	// groupstatusstateDescSolJuiceStatus is the schema descriptor for sol_juice_status field.
+	groupstatusstateDescSolJuiceStatus := groupstatusstateFields[12].Descriptor()
+	// groupstatusstate.DefaultSolJuiceStatus holds the default value on creation for the sol_juice_status field.
+	groupstatusstate.DefaultSolJuiceStatus = groupstatusstateDescSolJuiceStatus.Default.(string)
+	// groupstatusstateDescSolJuiceStableStatus is the schema descriptor for sol_juice_stable_status field.
+	groupstatusstateDescSolJuiceStableStatus := groupstatusstateFields[13].Descriptor()
+	// groupstatusstate.DefaultSolJuiceStableStatus holds the default value on creation for the sol_juice_stable_status field.
+	groupstatusstate.DefaultSolJuiceStableStatus = groupstatusstateDescSolJuiceStableStatus.Default.(string)
+	// groupstatusstateDescSolJuiceValue is the schema descriptor for sol_juice_value field.
+	groupstatusstateDescSolJuiceValue := groupstatusstateFields[14].Descriptor()
+	// groupstatusstate.DefaultSolJuiceValue holds the default value on creation for the sol_juice_value field.
+	groupstatusstate.DefaultSolJuiceValue = groupstatusstateDescSolJuiceValue.Default.(string)
+	// groupstatusstateDescSolJuiceConsecutiveMismatch is the schema descriptor for sol_juice_consecutive_mismatch field.
+	groupstatusstateDescSolJuiceConsecutiveMismatch := groupstatusstateFields[17].Descriptor()
+	// groupstatusstate.DefaultSolJuiceConsecutiveMismatch holds the default value on creation for the sol_juice_consecutive_mismatch field.
+	groupstatusstate.DefaultSolJuiceConsecutiveMismatch = groupstatusstateDescSolJuiceConsecutiveMismatch.Default.(int)
+	// groupstatusstateDescSolJuiceInputTokens is the schema descriptor for sol_juice_input_tokens field.
+	groupstatusstateDescSolJuiceInputTokens := groupstatusstateFields[18].Descriptor()
+	// groupstatusstate.DefaultSolJuiceInputTokens holds the default value on creation for the sol_juice_input_tokens field.
+	groupstatusstate.DefaultSolJuiceInputTokens = groupstatusstateDescSolJuiceInputTokens.Default.(int64)
+	// groupstatusstateDescSolJuiceOutputTokens is the schema descriptor for sol_juice_output_tokens field.
+	groupstatusstateDescSolJuiceOutputTokens := groupstatusstateFields[19].Descriptor()
+	// groupstatusstate.DefaultSolJuiceOutputTokens holds the default value on creation for the sol_juice_output_tokens field.
+	groupstatusstate.DefaultSolJuiceOutputTokens = groupstatusstateDescSolJuiceOutputTokens.Default.(int64)
+	// groupstatusstateDescSolJuiceReasoningTokens is the schema descriptor for sol_juice_reasoning_tokens field.
+	groupstatusstateDescSolJuiceReasoningTokens := groupstatusstateFields[20].Descriptor()
+	// groupstatusstate.DefaultSolJuiceReasoningTokens holds the default value on creation for the sol_juice_reasoning_tokens field.
+	groupstatusstate.DefaultSolJuiceReasoningTokens = groupstatusstateDescSolJuiceReasoningTokens.Default.(int64)
 	idempotencyrecordMixin := schema.IdempotencyRecord{}.Mixin()
 	idempotencyrecordMixinFields0 := idempotencyrecordMixin[0].Fields()
 	_ = idempotencyrecordMixinFields0

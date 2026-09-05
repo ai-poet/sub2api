@@ -87,6 +87,7 @@ temp/
 .cache/
 .dev/
 .serena/
+gpt56_api_detector/
 
 # ===================
 # 构建产物

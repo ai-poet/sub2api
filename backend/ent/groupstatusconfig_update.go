@@ -201,6 +201,55 @@ func (_u *GroupStatusConfigUpdate) SetNillableNotifyEnabled(v *bool) *GroupStatu
 	return _u
 }
 
+// SetSolJuiceEnabled sets the "sol_juice_enabled" field.
+func (_u *GroupStatusConfigUpdate) SetSolJuiceEnabled(v bool) *GroupStatusConfigUpdate {
+	_u.mutation.SetSolJuiceEnabled(v)
+	return _u
+}
+
+// SetNillableSolJuiceEnabled sets the "sol_juice_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableSolJuiceEnabled(v *bool) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetSolJuiceEnabled(*v)
+	}
+	return _u
+}
+
+// SetSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field.
+func (_u *GroupStatusConfigUpdate) SetSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpdate {
+	_u.mutation.ResetSolJuiceIntervalSeconds()
+	_u.mutation.SetSolJuiceIntervalSeconds(v)
+	return _u
+}
+
+// SetNillableSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableSolJuiceIntervalSeconds(v *int) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetSolJuiceIntervalSeconds(*v)
+	}
+	return _u
+}
+
+// AddSolJuiceIntervalSeconds adds value to the "sol_juice_interval_seconds" field.
+func (_u *GroupStatusConfigUpdate) AddSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpdate {
+	_u.mutation.AddSolJuiceIntervalSeconds(v)
+	return _u
+}
+
+// SetSolJuiceModel sets the "sol_juice_model" field.
+func (_u *GroupStatusConfigUpdate) SetSolJuiceModel(v string) *GroupStatusConfigUpdate {
+	_u.mutation.SetSolJuiceModel(v)
+	return _u
+}
+
+// SetNillableSolJuiceModel sets the "sol_juice_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableSolJuiceModel(v *string) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetSolJuiceModel(*v)
+	}
+	return _u
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_u *GroupStatusConfigUpdate) Mutation() *GroupStatusConfigMutation {
 	return _u.mutation
@@ -300,6 +349,18 @@ func (_u *GroupStatusConfigUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.NotifyEnabled(); ok {
 		_spec.SetField(groupstatusconfig.FieldNotifyEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.SolJuiceEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.SolJuiceIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSolJuiceIntervalSeconds(); ok {
+		_spec.AddField(groupstatusconfig.FieldSolJuiceIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SolJuiceModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -493,6 +554,55 @@ func (_u *GroupStatusConfigUpdateOne) SetNillableNotifyEnabled(v *bool) *GroupSt
 	return _u
 }
 
+// SetSolJuiceEnabled sets the "sol_juice_enabled" field.
+func (_u *GroupStatusConfigUpdateOne) SetSolJuiceEnabled(v bool) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetSolJuiceEnabled(v)
+	return _u
+}
+
+// SetNillableSolJuiceEnabled sets the "sol_juice_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableSolJuiceEnabled(v *bool) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetSolJuiceEnabled(*v)
+	}
+	return _u
+}
+
+// SetSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field.
+func (_u *GroupStatusConfigUpdateOne) SetSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpdateOne {
+	_u.mutation.ResetSolJuiceIntervalSeconds()
+	_u.mutation.SetSolJuiceIntervalSeconds(v)
+	return _u
+}
+
+// SetNillableSolJuiceIntervalSeconds sets the "sol_juice_interval_seconds" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableSolJuiceIntervalSeconds(v *int) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetSolJuiceIntervalSeconds(*v)
+	}
+	return _u
+}
+
+// AddSolJuiceIntervalSeconds adds value to the "sol_juice_interval_seconds" field.
+func (_u *GroupStatusConfigUpdateOne) AddSolJuiceIntervalSeconds(v int) *GroupStatusConfigUpdateOne {
+	_u.mutation.AddSolJuiceIntervalSeconds(v)
+	return _u
+}
+
+// SetSolJuiceModel sets the "sol_juice_model" field.
+func (_u *GroupStatusConfigUpdateOne) SetSolJuiceModel(v string) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetSolJuiceModel(v)
+	return _u
+}
+
+// SetNillableSolJuiceModel sets the "sol_juice_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableSolJuiceModel(v *string) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetSolJuiceModel(*v)
+	}
+	return _u
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_u *GroupStatusConfigUpdateOne) Mutation() *GroupStatusConfigMutation {
 	return _u.mutation
@@ -622,6 +732,18 @@ func (_u *GroupStatusConfigUpdateOne) sqlSave(ctx context.Context) (_node *Group
 	}
 	if value, ok := _u.mutation.NotifyEnabled(); ok {
 		_spec.SetField(groupstatusconfig.FieldNotifyEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.SolJuiceEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.SolJuiceIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSolJuiceIntervalSeconds(); ok {
+		_spec.AddField(groupstatusconfig.FieldSolJuiceIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SolJuiceModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
 	}
 	_node = &GroupStatusConfig{config: _u.config}
 	_spec.Assign = _node.assignValues

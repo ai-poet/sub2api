@@ -202,6 +202,132 @@ func (_c *GroupStatusStateCreate) SetNillableConsecutiveNonDown(v *int) *GroupSt
 	return _c
 }
 
+// SetSolJuiceStatus sets the "sol_juice_status" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceStatus(v string) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceStatus(v)
+	return _c
+}
+
+// SetNillableSolJuiceStatus sets the "sol_juice_status" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceStatus(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceStatus(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceStableStatus sets the "sol_juice_stable_status" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceStableStatus(v string) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceStableStatus(v)
+	return _c
+}
+
+// SetNillableSolJuiceStableStatus sets the "sol_juice_stable_status" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceStableStatus(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceStableStatus(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceValue sets the "sol_juice_value" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceValue(v string) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceValue(v)
+	return _c
+}
+
+// SetNillableSolJuiceValue sets the "sol_juice_value" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceValue(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceValue(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceDetail sets the "sol_juice_detail" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceDetail(v string) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceDetail(v)
+	return _c
+}
+
+// SetNillableSolJuiceDetail sets the "sol_juice_detail" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceDetail(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceDetail(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceCheckedAt sets the "sol_juice_checked_at" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceCheckedAt(v time.Time) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceCheckedAt(v)
+	return _c
+}
+
+// SetNillableSolJuiceCheckedAt sets the "sol_juice_checked_at" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceCheckedAt(v *time.Time) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceCheckedAt(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceConsecutiveMismatch(v int) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceConsecutiveMismatch(v)
+	return _c
+}
+
+// SetNillableSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceConsecutiveMismatch(v *int) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceConsecutiveMismatch(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceInputTokens sets the "sol_juice_input_tokens" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceInputTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceInputTokens(v)
+	return _c
+}
+
+// SetNillableSolJuiceInputTokens sets the "sol_juice_input_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceInputTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceInputTokens(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceOutputTokens sets the "sol_juice_output_tokens" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceOutputTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceOutputTokens(v)
+	return _c
+}
+
+// SetNillableSolJuiceOutputTokens sets the "sol_juice_output_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceOutputTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceOutputTokens(*v)
+	}
+	return _c
+}
+
+// SetSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field.
+func (_c *GroupStatusStateCreate) SetSolJuiceReasoningTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetSolJuiceReasoningTokens(v)
+	return _c
+}
+
+// SetNillableSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableSolJuiceReasoningTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetSolJuiceReasoningTokens(*v)
+	}
+	return _c
+}
+
 // Mutation returns the GroupStatusStateMutation object of the builder.
 func (_c *GroupStatusStateCreate) Mutation() *GroupStatusStateMutation {
 	return _c.mutation
@@ -265,6 +391,34 @@ func (_c *GroupStatusStateCreate) defaults() {
 		v := groupstatusstate.DefaultConsecutiveNonDown
 		_c.mutation.SetConsecutiveNonDown(v)
 	}
+	if _, ok := _c.mutation.SolJuiceStatus(); !ok {
+		v := groupstatusstate.DefaultSolJuiceStatus
+		_c.mutation.SetSolJuiceStatus(v)
+	}
+	if _, ok := _c.mutation.SolJuiceStableStatus(); !ok {
+		v := groupstatusstate.DefaultSolJuiceStableStatus
+		_c.mutation.SetSolJuiceStableStatus(v)
+	}
+	if _, ok := _c.mutation.SolJuiceValue(); !ok {
+		v := groupstatusstate.DefaultSolJuiceValue
+		_c.mutation.SetSolJuiceValue(v)
+	}
+	if _, ok := _c.mutation.SolJuiceConsecutiveMismatch(); !ok {
+		v := groupstatusstate.DefaultSolJuiceConsecutiveMismatch
+		_c.mutation.SetSolJuiceConsecutiveMismatch(v)
+	}
+	if _, ok := _c.mutation.SolJuiceInputTokens(); !ok {
+		v := groupstatusstate.DefaultSolJuiceInputTokens
+		_c.mutation.SetSolJuiceInputTokens(v)
+	}
+	if _, ok := _c.mutation.SolJuiceOutputTokens(); !ok {
+		v := groupstatusstate.DefaultSolJuiceOutputTokens
+		_c.mutation.SetSolJuiceOutputTokens(v)
+	}
+	if _, ok := _c.mutation.SolJuiceReasoningTokens(); !ok {
+		v := groupstatusstate.DefaultSolJuiceReasoningTokens
+		_c.mutation.SetSolJuiceReasoningTokens(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -295,6 +449,27 @@ func (_c *GroupStatusStateCreate) check() error {
 	}
 	if _, ok := _c.mutation.ConsecutiveNonDown(); !ok {
 		return &ValidationError{Name: "consecutive_non_down", err: errors.New(`ent: missing required field "GroupStatusState.consecutive_non_down"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceStatus(); !ok {
+		return &ValidationError{Name: "sol_juice_status", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_status"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceStableStatus(); !ok {
+		return &ValidationError{Name: "sol_juice_stable_status", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_stable_status"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceValue(); !ok {
+		return &ValidationError{Name: "sol_juice_value", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_value"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceConsecutiveMismatch(); !ok {
+		return &ValidationError{Name: "sol_juice_consecutive_mismatch", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_consecutive_mismatch"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceInputTokens(); !ok {
+		return &ValidationError{Name: "sol_juice_input_tokens", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_input_tokens"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceOutputTokens(); !ok {
+		return &ValidationError{Name: "sol_juice_output_tokens", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_output_tokens"`)}
+	}
+	if _, ok := _c.mutation.SolJuiceReasoningTokens(); !ok {
+		return &ValidationError{Name: "sol_juice_reasoning_tokens", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_reasoning_tokens"`)}
 	}
 	return nil
 }
@@ -378,6 +553,42 @@ func (_c *GroupStatusStateCreate) createSpec() (*GroupStatusState, *sqlgraph.Cre
 	if value, ok := _c.mutation.ConsecutiveNonDown(); ok {
 		_spec.SetField(groupstatusstate.FieldConsecutiveNonDown, field.TypeInt, value)
 		_node.ConsecutiveNonDown = value
+	}
+	if value, ok := _c.mutation.SolJuiceStatus(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceStatus, field.TypeString, value)
+		_node.SolJuiceStatus = value
+	}
+	if value, ok := _c.mutation.SolJuiceStableStatus(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceStableStatus, field.TypeString, value)
+		_node.SolJuiceStableStatus = value
+	}
+	if value, ok := _c.mutation.SolJuiceValue(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceValue, field.TypeString, value)
+		_node.SolJuiceValue = value
+	}
+	if value, ok := _c.mutation.SolJuiceDetail(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceDetail, field.TypeString, value)
+		_node.SolJuiceDetail = &value
+	}
+	if value, ok := _c.mutation.SolJuiceCheckedAt(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceCheckedAt, field.TypeTime, value)
+		_node.SolJuiceCheckedAt = &value
+	}
+	if value, ok := _c.mutation.SolJuiceConsecutiveMismatch(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceConsecutiveMismatch, field.TypeInt, value)
+		_node.SolJuiceConsecutiveMismatch = value
+	}
+	if value, ok := _c.mutation.SolJuiceInputTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceInputTokens, field.TypeInt64, value)
+		_node.SolJuiceInputTokens = value
+	}
+	if value, ok := _c.mutation.SolJuiceOutputTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceOutputTokens, field.TypeInt64, value)
+		_node.SolJuiceOutputTokens = value
+	}
+	if value, ok := _c.mutation.SolJuiceReasoningTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldSolJuiceReasoningTokens, field.TypeInt64, value)
+		_node.SolJuiceReasoningTokens = value
 	}
 	return _node, _spec
 }
@@ -650,6 +861,150 @@ func (u *GroupStatusStateUpsert) UpdateConsecutiveNonDown() *GroupStatusStateUps
 // AddConsecutiveNonDown adds v to the "consecutive_non_down" field.
 func (u *GroupStatusStateUpsert) AddConsecutiveNonDown(v int) *GroupStatusStateUpsert {
 	u.Add(groupstatusstate.FieldConsecutiveNonDown, v)
+	return u
+}
+
+// SetSolJuiceStatus sets the "sol_juice_status" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceStatus(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceStatus, v)
+	return u
+}
+
+// UpdateSolJuiceStatus sets the "sol_juice_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceStatus() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceStatus)
+	return u
+}
+
+// SetSolJuiceStableStatus sets the "sol_juice_stable_status" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceStableStatus(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceStableStatus, v)
+	return u
+}
+
+// UpdateSolJuiceStableStatus sets the "sol_juice_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceStableStatus() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceStableStatus)
+	return u
+}
+
+// SetSolJuiceValue sets the "sol_juice_value" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceValue(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceValue, v)
+	return u
+}
+
+// UpdateSolJuiceValue sets the "sol_juice_value" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceValue() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceValue)
+	return u
+}
+
+// SetSolJuiceDetail sets the "sol_juice_detail" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceDetail(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceDetail, v)
+	return u
+}
+
+// UpdateSolJuiceDetail sets the "sol_juice_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceDetail() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceDetail)
+	return u
+}
+
+// ClearSolJuiceDetail clears the value of the "sol_juice_detail" field.
+func (u *GroupStatusStateUpsert) ClearSolJuiceDetail() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldSolJuiceDetail)
+	return u
+}
+
+// SetSolJuiceCheckedAt sets the "sol_juice_checked_at" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceCheckedAt(v time.Time) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceCheckedAt, v)
+	return u
+}
+
+// UpdateSolJuiceCheckedAt sets the "sol_juice_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceCheckedAt() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceCheckedAt)
+	return u
+}
+
+// ClearSolJuiceCheckedAt clears the value of the "sol_juice_checked_at" field.
+func (u *GroupStatusStateUpsert) ClearSolJuiceCheckedAt() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldSolJuiceCheckedAt)
+	return u
+}
+
+// SetSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceConsecutiveMismatch(v int) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceConsecutiveMismatch, v)
+	return u
+}
+
+// UpdateSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceConsecutiveMismatch() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceConsecutiveMismatch)
+	return u
+}
+
+// AddSolJuiceConsecutiveMismatch adds v to the "sol_juice_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsert) AddSolJuiceConsecutiveMismatch(v int) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldSolJuiceConsecutiveMismatch, v)
+	return u
+}
+
+// SetSolJuiceInputTokens sets the "sol_juice_input_tokens" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceInputTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceInputTokens, v)
+	return u
+}
+
+// UpdateSolJuiceInputTokens sets the "sol_juice_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceInputTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceInputTokens)
+	return u
+}
+
+// AddSolJuiceInputTokens adds v to the "sol_juice_input_tokens" field.
+func (u *GroupStatusStateUpsert) AddSolJuiceInputTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldSolJuiceInputTokens, v)
+	return u
+}
+
+// SetSolJuiceOutputTokens sets the "sol_juice_output_tokens" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceOutputTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceOutputTokens, v)
+	return u
+}
+
+// UpdateSolJuiceOutputTokens sets the "sol_juice_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceOutputTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceOutputTokens)
+	return u
+}
+
+// AddSolJuiceOutputTokens adds v to the "sol_juice_output_tokens" field.
+func (u *GroupStatusStateUpsert) AddSolJuiceOutputTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldSolJuiceOutputTokens, v)
+	return u
+}
+
+// SetSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field.
+func (u *GroupStatusStateUpsert) SetSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldSolJuiceReasoningTokens, v)
+	return u
+}
+
+// UpdateSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateSolJuiceReasoningTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldSolJuiceReasoningTokens)
+	return u
+}
+
+// AddSolJuiceReasoningTokens adds v to the "sol_juice_reasoning_tokens" field.
+func (u *GroupStatusStateUpsert) AddSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldSolJuiceReasoningTokens, v)
 	return u
 }
 
@@ -954,6 +1309,174 @@ func (u *GroupStatusStateUpsertOne) AddConsecutiveNonDown(v int) *GroupStatusSta
 func (u *GroupStatusStateUpsertOne) UpdateConsecutiveNonDown() *GroupStatusStateUpsertOne {
 	return u.Update(func(s *GroupStatusStateUpsert) {
 		s.UpdateConsecutiveNonDown()
+	})
+}
+
+// SetSolJuiceStatus sets the "sol_juice_status" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceStatus(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceStatus(v)
+	})
+}
+
+// UpdateSolJuiceStatus sets the "sol_juice_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceStatus() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceStatus()
+	})
+}
+
+// SetSolJuiceStableStatus sets the "sol_juice_stable_status" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceStableStatus(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceStableStatus(v)
+	})
+}
+
+// UpdateSolJuiceStableStatus sets the "sol_juice_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceStableStatus() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceStableStatus()
+	})
+}
+
+// SetSolJuiceValue sets the "sol_juice_value" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceValue(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceValue(v)
+	})
+}
+
+// UpdateSolJuiceValue sets the "sol_juice_value" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceValue() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceValue()
+	})
+}
+
+// SetSolJuiceDetail sets the "sol_juice_detail" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceDetail(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceDetail(v)
+	})
+}
+
+// UpdateSolJuiceDetail sets the "sol_juice_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceDetail() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceDetail()
+	})
+}
+
+// ClearSolJuiceDetail clears the value of the "sol_juice_detail" field.
+func (u *GroupStatusStateUpsertOne) ClearSolJuiceDetail() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearSolJuiceDetail()
+	})
+}
+
+// SetSolJuiceCheckedAt sets the "sol_juice_checked_at" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceCheckedAt(v time.Time) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceCheckedAt(v)
+	})
+}
+
+// UpdateSolJuiceCheckedAt sets the "sol_juice_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceCheckedAt() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceCheckedAt()
+	})
+}
+
+// ClearSolJuiceCheckedAt clears the value of the "sol_juice_checked_at" field.
+func (u *GroupStatusStateUpsertOne) ClearSolJuiceCheckedAt() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearSolJuiceCheckedAt()
+	})
+}
+
+// SetSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceConsecutiveMismatch(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceConsecutiveMismatch(v)
+	})
+}
+
+// AddSolJuiceConsecutiveMismatch adds v to the "sol_juice_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertOne) AddSolJuiceConsecutiveMismatch(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceConsecutiveMismatch(v)
+	})
+}
+
+// UpdateSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceConsecutiveMismatch() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceConsecutiveMismatch()
+	})
+}
+
+// SetSolJuiceInputTokens sets the "sol_juice_input_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceInputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceInputTokens(v)
+	})
+}
+
+// AddSolJuiceInputTokens adds v to the "sol_juice_input_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddSolJuiceInputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceInputTokens(v)
+	})
+}
+
+// UpdateSolJuiceInputTokens sets the "sol_juice_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceInputTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceInputTokens()
+	})
+}
+
+// SetSolJuiceOutputTokens sets the "sol_juice_output_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceOutputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceOutputTokens(v)
+	})
+}
+
+// AddSolJuiceOutputTokens adds v to the "sol_juice_output_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddSolJuiceOutputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceOutputTokens(v)
+	})
+}
+
+// UpdateSolJuiceOutputTokens sets the "sol_juice_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceOutputTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceOutputTokens()
+	})
+}
+
+// SetSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceReasoningTokens(v)
+	})
+}
+
+// AddSolJuiceReasoningTokens adds v to the "sol_juice_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceReasoningTokens(v)
+	})
+}
+
+// UpdateSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateSolJuiceReasoningTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceReasoningTokens()
 	})
 }
 
@@ -1424,6 +1947,174 @@ func (u *GroupStatusStateUpsertBulk) AddConsecutiveNonDown(v int) *GroupStatusSt
 func (u *GroupStatusStateUpsertBulk) UpdateConsecutiveNonDown() *GroupStatusStateUpsertBulk {
 	return u.Update(func(s *GroupStatusStateUpsert) {
 		s.UpdateConsecutiveNonDown()
+	})
+}
+
+// SetSolJuiceStatus sets the "sol_juice_status" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceStatus(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceStatus(v)
+	})
+}
+
+// UpdateSolJuiceStatus sets the "sol_juice_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceStatus() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceStatus()
+	})
+}
+
+// SetSolJuiceStableStatus sets the "sol_juice_stable_status" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceStableStatus(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceStableStatus(v)
+	})
+}
+
+// UpdateSolJuiceStableStatus sets the "sol_juice_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceStableStatus() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceStableStatus()
+	})
+}
+
+// SetSolJuiceValue sets the "sol_juice_value" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceValue(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceValue(v)
+	})
+}
+
+// UpdateSolJuiceValue sets the "sol_juice_value" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceValue() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceValue()
+	})
+}
+
+// SetSolJuiceDetail sets the "sol_juice_detail" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceDetail(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceDetail(v)
+	})
+}
+
+// UpdateSolJuiceDetail sets the "sol_juice_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceDetail() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceDetail()
+	})
+}
+
+// ClearSolJuiceDetail clears the value of the "sol_juice_detail" field.
+func (u *GroupStatusStateUpsertBulk) ClearSolJuiceDetail() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearSolJuiceDetail()
+	})
+}
+
+// SetSolJuiceCheckedAt sets the "sol_juice_checked_at" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceCheckedAt(v time.Time) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceCheckedAt(v)
+	})
+}
+
+// UpdateSolJuiceCheckedAt sets the "sol_juice_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceCheckedAt() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceCheckedAt()
+	})
+}
+
+// ClearSolJuiceCheckedAt clears the value of the "sol_juice_checked_at" field.
+func (u *GroupStatusStateUpsertBulk) ClearSolJuiceCheckedAt() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearSolJuiceCheckedAt()
+	})
+}
+
+// SetSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceConsecutiveMismatch(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceConsecutiveMismatch(v)
+	})
+}
+
+// AddSolJuiceConsecutiveMismatch adds v to the "sol_juice_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertBulk) AddSolJuiceConsecutiveMismatch(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceConsecutiveMismatch(v)
+	})
+}
+
+// UpdateSolJuiceConsecutiveMismatch sets the "sol_juice_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceConsecutiveMismatch() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceConsecutiveMismatch()
+	})
+}
+
+// SetSolJuiceInputTokens sets the "sol_juice_input_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceInputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceInputTokens(v)
+	})
+}
+
+// AddSolJuiceInputTokens adds v to the "sol_juice_input_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddSolJuiceInputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceInputTokens(v)
+	})
+}
+
+// UpdateSolJuiceInputTokens sets the "sol_juice_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceInputTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceInputTokens()
+	})
+}
+
+// SetSolJuiceOutputTokens sets the "sol_juice_output_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceOutputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceOutputTokens(v)
+	})
+}
+
+// AddSolJuiceOutputTokens adds v to the "sol_juice_output_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddSolJuiceOutputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceOutputTokens(v)
+	})
+}
+
+// UpdateSolJuiceOutputTokens sets the "sol_juice_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceOutputTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceOutputTokens()
+	})
+}
+
+// SetSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetSolJuiceReasoningTokens(v)
+	})
+}
+
+// AddSolJuiceReasoningTokens adds v to the "sol_juice_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddSolJuiceReasoningTokens(v)
+	})
+}
+
+// UpdateSolJuiceReasoningTokens sets the "sol_juice_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceReasoningTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateSolJuiceReasoningTokens()
 	})
 }
 

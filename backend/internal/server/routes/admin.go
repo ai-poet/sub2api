@@ -344,6 +344,7 @@ func registerGroupRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		groups.POST("", h.Admin.Group.Create)
 		groups.PUT("/:id/runtime-status", h.Admin.Group.UpdateRuntimeStatus)
 		groups.POST("/:id/runtime-status/probe", h.Admin.Group.ProbeRuntimeStatus)
+		groups.POST("/:id/runtime-status/sol-juice/probe", h.Admin.Group.ProbeRuntimeStatusSolJuice)
 		groups.POST("/:id/duplicate", h.Admin.Group.Duplicate)
 		groups.PUT("/:id", h.Admin.Group.Update)
 		groups.DELETE("/:id", h.Admin.Group.Delete)

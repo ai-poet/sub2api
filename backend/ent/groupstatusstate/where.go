@@ -124,6 +124,51 @@ func ConsecutiveNonDown(v int) predicate.GroupStatusState {
 	return predicate.GroupStatusState(sql.FieldEQ(FieldConsecutiveNonDown, v))
 }
 
+// SolJuiceStatus applies equality check predicate on the "sol_juice_status" field. It's identical to SolJuiceStatusEQ.
+func SolJuiceStatus(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStableStatus applies equality check predicate on the "sol_juice_stable_status" field. It's identical to SolJuiceStableStatusEQ.
+func SolJuiceStableStatus(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceValue applies equality check predicate on the "sol_juice_value" field. It's identical to SolJuiceValueEQ.
+func SolJuiceValue(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceValue, v))
+}
+
+// SolJuiceDetail applies equality check predicate on the "sol_juice_detail" field. It's identical to SolJuiceDetailEQ.
+func SolJuiceDetail(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceCheckedAt applies equality check predicate on the "sol_juice_checked_at" field. It's identical to SolJuiceCheckedAtEQ.
+func SolJuiceCheckedAt(v time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceCheckedAt, v))
+}
+
+// SolJuiceConsecutiveMismatch applies equality check predicate on the "sol_juice_consecutive_mismatch" field. It's identical to SolJuiceConsecutiveMismatchEQ.
+func SolJuiceConsecutiveMismatch(v int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceConsecutiveMismatch, v))
+}
+
+// SolJuiceInputTokens applies equality check predicate on the "sol_juice_input_tokens" field. It's identical to SolJuiceInputTokensEQ.
+func SolJuiceInputTokens(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceInputTokens, v))
+}
+
+// SolJuiceOutputTokens applies equality check predicate on the "sol_juice_output_tokens" field. It's identical to SolJuiceOutputTokensEQ.
+func SolJuiceOutputTokens(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceOutputTokens, v))
+}
+
+// SolJuiceReasoningTokens applies equality check predicate on the "sol_juice_reasoning_tokens" field. It's identical to SolJuiceReasoningTokensEQ.
+func SolJuiceReasoningTokens(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceReasoningTokens, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.GroupStatusState {
 	return predicate.GroupStatusState(sql.FieldEQ(FieldCreatedAt, v))
@@ -857,6 +902,486 @@ func ConsecutiveNonDownLT(v int) predicate.GroupStatusState {
 // ConsecutiveNonDownLTE applies the LTE predicate on the "consecutive_non_down" field.
 func ConsecutiveNonDownLTE(v int) predicate.GroupStatusState {
 	return predicate.GroupStatusState(sql.FieldLTE(FieldConsecutiveNonDown, v))
+}
+
+// SolJuiceStatusEQ applies the EQ predicate on the "sol_juice_status" field.
+func SolJuiceStatusEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusNEQ applies the NEQ predicate on the "sol_juice_status" field.
+func SolJuiceStatusNEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusIn applies the In predicate on the "sol_juice_status" field.
+func SolJuiceStatusIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceStatus, vs...))
+}
+
+// SolJuiceStatusNotIn applies the NotIn predicate on the "sol_juice_status" field.
+func SolJuiceStatusNotIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceStatus, vs...))
+}
+
+// SolJuiceStatusGT applies the GT predicate on the "sol_juice_status" field.
+func SolJuiceStatusGT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusGTE applies the GTE predicate on the "sol_juice_status" field.
+func SolJuiceStatusGTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusLT applies the LT predicate on the "sol_juice_status" field.
+func SolJuiceStatusLT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusLTE applies the LTE predicate on the "sol_juice_status" field.
+func SolJuiceStatusLTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusContains applies the Contains predicate on the "sol_juice_status" field.
+func SolJuiceStatusContains(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContains(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusHasPrefix applies the HasPrefix predicate on the "sol_juice_status" field.
+func SolJuiceStatusHasPrefix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasPrefix(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusHasSuffix applies the HasSuffix predicate on the "sol_juice_status" field.
+func SolJuiceStatusHasSuffix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasSuffix(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusEqualFold applies the EqualFold predicate on the "sol_juice_status" field.
+func SolJuiceStatusEqualFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEqualFold(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStatusContainsFold applies the ContainsFold predicate on the "sol_juice_status" field.
+func SolJuiceStatusContainsFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContainsFold(FieldSolJuiceStatus, v))
+}
+
+// SolJuiceStableStatusEQ applies the EQ predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusNEQ applies the NEQ predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusNEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusIn applies the In predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceStableStatus, vs...))
+}
+
+// SolJuiceStableStatusNotIn applies the NotIn predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusNotIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceStableStatus, vs...))
+}
+
+// SolJuiceStableStatusGT applies the GT predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusGT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusGTE applies the GTE predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusGTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusLT applies the LT predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusLT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusLTE applies the LTE predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusLTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusContains applies the Contains predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusContains(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContains(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusHasPrefix applies the HasPrefix predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusHasPrefix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasPrefix(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusHasSuffix applies the HasSuffix predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusHasSuffix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasSuffix(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusEqualFold applies the EqualFold predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusEqualFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEqualFold(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceStableStatusContainsFold applies the ContainsFold predicate on the "sol_juice_stable_status" field.
+func SolJuiceStableStatusContainsFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContainsFold(FieldSolJuiceStableStatus, v))
+}
+
+// SolJuiceValueEQ applies the EQ predicate on the "sol_juice_value" field.
+func SolJuiceValueEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueNEQ applies the NEQ predicate on the "sol_juice_value" field.
+func SolJuiceValueNEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueIn applies the In predicate on the "sol_juice_value" field.
+func SolJuiceValueIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceValue, vs...))
+}
+
+// SolJuiceValueNotIn applies the NotIn predicate on the "sol_juice_value" field.
+func SolJuiceValueNotIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceValue, vs...))
+}
+
+// SolJuiceValueGT applies the GT predicate on the "sol_juice_value" field.
+func SolJuiceValueGT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueGTE applies the GTE predicate on the "sol_juice_value" field.
+func SolJuiceValueGTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueLT applies the LT predicate on the "sol_juice_value" field.
+func SolJuiceValueLT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueLTE applies the LTE predicate on the "sol_juice_value" field.
+func SolJuiceValueLTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueContains applies the Contains predicate on the "sol_juice_value" field.
+func SolJuiceValueContains(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContains(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueHasPrefix applies the HasPrefix predicate on the "sol_juice_value" field.
+func SolJuiceValueHasPrefix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasPrefix(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueHasSuffix applies the HasSuffix predicate on the "sol_juice_value" field.
+func SolJuiceValueHasSuffix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasSuffix(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueEqualFold applies the EqualFold predicate on the "sol_juice_value" field.
+func SolJuiceValueEqualFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEqualFold(FieldSolJuiceValue, v))
+}
+
+// SolJuiceValueContainsFold applies the ContainsFold predicate on the "sol_juice_value" field.
+func SolJuiceValueContainsFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContainsFold(FieldSolJuiceValue, v))
+}
+
+// SolJuiceDetailEQ applies the EQ predicate on the "sol_juice_detail" field.
+func SolJuiceDetailEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailNEQ applies the NEQ predicate on the "sol_juice_detail" field.
+func SolJuiceDetailNEQ(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailIn applies the In predicate on the "sol_juice_detail" field.
+func SolJuiceDetailIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceDetail, vs...))
+}
+
+// SolJuiceDetailNotIn applies the NotIn predicate on the "sol_juice_detail" field.
+func SolJuiceDetailNotIn(vs ...string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceDetail, vs...))
+}
+
+// SolJuiceDetailGT applies the GT predicate on the "sol_juice_detail" field.
+func SolJuiceDetailGT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailGTE applies the GTE predicate on the "sol_juice_detail" field.
+func SolJuiceDetailGTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailLT applies the LT predicate on the "sol_juice_detail" field.
+func SolJuiceDetailLT(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailLTE applies the LTE predicate on the "sol_juice_detail" field.
+func SolJuiceDetailLTE(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailContains applies the Contains predicate on the "sol_juice_detail" field.
+func SolJuiceDetailContains(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContains(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailHasPrefix applies the HasPrefix predicate on the "sol_juice_detail" field.
+func SolJuiceDetailHasPrefix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasPrefix(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailHasSuffix applies the HasSuffix predicate on the "sol_juice_detail" field.
+func SolJuiceDetailHasSuffix(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldHasSuffix(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailIsNil applies the IsNil predicate on the "sol_juice_detail" field.
+func SolJuiceDetailIsNil() predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIsNull(FieldSolJuiceDetail))
+}
+
+// SolJuiceDetailNotNil applies the NotNil predicate on the "sol_juice_detail" field.
+func SolJuiceDetailNotNil() predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotNull(FieldSolJuiceDetail))
+}
+
+// SolJuiceDetailEqualFold applies the EqualFold predicate on the "sol_juice_detail" field.
+func SolJuiceDetailEqualFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEqualFold(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceDetailContainsFold applies the ContainsFold predicate on the "sol_juice_detail" field.
+func SolJuiceDetailContainsFold(v string) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldContainsFold(FieldSolJuiceDetail, v))
+}
+
+// SolJuiceCheckedAtEQ applies the EQ predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtEQ(v time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceCheckedAt, v))
+}
+
+// SolJuiceCheckedAtNEQ applies the NEQ predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtNEQ(v time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceCheckedAt, v))
+}
+
+// SolJuiceCheckedAtIn applies the In predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtIn(vs ...time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceCheckedAt, vs...))
+}
+
+// SolJuiceCheckedAtNotIn applies the NotIn predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtNotIn(vs ...time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceCheckedAt, vs...))
+}
+
+// SolJuiceCheckedAtGT applies the GT predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtGT(v time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceCheckedAt, v))
+}
+
+// SolJuiceCheckedAtGTE applies the GTE predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtGTE(v time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceCheckedAt, v))
+}
+
+// SolJuiceCheckedAtLT applies the LT predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtLT(v time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceCheckedAt, v))
+}
+
+// SolJuiceCheckedAtLTE applies the LTE predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtLTE(v time.Time) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceCheckedAt, v))
+}
+
+// SolJuiceCheckedAtIsNil applies the IsNil predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtIsNil() predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIsNull(FieldSolJuiceCheckedAt))
+}
+
+// SolJuiceCheckedAtNotNil applies the NotNil predicate on the "sol_juice_checked_at" field.
+func SolJuiceCheckedAtNotNil() predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotNull(FieldSolJuiceCheckedAt))
+}
+
+// SolJuiceConsecutiveMismatchEQ applies the EQ predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchEQ(v int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceConsecutiveMismatch, v))
+}
+
+// SolJuiceConsecutiveMismatchNEQ applies the NEQ predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchNEQ(v int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceConsecutiveMismatch, v))
+}
+
+// SolJuiceConsecutiveMismatchIn applies the In predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchIn(vs ...int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceConsecutiveMismatch, vs...))
+}
+
+// SolJuiceConsecutiveMismatchNotIn applies the NotIn predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchNotIn(vs ...int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceConsecutiveMismatch, vs...))
+}
+
+// SolJuiceConsecutiveMismatchGT applies the GT predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchGT(v int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceConsecutiveMismatch, v))
+}
+
+// SolJuiceConsecutiveMismatchGTE applies the GTE predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchGTE(v int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceConsecutiveMismatch, v))
+}
+
+// SolJuiceConsecutiveMismatchLT applies the LT predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchLT(v int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceConsecutiveMismatch, v))
+}
+
+// SolJuiceConsecutiveMismatchLTE applies the LTE predicate on the "sol_juice_consecutive_mismatch" field.
+func SolJuiceConsecutiveMismatchLTE(v int) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceConsecutiveMismatch, v))
+}
+
+// SolJuiceInputTokensEQ applies the EQ predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensEQ(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceInputTokens, v))
+}
+
+// SolJuiceInputTokensNEQ applies the NEQ predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensNEQ(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceInputTokens, v))
+}
+
+// SolJuiceInputTokensIn applies the In predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensIn(vs ...int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceInputTokens, vs...))
+}
+
+// SolJuiceInputTokensNotIn applies the NotIn predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensNotIn(vs ...int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceInputTokens, vs...))
+}
+
+// SolJuiceInputTokensGT applies the GT predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensGT(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceInputTokens, v))
+}
+
+// SolJuiceInputTokensGTE applies the GTE predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensGTE(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceInputTokens, v))
+}
+
+// SolJuiceInputTokensLT applies the LT predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensLT(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceInputTokens, v))
+}
+
+// SolJuiceInputTokensLTE applies the LTE predicate on the "sol_juice_input_tokens" field.
+func SolJuiceInputTokensLTE(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceInputTokens, v))
+}
+
+// SolJuiceOutputTokensEQ applies the EQ predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensEQ(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceOutputTokens, v))
+}
+
+// SolJuiceOutputTokensNEQ applies the NEQ predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensNEQ(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceOutputTokens, v))
+}
+
+// SolJuiceOutputTokensIn applies the In predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensIn(vs ...int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceOutputTokens, vs...))
+}
+
+// SolJuiceOutputTokensNotIn applies the NotIn predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensNotIn(vs ...int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceOutputTokens, vs...))
+}
+
+// SolJuiceOutputTokensGT applies the GT predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensGT(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceOutputTokens, v))
+}
+
+// SolJuiceOutputTokensGTE applies the GTE predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensGTE(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceOutputTokens, v))
+}
+
+// SolJuiceOutputTokensLT applies the LT predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensLT(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceOutputTokens, v))
+}
+
+// SolJuiceOutputTokensLTE applies the LTE predicate on the "sol_juice_output_tokens" field.
+func SolJuiceOutputTokensLTE(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceOutputTokens, v))
+}
+
+// SolJuiceReasoningTokensEQ applies the EQ predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensEQ(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldEQ(FieldSolJuiceReasoningTokens, v))
+}
+
+// SolJuiceReasoningTokensNEQ applies the NEQ predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensNEQ(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNEQ(FieldSolJuiceReasoningTokens, v))
+}
+
+// SolJuiceReasoningTokensIn applies the In predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensIn(vs ...int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldIn(FieldSolJuiceReasoningTokens, vs...))
+}
+
+// SolJuiceReasoningTokensNotIn applies the NotIn predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensNotIn(vs ...int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldNotIn(FieldSolJuiceReasoningTokens, vs...))
+}
+
+// SolJuiceReasoningTokensGT applies the GT predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensGT(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGT(FieldSolJuiceReasoningTokens, v))
+}
+
+// SolJuiceReasoningTokensGTE applies the GTE predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensGTE(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldGTE(FieldSolJuiceReasoningTokens, v))
+}
+
+// SolJuiceReasoningTokensLT applies the LT predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensLT(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLT(FieldSolJuiceReasoningTokens, v))
+}
+
+// SolJuiceReasoningTokensLTE applies the LTE predicate on the "sol_juice_reasoning_tokens" field.
+func SolJuiceReasoningTokensLTE(v int64) predicate.GroupStatusState {
+	return predicate.GroupStatusState(sql.FieldLTE(FieldSolJuiceReasoningTokens, v))
 }
 
 // And groups predicates with the AND operator between them.

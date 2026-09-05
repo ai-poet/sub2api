@@ -41,6 +41,24 @@ const (
 	FieldConsecutiveDown = "consecutive_down"
 	// FieldConsecutiveNonDown holds the string denoting the consecutive_non_down field in the database.
 	FieldConsecutiveNonDown = "consecutive_non_down"
+	// FieldSolJuiceStatus holds the string denoting the sol_juice_status field in the database.
+	FieldSolJuiceStatus = "sol_juice_status"
+	// FieldSolJuiceStableStatus holds the string denoting the sol_juice_stable_status field in the database.
+	FieldSolJuiceStableStatus = "sol_juice_stable_status"
+	// FieldSolJuiceValue holds the string denoting the sol_juice_value field in the database.
+	FieldSolJuiceValue = "sol_juice_value"
+	// FieldSolJuiceDetail holds the string denoting the sol_juice_detail field in the database.
+	FieldSolJuiceDetail = "sol_juice_detail"
+	// FieldSolJuiceCheckedAt holds the string denoting the sol_juice_checked_at field in the database.
+	FieldSolJuiceCheckedAt = "sol_juice_checked_at"
+	// FieldSolJuiceConsecutiveMismatch holds the string denoting the sol_juice_consecutive_mismatch field in the database.
+	FieldSolJuiceConsecutiveMismatch = "sol_juice_consecutive_mismatch"
+	// FieldSolJuiceInputTokens holds the string denoting the sol_juice_input_tokens field in the database.
+	FieldSolJuiceInputTokens = "sol_juice_input_tokens"
+	// FieldSolJuiceOutputTokens holds the string denoting the sol_juice_output_tokens field in the database.
+	FieldSolJuiceOutputTokens = "sol_juice_output_tokens"
+	// FieldSolJuiceReasoningTokens holds the string denoting the sol_juice_reasoning_tokens field in the database.
+	FieldSolJuiceReasoningTokens = "sol_juice_reasoning_tokens"
 	// Table holds the table name of the groupstatusstate in the database.
 	Table = "group_status_states"
 )
@@ -62,6 +80,15 @@ var Columns = []string{
 	FieldObservedAt,
 	FieldConsecutiveDown,
 	FieldConsecutiveNonDown,
+	FieldSolJuiceStatus,
+	FieldSolJuiceStableStatus,
+	FieldSolJuiceValue,
+	FieldSolJuiceDetail,
+	FieldSolJuiceCheckedAt,
+	FieldSolJuiceConsecutiveMismatch,
+	FieldSolJuiceInputTokens,
+	FieldSolJuiceOutputTokens,
+	FieldSolJuiceReasoningTokens,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -91,6 +118,20 @@ var (
 	DefaultConsecutiveDown int
 	// DefaultConsecutiveNonDown holds the default value on creation for the "consecutive_non_down" field.
 	DefaultConsecutiveNonDown int
+	// DefaultSolJuiceStatus holds the default value on creation for the "sol_juice_status" field.
+	DefaultSolJuiceStatus string
+	// DefaultSolJuiceStableStatus holds the default value on creation for the "sol_juice_stable_status" field.
+	DefaultSolJuiceStableStatus string
+	// DefaultSolJuiceValue holds the default value on creation for the "sol_juice_value" field.
+	DefaultSolJuiceValue string
+	// DefaultSolJuiceConsecutiveMismatch holds the default value on creation for the "sol_juice_consecutive_mismatch" field.
+	DefaultSolJuiceConsecutiveMismatch int
+	// DefaultSolJuiceInputTokens holds the default value on creation for the "sol_juice_input_tokens" field.
+	DefaultSolJuiceInputTokens int64
+	// DefaultSolJuiceOutputTokens holds the default value on creation for the "sol_juice_output_tokens" field.
+	DefaultSolJuiceOutputTokens int64
+	// DefaultSolJuiceReasoningTokens holds the default value on creation for the "sol_juice_reasoning_tokens" field.
+	DefaultSolJuiceReasoningTokens int64
 )
 
 // OrderOption defines the ordering options for the GroupStatusState queries.
@@ -169,4 +210,49 @@ func ByConsecutiveDown(opts ...sql.OrderTermOption) OrderOption {
 // ByConsecutiveNonDown orders the results by the consecutive_non_down field.
 func ByConsecutiveNonDown(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldConsecutiveNonDown, opts...).ToFunc()
+}
+
+// BySolJuiceStatus orders the results by the sol_juice_status field.
+func BySolJuiceStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceStatus, opts...).ToFunc()
+}
+
+// BySolJuiceStableStatus orders the results by the sol_juice_stable_status field.
+func BySolJuiceStableStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceStableStatus, opts...).ToFunc()
+}
+
+// BySolJuiceValue orders the results by the sol_juice_value field.
+func BySolJuiceValue(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceValue, opts...).ToFunc()
+}
+
+// BySolJuiceDetail orders the results by the sol_juice_detail field.
+func BySolJuiceDetail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceDetail, opts...).ToFunc()
+}
+
+// BySolJuiceCheckedAt orders the results by the sol_juice_checked_at field.
+func BySolJuiceCheckedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceCheckedAt, opts...).ToFunc()
+}
+
+// BySolJuiceConsecutiveMismatch orders the results by the sol_juice_consecutive_mismatch field.
+func BySolJuiceConsecutiveMismatch(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceConsecutiveMismatch, opts...).ToFunc()
+}
+
+// BySolJuiceInputTokens orders the results by the sol_juice_input_tokens field.
+func BySolJuiceInputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceInputTokens, opts...).ToFunc()
+}
+
+// BySolJuiceOutputTokens orders the results by the sol_juice_output_tokens field.
+func BySolJuiceOutputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceOutputTokens, opts...).ToFunc()
+}
+
+// BySolJuiceReasoningTokens orders the results by the sol_juice_reasoning_tokens field.
+func BySolJuiceReasoningTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceReasoningTokens, opts...).ToFunc()
 }

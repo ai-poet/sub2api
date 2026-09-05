@@ -259,7 +259,20 @@ export default {
     },
     "eventTypes": {
       "up": "Recovered",
-      "down": "Outage"
+      "down": "Outage",
+      "sol_juice_mismatch": "Non-Sol suspected",
+      "sol_juice_recovered": "Sol verified again"
+    },
+    "solJuice": {
+      "pass": "Sol ✓",
+      "mismatch": "Not Sol",
+      "pending": "Sol pending",
+      "statuses": {
+        "pass": "Sol verified",
+        "mismatch": "Not Sol",
+        "inconclusive": "Inconclusive",
+        "unknown": "Pending"
+      }
     }
   },
   "nav": {
@@ -401,7 +414,34 @@ export default {
         "notConfigured": "Not Configured",
         "footerHint": "\"Probe now\" saves the current form first and then runs a probe immediately.",
         "notifyEnabled": "Push on down / recovery",
-        "notifyEnabledHint": "Only effective when Server酱³ push is enabled in site settings; turn off to silence this group."
+        "notifyEnabledHint": "Only effective when Server酱³ push is enabled in site settings; turn off to silence this group.",
+        "solJuice": {
+          "title": "Pure Sol check (Juice fingerprint)",
+          "hint": "Sends one reasoning=high request to this group's OpenAI accounts and reads the model's internal Juice budget: Sol answers 40, while 32 / 48 mean another model. Two consecutive non-Sol answers (the first triggers an immediate re-check) are required before the verdict flips and a push is sent; availability is not affected. Each request costs about $0.006–0.045 (mostly reasoning tokens), so keep the interval reasonable.",
+          "intervalSeconds": "Check interval (seconds, min 300)",
+          "model": "Request model",
+          "modelPlaceholder": "gpt-5.6-sol",
+          "latestResult": "Latest check",
+          "latestResultEmpty": "Not checked yet. Save and wait for the scheduler, or click \"Check now\".",
+          "status": "Verdict",
+          "value": "Juice value",
+          "checkedAt": "Checked at",
+          "tokens": "Tokens (input / output)",
+          "reasoningTokens": "of which reasoning",
+          "lastCost": "Last request cost",
+          "monthlyEstimate": "Monthly estimate at current interval",
+          "detail": "Details",
+          "probeNow": "Check now",
+          "probing": "Checking...",
+          "probeSucceeded": "Sol check completed",
+          "probeFailed": "Sol check failed",
+          "statuses": {
+            "pass": "Sol verified",
+            "mismatch": "Not Sol",
+            "inconclusive": "Inconclusive",
+            "unknown": "Pending"
+          }
+        }
       },
       "openaiMessages": {
         "defaultModel": "Default mapped model",

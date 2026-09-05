@@ -38,19 +38,23 @@ var (
 )
 
 type GroupStatusConfig struct {
-	ID               int64     `json:"id"`
-	GroupID          int64     `json:"group_id"`
-	Enabled          bool      `json:"enabled"`
-	ProbeModel       string    `json:"probe_model"`
-	ProbePrompt      string    `json:"probe_prompt"`
-	ValidationMode   string    `json:"validation_mode"`
-	ExpectedKeywords []string  `json:"expected_keywords"`
-	IntervalSeconds  int       `json:"interval_seconds"`
-	TimeoutSeconds   int       `json:"timeout_seconds"`
-	SlowLatencyMS    int64     `json:"slow_latency_ms"`
-	NotifyEnabled    bool      `json:"notify_enabled"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ID               int64    `json:"id"`
+	GroupID          int64    `json:"group_id"`
+	Enabled          bool     `json:"enabled"`
+	ProbeModel       string   `json:"probe_model"`
+	ProbePrompt      string   `json:"probe_prompt"`
+	ValidationMode   string   `json:"validation_mode"`
+	ExpectedKeywords []string `json:"expected_keywords"`
+	IntervalSeconds  int      `json:"interval_seconds"`
+	TimeoutSeconds   int      `json:"timeout_seconds"`
+	SlowLatencyMS    int64    `json:"slow_latency_ms"`
+	NotifyEnabled    bool     `json:"notify_enabled"`
+	// 纯 Sol 验证（Juice 指纹探测），仅 OpenAI 分组可开启
+	SolJuiceEnabled         bool      `json:"sol_juice_enabled"`
+	SolJuiceIntervalSeconds int       `json:"sol_juice_interval_seconds"`
+	SolJuiceModel           string    `json:"sol_juice_model"`
+	CreatedAt               time.Time `json:"created_at"`
+	UpdatedAt               time.Time `json:"updated_at"`
 }
 
 type GroupStatusRecord struct {
@@ -81,8 +85,18 @@ type GroupStatusState struct {
 	ObservedAt         *time.Time `json:"observed_at"`
 	ConsecutiveDown    int        `json:"consecutive_down"`
 	ConsecutiveNonDown int        `json:"consecutive_non_down"`
-	CreatedAt          time.Time  `json:"created_at"`
-	UpdatedAt          time.Time  `json:"updated_at"`
+	// 纯 Sol 验证的最近结果与稳定结论
+	SolJuiceStatus              string     `json:"sol_juice_status"`
+	SolJuiceStableStatus        string     `json:"sol_juice_stable_status"`
+	SolJuiceValue               string     `json:"sol_juice_value"`
+	SolJuiceDetail              string     `json:"sol_juice_detail"`
+	SolJuiceCheckedAt           *time.Time `json:"sol_juice_checked_at"`
+	SolJuiceConsecutiveMismatch int        `json:"sol_juice_consecutive_mismatch"`
+	SolJuiceInputTokens         int64      `json:"sol_juice_input_tokens"`
+	SolJuiceOutputTokens        int64      `json:"sol_juice_output_tokens"`
+	SolJuiceReasoningTokens     int64      `json:"sol_juice_reasoning_tokens"`
+	CreatedAt                   time.Time  `json:"created_at"`
+	UpdatedAt                   time.Time  `json:"updated_at"`
 }
 
 type GroupStatusEvent struct {
@@ -115,6 +129,20 @@ type GroupStatusSummary struct {
 	ObservedAt         *time.Time `json:"observed_at"`
 	ConsecutiveDown    int        `json:"consecutive_down"`
 	ConsecutiveNonDown int        `json:"consecutive_non_down"`
+	// 纯 Sol 验证：配置 + 最近结果；LastCostUSD 为派生字段，不落库
+	SolJuiceEnabled             bool       `json:"sol_juice_enabled"`
+	SolJuiceModel               string     `json:"sol_juice_model"`
+	SolJuiceIntervalSeconds     int        `json:"sol_juice_interval_seconds"`
+	SolJuiceStatus              string     `json:"sol_juice_status"`
+	SolJuiceStableStatus        string     `json:"sol_juice_stable_status"`
+	SolJuiceValue               string     `json:"sol_juice_value"`
+	SolJuiceDetail              string     `json:"sol_juice_detail"`
+	SolJuiceCheckedAt           *time.Time `json:"sol_juice_checked_at"`
+	SolJuiceConsecutiveMismatch int        `json:"sol_juice_consecutive_mismatch"`
+	SolJuiceInputTokens         int64      `json:"sol_juice_input_tokens"`
+	SolJuiceOutputTokens        int64      `json:"sol_juice_output_tokens"`
+	SolJuiceReasoningTokens     int64      `json:"sol_juice_reasoning_tokens"`
+	SolJuiceLastCostUSD         float64    `json:"sol_juice_last_cost_usd"`
 }
 
 type GroupStatusHistoryBucket struct {
@@ -147,6 +175,11 @@ type GroupStatusRepository interface {
 	ListEvents(ctx context.Context, groupID int64, limit int) ([]GroupStatusEvent, error)
 	CalculateAvailability(ctx context.Context, groupIDs []int64, since time.Time) (map[int64]float64, error)
 	DeleteRecordsOlderThan(ctx context.Context, before time.Time) (int64, error)
+	// 纯 Sol 验证（Juice 指纹探测）
+	ListDueSolJuiceConfigs(ctx context.Context, now time.Time, limit int) ([]*GroupStatusConfig, error)
+	SaveSolJuiceResult(ctx context.Context, result *GroupStatusSolJuiceResult) (*GroupStatusState, *GroupStatusEvent, error)
+	ListRecentSolJuiceRecords(ctx context.Context, groupID int64, limit int) ([]GroupStatusJuiceRecord, error)
+	DeleteSolJuiceRecordsOlderThan(ctx context.Context, before time.Time) (int64, error)
 }
 
 type GroupStatusProbeResult struct {
@@ -170,6 +203,55 @@ type GroupStatusProbeExecution struct {
 	Event   *GroupStatusEvent       `json:"event,omitempty"`
 }
 
+// GroupStatusSolJuiceResult 是一次 Juice 探测的样本。
+type GroupStatusSolJuiceResult struct {
+	GroupID         int64     `json:"group_id"`
+	ConfigID        int64     `json:"config_id"`
+	Model           string    `json:"model"`
+	Effort          string    `json:"effort"`
+	Classification  string    `json:"classification"`
+	NormalizedValue string    `json:"normalized_value"`
+	AnswerExcerpt   string    `json:"answer_excerpt"`
+	HTTPCode        *int      `json:"http_code"`
+	LatencyMS       *int64    `json:"latency_ms"`
+	InputTokens     int64     `json:"input_tokens"`
+	OutputTokens    int64     `json:"output_tokens"`
+	ReasoningTokens int64     `json:"reasoning_tokens"`
+	ErrorDetail     string    `json:"error_detail"`
+	ObservedAt      time.Time `json:"observed_at"`
+}
+
+// GroupStatusJuiceRecord 是落库后的 Juice 样本。
+type GroupStatusJuiceRecord struct {
+	ID              int64     `json:"id"`
+	GroupID         int64     `json:"group_id"`
+	ConfigID        int64     `json:"config_id"`
+	Model           string    `json:"model"`
+	Effort          string    `json:"effort"`
+	Classification  string    `json:"classification"`
+	NormalizedValue string    `json:"normalized_value"`
+	AnswerExcerpt   string    `json:"answer_excerpt"`
+	HTTPCode        *int      `json:"http_code"`
+	LatencyMS       *int64    `json:"latency_ms"`
+	InputTokens     int64     `json:"input_tokens"`
+	OutputTokens    int64     `json:"output_tokens"`
+	ReasoningTokens int64     `json:"reasoning_tokens"`
+	ErrorDetail     string    `json:"error_detail"`
+	ObservedAt      time.Time `json:"observed_at"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+type GroupStatusSolJuiceExecution struct {
+	Group   *Group                     `json:"group,omitempty"`
+	Config  *GroupStatusConfig         `json:"config,omitempty"`
+	Account *Account                   `json:"account,omitempty"`
+	Result  *GroupStatusSolJuiceResult `json:"result,omitempty"`
+	State   *GroupStatusState          `json:"state,omitempty"`
+	Event   *GroupStatusEvent          `json:"event,omitempty"`
+	// Confirmed 表示本次是首次 mismatch 后的立即复测
+	Confirmed bool `json:"confirmed"`
+}
+
 type GroupStatusConfigUpsertInput struct {
 	Enabled          bool
 	ProbeModel       string
@@ -181,6 +263,10 @@ type GroupStatusConfigUpsertInput struct {
 	SlowLatencyMS    int64
 	// NotifyEnabled 为 nil 表示请求未携带，保留已保存的值
 	NotifyEnabled *bool
+	// SolJuiceEnabled 为 nil 表示请求未携带，保留已保存的三项 Juice 配置
+	SolJuiceEnabled         *bool
+	SolJuiceIntervalSeconds int
+	SolJuiceModel           string
 }
 
 type AvailableGroupReader interface {
@@ -199,15 +285,18 @@ func DefaultGroupStatusConfig(group *Group) *GroupStatusConfig {
 			}
 			return group.ID
 		}(),
-		Enabled:          false,
-		ProbeModel:       model,
-		ProbePrompt:      "Please reply with the single word ONLINE.",
-		ValidationMode:   GroupStatusValidationNonEmpty,
-		ExpectedKeywords: []string{},
-		IntervalSeconds:  groupStatusDefaultIntervalSeconds,
-		TimeoutSeconds:   groupStatusDefaultTimeoutSeconds,
-		SlowLatencyMS:    groupStatusDefaultSlowLatencyMS,
-		NotifyEnabled:    true,
+		Enabled:                 false,
+		ProbeModel:              model,
+		ProbePrompt:             "Please reply with the single word ONLINE.",
+		ValidationMode:          GroupStatusValidationNonEmpty,
+		ExpectedKeywords:        []string{},
+		IntervalSeconds:         groupStatusDefaultIntervalSeconds,
+		TimeoutSeconds:          groupStatusDefaultTimeoutSeconds,
+		SlowLatencyMS:           groupStatusDefaultSlowLatencyMS,
+		NotifyEnabled:           true,
+		SolJuiceEnabled:         false,
+		SolJuiceIntervalSeconds: groupStatusSolJuiceDefaultIntervalSeconds,
+		SolJuiceModel:           groupStatusSolJuiceDefaultModel,
 	}
 }
 
@@ -260,6 +349,18 @@ func NormalizeGroupStatusConfig(group *Group, input *GroupStatusConfigUpsertInpu
 	if input.NotifyEnabled != nil {
 		cfg.NotifyEnabled = *input.NotifyEnabled
 	}
+	if input.SolJuiceEnabled != nil {
+		cfg.SolJuiceEnabled = *input.SolJuiceEnabled
+	}
+	if input.SolJuiceIntervalSeconds > 0 {
+		cfg.SolJuiceIntervalSeconds = input.SolJuiceIntervalSeconds
+	}
+	if model := strings.TrimSpace(input.SolJuiceModel); model != "" {
+		cfg.SolJuiceModel = model
+	}
+	if cfg.SolJuiceEnabled && (group == nil || group.Platform != PlatformOpenAI) {
+		return nil, fmt.Errorf("%w: sol_juice is only available for openai groups", ErrGroupStatusInvalidConfig)
+	}
 	if err := ValidateGroupStatusConfig(cfg); err != nil {
 		return nil, err
 	}
@@ -295,6 +396,16 @@ func ValidateGroupStatusConfig(cfg *GroupStatusConfig) error {
 	}
 	if cfg.SlowLatencyMS <= 0 {
 		cfg.SlowLatencyMS = groupStatusDefaultSlowLatencyMS
+	}
+	cfg.SolJuiceModel = strings.TrimSpace(cfg.SolJuiceModel)
+	if cfg.SolJuiceModel == "" {
+		cfg.SolJuiceModel = groupStatusSolJuiceDefaultModel
+	}
+	if cfg.SolJuiceIntervalSeconds <= 0 {
+		cfg.SolJuiceIntervalSeconds = groupStatusSolJuiceDefaultIntervalSeconds
+	}
+	if cfg.SolJuiceIntervalSeconds < groupStatusSolJuiceMinIntervalSeconds {
+		return fmt.Errorf("%w: sol_juice_interval_seconds must be >= %d", ErrGroupStatusInvalidConfig, groupStatusSolJuiceMinIntervalSeconds)
 	}
 	return nil
 }

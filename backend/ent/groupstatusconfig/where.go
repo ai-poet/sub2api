@@ -109,6 +109,21 @@ func NotifyEnabled(v bool) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldNotifyEnabled, v))
 }
 
+// SolJuiceEnabled applies equality check predicate on the "sol_juice_enabled" field. It's identical to SolJuiceEnabledEQ.
+func SolJuiceEnabled(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceEnabled, v))
+}
+
+// SolJuiceIntervalSeconds applies equality check predicate on the "sol_juice_interval_seconds" field. It's identical to SolJuiceIntervalSecondsEQ.
+func SolJuiceIntervalSeconds(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceIntervalSeconds, v))
+}
+
+// SolJuiceModel applies equality check predicate on the "sol_juice_model" field. It's identical to SolJuiceModelEQ.
+func SolJuiceModel(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceModel, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldCreatedAt, v))
@@ -562,6 +577,121 @@ func NotifyEnabledEQ(v bool) predicate.GroupStatusConfig {
 // NotifyEnabledNEQ applies the NEQ predicate on the "notify_enabled" field.
 func NotifyEnabledNEQ(v bool) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldNotifyEnabled, v))
+}
+
+// SolJuiceEnabledEQ applies the EQ predicate on the "sol_juice_enabled" field.
+func SolJuiceEnabledEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceEnabled, v))
+}
+
+// SolJuiceEnabledNEQ applies the NEQ predicate on the "sol_juice_enabled" field.
+func SolJuiceEnabledNEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldSolJuiceEnabled, v))
+}
+
+// SolJuiceIntervalSecondsEQ applies the EQ predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsEQ(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceIntervalSeconds, v))
+}
+
+// SolJuiceIntervalSecondsNEQ applies the NEQ predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsNEQ(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldSolJuiceIntervalSeconds, v))
+}
+
+// SolJuiceIntervalSecondsIn applies the In predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsIn(vs ...int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldSolJuiceIntervalSeconds, vs...))
+}
+
+// SolJuiceIntervalSecondsNotIn applies the NotIn predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsNotIn(vs ...int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldSolJuiceIntervalSeconds, vs...))
+}
+
+// SolJuiceIntervalSecondsGT applies the GT predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsGT(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldSolJuiceIntervalSeconds, v))
+}
+
+// SolJuiceIntervalSecondsGTE applies the GTE predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsGTE(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldSolJuiceIntervalSeconds, v))
+}
+
+// SolJuiceIntervalSecondsLT applies the LT predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsLT(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldSolJuiceIntervalSeconds, v))
+}
+
+// SolJuiceIntervalSecondsLTE applies the LTE predicate on the "sol_juice_interval_seconds" field.
+func SolJuiceIntervalSecondsLTE(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldSolJuiceIntervalSeconds, v))
+}
+
+// SolJuiceModelEQ applies the EQ predicate on the "sol_juice_model" field.
+func SolJuiceModelEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelNEQ applies the NEQ predicate on the "sol_juice_model" field.
+func SolJuiceModelNEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelIn applies the In predicate on the "sol_juice_model" field.
+func SolJuiceModelIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldSolJuiceModel, vs...))
+}
+
+// SolJuiceModelNotIn applies the NotIn predicate on the "sol_juice_model" field.
+func SolJuiceModelNotIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldSolJuiceModel, vs...))
+}
+
+// SolJuiceModelGT applies the GT predicate on the "sol_juice_model" field.
+func SolJuiceModelGT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelGTE applies the GTE predicate on the "sol_juice_model" field.
+func SolJuiceModelGTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelLT applies the LT predicate on the "sol_juice_model" field.
+func SolJuiceModelLT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelLTE applies the LTE predicate on the "sol_juice_model" field.
+func SolJuiceModelLTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelContains applies the Contains predicate on the "sol_juice_model" field.
+func SolJuiceModelContains(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContains(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelHasPrefix applies the HasPrefix predicate on the "sol_juice_model" field.
+func SolJuiceModelHasPrefix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasPrefix(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelHasSuffix applies the HasSuffix predicate on the "sol_juice_model" field.
+func SolJuiceModelHasSuffix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasSuffix(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelEqualFold applies the EqualFold predicate on the "sol_juice_model" field.
+func SolJuiceModelEqualFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEqualFold(FieldSolJuiceModel, v))
+}
+
+// SolJuiceModelContainsFold applies the ContainsFold predicate on the "sol_juice_model" field.
+func SolJuiceModelContainsFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContainsFold(FieldSolJuiceModel, v))
 }
 
 // And groups predicates with the AND operator between them.

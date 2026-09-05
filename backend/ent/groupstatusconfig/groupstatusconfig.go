@@ -37,6 +37,12 @@ const (
 	FieldSlowLatencyMs = "slow_latency_ms"
 	// FieldNotifyEnabled holds the string denoting the notify_enabled field in the database.
 	FieldNotifyEnabled = "notify_enabled"
+	// FieldSolJuiceEnabled holds the string denoting the sol_juice_enabled field in the database.
+	FieldSolJuiceEnabled = "sol_juice_enabled"
+	// FieldSolJuiceIntervalSeconds holds the string denoting the sol_juice_interval_seconds field in the database.
+	FieldSolJuiceIntervalSeconds = "sol_juice_interval_seconds"
+	// FieldSolJuiceModel holds the string denoting the sol_juice_model field in the database.
+	FieldSolJuiceModel = "sol_juice_model"
 	// Table holds the table name of the groupstatusconfig in the database.
 	Table = "group_status_configs"
 )
@@ -56,6 +62,9 @@ var Columns = []string{
 	FieldTimeoutSeconds,
 	FieldSlowLatencyMs,
 	FieldNotifyEnabled,
+	FieldSolJuiceEnabled,
+	FieldSolJuiceIntervalSeconds,
+	FieldSolJuiceModel,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -93,6 +102,12 @@ var (
 	DefaultSlowLatencyMs int64
 	// DefaultNotifyEnabled holds the default value on creation for the "notify_enabled" field.
 	DefaultNotifyEnabled bool
+	// DefaultSolJuiceEnabled holds the default value on creation for the "sol_juice_enabled" field.
+	DefaultSolJuiceEnabled bool
+	// DefaultSolJuiceIntervalSeconds holds the default value on creation for the "sol_juice_interval_seconds" field.
+	DefaultSolJuiceIntervalSeconds int
+	// DefaultSolJuiceModel holds the default value on creation for the "sol_juice_model" field.
+	DefaultSolJuiceModel string
 )
 
 // OrderOption defines the ordering options for the GroupStatusConfig queries.
@@ -156,4 +171,19 @@ func BySlowLatencyMs(opts ...sql.OrderTermOption) OrderOption {
 // ByNotifyEnabled orders the results by the notify_enabled field.
 func ByNotifyEnabled(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNotifyEnabled, opts...).ToFunc()
+}
+
+// BySolJuiceEnabled orders the results by the sol_juice_enabled field.
+func BySolJuiceEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceEnabled, opts...).ToFunc()
+}
+
+// BySolJuiceIntervalSeconds orders the results by the sol_juice_interval_seconds field.
+func BySolJuiceIntervalSeconds(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceIntervalSeconds, opts...).ToFunc()
+}
+
+// BySolJuiceModel orders the results by the sol_juice_model field.
+func BySolJuiceModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSolJuiceModel, opts...).ToFunc()
 }

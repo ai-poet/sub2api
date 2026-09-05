@@ -44,6 +44,10 @@ func (GroupStatusConfig) Fields() []ent.Field {
 		field.Int64("slow_latency_ms").Default(15000),
 		// 稳定状态变红 / 从红恢复时是否推送提醒（Server酱³）
 		field.Bool("notify_enabled").Default(true),
+		// 纯 Sol 验证（Juice 指纹探测），仅 OpenAI 分组
+		field.Bool("sol_juice_enabled").Default(false),
+		field.Int("sol_juice_interval_seconds").Default(900),
+		field.String("sol_juice_model").Default("gpt-5.6-sol"),
 	}
 }
 

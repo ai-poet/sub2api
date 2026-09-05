@@ -224,7 +224,7 @@ func (s *GroupStatusNotifyService) NotifyTransition(group *Group, cfg *GroupStat
 	if s == nil || group == nil || cfg == nil || event == nil {
 		return
 	}
-	if event.EventType != GroupStatusEventDown && event.EventType != GroupStatusEventUp {
+	if !isGroupStatusNotifyEvent(event.EventType) {
 		return
 	}
 	if !cfg.NotifyEnabled {
@@ -317,6 +317,10 @@ func buildGroupStatusNotifyMessage(siteName string, group *Group, event *GroupSt
 		title = fmt.Sprintf("[%s] 分组「%s」状态变红", siteName, groupName)
 	case GroupStatusEventUp:
 		title = fmt.Sprintf("[%s] 分组「%s」已恢复", siteName, groupName)
+	case GroupStatusEventSolJuiceMismatch:
+		title = fmt.Sprintf("[%s] 分组「%s」疑似非 Sol（Juice 指纹 %s）", siteName, groupName, solJuiceValueFromEvent(event))
+	case GroupStatusEventSolJuiceRecovered:
+		title = fmt.Sprintf("[%s] 分组「%s」Sol 验证已恢复", siteName, groupName)
 	default:
 		title = fmt.Sprintf("[%s] 分组「%s」状态变化", siteName, groupName)
 	}
@@ -362,11 +366,27 @@ func groupStatusStatusLabel(status string) string {
 		return "降级"
 	case GroupRuntimeStatusDown:
 		return "不可用"
+	case SolJuiceStatusPass:
+		return "Sol 验证通过"
+	case SolJuiceStatusMismatch:
+		return "非 Sol"
 	case "":
 		return "未知"
 	default:
 		return strings.TrimSpace(status)
 	}
+}
+
+// solJuiceValueFromEvent 从事件的 sub_status（juice_32）里取出指纹值，缺失时返回 ?。
+func solJuiceValueFromEvent(event *GroupStatusEvent) string {
+	if event == nil {
+		return "?"
+	}
+	value := strings.TrimPrefix(strings.TrimSpace(event.SubStatus), "juice_")
+	if value == "" || value == "unknown" {
+		return "?"
+	}
+	return value
 }
 
 // truncateGroupStatusErrorDetail 压平换行并截断，避免推送正文被超长错误撑爆。
