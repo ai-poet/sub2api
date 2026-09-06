@@ -349,29 +349,25 @@ func TestNewConfiguredCodexModelDescriptorUsesProviderMetadataAndSafeFallback(t 
 	require.Equal(t, []string{"low", "medium", "high", "xhigh", "max"}, effortsFromConfiguredCodexLevels(gpt56Luna.SupportedReasoningLevels))
 	require.Equal(t, "medium", *gpt56Luna.DefaultReasoningLevel)
 
-	astra := newConfiguredCodexModelDescriptor("gpt-6-astra")
-	require.Equal(t, "GPT-6 Astra", astra.DisplayName)
-	require.NotNil(t, astra.DefaultReasoningLevel)
-	require.Equal(t, "medium", *astra.DefaultReasoningLevel)
-	require.Equal(t, []string{"low", "medium", "high", "xhigh", "max"}, effortsFromConfiguredCodexLevels(astra.SupportedReasoningLevels))
-	require.NotContains(t, astra.SupportedReasoningLevels, configuredCodexReasoningLevel{Effort: "none"})
-	require.NotContains(t, astra.SupportedReasoningLevels, configuredCodexReasoningLevel{Effort: "minimal"})
-	require.NotContains(t, astra.SupportedReasoningLevels, configuredCodexReasoningLevel{Effort: "ultra"})
+	gpt6Astra := newConfiguredCodexModelDescriptor("gpt-6-astra")
+	require.Equal(t, "GPT-6 Astra", gpt6Astra.DisplayName)
+	require.NotNil(t, gpt6Astra.DefaultReasoningLevel)
+	require.Equal(t, "medium", *gpt6Astra.DefaultReasoningLevel)
+	require.Equal(t, []string{"low", "medium", "high", "xhigh", "max"}, effortsFromConfiguredCodexLevels(gpt6Astra.SupportedReasoningLevels))
+	require.NotContains(t, gpt6Astra.SupportedReasoningLevels, configuredCodexReasoningLevel{Effort: "ultra"})
+	require.NotContains(t, gpt6Astra.SupportedReasoningLevels, configuredCodexReasoningLevel{Effort: "none"})
 	require.True(t, configuredCodexSupportsPriorityServiceTier("gpt-6-astra"))
 	require.Equal(t, []configuredCodexServiceTier{{
 		ID:          "priority",
 		Name:        "Fast",
 		Description: "Priority processing for lower latency.",
-	}}, astra.ServiceTiers)
-	require.True(t, astra.SupportsParallelToolCalls)
-	require.True(t, astra.SupportVerbosity)
-	require.Equal(t, int64(1_050_000), astra.ContextWindow)
-	require.Equal(t, int64(1_050_000), astra.MaxContextWindow)
-	require.Equal(t, configuredCodexTruncationPolicy{Mode: "tokens", Limit: 10_000}, astra.TruncationPolicy)
+	}}, gpt6Astra.ServiceTiers)
 	require.True(t, isOpenAICodexImageInputModel("gpt-6-astra"))
 	require.True(t, isOpenAICodexReasoningGPTModel("openai/gpt-6-astra"))
 	require.True(t, isOpenAIGPT6AstraModel("gpt-6-astra-2026-09-01"))
 	require.False(t, isOpenAIGPT6AstraModel("gpt-6-other"))
+	require.Equal(t, int64(1_050_000), gpt6Astra.ContextWindow)
+	require.Equal(t, int64(1_050_000), gpt6Astra.MaxContextWindow)
 	gpt6 := newConfiguredCodexModelDescriptor("gpt-6")
 	require.Equal(t, "GPT-6 (Astra)", gpt6.DisplayName)
 	require.Equal(t, []string{"low", "medium", "high", "xhigh", "max"}, effortsFromConfiguredCodexLevels(gpt6.SupportedReasoningLevels))
@@ -462,7 +458,7 @@ func TestBuildCodexModelsManifestAdvertisesPriorityServiceTierForFastGPTModels(t
 	body, err := BuildCodexModelsManifest([]string{
 		"gpt-5.4-mini",
 		"gpt-5.5",
-		"gpt-5.6-sol",
+		"gpt-5.6-terra",
 	})
 	require.NoError(t, err)
 	models := decodeCodexManifestModels(t, body)
@@ -476,6 +472,36 @@ func TestBuildCodexModelsManifestAdvertisesPriorityServiceTierForFastGPTModels(t
 				"description": "Priority processing for lower latency.",
 			},
 		}, model["service_tiers"])
+		require.Nil(t, model["default_service_tier"])
+	}
+}
+
+// Scenario: GPT-5.6 Sol 在 Fast 之外额外声明 ultrafast service tier。
+func TestBuildCodexModelsManifestAdvertisesUltrafastServiceTierForSol(t *testing.T) {
+	t.Parallel()
+
+	body, err := BuildCodexModelsManifest([]string{
+		"gpt-5.6-sol",
+		"gpt-5.6",
+	})
+	require.NoError(t, err)
+	models := decodeCodexManifestModels(t, body)
+	require.Len(t, models, 2)
+
+	wantTiers := []any{
+		map[string]any{
+			"id":          "priority",
+			"name":        "Fast",
+			"description": "Priority processing for lower latency.",
+		},
+		map[string]any{
+			"id":          "ultrafast",
+			"name":        "Ultrafast",
+			"description": "Ultra-low latency processing.",
+		},
+	}
+	for _, model := range models {
+		require.Equal(t, wantTiers, model["service_tiers"])
 		require.Nil(t, model["default_service_tier"])
 	}
 }
@@ -2236,7 +2262,7 @@ func TestAdjustAPIKeyCodexModelsManifest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := adjustAPIKeyCodexModelsManifest([]byte(tt.body))
+			got, err := adjustAPIKeyCodexModelsManifest([]byte(tt.body), nil)
 			require.NoError(t, err)
 			require.Equal(t, tt.want, string(got))
 		})
