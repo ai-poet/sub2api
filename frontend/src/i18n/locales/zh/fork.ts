@@ -264,14 +264,14 @@ export default {
       "sol_juice_recovered": "Sol 验证恢复"
     },
     "solJuice": {
-      "pass": "Sol ✓",
-      "mismatch": "非 Sol",
-      "pending": "Sol 待验证",
+      "pass": "Sol Juice 正常",
+      "mismatch": "Sol Juice 异常（非 Sol）",
+      "pending": "Sol Juice 待验证",
       "statuses": {
-        "pass": "Sol 验证通过",
-        "mismatch": "非 Sol",
-        "inconclusive": "证据不足",
-        "unknown": "待验证"
+        "pass": "Sol Juice 正常",
+        "mismatch": "Sol Juice 异常（非 Sol）",
+        "inconclusive": "Sol Juice 证据不足",
+        "unknown": "Sol Juice 待验证"
       }
     }
   },
@@ -436,10 +436,10 @@ export default {
           "probeSucceeded": "Sol 验证已完成",
           "probeFailed": "Sol 验证失败",
           "statuses": {
-            "pass": "Sol 验证通过",
-            "mismatch": "非 Sol",
-            "inconclusive": "证据不足",
-            "unknown": "待验证"
+            "pass": "Sol Juice 正常",
+            "mismatch": "Sol Juice 异常（非 Sol）",
+            "inconclusive": "Sol Juice 证据不足",
+            "unknown": "Sol Juice 待验证"
           }
         }
       },

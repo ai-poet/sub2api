@@ -264,14 +264,14 @@ export default {
       "sol_juice_recovered": "Sol verified again"
     },
     "solJuice": {
-      "pass": "Sol ✓",
-      "mismatch": "Not Sol",
-      "pending": "Sol pending",
+      "pass": "Sol Juice OK",
+      "mismatch": "Sol Juice failed (not Sol)",
+      "pending": "Sol Juice pending",
       "statuses": {
-        "pass": "Sol verified",
-        "mismatch": "Not Sol",
-        "inconclusive": "Inconclusive",
-        "unknown": "Pending"
+        "pass": "Sol Juice OK",
+        "mismatch": "Sol Juice failed (not Sol)",
+        "inconclusive": "Sol Juice inconclusive",
+        "unknown": "Sol Juice pending"
       }
     }
   },
@@ -436,10 +436,10 @@ export default {
           "probeSucceeded": "Sol check completed",
           "probeFailed": "Sol check failed",
           "statuses": {
-            "pass": "Sol verified",
-            "mismatch": "Not Sol",
-            "inconclusive": "Inconclusive",
-            "unknown": "Pending"
+            "pass": "Sol Juice OK",
+            "mismatch": "Sol Juice failed (not Sol)",
+            "inconclusive": "Sol Juice inconclusive",
+            "unknown": "Sol Juice pending"
           }
         }
       },
