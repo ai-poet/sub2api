@@ -36,8 +36,8 @@ const (
 	groupStatusAstraCheckDefaultTier           = AstraCheckTierLow
 	groupStatusAstraCheckDefaultIntervalSecond = 3600
 	groupStatusAstraCheckMinIntervalSeconds    = 900
-	groupStatusAstraCheckDefaultConcurrency    = 4
-	groupStatusAstraCheckRequestTimeout        = 60 * time.Second
+	groupStatusAstraCheckDefaultConcurrency    = 8
+	groupStatusAstraCheckRequestTimeout        = 30 * time.Second
 	groupStatusAstraCheckMaxAttempts           = 3
 	groupStatusAstraCheckSampleRatio           = 0.6
 	groupStatusAstraCheckMismatchThreshold     = 2

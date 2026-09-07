@@ -380,7 +380,12 @@ func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Acco
 		if attempt == groupStatusAstraCheckMaxAttempts {
 			break
 		}
-		if err := s.astraSleepFor(ctx, time.Duration(attempt)*time.Second); err != nil {
+		// 无效答案只是模型没按格式答，短暂等一下即可；传输 / HTTP 错误多半是上游限流，退避长一些
+		backoff := time.Duration(attempt) * 500 * time.Millisecond
+		if sample.TransportFailed {
+			backoff = time.Duration(attempt) * time.Second
+		}
+		if err := s.astraSleepFor(ctx, backoff); err != nil {
 			sample.TransportFailed = true
 			sample.Completed = false
 			sample.ErrDetail = err.Error()

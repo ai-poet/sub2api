@@ -480,7 +480,7 @@ export default {
           "threshold": "阈值",
           "detail": "说明",
           "probeNow": "立即验证",
-          "running": "验证中（约 1–2 分钟）...",
+          "running": "验证中（通常 20–40 秒）...",
           "probeStarted": "Astra 指纹验证已在后台开始",
           "probeSucceeded": "Astra 指纹验证已完成",
           "probeFailed": "Astra 指纹验证失败",

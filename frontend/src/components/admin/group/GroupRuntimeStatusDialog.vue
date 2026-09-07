@@ -646,7 +646,7 @@ const solJuiceProbing = ref(false)
 const astraProbing = ref(false)
 let astraPollTimer: ReturnType<typeof setTimeout> | null = null
 let astraPollStartedAt = 0
-const ASTRA_POLL_INTERVAL_MS = 3000
+const ASTRA_POLL_INTERVAL_MS = 2000
 const ASTRA_POLL_MAX_MS = 20 * 60 * 1000
 
 const dialogTitle = computed(() => {

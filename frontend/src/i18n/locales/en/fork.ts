@@ -480,7 +480,7 @@ export default {
           "threshold": "threshold",
           "detail": "Details",
           "probeNow": "Check now",
-          "running": "Checking (about 1–2 minutes)...",
+          "running": "Checking (usually 20–40 seconds)...",
           "probeStarted": "Astra fingerprint check started in the background",
           "probeSucceeded": "Astra fingerprint check completed",
           "probeFailed": "Astra fingerprint check failed",
