@@ -261,7 +261,9 @@ export default {
       "up": "恢复",
       "down": "中断",
       "sol_juice_mismatch": "疑似非 Sol",
-      "sol_juice_recovered": "Sol 验证恢复"
+      "sol_juice_recovered": "Sol 验证恢复",
+      "astra_mismatch": "Astra 指纹异常",
+      "astra_recovered": "Astra 指纹恢复"
     },
     "solJuice": {
       "pass": "Sol Juice 正常",
@@ -272,6 +274,18 @@ export default {
         "mismatch": "Sol Juice 异常（非 Sol）",
         "inconclusive": "Sol Juice 证据不足",
         "unknown": "Sol Juice 待验证"
+      }
+    },
+    "astraCheck": {
+      "pass": "Astra 指纹 正常",
+      "mismatch": "Astra 指纹 异常（强指向 {winner}）",
+      "insufficient": "Astra 指纹 证据不足",
+      "pending": "Astra 指纹 待验证",
+      "statuses": {
+        "pass": "Astra 指纹正常",
+        "mismatch": "Astra 指纹不符",
+        "insufficient": "Astra 指纹证据不足",
+        "unknown": "未知"
       }
     }
   },
@@ -440,6 +454,52 @@ export default {
             "mismatch": "Sol Juice 异常（非 Sol）",
             "inconclusive": "Sol Juice 证据不足",
             "unknown": "Sol Juice 待验证"
+          }
+        },
+        "astraCheck": {
+          "title": "Astra 指纹验证（meow 基准）",
+          "hint": "向分组的一个 OpenAI 账号发一批固定短答题（reasoning=low），把答案分布与内置基准里 Astra / Sol / Terra / Luna 的分布比较，唯一越过阈值的模型才算强指向。连续 2 次强指向其他模型（首次会立即复测）才判定并推送，不影响在线率。低档每次 20 个请求，约 $0.01–0.05。",
+          "benchmark": "基准",
+          "requestModel": "请求模型名",
+          "tier": "档位",
+          "tiers": {
+            "low": "低档",
+            "medium": "中档",
+            "high": "高档"
+          },
+          "intervalSeconds": "验证间隔（秒，最小 900）",
+          "latestResult": "最近一次验证",
+          "latestResultEmpty": "尚未验证。保存后等待调度，或点击“立即验证”。",
+          "verdict": "结论",
+          "samples": "有效样本 / 计划",
+          "checkedAt": "验证时间",
+          "tokens": "Token（输入 / 输出）",
+          "lastCost": "最近一次成本",
+          "monthlyEstimate": "按当前间隔折算每月",
+          "matches": "各候选模型匹配度",
+          "threshold": "阈值",
+          "detail": "说明",
+          "probeNow": "立即验证",
+          "running": "验证中（约 1–2 分钟）...",
+          "probeStarted": "Astra 指纹验证已在后台开始",
+          "probeSucceeded": "Astra 指纹验证已完成",
+          "probeFailed": "Astra 指纹验证失败",
+          "statuses": {
+            "pass": "Astra 指纹正常",
+            "mismatch": "Astra 指纹异常（强指向 {winner}）",
+            "insufficient": "Astra 指纹证据不足",
+            "unknown": "待验证"
+          },
+          "reasons": {
+            "samples_incomplete": "有效样本不足",
+            "samples_exceed_plan": "样本数超出计划",
+            "baseline_cell_missing": "基准缺少该题",
+            "no_weighted_family": "没有可用权重的题族",
+            "uncalibrated": "该档位未校准",
+            "no_threshold": "没有模型越过阈值",
+            "multiple_thresholds": "多个模型越过阈值",
+            "scoring_failed": "判定计算失败",
+            "empty_result": "空结果"
           }
         }
       },

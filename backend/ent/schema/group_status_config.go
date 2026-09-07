@@ -48,6 +48,11 @@ func (GroupStatusConfig) Fields() []ent.Field {
 		field.Bool("sol_juice_enabled").Default(false),
 		field.Int("sol_juice_interval_seconds").Default(900),
 		field.String("sol_juice_model").Default("gpt-5.6-sol"),
+		// Astra 指纹验证（meow 基准，行为指纹），仅 OpenAI 分组
+		field.Bool("astra_check_enabled").Default(false),
+		field.String("astra_check_request_model").Default("gpt-6-astra"),
+		field.String("astra_check_tier").Default("low"),
+		field.Int("astra_check_interval_seconds").Default(3600),
 	}
 }
 

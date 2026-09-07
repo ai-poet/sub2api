@@ -123,6 +123,13 @@
                       >
                         {{ getSolJuiceText(item.summary) }}
                       </span>
+                      <span
+                        v-if="item.summary.astra_check_enabled"
+                        :class="['badge', getAstraCheckBadgeClass(getAstraCheckStatus(item.summary))]"
+                        :title="item.summary.astra_check_checked_at ? formatDateTime(item.summary.astra_check_checked_at) : ''"
+                      >
+                        {{ getAstraCheckText(item.summary) }}
+                      </span>
                     </div>
 
                     <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
@@ -242,6 +249,13 @@
               :title="selectedItem.summary.sol_juice_checked_at ? formatDateTime(selectedItem.summary.sol_juice_checked_at) : ''"
             >
               {{ getSolJuiceText(selectedItem.summary) }}
+            </span>
+            <span
+              v-if="selectedItem.summary.astra_check_enabled"
+              :class="['badge', getAstraCheckBadgeClass(getAstraCheckStatus(selectedItem.summary))]"
+              :title="selectedItem.summary.astra_check_checked_at ? formatDateTime(selectedItem.summary.astra_check_checked_at) : ''"
+            >
+              {{ getAstraCheckText(selectedItem.summary) }}
             </span>
           </div>
         </div>
@@ -441,20 +455,24 @@ import type {
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
+  astraModelShortName,
   formatGroupRuntimeAvailability,
   formatGroupRuntimeLatency,
+  getAstraCheckBadgeClass,
   getGroupRuntimeEventBadgeClass,
   getGroupRuntimeStatusBadgeClass,
   getGroupRuntimeStatusBarClass,
   getGroupRuntimeStatusSurfaceClass,
   getSolJuiceBadgeClass,
+  isAstraCheckEvent,
   isSolJuiceEvent,
+  normalizeAstraCheckStatus,
   normalizeGroupRuntimeStatus,
   normalizeSolJuiceStatus,
   sanitizeRuntimeErrorDetail,
   shortenRuntimeExcerpt,
 } from '@/utils/groupStatus'
-import type { NormalizedSolJuiceStatus } from '@/utils/groupStatus'
+import type { NormalizedAstraCheckStatus, NormalizedSolJuiceStatus } from '@/utils/groupStatus'
 
 const POLL_INTERVAL_MS = 30_000
 const HEARTBEAT_RECORD_COUNT = 24
@@ -617,9 +635,24 @@ function getSolJuiceText(summary: GroupStatusListItem['summary']): string {
   return t('modelStatus.solJuice.pending')
 }
 
+function getAstraCheckStatus(summary: GroupStatusListItem['summary']): NormalizedAstraCheckStatus {
+  return normalizeAstraCheckStatus(summary.astra_check_stable_status, summary.astra_check_verdict)
+}
+
+function getAstraCheckText(summary: GroupStatusListItem['summary']): string {
+  const status = getAstraCheckStatus(summary)
+  if (status === 'mismatch') {
+    return t('modelStatus.astraCheck.mismatch', { winner: astraModelShortName(summary.astra_check_winner) })
+  }
+  return t(`modelStatus.astraCheck.${status === 'pass' ? 'pass' : status === 'insufficient' ? 'insufficient' : 'pending'}`)
+}
+
 function getEventStatusBadgeClass(event: { event_type: string }, status: string): string {
   if (isSolJuiceEvent(event.event_type)) {
     return getSolJuiceBadgeClass(status)
+  }
+  if (isAstraCheckEvent(event.event_type)) {
+    return getAstraCheckBadgeClass(status)
   }
   return getGroupRuntimeStatusBadgeClass(status || 'unknown')
 }
@@ -627,6 +660,9 @@ function getEventStatusBadgeClass(event: { event_type: string }, status: string)
 function getEventStatusLabel(event: { event_type: string }, status: string): string {
   if (isSolJuiceEvent(event.event_type)) {
     return t(`modelStatus.solJuice.statuses.${normalizeSolJuiceStatus(status)}`)
+  }
+  if (isAstraCheckEvent(event.event_type)) {
+    return t(`modelStatus.astraCheck.statuses.${normalizeAstraCheckStatus(status, '')}`)
   }
   return t(`modelStatus.statuses.${normalizeGroupRuntimeStatus(status)}`)
 }

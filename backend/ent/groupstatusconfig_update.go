@@ -250,6 +250,69 @@ func (_u *GroupStatusConfigUpdate) SetNillableSolJuiceModel(v *string) *GroupSta
 	return _u
 }
 
+// SetAstraCheckEnabled sets the "astra_check_enabled" field.
+func (_u *GroupStatusConfigUpdate) SetAstraCheckEnabled(v bool) *GroupStatusConfigUpdate {
+	_u.mutation.SetAstraCheckEnabled(v)
+	return _u
+}
+
+// SetNillableAstraCheckEnabled sets the "astra_check_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableAstraCheckEnabled(v *bool) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetAstraCheckEnabled(*v)
+	}
+	return _u
+}
+
+// SetAstraCheckRequestModel sets the "astra_check_request_model" field.
+func (_u *GroupStatusConfigUpdate) SetAstraCheckRequestModel(v string) *GroupStatusConfigUpdate {
+	_u.mutation.SetAstraCheckRequestModel(v)
+	return _u
+}
+
+// SetNillableAstraCheckRequestModel sets the "astra_check_request_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableAstraCheckRequestModel(v *string) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetAstraCheckRequestModel(*v)
+	}
+	return _u
+}
+
+// SetAstraCheckTier sets the "astra_check_tier" field.
+func (_u *GroupStatusConfigUpdate) SetAstraCheckTier(v string) *GroupStatusConfigUpdate {
+	_u.mutation.SetAstraCheckTier(v)
+	return _u
+}
+
+// SetNillableAstraCheckTier sets the "astra_check_tier" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableAstraCheckTier(v *string) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetAstraCheckTier(*v)
+	}
+	return _u
+}
+
+// SetAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field.
+func (_u *GroupStatusConfigUpdate) SetAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpdate {
+	_u.mutation.ResetAstraCheckIntervalSeconds()
+	_u.mutation.SetAstraCheckIntervalSeconds(v)
+	return _u
+}
+
+// SetNillableAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableAstraCheckIntervalSeconds(v *int) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetAstraCheckIntervalSeconds(*v)
+	}
+	return _u
+}
+
+// AddAstraCheckIntervalSeconds adds value to the "astra_check_interval_seconds" field.
+func (_u *GroupStatusConfigUpdate) AddAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpdate {
+	_u.mutation.AddAstraCheckIntervalSeconds(v)
+	return _u
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_u *GroupStatusConfigUpdate) Mutation() *GroupStatusConfigMutation {
 	return _u.mutation
@@ -361,6 +424,21 @@ func (_u *GroupStatusConfigUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.SolJuiceModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.AstraCheckRequestModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckRequestModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckTier(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckTier, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAstraCheckIntervalSeconds(); ok {
+		_spec.AddField(groupstatusconfig.FieldAstraCheckIntervalSeconds, field.TypeInt, value)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -603,6 +681,69 @@ func (_u *GroupStatusConfigUpdateOne) SetNillableSolJuiceModel(v *string) *Group
 	return _u
 }
 
+// SetAstraCheckEnabled sets the "astra_check_enabled" field.
+func (_u *GroupStatusConfigUpdateOne) SetAstraCheckEnabled(v bool) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetAstraCheckEnabled(v)
+	return _u
+}
+
+// SetNillableAstraCheckEnabled sets the "astra_check_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableAstraCheckEnabled(v *bool) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetAstraCheckEnabled(*v)
+	}
+	return _u
+}
+
+// SetAstraCheckRequestModel sets the "astra_check_request_model" field.
+func (_u *GroupStatusConfigUpdateOne) SetAstraCheckRequestModel(v string) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetAstraCheckRequestModel(v)
+	return _u
+}
+
+// SetNillableAstraCheckRequestModel sets the "astra_check_request_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableAstraCheckRequestModel(v *string) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetAstraCheckRequestModel(*v)
+	}
+	return _u
+}
+
+// SetAstraCheckTier sets the "astra_check_tier" field.
+func (_u *GroupStatusConfigUpdateOne) SetAstraCheckTier(v string) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetAstraCheckTier(v)
+	return _u
+}
+
+// SetNillableAstraCheckTier sets the "astra_check_tier" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableAstraCheckTier(v *string) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetAstraCheckTier(*v)
+	}
+	return _u
+}
+
+// SetAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field.
+func (_u *GroupStatusConfigUpdateOne) SetAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpdateOne {
+	_u.mutation.ResetAstraCheckIntervalSeconds()
+	_u.mutation.SetAstraCheckIntervalSeconds(v)
+	return _u
+}
+
+// SetNillableAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableAstraCheckIntervalSeconds(v *int) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetAstraCheckIntervalSeconds(*v)
+	}
+	return _u
+}
+
+// AddAstraCheckIntervalSeconds adds value to the "astra_check_interval_seconds" field.
+func (_u *GroupStatusConfigUpdateOne) AddAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpdateOne {
+	_u.mutation.AddAstraCheckIntervalSeconds(v)
+	return _u
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_u *GroupStatusConfigUpdateOne) Mutation() *GroupStatusConfigMutation {
 	return _u.mutation
@@ -744,6 +885,21 @@ func (_u *GroupStatusConfigUpdateOne) sqlSave(ctx context.Context) (_node *Group
 	}
 	if value, ok := _u.mutation.SolJuiceModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.AstraCheckRequestModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckRequestModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckTier(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckTier, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAstraCheckIntervalSeconds(); ok {
+		_spec.AddField(groupstatusconfig.FieldAstraCheckIntervalSeconds, field.TypeInt, value)
 	}
 	_node = &GroupStatusConfig{config: _u.config}
 	_spec.Assign = _node.assignValues

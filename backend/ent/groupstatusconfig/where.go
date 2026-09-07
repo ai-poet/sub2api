@@ -124,6 +124,26 @@ func SolJuiceModel(v string) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceModel, v))
 }
 
+// AstraCheckEnabled applies equality check predicate on the "astra_check_enabled" field. It's identical to AstraCheckEnabledEQ.
+func AstraCheckEnabled(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckEnabled, v))
+}
+
+// AstraCheckRequestModel applies equality check predicate on the "astra_check_request_model" field. It's identical to AstraCheckRequestModelEQ.
+func AstraCheckRequestModel(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckTier applies equality check predicate on the "astra_check_tier" field. It's identical to AstraCheckTierEQ.
+func AstraCheckTier(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckTier, v))
+}
+
+// AstraCheckIntervalSeconds applies equality check predicate on the "astra_check_interval_seconds" field. It's identical to AstraCheckIntervalSecondsEQ.
+func AstraCheckIntervalSeconds(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckIntervalSeconds, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldCreatedAt, v))
@@ -692,6 +712,186 @@ func SolJuiceModelEqualFold(v string) predicate.GroupStatusConfig {
 // SolJuiceModelContainsFold applies the ContainsFold predicate on the "sol_juice_model" field.
 func SolJuiceModelContainsFold(v string) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldContainsFold(FieldSolJuiceModel, v))
+}
+
+// AstraCheckEnabledEQ applies the EQ predicate on the "astra_check_enabled" field.
+func AstraCheckEnabledEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckEnabled, v))
+}
+
+// AstraCheckEnabledNEQ applies the NEQ predicate on the "astra_check_enabled" field.
+func AstraCheckEnabledNEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldAstraCheckEnabled, v))
+}
+
+// AstraCheckRequestModelEQ applies the EQ predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelNEQ applies the NEQ predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelNEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelIn applies the In predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldAstraCheckRequestModel, vs...))
+}
+
+// AstraCheckRequestModelNotIn applies the NotIn predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelNotIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldAstraCheckRequestModel, vs...))
+}
+
+// AstraCheckRequestModelGT applies the GT predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelGT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelGTE applies the GTE predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelGTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelLT applies the LT predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelLT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelLTE applies the LTE predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelLTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelContains applies the Contains predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelContains(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContains(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelHasPrefix applies the HasPrefix predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelHasPrefix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasPrefix(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelHasSuffix applies the HasSuffix predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelHasSuffix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasSuffix(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelEqualFold applies the EqualFold predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelEqualFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEqualFold(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckRequestModelContainsFold applies the ContainsFold predicate on the "astra_check_request_model" field.
+func AstraCheckRequestModelContainsFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContainsFold(FieldAstraCheckRequestModel, v))
+}
+
+// AstraCheckTierEQ applies the EQ predicate on the "astra_check_tier" field.
+func AstraCheckTierEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierNEQ applies the NEQ predicate on the "astra_check_tier" field.
+func AstraCheckTierNEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierIn applies the In predicate on the "astra_check_tier" field.
+func AstraCheckTierIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldAstraCheckTier, vs...))
+}
+
+// AstraCheckTierNotIn applies the NotIn predicate on the "astra_check_tier" field.
+func AstraCheckTierNotIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldAstraCheckTier, vs...))
+}
+
+// AstraCheckTierGT applies the GT predicate on the "astra_check_tier" field.
+func AstraCheckTierGT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierGTE applies the GTE predicate on the "astra_check_tier" field.
+func AstraCheckTierGTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierLT applies the LT predicate on the "astra_check_tier" field.
+func AstraCheckTierLT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierLTE applies the LTE predicate on the "astra_check_tier" field.
+func AstraCheckTierLTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierContains applies the Contains predicate on the "astra_check_tier" field.
+func AstraCheckTierContains(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContains(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierHasPrefix applies the HasPrefix predicate on the "astra_check_tier" field.
+func AstraCheckTierHasPrefix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasPrefix(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierHasSuffix applies the HasSuffix predicate on the "astra_check_tier" field.
+func AstraCheckTierHasSuffix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasSuffix(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierEqualFold applies the EqualFold predicate on the "astra_check_tier" field.
+func AstraCheckTierEqualFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEqualFold(FieldAstraCheckTier, v))
+}
+
+// AstraCheckTierContainsFold applies the ContainsFold predicate on the "astra_check_tier" field.
+func AstraCheckTierContainsFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContainsFold(FieldAstraCheckTier, v))
+}
+
+// AstraCheckIntervalSecondsEQ applies the EQ predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsEQ(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckIntervalSeconds, v))
+}
+
+// AstraCheckIntervalSecondsNEQ applies the NEQ predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsNEQ(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldAstraCheckIntervalSeconds, v))
+}
+
+// AstraCheckIntervalSecondsIn applies the In predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsIn(vs ...int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldAstraCheckIntervalSeconds, vs...))
+}
+
+// AstraCheckIntervalSecondsNotIn applies the NotIn predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsNotIn(vs ...int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldAstraCheckIntervalSeconds, vs...))
+}
+
+// AstraCheckIntervalSecondsGT applies the GT predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsGT(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldAstraCheckIntervalSeconds, v))
+}
+
+// AstraCheckIntervalSecondsGTE applies the GTE predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsGTE(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldAstraCheckIntervalSeconds, v))
+}
+
+// AstraCheckIntervalSecondsLT applies the LT predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsLT(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldAstraCheckIntervalSeconds, v))
+}
+
+// AstraCheckIntervalSecondsLTE applies the LTE predicate on the "astra_check_interval_seconds" field.
+func AstraCheckIntervalSecondsLTE(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldAstraCheckIntervalSeconds, v))
 }
 
 // And groups predicates with the AND operator between them.

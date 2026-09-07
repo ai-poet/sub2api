@@ -66,6 +66,31 @@ func (GroupStatusState) Fields() []ent.Field {
 		field.Int64("sol_juice_input_tokens").Default(0),
 		field.Int64("sol_juice_output_tokens").Default(0),
 		field.Int64("sol_juice_reasoning_tokens").Default(0),
+		// Astra 指纹验证（meow 基准）的最近结果与稳定结论
+		field.String("astra_check_verdict").Default(""),
+		field.String("astra_check_stable_status").Default(""),
+		field.String("astra_check_winner").Default(""),
+		field.JSON("astra_check_matches", []map[string]any{}).
+			Default([]map[string]any{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
+		field.JSON("astra_check_reasons", []string{}).
+			Default([]string{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
+		field.String("astra_check_detail").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "text"}),
+		field.Time("astra_check_checked_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
+		field.Int("astra_check_consecutive_mismatch").Default(0),
+		field.Int("astra_check_valid_samples").Default(0),
+		field.Int("astra_check_planned_samples").Default(0),
+		field.Int64("astra_check_input_tokens").Default(0),
+		field.Int64("astra_check_output_tokens").Default(0),
+		field.Int64("astra_check_reasoning_tokens").Default(0),
+		field.Int64("astra_check_last_run_id").Optional().Nillable(),
 	}
 }
 

@@ -2452,11 +2452,43 @@ export interface ClientChangelogEntry {
 
 export type GroupStatusValidationMode = 'non_empty' | 'keywords_any' | 'keywords_all'
 
-export type GroupStatusEventType = 'up' | 'down' | 'sol_juice_mismatch' | 'sol_juice_recovered'
+export type GroupStatusEventType =
+  | 'up'
+  | 'down'
+  | 'sol_juice_mismatch'
+  | 'sol_juice_recovered'
+  | 'astra_mismatch'
+  | 'astra_recovered'
 
 // 纯 Sol 验证（Juice 指纹探测）
 export type SolJuiceStatus = '' | 'pass' | 'mismatch' | 'inconclusive'
 export type SolJuiceStableStatus = '' | 'pass' | 'mismatch'
+
+// Astra 指纹验证（meow 基准，行为指纹）
+export type AstraCheckVerdict = '' | 'match' | 'mismatch' | 'insufficient'
+export type AstraCheckStableStatus = '' | 'pass' | 'mismatch'
+export type AstraCheckTier = 'low' | 'medium' | 'high'
+
+export interface AstraCheckModelMatch {
+  model: string
+  name: string
+  score: number
+  match: number
+  threshold: number
+  passed: boolean
+}
+
+export interface AstraBenchmarkModel {
+  id: string
+  name: string
+  request_model: string
+}
+
+export interface AstraBenchmarkTierMeta {
+  tier: AstraCheckTier
+  requests: number
+  calibrated: boolean
+}
 
 export interface GroupStatusConfig {
   id: number
@@ -2473,6 +2505,10 @@ export interface GroupStatusConfig {
   sol_juice_enabled: boolean
   sol_juice_interval_seconds: number
   sol_juice_model: string
+  astra_check_enabled: boolean
+  astra_check_request_model: string
+  astra_check_tier: AstraCheckTier
+  astra_check_interval_seconds: number
   created_at: string
   updated_at: string
 }
@@ -2505,6 +2541,28 @@ export interface GroupStatusSummary {
   sol_juice_output_tokens: number
   sol_juice_reasoning_tokens: number
   sol_juice_last_cost_usd: number
+  astra_check_enabled: boolean
+  astra_check_request_model: string
+  astra_check_tier: AstraCheckTier
+  astra_check_interval_seconds: number
+  astra_check_verdict: AstraCheckVerdict
+  astra_check_stable_status: AstraCheckStableStatus
+  astra_check_winner: string
+  astra_check_matches: AstraCheckModelMatch[]
+  astra_check_reasons: string[]
+  astra_check_detail: string
+  astra_check_checked_at: string | null
+  astra_check_consecutive_mismatch: number
+  astra_check_valid_samples: number
+  astra_check_planned_samples: number
+  astra_check_input_tokens: number
+  astra_check_output_tokens: number
+  astra_check_reasoning_tokens: number
+  astra_check_last_cost_usd: number
+  astra_check_running: boolean
+  astra_check_benchmark_version: string
+  astra_check_benchmark_models: AstraBenchmarkModel[]
+  astra_check_benchmark_tiers: AstraBenchmarkTierMeta[]
 }
 
 export interface GroupStatusAdminView {

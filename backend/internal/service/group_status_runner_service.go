@@ -22,6 +22,8 @@ type GroupStatusRunnerService struct {
 
 	// solJuiceRunning 防止一批慢的 high 档 Juice 请求与下一次 tick 重叠
 	solJuiceRunning atomic.Bool
+	// astraRunning 同理，Astra 指纹一次要跑几十个请求
+	astraRunning atomic.Bool
 }
 
 func NewGroupStatusRunnerService(
@@ -69,6 +71,7 @@ func (s *GroupStatusRunnerService) loop() {
 
 	s.runOnce()
 	s.startSolJuiceBatch()
+	s.startAstraCheckBatch()
 
 	for {
 		select {
@@ -76,8 +79,9 @@ func (s *GroupStatusRunnerService) loop() {
 			return
 		case <-ticker.C:
 			s.runOnce()
-			// Juice 探测走 high 档、单条可达两分钟，放到独立 goroutine 里，不拖慢存活探测
+			// Juice / Astra 探测都可能很慢，放到独立 goroutine 里，不拖慢存活探测
 			s.startSolJuiceBatch()
+			s.startAstraCheckBatch()
 		case <-cleanupTicker.C:
 			s.cleanupOldRecords()
 		}
@@ -112,10 +116,9 @@ func (s *GroupStatusRunnerService) startSolJuiceBatch() {
 	}()
 }
 
-func (s *GroupStatusRunnerService) runSolJuiceOnce() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancel()
-	// Stop() 时尽快结束在途的 Juice 批次
+// batchContext 给后台批次一个有上限的 ctx，并在 Stop() 时尽快取消。
+func (s *GroupStatusRunnerService) batchContext(budget time.Duration) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	go func() {
 		select {
 		case <-s.stopCh:
@@ -123,6 +126,12 @@ func (s *GroupStatusRunnerService) runSolJuiceOnce() {
 		case <-ctx.Done():
 		}
 	}()
+	return ctx, cancel
+}
+
+func (s *GroupStatusRunnerService) runSolJuiceOnce() {
+	ctx, cancel := s.batchContext(10 * time.Minute)
+	defer cancel()
 
 	configs, err := s.repo.ListDueSolJuiceConfigs(ctx, time.Now(), 10)
 	if err != nil {
@@ -135,6 +144,37 @@ func (s *GroupStatusRunnerService) runSolJuiceOnce() {
 		}
 		if _, err := s.probeSvc.ProbeSolJuiceWithConfig(ctx, cfg); err != nil {
 			logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] sol juice probe group=%d failed: %v", cfg.GroupID, err)
+		}
+	}
+}
+
+func (s *GroupStatusRunnerService) startAstraCheckBatch() {
+	if !s.astraRunning.CompareAndSwap(false, true) {
+		return
+	}
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		defer s.astraRunning.Store(false)
+		s.runAstraCheckOnce()
+	}()
+}
+
+func (s *GroupStatusRunnerService) runAstraCheckOnce() {
+	ctx, cancel := s.batchContext(25 * time.Minute)
+	defer cancel()
+
+	configs, err := s.repo.ListDueAstraCheckConfigs(ctx, time.Now(), 3)
+	if err != nil {
+		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] list due astra check configs failed: %v", err)
+		return
+	}
+	for _, cfg := range configs {
+		if ctx.Err() != nil {
+			return
+		}
+		if _, err := s.probeSvc.ProbeAstraCheckWithConfig(ctx, cfg); err != nil {
+			logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] astra check group=%d failed: %v", cfg.GroupID, err)
 		}
 	}
 }
@@ -156,9 +196,14 @@ func (s *GroupStatusRunnerService) cleanupOldRecords() {
 	deletedJuice, err := s.repo.DeleteSolJuiceRecordsOlderThan(ctx, before)
 	if err != nil {
 		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] sol juice cleanup failed: %v", err)
-		return
-	}
-	if deletedJuice > 0 {
+	} else if deletedJuice > 0 {
 		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] cleaned %d old sol juice records", deletedJuice)
+	}
+
+	deletedAstra, err := s.repo.DeleteAstraCheckRunsOlderThan(ctx, before)
+	if err != nil {
+		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] astra check cleanup failed: %v", err)
+	} else if deletedAstra > 0 {
+		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] cleaned %d old astra check runs", deletedAstra)
 	}
 }

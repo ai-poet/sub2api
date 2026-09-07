@@ -59,6 +59,34 @@ const (
 	FieldSolJuiceOutputTokens = "sol_juice_output_tokens"
 	// FieldSolJuiceReasoningTokens holds the string denoting the sol_juice_reasoning_tokens field in the database.
 	FieldSolJuiceReasoningTokens = "sol_juice_reasoning_tokens"
+	// FieldAstraCheckVerdict holds the string denoting the astra_check_verdict field in the database.
+	FieldAstraCheckVerdict = "astra_check_verdict"
+	// FieldAstraCheckStableStatus holds the string denoting the astra_check_stable_status field in the database.
+	FieldAstraCheckStableStatus = "astra_check_stable_status"
+	// FieldAstraCheckWinner holds the string denoting the astra_check_winner field in the database.
+	FieldAstraCheckWinner = "astra_check_winner"
+	// FieldAstraCheckMatches holds the string denoting the astra_check_matches field in the database.
+	FieldAstraCheckMatches = "astra_check_matches"
+	// FieldAstraCheckReasons holds the string denoting the astra_check_reasons field in the database.
+	FieldAstraCheckReasons = "astra_check_reasons"
+	// FieldAstraCheckDetail holds the string denoting the astra_check_detail field in the database.
+	FieldAstraCheckDetail = "astra_check_detail"
+	// FieldAstraCheckCheckedAt holds the string denoting the astra_check_checked_at field in the database.
+	FieldAstraCheckCheckedAt = "astra_check_checked_at"
+	// FieldAstraCheckConsecutiveMismatch holds the string denoting the astra_check_consecutive_mismatch field in the database.
+	FieldAstraCheckConsecutiveMismatch = "astra_check_consecutive_mismatch"
+	// FieldAstraCheckValidSamples holds the string denoting the astra_check_valid_samples field in the database.
+	FieldAstraCheckValidSamples = "astra_check_valid_samples"
+	// FieldAstraCheckPlannedSamples holds the string denoting the astra_check_planned_samples field in the database.
+	FieldAstraCheckPlannedSamples = "astra_check_planned_samples"
+	// FieldAstraCheckInputTokens holds the string denoting the astra_check_input_tokens field in the database.
+	FieldAstraCheckInputTokens = "astra_check_input_tokens"
+	// FieldAstraCheckOutputTokens holds the string denoting the astra_check_output_tokens field in the database.
+	FieldAstraCheckOutputTokens = "astra_check_output_tokens"
+	// FieldAstraCheckReasoningTokens holds the string denoting the astra_check_reasoning_tokens field in the database.
+	FieldAstraCheckReasoningTokens = "astra_check_reasoning_tokens"
+	// FieldAstraCheckLastRunID holds the string denoting the astra_check_last_run_id field in the database.
+	FieldAstraCheckLastRunID = "astra_check_last_run_id"
 	// Table holds the table name of the groupstatusstate in the database.
 	Table = "group_status_states"
 )
@@ -89,6 +117,20 @@ var Columns = []string{
 	FieldSolJuiceInputTokens,
 	FieldSolJuiceOutputTokens,
 	FieldSolJuiceReasoningTokens,
+	FieldAstraCheckVerdict,
+	FieldAstraCheckStableStatus,
+	FieldAstraCheckWinner,
+	FieldAstraCheckMatches,
+	FieldAstraCheckReasons,
+	FieldAstraCheckDetail,
+	FieldAstraCheckCheckedAt,
+	FieldAstraCheckConsecutiveMismatch,
+	FieldAstraCheckValidSamples,
+	FieldAstraCheckPlannedSamples,
+	FieldAstraCheckInputTokens,
+	FieldAstraCheckOutputTokens,
+	FieldAstraCheckReasoningTokens,
+	FieldAstraCheckLastRunID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -132,6 +174,28 @@ var (
 	DefaultSolJuiceOutputTokens int64
 	// DefaultSolJuiceReasoningTokens holds the default value on creation for the "sol_juice_reasoning_tokens" field.
 	DefaultSolJuiceReasoningTokens int64
+	// DefaultAstraCheckVerdict holds the default value on creation for the "astra_check_verdict" field.
+	DefaultAstraCheckVerdict string
+	// DefaultAstraCheckStableStatus holds the default value on creation for the "astra_check_stable_status" field.
+	DefaultAstraCheckStableStatus string
+	// DefaultAstraCheckWinner holds the default value on creation for the "astra_check_winner" field.
+	DefaultAstraCheckWinner string
+	// DefaultAstraCheckMatches holds the default value on creation for the "astra_check_matches" field.
+	DefaultAstraCheckMatches []map[string]interface{}
+	// DefaultAstraCheckReasons holds the default value on creation for the "astra_check_reasons" field.
+	DefaultAstraCheckReasons []string
+	// DefaultAstraCheckConsecutiveMismatch holds the default value on creation for the "astra_check_consecutive_mismatch" field.
+	DefaultAstraCheckConsecutiveMismatch int
+	// DefaultAstraCheckValidSamples holds the default value on creation for the "astra_check_valid_samples" field.
+	DefaultAstraCheckValidSamples int
+	// DefaultAstraCheckPlannedSamples holds the default value on creation for the "astra_check_planned_samples" field.
+	DefaultAstraCheckPlannedSamples int
+	// DefaultAstraCheckInputTokens holds the default value on creation for the "astra_check_input_tokens" field.
+	DefaultAstraCheckInputTokens int64
+	// DefaultAstraCheckOutputTokens holds the default value on creation for the "astra_check_output_tokens" field.
+	DefaultAstraCheckOutputTokens int64
+	// DefaultAstraCheckReasoningTokens holds the default value on creation for the "astra_check_reasoning_tokens" field.
+	DefaultAstraCheckReasoningTokens int64
 )
 
 // OrderOption defines the ordering options for the GroupStatusState queries.
@@ -255,4 +319,64 @@ func BySolJuiceOutputTokens(opts ...sql.OrderTermOption) OrderOption {
 // BySolJuiceReasoningTokens orders the results by the sol_juice_reasoning_tokens field.
 func BySolJuiceReasoningTokens(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSolJuiceReasoningTokens, opts...).ToFunc()
+}
+
+// ByAstraCheckVerdict orders the results by the astra_check_verdict field.
+func ByAstraCheckVerdict(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckVerdict, opts...).ToFunc()
+}
+
+// ByAstraCheckStableStatus orders the results by the astra_check_stable_status field.
+func ByAstraCheckStableStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckStableStatus, opts...).ToFunc()
+}
+
+// ByAstraCheckWinner orders the results by the astra_check_winner field.
+func ByAstraCheckWinner(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckWinner, opts...).ToFunc()
+}
+
+// ByAstraCheckDetail orders the results by the astra_check_detail field.
+func ByAstraCheckDetail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckDetail, opts...).ToFunc()
+}
+
+// ByAstraCheckCheckedAt orders the results by the astra_check_checked_at field.
+func ByAstraCheckCheckedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckCheckedAt, opts...).ToFunc()
+}
+
+// ByAstraCheckConsecutiveMismatch orders the results by the astra_check_consecutive_mismatch field.
+func ByAstraCheckConsecutiveMismatch(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckConsecutiveMismatch, opts...).ToFunc()
+}
+
+// ByAstraCheckValidSamples orders the results by the astra_check_valid_samples field.
+func ByAstraCheckValidSamples(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckValidSamples, opts...).ToFunc()
+}
+
+// ByAstraCheckPlannedSamples orders the results by the astra_check_planned_samples field.
+func ByAstraCheckPlannedSamples(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckPlannedSamples, opts...).ToFunc()
+}
+
+// ByAstraCheckInputTokens orders the results by the astra_check_input_tokens field.
+func ByAstraCheckInputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckInputTokens, opts...).ToFunc()
+}
+
+// ByAstraCheckOutputTokens orders the results by the astra_check_output_tokens field.
+func ByAstraCheckOutputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckOutputTokens, opts...).ToFunc()
+}
+
+// ByAstraCheckReasoningTokens orders the results by the astra_check_reasoning_tokens field.
+func ByAstraCheckReasoningTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckReasoningTokens, opts...).ToFunc()
+}
+
+// ByAstraCheckLastRunID orders the results by the astra_check_last_run_id field.
+func ByAstraCheckLastRunID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckLastRunID, opts...).ToFunc()
 }

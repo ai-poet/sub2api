@@ -273,6 +273,176 @@
           </div>
         </div>
 
+        <div
+          v-if="group.platform === 'openai'"
+          class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-dark-700"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="font-medium text-gray-900 dark:text-white">
+                {{ t('admin.groups.runtimeStatus.astraCheck.title') }}
+              </div>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.astraCheck.hint') }}
+              </p>
+              <p v-if="summary.astra_check_benchmark_version" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                {{ t('admin.groups.runtimeStatus.astraCheck.benchmark') }}: {{ summary.astra_check_benchmark_version }}
+                · {{ summary.astra_check_benchmark_models.map((m) => astraModelShortName(m.id)).join(' / ') }}
+              </p>
+            </div>
+            <Toggle v-model="form.astra_check_enabled" />
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-3">
+            <div>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.astraCheck.requestModel') }}</label>
+              <input
+                v-model.trim="form.astra_check_request_model"
+                type="text"
+                class="input"
+                placeholder="gpt-6-astra"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.astraCheck.tier') }}</label>
+              <select v-model="form.astra_check_tier" class="input">
+                <option v-for="option in astraTierOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.astraCheck.intervalSeconds') }}</label>
+              <input
+                v-model.number="form.astra_check_interval_seconds"
+                type="number"
+                min="900"
+                step="300"
+                class="input"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ t('admin.groups.runtimeStatus.astraCheck.latestResult') }}
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              :disabled="loading || saving || probing || astraProbing || summary.astra_check_running"
+              @click="handleAstraCheckProbe"
+            >
+              <span
+                v-if="astraProbing || summary.astra_check_running"
+                class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+              ></span>
+              {{
+                astraProbing || summary.astra_check_running
+                  ? t('admin.groups.runtimeStatus.astraCheck.running')
+                  : t('admin.groups.runtimeStatus.astraCheck.probeNow')
+              }}
+            </button>
+          </div>
+
+          <div v-if="summary.astra_check_checked_at" class="space-y-3">
+            <div class="grid gap-3 md:grid-cols-4">
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.astraCheck.verdict') }}
+                </div>
+                <div class="mt-1">
+                  <span :class="['badge', getAstraCheckBadgeClass(astraDisplayStatus)]">
+                    {{ astraStatusText }}
+                  </span>
+                </div>
+              </div>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.astraCheck.samples') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ summary.astra_check_valid_samples }} / {{ summary.astra_check_planned_samples }}
+                </div>
+              </div>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.astraCheck.checkedAt') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ formatDateTime(summary.astra_check_checked_at) }}
+                </div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {{ formatRelativeTime(summary.astra_check_checked_at) }}
+                </div>
+              </div>
+              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.astraCheck.tokens') }}
+                </div>
+                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ summary.astra_check_input_tokens }} / {{ summary.astra_check_output_tokens }}
+                </div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.astraCheck.lastCost') }}: {{ formatUsd(summary.astra_check_last_cost_usd) }}
+                  · {{ t('admin.groups.runtimeStatus.astraCheck.monthlyEstimate') }}: {{ formatUsd(astraMonthlyCost, 2) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
+              <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.astraCheck.matches') }}
+              </div>
+              <div v-for="m in summary.astra_check_matches" :key="m.model">
+                <div class="flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
+                  <span :class="m.passed ? 'font-semibold' : ''">{{ astraModelShortName(m.model) }}</span>
+                  <span>
+                    {{ formatMatchPercent(m.match) }}
+                    <span class="text-gray-400">/ {{ t('admin.groups.runtimeStatus.astraCheck.threshold') }} {{ formatMatchPercent(m.threshold) }}</span>
+                  </span>
+                </div>
+                <div class="mt-1 h-2 w-full rounded bg-gray-200 dark:bg-dark-700">
+                  <div
+                    class="h-2 rounded"
+                    :class="m.passed ? (m.model === 'gpt-6-astra' ? 'bg-emerald-500' : 'bg-rose-500') : 'bg-gray-400'"
+                    :style="{ width: `${Math.min(100, Math.round(m.match * 100))}%` }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-if="summary.astra_check_reasons.length > 0"
+              class="flex flex-wrap gap-2"
+            >
+              <span
+                v-for="reason in summary.astra_check_reasons"
+                :key="reason"
+                class="badge badge-warning"
+              >
+                {{ astraReasonLabel(reason) }}
+              </span>
+            </div>
+
+            <div
+              v-if="summary.astra_check_detail"
+              class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
+            >
+              <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.astraCheck.detail') }}
+              </div>
+              <pre class="mt-2 whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-gray-200">{{ summary.astra_check_detail }}</pre>
+            </div>
+          </div>
+          <div
+            v-else
+            class="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500 dark:border-dark-700 dark:text-gray-400"
+          >
+            {{ t('admin.groups.runtimeStatus.astraCheck.latestResultEmpty') }}
+          </div>
+        </div>
+
         <div class="rounded-xl border border-gray-200 p-4 dark:border-dark-700">
           <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
@@ -401,7 +571,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Toggle from '@/components/common/Toggle.vue'
@@ -409,18 +579,23 @@ import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores'
 import type {
   AdminGroup,
+  AstraCheckTier,
   GroupStatusAdminView,
   GroupStatusSummary,
   GroupStatusValidationMode,
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
+  astraModelShortName,
   estimateSolJuiceMonthlyCostUsd,
   formatGroupRuntimeLatency,
+  formatMatchPercent,
   formatUsd,
+  getAstraCheckBadgeClass,
   getGroupRuntimeStatusBadgeClass,
   getSolJuiceBadgeClass,
   joinRuntimeKeywordsText,
+  normalizeAstraCheckStatus,
   normalizeSolJuiceStatus,
   normalizeGroupRuntimeStatus,
   shouldShowRuntimeKeywordEditor,
@@ -439,7 +614,7 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const appStore = useAppStore()
 
 const loading = ref(false)
@@ -461,9 +636,18 @@ const form = reactive({
   sol_juice_enabled: false,
   sol_juice_interval_seconds: 900,
   sol_juice_model: 'gpt-5.6-sol',
+  astra_check_enabled: false,
+  astra_check_request_model: 'gpt-6-astra',
+  astra_check_tier: 'low' as AstraCheckTier,
+  astra_check_interval_seconds: 3600,
 })
 
 const solJuiceProbing = ref(false)
+const astraProbing = ref(false)
+let astraPollTimer: ReturnType<typeof setTimeout> | null = null
+let astraPollStartedAt = 0
+const ASTRA_POLL_INTERVAL_MS = 3000
+const ASTRA_POLL_MAX_MS = 20 * 60 * 1000
 
 const dialogTitle = computed(() => {
   if (!props.group) {
@@ -515,9 +699,62 @@ const summary = computed<GroupStatusSummary>(() => {
     sol_juice_input_tokens: 0,
     sol_juice_output_tokens: 0,
     sol_juice_reasoning_tokens: 0,
-    sol_juice_last_cost_usd: 0
+    sol_juice_last_cost_usd: 0,
+    astra_check_enabled: false,
+    astra_check_request_model: 'gpt-6-astra',
+    astra_check_tier: 'low',
+    astra_check_interval_seconds: 3600,
+    astra_check_verdict: '',
+    astra_check_stable_status: '',
+    astra_check_winner: '',
+    astra_check_matches: [],
+    astra_check_reasons: [],
+    astra_check_detail: '',
+    astra_check_checked_at: null,
+    astra_check_consecutive_mismatch: 0,
+    astra_check_valid_samples: 0,
+    astra_check_planned_samples: 0,
+    astra_check_input_tokens: 0,
+    astra_check_output_tokens: 0,
+    astra_check_reasoning_tokens: 0,
+    astra_check_last_cost_usd: 0,
+    astra_check_running: false,
+    astra_check_benchmark_version: '',
+    astra_check_benchmark_models: [],
+    astra_check_benchmark_tiers: []
   }
 })
+
+const astraTierOptions = computed(() => {
+  const tiers = summary.value.astra_check_benchmark_tiers ?? []
+  return (['low', 'medium', 'high'] as AstraCheckTier[]).map((tier) => {
+    const meta = tiers.find((item) => item.tier === tier)
+    const requests = meta?.requests ? ` (${meta.requests})` : ''
+    return { value: tier, label: `${t(`admin.groups.runtimeStatus.astraCheck.tiers.${tier}`)}${requests}` }
+  })
+})
+
+const astraDisplayStatus = computed(() =>
+  normalizeAstraCheckStatus(summary.value.astra_check_stable_status, summary.value.astra_check_verdict)
+)
+
+const astraStatusText = computed(() => {
+  if (astraDisplayStatus.value === 'mismatch') {
+    return t('admin.groups.runtimeStatus.astraCheck.statuses.mismatch', {
+      winner: astraModelShortName(summary.value.astra_check_winner)
+    })
+  }
+  return t(`admin.groups.runtimeStatus.astraCheck.statuses.${astraDisplayStatus.value}`)
+})
+
+const astraMonthlyCost = computed(() =>
+  estimateSolJuiceMonthlyCostUsd(summary.value.astra_check_last_cost_usd, Number(form.astra_check_interval_seconds) || 0)
+)
+
+function astraReasonLabel(reason: string): string {
+  const key = `admin.groups.runtimeStatus.astraCheck.reasons.${reason}`
+  return te(key) ? t(key) : reason
+}
 
 const solJuiceDisplayStatus = computed(() =>
   normalizeSolJuiceStatus(summary.value.sol_juice_stable_status || summary.value.sol_juice_status)
@@ -566,6 +803,10 @@ function resetForm() {
   form.sol_juice_enabled = false
   form.sol_juice_interval_seconds = 900
   form.sol_juice_model = 'gpt-5.6-sol'
+  form.astra_check_enabled = false
+  form.astra_check_request_model = 'gpt-6-astra'
+  form.astra_check_tier = 'low'
+  form.astra_check_interval_seconds = 3600
   expectedKeywordsText.value = ''
 }
 
@@ -582,6 +823,10 @@ function applyView(view: GroupStatusAdminView) {
   form.sol_juice_enabled = view.config.sol_juice_enabled === true
   form.sol_juice_interval_seconds = view.config.sol_juice_interval_seconds || 900
   form.sol_juice_model = view.config.sol_juice_model || 'gpt-5.6-sol'
+  form.astra_check_enabled = view.config.astra_check_enabled === true
+  form.astra_check_request_model = view.config.astra_check_request_model || 'gpt-6-astra'
+  form.astra_check_tier = view.config.astra_check_tier || 'low'
+  form.astra_check_interval_seconds = view.config.astra_check_interval_seconds || 3600
   expectedKeywordsText.value = joinRuntimeKeywordsText(view.config.expected_keywords)
 }
 
@@ -619,6 +864,10 @@ async function saveRuntimeStatus(showToast = true): Promise<GroupStatusAdminView
       sol_juice_enabled: form.sol_juice_enabled,
       sol_juice_interval_seconds: Math.max(300, Math.round(Number(form.sol_juice_interval_seconds) || 900)),
       sol_juice_model: form.sol_juice_model.trim() || 'gpt-5.6-sol',
+      astra_check_enabled: form.astra_check_enabled,
+      astra_check_request_model: form.astra_check_request_model.trim() || 'gpt-6-astra',
+      astra_check_tier: form.astra_check_tier,
+      astra_check_interval_seconds: Math.max(900, Math.round(Number(form.astra_check_interval_seconds) || 3600)),
     })
     applyView(view)
     if (showToast) {
@@ -686,6 +935,77 @@ async function handleSolJuiceProbe() {
     solJuiceProbing.value = false
   }
 }
+
+function stopAstraPolling() {
+  if (astraPollTimer) {
+    clearTimeout(astraPollTimer)
+    astraPollTimer = null
+  }
+  astraProbing.value = false
+}
+
+// 一轮 Astra 指纹验证有几十个请求，后端在后台跑；这里每 3s 拉一次管理视图直到 running 结束。
+function scheduleAstraPoll(groupId: number) {
+  astraPollTimer = setTimeout(async () => {
+    astraPollTimer = null
+    if (!props.show || props.group?.id !== groupId) {
+      stopAstraPolling()
+      return
+    }
+    try {
+      const view = await adminAPI.groups.getRuntimeStatus(groupId)
+      applyView(view)
+      if (view.summary.astra_check_running && Date.now() - astraPollStartedAt < ASTRA_POLL_MAX_MS) {
+        scheduleAstraPoll(groupId)
+        return
+      }
+      stopAstraPolling()
+      emit('updated')
+      if (!view.summary.astra_check_running) {
+        appStore.showSuccess(t('admin.groups.runtimeStatus.astraCheck.probeSucceeded'))
+      }
+    } catch (error: any) {
+      stopAstraPolling()
+      appStore.showError(error?.message || t('admin.groups.runtimeStatus.astraCheck.probeFailed'))
+    }
+  }, ASTRA_POLL_INTERVAL_MS)
+}
+
+async function handleAstraCheckProbe() {
+  if (!props.group) {
+    return
+  }
+
+  const saved = await saveRuntimeStatus(false)
+  if (!saved) {
+    return
+  }
+
+  astraProbing.value = true
+  try {
+    const view = await adminAPI.groups.probeRuntimeStatusAstraCheck(props.group.id)
+    applyView(view)
+    appStore.showSuccess(t('admin.groups.runtimeStatus.astraCheck.probeStarted'))
+    astraPollStartedAt = Date.now()
+    scheduleAstraPoll(props.group.id)
+  } catch (error: any) {
+    astraProbing.value = false
+    appStore.showError(error?.message || t('admin.groups.runtimeStatus.astraCheck.probeFailed'))
+  }
+}
+
+watch(
+  () => props.show,
+  (show) => {
+    if (!show) {
+      stopAstraPolling()
+    }
+  }
+)
+
+onBeforeUnmount(() => {
+  stopAstraPolling()
+})
 
 watch(
   () => [props.show, props.group?.id] as const,

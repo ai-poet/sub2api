@@ -216,6 +216,62 @@ func (_c *GroupStatusConfigCreate) SetNillableSolJuiceModel(v *string) *GroupSta
 	return _c
 }
 
+// SetAstraCheckEnabled sets the "astra_check_enabled" field.
+func (_c *GroupStatusConfigCreate) SetAstraCheckEnabled(v bool) *GroupStatusConfigCreate {
+	_c.mutation.SetAstraCheckEnabled(v)
+	return _c
+}
+
+// SetNillableAstraCheckEnabled sets the "astra_check_enabled" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableAstraCheckEnabled(v *bool) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetAstraCheckEnabled(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckRequestModel sets the "astra_check_request_model" field.
+func (_c *GroupStatusConfigCreate) SetAstraCheckRequestModel(v string) *GroupStatusConfigCreate {
+	_c.mutation.SetAstraCheckRequestModel(v)
+	return _c
+}
+
+// SetNillableAstraCheckRequestModel sets the "astra_check_request_model" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableAstraCheckRequestModel(v *string) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetAstraCheckRequestModel(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckTier sets the "astra_check_tier" field.
+func (_c *GroupStatusConfigCreate) SetAstraCheckTier(v string) *GroupStatusConfigCreate {
+	_c.mutation.SetAstraCheckTier(v)
+	return _c
+}
+
+// SetNillableAstraCheckTier sets the "astra_check_tier" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableAstraCheckTier(v *string) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetAstraCheckTier(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field.
+func (_c *GroupStatusConfigCreate) SetAstraCheckIntervalSeconds(v int) *GroupStatusConfigCreate {
+	_c.mutation.SetAstraCheckIntervalSeconds(v)
+	return _c
+}
+
+// SetNillableAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableAstraCheckIntervalSeconds(v *int) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetAstraCheckIntervalSeconds(*v)
+	}
+	return _c
+}
+
 // Mutation returns the GroupStatusConfigMutation object of the builder.
 func (_c *GroupStatusConfigCreate) Mutation() *GroupStatusConfigMutation {
 	return _c.mutation
@@ -307,6 +363,22 @@ func (_c *GroupStatusConfigCreate) defaults() {
 		v := groupstatusconfig.DefaultSolJuiceModel
 		_c.mutation.SetSolJuiceModel(v)
 	}
+	if _, ok := _c.mutation.AstraCheckEnabled(); !ok {
+		v := groupstatusconfig.DefaultAstraCheckEnabled
+		_c.mutation.SetAstraCheckEnabled(v)
+	}
+	if _, ok := _c.mutation.AstraCheckRequestModel(); !ok {
+		v := groupstatusconfig.DefaultAstraCheckRequestModel
+		_c.mutation.SetAstraCheckRequestModel(v)
+	}
+	if _, ok := _c.mutation.AstraCheckTier(); !ok {
+		v := groupstatusconfig.DefaultAstraCheckTier
+		_c.mutation.SetAstraCheckTier(v)
+	}
+	if _, ok := _c.mutation.AstraCheckIntervalSeconds(); !ok {
+		v := groupstatusconfig.DefaultAstraCheckIntervalSeconds
+		_c.mutation.SetAstraCheckIntervalSeconds(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -355,6 +427,18 @@ func (_c *GroupStatusConfigCreate) check() error {
 	}
 	if _, ok := _c.mutation.SolJuiceModel(); !ok {
 		return &ValidationError{Name: "sol_juice_model", err: errors.New(`ent: missing required field "GroupStatusConfig.sol_juice_model"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckEnabled(); !ok {
+		return &ValidationError{Name: "astra_check_enabled", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_enabled"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckRequestModel(); !ok {
+		return &ValidationError{Name: "astra_check_request_model", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_request_model"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckTier(); !ok {
+		return &ValidationError{Name: "astra_check_tier", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_tier"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckIntervalSeconds(); !ok {
+		return &ValidationError{Name: "astra_check_interval_seconds", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_interval_seconds"`)}
 	}
 	return nil
 }
@@ -442,6 +526,22 @@ func (_c *GroupStatusConfigCreate) createSpec() (*GroupStatusConfig, *sqlgraph.C
 	if value, ok := _c.mutation.SolJuiceModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
 		_node.SolJuiceModel = value
+	}
+	if value, ok := _c.mutation.AstraCheckEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckEnabled, field.TypeBool, value)
+		_node.AstraCheckEnabled = value
+	}
+	if value, ok := _c.mutation.AstraCheckRequestModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckRequestModel, field.TypeString, value)
+		_node.AstraCheckRequestModel = value
+	}
+	if value, ok := _c.mutation.AstraCheckTier(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckTier, field.TypeString, value)
+		_node.AstraCheckTier = value
+	}
+	if value, ok := _c.mutation.AstraCheckIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckIntervalSeconds, field.TypeInt, value)
+		_node.AstraCheckIntervalSeconds = value
 	}
 	return _node, _spec
 }
@@ -690,6 +790,60 @@ func (u *GroupStatusConfigUpsert) SetSolJuiceModel(v string) *GroupStatusConfigU
 // UpdateSolJuiceModel sets the "sol_juice_model" field to the value that was provided on create.
 func (u *GroupStatusConfigUpsert) UpdateSolJuiceModel() *GroupStatusConfigUpsert {
 	u.SetExcluded(groupstatusconfig.FieldSolJuiceModel)
+	return u
+}
+
+// SetAstraCheckEnabled sets the "astra_check_enabled" field.
+func (u *GroupStatusConfigUpsert) SetAstraCheckEnabled(v bool) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldAstraCheckEnabled, v)
+	return u
+}
+
+// UpdateAstraCheckEnabled sets the "astra_check_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateAstraCheckEnabled() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldAstraCheckEnabled)
+	return u
+}
+
+// SetAstraCheckRequestModel sets the "astra_check_request_model" field.
+func (u *GroupStatusConfigUpsert) SetAstraCheckRequestModel(v string) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldAstraCheckRequestModel, v)
+	return u
+}
+
+// UpdateAstraCheckRequestModel sets the "astra_check_request_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateAstraCheckRequestModel() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldAstraCheckRequestModel)
+	return u
+}
+
+// SetAstraCheckTier sets the "astra_check_tier" field.
+func (u *GroupStatusConfigUpsert) SetAstraCheckTier(v string) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldAstraCheckTier, v)
+	return u
+}
+
+// UpdateAstraCheckTier sets the "astra_check_tier" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateAstraCheckTier() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldAstraCheckTier)
+	return u
+}
+
+// SetAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field.
+func (u *GroupStatusConfigUpsert) SetAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldAstraCheckIntervalSeconds, v)
+	return u
+}
+
+// UpdateAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateAstraCheckIntervalSeconds() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldAstraCheckIntervalSeconds)
+	return u
+}
+
+// AddAstraCheckIntervalSeconds adds v to the "astra_check_interval_seconds" field.
+func (u *GroupStatusConfigUpsert) AddAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpsert {
+	u.Add(groupstatusconfig.FieldAstraCheckIntervalSeconds, v)
 	return u
 }
 
@@ -966,6 +1120,69 @@ func (u *GroupStatusConfigUpsertOne) SetSolJuiceModel(v string) *GroupStatusConf
 func (u *GroupStatusConfigUpsertOne) UpdateSolJuiceModel() *GroupStatusConfigUpsertOne {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateSolJuiceModel()
+	})
+}
+
+// SetAstraCheckEnabled sets the "astra_check_enabled" field.
+func (u *GroupStatusConfigUpsertOne) SetAstraCheckEnabled(v bool) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckEnabled(v)
+	})
+}
+
+// UpdateAstraCheckEnabled sets the "astra_check_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateAstraCheckEnabled() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckEnabled()
+	})
+}
+
+// SetAstraCheckRequestModel sets the "astra_check_request_model" field.
+func (u *GroupStatusConfigUpsertOne) SetAstraCheckRequestModel(v string) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckRequestModel(v)
+	})
+}
+
+// UpdateAstraCheckRequestModel sets the "astra_check_request_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateAstraCheckRequestModel() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckRequestModel()
+	})
+}
+
+// SetAstraCheckTier sets the "astra_check_tier" field.
+func (u *GroupStatusConfigUpsertOne) SetAstraCheckTier(v string) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckTier(v)
+	})
+}
+
+// UpdateAstraCheckTier sets the "astra_check_tier" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateAstraCheckTier() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckTier()
+	})
+}
+
+// SetAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field.
+func (u *GroupStatusConfigUpsertOne) SetAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckIntervalSeconds(v)
+	})
+}
+
+// AddAstraCheckIntervalSeconds adds v to the "astra_check_interval_seconds" field.
+func (u *GroupStatusConfigUpsertOne) AddAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.AddAstraCheckIntervalSeconds(v)
+	})
+}
+
+// UpdateAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateAstraCheckIntervalSeconds() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckIntervalSeconds()
 	})
 }
 
@@ -1408,6 +1625,69 @@ func (u *GroupStatusConfigUpsertBulk) SetSolJuiceModel(v string) *GroupStatusCon
 func (u *GroupStatusConfigUpsertBulk) UpdateSolJuiceModel() *GroupStatusConfigUpsertBulk {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateSolJuiceModel()
+	})
+}
+
+// SetAstraCheckEnabled sets the "astra_check_enabled" field.
+func (u *GroupStatusConfigUpsertBulk) SetAstraCheckEnabled(v bool) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckEnabled(v)
+	})
+}
+
+// UpdateAstraCheckEnabled sets the "astra_check_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateAstraCheckEnabled() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckEnabled()
+	})
+}
+
+// SetAstraCheckRequestModel sets the "astra_check_request_model" field.
+func (u *GroupStatusConfigUpsertBulk) SetAstraCheckRequestModel(v string) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckRequestModel(v)
+	})
+}
+
+// UpdateAstraCheckRequestModel sets the "astra_check_request_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateAstraCheckRequestModel() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckRequestModel()
+	})
+}
+
+// SetAstraCheckTier sets the "astra_check_tier" field.
+func (u *GroupStatusConfigUpsertBulk) SetAstraCheckTier(v string) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckTier(v)
+	})
+}
+
+// UpdateAstraCheckTier sets the "astra_check_tier" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateAstraCheckTier() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckTier()
+	})
+}
+
+// SetAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field.
+func (u *GroupStatusConfigUpsertBulk) SetAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckIntervalSeconds(v)
+	})
+}
+
+// AddAstraCheckIntervalSeconds adds v to the "astra_check_interval_seconds" field.
+func (u *GroupStatusConfigUpsertBulk) AddAstraCheckIntervalSeconds(v int) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.AddAstraCheckIntervalSeconds(v)
+	})
+}
+
+// UpdateAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateAstraCheckIntervalSeconds() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckIntervalSeconds()
 	})
 }
 

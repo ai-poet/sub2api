@@ -48,7 +48,15 @@ type GroupStatusConfig struct {
 	SolJuiceIntervalSeconds int `json:"sol_juice_interval_seconds,omitempty"`
 	// SolJuiceModel holds the value of the "sol_juice_model" field.
 	SolJuiceModel string `json:"sol_juice_model,omitempty"`
-	selectValues  sql.SelectValues
+	// AstraCheckEnabled holds the value of the "astra_check_enabled" field.
+	AstraCheckEnabled bool `json:"astra_check_enabled,omitempty"`
+	// AstraCheckRequestModel holds the value of the "astra_check_request_model" field.
+	AstraCheckRequestModel string `json:"astra_check_request_model,omitempty"`
+	// AstraCheckTier holds the value of the "astra_check_tier" field.
+	AstraCheckTier string `json:"astra_check_tier,omitempty"`
+	// AstraCheckIntervalSeconds holds the value of the "astra_check_interval_seconds" field.
+	AstraCheckIntervalSeconds int `json:"astra_check_interval_seconds,omitempty"`
+	selectValues              sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -58,11 +66,11 @@ func (*GroupStatusConfig) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case groupstatusconfig.FieldExpectedKeywords:
 			values[i] = new([]byte)
-		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled, groupstatusconfig.FieldSolJuiceEnabled:
+		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled, groupstatusconfig.FieldSolJuiceEnabled, groupstatusconfig.FieldAstraCheckEnabled:
 			values[i] = new(sql.NullBool)
-		case groupstatusconfig.FieldID, groupstatusconfig.FieldGroupID, groupstatusconfig.FieldIntervalSeconds, groupstatusconfig.FieldTimeoutSeconds, groupstatusconfig.FieldSlowLatencyMs, groupstatusconfig.FieldSolJuiceIntervalSeconds:
+		case groupstatusconfig.FieldID, groupstatusconfig.FieldGroupID, groupstatusconfig.FieldIntervalSeconds, groupstatusconfig.FieldTimeoutSeconds, groupstatusconfig.FieldSlowLatencyMs, groupstatusconfig.FieldSolJuiceIntervalSeconds, groupstatusconfig.FieldAstraCheckIntervalSeconds:
 			values[i] = new(sql.NullInt64)
-		case groupstatusconfig.FieldProbeModel, groupstatusconfig.FieldProbePrompt, groupstatusconfig.FieldValidationMode, groupstatusconfig.FieldSolJuiceModel:
+		case groupstatusconfig.FieldProbeModel, groupstatusconfig.FieldProbePrompt, groupstatusconfig.FieldValidationMode, groupstatusconfig.FieldSolJuiceModel, groupstatusconfig.FieldAstraCheckRequestModel, groupstatusconfig.FieldAstraCheckTier:
 			values[i] = new(sql.NullString)
 		case groupstatusconfig.FieldCreatedAt, groupstatusconfig.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -179,6 +187,30 @@ func (_m *GroupStatusConfig) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.SolJuiceModel = value.String
 			}
+		case groupstatusconfig.FieldAstraCheckEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_enabled", values[i])
+			} else if value.Valid {
+				_m.AstraCheckEnabled = value.Bool
+			}
+		case groupstatusconfig.FieldAstraCheckRequestModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_request_model", values[i])
+			} else if value.Valid {
+				_m.AstraCheckRequestModel = value.String
+			}
+		case groupstatusconfig.FieldAstraCheckTier:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_tier", values[i])
+			} else if value.Valid {
+				_m.AstraCheckTier = value.String
+			}
+		case groupstatusconfig.FieldAstraCheckIntervalSeconds:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_interval_seconds", values[i])
+			} else if value.Valid {
+				_m.AstraCheckIntervalSeconds = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -259,6 +291,18 @@ func (_m *GroupStatusConfig) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sol_juice_model=")
 	builder.WriteString(_m.SolJuiceModel)
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_request_model=")
+	builder.WriteString(_m.AstraCheckRequestModel)
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_tier=")
+	builder.WriteString(_m.AstraCheckTier)
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_interval_seconds=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckIntervalSeconds))
 	builder.WriteByte(')')
 	return builder.String()
 }

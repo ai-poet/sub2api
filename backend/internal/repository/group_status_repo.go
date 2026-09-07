@@ -16,13 +16,24 @@ import (
 const (
 	groupStatusConfigColumns = `id, group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
 		interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled,
-		sol_juice_enabled, sol_juice_interval_seconds, sol_juice_model, created_at, updated_at`
+		sol_juice_enabled, sol_juice_interval_seconds, sol_juice_model,
+		astra_check_enabled, astra_check_request_model, astra_check_tier, astra_check_interval_seconds,
+		created_at, updated_at`
 
 	groupStatusStateColumns = `id, group_id, config_id, latest_status, stable_status, response_excerpt, latency_ms, http_code,
 		sub_status, error_detail, observed_at, consecutive_down, consecutive_non_down,
 		sol_juice_status, sol_juice_stable_status, sol_juice_value, sol_juice_detail, sol_juice_checked_at,
 		sol_juice_consecutive_mismatch, sol_juice_input_tokens, sol_juice_output_tokens, sol_juice_reasoning_tokens,
+		astra_check_verdict, astra_check_stable_status, astra_check_winner, astra_check_matches, astra_check_reasons,
+		astra_check_detail, astra_check_checked_at, astra_check_consecutive_mismatch, astra_check_valid_samples,
+		astra_check_planned_samples, astra_check_input_tokens, astra_check_output_tokens, astra_check_reasoning_tokens,
+		astra_check_last_run_id,
 		created_at, updated_at`
+
+	groupStatusAstraRunColumns = `id, group_id, config_id, benchmark_package_id, benchmark_version, benchmark_sha256,
+		request_model, tier, account_id, verdict, winner_model, matches, cells, reasons,
+		requests_planned, requests_completed, valid_samples, input_tokens, output_tokens, reasoning_tokens,
+		latency_ms, http_code, error_detail, started_at, finished_at, created_at`
 
 	groupStatusSummarySelect = `SELECT c.group_id, c.id, c.enabled, c.probe_model,
 		       COALESCE(s.latest_status, ''), COALESCE(s.stable_status, ''), COALESCE(s.response_excerpt, ''),
@@ -31,7 +42,13 @@ const (
 		       c.sol_juice_enabled, c.sol_juice_model, c.sol_juice_interval_seconds,
 		       COALESCE(s.sol_juice_status, ''), COALESCE(s.sol_juice_stable_status, ''), COALESCE(s.sol_juice_value, ''),
 		       COALESCE(s.sol_juice_detail, ''), s.sol_juice_checked_at, COALESCE(s.sol_juice_consecutive_mismatch, 0),
-		       COALESCE(s.sol_juice_input_tokens, 0), COALESCE(s.sol_juice_output_tokens, 0), COALESCE(s.sol_juice_reasoning_tokens, 0)
+		       COALESCE(s.sol_juice_input_tokens, 0), COALESCE(s.sol_juice_output_tokens, 0), COALESCE(s.sol_juice_reasoning_tokens, 0),
+		       c.astra_check_enabled, c.astra_check_request_model, c.astra_check_tier, c.astra_check_interval_seconds,
+		       COALESCE(s.astra_check_verdict, ''), COALESCE(s.astra_check_stable_status, ''), COALESCE(s.astra_check_winner, ''),
+		       COALESCE(s.astra_check_matches, '[]'::jsonb), COALESCE(s.astra_check_reasons, '[]'::jsonb), COALESCE(s.astra_check_detail, ''),
+		       s.astra_check_checked_at, COALESCE(s.astra_check_consecutive_mismatch, 0), COALESCE(s.astra_check_valid_samples, 0),
+		       COALESCE(s.astra_check_planned_samples, 0), COALESCE(s.astra_check_input_tokens, 0), COALESCE(s.astra_check_output_tokens, 0),
+		       COALESCE(s.astra_check_reasoning_tokens, 0), s.astra_check_last_run_id
 		FROM group_status_configs c
 		LEFT JOIN group_status_states s ON s.group_id = c.group_id`
 
@@ -77,9 +94,11 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 		INSERT INTO group_status_configs (
 			group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
 			interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled,
-			sol_juice_enabled, sol_juice_interval_seconds, sol_juice_model, created_at, updated_at
+			sol_juice_enabled, sol_juice_interval_seconds, sol_juice_model,
+			astra_check_enabled, astra_check_request_model, astra_check_tier, astra_check_interval_seconds,
+			created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
 		ON CONFLICT (group_id) DO UPDATE SET
 			enabled = EXCLUDED.enabled,
 			probe_model = EXCLUDED.probe_model,
@@ -93,11 +112,16 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 			sol_juice_enabled = EXCLUDED.sol_juice_enabled,
 			sol_juice_interval_seconds = EXCLUDED.sol_juice_interval_seconds,
 			sol_juice_model = EXCLUDED.sol_juice_model,
+			astra_check_enabled = EXCLUDED.astra_check_enabled,
+			astra_check_request_model = EXCLUDED.astra_check_request_model,
+			astra_check_tier = EXCLUDED.astra_check_tier,
+			astra_check_interval_seconds = EXCLUDED.astra_check_interval_seconds,
 			updated_at = NOW()
 		RETURNING `+groupStatusConfigColumns+`
 	`, config.GroupID, config.Enabled, config.ProbeModel, config.ProbePrompt, config.ValidationMode,
 		mustJSON(config.ExpectedKeywords), config.IntervalSeconds, config.TimeoutSeconds, config.SlowLatencyMS,
-		config.NotifyEnabled, config.SolJuiceEnabled, config.SolJuiceIntervalSeconds, config.SolJuiceModel)
+		config.NotifyEnabled, config.SolJuiceEnabled, config.SolJuiceIntervalSeconds, config.SolJuiceModel,
+		config.AstraCheckEnabled, config.AstraCheckRequestModel, config.AstraCheckTier, config.AstraCheckIntervalSeconds)
 	return scanGroupStatusConfig(row)
 }
 
@@ -515,6 +539,235 @@ func (r *groupStatusRepository) DeleteSolJuiceRecordsOlderThan(ctx context.Conte
 	return res.RowsAffected()
 }
 
+// ListDueAstraCheckConfigs 列出到期的 Astra 指纹验证配置：分组仍是 OpenAI 平台、两个开关都开、且距上次验证超过间隔。
+func (r *groupStatusRepository) ListDueAstraCheckConfigs(ctx context.Context, now time.Time, limit int) ([]*service.GroupStatusConfig, error) {
+	if limit <= 0 {
+		limit = 3
+	}
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT `+aliasColumns("c", groupStatusConfigColumns)+`
+		FROM group_status_configs c
+		JOIN groups g ON g.id = c.group_id
+		LEFT JOIN group_status_states s ON s.group_id = c.group_id
+		WHERE c.enabled = TRUE
+		  AND c.astra_check_enabled = TRUE
+		  AND g.platform = $3
+		  AND (
+		        s.astra_check_checked_at IS NULL
+		        OR s.astra_check_checked_at <= ($1::timestamptz - (c.astra_check_interval_seconds * INTERVAL '1 second'))
+		      )
+		ORDER BY COALESCE(s.astra_check_checked_at, to_timestamp(0)) ASC, c.group_id ASC
+		LIMIT $2
+	`, now, limit, service.PlatformOpenAI)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	var out []*service.GroupStatusConfig
+	for rows.Next() {
+		cfg, err := scanGroupStatusConfig(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cfg)
+	}
+	return out, rows.Err()
+}
+
+// SaveAstraCheckRun 落一条运行记录、只更新 group_status_states 的 astra_check_* 列，稳定结论切换时写事件。
+func (r *groupStatusRepository) SaveAstraCheckRun(ctx context.Context, result *service.GroupStatusAstraCheckResult) (*service.GroupStatusAstraCheckRun, *service.GroupStatusState, *service.GroupStatusEvent, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer func() {
+		if tx != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	row := tx.QueryRowContext(ctx, `
+		INSERT INTO group_status_astra_check_runs (
+			group_id, config_id, benchmark_package_id, benchmark_version, benchmark_sha256,
+			request_model, tier, account_id, verdict, winner_model, matches, cells, reasons,
+			requests_planned, requests_completed, valid_samples, input_tokens, output_tokens, reasoning_tokens,
+			latency_ms, http_code, error_detail, started_at, finished_at, created_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13::jsonb,
+		        $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, NOW())
+		RETURNING `+groupStatusAstraRunColumns+`
+	`, result.GroupID, result.ConfigID, result.BenchmarkPackageID, result.BenchmarkVersion, result.BenchmarkSHA256,
+		result.RequestModel, result.Tier, result.AccountID, result.Verdict, result.Winner,
+		mustJSONArray(result.Matches), mustJSONArray(result.Cells), mustJSONArray(result.Reasons),
+		result.RequestsPlanned, result.RequestsCompleted, result.ValidSamples, result.InputTokens, result.OutputTokens,
+		result.ReasoningTokens, result.LatencyMS, result.HTTPCode, nullIfEmpty(result.ErrorDetail), result.StartedAt, result.FinishedAt)
+	run, err := scanGroupStatusAstraCheckRun(row)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	prev, err := r.getStateForUpdate(ctx, tx, result.GroupID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	next, event := service.ComputeAstraCheckTransition(prev, result, run.ID)
+
+	row = tx.QueryRowContext(ctx, `
+		INSERT INTO group_status_states (
+			group_id, config_id, astra_check_verdict, astra_check_stable_status, astra_check_winner,
+			astra_check_matches, astra_check_reasons, astra_check_detail, astra_check_checked_at,
+			astra_check_consecutive_mismatch, astra_check_valid_samples, astra_check_planned_samples,
+			astra_check_input_tokens, astra_check_output_tokens, astra_check_reasoning_tokens, astra_check_last_run_id,
+			created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+		ON CONFLICT (group_id) DO UPDATE SET
+			astra_check_verdict = EXCLUDED.astra_check_verdict,
+			astra_check_stable_status = EXCLUDED.astra_check_stable_status,
+			astra_check_winner = EXCLUDED.astra_check_winner,
+			astra_check_matches = EXCLUDED.astra_check_matches,
+			astra_check_reasons = EXCLUDED.astra_check_reasons,
+			astra_check_detail = EXCLUDED.astra_check_detail,
+			astra_check_checked_at = EXCLUDED.astra_check_checked_at,
+			astra_check_consecutive_mismatch = EXCLUDED.astra_check_consecutive_mismatch,
+			astra_check_valid_samples = EXCLUDED.astra_check_valid_samples,
+			astra_check_planned_samples = EXCLUDED.astra_check_planned_samples,
+			astra_check_input_tokens = EXCLUDED.astra_check_input_tokens,
+			astra_check_output_tokens = EXCLUDED.astra_check_output_tokens,
+			astra_check_reasoning_tokens = EXCLUDED.astra_check_reasoning_tokens,
+			astra_check_last_run_id = EXCLUDED.astra_check_last_run_id,
+			updated_at = NOW()
+		RETURNING `+groupStatusStateColumns+`
+	`, next.GroupID, next.ConfigID, next.AstraCheckVerdict, next.AstraCheckStableStatus, next.AstraCheckWinner,
+		mustJSONArray(next.AstraCheckMatches), mustJSONArray(next.AstraCheckReasons), nullIfEmpty(next.AstraCheckDetail),
+		next.AstraCheckCheckedAt, next.AstraCheckConsecutiveMismatch, next.AstraCheckValidSamples, next.AstraCheckPlannedSamples,
+		next.AstraCheckInputTokens, next.AstraCheckOutputTokens, next.AstraCheckReasoningTokens, next.AstraCheckLastRunID)
+	savedState, err := scanGroupStatusState(row)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	if event != nil {
+		event, err = insertGroupStatusEvent(ctx, tx, event)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, nil, nil, err
+	}
+	tx = nil
+	return run, savedState, event, nil
+}
+
+func (r *groupStatusRepository) ListRecentAstraCheckRuns(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusAstraCheckRun, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT `+groupStatusAstraRunColumns+`
+		FROM group_status_astra_check_runs
+		WHERE group_id = $1
+		ORDER BY finished_at DESC
+		LIMIT $2
+	`, groupID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := make([]service.GroupStatusAstraCheckRun, 0)
+	for rows.Next() {
+		run, err := scanGroupStatusAstraCheckRun(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, *run)
+	}
+	return out, rows.Err()
+}
+
+func (r *groupStatusRepository) DeleteAstraCheckRunsOlderThan(ctx context.Context, before time.Time) (int64, error) {
+	res, err := r.db.ExecContext(ctx, `DELETE FROM group_status_astra_check_runs WHERE finished_at < $1`, before)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
+func scanGroupStatusAstraCheckRun(row scannable) (*service.GroupStatusAstraCheckRun, error) {
+	run := &service.GroupStatusAstraCheckRun{}
+	var accountID sql.NullInt64
+	var matchesRaw, cellsRaw, reasonsRaw []byte
+	var latency sql.NullInt64
+	var httpCode sql.NullInt64
+	var errorDetail sql.NullString
+	if err := row.Scan(
+		&run.ID, &run.GroupID, &run.ConfigID, &run.BenchmarkPackageID, &run.BenchmarkVersion, &run.BenchmarkSHA256,
+		&run.RequestModel, &run.Tier, &accountID, &run.Verdict, &run.Winner, &matchesRaw, &cellsRaw, &reasonsRaw,
+		&run.RequestsPlanned, &run.RequestsCompleted, &run.ValidSamples, &run.InputTokens, &run.OutputTokens, &run.ReasoningTokens,
+		&latency, &httpCode, &errorDetail, &run.StartedAt, &run.FinishedAt, &run.CreatedAt,
+	); err != nil {
+		return nil, err
+	}
+	if accountID.Valid {
+		v := accountID.Int64
+		run.AccountID = &v
+	}
+	run.Matches = decodeAstraMatches(matchesRaw)
+	if len(cellsRaw) > 0 {
+		_ = json.Unmarshal(cellsRaw, &run.Cells)
+	}
+	if run.Cells == nil {
+		run.Cells = []service.AstraCheckCellSummary{}
+	}
+	run.Reasons = decodeJSONStrings(reasonsRaw)
+	if latency.Valid {
+		v := latency.Int64
+		run.LatencyMS = &v
+	}
+	if httpCode.Valid {
+		v := int(httpCode.Int64)
+		run.HTTPCode = &v
+	}
+	run.ErrorDetail = errorDetail.String
+	return run, nil
+}
+
+func decodeAstraMatches(raw []byte) []service.AstraCheckModelMatch {
+	out := []service.AstraCheckModelMatch{}
+	if len(raw) > 0 {
+		_ = json.Unmarshal(raw, &out)
+	}
+	if out == nil {
+		out = []service.AstraCheckModelMatch{}
+	}
+	return out
+}
+
+func decodeJSONStrings(raw []byte) []string {
+	out := []string{}
+	if len(raw) > 0 {
+		_ = json.Unmarshal(raw, &out)
+	}
+	if out == nil {
+		out = []string{}
+	}
+	return out
+}
+
+// mustJSONArray 把切片编码成 JSON 数组；nil 也输出 []，避免 jsonb 列存成 null。
+func mustJSONArray(v any) []byte {
+	raw, err := json.Marshal(v)
+	if err != nil || len(raw) == 0 || string(raw) == "null" {
+		return []byte("[]")
+	}
+	return raw
+}
+
 func (r *groupStatusRepository) getStateForUpdate(ctx context.Context, tx *sql.Tx, groupID int64) (*service.GroupStatusState, error) {
 	row := tx.QueryRowContext(ctx, `
 		SELECT `+groupStatusStateColumns+`
@@ -538,7 +791,9 @@ func scanGroupStatusConfig(row scannable) (*service.GroupStatusConfig, error) {
 	if err := row.Scan(
 		&cfg.ID, &cfg.GroupID, &cfg.Enabled, &cfg.ProbeModel, &cfg.ProbePrompt, &cfg.ValidationMode, &keywordsRaw,
 		&cfg.IntervalSeconds, &cfg.TimeoutSeconds, &cfg.SlowLatencyMS, &cfg.NotifyEnabled,
-		&cfg.SolJuiceEnabled, &cfg.SolJuiceIntervalSeconds, &cfg.SolJuiceModel, &cfg.CreatedAt, &cfg.UpdatedAt,
+		&cfg.SolJuiceEnabled, &cfg.SolJuiceIntervalSeconds, &cfg.SolJuiceModel,
+		&cfg.AstraCheckEnabled, &cfg.AstraCheckRequestModel, &cfg.AstraCheckTier, &cfg.AstraCheckIntervalSeconds,
+		&cfg.CreatedAt, &cfg.UpdatedAt,
 	); err != nil {
 		return nil, err
 	}
@@ -563,15 +818,34 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 	var observedAt sql.NullTime
 	var solJuiceDetail sql.NullString
 	var solJuiceCheckedAt sql.NullTime
+	var astraMatchesRaw, astraReasonsRaw []byte
+	var astraDetail sql.NullString
+	var astraCheckedAt sql.NullTime
+	var astraLastRunID sql.NullInt64
 	if err := row.Scan(
 		&state.ID, &state.GroupID, &state.ConfigID, &state.LatestStatus, &state.StableStatus, &responseExcerpt,
 		&latency, &httpCode, &subStatus, &errorDetail, &observedAt, &state.ConsecutiveDown,
 		&state.ConsecutiveNonDown,
 		&state.SolJuiceStatus, &state.SolJuiceStableStatus, &state.SolJuiceValue, &solJuiceDetail, &solJuiceCheckedAt,
 		&state.SolJuiceConsecutiveMismatch, &state.SolJuiceInputTokens, &state.SolJuiceOutputTokens, &state.SolJuiceReasoningTokens,
+		&state.AstraCheckVerdict, &state.AstraCheckStableStatus, &state.AstraCheckWinner, &astraMatchesRaw, &astraReasonsRaw,
+		&astraDetail, &astraCheckedAt, &state.AstraCheckConsecutiveMismatch, &state.AstraCheckValidSamples,
+		&state.AstraCheckPlannedSamples, &state.AstraCheckInputTokens, &state.AstraCheckOutputTokens, &state.AstraCheckReasoningTokens,
+		&astraLastRunID,
 		&state.CreatedAt, &state.UpdatedAt,
 	); err != nil {
 		return nil, err
+	}
+	state.AstraCheckMatches = decodeAstraMatches(astraMatchesRaw)
+	state.AstraCheckReasons = decodeJSONStrings(astraReasonsRaw)
+	state.AstraCheckDetail = astraDetail.String
+	if astraCheckedAt.Valid {
+		v := astraCheckedAt.Time
+		state.AstraCheckCheckedAt = &v
+	}
+	if astraLastRunID.Valid {
+		v := astraLastRunID.Int64
+		state.AstraCheckLastRunID = &v
 	}
 	state.ResponseExcerpt = responseExcerpt.String
 	if latency.Valid {
@@ -692,6 +966,9 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 	var httpCode sql.NullInt64
 	var observedAt sql.NullTime
 	var solJuiceCheckedAt sql.NullTime
+	var astraMatchesRaw, astraReasonsRaw []byte
+	var astraCheckedAt sql.NullTime
+	var astraLastRunID sql.NullInt64
 	if err := row.Scan(
 		&item.GroupID, &item.ConfigID, &item.Enabled, &item.ProbeModel,
 		&item.LatestStatus, &item.StableStatus, &item.ResponseExcerpt, &latency, &httpCode,
@@ -700,9 +977,22 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 		&item.SolJuiceStatus, &item.SolJuiceStableStatus, &item.SolJuiceValue,
 		&item.SolJuiceDetail, &solJuiceCheckedAt, &item.SolJuiceConsecutiveMismatch,
 		&item.SolJuiceInputTokens, &item.SolJuiceOutputTokens, &item.SolJuiceReasoningTokens,
+		&item.AstraCheckEnabled, &item.AstraCheckRequestModel, &item.AstraCheckTier, &item.AstraCheckIntervalSeconds,
+		&item.AstraCheckVerdict, &item.AstraCheckStableStatus, &item.AstraCheckWinner,
+		&astraMatchesRaw, &astraReasonsRaw, &item.AstraCheckDetail,
+		&astraCheckedAt, &item.AstraCheckConsecutiveMismatch, &item.AstraCheckValidSamples,
+		&item.AstraCheckPlannedSamples, &item.AstraCheckInputTokens, &item.AstraCheckOutputTokens,
+		&item.AstraCheckReasoningTokens, &astraLastRunID,
 	); err != nil {
 		return nil, err
 	}
+	item.AstraCheckMatches = decodeAstraMatches(astraMatchesRaw)
+	item.AstraCheckReasons = decodeJSONStrings(astraReasonsRaw)
+	if astraCheckedAt.Valid {
+		v := astraCheckedAt.Time
+		item.AstraCheckCheckedAt = &v
+	}
+	_ = astraLastRunID
 	if latency.Valid {
 		v := latency.Int64
 		item.LatencyMS = &v

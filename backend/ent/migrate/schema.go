@@ -832,6 +832,48 @@ var (
 			},
 		},
 	}
+	// GroupStatusAstraCheckRunsColumns holds the columns for the "group_status_astra_check_runs" table.
+	GroupStatusAstraCheckRunsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "group_id", Type: field.TypeInt64},
+		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "benchmark_package_id", Type: field.TypeString, Default: ""},
+		{Name: "benchmark_version", Type: field.TypeString, Default: ""},
+		{Name: "benchmark_sha256", Type: field.TypeString, Default: ""},
+		{Name: "request_model", Type: field.TypeString, Default: ""},
+		{Name: "tier", Type: field.TypeString, Default: "low"},
+		{Name: "account_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "verdict", Type: field.TypeString},
+		{Name: "winner_model", Type: field.TypeString, Default: ""},
+		{Name: "matches", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "cells", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "reasons", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "requests_planned", Type: field.TypeInt, Default: 0},
+		{Name: "requests_completed", Type: field.TypeInt, Default: 0},
+		{Name: "valid_samples", Type: field.TypeInt, Default: 0},
+		{Name: "input_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "output_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "http_code", Type: field.TypeInt, Nullable: true},
+		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "started_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "finished_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// GroupStatusAstraCheckRunsTable holds the schema information for the "group_status_astra_check_runs" table.
+	GroupStatusAstraCheckRunsTable = &schema.Table{
+		Name:       "group_status_astra_check_runs",
+		Columns:    GroupStatusAstraCheckRunsColumns,
+		PrimaryKey: []*schema.Column{GroupStatusAstraCheckRunsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusastracheckrun_group_id_finished_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusAstraCheckRunsColumns[1], GroupStatusAstraCheckRunsColumns[24]},
+			},
+		},
+	}
 	// GroupStatusConfigsColumns holds the columns for the "group_status_configs" table.
 	GroupStatusConfigsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -850,6 +892,10 @@ var (
 		{Name: "sol_juice_enabled", Type: field.TypeBool, Default: false},
 		{Name: "sol_juice_interval_seconds", Type: field.TypeInt, Default: 900},
 		{Name: "sol_juice_model", Type: field.TypeString, Default: "gpt-5.6-sol"},
+		{Name: "astra_check_enabled", Type: field.TypeBool, Default: false},
+		{Name: "astra_check_request_model", Type: field.TypeString, Default: "gpt-6-astra"},
+		{Name: "astra_check_tier", Type: field.TypeString, Default: "low"},
+		{Name: "astra_check_interval_seconds", Type: field.TypeInt, Default: 3600},
 	}
 	// GroupStatusConfigsTable holds the schema information for the "group_status_configs" table.
 	GroupStatusConfigsTable = &schema.Table{
@@ -997,6 +1043,20 @@ var (
 		{Name: "sol_juice_input_tokens", Type: field.TypeInt64, Default: 0},
 		{Name: "sol_juice_output_tokens", Type: field.TypeInt64, Default: 0},
 		{Name: "sol_juice_reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "astra_check_verdict", Type: field.TypeString, Default: ""},
+		{Name: "astra_check_stable_status", Type: field.TypeString, Default: ""},
+		{Name: "astra_check_winner", Type: field.TypeString, Default: ""},
+		{Name: "astra_check_matches", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "astra_check_reasons", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "astra_check_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "astra_check_checked_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "astra_check_consecutive_mismatch", Type: field.TypeInt, Default: 0},
+		{Name: "astra_check_valid_samples", Type: field.TypeInt, Default: 0},
+		{Name: "astra_check_planned_samples", Type: field.TypeInt, Default: 0},
+		{Name: "astra_check_input_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "astra_check_output_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "astra_check_reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "astra_check_last_run_id", Type: field.TypeInt64, Nullable: true},
 	}
 	// GroupStatusStatesTable holds the schema information for the "group_status_states" table.
 	GroupStatusStatesTable = &schema.Table{
@@ -1962,6 +2022,7 @@ var (
 		CompositeModelRoutesTable,
 		ErrorPassthroughRulesTable,
 		GroupsTable,
+		GroupStatusAstraCheckRunsTable,
 		GroupStatusConfigsTable,
 		GroupStatusEventsTable,
 		GroupStatusJuiceRecordsTable,
@@ -2039,6 +2100,9 @@ func init() {
 	}
 	GroupsTable.Annotation = &entsql.Annotation{
 		Table: "groups",
+	}
+	GroupStatusAstraCheckRunsTable.Annotation = &entsql.Annotation{
+		Table: "group_status_astra_check_runs",
 	}
 	GroupStatusConfigsTable.Annotation = &entsql.Annotation{
 		Table: "group_status_configs",

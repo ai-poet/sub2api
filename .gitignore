@@ -88,6 +88,7 @@ temp/
 .dev/
 .serena/
 gpt56_api_detector/
+meow-llm-detector-main/
 
 # ===================
 # 构建产物

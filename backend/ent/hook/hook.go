@@ -165,6 +165,18 @@ func (f GroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupMutation", m)
 }
 
+// The GroupStatusAstraCheckRunFunc type is an adapter to allow the use of ordinary
+// function as GroupStatusAstraCheckRun mutator.
+type GroupStatusAstraCheckRunFunc func(context.Context, *ent.GroupStatusAstraCheckRunMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f GroupStatusAstraCheckRunFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.GroupStatusAstraCheckRunMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupStatusAstraCheckRunMutation", m)
+}
+
 // The GroupStatusConfigFunc type is an adapter to allow the use of ordinary
 // function as GroupStatusConfig mutator.
 type GroupStatusConfigFunc func(context.Context, *ent.GroupStatusConfigMutation) (ent.Value, error)

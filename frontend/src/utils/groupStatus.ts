@@ -153,9 +153,11 @@ export function getGroupRuntimeEventBadgeClass(eventType?: string | null): strin
   switch (eventType) {
     case 'down':
     case 'sol_juice_mismatch':
+    case 'astra_mismatch':
       return 'badge-danger'
     case 'up':
     case 'sol_juice_recovered':
+    case 'astra_recovered':
       return 'badge-success'
     default:
       return 'badge-gray'
@@ -185,4 +187,70 @@ export function estimateSolJuiceMonthlyCostUsd(
     return null
   }
   return lastCostUsd * ((30 * 86400) / intervalSeconds)
+}
+
+// ==================== Astra 指纹验证（meow 基准，行为指纹） ====================
+
+export type NormalizedAstraCheckStatus = 'pass' | 'mismatch' | 'insufficient' | 'unknown'
+
+// 稳定结论优先；没有稳定结论时用最近一次 verdict（match → pass）
+export function normalizeAstraCheckStatus(
+  stable?: string | null,
+  verdict?: string | null
+): NormalizedAstraCheckStatus {
+  if (stable === 'pass' || stable === 'mismatch') {
+    return stable
+  }
+  switch (verdict) {
+    case 'match':
+      return 'pass'
+    case 'mismatch':
+      return 'mismatch'
+    case 'insufficient':
+      return 'insufficient'
+    default:
+      return 'unknown'
+  }
+}
+
+export function getAstraCheckBadgeClass(status?: string | null): string {
+  switch (status) {
+    case 'pass':
+      return 'badge-success'
+    case 'mismatch':
+      return 'badge-danger'
+    case 'insufficient':
+      return 'badge-warning'
+    default:
+      return 'badge-gray'
+  }
+}
+
+export function isAstraCheckEvent(eventType?: string | null): boolean {
+  return eventType === 'astra_mismatch' || eventType === 'astra_recovered'
+}
+
+export function astraModelShortName(model?: string | null): string {
+  switch ((model || '').trim()) {
+    case 'gpt-6-astra':
+    case 'gpt-6':
+      return 'Astra'
+    case 'gpt-5.6-sol':
+      return 'Sol'
+    case 'gpt-5.6-terra':
+      return 'Terra'
+    case 'gpt-5.6-luna':
+      return 'Luna'
+    case '':
+      return '?'
+    default:
+      return (model || '').trim()
+  }
+}
+
+export function formatMatchPercent(value?: number | null): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return '-'
+  }
+  return `${(value * 100).toFixed(1)}%`
 }

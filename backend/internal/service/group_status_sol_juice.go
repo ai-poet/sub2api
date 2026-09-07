@@ -222,7 +222,8 @@ func decorateSolJuiceSummary(summary *GroupStatusSummary) {
 // isGroupStatusNotifyEvent 报告事件类型是否需要推送提醒。
 func isGroupStatusNotifyEvent(eventType string) bool {
 	switch eventType {
-	case GroupStatusEventDown, GroupStatusEventUp, GroupStatusEventSolJuiceMismatch, GroupStatusEventSolJuiceRecovered:
+	case GroupStatusEventDown, GroupStatusEventUp, GroupStatusEventSolJuiceMismatch, GroupStatusEventSolJuiceRecovered,
+		GroupStatusEventAstraMismatch, GroupStatusEventAstraRecovered:
 		return true
 	default:
 		return false

@@ -328,6 +328,186 @@ func (_c *GroupStatusStateCreate) SetNillableSolJuiceReasoningTokens(v *int64) *
 	return _c
 }
 
+// SetAstraCheckVerdict sets the "astra_check_verdict" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckVerdict(v string) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckVerdict(v)
+	return _c
+}
+
+// SetNillableAstraCheckVerdict sets the "astra_check_verdict" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckVerdict(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckVerdict(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckStableStatus sets the "astra_check_stable_status" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckStableStatus(v string) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckStableStatus(v)
+	return _c
+}
+
+// SetNillableAstraCheckStableStatus sets the "astra_check_stable_status" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckStableStatus(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckStableStatus(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckWinner sets the "astra_check_winner" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckWinner(v string) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckWinner(v)
+	return _c
+}
+
+// SetNillableAstraCheckWinner sets the "astra_check_winner" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckWinner(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckWinner(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckMatches sets the "astra_check_matches" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckMatches(v []map[string]interface{}) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckMatches(v)
+	return _c
+}
+
+// SetAstraCheckReasons sets the "astra_check_reasons" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckReasons(v []string) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckReasons(v)
+	return _c
+}
+
+// SetAstraCheckDetail sets the "astra_check_detail" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckDetail(v string) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckDetail(v)
+	return _c
+}
+
+// SetNillableAstraCheckDetail sets the "astra_check_detail" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckDetail(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckDetail(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckCheckedAt sets the "astra_check_checked_at" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckCheckedAt(v time.Time) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckCheckedAt(v)
+	return _c
+}
+
+// SetNillableAstraCheckCheckedAt sets the "astra_check_checked_at" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckCheckedAt(v *time.Time) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckCheckedAt(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckConsecutiveMismatch(v int) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckConsecutiveMismatch(v)
+	return _c
+}
+
+// SetNillableAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckConsecutiveMismatch(v *int) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckConsecutiveMismatch(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckValidSamples sets the "astra_check_valid_samples" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckValidSamples(v int) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckValidSamples(v)
+	return _c
+}
+
+// SetNillableAstraCheckValidSamples sets the "astra_check_valid_samples" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckValidSamples(v *int) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckValidSamples(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckPlannedSamples sets the "astra_check_planned_samples" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckPlannedSamples(v int) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckPlannedSamples(v)
+	return _c
+}
+
+// SetNillableAstraCheckPlannedSamples sets the "astra_check_planned_samples" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckPlannedSamples(v *int) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckPlannedSamples(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckInputTokens sets the "astra_check_input_tokens" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckInputTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckInputTokens(v)
+	return _c
+}
+
+// SetNillableAstraCheckInputTokens sets the "astra_check_input_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckInputTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckInputTokens(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckOutputTokens sets the "astra_check_output_tokens" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckOutputTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckOutputTokens(v)
+	return _c
+}
+
+// SetNillableAstraCheckOutputTokens sets the "astra_check_output_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckOutputTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckOutputTokens(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckReasoningTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckReasoningTokens(v)
+	return _c
+}
+
+// SetNillableAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckReasoningTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckReasoningTokens(*v)
+	}
+	return _c
+}
+
+// SetAstraCheckLastRunID sets the "astra_check_last_run_id" field.
+func (_c *GroupStatusStateCreate) SetAstraCheckLastRunID(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetAstraCheckLastRunID(v)
+	return _c
+}
+
+// SetNillableAstraCheckLastRunID sets the "astra_check_last_run_id" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableAstraCheckLastRunID(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetAstraCheckLastRunID(*v)
+	}
+	return _c
+}
+
 // Mutation returns the GroupStatusStateMutation object of the builder.
 func (_c *GroupStatusStateCreate) Mutation() *GroupStatusStateMutation {
 	return _c.mutation
@@ -419,6 +599,50 @@ func (_c *GroupStatusStateCreate) defaults() {
 		v := groupstatusstate.DefaultSolJuiceReasoningTokens
 		_c.mutation.SetSolJuiceReasoningTokens(v)
 	}
+	if _, ok := _c.mutation.AstraCheckVerdict(); !ok {
+		v := groupstatusstate.DefaultAstraCheckVerdict
+		_c.mutation.SetAstraCheckVerdict(v)
+	}
+	if _, ok := _c.mutation.AstraCheckStableStatus(); !ok {
+		v := groupstatusstate.DefaultAstraCheckStableStatus
+		_c.mutation.SetAstraCheckStableStatus(v)
+	}
+	if _, ok := _c.mutation.AstraCheckWinner(); !ok {
+		v := groupstatusstate.DefaultAstraCheckWinner
+		_c.mutation.SetAstraCheckWinner(v)
+	}
+	if _, ok := _c.mutation.AstraCheckMatches(); !ok {
+		v := groupstatusstate.DefaultAstraCheckMatches
+		_c.mutation.SetAstraCheckMatches(v)
+	}
+	if _, ok := _c.mutation.AstraCheckReasons(); !ok {
+		v := groupstatusstate.DefaultAstraCheckReasons
+		_c.mutation.SetAstraCheckReasons(v)
+	}
+	if _, ok := _c.mutation.AstraCheckConsecutiveMismatch(); !ok {
+		v := groupstatusstate.DefaultAstraCheckConsecutiveMismatch
+		_c.mutation.SetAstraCheckConsecutiveMismatch(v)
+	}
+	if _, ok := _c.mutation.AstraCheckValidSamples(); !ok {
+		v := groupstatusstate.DefaultAstraCheckValidSamples
+		_c.mutation.SetAstraCheckValidSamples(v)
+	}
+	if _, ok := _c.mutation.AstraCheckPlannedSamples(); !ok {
+		v := groupstatusstate.DefaultAstraCheckPlannedSamples
+		_c.mutation.SetAstraCheckPlannedSamples(v)
+	}
+	if _, ok := _c.mutation.AstraCheckInputTokens(); !ok {
+		v := groupstatusstate.DefaultAstraCheckInputTokens
+		_c.mutation.SetAstraCheckInputTokens(v)
+	}
+	if _, ok := _c.mutation.AstraCheckOutputTokens(); !ok {
+		v := groupstatusstate.DefaultAstraCheckOutputTokens
+		_c.mutation.SetAstraCheckOutputTokens(v)
+	}
+	if _, ok := _c.mutation.AstraCheckReasoningTokens(); !ok {
+		v := groupstatusstate.DefaultAstraCheckReasoningTokens
+		_c.mutation.SetAstraCheckReasoningTokens(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -470,6 +694,39 @@ func (_c *GroupStatusStateCreate) check() error {
 	}
 	if _, ok := _c.mutation.SolJuiceReasoningTokens(); !ok {
 		return &ValidationError{Name: "sol_juice_reasoning_tokens", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_reasoning_tokens"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckVerdict(); !ok {
+		return &ValidationError{Name: "astra_check_verdict", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_verdict"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckStableStatus(); !ok {
+		return &ValidationError{Name: "astra_check_stable_status", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_stable_status"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckWinner(); !ok {
+		return &ValidationError{Name: "astra_check_winner", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_winner"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckMatches(); !ok {
+		return &ValidationError{Name: "astra_check_matches", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_matches"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckReasons(); !ok {
+		return &ValidationError{Name: "astra_check_reasons", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_reasons"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckConsecutiveMismatch(); !ok {
+		return &ValidationError{Name: "astra_check_consecutive_mismatch", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_consecutive_mismatch"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckValidSamples(); !ok {
+		return &ValidationError{Name: "astra_check_valid_samples", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_valid_samples"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckPlannedSamples(); !ok {
+		return &ValidationError{Name: "astra_check_planned_samples", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_planned_samples"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckInputTokens(); !ok {
+		return &ValidationError{Name: "astra_check_input_tokens", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_input_tokens"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckOutputTokens(); !ok {
+		return &ValidationError{Name: "astra_check_output_tokens", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_output_tokens"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckReasoningTokens(); !ok {
+		return &ValidationError{Name: "astra_check_reasoning_tokens", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_reasoning_tokens"`)}
 	}
 	return nil
 }
@@ -589,6 +846,62 @@ func (_c *GroupStatusStateCreate) createSpec() (*GroupStatusState, *sqlgraph.Cre
 	if value, ok := _c.mutation.SolJuiceReasoningTokens(); ok {
 		_spec.SetField(groupstatusstate.FieldSolJuiceReasoningTokens, field.TypeInt64, value)
 		_node.SolJuiceReasoningTokens = value
+	}
+	if value, ok := _c.mutation.AstraCheckVerdict(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckVerdict, field.TypeString, value)
+		_node.AstraCheckVerdict = value
+	}
+	if value, ok := _c.mutation.AstraCheckStableStatus(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckStableStatus, field.TypeString, value)
+		_node.AstraCheckStableStatus = value
+	}
+	if value, ok := _c.mutation.AstraCheckWinner(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckWinner, field.TypeString, value)
+		_node.AstraCheckWinner = value
+	}
+	if value, ok := _c.mutation.AstraCheckMatches(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckMatches, field.TypeJSON, value)
+		_node.AstraCheckMatches = value
+	}
+	if value, ok := _c.mutation.AstraCheckReasons(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckReasons, field.TypeJSON, value)
+		_node.AstraCheckReasons = value
+	}
+	if value, ok := _c.mutation.AstraCheckDetail(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckDetail, field.TypeString, value)
+		_node.AstraCheckDetail = &value
+	}
+	if value, ok := _c.mutation.AstraCheckCheckedAt(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckCheckedAt, field.TypeTime, value)
+		_node.AstraCheckCheckedAt = &value
+	}
+	if value, ok := _c.mutation.AstraCheckConsecutiveMismatch(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckConsecutiveMismatch, field.TypeInt, value)
+		_node.AstraCheckConsecutiveMismatch = value
+	}
+	if value, ok := _c.mutation.AstraCheckValidSamples(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckValidSamples, field.TypeInt, value)
+		_node.AstraCheckValidSamples = value
+	}
+	if value, ok := _c.mutation.AstraCheckPlannedSamples(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckPlannedSamples, field.TypeInt, value)
+		_node.AstraCheckPlannedSamples = value
+	}
+	if value, ok := _c.mutation.AstraCheckInputTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckInputTokens, field.TypeInt64, value)
+		_node.AstraCheckInputTokens = value
+	}
+	if value, ok := _c.mutation.AstraCheckOutputTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckOutputTokens, field.TypeInt64, value)
+		_node.AstraCheckOutputTokens = value
+	}
+	if value, ok := _c.mutation.AstraCheckReasoningTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckReasoningTokens, field.TypeInt64, value)
+		_node.AstraCheckReasoningTokens = value
+	}
+	if value, ok := _c.mutation.AstraCheckLastRunID(); ok {
+		_spec.SetField(groupstatusstate.FieldAstraCheckLastRunID, field.TypeInt64, value)
+		_node.AstraCheckLastRunID = &value
 	}
 	return _node, _spec
 }
@@ -1005,6 +1318,234 @@ func (u *GroupStatusStateUpsert) UpdateSolJuiceReasoningTokens() *GroupStatusSta
 // AddSolJuiceReasoningTokens adds v to the "sol_juice_reasoning_tokens" field.
 func (u *GroupStatusStateUpsert) AddSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsert {
 	u.Add(groupstatusstate.FieldSolJuiceReasoningTokens, v)
+	return u
+}
+
+// SetAstraCheckVerdict sets the "astra_check_verdict" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckVerdict(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckVerdict, v)
+	return u
+}
+
+// UpdateAstraCheckVerdict sets the "astra_check_verdict" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckVerdict() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckVerdict)
+	return u
+}
+
+// SetAstraCheckStableStatus sets the "astra_check_stable_status" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckStableStatus(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckStableStatus, v)
+	return u
+}
+
+// UpdateAstraCheckStableStatus sets the "astra_check_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckStableStatus() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckStableStatus)
+	return u
+}
+
+// SetAstraCheckWinner sets the "astra_check_winner" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckWinner(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckWinner, v)
+	return u
+}
+
+// UpdateAstraCheckWinner sets the "astra_check_winner" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckWinner() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckWinner)
+	return u
+}
+
+// SetAstraCheckMatches sets the "astra_check_matches" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckMatches(v []map[string]interface{}) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckMatches, v)
+	return u
+}
+
+// UpdateAstraCheckMatches sets the "astra_check_matches" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckMatches() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckMatches)
+	return u
+}
+
+// SetAstraCheckReasons sets the "astra_check_reasons" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckReasons(v []string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckReasons, v)
+	return u
+}
+
+// UpdateAstraCheckReasons sets the "astra_check_reasons" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckReasons() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckReasons)
+	return u
+}
+
+// SetAstraCheckDetail sets the "astra_check_detail" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckDetail(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckDetail, v)
+	return u
+}
+
+// UpdateAstraCheckDetail sets the "astra_check_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckDetail() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckDetail)
+	return u
+}
+
+// ClearAstraCheckDetail clears the value of the "astra_check_detail" field.
+func (u *GroupStatusStateUpsert) ClearAstraCheckDetail() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldAstraCheckDetail)
+	return u
+}
+
+// SetAstraCheckCheckedAt sets the "astra_check_checked_at" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckCheckedAt(v time.Time) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckCheckedAt, v)
+	return u
+}
+
+// UpdateAstraCheckCheckedAt sets the "astra_check_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckCheckedAt() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckCheckedAt)
+	return u
+}
+
+// ClearAstraCheckCheckedAt clears the value of the "astra_check_checked_at" field.
+func (u *GroupStatusStateUpsert) ClearAstraCheckCheckedAt() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldAstraCheckCheckedAt)
+	return u
+}
+
+// SetAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckConsecutiveMismatch(v int) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckConsecutiveMismatch, v)
+	return u
+}
+
+// UpdateAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckConsecutiveMismatch() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckConsecutiveMismatch)
+	return u
+}
+
+// AddAstraCheckConsecutiveMismatch adds v to the "astra_check_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsert) AddAstraCheckConsecutiveMismatch(v int) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldAstraCheckConsecutiveMismatch, v)
+	return u
+}
+
+// SetAstraCheckValidSamples sets the "astra_check_valid_samples" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckValidSamples(v int) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckValidSamples, v)
+	return u
+}
+
+// UpdateAstraCheckValidSamples sets the "astra_check_valid_samples" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckValidSamples() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckValidSamples)
+	return u
+}
+
+// AddAstraCheckValidSamples adds v to the "astra_check_valid_samples" field.
+func (u *GroupStatusStateUpsert) AddAstraCheckValidSamples(v int) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldAstraCheckValidSamples, v)
+	return u
+}
+
+// SetAstraCheckPlannedSamples sets the "astra_check_planned_samples" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckPlannedSamples(v int) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckPlannedSamples, v)
+	return u
+}
+
+// UpdateAstraCheckPlannedSamples sets the "astra_check_planned_samples" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckPlannedSamples() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckPlannedSamples)
+	return u
+}
+
+// AddAstraCheckPlannedSamples adds v to the "astra_check_planned_samples" field.
+func (u *GroupStatusStateUpsert) AddAstraCheckPlannedSamples(v int) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldAstraCheckPlannedSamples, v)
+	return u
+}
+
+// SetAstraCheckInputTokens sets the "astra_check_input_tokens" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckInputTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckInputTokens, v)
+	return u
+}
+
+// UpdateAstraCheckInputTokens sets the "astra_check_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckInputTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckInputTokens)
+	return u
+}
+
+// AddAstraCheckInputTokens adds v to the "astra_check_input_tokens" field.
+func (u *GroupStatusStateUpsert) AddAstraCheckInputTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldAstraCheckInputTokens, v)
+	return u
+}
+
+// SetAstraCheckOutputTokens sets the "astra_check_output_tokens" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckOutputTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckOutputTokens, v)
+	return u
+}
+
+// UpdateAstraCheckOutputTokens sets the "astra_check_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckOutputTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckOutputTokens)
+	return u
+}
+
+// AddAstraCheckOutputTokens adds v to the "astra_check_output_tokens" field.
+func (u *GroupStatusStateUpsert) AddAstraCheckOutputTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldAstraCheckOutputTokens, v)
+	return u
+}
+
+// SetAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckReasoningTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckReasoningTokens, v)
+	return u
+}
+
+// UpdateAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckReasoningTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckReasoningTokens)
+	return u
+}
+
+// AddAstraCheckReasoningTokens adds v to the "astra_check_reasoning_tokens" field.
+func (u *GroupStatusStateUpsert) AddAstraCheckReasoningTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldAstraCheckReasoningTokens, v)
+	return u
+}
+
+// SetAstraCheckLastRunID sets the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsert) SetAstraCheckLastRunID(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldAstraCheckLastRunID, v)
+	return u
+}
+
+// UpdateAstraCheckLastRunID sets the "astra_check_last_run_id" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateAstraCheckLastRunID() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldAstraCheckLastRunID)
+	return u
+}
+
+// AddAstraCheckLastRunID adds v to the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsert) AddAstraCheckLastRunID(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldAstraCheckLastRunID, v)
+	return u
+}
+
+// ClearAstraCheckLastRunID clears the value of the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsert) ClearAstraCheckLastRunID() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldAstraCheckLastRunID)
 	return u
 }
 
@@ -1477,6 +2018,272 @@ func (u *GroupStatusStateUpsertOne) AddSolJuiceReasoningTokens(v int64) *GroupSt
 func (u *GroupStatusStateUpsertOne) UpdateSolJuiceReasoningTokens() *GroupStatusStateUpsertOne {
 	return u.Update(func(s *GroupStatusStateUpsert) {
 		s.UpdateSolJuiceReasoningTokens()
+	})
+}
+
+// SetAstraCheckVerdict sets the "astra_check_verdict" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckVerdict(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckVerdict(v)
+	})
+}
+
+// UpdateAstraCheckVerdict sets the "astra_check_verdict" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckVerdict() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckVerdict()
+	})
+}
+
+// SetAstraCheckStableStatus sets the "astra_check_stable_status" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckStableStatus(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckStableStatus(v)
+	})
+}
+
+// UpdateAstraCheckStableStatus sets the "astra_check_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckStableStatus() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckStableStatus()
+	})
+}
+
+// SetAstraCheckWinner sets the "astra_check_winner" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckWinner(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckWinner(v)
+	})
+}
+
+// UpdateAstraCheckWinner sets the "astra_check_winner" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckWinner() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckWinner()
+	})
+}
+
+// SetAstraCheckMatches sets the "astra_check_matches" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckMatches(v []map[string]interface{}) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckMatches(v)
+	})
+}
+
+// UpdateAstraCheckMatches sets the "astra_check_matches" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckMatches() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckMatches()
+	})
+}
+
+// SetAstraCheckReasons sets the "astra_check_reasons" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckReasons(v []string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckReasons(v)
+	})
+}
+
+// UpdateAstraCheckReasons sets the "astra_check_reasons" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckReasons() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckReasons()
+	})
+}
+
+// SetAstraCheckDetail sets the "astra_check_detail" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckDetail(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckDetail(v)
+	})
+}
+
+// UpdateAstraCheckDetail sets the "astra_check_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckDetail() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckDetail()
+	})
+}
+
+// ClearAstraCheckDetail clears the value of the "astra_check_detail" field.
+func (u *GroupStatusStateUpsertOne) ClearAstraCheckDetail() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearAstraCheckDetail()
+	})
+}
+
+// SetAstraCheckCheckedAt sets the "astra_check_checked_at" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckCheckedAt(v time.Time) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckCheckedAt(v)
+	})
+}
+
+// UpdateAstraCheckCheckedAt sets the "astra_check_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckCheckedAt() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckCheckedAt()
+	})
+}
+
+// ClearAstraCheckCheckedAt clears the value of the "astra_check_checked_at" field.
+func (u *GroupStatusStateUpsertOne) ClearAstraCheckCheckedAt() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearAstraCheckCheckedAt()
+	})
+}
+
+// SetAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckConsecutiveMismatch(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckConsecutiveMismatch(v)
+	})
+}
+
+// AddAstraCheckConsecutiveMismatch adds v to the "astra_check_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertOne) AddAstraCheckConsecutiveMismatch(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckConsecutiveMismatch(v)
+	})
+}
+
+// UpdateAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckConsecutiveMismatch() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckConsecutiveMismatch()
+	})
+}
+
+// SetAstraCheckValidSamples sets the "astra_check_valid_samples" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckValidSamples(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckValidSamples(v)
+	})
+}
+
+// AddAstraCheckValidSamples adds v to the "astra_check_valid_samples" field.
+func (u *GroupStatusStateUpsertOne) AddAstraCheckValidSamples(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckValidSamples(v)
+	})
+}
+
+// UpdateAstraCheckValidSamples sets the "astra_check_valid_samples" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckValidSamples() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckValidSamples()
+	})
+}
+
+// SetAstraCheckPlannedSamples sets the "astra_check_planned_samples" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckPlannedSamples(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckPlannedSamples(v)
+	})
+}
+
+// AddAstraCheckPlannedSamples adds v to the "astra_check_planned_samples" field.
+func (u *GroupStatusStateUpsertOne) AddAstraCheckPlannedSamples(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckPlannedSamples(v)
+	})
+}
+
+// UpdateAstraCheckPlannedSamples sets the "astra_check_planned_samples" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckPlannedSamples() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckPlannedSamples()
+	})
+}
+
+// SetAstraCheckInputTokens sets the "astra_check_input_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckInputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckInputTokens(v)
+	})
+}
+
+// AddAstraCheckInputTokens adds v to the "astra_check_input_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddAstraCheckInputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckInputTokens(v)
+	})
+}
+
+// UpdateAstraCheckInputTokens sets the "astra_check_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckInputTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckInputTokens()
+	})
+}
+
+// SetAstraCheckOutputTokens sets the "astra_check_output_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckOutputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckOutputTokens(v)
+	})
+}
+
+// AddAstraCheckOutputTokens adds v to the "astra_check_output_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddAstraCheckOutputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckOutputTokens(v)
+	})
+}
+
+// UpdateAstraCheckOutputTokens sets the "astra_check_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckOutputTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckOutputTokens()
+	})
+}
+
+// SetAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckReasoningTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckReasoningTokens(v)
+	})
+}
+
+// AddAstraCheckReasoningTokens adds v to the "astra_check_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddAstraCheckReasoningTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckReasoningTokens(v)
+	})
+}
+
+// UpdateAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckReasoningTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckReasoningTokens()
+	})
+}
+
+// SetAstraCheckLastRunID sets the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsertOne) SetAstraCheckLastRunID(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckLastRunID(v)
+	})
+}
+
+// AddAstraCheckLastRunID adds v to the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsertOne) AddAstraCheckLastRunID(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckLastRunID(v)
+	})
+}
+
+// UpdateAstraCheckLastRunID sets the "astra_check_last_run_id" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateAstraCheckLastRunID() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckLastRunID()
+	})
+}
+
+// ClearAstraCheckLastRunID clears the value of the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsertOne) ClearAstraCheckLastRunID() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearAstraCheckLastRunID()
 	})
 }
 
@@ -2115,6 +2922,272 @@ func (u *GroupStatusStateUpsertBulk) AddSolJuiceReasoningTokens(v int64) *GroupS
 func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceReasoningTokens() *GroupStatusStateUpsertBulk {
 	return u.Update(func(s *GroupStatusStateUpsert) {
 		s.UpdateSolJuiceReasoningTokens()
+	})
+}
+
+// SetAstraCheckVerdict sets the "astra_check_verdict" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckVerdict(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckVerdict(v)
+	})
+}
+
+// UpdateAstraCheckVerdict sets the "astra_check_verdict" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckVerdict() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckVerdict()
+	})
+}
+
+// SetAstraCheckStableStatus sets the "astra_check_stable_status" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckStableStatus(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckStableStatus(v)
+	})
+}
+
+// UpdateAstraCheckStableStatus sets the "astra_check_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckStableStatus() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckStableStatus()
+	})
+}
+
+// SetAstraCheckWinner sets the "astra_check_winner" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckWinner(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckWinner(v)
+	})
+}
+
+// UpdateAstraCheckWinner sets the "astra_check_winner" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckWinner() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckWinner()
+	})
+}
+
+// SetAstraCheckMatches sets the "astra_check_matches" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckMatches(v []map[string]interface{}) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckMatches(v)
+	})
+}
+
+// UpdateAstraCheckMatches sets the "astra_check_matches" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckMatches() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckMatches()
+	})
+}
+
+// SetAstraCheckReasons sets the "astra_check_reasons" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckReasons(v []string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckReasons(v)
+	})
+}
+
+// UpdateAstraCheckReasons sets the "astra_check_reasons" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckReasons() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckReasons()
+	})
+}
+
+// SetAstraCheckDetail sets the "astra_check_detail" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckDetail(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckDetail(v)
+	})
+}
+
+// UpdateAstraCheckDetail sets the "astra_check_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckDetail() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckDetail()
+	})
+}
+
+// ClearAstraCheckDetail clears the value of the "astra_check_detail" field.
+func (u *GroupStatusStateUpsertBulk) ClearAstraCheckDetail() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearAstraCheckDetail()
+	})
+}
+
+// SetAstraCheckCheckedAt sets the "astra_check_checked_at" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckCheckedAt(v time.Time) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckCheckedAt(v)
+	})
+}
+
+// UpdateAstraCheckCheckedAt sets the "astra_check_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckCheckedAt() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckCheckedAt()
+	})
+}
+
+// ClearAstraCheckCheckedAt clears the value of the "astra_check_checked_at" field.
+func (u *GroupStatusStateUpsertBulk) ClearAstraCheckCheckedAt() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearAstraCheckCheckedAt()
+	})
+}
+
+// SetAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckConsecutiveMismatch(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckConsecutiveMismatch(v)
+	})
+}
+
+// AddAstraCheckConsecutiveMismatch adds v to the "astra_check_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertBulk) AddAstraCheckConsecutiveMismatch(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckConsecutiveMismatch(v)
+	})
+}
+
+// UpdateAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckConsecutiveMismatch() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckConsecutiveMismatch()
+	})
+}
+
+// SetAstraCheckValidSamples sets the "astra_check_valid_samples" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckValidSamples(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckValidSamples(v)
+	})
+}
+
+// AddAstraCheckValidSamples adds v to the "astra_check_valid_samples" field.
+func (u *GroupStatusStateUpsertBulk) AddAstraCheckValidSamples(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckValidSamples(v)
+	})
+}
+
+// UpdateAstraCheckValidSamples sets the "astra_check_valid_samples" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckValidSamples() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckValidSamples()
+	})
+}
+
+// SetAstraCheckPlannedSamples sets the "astra_check_planned_samples" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckPlannedSamples(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckPlannedSamples(v)
+	})
+}
+
+// AddAstraCheckPlannedSamples adds v to the "astra_check_planned_samples" field.
+func (u *GroupStatusStateUpsertBulk) AddAstraCheckPlannedSamples(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckPlannedSamples(v)
+	})
+}
+
+// UpdateAstraCheckPlannedSamples sets the "astra_check_planned_samples" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckPlannedSamples() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckPlannedSamples()
+	})
+}
+
+// SetAstraCheckInputTokens sets the "astra_check_input_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckInputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckInputTokens(v)
+	})
+}
+
+// AddAstraCheckInputTokens adds v to the "astra_check_input_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddAstraCheckInputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckInputTokens(v)
+	})
+}
+
+// UpdateAstraCheckInputTokens sets the "astra_check_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckInputTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckInputTokens()
+	})
+}
+
+// SetAstraCheckOutputTokens sets the "astra_check_output_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckOutputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckOutputTokens(v)
+	})
+}
+
+// AddAstraCheckOutputTokens adds v to the "astra_check_output_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddAstraCheckOutputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckOutputTokens(v)
+	})
+}
+
+// UpdateAstraCheckOutputTokens sets the "astra_check_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckOutputTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckOutputTokens()
+	})
+}
+
+// SetAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckReasoningTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckReasoningTokens(v)
+	})
+}
+
+// AddAstraCheckReasoningTokens adds v to the "astra_check_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddAstraCheckReasoningTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckReasoningTokens(v)
+	})
+}
+
+// UpdateAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckReasoningTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckReasoningTokens()
+	})
+}
+
+// SetAstraCheckLastRunID sets the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsertBulk) SetAstraCheckLastRunID(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetAstraCheckLastRunID(v)
+	})
+}
+
+// AddAstraCheckLastRunID adds v to the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsertBulk) AddAstraCheckLastRunID(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddAstraCheckLastRunID(v)
+	})
+}
+
+// UpdateAstraCheckLastRunID sets the "astra_check_last_run_id" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateAstraCheckLastRunID() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateAstraCheckLastRunID()
+	})
+}
+
+// ClearAstraCheckLastRunID clears the value of the "astra_check_last_run_id" field.
+func (u *GroupStatusStateUpsertBulk) ClearAstraCheckLastRunID() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearAstraCheckLastRunID()
 	})
 }
 

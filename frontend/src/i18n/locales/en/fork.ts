@@ -261,7 +261,9 @@ export default {
       "up": "Recovered",
       "down": "Outage",
       "sol_juice_mismatch": "Non-Sol suspected",
-      "sol_juice_recovered": "Sol verified again"
+      "sol_juice_recovered": "Sol verified again",
+      "astra_mismatch": "Astra fingerprint failed",
+      "astra_recovered": "Astra fingerprint recovered"
     },
     "solJuice": {
       "pass": "Sol Juice OK",
@@ -272,6 +274,18 @@ export default {
         "mismatch": "Sol Juice failed (not Sol)",
         "inconclusive": "Sol Juice inconclusive",
         "unknown": "Sol Juice pending"
+      }
+    },
+    "astraCheck": {
+      "pass": "Astra fingerprint OK",
+      "mismatch": "Astra fingerprint failed (points to {winner})",
+      "insufficient": "Astra fingerprint inconclusive",
+      "pending": "Astra fingerprint pending",
+      "statuses": {
+        "pass": "Astra fingerprint OK",
+        "mismatch": "Astra fingerprint failed",
+        "insufficient": "Astra fingerprint inconclusive",
+        "unknown": "Unknown"
       }
     }
   },
@@ -440,6 +454,52 @@ export default {
             "mismatch": "Sol Juice failed (not Sol)",
             "inconclusive": "Sol Juice inconclusive",
             "unknown": "Sol Juice pending"
+          }
+        },
+        "astraCheck": {
+          "title": "Astra fingerprint check (meow benchmark)",
+          "hint": "Sends a batch of fixed short-answer prompts (reasoning=low) to one OpenAI account of this group and compares the answer distribution with the bundled Astra / Sol / Terra / Luna baselines; only a model that uniquely clears its threshold counts as a strong match. Two consecutive strong matches on another model (the first triggers an immediate re-run) flip the verdict and send a push; availability is not affected. The low tier sends 20 requests per run (about $0.01–0.05).",
+          "benchmark": "Benchmark",
+          "requestModel": "Request model",
+          "tier": "Tier",
+          "tiers": {
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High"
+          },
+          "intervalSeconds": "Check interval (seconds, min 900)",
+          "latestResult": "Latest check",
+          "latestResultEmpty": "Not checked yet. Save and wait for the scheduler, or click \"Check now\".",
+          "verdict": "Verdict",
+          "samples": "Valid samples / planned",
+          "checkedAt": "Checked at",
+          "tokens": "Tokens (input / output)",
+          "lastCost": "Last run cost",
+          "monthlyEstimate": "Monthly estimate at current interval",
+          "matches": "Match per candidate model",
+          "threshold": "threshold",
+          "detail": "Details",
+          "probeNow": "Check now",
+          "running": "Checking (about 1–2 minutes)...",
+          "probeStarted": "Astra fingerprint check started in the background",
+          "probeSucceeded": "Astra fingerprint check completed",
+          "probeFailed": "Astra fingerprint check failed",
+          "statuses": {
+            "pass": "Astra fingerprint OK",
+            "mismatch": "Astra fingerprint failed (points to {winner})",
+            "insufficient": "Astra fingerprint inconclusive",
+            "unknown": "Pending"
+          },
+          "reasons": {
+            "samples_incomplete": "Not enough valid samples",
+            "samples_exceed_plan": "More samples than planned",
+            "baseline_cell_missing": "Benchmark lacks this probe",
+            "no_weighted_family": "No probe family with a positive weight",
+            "uncalibrated": "Tier is not calibrated",
+            "no_threshold": "No model cleared its threshold",
+            "multiple_thresholds": "Several models cleared their thresholds",
+            "scoring_failed": "Scoring failed",
+            "empty_result": "Empty result"
           }
         }
       },

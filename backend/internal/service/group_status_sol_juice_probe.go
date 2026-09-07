@@ -220,6 +220,21 @@ func (s *GroupStatusProbeService) saveSolJuiceExecution(ctx context.Context, gro
 
 // solJuiceOpenAI 复用存活探测的鉴权 / 地址 / 头部逻辑，只换请求体与解析器。
 func (s *GroupStatusProbeService) solJuiceOpenAI(ctx context.Context, account *Account, requestModel string) (string, openAIProbeUsage, *int, error) {
+	if strings.TrimSpace(requestModel) == "" {
+		requestModel = groupStatusSolJuiceDefaultModel
+	}
+	return s.openAIResponsesProbeRequest(ctx, account, requestModel, createOpenAISolJuicePayload, parseOpenAIJuiceStream)
+}
+
+// openAIResponsesProbeRequest 是 Sol Juice / Astra 指纹共用的 Responses 探测请求：
+// 处理账号模型映射、API-Key 与 Codex OAuth 的地址与头部，请求体和流解析由调用方提供。
+func (s *GroupStatusProbeService) openAIResponsesProbeRequest(
+	ctx context.Context,
+	account *Account,
+	requestModel string,
+	buildPayload func(modelID string, isOAuth bool) map[string]any,
+	parser func(io.Reader) (string, openAIProbeUsage, error),
+) (string, openAIProbeUsage, *int, error) {
 	var usage openAIProbeUsage
 	if s.accountTestSvc == nil {
 		return "", usage, nil, errors.New("account test service is not configured")
@@ -230,7 +245,7 @@ func (s *GroupStatusProbeService) solJuiceOpenAI(ctx context.Context, account *A
 
 	modelID := strings.TrimSpace(requestModel)
 	if modelID == "" {
-		modelID = groupStatusSolJuiceDefaultModel
+		return "", usage, nil, errors.New("request model is empty")
 	}
 	if account.Type == AccountTypeAPIKey {
 		if mapping := account.GetModelMapping(); len(mapping) > 0 {
@@ -266,7 +281,7 @@ func (s *GroupStatusProbeService) solJuiceOpenAI(ctx context.Context, account *A
 		return "", usage, nil, fmt.Errorf("unsupported account type: %s", account.Type)
 	}
 
-	payloadBytes, _ := json.Marshal(createOpenAISolJuicePayload(modelID, isOAuth))
+	payloadBytes, _ := json.Marshal(buildPayload(modelID, isOAuth))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(payloadBytes))
 	if err != nil {
 		return "", usage, nil, err
@@ -281,7 +296,7 @@ func (s *GroupStatusProbeService) solJuiceOpenAI(ctx context.Context, account *A
 		}
 	}
 
-	return s.executeStreamingProbeWithUsage(req, account, parseOpenAIJuiceStream)
+	return s.executeStreamingProbeWithUsage(req, account, parser)
 }
 
 func (s *GroupStatusProbeService) executeStreamingProbeWithUsage(req *http.Request, account *Account, parser func(io.Reader) (string, openAIProbeUsage, error)) (string, openAIProbeUsage, *int, error) {
@@ -328,8 +343,14 @@ func createOpenAISolJuicePayload(modelID string, isOAuth bool) map[string]any {
 }
 
 // parseOpenAIJuiceStream 收集 output_text 增量，并从 response.completed 读取 usage。
-// 没有增量时回退到最终 response.output 里的 output_text。
+// 没有增量时回退到最终 response.output 里的 output_text。response.incomplete 视为错误。
 func parseOpenAIJuiceStream(body io.Reader) (string, openAIProbeUsage, error) {
+	return parseOpenAIResponsesStream(body, true)
+}
+
+// parseOpenAIResponsesStream 是 Responses SSE 的通用解析：incompleteIsError 为 false 时，
+// response.incomplete（如撞到 max_output_tokens）照常返回已收到的文本与 usage。
+func parseOpenAIResponsesStream(body io.Reader, incompleteIsError bool) (string, openAIProbeUsage, error) {
 	reader := bufio.NewReader(body)
 	var parts []string
 	var usage openAIProbeUsage
@@ -369,6 +390,13 @@ func parseOpenAIJuiceStream(body io.Reader) (string, openAIProbeUsage, error) {
 		case "response.failed", "response.incomplete":
 			resp, _ := data["response"].(map[string]any)
 			usage = parseOpenAIResponseUsage(resp)
+			if data["type"] == "response.incomplete" && !incompleteIsError {
+				text := strings.Join(parts, "")
+				if strings.TrimSpace(text) == "" {
+					text = extractOpenAIResponseOutputText(resp)
+				}
+				return text, usage, nil
+			}
 			return strings.Join(parts, ""), usage, errors.New(openAIResponseFailureMessage(resp, fmt.Sprintf("openai probe %v", data["type"])))
 		case "error":
 			if errData, ok := data["error"].(map[string]any); ok {

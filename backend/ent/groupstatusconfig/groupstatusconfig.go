@@ -43,6 +43,14 @@ const (
 	FieldSolJuiceIntervalSeconds = "sol_juice_interval_seconds"
 	// FieldSolJuiceModel holds the string denoting the sol_juice_model field in the database.
 	FieldSolJuiceModel = "sol_juice_model"
+	// FieldAstraCheckEnabled holds the string denoting the astra_check_enabled field in the database.
+	FieldAstraCheckEnabled = "astra_check_enabled"
+	// FieldAstraCheckRequestModel holds the string denoting the astra_check_request_model field in the database.
+	FieldAstraCheckRequestModel = "astra_check_request_model"
+	// FieldAstraCheckTier holds the string denoting the astra_check_tier field in the database.
+	FieldAstraCheckTier = "astra_check_tier"
+	// FieldAstraCheckIntervalSeconds holds the string denoting the astra_check_interval_seconds field in the database.
+	FieldAstraCheckIntervalSeconds = "astra_check_interval_seconds"
 	// Table holds the table name of the groupstatusconfig in the database.
 	Table = "group_status_configs"
 )
@@ -65,6 +73,10 @@ var Columns = []string{
 	FieldSolJuiceEnabled,
 	FieldSolJuiceIntervalSeconds,
 	FieldSolJuiceModel,
+	FieldAstraCheckEnabled,
+	FieldAstraCheckRequestModel,
+	FieldAstraCheckTier,
+	FieldAstraCheckIntervalSeconds,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -108,6 +120,14 @@ var (
 	DefaultSolJuiceIntervalSeconds int
 	// DefaultSolJuiceModel holds the default value on creation for the "sol_juice_model" field.
 	DefaultSolJuiceModel string
+	// DefaultAstraCheckEnabled holds the default value on creation for the "astra_check_enabled" field.
+	DefaultAstraCheckEnabled bool
+	// DefaultAstraCheckRequestModel holds the default value on creation for the "astra_check_request_model" field.
+	DefaultAstraCheckRequestModel string
+	// DefaultAstraCheckTier holds the default value on creation for the "astra_check_tier" field.
+	DefaultAstraCheckTier string
+	// DefaultAstraCheckIntervalSeconds holds the default value on creation for the "astra_check_interval_seconds" field.
+	DefaultAstraCheckIntervalSeconds int
 )
 
 // OrderOption defines the ordering options for the GroupStatusConfig queries.
@@ -186,4 +206,24 @@ func BySolJuiceIntervalSeconds(opts ...sql.OrderTermOption) OrderOption {
 // BySolJuiceModel orders the results by the sol_juice_model field.
 func BySolJuiceModel(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSolJuiceModel, opts...).ToFunc()
+}
+
+// ByAstraCheckEnabled orders the results by the astra_check_enabled field.
+func ByAstraCheckEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckEnabled, opts...).ToFunc()
+}
+
+// ByAstraCheckRequestModel orders the results by the astra_check_request_model field.
+func ByAstraCheckRequestModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckRequestModel, opts...).ToFunc()
+}
+
+// ByAstraCheckTier orders the results by the astra_check_tier field.
+func ByAstraCheckTier(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckTier, opts...).ToFunc()
+}
+
+// ByAstraCheckIntervalSeconds orders the results by the astra_check_interval_seconds field.
+func ByAstraCheckIntervalSeconds(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAstraCheckIntervalSeconds, opts...).ToFunc()
 }

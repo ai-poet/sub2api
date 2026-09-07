@@ -45,6 +45,9 @@ type ErrorPassthroughRule func(*sql.Selector)
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
 
+// GroupStatusAstraCheckRun is the predicate function for groupstatusastracheckrun builders.
+type GroupStatusAstraCheckRun func(*sql.Selector)
+
 // GroupStatusConfig is the predicate function for groupstatusconfig builders.
 type GroupStatusConfig func(*sql.Selector)
 

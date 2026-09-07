@@ -40,6 +40,8 @@ type Tx struct {
 	ErrorPassthroughRule *ErrorPassthroughRuleClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// GroupStatusAstraCheckRun is the client for interacting with the GroupStatusAstraCheckRun builders.
+	GroupStatusAstraCheckRun *GroupStatusAstraCheckRunClient
 	// GroupStatusConfig is the client for interacting with the GroupStatusConfig builders.
 	GroupStatusConfig *GroupStatusConfigClient
 	// GroupStatusEvent is the client for interacting with the GroupStatusEvent builders.
@@ -232,6 +234,7 @@ func (tx *Tx) init() {
 	tx.CompositeModelRoute = NewCompositeModelRouteClient(tx.config)
 	tx.ErrorPassthroughRule = NewErrorPassthroughRuleClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
+	tx.GroupStatusAstraCheckRun = NewGroupStatusAstraCheckRunClient(tx.config)
 	tx.GroupStatusConfig = NewGroupStatusConfigClient(tx.config)
 	tx.GroupStatusEvent = NewGroupStatusEventClient(tx.config)
 	tx.GroupStatusJuiceRecord = NewGroupStatusJuiceRecordClient(tx.config)

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -63,7 +64,35 @@ type GroupStatusState struct {
 	SolJuiceOutputTokens int64 `json:"sol_juice_output_tokens,omitempty"`
 	// SolJuiceReasoningTokens holds the value of the "sol_juice_reasoning_tokens" field.
 	SolJuiceReasoningTokens int64 `json:"sol_juice_reasoning_tokens,omitempty"`
-	selectValues            sql.SelectValues
+	// AstraCheckVerdict holds the value of the "astra_check_verdict" field.
+	AstraCheckVerdict string `json:"astra_check_verdict,omitempty"`
+	// AstraCheckStableStatus holds the value of the "astra_check_stable_status" field.
+	AstraCheckStableStatus string `json:"astra_check_stable_status,omitempty"`
+	// AstraCheckWinner holds the value of the "astra_check_winner" field.
+	AstraCheckWinner string `json:"astra_check_winner,omitempty"`
+	// AstraCheckMatches holds the value of the "astra_check_matches" field.
+	AstraCheckMatches []map[string]interface{} `json:"astra_check_matches,omitempty"`
+	// AstraCheckReasons holds the value of the "astra_check_reasons" field.
+	AstraCheckReasons []string `json:"astra_check_reasons,omitempty"`
+	// AstraCheckDetail holds the value of the "astra_check_detail" field.
+	AstraCheckDetail *string `json:"astra_check_detail,omitempty"`
+	// AstraCheckCheckedAt holds the value of the "astra_check_checked_at" field.
+	AstraCheckCheckedAt *time.Time `json:"astra_check_checked_at,omitempty"`
+	// AstraCheckConsecutiveMismatch holds the value of the "astra_check_consecutive_mismatch" field.
+	AstraCheckConsecutiveMismatch int `json:"astra_check_consecutive_mismatch,omitempty"`
+	// AstraCheckValidSamples holds the value of the "astra_check_valid_samples" field.
+	AstraCheckValidSamples int `json:"astra_check_valid_samples,omitempty"`
+	// AstraCheckPlannedSamples holds the value of the "astra_check_planned_samples" field.
+	AstraCheckPlannedSamples int `json:"astra_check_planned_samples,omitempty"`
+	// AstraCheckInputTokens holds the value of the "astra_check_input_tokens" field.
+	AstraCheckInputTokens int64 `json:"astra_check_input_tokens,omitempty"`
+	// AstraCheckOutputTokens holds the value of the "astra_check_output_tokens" field.
+	AstraCheckOutputTokens int64 `json:"astra_check_output_tokens,omitempty"`
+	// AstraCheckReasoningTokens holds the value of the "astra_check_reasoning_tokens" field.
+	AstraCheckReasoningTokens int64 `json:"astra_check_reasoning_tokens,omitempty"`
+	// AstraCheckLastRunID holds the value of the "astra_check_last_run_id" field.
+	AstraCheckLastRunID *int64 `json:"astra_check_last_run_id,omitempty"`
+	selectValues        sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -71,11 +100,13 @@ func (*GroupStatusState) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown, groupstatusstate.FieldSolJuiceConsecutiveMismatch, groupstatusstate.FieldSolJuiceInputTokens, groupstatusstate.FieldSolJuiceOutputTokens, groupstatusstate.FieldSolJuiceReasoningTokens:
+		case groupstatusstate.FieldAstraCheckMatches, groupstatusstate.FieldAstraCheckReasons:
+			values[i] = new([]byte)
+		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown, groupstatusstate.FieldSolJuiceConsecutiveMismatch, groupstatusstate.FieldSolJuiceInputTokens, groupstatusstate.FieldSolJuiceOutputTokens, groupstatusstate.FieldSolJuiceReasoningTokens, groupstatusstate.FieldAstraCheckConsecutiveMismatch, groupstatusstate.FieldAstraCheckValidSamples, groupstatusstate.FieldAstraCheckPlannedSamples, groupstatusstate.FieldAstraCheckInputTokens, groupstatusstate.FieldAstraCheckOutputTokens, groupstatusstate.FieldAstraCheckReasoningTokens, groupstatusstate.FieldAstraCheckLastRunID:
 			values[i] = new(sql.NullInt64)
-		case groupstatusstate.FieldLatestStatus, groupstatusstate.FieldStableStatus, groupstatusstate.FieldResponseExcerpt, groupstatusstate.FieldSubStatus, groupstatusstate.FieldErrorDetail, groupstatusstate.FieldSolJuiceStatus, groupstatusstate.FieldSolJuiceStableStatus, groupstatusstate.FieldSolJuiceValue, groupstatusstate.FieldSolJuiceDetail:
+		case groupstatusstate.FieldLatestStatus, groupstatusstate.FieldStableStatus, groupstatusstate.FieldResponseExcerpt, groupstatusstate.FieldSubStatus, groupstatusstate.FieldErrorDetail, groupstatusstate.FieldSolJuiceStatus, groupstatusstate.FieldSolJuiceStableStatus, groupstatusstate.FieldSolJuiceValue, groupstatusstate.FieldSolJuiceDetail, groupstatusstate.FieldAstraCheckVerdict, groupstatusstate.FieldAstraCheckStableStatus, groupstatusstate.FieldAstraCheckWinner, groupstatusstate.FieldAstraCheckDetail:
 			values[i] = new(sql.NullString)
-		case groupstatusstate.FieldCreatedAt, groupstatusstate.FieldUpdatedAt, groupstatusstate.FieldObservedAt, groupstatusstate.FieldSolJuiceCheckedAt:
+		case groupstatusstate.FieldCreatedAt, groupstatusstate.FieldUpdatedAt, groupstatusstate.FieldObservedAt, groupstatusstate.FieldSolJuiceCheckedAt, groupstatusstate.FieldAstraCheckCheckedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -243,6 +274,97 @@ func (_m *GroupStatusState) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.SolJuiceReasoningTokens = value.Int64
 			}
+		case groupstatusstate.FieldAstraCheckVerdict:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_verdict", values[i])
+			} else if value.Valid {
+				_m.AstraCheckVerdict = value.String
+			}
+		case groupstatusstate.FieldAstraCheckStableStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_stable_status", values[i])
+			} else if value.Valid {
+				_m.AstraCheckStableStatus = value.String
+			}
+		case groupstatusstate.FieldAstraCheckWinner:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_winner", values[i])
+			} else if value.Valid {
+				_m.AstraCheckWinner = value.String
+			}
+		case groupstatusstate.FieldAstraCheckMatches:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_matches", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.AstraCheckMatches); err != nil {
+					return fmt.Errorf("unmarshal field astra_check_matches: %w", err)
+				}
+			}
+		case groupstatusstate.FieldAstraCheckReasons:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_reasons", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.AstraCheckReasons); err != nil {
+					return fmt.Errorf("unmarshal field astra_check_reasons: %w", err)
+				}
+			}
+		case groupstatusstate.FieldAstraCheckDetail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_detail", values[i])
+			} else if value.Valid {
+				_m.AstraCheckDetail = new(string)
+				*_m.AstraCheckDetail = value.String
+			}
+		case groupstatusstate.FieldAstraCheckCheckedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_checked_at", values[i])
+			} else if value.Valid {
+				_m.AstraCheckCheckedAt = new(time.Time)
+				*_m.AstraCheckCheckedAt = value.Time
+			}
+		case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_consecutive_mismatch", values[i])
+			} else if value.Valid {
+				_m.AstraCheckConsecutiveMismatch = int(value.Int64)
+			}
+		case groupstatusstate.FieldAstraCheckValidSamples:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_valid_samples", values[i])
+			} else if value.Valid {
+				_m.AstraCheckValidSamples = int(value.Int64)
+			}
+		case groupstatusstate.FieldAstraCheckPlannedSamples:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_planned_samples", values[i])
+			} else if value.Valid {
+				_m.AstraCheckPlannedSamples = int(value.Int64)
+			}
+		case groupstatusstate.FieldAstraCheckInputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_input_tokens", values[i])
+			} else if value.Valid {
+				_m.AstraCheckInputTokens = value.Int64
+			}
+		case groupstatusstate.FieldAstraCheckOutputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_output_tokens", values[i])
+			} else if value.Valid {
+				_m.AstraCheckOutputTokens = value.Int64
+			}
+		case groupstatusstate.FieldAstraCheckReasoningTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_reasoning_tokens", values[i])
+			} else if value.Valid {
+				_m.AstraCheckReasoningTokens = value.Int64
+			}
+		case groupstatusstate.FieldAstraCheckLastRunID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_last_run_id", values[i])
+			} else if value.Valid {
+				_m.AstraCheckLastRunID = new(int64)
+				*_m.AstraCheckLastRunID = value.Int64
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -361,6 +483,54 @@ func (_m *GroupStatusState) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sol_juice_reasoning_tokens=")
 	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceReasoningTokens))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_verdict=")
+	builder.WriteString(_m.AstraCheckVerdict)
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_stable_status=")
+	builder.WriteString(_m.AstraCheckStableStatus)
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_winner=")
+	builder.WriteString(_m.AstraCheckWinner)
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_matches=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckMatches))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_reasons=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckReasons))
+	builder.WriteString(", ")
+	if v := _m.AstraCheckDetail; v != nil {
+		builder.WriteString("astra_check_detail=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.AstraCheckCheckedAt; v != nil {
+		builder.WriteString("astra_check_checked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_consecutive_mismatch=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckConsecutiveMismatch))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_valid_samples=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckValidSamples))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_planned_samples=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckPlannedSamples))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_input_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckInputTokens))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_output_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckOutputTokens))
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_reasoning_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckReasoningTokens))
+	builder.WriteString(", ")
+	if v := _m.AstraCheckLastRunID; v != nil {
+		builder.WriteString("astra_check_last_run_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

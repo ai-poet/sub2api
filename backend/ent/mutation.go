@@ -25,6 +25,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/compositemodelroute"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckrun"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
@@ -75,6 +76,7 @@ const (
 	TypeCompositeModelRoute      = "CompositeModelRoute"
 	TypeErrorPassthroughRule     = "ErrorPassthroughRule"
 	TypeGroup                    = "Group"
+	TypeGroupStatusAstraCheckRun = "GroupStatusAstraCheckRun"
 	TypeGroupStatusConfig        = "GroupStatusConfig"
 	TypeGroupStatusEvent         = "GroupStatusEvent"
 	TypeGroupStatusJuiceRecord   = "GroupStatusJuiceRecord"
@@ -22689,37 +22691,2160 @@ func (m *GroupMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Group edge %s", name)
 }
 
+// GroupStatusAstraCheckRunMutation represents an operation that mutates the GroupStatusAstraCheckRun nodes in the graph.
+type GroupStatusAstraCheckRunMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *int64
+	group_id              *int64
+	addgroup_id           *int64
+	config_id             *int64
+	addconfig_id          *int64
+	benchmark_package_id  *string
+	benchmark_version     *string
+	benchmark_sha256      *string
+	request_model         *string
+	tier                  *string
+	account_id            *int64
+	addaccount_id         *int64
+	verdict               *string
+	winner_model          *string
+	matches               *[]map[string]interface{}
+	appendmatches         []map[string]interface{}
+	cells                 *[]map[string]interface{}
+	appendcells           []map[string]interface{}
+	reasons               *[]string
+	appendreasons         []string
+	requests_planned      *int
+	addrequests_planned   *int
+	requests_completed    *int
+	addrequests_completed *int
+	valid_samples         *int
+	addvalid_samples      *int
+	input_tokens          *int64
+	addinput_tokens       *int64
+	output_tokens         *int64
+	addoutput_tokens      *int64
+	reasoning_tokens      *int64
+	addreasoning_tokens   *int64
+	latency_ms            *int64
+	addlatency_ms         *int64
+	http_code             *int
+	addhttp_code          *int
+	error_detail          *string
+	started_at            *time.Time
+	finished_at           *time.Time
+	created_at            *time.Time
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*GroupStatusAstraCheckRun, error)
+	predicates            []predicate.GroupStatusAstraCheckRun
+}
+
+var _ ent.Mutation = (*GroupStatusAstraCheckRunMutation)(nil)
+
+// groupstatusastracheckrunOption allows management of the mutation configuration using functional options.
+type groupstatusastracheckrunOption func(*GroupStatusAstraCheckRunMutation)
+
+// newGroupStatusAstraCheckRunMutation creates new mutation for the GroupStatusAstraCheckRun entity.
+func newGroupStatusAstraCheckRunMutation(c config, op Op, opts ...groupstatusastracheckrunOption) *GroupStatusAstraCheckRunMutation {
+	m := &GroupStatusAstraCheckRunMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupStatusAstraCheckRun,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupStatusAstraCheckRunID sets the ID field of the mutation.
+func withGroupStatusAstraCheckRunID(id int64) groupstatusastracheckrunOption {
+	return func(m *GroupStatusAstraCheckRunMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupStatusAstraCheckRun
+		)
+		m.oldValue = func(ctx context.Context) (*GroupStatusAstraCheckRun, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupStatusAstraCheckRun.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupStatusAstraCheckRun sets the old GroupStatusAstraCheckRun of the mutation.
+func withGroupStatusAstraCheckRun(node *GroupStatusAstraCheckRun) groupstatusastracheckrunOption {
+	return func(m *GroupStatusAstraCheckRunMutation) {
+		m.oldValue = func(context.Context) (*GroupStatusAstraCheckRun, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupStatusAstraCheckRunMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupStatusAstraCheckRunMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupStatusAstraCheckRunMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupStatusAstraCheckRunMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupStatusAstraCheckRun.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *GroupStatusAstraCheckRunMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldGroupID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *GroupStatusAstraCheckRunMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+}
+
+// SetConfigID sets the "config_id" field.
+func (m *GroupStatusAstraCheckRunMutation) SetConfigID(i int64) {
+	m.config_id = &i
+	m.addconfig_id = nil
+}
+
+// ConfigID returns the value of the "config_id" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) ConfigID() (r int64, exists bool) {
+	v := m.config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigID returns the old "config_id" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldConfigID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigID: %w", err)
+	}
+	return oldValue.ConfigID, nil
+}
+
+// AddConfigID adds i to the "config_id" field.
+func (m *GroupStatusAstraCheckRunMutation) AddConfigID(i int64) {
+	if m.addconfig_id != nil {
+		*m.addconfig_id += i
+	} else {
+		m.addconfig_id = &i
+	}
+}
+
+// AddedConfigID returns the value that was added to the "config_id" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedConfigID() (r int64, exists bool) {
+	v := m.addconfig_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConfigID resets all changes to the "config_id" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetConfigID() {
+	m.config_id = nil
+	m.addconfig_id = nil
+}
+
+// SetBenchmarkPackageID sets the "benchmark_package_id" field.
+func (m *GroupStatusAstraCheckRunMutation) SetBenchmarkPackageID(s string) {
+	m.benchmark_package_id = &s
+}
+
+// BenchmarkPackageID returns the value of the "benchmark_package_id" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) BenchmarkPackageID() (r string, exists bool) {
+	v := m.benchmark_package_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBenchmarkPackageID returns the old "benchmark_package_id" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldBenchmarkPackageID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBenchmarkPackageID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBenchmarkPackageID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBenchmarkPackageID: %w", err)
+	}
+	return oldValue.BenchmarkPackageID, nil
+}
+
+// ResetBenchmarkPackageID resets all changes to the "benchmark_package_id" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetBenchmarkPackageID() {
+	m.benchmark_package_id = nil
+}
+
+// SetBenchmarkVersion sets the "benchmark_version" field.
+func (m *GroupStatusAstraCheckRunMutation) SetBenchmarkVersion(s string) {
+	m.benchmark_version = &s
+}
+
+// BenchmarkVersion returns the value of the "benchmark_version" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) BenchmarkVersion() (r string, exists bool) {
+	v := m.benchmark_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBenchmarkVersion returns the old "benchmark_version" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldBenchmarkVersion(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBenchmarkVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBenchmarkVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBenchmarkVersion: %w", err)
+	}
+	return oldValue.BenchmarkVersion, nil
+}
+
+// ResetBenchmarkVersion resets all changes to the "benchmark_version" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetBenchmarkVersion() {
+	m.benchmark_version = nil
+}
+
+// SetBenchmarkSha256 sets the "benchmark_sha256" field.
+func (m *GroupStatusAstraCheckRunMutation) SetBenchmarkSha256(s string) {
+	m.benchmark_sha256 = &s
+}
+
+// BenchmarkSha256 returns the value of the "benchmark_sha256" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) BenchmarkSha256() (r string, exists bool) {
+	v := m.benchmark_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBenchmarkSha256 returns the old "benchmark_sha256" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldBenchmarkSha256(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBenchmarkSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBenchmarkSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBenchmarkSha256: %w", err)
+	}
+	return oldValue.BenchmarkSha256, nil
+}
+
+// ResetBenchmarkSha256 resets all changes to the "benchmark_sha256" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetBenchmarkSha256() {
+	m.benchmark_sha256 = nil
+}
+
+// SetRequestModel sets the "request_model" field.
+func (m *GroupStatusAstraCheckRunMutation) SetRequestModel(s string) {
+	m.request_model = &s
+}
+
+// RequestModel returns the value of the "request_model" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) RequestModel() (r string, exists bool) {
+	v := m.request_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestModel returns the old "request_model" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldRequestModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestModel: %w", err)
+	}
+	return oldValue.RequestModel, nil
+}
+
+// ResetRequestModel resets all changes to the "request_model" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetRequestModel() {
+	m.request_model = nil
+}
+
+// SetTier sets the "tier" field.
+func (m *GroupStatusAstraCheckRunMutation) SetTier(s string) {
+	m.tier = &s
+}
+
+// Tier returns the value of the "tier" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) Tier() (r string, exists bool) {
+	v := m.tier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTier returns the old "tier" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldTier(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTier: %w", err)
+	}
+	return oldValue.Tier, nil
+}
+
+// ResetTier resets all changes to the "tier" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetTier() {
+	m.tier = nil
+}
+
+// SetAccountID sets the "account_id" field.
+func (m *GroupStatusAstraCheckRunMutation) SetAccountID(i int64) {
+	m.account_id = &i
+	m.addaccount_id = nil
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) AccountID() (r int64, exists bool) {
+	v := m.account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldAccountID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// AddAccountID adds i to the "account_id" field.
+func (m *GroupStatusAstraCheckRunMutation) AddAccountID(i int64) {
+	if m.addaccount_id != nil {
+		*m.addaccount_id += i
+	} else {
+		m.addaccount_id = &i
+	}
+}
+
+// AddedAccountID returns the value that was added to the "account_id" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedAccountID() (r int64, exists bool) {
+	v := m.addaccount_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAccountID clears the value of the "account_id" field.
+func (m *GroupStatusAstraCheckRunMutation) ClearAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+	m.clearedFields[groupstatusastracheckrun.FieldAccountID] = struct{}{}
+}
+
+// AccountIDCleared returns if the "account_id" field was cleared in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AccountIDCleared() bool {
+	_, ok := m.clearedFields[groupstatusastracheckrun.FieldAccountID]
+	return ok
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+	delete(m.clearedFields, groupstatusastracheckrun.FieldAccountID)
+}
+
+// SetVerdict sets the "verdict" field.
+func (m *GroupStatusAstraCheckRunMutation) SetVerdict(s string) {
+	m.verdict = &s
+}
+
+// Verdict returns the value of the "verdict" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) Verdict() (r string, exists bool) {
+	v := m.verdict
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVerdict returns the old "verdict" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldVerdict(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVerdict is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVerdict requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVerdict: %w", err)
+	}
+	return oldValue.Verdict, nil
+}
+
+// ResetVerdict resets all changes to the "verdict" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetVerdict() {
+	m.verdict = nil
+}
+
+// SetWinnerModel sets the "winner_model" field.
+func (m *GroupStatusAstraCheckRunMutation) SetWinnerModel(s string) {
+	m.winner_model = &s
+}
+
+// WinnerModel returns the value of the "winner_model" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) WinnerModel() (r string, exists bool) {
+	v := m.winner_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWinnerModel returns the old "winner_model" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldWinnerModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWinnerModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWinnerModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWinnerModel: %w", err)
+	}
+	return oldValue.WinnerModel, nil
+}
+
+// ResetWinnerModel resets all changes to the "winner_model" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetWinnerModel() {
+	m.winner_model = nil
+}
+
+// SetMatches sets the "matches" field.
+func (m *GroupStatusAstraCheckRunMutation) SetMatches(value []map[string]interface{}) {
+	m.matches = &value
+	m.appendmatches = nil
+}
+
+// Matches returns the value of the "matches" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) Matches() (r []map[string]interface{}, exists bool) {
+	v := m.matches
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMatches returns the old "matches" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldMatches(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMatches is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMatches requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMatches: %w", err)
+	}
+	return oldValue.Matches, nil
+}
+
+// AppendMatches adds value to the "matches" field.
+func (m *GroupStatusAstraCheckRunMutation) AppendMatches(value []map[string]interface{}) {
+	m.appendmatches = append(m.appendmatches, value...)
+}
+
+// AppendedMatches returns the list of values that were appended to the "matches" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AppendedMatches() ([]map[string]interface{}, bool) {
+	if len(m.appendmatches) == 0 {
+		return nil, false
+	}
+	return m.appendmatches, true
+}
+
+// ResetMatches resets all changes to the "matches" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetMatches() {
+	m.matches = nil
+	m.appendmatches = nil
+}
+
+// SetCells sets the "cells" field.
+func (m *GroupStatusAstraCheckRunMutation) SetCells(value []map[string]interface{}) {
+	m.cells = &value
+	m.appendcells = nil
+}
+
+// Cells returns the value of the "cells" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) Cells() (r []map[string]interface{}, exists bool) {
+	v := m.cells
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCells returns the old "cells" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldCells(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCells is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCells requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCells: %w", err)
+	}
+	return oldValue.Cells, nil
+}
+
+// AppendCells adds value to the "cells" field.
+func (m *GroupStatusAstraCheckRunMutation) AppendCells(value []map[string]interface{}) {
+	m.appendcells = append(m.appendcells, value...)
+}
+
+// AppendedCells returns the list of values that were appended to the "cells" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AppendedCells() ([]map[string]interface{}, bool) {
+	if len(m.appendcells) == 0 {
+		return nil, false
+	}
+	return m.appendcells, true
+}
+
+// ResetCells resets all changes to the "cells" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetCells() {
+	m.cells = nil
+	m.appendcells = nil
+}
+
+// SetReasons sets the "reasons" field.
+func (m *GroupStatusAstraCheckRunMutation) SetReasons(s []string) {
+	m.reasons = &s
+	m.appendreasons = nil
+}
+
+// Reasons returns the value of the "reasons" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) Reasons() (r []string, exists bool) {
+	v := m.reasons
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReasons returns the old "reasons" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldReasons(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReasons is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReasons requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReasons: %w", err)
+	}
+	return oldValue.Reasons, nil
+}
+
+// AppendReasons adds s to the "reasons" field.
+func (m *GroupStatusAstraCheckRunMutation) AppendReasons(s []string) {
+	m.appendreasons = append(m.appendreasons, s...)
+}
+
+// AppendedReasons returns the list of values that were appended to the "reasons" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AppendedReasons() ([]string, bool) {
+	if len(m.appendreasons) == 0 {
+		return nil, false
+	}
+	return m.appendreasons, true
+}
+
+// ResetReasons resets all changes to the "reasons" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetReasons() {
+	m.reasons = nil
+	m.appendreasons = nil
+}
+
+// SetRequestsPlanned sets the "requests_planned" field.
+func (m *GroupStatusAstraCheckRunMutation) SetRequestsPlanned(i int) {
+	m.requests_planned = &i
+	m.addrequests_planned = nil
+}
+
+// RequestsPlanned returns the value of the "requests_planned" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) RequestsPlanned() (r int, exists bool) {
+	v := m.requests_planned
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestsPlanned returns the old "requests_planned" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldRequestsPlanned(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestsPlanned is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestsPlanned requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestsPlanned: %w", err)
+	}
+	return oldValue.RequestsPlanned, nil
+}
+
+// AddRequestsPlanned adds i to the "requests_planned" field.
+func (m *GroupStatusAstraCheckRunMutation) AddRequestsPlanned(i int) {
+	if m.addrequests_planned != nil {
+		*m.addrequests_planned += i
+	} else {
+		m.addrequests_planned = &i
+	}
+}
+
+// AddedRequestsPlanned returns the value that was added to the "requests_planned" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedRequestsPlanned() (r int, exists bool) {
+	v := m.addrequests_planned
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRequestsPlanned resets all changes to the "requests_planned" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetRequestsPlanned() {
+	m.requests_planned = nil
+	m.addrequests_planned = nil
+}
+
+// SetRequestsCompleted sets the "requests_completed" field.
+func (m *GroupStatusAstraCheckRunMutation) SetRequestsCompleted(i int) {
+	m.requests_completed = &i
+	m.addrequests_completed = nil
+}
+
+// RequestsCompleted returns the value of the "requests_completed" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) RequestsCompleted() (r int, exists bool) {
+	v := m.requests_completed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestsCompleted returns the old "requests_completed" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldRequestsCompleted(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestsCompleted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestsCompleted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestsCompleted: %w", err)
+	}
+	return oldValue.RequestsCompleted, nil
+}
+
+// AddRequestsCompleted adds i to the "requests_completed" field.
+func (m *GroupStatusAstraCheckRunMutation) AddRequestsCompleted(i int) {
+	if m.addrequests_completed != nil {
+		*m.addrequests_completed += i
+	} else {
+		m.addrequests_completed = &i
+	}
+}
+
+// AddedRequestsCompleted returns the value that was added to the "requests_completed" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedRequestsCompleted() (r int, exists bool) {
+	v := m.addrequests_completed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRequestsCompleted resets all changes to the "requests_completed" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetRequestsCompleted() {
+	m.requests_completed = nil
+	m.addrequests_completed = nil
+}
+
+// SetValidSamples sets the "valid_samples" field.
+func (m *GroupStatusAstraCheckRunMutation) SetValidSamples(i int) {
+	m.valid_samples = &i
+	m.addvalid_samples = nil
+}
+
+// ValidSamples returns the value of the "valid_samples" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) ValidSamples() (r int, exists bool) {
+	v := m.valid_samples
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidSamples returns the old "valid_samples" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldValidSamples(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidSamples is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidSamples requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidSamples: %w", err)
+	}
+	return oldValue.ValidSamples, nil
+}
+
+// AddValidSamples adds i to the "valid_samples" field.
+func (m *GroupStatusAstraCheckRunMutation) AddValidSamples(i int) {
+	if m.addvalid_samples != nil {
+		*m.addvalid_samples += i
+	} else {
+		m.addvalid_samples = &i
+	}
+}
+
+// AddedValidSamples returns the value that was added to the "valid_samples" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedValidSamples() (r int, exists bool) {
+	v := m.addvalid_samples
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetValidSamples resets all changes to the "valid_samples" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetValidSamples() {
+	m.valid_samples = nil
+	m.addvalid_samples = nil
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) SetInputTokens(i int64) {
+	m.input_tokens = &i
+	m.addinput_tokens = nil
+}
+
+// InputTokens returns the value of the "input_tokens" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) InputTokens() (r int64, exists bool) {
+	v := m.input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInputTokens returns the old "input_tokens" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldInputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInputTokens: %w", err)
+	}
+	return oldValue.InputTokens, nil
+}
+
+// AddInputTokens adds i to the "input_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) AddInputTokens(i int64) {
+	if m.addinput_tokens != nil {
+		*m.addinput_tokens += i
+	} else {
+		m.addinput_tokens = &i
+	}
+}
+
+// AddedInputTokens returns the value that was added to the "input_tokens" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedInputTokens() (r int64, exists bool) {
+	v := m.addinput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetInputTokens resets all changes to the "input_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetInputTokens() {
+	m.input_tokens = nil
+	m.addinput_tokens = nil
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) SetOutputTokens(i int64) {
+	m.output_tokens = &i
+	m.addoutput_tokens = nil
+}
+
+// OutputTokens returns the value of the "output_tokens" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) OutputTokens() (r int64, exists bool) {
+	v := m.output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutputTokens returns the old "output_tokens" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldOutputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutputTokens: %w", err)
+	}
+	return oldValue.OutputTokens, nil
+}
+
+// AddOutputTokens adds i to the "output_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) AddOutputTokens(i int64) {
+	if m.addoutput_tokens != nil {
+		*m.addoutput_tokens += i
+	} else {
+		m.addoutput_tokens = &i
+	}
+}
+
+// AddedOutputTokens returns the value that was added to the "output_tokens" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedOutputTokens() (r int64, exists bool) {
+	v := m.addoutput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOutputTokens resets all changes to the "output_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetOutputTokens() {
+	m.output_tokens = nil
+	m.addoutput_tokens = nil
+}
+
+// SetReasoningTokens sets the "reasoning_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) SetReasoningTokens(i int64) {
+	m.reasoning_tokens = &i
+	m.addreasoning_tokens = nil
+}
+
+// ReasoningTokens returns the value of the "reasoning_tokens" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) ReasoningTokens() (r int64, exists bool) {
+	v := m.reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReasoningTokens returns the old "reasoning_tokens" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldReasoningTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReasoningTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReasoningTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReasoningTokens: %w", err)
+	}
+	return oldValue.ReasoningTokens, nil
+}
+
+// AddReasoningTokens adds i to the "reasoning_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) AddReasoningTokens(i int64) {
+	if m.addreasoning_tokens != nil {
+		*m.addreasoning_tokens += i
+	} else {
+		m.addreasoning_tokens = &i
+	}
+}
+
+// AddedReasoningTokens returns the value that was added to the "reasoning_tokens" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedReasoningTokens() (r int64, exists bool) {
+	v := m.addreasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReasoningTokens resets all changes to the "reasoning_tokens" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetReasoningTokens() {
+	m.reasoning_tokens = nil
+	m.addreasoning_tokens = nil
+}
+
+// SetLatencyMs sets the "latency_ms" field.
+func (m *GroupStatusAstraCheckRunMutation) SetLatencyMs(i int64) {
+	m.latency_ms = &i
+	m.addlatency_ms = nil
+}
+
+// LatencyMs returns the value of the "latency_ms" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) LatencyMs() (r int64, exists bool) {
+	v := m.latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatencyMs returns the old "latency_ms" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatencyMs: %w", err)
+	}
+	return oldValue.LatencyMs, nil
+}
+
+// AddLatencyMs adds i to the "latency_ms" field.
+func (m *GroupStatusAstraCheckRunMutation) AddLatencyMs(i int64) {
+	if m.addlatency_ms != nil {
+		*m.addlatency_ms += i
+	} else {
+		m.addlatency_ms = &i
+	}
+}
+
+// AddedLatencyMs returns the value that was added to the "latency_ms" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedLatencyMs() (r int64, exists bool) {
+	v := m.addlatency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatencyMs clears the value of the "latency_ms" field.
+func (m *GroupStatusAstraCheckRunMutation) ClearLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	m.clearedFields[groupstatusastracheckrun.FieldLatencyMs] = struct{}{}
+}
+
+// LatencyMsCleared returns if the "latency_ms" field was cleared in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) LatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusastracheckrun.FieldLatencyMs]
+	return ok
+}
+
+// ResetLatencyMs resets all changes to the "latency_ms" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	delete(m.clearedFields, groupstatusastracheckrun.FieldLatencyMs)
+}
+
+// SetHTTPCode sets the "http_code" field.
+func (m *GroupStatusAstraCheckRunMutation) SetHTTPCode(i int) {
+	m.http_code = &i
+	m.addhttp_code = nil
+}
+
+// HTTPCode returns the value of the "http_code" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) HTTPCode() (r int, exists bool) {
+	v := m.http_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHTTPCode returns the old "http_code" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldHTTPCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHTTPCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHTTPCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHTTPCode: %w", err)
+	}
+	return oldValue.HTTPCode, nil
+}
+
+// AddHTTPCode adds i to the "http_code" field.
+func (m *GroupStatusAstraCheckRunMutation) AddHTTPCode(i int) {
+	if m.addhttp_code != nil {
+		*m.addhttp_code += i
+	} else {
+		m.addhttp_code = &i
+	}
+}
+
+// AddedHTTPCode returns the value that was added to the "http_code" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedHTTPCode() (r int, exists bool) {
+	v := m.addhttp_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearHTTPCode clears the value of the "http_code" field.
+func (m *GroupStatusAstraCheckRunMutation) ClearHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	m.clearedFields[groupstatusastracheckrun.FieldHTTPCode] = struct{}{}
+}
+
+// HTTPCodeCleared returns if the "http_code" field was cleared in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) HTTPCodeCleared() bool {
+	_, ok := m.clearedFields[groupstatusastracheckrun.FieldHTTPCode]
+	return ok
+}
+
+// ResetHTTPCode resets all changes to the "http_code" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	delete(m.clearedFields, groupstatusastracheckrun.FieldHTTPCode)
+}
+
+// SetErrorDetail sets the "error_detail" field.
+func (m *GroupStatusAstraCheckRunMutation) SetErrorDetail(s string) {
+	m.error_detail = &s
+}
+
+// ErrorDetail returns the value of the "error_detail" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) ErrorDetail() (r string, exists bool) {
+	v := m.error_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorDetail returns the old "error_detail" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldErrorDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorDetail: %w", err)
+	}
+	return oldValue.ErrorDetail, nil
+}
+
+// ClearErrorDetail clears the value of the "error_detail" field.
+func (m *GroupStatusAstraCheckRunMutation) ClearErrorDetail() {
+	m.error_detail = nil
+	m.clearedFields[groupstatusastracheckrun.FieldErrorDetail] = struct{}{}
+}
+
+// ErrorDetailCleared returns if the "error_detail" field was cleared in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) ErrorDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusastracheckrun.FieldErrorDetail]
+	return ok
+}
+
+// ResetErrorDetail resets all changes to the "error_detail" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetErrorDetail() {
+	m.error_detail = nil
+	delete(m.clearedFields, groupstatusastracheckrun.FieldErrorDetail)
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *GroupStatusAstraCheckRunMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldStartedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetStartedAt() {
+	m.started_at = nil
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (m *GroupStatusAstraCheckRunMutation) SetFinishedAt(t time.Time) {
+	m.finished_at = &t
+}
+
+// FinishedAt returns the value of the "finished_at" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) FinishedAt() (r time.Time, exists bool) {
+	v := m.finished_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFinishedAt returns the old "finished_at" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldFinishedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFinishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFinishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFinishedAt: %w", err)
+	}
+	return oldValue.FinishedAt, nil
+}
+
+// ResetFinishedAt resets all changes to the "finished_at" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetFinishedAt() {
+	m.finished_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GroupStatusAstraCheckRunMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// Where appends a list predicates to the GroupStatusAstraCheckRunMutation builder.
+func (m *GroupStatusAstraCheckRunMutation) Where(ps ...predicate.GroupStatusAstraCheckRun) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupStatusAstraCheckRunMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupStatusAstraCheckRunMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupStatusAstraCheckRun, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupStatusAstraCheckRunMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupStatusAstraCheckRunMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupStatusAstraCheckRun).
+func (m *GroupStatusAstraCheckRunMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupStatusAstraCheckRunMutation) Fields() []string {
+	fields := make([]string, 0, 25)
+	if m.group_id != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldGroupID)
+	}
+	if m.config_id != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldConfigID)
+	}
+	if m.benchmark_package_id != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldBenchmarkPackageID)
+	}
+	if m.benchmark_version != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldBenchmarkVersion)
+	}
+	if m.benchmark_sha256 != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldBenchmarkSha256)
+	}
+	if m.request_model != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldRequestModel)
+	}
+	if m.tier != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldTier)
+	}
+	if m.account_id != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldAccountID)
+	}
+	if m.verdict != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldVerdict)
+	}
+	if m.winner_model != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldWinnerModel)
+	}
+	if m.matches != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldMatches)
+	}
+	if m.cells != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldCells)
+	}
+	if m.reasons != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldReasons)
+	}
+	if m.requests_planned != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldRequestsPlanned)
+	}
+	if m.requests_completed != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldRequestsCompleted)
+	}
+	if m.valid_samples != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldValidSamples)
+	}
+	if m.input_tokens != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldInputTokens)
+	}
+	if m.output_tokens != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldOutputTokens)
+	}
+	if m.reasoning_tokens != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldReasoningTokens)
+	}
+	if m.latency_ms != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldLatencyMs)
+	}
+	if m.http_code != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldHTTPCode)
+	}
+	if m.error_detail != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldErrorDetail)
+	}
+	if m.started_at != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldStartedAt)
+	}
+	if m.finished_at != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldFinishedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupStatusAstraCheckRunMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusastracheckrun.FieldGroupID:
+		return m.GroupID()
+	case groupstatusastracheckrun.FieldConfigID:
+		return m.ConfigID()
+	case groupstatusastracheckrun.FieldBenchmarkPackageID:
+		return m.BenchmarkPackageID()
+	case groupstatusastracheckrun.FieldBenchmarkVersion:
+		return m.BenchmarkVersion()
+	case groupstatusastracheckrun.FieldBenchmarkSha256:
+		return m.BenchmarkSha256()
+	case groupstatusastracheckrun.FieldRequestModel:
+		return m.RequestModel()
+	case groupstatusastracheckrun.FieldTier:
+		return m.Tier()
+	case groupstatusastracheckrun.FieldAccountID:
+		return m.AccountID()
+	case groupstatusastracheckrun.FieldVerdict:
+		return m.Verdict()
+	case groupstatusastracheckrun.FieldWinnerModel:
+		return m.WinnerModel()
+	case groupstatusastracheckrun.FieldMatches:
+		return m.Matches()
+	case groupstatusastracheckrun.FieldCells:
+		return m.Cells()
+	case groupstatusastracheckrun.FieldReasons:
+		return m.Reasons()
+	case groupstatusastracheckrun.FieldRequestsPlanned:
+		return m.RequestsPlanned()
+	case groupstatusastracheckrun.FieldRequestsCompleted:
+		return m.RequestsCompleted()
+	case groupstatusastracheckrun.FieldValidSamples:
+		return m.ValidSamples()
+	case groupstatusastracheckrun.FieldInputTokens:
+		return m.InputTokens()
+	case groupstatusastracheckrun.FieldOutputTokens:
+		return m.OutputTokens()
+	case groupstatusastracheckrun.FieldReasoningTokens:
+		return m.ReasoningTokens()
+	case groupstatusastracheckrun.FieldLatencyMs:
+		return m.LatencyMs()
+	case groupstatusastracheckrun.FieldHTTPCode:
+		return m.HTTPCode()
+	case groupstatusastracheckrun.FieldErrorDetail:
+		return m.ErrorDetail()
+	case groupstatusastracheckrun.FieldStartedAt:
+		return m.StartedAt()
+	case groupstatusastracheckrun.FieldFinishedAt:
+		return m.FinishedAt()
+	case groupstatusastracheckrun.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupStatusAstraCheckRunMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupstatusastracheckrun.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case groupstatusastracheckrun.FieldConfigID:
+		return m.OldConfigID(ctx)
+	case groupstatusastracheckrun.FieldBenchmarkPackageID:
+		return m.OldBenchmarkPackageID(ctx)
+	case groupstatusastracheckrun.FieldBenchmarkVersion:
+		return m.OldBenchmarkVersion(ctx)
+	case groupstatusastracheckrun.FieldBenchmarkSha256:
+		return m.OldBenchmarkSha256(ctx)
+	case groupstatusastracheckrun.FieldRequestModel:
+		return m.OldRequestModel(ctx)
+	case groupstatusastracheckrun.FieldTier:
+		return m.OldTier(ctx)
+	case groupstatusastracheckrun.FieldAccountID:
+		return m.OldAccountID(ctx)
+	case groupstatusastracheckrun.FieldVerdict:
+		return m.OldVerdict(ctx)
+	case groupstatusastracheckrun.FieldWinnerModel:
+		return m.OldWinnerModel(ctx)
+	case groupstatusastracheckrun.FieldMatches:
+		return m.OldMatches(ctx)
+	case groupstatusastracheckrun.FieldCells:
+		return m.OldCells(ctx)
+	case groupstatusastracheckrun.FieldReasons:
+		return m.OldReasons(ctx)
+	case groupstatusastracheckrun.FieldRequestsPlanned:
+		return m.OldRequestsPlanned(ctx)
+	case groupstatusastracheckrun.FieldRequestsCompleted:
+		return m.OldRequestsCompleted(ctx)
+	case groupstatusastracheckrun.FieldValidSamples:
+		return m.OldValidSamples(ctx)
+	case groupstatusastracheckrun.FieldInputTokens:
+		return m.OldInputTokens(ctx)
+	case groupstatusastracheckrun.FieldOutputTokens:
+		return m.OldOutputTokens(ctx)
+	case groupstatusastracheckrun.FieldReasoningTokens:
+		return m.OldReasoningTokens(ctx)
+	case groupstatusastracheckrun.FieldLatencyMs:
+		return m.OldLatencyMs(ctx)
+	case groupstatusastracheckrun.FieldHTTPCode:
+		return m.OldHTTPCode(ctx)
+	case groupstatusastracheckrun.FieldErrorDetail:
+		return m.OldErrorDetail(ctx)
+	case groupstatusastracheckrun.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case groupstatusastracheckrun.FieldFinishedAt:
+		return m.OldFinishedAt(ctx)
+	case groupstatusastracheckrun.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupStatusAstraCheckRun field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusAstraCheckRunMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusastracheckrun.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case groupstatusastracheckrun.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigID(v)
+		return nil
+	case groupstatusastracheckrun.FieldBenchmarkPackageID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBenchmarkPackageID(v)
+		return nil
+	case groupstatusastracheckrun.FieldBenchmarkVersion:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBenchmarkVersion(v)
+		return nil
+	case groupstatusastracheckrun.FieldBenchmarkSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBenchmarkSha256(v)
+		return nil
+	case groupstatusastracheckrun.FieldRequestModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestModel(v)
+		return nil
+	case groupstatusastracheckrun.FieldTier:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTier(v)
+		return nil
+	case groupstatusastracheckrun.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
+	case groupstatusastracheckrun.FieldVerdict:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVerdict(v)
+		return nil
+	case groupstatusastracheckrun.FieldWinnerModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWinnerModel(v)
+		return nil
+	case groupstatusastracheckrun.FieldMatches:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMatches(v)
+		return nil
+	case groupstatusastracheckrun.FieldCells:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCells(v)
+		return nil
+	case groupstatusastracheckrun.FieldReasons:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReasons(v)
+		return nil
+	case groupstatusastracheckrun.FieldRequestsPlanned:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestsPlanned(v)
+		return nil
+	case groupstatusastracheckrun.FieldRequestsCompleted:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestsCompleted(v)
+		return nil
+	case groupstatusastracheckrun.FieldValidSamples:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidSamples(v)
+		return nil
+	case groupstatusastracheckrun.FieldInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInputTokens(v)
+		return nil
+	case groupstatusastracheckrun.FieldOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutputTokens(v)
+		return nil
+	case groupstatusastracheckrun.FieldReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReasoningTokens(v)
+		return nil
+	case groupstatusastracheckrun.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatencyMs(v)
+		return nil
+	case groupstatusastracheckrun.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHTTPCode(v)
+		return nil
+	case groupstatusastracheckrun.FieldErrorDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorDetail(v)
+		return nil
+	case groupstatusastracheckrun.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case groupstatusastracheckrun.FieldFinishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFinishedAt(v)
+		return nil
+	case groupstatusastracheckrun.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusAstraCheckRun field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedFields() []string {
+	var fields []string
+	if m.addgroup_id != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldGroupID)
+	}
+	if m.addconfig_id != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldConfigID)
+	}
+	if m.addaccount_id != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldAccountID)
+	}
+	if m.addrequests_planned != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldRequestsPlanned)
+	}
+	if m.addrequests_completed != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldRequestsCompleted)
+	}
+	if m.addvalid_samples != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldValidSamples)
+	}
+	if m.addinput_tokens != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldInputTokens)
+	}
+	if m.addoutput_tokens != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldOutputTokens)
+	}
+	if m.addreasoning_tokens != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldReasoningTokens)
+	}
+	if m.addlatency_ms != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldLatencyMs)
+	}
+	if m.addhttp_code != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldHTTPCode)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupStatusAstraCheckRunMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusastracheckrun.FieldGroupID:
+		return m.AddedGroupID()
+	case groupstatusastracheckrun.FieldConfigID:
+		return m.AddedConfigID()
+	case groupstatusastracheckrun.FieldAccountID:
+		return m.AddedAccountID()
+	case groupstatusastracheckrun.FieldRequestsPlanned:
+		return m.AddedRequestsPlanned()
+	case groupstatusastracheckrun.FieldRequestsCompleted:
+		return m.AddedRequestsCompleted()
+	case groupstatusastracheckrun.FieldValidSamples:
+		return m.AddedValidSamples()
+	case groupstatusastracheckrun.FieldInputTokens:
+		return m.AddedInputTokens()
+	case groupstatusastracheckrun.FieldOutputTokens:
+		return m.AddedOutputTokens()
+	case groupstatusastracheckrun.FieldReasoningTokens:
+		return m.AddedReasoningTokens()
+	case groupstatusastracheckrun.FieldLatencyMs:
+		return m.AddedLatencyMs()
+	case groupstatusastracheckrun.FieldHTTPCode:
+		return m.AddedHTTPCode()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusAstraCheckRunMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusastracheckrun.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case groupstatusastracheckrun.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfigID(v)
+		return nil
+	case groupstatusastracheckrun.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAccountID(v)
+		return nil
+	case groupstatusastracheckrun.FieldRequestsPlanned:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRequestsPlanned(v)
+		return nil
+	case groupstatusastracheckrun.FieldRequestsCompleted:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRequestsCompleted(v)
+		return nil
+	case groupstatusastracheckrun.FieldValidSamples:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddValidSamples(v)
+		return nil
+	case groupstatusastracheckrun.FieldInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddInputTokens(v)
+		return nil
+	case groupstatusastracheckrun.FieldOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOutputTokens(v)
+		return nil
+	case groupstatusastracheckrun.FieldReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReasoningTokens(v)
+		return nil
+	case groupstatusastracheckrun.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatencyMs(v)
+		return nil
+	case groupstatusastracheckrun.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHTTPCode(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusAstraCheckRun numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupStatusAstraCheckRunMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(groupstatusastracheckrun.FieldAccountID) {
+		fields = append(fields, groupstatusastracheckrun.FieldAccountID)
+	}
+	if m.FieldCleared(groupstatusastracheckrun.FieldLatencyMs) {
+		fields = append(fields, groupstatusastracheckrun.FieldLatencyMs)
+	}
+	if m.FieldCleared(groupstatusastracheckrun.FieldHTTPCode) {
+		fields = append(fields, groupstatusastracheckrun.FieldHTTPCode)
+	}
+	if m.FieldCleared(groupstatusastracheckrun.FieldErrorDetail) {
+		fields = append(fields, groupstatusastracheckrun.FieldErrorDetail)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupStatusAstraCheckRunMutation) ClearField(name string) error {
+	switch name {
+	case groupstatusastracheckrun.FieldAccountID:
+		m.ClearAccountID()
+		return nil
+	case groupstatusastracheckrun.FieldLatencyMs:
+		m.ClearLatencyMs()
+		return nil
+	case groupstatusastracheckrun.FieldHTTPCode:
+		m.ClearHTTPCode()
+		return nil
+	case groupstatusastracheckrun.FieldErrorDetail:
+		m.ClearErrorDetail()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusAstraCheckRun nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupStatusAstraCheckRunMutation) ResetField(name string) error {
+	switch name {
+	case groupstatusastracheckrun.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case groupstatusastracheckrun.FieldConfigID:
+		m.ResetConfigID()
+		return nil
+	case groupstatusastracheckrun.FieldBenchmarkPackageID:
+		m.ResetBenchmarkPackageID()
+		return nil
+	case groupstatusastracheckrun.FieldBenchmarkVersion:
+		m.ResetBenchmarkVersion()
+		return nil
+	case groupstatusastracheckrun.FieldBenchmarkSha256:
+		m.ResetBenchmarkSha256()
+		return nil
+	case groupstatusastracheckrun.FieldRequestModel:
+		m.ResetRequestModel()
+		return nil
+	case groupstatusastracheckrun.FieldTier:
+		m.ResetTier()
+		return nil
+	case groupstatusastracheckrun.FieldAccountID:
+		m.ResetAccountID()
+		return nil
+	case groupstatusastracheckrun.FieldVerdict:
+		m.ResetVerdict()
+		return nil
+	case groupstatusastracheckrun.FieldWinnerModel:
+		m.ResetWinnerModel()
+		return nil
+	case groupstatusastracheckrun.FieldMatches:
+		m.ResetMatches()
+		return nil
+	case groupstatusastracheckrun.FieldCells:
+		m.ResetCells()
+		return nil
+	case groupstatusastracheckrun.FieldReasons:
+		m.ResetReasons()
+		return nil
+	case groupstatusastracheckrun.FieldRequestsPlanned:
+		m.ResetRequestsPlanned()
+		return nil
+	case groupstatusastracheckrun.FieldRequestsCompleted:
+		m.ResetRequestsCompleted()
+		return nil
+	case groupstatusastracheckrun.FieldValidSamples:
+		m.ResetValidSamples()
+		return nil
+	case groupstatusastracheckrun.FieldInputTokens:
+		m.ResetInputTokens()
+		return nil
+	case groupstatusastracheckrun.FieldOutputTokens:
+		m.ResetOutputTokens()
+		return nil
+	case groupstatusastracheckrun.FieldReasoningTokens:
+		m.ResetReasoningTokens()
+		return nil
+	case groupstatusastracheckrun.FieldLatencyMs:
+		m.ResetLatencyMs()
+		return nil
+	case groupstatusastracheckrun.FieldHTTPCode:
+		m.ResetHTTPCode()
+		return nil
+	case groupstatusastracheckrun.FieldErrorDetail:
+		m.ResetErrorDetail()
+		return nil
+	case groupstatusastracheckrun.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case groupstatusastracheckrun.FieldFinishedAt:
+		m.ResetFinishedAt()
+		return nil
+	case groupstatusastracheckrun.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusAstraCheckRun field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupStatusAstraCheckRunMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusAstraCheckRun unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupStatusAstraCheckRunMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusAstraCheckRun edge %s", name)
+}
+
 // GroupStatusConfigMutation represents an operation that mutates the GroupStatusConfig nodes in the graph.
 type GroupStatusConfigMutation struct {
 	config
-	op                            Op
-	typ                           string
-	id                            *int64
-	created_at                    *time.Time
-	updated_at                    *time.Time
-	group_id                      *int64
-	addgroup_id                   *int64
-	enabled                       *bool
-	probe_model                   *string
-	probe_prompt                  *string
-	validation_mode               *string
-	expected_keywords             *[]string
-	appendexpected_keywords       []string
-	interval_seconds              *int
-	addinterval_seconds           *int
-	timeout_seconds               *int
-	addtimeout_seconds            *int
-	slow_latency_ms               *int64
-	addslow_latency_ms            *int64
-	notify_enabled                *bool
-	sol_juice_enabled             *bool
-	sol_juice_interval_seconds    *int
-	addsol_juice_interval_seconds *int
-	sol_juice_model               *string
-	clearedFields                 map[string]struct{}
-	done                          bool
-	oldValue                      func(context.Context) (*GroupStatusConfig, error)
-	predicates                    []predicate.GroupStatusConfig
+	op                              Op
+	typ                             string
+	id                              *int64
+	created_at                      *time.Time
+	updated_at                      *time.Time
+	group_id                        *int64
+	addgroup_id                     *int64
+	enabled                         *bool
+	probe_model                     *string
+	probe_prompt                    *string
+	validation_mode                 *string
+	expected_keywords               *[]string
+	appendexpected_keywords         []string
+	interval_seconds                *int
+	addinterval_seconds             *int
+	timeout_seconds                 *int
+	addtimeout_seconds              *int
+	slow_latency_ms                 *int64
+	addslow_latency_ms              *int64
+	notify_enabled                  *bool
+	sol_juice_enabled               *bool
+	sol_juice_interval_seconds      *int
+	addsol_juice_interval_seconds   *int
+	sol_juice_model                 *string
+	astra_check_enabled             *bool
+	astra_check_request_model       *string
+	astra_check_tier                *string
+	astra_check_interval_seconds    *int
+	addastra_check_interval_seconds *int
+	clearedFields                   map[string]struct{}
+	done                            bool
+	oldValue                        func(context.Context) (*GroupStatusConfig, error)
+	predicates                      []predicate.GroupStatusConfig
 }
 
 var _ ent.Mutation = (*GroupStatusConfigMutation)(nil)
@@ -23475,6 +25600,170 @@ func (m *GroupStatusConfigMutation) ResetSolJuiceModel() {
 	m.sol_juice_model = nil
 }
 
+// SetAstraCheckEnabled sets the "astra_check_enabled" field.
+func (m *GroupStatusConfigMutation) SetAstraCheckEnabled(b bool) {
+	m.astra_check_enabled = &b
+}
+
+// AstraCheckEnabled returns the value of the "astra_check_enabled" field in the mutation.
+func (m *GroupStatusConfigMutation) AstraCheckEnabled() (r bool, exists bool) {
+	v := m.astra_check_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckEnabled returns the old "astra_check_enabled" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldAstraCheckEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckEnabled: %w", err)
+	}
+	return oldValue.AstraCheckEnabled, nil
+}
+
+// ResetAstraCheckEnabled resets all changes to the "astra_check_enabled" field.
+func (m *GroupStatusConfigMutation) ResetAstraCheckEnabled() {
+	m.astra_check_enabled = nil
+}
+
+// SetAstraCheckRequestModel sets the "astra_check_request_model" field.
+func (m *GroupStatusConfigMutation) SetAstraCheckRequestModel(s string) {
+	m.astra_check_request_model = &s
+}
+
+// AstraCheckRequestModel returns the value of the "astra_check_request_model" field in the mutation.
+func (m *GroupStatusConfigMutation) AstraCheckRequestModel() (r string, exists bool) {
+	v := m.astra_check_request_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckRequestModel returns the old "astra_check_request_model" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldAstraCheckRequestModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckRequestModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckRequestModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckRequestModel: %w", err)
+	}
+	return oldValue.AstraCheckRequestModel, nil
+}
+
+// ResetAstraCheckRequestModel resets all changes to the "astra_check_request_model" field.
+func (m *GroupStatusConfigMutation) ResetAstraCheckRequestModel() {
+	m.astra_check_request_model = nil
+}
+
+// SetAstraCheckTier sets the "astra_check_tier" field.
+func (m *GroupStatusConfigMutation) SetAstraCheckTier(s string) {
+	m.astra_check_tier = &s
+}
+
+// AstraCheckTier returns the value of the "astra_check_tier" field in the mutation.
+func (m *GroupStatusConfigMutation) AstraCheckTier() (r string, exists bool) {
+	v := m.astra_check_tier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckTier returns the old "astra_check_tier" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldAstraCheckTier(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckTier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckTier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckTier: %w", err)
+	}
+	return oldValue.AstraCheckTier, nil
+}
+
+// ResetAstraCheckTier resets all changes to the "astra_check_tier" field.
+func (m *GroupStatusConfigMutation) ResetAstraCheckTier() {
+	m.astra_check_tier = nil
+}
+
+// SetAstraCheckIntervalSeconds sets the "astra_check_interval_seconds" field.
+func (m *GroupStatusConfigMutation) SetAstraCheckIntervalSeconds(i int) {
+	m.astra_check_interval_seconds = &i
+	m.addastra_check_interval_seconds = nil
+}
+
+// AstraCheckIntervalSeconds returns the value of the "astra_check_interval_seconds" field in the mutation.
+func (m *GroupStatusConfigMutation) AstraCheckIntervalSeconds() (r int, exists bool) {
+	v := m.astra_check_interval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckIntervalSeconds returns the old "astra_check_interval_seconds" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldAstraCheckIntervalSeconds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckIntervalSeconds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckIntervalSeconds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckIntervalSeconds: %w", err)
+	}
+	return oldValue.AstraCheckIntervalSeconds, nil
+}
+
+// AddAstraCheckIntervalSeconds adds i to the "astra_check_interval_seconds" field.
+func (m *GroupStatusConfigMutation) AddAstraCheckIntervalSeconds(i int) {
+	if m.addastra_check_interval_seconds != nil {
+		*m.addastra_check_interval_seconds += i
+	} else {
+		m.addastra_check_interval_seconds = &i
+	}
+}
+
+// AddedAstraCheckIntervalSeconds returns the value that was added to the "astra_check_interval_seconds" field in this mutation.
+func (m *GroupStatusConfigMutation) AddedAstraCheckIntervalSeconds() (r int, exists bool) {
+	v := m.addastra_check_interval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAstraCheckIntervalSeconds resets all changes to the "astra_check_interval_seconds" field.
+func (m *GroupStatusConfigMutation) ResetAstraCheckIntervalSeconds() {
+	m.astra_check_interval_seconds = nil
+	m.addastra_check_interval_seconds = nil
+}
+
 // Where appends a list predicates to the GroupStatusConfigMutation builder.
 func (m *GroupStatusConfigMutation) Where(ps ...predicate.GroupStatusConfig) {
 	m.predicates = append(m.predicates, ps...)
@@ -23509,7 +25798,7 @@ func (m *GroupStatusConfigMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusConfigMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 19)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusconfig.FieldCreatedAt)
 	}
@@ -23555,6 +25844,18 @@ func (m *GroupStatusConfigMutation) Fields() []string {
 	if m.sol_juice_model != nil {
 		fields = append(fields, groupstatusconfig.FieldSolJuiceModel)
 	}
+	if m.astra_check_enabled != nil {
+		fields = append(fields, groupstatusconfig.FieldAstraCheckEnabled)
+	}
+	if m.astra_check_request_model != nil {
+		fields = append(fields, groupstatusconfig.FieldAstraCheckRequestModel)
+	}
+	if m.astra_check_tier != nil {
+		fields = append(fields, groupstatusconfig.FieldAstraCheckTier)
+	}
+	if m.astra_check_interval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldAstraCheckIntervalSeconds)
+	}
 	return fields
 }
 
@@ -23593,6 +25894,14 @@ func (m *GroupStatusConfigMutation) Field(name string) (ent.Value, bool) {
 		return m.SolJuiceIntervalSeconds()
 	case groupstatusconfig.FieldSolJuiceModel:
 		return m.SolJuiceModel()
+	case groupstatusconfig.FieldAstraCheckEnabled:
+		return m.AstraCheckEnabled()
+	case groupstatusconfig.FieldAstraCheckRequestModel:
+		return m.AstraCheckRequestModel()
+	case groupstatusconfig.FieldAstraCheckTier:
+		return m.AstraCheckTier()
+	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
+		return m.AstraCheckIntervalSeconds()
 	}
 	return nil, false
 }
@@ -23632,6 +25941,14 @@ func (m *GroupStatusConfigMutation) OldField(ctx context.Context, name string) (
 		return m.OldSolJuiceIntervalSeconds(ctx)
 	case groupstatusconfig.FieldSolJuiceModel:
 		return m.OldSolJuiceModel(ctx)
+	case groupstatusconfig.FieldAstraCheckEnabled:
+		return m.OldAstraCheckEnabled(ctx)
+	case groupstatusconfig.FieldAstraCheckRequestModel:
+		return m.OldAstraCheckRequestModel(ctx)
+	case groupstatusconfig.FieldAstraCheckTier:
+		return m.OldAstraCheckTier(ctx)
+	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
+		return m.OldAstraCheckIntervalSeconds(ctx)
 	}
 	return nil, fmt.Errorf("unknown GroupStatusConfig field %s", name)
 }
@@ -23746,6 +26063,34 @@ func (m *GroupStatusConfigMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetSolJuiceModel(v)
 		return nil
+	case groupstatusconfig.FieldAstraCheckEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckEnabled(v)
+		return nil
+	case groupstatusconfig.FieldAstraCheckRequestModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckRequestModel(v)
+		return nil
+	case groupstatusconfig.FieldAstraCheckTier:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckTier(v)
+		return nil
+	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckIntervalSeconds(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig field %s", name)
 }
@@ -23769,6 +26114,9 @@ func (m *GroupStatusConfigMutation) AddedFields() []string {
 	if m.addsol_juice_interval_seconds != nil {
 		fields = append(fields, groupstatusconfig.FieldSolJuiceIntervalSeconds)
 	}
+	if m.addastra_check_interval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldAstraCheckIntervalSeconds)
+	}
 	return fields
 }
 
@@ -23787,6 +26135,8 @@ func (m *GroupStatusConfigMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedSlowLatencyMs()
 	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
 		return m.AddedSolJuiceIntervalSeconds()
+	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
+		return m.AddedAstraCheckIntervalSeconds()
 	}
 	return nil, false
 }
@@ -23830,6 +26180,13 @@ func (m *GroupStatusConfigMutation) AddField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddSolJuiceIntervalSeconds(v)
+		return nil
+	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckIntervalSeconds(v)
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig numeric field %s", name)
@@ -23902,6 +26259,18 @@ func (m *GroupStatusConfigMutation) ResetField(name string) error {
 		return nil
 	case groupstatusconfig.FieldSolJuiceModel:
 		m.ResetSolJuiceModel()
+		return nil
+	case groupstatusconfig.FieldAstraCheckEnabled:
+		m.ResetAstraCheckEnabled()
+		return nil
+	case groupstatusconfig.FieldAstraCheckRequestModel:
+		m.ResetAstraCheckRequestModel()
+		return nil
+	case groupstatusconfig.FieldAstraCheckTier:
+		m.ResetAstraCheckTier()
+		return nil
+	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
+		m.ResetAstraCheckIntervalSeconds()
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusConfig field %s", name)
@@ -27446,46 +29815,69 @@ func (m *GroupStatusRecordMutation) ResetEdge(name string) error {
 // GroupStatusStateMutation represents an operation that mutates the GroupStatusState nodes in the graph.
 type GroupStatusStateMutation struct {
 	config
-	op                                Op
-	typ                               string
-	id                                *int64
-	created_at                        *time.Time
-	updated_at                        *time.Time
-	group_id                          *int64
-	addgroup_id                       *int64
-	config_id                         *int64
-	addconfig_id                      *int64
-	latest_status                     *string
-	stable_status                     *string
-	response_excerpt                  *string
-	latency_ms                        *int64
-	addlatency_ms                     *int64
-	http_code                         *int
-	addhttp_code                      *int
-	sub_status                        *string
-	error_detail                      *string
-	observed_at                       *time.Time
-	consecutive_down                  *int
-	addconsecutive_down               *int
-	consecutive_non_down              *int
-	addconsecutive_non_down           *int
-	sol_juice_status                  *string
-	sol_juice_stable_status           *string
-	sol_juice_value                   *string
-	sol_juice_detail                  *string
-	sol_juice_checked_at              *time.Time
-	sol_juice_consecutive_mismatch    *int
-	addsol_juice_consecutive_mismatch *int
-	sol_juice_input_tokens            *int64
-	addsol_juice_input_tokens         *int64
-	sol_juice_output_tokens           *int64
-	addsol_juice_output_tokens        *int64
-	sol_juice_reasoning_tokens        *int64
-	addsol_juice_reasoning_tokens     *int64
-	clearedFields                     map[string]struct{}
-	done                              bool
-	oldValue                          func(context.Context) (*GroupStatusState, error)
-	predicates                        []predicate.GroupStatusState
+	op                                  Op
+	typ                                 string
+	id                                  *int64
+	created_at                          *time.Time
+	updated_at                          *time.Time
+	group_id                            *int64
+	addgroup_id                         *int64
+	config_id                           *int64
+	addconfig_id                        *int64
+	latest_status                       *string
+	stable_status                       *string
+	response_excerpt                    *string
+	latency_ms                          *int64
+	addlatency_ms                       *int64
+	http_code                           *int
+	addhttp_code                        *int
+	sub_status                          *string
+	error_detail                        *string
+	observed_at                         *time.Time
+	consecutive_down                    *int
+	addconsecutive_down                 *int
+	consecutive_non_down                *int
+	addconsecutive_non_down             *int
+	sol_juice_status                    *string
+	sol_juice_stable_status             *string
+	sol_juice_value                     *string
+	sol_juice_detail                    *string
+	sol_juice_checked_at                *time.Time
+	sol_juice_consecutive_mismatch      *int
+	addsol_juice_consecutive_mismatch   *int
+	sol_juice_input_tokens              *int64
+	addsol_juice_input_tokens           *int64
+	sol_juice_output_tokens             *int64
+	addsol_juice_output_tokens          *int64
+	sol_juice_reasoning_tokens          *int64
+	addsol_juice_reasoning_tokens       *int64
+	astra_check_verdict                 *string
+	astra_check_stable_status           *string
+	astra_check_winner                  *string
+	astra_check_matches                 *[]map[string]interface{}
+	appendastra_check_matches           []map[string]interface{}
+	astra_check_reasons                 *[]string
+	appendastra_check_reasons           []string
+	astra_check_detail                  *string
+	astra_check_checked_at              *time.Time
+	astra_check_consecutive_mismatch    *int
+	addastra_check_consecutive_mismatch *int
+	astra_check_valid_samples           *int
+	addastra_check_valid_samples        *int
+	astra_check_planned_samples         *int
+	addastra_check_planned_samples      *int
+	astra_check_input_tokens            *int64
+	addastra_check_input_tokens         *int64
+	astra_check_output_tokens           *int64
+	addastra_check_output_tokens        *int64
+	astra_check_reasoning_tokens        *int64
+	addastra_check_reasoning_tokens     *int64
+	astra_check_last_run_id             *int64
+	addastra_check_last_run_id          *int64
+	clearedFields                       map[string]struct{}
+	done                                bool
+	oldValue                            func(context.Context) (*GroupStatusState, error)
+	predicates                          []predicate.GroupStatusState
 }
 
 var _ ent.Mutation = (*GroupStatusStateMutation)(nil)
@@ -28707,6 +31099,720 @@ func (m *GroupStatusStateMutation) ResetSolJuiceReasoningTokens() {
 	m.addsol_juice_reasoning_tokens = nil
 }
 
+// SetAstraCheckVerdict sets the "astra_check_verdict" field.
+func (m *GroupStatusStateMutation) SetAstraCheckVerdict(s string) {
+	m.astra_check_verdict = &s
+}
+
+// AstraCheckVerdict returns the value of the "astra_check_verdict" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckVerdict() (r string, exists bool) {
+	v := m.astra_check_verdict
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckVerdict returns the old "astra_check_verdict" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckVerdict(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckVerdict is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckVerdict requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckVerdict: %w", err)
+	}
+	return oldValue.AstraCheckVerdict, nil
+}
+
+// ResetAstraCheckVerdict resets all changes to the "astra_check_verdict" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckVerdict() {
+	m.astra_check_verdict = nil
+}
+
+// SetAstraCheckStableStatus sets the "astra_check_stable_status" field.
+func (m *GroupStatusStateMutation) SetAstraCheckStableStatus(s string) {
+	m.astra_check_stable_status = &s
+}
+
+// AstraCheckStableStatus returns the value of the "astra_check_stable_status" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckStableStatus() (r string, exists bool) {
+	v := m.astra_check_stable_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckStableStatus returns the old "astra_check_stable_status" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckStableStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckStableStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckStableStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckStableStatus: %w", err)
+	}
+	return oldValue.AstraCheckStableStatus, nil
+}
+
+// ResetAstraCheckStableStatus resets all changes to the "astra_check_stable_status" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckStableStatus() {
+	m.astra_check_stable_status = nil
+}
+
+// SetAstraCheckWinner sets the "astra_check_winner" field.
+func (m *GroupStatusStateMutation) SetAstraCheckWinner(s string) {
+	m.astra_check_winner = &s
+}
+
+// AstraCheckWinner returns the value of the "astra_check_winner" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckWinner() (r string, exists bool) {
+	v := m.astra_check_winner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckWinner returns the old "astra_check_winner" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckWinner(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckWinner is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckWinner requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckWinner: %w", err)
+	}
+	return oldValue.AstraCheckWinner, nil
+}
+
+// ResetAstraCheckWinner resets all changes to the "astra_check_winner" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckWinner() {
+	m.astra_check_winner = nil
+}
+
+// SetAstraCheckMatches sets the "astra_check_matches" field.
+func (m *GroupStatusStateMutation) SetAstraCheckMatches(value []map[string]interface{}) {
+	m.astra_check_matches = &value
+	m.appendastra_check_matches = nil
+}
+
+// AstraCheckMatches returns the value of the "astra_check_matches" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckMatches() (r []map[string]interface{}, exists bool) {
+	v := m.astra_check_matches
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckMatches returns the old "astra_check_matches" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckMatches(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckMatches is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckMatches requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckMatches: %w", err)
+	}
+	return oldValue.AstraCheckMatches, nil
+}
+
+// AppendAstraCheckMatches adds value to the "astra_check_matches" field.
+func (m *GroupStatusStateMutation) AppendAstraCheckMatches(value []map[string]interface{}) {
+	m.appendastra_check_matches = append(m.appendastra_check_matches, value...)
+}
+
+// AppendedAstraCheckMatches returns the list of values that were appended to the "astra_check_matches" field in this mutation.
+func (m *GroupStatusStateMutation) AppendedAstraCheckMatches() ([]map[string]interface{}, bool) {
+	if len(m.appendastra_check_matches) == 0 {
+		return nil, false
+	}
+	return m.appendastra_check_matches, true
+}
+
+// ResetAstraCheckMatches resets all changes to the "astra_check_matches" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckMatches() {
+	m.astra_check_matches = nil
+	m.appendastra_check_matches = nil
+}
+
+// SetAstraCheckReasons sets the "astra_check_reasons" field.
+func (m *GroupStatusStateMutation) SetAstraCheckReasons(s []string) {
+	m.astra_check_reasons = &s
+	m.appendastra_check_reasons = nil
+}
+
+// AstraCheckReasons returns the value of the "astra_check_reasons" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckReasons() (r []string, exists bool) {
+	v := m.astra_check_reasons
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckReasons returns the old "astra_check_reasons" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckReasons(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckReasons is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckReasons requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckReasons: %w", err)
+	}
+	return oldValue.AstraCheckReasons, nil
+}
+
+// AppendAstraCheckReasons adds s to the "astra_check_reasons" field.
+func (m *GroupStatusStateMutation) AppendAstraCheckReasons(s []string) {
+	m.appendastra_check_reasons = append(m.appendastra_check_reasons, s...)
+}
+
+// AppendedAstraCheckReasons returns the list of values that were appended to the "astra_check_reasons" field in this mutation.
+func (m *GroupStatusStateMutation) AppendedAstraCheckReasons() ([]string, bool) {
+	if len(m.appendastra_check_reasons) == 0 {
+		return nil, false
+	}
+	return m.appendastra_check_reasons, true
+}
+
+// ResetAstraCheckReasons resets all changes to the "astra_check_reasons" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckReasons() {
+	m.astra_check_reasons = nil
+	m.appendastra_check_reasons = nil
+}
+
+// SetAstraCheckDetail sets the "astra_check_detail" field.
+func (m *GroupStatusStateMutation) SetAstraCheckDetail(s string) {
+	m.astra_check_detail = &s
+}
+
+// AstraCheckDetail returns the value of the "astra_check_detail" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckDetail() (r string, exists bool) {
+	v := m.astra_check_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckDetail returns the old "astra_check_detail" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckDetail: %w", err)
+	}
+	return oldValue.AstraCheckDetail, nil
+}
+
+// ClearAstraCheckDetail clears the value of the "astra_check_detail" field.
+func (m *GroupStatusStateMutation) ClearAstraCheckDetail() {
+	m.astra_check_detail = nil
+	m.clearedFields[groupstatusstate.FieldAstraCheckDetail] = struct{}{}
+}
+
+// AstraCheckDetailCleared returns if the "astra_check_detail" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) AstraCheckDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldAstraCheckDetail]
+	return ok
+}
+
+// ResetAstraCheckDetail resets all changes to the "astra_check_detail" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckDetail() {
+	m.astra_check_detail = nil
+	delete(m.clearedFields, groupstatusstate.FieldAstraCheckDetail)
+}
+
+// SetAstraCheckCheckedAt sets the "astra_check_checked_at" field.
+func (m *GroupStatusStateMutation) SetAstraCheckCheckedAt(t time.Time) {
+	m.astra_check_checked_at = &t
+}
+
+// AstraCheckCheckedAt returns the value of the "astra_check_checked_at" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckCheckedAt() (r time.Time, exists bool) {
+	v := m.astra_check_checked_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckCheckedAt returns the old "astra_check_checked_at" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckCheckedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckCheckedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckCheckedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckCheckedAt: %w", err)
+	}
+	return oldValue.AstraCheckCheckedAt, nil
+}
+
+// ClearAstraCheckCheckedAt clears the value of the "astra_check_checked_at" field.
+func (m *GroupStatusStateMutation) ClearAstraCheckCheckedAt() {
+	m.astra_check_checked_at = nil
+	m.clearedFields[groupstatusstate.FieldAstraCheckCheckedAt] = struct{}{}
+}
+
+// AstraCheckCheckedAtCleared returns if the "astra_check_checked_at" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) AstraCheckCheckedAtCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldAstraCheckCheckedAt]
+	return ok
+}
+
+// ResetAstraCheckCheckedAt resets all changes to the "astra_check_checked_at" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckCheckedAt() {
+	m.astra_check_checked_at = nil
+	delete(m.clearedFields, groupstatusstate.FieldAstraCheckCheckedAt)
+}
+
+// SetAstraCheckConsecutiveMismatch sets the "astra_check_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) SetAstraCheckConsecutiveMismatch(i int) {
+	m.astra_check_consecutive_mismatch = &i
+	m.addastra_check_consecutive_mismatch = nil
+}
+
+// AstraCheckConsecutiveMismatch returns the value of the "astra_check_consecutive_mismatch" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckConsecutiveMismatch() (r int, exists bool) {
+	v := m.astra_check_consecutive_mismatch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckConsecutiveMismatch returns the old "astra_check_consecutive_mismatch" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckConsecutiveMismatch(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckConsecutiveMismatch is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckConsecutiveMismatch requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckConsecutiveMismatch: %w", err)
+	}
+	return oldValue.AstraCheckConsecutiveMismatch, nil
+}
+
+// AddAstraCheckConsecutiveMismatch adds i to the "astra_check_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) AddAstraCheckConsecutiveMismatch(i int) {
+	if m.addastra_check_consecutive_mismatch != nil {
+		*m.addastra_check_consecutive_mismatch += i
+	} else {
+		m.addastra_check_consecutive_mismatch = &i
+	}
+}
+
+// AddedAstraCheckConsecutiveMismatch returns the value that was added to the "astra_check_consecutive_mismatch" field in this mutation.
+func (m *GroupStatusStateMutation) AddedAstraCheckConsecutiveMismatch() (r int, exists bool) {
+	v := m.addastra_check_consecutive_mismatch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAstraCheckConsecutiveMismatch resets all changes to the "astra_check_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckConsecutiveMismatch() {
+	m.astra_check_consecutive_mismatch = nil
+	m.addastra_check_consecutive_mismatch = nil
+}
+
+// SetAstraCheckValidSamples sets the "astra_check_valid_samples" field.
+func (m *GroupStatusStateMutation) SetAstraCheckValidSamples(i int) {
+	m.astra_check_valid_samples = &i
+	m.addastra_check_valid_samples = nil
+}
+
+// AstraCheckValidSamples returns the value of the "astra_check_valid_samples" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckValidSamples() (r int, exists bool) {
+	v := m.astra_check_valid_samples
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckValidSamples returns the old "astra_check_valid_samples" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckValidSamples(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckValidSamples is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckValidSamples requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckValidSamples: %w", err)
+	}
+	return oldValue.AstraCheckValidSamples, nil
+}
+
+// AddAstraCheckValidSamples adds i to the "astra_check_valid_samples" field.
+func (m *GroupStatusStateMutation) AddAstraCheckValidSamples(i int) {
+	if m.addastra_check_valid_samples != nil {
+		*m.addastra_check_valid_samples += i
+	} else {
+		m.addastra_check_valid_samples = &i
+	}
+}
+
+// AddedAstraCheckValidSamples returns the value that was added to the "astra_check_valid_samples" field in this mutation.
+func (m *GroupStatusStateMutation) AddedAstraCheckValidSamples() (r int, exists bool) {
+	v := m.addastra_check_valid_samples
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAstraCheckValidSamples resets all changes to the "astra_check_valid_samples" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckValidSamples() {
+	m.astra_check_valid_samples = nil
+	m.addastra_check_valid_samples = nil
+}
+
+// SetAstraCheckPlannedSamples sets the "astra_check_planned_samples" field.
+func (m *GroupStatusStateMutation) SetAstraCheckPlannedSamples(i int) {
+	m.astra_check_planned_samples = &i
+	m.addastra_check_planned_samples = nil
+}
+
+// AstraCheckPlannedSamples returns the value of the "astra_check_planned_samples" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckPlannedSamples() (r int, exists bool) {
+	v := m.astra_check_planned_samples
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckPlannedSamples returns the old "astra_check_planned_samples" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckPlannedSamples(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckPlannedSamples is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckPlannedSamples requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckPlannedSamples: %w", err)
+	}
+	return oldValue.AstraCheckPlannedSamples, nil
+}
+
+// AddAstraCheckPlannedSamples adds i to the "astra_check_planned_samples" field.
+func (m *GroupStatusStateMutation) AddAstraCheckPlannedSamples(i int) {
+	if m.addastra_check_planned_samples != nil {
+		*m.addastra_check_planned_samples += i
+	} else {
+		m.addastra_check_planned_samples = &i
+	}
+}
+
+// AddedAstraCheckPlannedSamples returns the value that was added to the "astra_check_planned_samples" field in this mutation.
+func (m *GroupStatusStateMutation) AddedAstraCheckPlannedSamples() (r int, exists bool) {
+	v := m.addastra_check_planned_samples
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAstraCheckPlannedSamples resets all changes to the "astra_check_planned_samples" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckPlannedSamples() {
+	m.astra_check_planned_samples = nil
+	m.addastra_check_planned_samples = nil
+}
+
+// SetAstraCheckInputTokens sets the "astra_check_input_tokens" field.
+func (m *GroupStatusStateMutation) SetAstraCheckInputTokens(i int64) {
+	m.astra_check_input_tokens = &i
+	m.addastra_check_input_tokens = nil
+}
+
+// AstraCheckInputTokens returns the value of the "astra_check_input_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckInputTokens() (r int64, exists bool) {
+	v := m.astra_check_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckInputTokens returns the old "astra_check_input_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckInputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckInputTokens: %w", err)
+	}
+	return oldValue.AstraCheckInputTokens, nil
+}
+
+// AddAstraCheckInputTokens adds i to the "astra_check_input_tokens" field.
+func (m *GroupStatusStateMutation) AddAstraCheckInputTokens(i int64) {
+	if m.addastra_check_input_tokens != nil {
+		*m.addastra_check_input_tokens += i
+	} else {
+		m.addastra_check_input_tokens = &i
+	}
+}
+
+// AddedAstraCheckInputTokens returns the value that was added to the "astra_check_input_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedAstraCheckInputTokens() (r int64, exists bool) {
+	v := m.addastra_check_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAstraCheckInputTokens resets all changes to the "astra_check_input_tokens" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckInputTokens() {
+	m.astra_check_input_tokens = nil
+	m.addastra_check_input_tokens = nil
+}
+
+// SetAstraCheckOutputTokens sets the "astra_check_output_tokens" field.
+func (m *GroupStatusStateMutation) SetAstraCheckOutputTokens(i int64) {
+	m.astra_check_output_tokens = &i
+	m.addastra_check_output_tokens = nil
+}
+
+// AstraCheckOutputTokens returns the value of the "astra_check_output_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckOutputTokens() (r int64, exists bool) {
+	v := m.astra_check_output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckOutputTokens returns the old "astra_check_output_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckOutputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckOutputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckOutputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckOutputTokens: %w", err)
+	}
+	return oldValue.AstraCheckOutputTokens, nil
+}
+
+// AddAstraCheckOutputTokens adds i to the "astra_check_output_tokens" field.
+func (m *GroupStatusStateMutation) AddAstraCheckOutputTokens(i int64) {
+	if m.addastra_check_output_tokens != nil {
+		*m.addastra_check_output_tokens += i
+	} else {
+		m.addastra_check_output_tokens = &i
+	}
+}
+
+// AddedAstraCheckOutputTokens returns the value that was added to the "astra_check_output_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedAstraCheckOutputTokens() (r int64, exists bool) {
+	v := m.addastra_check_output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAstraCheckOutputTokens resets all changes to the "astra_check_output_tokens" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckOutputTokens() {
+	m.astra_check_output_tokens = nil
+	m.addastra_check_output_tokens = nil
+}
+
+// SetAstraCheckReasoningTokens sets the "astra_check_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) SetAstraCheckReasoningTokens(i int64) {
+	m.astra_check_reasoning_tokens = &i
+	m.addastra_check_reasoning_tokens = nil
+}
+
+// AstraCheckReasoningTokens returns the value of the "astra_check_reasoning_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckReasoningTokens() (r int64, exists bool) {
+	v := m.astra_check_reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckReasoningTokens returns the old "astra_check_reasoning_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckReasoningTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckReasoningTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckReasoningTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckReasoningTokens: %w", err)
+	}
+	return oldValue.AstraCheckReasoningTokens, nil
+}
+
+// AddAstraCheckReasoningTokens adds i to the "astra_check_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) AddAstraCheckReasoningTokens(i int64) {
+	if m.addastra_check_reasoning_tokens != nil {
+		*m.addastra_check_reasoning_tokens += i
+	} else {
+		m.addastra_check_reasoning_tokens = &i
+	}
+}
+
+// AddedAstraCheckReasoningTokens returns the value that was added to the "astra_check_reasoning_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedAstraCheckReasoningTokens() (r int64, exists bool) {
+	v := m.addastra_check_reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAstraCheckReasoningTokens resets all changes to the "astra_check_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckReasoningTokens() {
+	m.astra_check_reasoning_tokens = nil
+	m.addastra_check_reasoning_tokens = nil
+}
+
+// SetAstraCheckLastRunID sets the "astra_check_last_run_id" field.
+func (m *GroupStatusStateMutation) SetAstraCheckLastRunID(i int64) {
+	m.astra_check_last_run_id = &i
+	m.addastra_check_last_run_id = nil
+}
+
+// AstraCheckLastRunID returns the value of the "astra_check_last_run_id" field in the mutation.
+func (m *GroupStatusStateMutation) AstraCheckLastRunID() (r int64, exists bool) {
+	v := m.astra_check_last_run_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAstraCheckLastRunID returns the old "astra_check_last_run_id" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldAstraCheckLastRunID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAstraCheckLastRunID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAstraCheckLastRunID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAstraCheckLastRunID: %w", err)
+	}
+	return oldValue.AstraCheckLastRunID, nil
+}
+
+// AddAstraCheckLastRunID adds i to the "astra_check_last_run_id" field.
+func (m *GroupStatusStateMutation) AddAstraCheckLastRunID(i int64) {
+	if m.addastra_check_last_run_id != nil {
+		*m.addastra_check_last_run_id += i
+	} else {
+		m.addastra_check_last_run_id = &i
+	}
+}
+
+// AddedAstraCheckLastRunID returns the value that was added to the "astra_check_last_run_id" field in this mutation.
+func (m *GroupStatusStateMutation) AddedAstraCheckLastRunID() (r int64, exists bool) {
+	v := m.addastra_check_last_run_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAstraCheckLastRunID clears the value of the "astra_check_last_run_id" field.
+func (m *GroupStatusStateMutation) ClearAstraCheckLastRunID() {
+	m.astra_check_last_run_id = nil
+	m.addastra_check_last_run_id = nil
+	m.clearedFields[groupstatusstate.FieldAstraCheckLastRunID] = struct{}{}
+}
+
+// AstraCheckLastRunIDCleared returns if the "astra_check_last_run_id" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) AstraCheckLastRunIDCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldAstraCheckLastRunID]
+	return ok
+}
+
+// ResetAstraCheckLastRunID resets all changes to the "astra_check_last_run_id" field.
+func (m *GroupStatusStateMutation) ResetAstraCheckLastRunID() {
+	m.astra_check_last_run_id = nil
+	m.addastra_check_last_run_id = nil
+	delete(m.clearedFields, groupstatusstate.FieldAstraCheckLastRunID)
+}
+
 // Where appends a list predicates to the GroupStatusStateMutation builder.
 func (m *GroupStatusStateMutation) Where(ps ...predicate.GroupStatusState) {
 	m.predicates = append(m.predicates, ps...)
@@ -28741,7 +31847,7 @@ func (m *GroupStatusStateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusStateMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 37)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusstate.FieldCreatedAt)
 	}
@@ -28811,6 +31917,48 @@ func (m *GroupStatusStateMutation) Fields() []string {
 	if m.sol_juice_reasoning_tokens != nil {
 		fields = append(fields, groupstatusstate.FieldSolJuiceReasoningTokens)
 	}
+	if m.astra_check_verdict != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckVerdict)
+	}
+	if m.astra_check_stable_status != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckStableStatus)
+	}
+	if m.astra_check_winner != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckWinner)
+	}
+	if m.astra_check_matches != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckMatches)
+	}
+	if m.astra_check_reasons != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckReasons)
+	}
+	if m.astra_check_detail != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckDetail)
+	}
+	if m.astra_check_checked_at != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckCheckedAt)
+	}
+	if m.astra_check_consecutive_mismatch != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckConsecutiveMismatch)
+	}
+	if m.astra_check_valid_samples != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckValidSamples)
+	}
+	if m.astra_check_planned_samples != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckPlannedSamples)
+	}
+	if m.astra_check_input_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckInputTokens)
+	}
+	if m.astra_check_output_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckOutputTokens)
+	}
+	if m.astra_check_reasoning_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckReasoningTokens)
+	}
+	if m.astra_check_last_run_id != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckLastRunID)
+	}
 	return fields
 }
 
@@ -28865,6 +32013,34 @@ func (m *GroupStatusStateMutation) Field(name string) (ent.Value, bool) {
 		return m.SolJuiceOutputTokens()
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		return m.SolJuiceReasoningTokens()
+	case groupstatusstate.FieldAstraCheckVerdict:
+		return m.AstraCheckVerdict()
+	case groupstatusstate.FieldAstraCheckStableStatus:
+		return m.AstraCheckStableStatus()
+	case groupstatusstate.FieldAstraCheckWinner:
+		return m.AstraCheckWinner()
+	case groupstatusstate.FieldAstraCheckMatches:
+		return m.AstraCheckMatches()
+	case groupstatusstate.FieldAstraCheckReasons:
+		return m.AstraCheckReasons()
+	case groupstatusstate.FieldAstraCheckDetail:
+		return m.AstraCheckDetail()
+	case groupstatusstate.FieldAstraCheckCheckedAt:
+		return m.AstraCheckCheckedAt()
+	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
+		return m.AstraCheckConsecutiveMismatch()
+	case groupstatusstate.FieldAstraCheckValidSamples:
+		return m.AstraCheckValidSamples()
+	case groupstatusstate.FieldAstraCheckPlannedSamples:
+		return m.AstraCheckPlannedSamples()
+	case groupstatusstate.FieldAstraCheckInputTokens:
+		return m.AstraCheckInputTokens()
+	case groupstatusstate.FieldAstraCheckOutputTokens:
+		return m.AstraCheckOutputTokens()
+	case groupstatusstate.FieldAstraCheckReasoningTokens:
+		return m.AstraCheckReasoningTokens()
+	case groupstatusstate.FieldAstraCheckLastRunID:
+		return m.AstraCheckLastRunID()
 	}
 	return nil, false
 }
@@ -28920,6 +32096,34 @@ func (m *GroupStatusStateMutation) OldField(ctx context.Context, name string) (e
 		return m.OldSolJuiceOutputTokens(ctx)
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		return m.OldSolJuiceReasoningTokens(ctx)
+	case groupstatusstate.FieldAstraCheckVerdict:
+		return m.OldAstraCheckVerdict(ctx)
+	case groupstatusstate.FieldAstraCheckStableStatus:
+		return m.OldAstraCheckStableStatus(ctx)
+	case groupstatusstate.FieldAstraCheckWinner:
+		return m.OldAstraCheckWinner(ctx)
+	case groupstatusstate.FieldAstraCheckMatches:
+		return m.OldAstraCheckMatches(ctx)
+	case groupstatusstate.FieldAstraCheckReasons:
+		return m.OldAstraCheckReasons(ctx)
+	case groupstatusstate.FieldAstraCheckDetail:
+		return m.OldAstraCheckDetail(ctx)
+	case groupstatusstate.FieldAstraCheckCheckedAt:
+		return m.OldAstraCheckCheckedAt(ctx)
+	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
+		return m.OldAstraCheckConsecutiveMismatch(ctx)
+	case groupstatusstate.FieldAstraCheckValidSamples:
+		return m.OldAstraCheckValidSamples(ctx)
+	case groupstatusstate.FieldAstraCheckPlannedSamples:
+		return m.OldAstraCheckPlannedSamples(ctx)
+	case groupstatusstate.FieldAstraCheckInputTokens:
+		return m.OldAstraCheckInputTokens(ctx)
+	case groupstatusstate.FieldAstraCheckOutputTokens:
+		return m.OldAstraCheckOutputTokens(ctx)
+	case groupstatusstate.FieldAstraCheckReasoningTokens:
+		return m.OldAstraCheckReasoningTokens(ctx)
+	case groupstatusstate.FieldAstraCheckLastRunID:
+		return m.OldAstraCheckLastRunID(ctx)
 	}
 	return nil, fmt.Errorf("unknown GroupStatusState field %s", name)
 }
@@ -29090,6 +32294,104 @@ func (m *GroupStatusStateMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetSolJuiceReasoningTokens(v)
 		return nil
+	case groupstatusstate.FieldAstraCheckVerdict:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckVerdict(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckStableStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckStableStatus(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckWinner:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckWinner(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckMatches:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckMatches(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckReasons:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckReasons(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckDetail(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckCheckedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckCheckedAt(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckConsecutiveMismatch(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckValidSamples:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckValidSamples(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckPlannedSamples:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckPlannedSamples(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckInputTokens(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckOutputTokens(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckReasoningTokens(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckLastRunID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAstraCheckLastRunID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState field %s", name)
 }
@@ -29128,6 +32430,27 @@ func (m *GroupStatusStateMutation) AddedFields() []string {
 	if m.addsol_juice_reasoning_tokens != nil {
 		fields = append(fields, groupstatusstate.FieldSolJuiceReasoningTokens)
 	}
+	if m.addastra_check_consecutive_mismatch != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckConsecutiveMismatch)
+	}
+	if m.addastra_check_valid_samples != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckValidSamples)
+	}
+	if m.addastra_check_planned_samples != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckPlannedSamples)
+	}
+	if m.addastra_check_input_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckInputTokens)
+	}
+	if m.addastra_check_output_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckOutputTokens)
+	}
+	if m.addastra_check_reasoning_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckReasoningTokens)
+	}
+	if m.addastra_check_last_run_id != nil {
+		fields = append(fields, groupstatusstate.FieldAstraCheckLastRunID)
+	}
 	return fields
 }
 
@@ -29156,6 +32479,20 @@ func (m *GroupStatusStateMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedSolJuiceOutputTokens()
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		return m.AddedSolJuiceReasoningTokens()
+	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
+		return m.AddedAstraCheckConsecutiveMismatch()
+	case groupstatusstate.FieldAstraCheckValidSamples:
+		return m.AddedAstraCheckValidSamples()
+	case groupstatusstate.FieldAstraCheckPlannedSamples:
+		return m.AddedAstraCheckPlannedSamples()
+	case groupstatusstate.FieldAstraCheckInputTokens:
+		return m.AddedAstraCheckInputTokens()
+	case groupstatusstate.FieldAstraCheckOutputTokens:
+		return m.AddedAstraCheckOutputTokens()
+	case groupstatusstate.FieldAstraCheckReasoningTokens:
+		return m.AddedAstraCheckReasoningTokens()
+	case groupstatusstate.FieldAstraCheckLastRunID:
+		return m.AddedAstraCheckLastRunID()
 	}
 	return nil, false
 }
@@ -29235,6 +32572,55 @@ func (m *GroupStatusStateMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddSolJuiceReasoningTokens(v)
 		return nil
+	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckConsecutiveMismatch(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckValidSamples:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckValidSamples(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckPlannedSamples:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckPlannedSamples(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckInputTokens(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckOutputTokens(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckReasoningTokens(v)
+		return nil
+	case groupstatusstate.FieldAstraCheckLastRunID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAstraCheckLastRunID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState numeric field %s", name)
 }
@@ -29263,6 +32649,15 @@ func (m *GroupStatusStateMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(groupstatusstate.FieldSolJuiceCheckedAt) {
 		fields = append(fields, groupstatusstate.FieldSolJuiceCheckedAt)
+	}
+	if m.FieldCleared(groupstatusstate.FieldAstraCheckDetail) {
+		fields = append(fields, groupstatusstate.FieldAstraCheckDetail)
+	}
+	if m.FieldCleared(groupstatusstate.FieldAstraCheckCheckedAt) {
+		fields = append(fields, groupstatusstate.FieldAstraCheckCheckedAt)
+	}
+	if m.FieldCleared(groupstatusstate.FieldAstraCheckLastRunID) {
+		fields = append(fields, groupstatusstate.FieldAstraCheckLastRunID)
 	}
 	return fields
 }
@@ -29298,6 +32693,15 @@ func (m *GroupStatusStateMutation) ClearField(name string) error {
 		return nil
 	case groupstatusstate.FieldSolJuiceCheckedAt:
 		m.ClearSolJuiceCheckedAt()
+		return nil
+	case groupstatusstate.FieldAstraCheckDetail:
+		m.ClearAstraCheckDetail()
+		return nil
+	case groupstatusstate.FieldAstraCheckCheckedAt:
+		m.ClearAstraCheckCheckedAt()
+		return nil
+	case groupstatusstate.FieldAstraCheckLastRunID:
+		m.ClearAstraCheckLastRunID()
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState nullable field %s", name)
@@ -29375,6 +32779,48 @@ func (m *GroupStatusStateMutation) ResetField(name string) error {
 		return nil
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		m.ResetSolJuiceReasoningTokens()
+		return nil
+	case groupstatusstate.FieldAstraCheckVerdict:
+		m.ResetAstraCheckVerdict()
+		return nil
+	case groupstatusstate.FieldAstraCheckStableStatus:
+		m.ResetAstraCheckStableStatus()
+		return nil
+	case groupstatusstate.FieldAstraCheckWinner:
+		m.ResetAstraCheckWinner()
+		return nil
+	case groupstatusstate.FieldAstraCheckMatches:
+		m.ResetAstraCheckMatches()
+		return nil
+	case groupstatusstate.FieldAstraCheckReasons:
+		m.ResetAstraCheckReasons()
+		return nil
+	case groupstatusstate.FieldAstraCheckDetail:
+		m.ResetAstraCheckDetail()
+		return nil
+	case groupstatusstate.FieldAstraCheckCheckedAt:
+		m.ResetAstraCheckCheckedAt()
+		return nil
+	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
+		m.ResetAstraCheckConsecutiveMismatch()
+		return nil
+	case groupstatusstate.FieldAstraCheckValidSamples:
+		m.ResetAstraCheckValidSamples()
+		return nil
+	case groupstatusstate.FieldAstraCheckPlannedSamples:
+		m.ResetAstraCheckPlannedSamples()
+		return nil
+	case groupstatusstate.FieldAstraCheckInputTokens:
+		m.ResetAstraCheckInputTokens()
+		return nil
+	case groupstatusstate.FieldAstraCheckOutputTokens:
+		m.ResetAstraCheckOutputTokens()
+		return nil
+	case groupstatusstate.FieldAstraCheckReasoningTokens:
+		m.ResetAstraCheckReasoningTokens()
+		return nil
+	case groupstatusstate.FieldAstraCheckLastRunID:
+		m.ResetAstraCheckLastRunID()
 		return nil
 	}
 	return fmt.Errorf("unknown GroupStatusState field %s", name)

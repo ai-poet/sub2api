@@ -503,6 +503,7 @@ export const groupsAPI = {
   updateRuntimeStatus,
   probeRuntimeStatus,
   probeRuntimeStatusSolJuice,
+  probeRuntimeStatusAstraCheck,
   getRuntimeStatusSummary
 }
 
@@ -526,11 +527,23 @@ export async function updateRuntimeStatus(
     sol_juice_enabled?: boolean
     sol_juice_interval_seconds?: number
     sol_juice_model?: string
+    astra_check_enabled?: boolean
+    astra_check_request_model?: string
+    astra_check_tier?: 'low' | 'medium' | 'high'
+    astra_check_interval_seconds?: number
   }
 ): Promise<GroupStatusAdminView> {
   const { data } = await apiClient.put<GroupStatusAdminView>(
     `/admin/groups/${id}/runtime-status`,
     payload
+  )
+  return data
+}
+
+// 后台启动一次 Astra 指纹验证（20+ 个请求，超出前端 30s 超时），返回时 summary.astra_check_running 为 true，需轮询
+export async function probeRuntimeStatusAstraCheck(id: number): Promise<GroupStatusAdminView> {
+  const { data } = await apiClient.post<GroupStatusAdminView>(
+    `/admin/groups/${id}/runtime-status/astra-check/probe`
   )
   return data
 }

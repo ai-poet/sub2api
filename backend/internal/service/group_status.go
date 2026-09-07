@@ -50,11 +50,16 @@ type GroupStatusConfig struct {
 	SlowLatencyMS    int64    `json:"slow_latency_ms"`
 	NotifyEnabled    bool     `json:"notify_enabled"`
 	// 纯 Sol 验证（Juice 指纹探测），仅 OpenAI 分组可开启
-	SolJuiceEnabled         bool      `json:"sol_juice_enabled"`
-	SolJuiceIntervalSeconds int       `json:"sol_juice_interval_seconds"`
-	SolJuiceModel           string    `json:"sol_juice_model"`
-	CreatedAt               time.Time `json:"created_at"`
-	UpdatedAt               time.Time `json:"updated_at"`
+	SolJuiceEnabled         bool   `json:"sol_juice_enabled"`
+	SolJuiceIntervalSeconds int    `json:"sol_juice_interval_seconds"`
+	SolJuiceModel           string `json:"sol_juice_model"`
+	// Astra 指纹验证（meow 基准），与 Sol Juice 并列、字段独立；仅 OpenAI 分组
+	AstraCheckEnabled         bool      `json:"astra_check_enabled"`
+	AstraCheckRequestModel    string    `json:"astra_check_request_model"`
+	AstraCheckTier            string    `json:"astra_check_tier"`
+	AstraCheckIntervalSeconds int       `json:"astra_check_interval_seconds"`
+	CreatedAt                 time.Time `json:"created_at"`
+	UpdatedAt                 time.Time `json:"updated_at"`
 }
 
 type GroupStatusRecord struct {
@@ -95,8 +100,23 @@ type GroupStatusState struct {
 	SolJuiceInputTokens         int64      `json:"sol_juice_input_tokens"`
 	SolJuiceOutputTokens        int64      `json:"sol_juice_output_tokens"`
 	SolJuiceReasoningTokens     int64      `json:"sol_juice_reasoning_tokens"`
-	CreatedAt                   time.Time  `json:"created_at"`
-	UpdatedAt                   time.Time  `json:"updated_at"`
+	// Astra 指纹验证的最近结果与稳定结论
+	AstraCheckVerdict             string                 `json:"astra_check_verdict"`
+	AstraCheckStableStatus        string                 `json:"astra_check_stable_status"`
+	AstraCheckWinner              string                 `json:"astra_check_winner"`
+	AstraCheckMatches             []AstraCheckModelMatch `json:"astra_check_matches"`
+	AstraCheckReasons             []string               `json:"astra_check_reasons"`
+	AstraCheckDetail              string                 `json:"astra_check_detail"`
+	AstraCheckCheckedAt           *time.Time             `json:"astra_check_checked_at"`
+	AstraCheckConsecutiveMismatch int                    `json:"astra_check_consecutive_mismatch"`
+	AstraCheckValidSamples        int                    `json:"astra_check_valid_samples"`
+	AstraCheckPlannedSamples      int                    `json:"astra_check_planned_samples"`
+	AstraCheckInputTokens         int64                  `json:"astra_check_input_tokens"`
+	AstraCheckOutputTokens        int64                  `json:"astra_check_output_tokens"`
+	AstraCheckReasoningTokens     int64                  `json:"astra_check_reasoning_tokens"`
+	AstraCheckLastRunID           *int64                 `json:"astra_check_last_run_id"`
+	CreatedAt                     time.Time              `json:"created_at"`
+	UpdatedAt                     time.Time              `json:"updated_at"`
 }
 
 type GroupStatusEvent struct {
@@ -143,6 +163,29 @@ type GroupStatusSummary struct {
 	SolJuiceOutputTokens        int64      `json:"sol_juice_output_tokens"`
 	SolJuiceReasoningTokens     int64      `json:"sol_juice_reasoning_tokens"`
 	SolJuiceLastCostUSD         float64    `json:"sol_juice_last_cost_usd"`
+	// Astra 指纹验证：配置 + 最近结果；LastCostUSD / Running / Benchmark* 为派生字段，不落库
+	AstraCheckEnabled             bool                     `json:"astra_check_enabled"`
+	AstraCheckRequestModel        string                   `json:"astra_check_request_model"`
+	AstraCheckTier                string                   `json:"astra_check_tier"`
+	AstraCheckIntervalSeconds     int                      `json:"astra_check_interval_seconds"`
+	AstraCheckVerdict             string                   `json:"astra_check_verdict"`
+	AstraCheckStableStatus        string                   `json:"astra_check_stable_status"`
+	AstraCheckWinner              string                   `json:"astra_check_winner"`
+	AstraCheckMatches             []AstraCheckModelMatch   `json:"astra_check_matches"`
+	AstraCheckReasons             []string                 `json:"astra_check_reasons"`
+	AstraCheckDetail              string                   `json:"astra_check_detail"`
+	AstraCheckCheckedAt           *time.Time               `json:"astra_check_checked_at"`
+	AstraCheckConsecutiveMismatch int                      `json:"astra_check_consecutive_mismatch"`
+	AstraCheckValidSamples        int                      `json:"astra_check_valid_samples"`
+	AstraCheckPlannedSamples      int                      `json:"astra_check_planned_samples"`
+	AstraCheckInputTokens         int64                    `json:"astra_check_input_tokens"`
+	AstraCheckOutputTokens        int64                    `json:"astra_check_output_tokens"`
+	AstraCheckReasoningTokens     int64                    `json:"astra_check_reasoning_tokens"`
+	AstraCheckLastCostUSD         float64                  `json:"astra_check_last_cost_usd"`
+	AstraCheckRunning             bool                     `json:"astra_check_running"`
+	AstraCheckBenchmarkVersion    string                   `json:"astra_check_benchmark_version"`
+	AstraCheckBenchmarkModels     []AstraBenchmarkModel    `json:"astra_check_benchmark_models"`
+	AstraCheckBenchmarkTiers      []AstraBenchmarkTierMeta `json:"astra_check_benchmark_tiers"`
 }
 
 type GroupStatusHistoryBucket struct {
@@ -180,6 +223,11 @@ type GroupStatusRepository interface {
 	SaveSolJuiceResult(ctx context.Context, result *GroupStatusSolJuiceResult) (*GroupStatusState, *GroupStatusEvent, error)
 	ListRecentSolJuiceRecords(ctx context.Context, groupID int64, limit int) ([]GroupStatusJuiceRecord, error)
 	DeleteSolJuiceRecordsOlderThan(ctx context.Context, before time.Time) (int64, error)
+	// Astra 指纹验证（meow 基准）
+	ListDueAstraCheckConfigs(ctx context.Context, now time.Time, limit int) ([]*GroupStatusConfig, error)
+	SaveAstraCheckRun(ctx context.Context, result *GroupStatusAstraCheckResult) (*GroupStatusAstraCheckRun, *GroupStatusState, *GroupStatusEvent, error)
+	ListRecentAstraCheckRuns(ctx context.Context, groupID int64, limit int) ([]GroupStatusAstraCheckRun, error)
+	DeleteAstraCheckRunsOlderThan(ctx context.Context, before time.Time) (int64, error)
 }
 
 type GroupStatusProbeResult struct {
@@ -267,6 +315,11 @@ type GroupStatusConfigUpsertInput struct {
 	SolJuiceEnabled         *bool
 	SolJuiceIntervalSeconds int
 	SolJuiceModel           string
+	// AstraCheckEnabled 为 nil 表示请求未携带，保留已保存的四项 Astra 配置
+	AstraCheckEnabled         *bool
+	AstraCheckRequestModel    string
+	AstraCheckTier            string
+	AstraCheckIntervalSeconds int
 }
 
 type AvailableGroupReader interface {
@@ -285,18 +338,22 @@ func DefaultGroupStatusConfig(group *Group) *GroupStatusConfig {
 			}
 			return group.ID
 		}(),
-		Enabled:                 false,
-		ProbeModel:              model,
-		ProbePrompt:             "Please reply with the single word ONLINE.",
-		ValidationMode:          GroupStatusValidationNonEmpty,
-		ExpectedKeywords:        []string{},
-		IntervalSeconds:         groupStatusDefaultIntervalSeconds,
-		TimeoutSeconds:          groupStatusDefaultTimeoutSeconds,
-		SlowLatencyMS:           groupStatusDefaultSlowLatencyMS,
-		NotifyEnabled:           true,
-		SolJuiceEnabled:         false,
-		SolJuiceIntervalSeconds: groupStatusSolJuiceDefaultIntervalSeconds,
-		SolJuiceModel:           groupStatusSolJuiceDefaultModel,
+		Enabled:                   false,
+		ProbeModel:                model,
+		ProbePrompt:               "Please reply with the single word ONLINE.",
+		ValidationMode:            GroupStatusValidationNonEmpty,
+		ExpectedKeywords:          []string{},
+		IntervalSeconds:           groupStatusDefaultIntervalSeconds,
+		TimeoutSeconds:            groupStatusDefaultTimeoutSeconds,
+		SlowLatencyMS:             groupStatusDefaultSlowLatencyMS,
+		NotifyEnabled:             true,
+		SolJuiceEnabled:           false,
+		SolJuiceIntervalSeconds:   groupStatusSolJuiceDefaultIntervalSeconds,
+		SolJuiceModel:             groupStatusSolJuiceDefaultModel,
+		AstraCheckEnabled:         false,
+		AstraCheckRequestModel:    groupStatusAstraCheckDefaultRequestModel,
+		AstraCheckTier:            groupStatusAstraCheckDefaultTier,
+		AstraCheckIntervalSeconds: groupStatusAstraCheckDefaultIntervalSecond,
 	}
 }
 
@@ -361,6 +418,21 @@ func NormalizeGroupStatusConfig(group *Group, input *GroupStatusConfigUpsertInpu
 	if cfg.SolJuiceEnabled && (group == nil || group.Platform != PlatformOpenAI) {
 		return nil, fmt.Errorf("%w: sol_juice is only available for openai groups", ErrGroupStatusInvalidConfig)
 	}
+	if input.AstraCheckEnabled != nil {
+		cfg.AstraCheckEnabled = *input.AstraCheckEnabled
+	}
+	if model := strings.TrimSpace(input.AstraCheckRequestModel); model != "" {
+		cfg.AstraCheckRequestModel = model
+	}
+	if tier := strings.TrimSpace(strings.ToLower(input.AstraCheckTier)); tier != "" {
+		cfg.AstraCheckTier = tier
+	}
+	if input.AstraCheckIntervalSeconds > 0 {
+		cfg.AstraCheckIntervalSeconds = input.AstraCheckIntervalSeconds
+	}
+	if cfg.AstraCheckEnabled && (group == nil || group.Platform != PlatformOpenAI) {
+		return nil, fmt.Errorf("%w: astra_check is only available for openai groups", ErrGroupStatusInvalidConfig)
+	}
 	if err := ValidateGroupStatusConfig(cfg); err != nil {
 		return nil, err
 	}
@@ -406,6 +478,24 @@ func ValidateGroupStatusConfig(cfg *GroupStatusConfig) error {
 	}
 	if cfg.SolJuiceIntervalSeconds < groupStatusSolJuiceMinIntervalSeconds {
 		return fmt.Errorf("%w: sol_juice_interval_seconds must be >= %d", ErrGroupStatusInvalidConfig, groupStatusSolJuiceMinIntervalSeconds)
+	}
+	cfg.AstraCheckRequestModel = strings.TrimSpace(cfg.AstraCheckRequestModel)
+	if cfg.AstraCheckRequestModel == "" {
+		cfg.AstraCheckRequestModel = groupStatusAstraCheckDefaultRequestModel
+	}
+	cfg.AstraCheckTier = strings.TrimSpace(strings.ToLower(cfg.AstraCheckTier))
+	switch cfg.AstraCheckTier {
+	case "":
+		cfg.AstraCheckTier = groupStatusAstraCheckDefaultTier
+	case AstraCheckTierLow, AstraCheckTierMedium, AstraCheckTierHigh:
+	default:
+		return fmt.Errorf("%w: unsupported astra_check_tier", ErrGroupStatusInvalidConfig)
+	}
+	if cfg.AstraCheckIntervalSeconds <= 0 {
+		cfg.AstraCheckIntervalSeconds = groupStatusAstraCheckDefaultIntervalSecond
+	}
+	if cfg.AstraCheckIntervalSeconds < groupStatusAstraCheckMinIntervalSeconds {
+		return fmt.Errorf("%w: astra_check_interval_seconds must be >= %d", ErrGroupStatusInvalidConfig, groupStatusAstraCheckMinIntervalSeconds)
 	}
 	return nil
 }

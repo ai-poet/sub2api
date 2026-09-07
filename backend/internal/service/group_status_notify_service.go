@@ -321,6 +321,10 @@ func buildGroupStatusNotifyMessage(siteName string, group *Group, event *GroupSt
 		title = fmt.Sprintf("[%s] 分组「%s」疑似非 Sol（Juice 指纹 %s）", siteName, groupName, solJuiceValueFromEvent(event))
 	case GroupStatusEventSolJuiceRecovered:
 		title = fmt.Sprintf("[%s] 分组「%s」Sol 验证已恢复", siteName, groupName)
+	case GroupStatusEventAstraMismatch:
+		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹疑似非 Astra（强指向 %s）", siteName, groupName, astraWinnerFromEvent(event))
+	case GroupStatusEventAstraRecovered:
+		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹验证已恢复", siteName, groupName)
 	default:
 		title = fmt.Sprintf("[%s] 分组「%s」状态变化", siteName, groupName)
 	}
@@ -348,7 +352,7 @@ func buildGroupStatusNotifyMessage(siteName string, group *Group, event *GroupSt
 
 	lines := []string{
 		fmt.Sprintf("**分组**：%s（#%d / %s）", groupName, group.ID, platform),
-		fmt.Sprintf("**状态**：%s → %s", groupStatusStatusLabel(event.FromStatus), groupStatusStatusLabel(event.ToStatus)),
+		fmt.Sprintf("**状态**：%s → %s", groupStatusEventStatusLabel(event, event.FromStatus), groupStatusEventStatusLabel(event, event.ToStatus)),
 		fmt.Sprintf("**子状态**：%s", subStatus),
 		fmt.Sprintf("**HTTP**：%s", httpCode),
 		fmt.Sprintf("**延迟**：%s", latency),
@@ -375,6 +379,14 @@ func groupStatusStatusLabel(status string) string {
 	default:
 		return strings.TrimSpace(status)
 	}
+}
+
+// groupStatusEventStatusLabel 按事件类型选择状态标签：Astra 事件用指纹标签，其余沿用原逻辑。
+func groupStatusEventStatusLabel(event *GroupStatusEvent, status string) string {
+	if event != nil && isAstraCheckEvent(event.EventType) {
+		return astraCheckStatusLabel(status)
+	}
+	return groupStatusStatusLabel(status)
 }
 
 // solJuiceValueFromEvent 从事件的 sub_status（juice_32）里取出指纹值，缺失时返回 ?。

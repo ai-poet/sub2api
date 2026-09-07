@@ -60,8 +60,13 @@ func (s *GroupStatusService) GetAdminView(ctx context.Context, groupID int64) (*
 		summary.SolJuiceEnabled = cfg.SolJuiceEnabled
 		summary.SolJuiceModel = cfg.SolJuiceModel
 		summary.SolJuiceIntervalSeconds = cfg.SolJuiceIntervalSeconds
+		summary.AstraCheckEnabled = cfg.AstraCheckEnabled
+		summary.AstraCheckRequestModel = cfg.AstraCheckRequestModel
+		summary.AstraCheckTier = cfg.AstraCheckTier
+		summary.AstraCheckIntervalSeconds = cfg.AstraCheckIntervalSeconds
 	}
 	decorateSolJuiceSummary(&summary)
+	decorateAstraCheckSummary(&summary)
 
 	return &GroupStatusAdminView{
 		Group:   group,
@@ -76,8 +81,8 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 		return nil, err
 	}
 
-	// notify_enabled / sol_juice_* 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认值
-	if input != nil && (input.NotifyEnabled == nil || input.SolJuiceEnabled == nil) {
+	// notify_enabled / sol_juice_* / astra_check_* 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认值
+	if input != nil && (input.NotifyEnabled == nil || input.SolJuiceEnabled == nil || input.AstraCheckEnabled == nil) {
 		if prev, err := s.repo.GetConfig(ctx, groupID); err == nil && prev != nil {
 			merged := *input
 			if merged.NotifyEnabled == nil {
@@ -92,6 +97,19 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 				}
 				if strings.TrimSpace(merged.SolJuiceModel) == "" {
 					merged.SolJuiceModel = prev.SolJuiceModel
+				}
+			}
+			if merged.AstraCheckEnabled == nil {
+				astraEnabled := prev.AstraCheckEnabled
+				merged.AstraCheckEnabled = &astraEnabled
+				if strings.TrimSpace(merged.AstraCheckRequestModel) == "" {
+					merged.AstraCheckRequestModel = prev.AstraCheckRequestModel
+				}
+				if strings.TrimSpace(merged.AstraCheckTier) == "" {
+					merged.AstraCheckTier = prev.AstraCheckTier
+				}
+				if merged.AstraCheckIntervalSeconds <= 0 {
+					merged.AstraCheckIntervalSeconds = prev.AstraCheckIntervalSeconds
 				}
 			}
 			input = &merged
@@ -124,6 +142,7 @@ func (s *GroupStatusService) ListAdminSummaries(ctx context.Context) ([]GroupSta
 	}
 	for i := range summaries {
 		decorateSolJuiceSummary(&summaries[i])
+		decorateAstraCheckSummary(&summaries[i])
 	}
 	return summaries, nil
 }
@@ -185,6 +204,7 @@ func (s *GroupStatusService) ListUserStatuses(ctx context.Context, userID int64)
 		}
 		summary := summaryMap[groupID]
 		decorateSolJuiceSummary(&summary)
+		decorateAstraCheckSummary(&summary)
 		items = append(items, GroupStatusListItem{
 			Group:          group,
 			Summary:        summary,
