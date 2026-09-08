@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -327,6 +328,23 @@ func TestAstraProgressTracker_CountsAndSnapshot(t *testing.T) {
 	require.Nil(t, nilTracker.snapshot())
 	require.Empty(t, nilTracker.allSamples())
 	nilTracker.record(AstraCheckSampleRecord{}, true) // 不 panic
+}
+
+// 刚开始、还没有样本时，快照与汇总里的数组也必须是 []，不能是 null（前端直接读 .length）。
+func TestAstraCheckJSON_ArraysNeverNull(t *testing.T) {
+	fresh := newAstraProgressTracker(1).snapshot()
+	require.NotNil(t, fresh.Samples)
+	raw, err := json.Marshal(fresh)
+	require.NoError(t, err)
+	require.Contains(t, string(raw), `"samples":[]`)
+
+	summary := &GroupStatusSummary{}
+	decorateAstraCheckSummary(summary)
+	raw, err = json.Marshal(summary)
+	require.NoError(t, err)
+	require.Contains(t, string(raw), `"astra_check_matches":[]`)
+	require.Contains(t, string(raw), `"astra_check_reasons":[]`)
+	require.NotContains(t, string(raw), `"astra_check_benchmark_models":null`)
 }
 
 func TestAstraCheckProbe_AllAccountsFailingYieldsInsufficient(t *testing.T) {

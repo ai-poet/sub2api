@@ -590,6 +590,15 @@ func decorateAstraCheckSummary(summary *GroupStatusSummary) {
 		return
 	}
 	summary.AstraCheckLastCostUSD = EstimateAstraCheckCostUSD(summary.AstraCheckInputTokens, summary.AstraCheckOutputTokens)
+	// 没有状态行时这些切片是 nil，会序列化成 null；前端直接读 .length，必须给空数组
+	if summary.AstraCheckMatches == nil {
+		summary.AstraCheckMatches = []AstraCheckModelMatch{}
+	}
+	if summary.AstraCheckReasons == nil {
+		summary.AstraCheckReasons = []string{}
+	}
+	summary.AstraCheckBenchmarkModels = []AstraBenchmarkModel{}
+	summary.AstraCheckBenchmarkTiers = []AstraBenchmarkTierMeta{}
 	if _, meta, err := LoadEmbeddedAstraBenchmark(); err == nil && meta != nil {
 		summary.AstraCheckBenchmarkVersion = meta.Version
 		summary.AstraCheckBenchmarkModels = append([]AstraBenchmarkModel(nil), meta.Models...)

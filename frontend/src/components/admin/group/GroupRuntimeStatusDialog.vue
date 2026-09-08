@@ -287,7 +287,7 @@
               </p>
               <p v-if="summary.astra_check_benchmark_version" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 {{ t('admin.groups.runtimeStatus.astraCheck.benchmark') }}: {{ summary.astra_check_benchmark_version }}
-                · {{ summary.astra_check_benchmark_models.map((m) => astraModelShortName(m.id)).join(' / ') }}
+                · {{ (summary.astra_check_benchmark_models ?? []).map((m) => astraModelShortName(m.id)).join(' / ') }}
               </p>
             </div>
             <Toggle v-model="form.astra_check_enabled" />
@@ -374,7 +374,7 @@
             <div class="h-2 w-full rounded bg-gray-200 dark:bg-dark-700">
               <div class="h-2 rounded bg-emerald-500 transition-all" :style="{ width: `${astraProgressPercent}%` }"></div>
             </div>
-            <div v-if="astraProgress.samples.length > 0" class="max-h-56 overflow-auto">
+            <div v-if="(astraProgress.samples?.length ?? 0) > 0" class="max-h-56 overflow-auto">
               <table class="w-full text-left text-xs">
                 <thead class="text-gray-500 dark:text-gray-400">
                   <tr>
@@ -388,7 +388,7 @@
                   </tr>
                 </thead>
                 <tbody class="text-gray-700 dark:text-gray-200">
-                  <tr v-for="row in astraSampleRows(astraProgress.samples)" :key="row.seq" class="border-t border-gray-100 dark:border-dark-700">
+                  <tr v-for="row in astraSampleRows(astraProgress.samples ?? [])" :key="row.seq" class="border-t border-gray-100 dark:border-dark-700">
                     <td class="py-1 pr-2 text-gray-400">{{ row.seq }}</td>
                     <td class="py-1 pr-2 font-mono">{{ row.cell_id }}</td>
                     <td class="py-1 pr-2">{{ row.attempt }}</td>
@@ -470,11 +470,11 @@
             </div>
 
             <details
-              v-if="astraLastRun && (astraLastRun.samples.length > 0 || astraLastRun.cells.length > 0)"
+              v-if="astraLastRun && ((astraLastRun.samples?.length ?? 0) > 0 || (astraLastRun.cells?.length ?? 0) > 0)"
               class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
             >
               <summary class="cursor-pointer text-xs font-medium text-gray-500 dark:text-gray-400">
-                {{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.title', { count: astraLastRun.samples.length }) }}
+                {{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.title', { count: astraLastRun.samples?.length ?? 0 }) }}
                 <span class="ml-1 font-normal">
                   · {{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.runMeta', {
                     planned: astraLastRun.requests_planned,
@@ -491,7 +491,7 @@
                 >
                   <span class="font-mono font-medium">{{ cell.cell_id }}</span>: {{ formatAstraCellCounts(cell) }}
                 </div>
-                <div v-if="astraLastRun.samples.length > 0" class="max-h-72 overflow-auto">
+                <div v-if="(astraLastRun.samples?.length ?? 0) > 0" class="max-h-72 overflow-auto">
                   <table class="w-full text-left text-xs">
                     <thead class="text-gray-500 dark:text-gray-400">
                       <tr>
@@ -521,7 +521,7 @@
             </details>
 
             <div
-              v-if="summary.astra_check_reasons.length > 0"
+              v-if="(summary.astra_check_reasons?.length ?? 0) > 0"
               class="flex flex-wrap gap-2"
             >
               <span
@@ -959,8 +959,31 @@ function resetForm() {
   expectedKeywordsText.value = ''
 }
 
+// 后端某些路径会把空切片序列化成 null；模板里直接读 .length / .map，这里统一兜成空数组，
+// 否则渲染抛错会让整个弹窗组件崩掉。
+function normalizeAstraView(view: GroupStatusAdminView): GroupStatusAdminView {
+  const summary = view.summary
+  if (summary) {
+    if (!Array.isArray(summary.astra_check_matches)) summary.astra_check_matches = []
+    if (!Array.isArray(summary.astra_check_reasons)) summary.astra_check_reasons = []
+    if (!Array.isArray(summary.astra_check_benchmark_models)) summary.astra_check_benchmark_models = []
+    if (!Array.isArray(summary.astra_check_benchmark_tiers)) summary.astra_check_benchmark_tiers = []
+  }
+  if (view.astra_check_progress && !Array.isArray(view.astra_check_progress.samples)) {
+    view.astra_check_progress.samples = []
+  }
+  const run = view.astra_check_last_run
+  if (run) {
+    if (!Array.isArray(run.samples)) run.samples = []
+    if (!Array.isArray(run.cells)) run.cells = []
+    if (!Array.isArray(run.matches)) run.matches = []
+    if (!Array.isArray(run.reasons)) run.reasons = []
+  }
+  return view
+}
+
 function applyView(view: GroupStatusAdminView) {
-  currentView.value = view
+  currentView.value = normalizeAstraView(view)
   form.enabled = view.config.enabled
   form.probe_model = view.config.probe_model
   form.probe_prompt = view.config.probe_prompt

@@ -103,6 +103,39 @@ The features below are locally maintained customizations of this fork. During up
 - A third, independent probe for OpenAI groups next to liveness and Sol Juice: one run sends a tier-sized batch (20/50/100) of fixed short-answer prompts at `reasoning=low` to one account, normalizes the answers and scores them against the bundled meow benchmark (Astra / Sol / Terra / Luna distributions, family weights, per-tier thresholds); the verdict drives a separate "Astra 指纹" badge and `astra_mismatch` / `astra_recovered` pushes. Files: `backend/internal/service/group_status_astra_benchmark.go` (package parsing/validation, embedded loader), `group_status_astra_check.go` (normalizers, scoring, transition), `group_status_astra_check_probe.go` (run execution, async start), `group_status_astra_progress.go` (in-memory live progress + per-request samples exposed on the admin view), the `astra_check_*` fields in `group_status.go` / `group_status_service.go` / `group_status_runner_service.go` / `group_status_notify_service.go`, `backend/internal/repository/group_status_repo.go`, migrations `backend/migrations/236_group_status_astra_check.sql` and `237_group_status_astra_check_samples.sql`, ent schemas `group_status_config.go` / `group_status_state.go` / `group_status_astra_check_run.go`, the `astra-check/probe` route and `ProbeRuntimeStatusAstraCheck` handler; frontend `GroupRuntimeStatusDialog.vue` (card + polling), `ModelStatusView.vue`, `utils/groupStatus.ts`, `astraCheck` i18n keys in `frontend/src/i18n/locales/{zh,en}/fork.ts`.
 - The benchmark data lives in `backend/resources/astra-benchmark/` (embedded via `go:embed`, provenance and PolyForm Noncommercial license in its `NOTICE.md`); the scoring engine is written in this repo. Never import or copy code from the git-ignored `meow-llm-detector-main/` reference. Sol Juice logic and wording stay unchanged. Keep this feature on upstream merges.
 
+### 内置 Agent (Waku Agent / ProviderKind::Native, local implementation)
+
+- The default provider is an agent engine compiled into the client, not a CLI
+  it launches. It removes the Node + npm install step from first run entirely,
+  which is why the onboarding checklist is two steps rather than three.
+- Vendored engine: `client/crates/waku-agent/{core,api,tools,query,mcp,plugins}`
+  — a copy of Claurst (GPL-3.0, same licence as this fork), kept as a pristine
+  subtree so it can still be re-synced. **Do not hand-edit it** except for the
+  three deliberate departures recorded in its manifests: `rusqlite` bumped to
+  0.37 (`links = "sqlite3"` cannot coexist with `waku-core`'s copy), `wreq`/
+  BoringSSL removed in favour of `reqwest` (`api/src/bun_tls.rs` — the fork
+  routes through its own gateway and has no first-party client to imitate), and
+  `enigo`/`xcap`/`image`/`cpal` left off (Waku has its own Computer Use).
+- Adapter, which is ours and where changes belong:
+  `client/crates/waku-agent-bridge/` (engine lifecycle, permission bridge,
+  history ownership, steering) and
+  `client/crates/waku-core/src/driver/native.rs` (`AgentEvent` → `DriverEvent`,
+  `DriverControl`). The bridge depends on neither `waku-core` nor
+  `waku-protocol` on purpose.
+- Upstream files carry only hook points: the `ProviderKind::Native` variant and
+  its `is_builtin()` predicate (`waku-protocol/src/model.rs`), one match arm in
+  `waku-core/src/driver/mod.rs`, and the built-in short-circuits in
+  `provider_probe` / `provider_binary` / `driver_start_request_for_session` —
+  every one of which exists because a built-in provider has no binary to find.
+- Waku owns the transcript (`Vec<Message>` in
+  `waku-agent-bridge/src/history.rs`), stored in `agent-sessions/` beside the
+  daemon's state database. That is what makes rewind, branch and resume
+  truncations rather than protocol calls; do not move it back into the engine.
+- Keep this feature on upstream merges. Resolve conflicts on the paths above in
+  favour of the local version, and re-read
+  `client/docs/providers.md` § "Waku Agent (the built-in one)" before changing
+  the driver contract for it.
+
 ### GitHub OAuth login (local implementation)
 
 - GitHub OAuth is a fork-local feature and must not be changed by upstream syncs: `backend/internal/handler/auth_github_oauth.go` (+ `_test.go`), `backend/internal/handler/auth_email_oauth.go`, `backend/internal/service/github_oauth_fork.go`, `backend/internal/service/setting_oauth.go`, the `github_oauth_*` settings/config in `backend/internal/config/config.go` and `backend/internal/handler/admin/setting_handler_*.go`; frontend `frontend/src/components/auth/EmailOAuthButtons.vue` (+ spec), the GitHub parts of `frontend/src/api/auth.ts`, `frontend/src/views/auth/LoginView.vue` / `RegisterView.vue`, and `frontend/src/components/admin/settings/ForkSettingsSection.vue`.

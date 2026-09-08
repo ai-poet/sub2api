@@ -176,7 +176,9 @@ func (t *astraProgressTracker) snapshot() *AstraCheckProgress {
 	if len(t.samples) > astraProgressSnapshotSamples {
 		start = len(t.samples) - astraProgressSnapshotSamples
 	}
-	out.Samples = append([]AstraCheckSampleRecord(nil), t.samples[start:]...)
+	// 一定是非 nil 切片：JSON 里要输出 []，前端会直接读 .length
+	out.Samples = make([]AstraCheckSampleRecord, 0, len(t.samples)-start)
+	out.Samples = append(out.Samples, t.samples[start:]...)
 	return &out
 }
 
