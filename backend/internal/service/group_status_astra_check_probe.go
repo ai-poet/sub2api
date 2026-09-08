@@ -130,8 +130,11 @@ func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Gr
 		return nil, ErrGroupStatusAstraCheckRunning
 	}
 	defer s.clearAstraCheckRunning(group.ID)
+	defer s.clearAstraProgress(group.ID)
 
-	account, result := s.executeAstraCheckRun(ctx, group, cfg, bench, meta)
+	progress := s.beginAstraProgress(group.ID, 1)
+	account, result := s.executeAstraCheckRun(ctx, group, cfg, bench, meta, progress)
+	logAstraCheckRun(group, 1, account, result)
 	execution, err := s.saveAstraCheckExecution(ctx, group, cfg, account, result)
 	if err != nil {
 		return nil, err
@@ -143,7 +146,9 @@ func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Gr
 		execution.State.AstraCheckConsecutiveMismatch == 1 &&
 		execution.State.AstraCheckStableStatus != AstraCheckStatusMismatch &&
 		ctx.Err() == nil {
-		confirmAccount, confirmResult := s.executeAstraCheckRun(ctx, group, cfg, bench, meta)
+		confirmProgress := s.beginAstraProgress(group.ID, 2)
+		confirmAccount, confirmResult := s.executeAstraCheckRun(ctx, group, cfg, bench, meta, confirmProgress)
+		logAstraCheckRun(group, 2, confirmAccount, confirmResult)
 		confirmed, err := s.saveAstraCheckExecution(ctx, group, cfg, confirmAccount, confirmResult)
 		if err != nil {
 			return nil, err
@@ -154,8 +159,28 @@ func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Gr
 	return execution, nil
 }
 
+// logAstraCheckRun 每轮结束记一行摘要，方便在服务端日志里定位慢、失败和判定。
+func logAstraCheckRun(group *Group, round int, account *Account, result *GroupStatusAstraCheckResult) {
+	if group == nil || result == nil {
+		return
+	}
+	accountID := int64(0)
+	if account != nil {
+		accountID = account.ID
+	}
+	latency := int64(0)
+	if result.LatencyMS != nil {
+		latency = *result.LatencyMS
+	}
+	logger.LegacyPrintf(groupStatusAstraCheckLogComponent,
+		"[AstraCheck] group=%d round=%d verdict=%s winner=%q valid=%d/%d completed=%d/%d samples=%d account=%d latency=%dms reasons=%s detail=%q",
+		group.ID, round, result.Verdict, result.Winner, result.ValidSamples, result.PlannedSamples,
+		result.RequestsCompleted, result.RequestsPlanned, len(result.Samples), accountID, latency,
+		strings.Join(result.Reasons, ","), result.ErrorDetail)
+}
+
 // executeAstraCheckRun 选账号、跑整批、判定；永远返回一个结果，不返回 error。
-func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, group *Group, cfg *GroupStatusConfig, bench *AstraBenchmark, meta *AstraBenchmarkMeta) (*Account, *GroupStatusAstraCheckResult) {
+func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, group *Group, cfg *GroupStatusConfig, bench *AstraBenchmark, meta *AstraBenchmarkMeta, progress *astraProgressTracker) (*Account, *GroupStatusAstraCheckResult) {
 	startedAt := time.Now()
 	requestModel := strings.TrimSpace(cfg.AstraCheckRequestModel)
 	if requestModel == "" {
@@ -179,7 +204,9 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 		result.BenchmarkSHA256 = meta.BodySHA256
 	}
 	finish := func(account *Account, samples []astraSample, extraDetail string) (*Account, *GroupStatusAstraCheckResult) {
+		progress.setPhase(AstraCheckPhaseScoring)
 		result.FinishedAt = time.Now()
+		result.Samples = progress.allSamples()
 		latency := result.FinishedAt.Sub(startedAt).Milliseconds()
 		result.LatencyMS = &latency
 		if account != nil {
@@ -247,6 +274,7 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 		return finish(nil, nil, detail)
 	}
 	result.RequestsPlanned = len(jobs)
+	progress.setPlanned(len(jobs))
 
 	// 让调度器按 Astra 请求模型过滤账号，其余配置照抄
 	probeCfg := *cfg
@@ -274,7 +302,8 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 			excludedIDs[candidate.ID] = struct{}{}
 			continue
 		}
-		sample := s.runAstraJob(ctx, candidate, requestModel, bench, jobs[0])
+		progress.setAccount(candidate.ID)
+		sample := s.runAstraJob(ctx, candidate, requestModel, bench, jobs[0], progress)
 		if sample.TransportFailed {
 			failure := &GroupStatusProbeResult{HTTPCode: sample.HTTPCode}
 			if s.shouldProbeFailover(candidate, failure, errors.New(sample.ErrDetail)) && attemptNo < maxAttempts-1 {
@@ -283,6 +312,8 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 				}
 				failedSamples = append(failedSamples, sample)
 				excludedIDs[candidate.ID] = struct{}{}
+				// 首个任务会在下一个账号上重跑，不算已完成
+				progress.rollbackJob(AstraCheckSampleFailed)
 				continue
 			}
 		}
@@ -293,6 +324,7 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 	if account == nil {
 		return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "failover_exhausted"))
 	}
+	progress.setPhase(AstraCheckPhaseRunning)
 
 	samples := make([]astraSample, 0, len(jobs))
 	samples = append(samples, *firstSample)
@@ -301,7 +333,12 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 		var mu sync.Mutex
 		var wg sync.WaitGroup
 		queue := make(chan AstraJob)
+		// 连接池按账号隔离时上游连接数 = 账号并发数，超出的请求只会在传输层排队并把超时耗光，
+		// 所以并发不能高于账号并发。
 		workers := s.astraCheckConcurrency()
+		if account.Concurrency > 0 && workers > account.Concurrency {
+			workers = account.Concurrency
+		}
 		if workers > len(rest) {
 			workers = len(rest)
 		}
@@ -313,7 +350,7 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 					if ctx.Err() != nil {
 						continue
 					}
-					sample := s.runAstraJob(ctx, account, requestModel, bench, job)
+					sample := s.runAstraJob(ctx, account, requestModel, bench, job, progress)
 					mu.Lock()
 					samples = append(samples, sample)
 					mu.Unlock()
@@ -334,22 +371,25 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 }
 
 // runAstraJob 执行一个任务：最多 3 次尝试，传输错误 / 非 2xx / 无效答案都重试。
-func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Account, requestModel string, bench *AstraBenchmark, job AstraJob) astraSample {
+func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Account, requestModel string, bench *AstraBenchmark, job AstraJob, progress *astraProgressTracker) astraSample {
 	sample := astraSample{CellID: job.CellID}
 	cell := bench.CellIndex[job.CellID]
 	if cell == nil {
 		sample.ErrDetail = "unknown cell " + job.CellID
 		sample.TransportFailed = true
+		progress.record(astraSampleRecordFrom(&sample, 0, true), false)
 		return sample
 	}
 	for attempt := 1; attempt <= groupStatusAstraCheckMaxAttempts; attempt++ {
 		if ctx.Err() != nil {
 			sample.TransportFailed = true
 			sample.ErrDetail = ctx.Err().Error()
+			progress.record(astraSampleRecordFrom(&sample, attempt, true), false)
 			return sample
 		}
 		sample.Attempts = attempt
 		timeoutCtx, cancel := context.WithTimeout(ctx, groupStatusAstraCheckRequestTimeout)
+		progress.requestStarted()
 		started := time.Now()
 		text, usage, httpCode, err := s.astraCheckRequest(timeoutCtx, account, requestModel, cell)
 		cancel()
@@ -373,9 +413,12 @@ func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Acco
 			sample.ErrDetail = ""
 			sample.Answer = truncateProbeText(text)
 			sample.Category = NormalizeAstraAnswer(cell.Normalizer, text)
-			if sample.Category != AstraCheckInvalidOutput {
-				return sample
-			}
+		}
+		valid := sample.Completed && sample.Category != AstraCheckInvalidOutput
+		final := valid || attempt == groupStatusAstraCheckMaxAttempts
+		progress.record(astraSampleRecordFrom(&sample, attempt, final), true)
+		if valid {
+			return sample
 		}
 		if attempt == groupStatusAstraCheckMaxAttempts {
 			break
@@ -389,6 +432,7 @@ func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Acco
 			sample.TransportFailed = true
 			sample.Completed = false
 			sample.ErrDetail = err.Error()
+			progress.record(astraSampleRecordFrom(&sample, attempt, true), false)
 			return sample
 		}
 	}

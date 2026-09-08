@@ -39,6 +39,8 @@ const (
 	FieldCells = "cells"
 	// FieldReasons holds the string denoting the reasons field in the database.
 	FieldReasons = "reasons"
+	// FieldSamples holds the string denoting the samples field in the database.
+	FieldSamples = "samples"
 	// FieldRequestsPlanned holds the string denoting the requests_planned field in the database.
 	FieldRequestsPlanned = "requests_planned"
 	// FieldRequestsCompleted holds the string denoting the requests_completed field in the database.
@@ -83,6 +85,7 @@ var Columns = []string{
 	FieldMatches,
 	FieldCells,
 	FieldReasons,
+	FieldSamples,
 	FieldRequestsPlanned,
 	FieldRequestsCompleted,
 	FieldValidSamples,
@@ -126,6 +129,8 @@ var (
 	DefaultCells []map[string]interface{}
 	// DefaultReasons holds the default value on creation for the "reasons" field.
 	DefaultReasons []string
+	// DefaultSamples holds the default value on creation for the "samples" field.
+	DefaultSamples []map[string]interface{}
 	// DefaultRequestsPlanned holds the default value on creation for the "requests_planned" field.
 	DefaultRequestsPlanned int
 	// DefaultRequestsCompleted holds the default value on creation for the "requests_completed" field.

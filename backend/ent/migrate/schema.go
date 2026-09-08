@@ -848,6 +848,7 @@ var (
 		{Name: "matches", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "cells", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "reasons", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "samples", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "requests_planned", Type: field.TypeInt, Default: 0},
 		{Name: "requests_completed", Type: field.TypeInt, Default: 0},
 		{Name: "valid_samples", Type: field.TypeInt, Default: 0},
@@ -870,7 +871,7 @@ var (
 			{
 				Name:    "groupstatusastracheckrun_group_id_finished_at",
 				Unique:  false,
-				Columns: []*schema.Column{GroupStatusAstraCheckRunsColumns[1], GroupStatusAstraCheckRunsColumns[24]},
+				Columns: []*schema.Column{GroupStatusAstraCheckRunsColumns[1], GroupStatusAstraCheckRunsColumns[25]},
 			},
 		},
 	}

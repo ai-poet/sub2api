@@ -480,10 +480,34 @@ export default {
           "threshold": "threshold",
           "detail": "Details",
           "probeNow": "Check now",
-          "running": "Checking (usually 20–40 seconds)...",
+          "running": "Checking...",
           "probeStarted": "Astra fingerprint check started in the background",
           "probeSucceeded": "Astra fingerprint check completed",
           "probeFailed": "Astra fingerprint check failed",
+          "progress": {
+            "title": "Round {round} in progress",
+            "phases": {
+              "selecting_account": "Selecting account, first request",
+              "running": "Sending requests",
+              "scoring": "Scoring"
+            },
+            "account": "account",
+            "valid": "valid",
+            "invalid": "invalid",
+            "failed": "failed",
+            "requests": "requests",
+            "inFlight": "in flight"
+          },
+          "sampleTable": {
+            "title": "Per-request samples ({count})",
+            "runMeta": "{completed}/{planned} completed in {latency}",
+            "seq": "#",
+            "cell": "Probe",
+            "attempt": "Try",
+            "answer": "Answer",
+            "category": "Normalized",
+            "latency": "Latency"
+          },
           "statuses": {
             "pass": "Astra fingerprint OK",
             "mismatch": "Astra fingerprint failed (points to {winner})",

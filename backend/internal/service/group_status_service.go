@@ -12,6 +12,9 @@ type GroupStatusAdminView struct {
 	Group   *Group             `json:"group"`
 	Config  *GroupStatusConfig `json:"config"`
 	Summary GroupStatusSummary `json:"summary"`
+	// Astra 指纹验证：正在进行的实时进度（handler 从探测服务内存里填）与最近一次运行的完整记录（含逐请求样本）
+	AstraCheckProgress *AstraCheckProgress       `json:"astra_check_progress,omitempty"`
+	AstraCheckLastRun  *GroupStatusAstraCheckRun `json:"astra_check_last_run,omitempty"`
 }
 
 type GroupStatusService struct {
@@ -68,11 +71,22 @@ func (s *GroupStatusService) GetAdminView(ctx context.Context, groupID int64) (*
 	decorateSolJuiceSummary(&summary)
 	decorateAstraCheckSummary(&summary)
 
-	return &GroupStatusAdminView{
+	view := &GroupStatusAdminView{
 		Group:   group,
 		Config:  cfg,
 		Summary: summary,
-	}, nil
+	}
+	if group.Platform == PlatformOpenAI {
+		runs, err := s.repo.ListRecentAstraCheckRuns(ctx, groupID, 1)
+		if err != nil {
+			return nil, err
+		}
+		if len(runs) > 0 {
+			run := runs[0]
+			view.AstraCheckLastRun = &run
+		}
+	}
+	return view, nil
 }
 
 func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, input *GroupStatusConfigUpsertInput) (*GroupStatusAdminView, error) {

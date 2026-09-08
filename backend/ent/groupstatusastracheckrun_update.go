@@ -232,6 +232,18 @@ func (_u *GroupStatusAstraCheckRunUpdate) AppendReasons(v []string) *GroupStatus
 	return _u
 }
 
+// SetSamples sets the "samples" field.
+func (_u *GroupStatusAstraCheckRunUpdate) SetSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.SetSamples(v)
+	return _u
+}
+
+// AppendSamples appends value to the "samples" field.
+func (_u *GroupStatusAstraCheckRunUpdate) AppendSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.AppendSamples(v)
+	return _u
+}
+
 // SetRequestsPlanned sets the "requests_planned" field.
 func (_u *GroupStatusAstraCheckRunUpdate) SetRequestsPlanned(v int) *GroupStatusAstraCheckRunUpdate {
 	_u.mutation.ResetRequestsPlanned()
@@ -567,6 +579,14 @@ func (_u *GroupStatusAstraCheckRunUpdate) sqlSave(ctx context.Context) (_node in
 			sqljson.Append(u, groupstatusastracheckrun.FieldReasons, value)
 		})
 	}
+	if value, ok := _u.mutation.Samples(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldSamples, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSamples(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, groupstatusastracheckrun.FieldSamples, value)
+		})
+	}
 	if value, ok := _u.mutation.RequestsPlanned(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldRequestsPlanned, field.TypeInt, value)
 	}
@@ -853,6 +873,18 @@ func (_u *GroupStatusAstraCheckRunUpdateOne) SetReasons(v []string) *GroupStatus
 // AppendReasons appends value to the "reasons" field.
 func (_u *GroupStatusAstraCheckRunUpdateOne) AppendReasons(v []string) *GroupStatusAstraCheckRunUpdateOne {
 	_u.mutation.AppendReasons(v)
+	return _u
+}
+
+// SetSamples sets the "samples" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.SetSamples(v)
+	return _u
+}
+
+// AppendSamples appends value to the "samples" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) AppendSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.AppendSamples(v)
 	return _u
 }
 
@@ -1219,6 +1251,14 @@ func (_u *GroupStatusAstraCheckRunUpdateOne) sqlSave(ctx context.Context) (_node
 	if value, ok := _u.mutation.AppendedReasons(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, groupstatusastracheckrun.FieldReasons, value)
+		})
+	}
+	if value, ok := _u.mutation.Samples(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldSamples, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSamples(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, groupstatusastracheckrun.FieldSamples, value)
 		})
 	}
 	if value, ok := _u.mutation.RequestsPlanned(); ok {

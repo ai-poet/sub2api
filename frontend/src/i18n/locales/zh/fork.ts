@@ -480,10 +480,34 @@ export default {
           "threshold": "阈值",
           "detail": "说明",
           "probeNow": "立即验证",
-          "running": "验证中（通常 20–40 秒）...",
+          "running": "验证中...",
           "probeStarted": "Astra 指纹验证已在后台开始",
           "probeSucceeded": "Astra 指纹验证已完成",
           "probeFailed": "Astra 指纹验证失败",
+          "progress": {
+            "title": "第 {round} 轮验证进行中",
+            "phases": {
+              "selecting_account": "选择账号并发首个请求",
+              "running": "并发发送请求",
+              "scoring": "计算判定"
+            },
+            "account": "账号",
+            "valid": "有效",
+            "invalid": "无效",
+            "failed": "失败",
+            "requests": "请求",
+            "inFlight": "在途"
+          },
+          "sampleTable": {
+            "title": "逐请求样本（{count} 条）",
+            "runMeta": "完成 {completed}/{planned}，耗时 {latency}",
+            "seq": "#",
+            "cell": "题目",
+            "attempt": "尝试",
+            "answer": "回答",
+            "category": "归一结果",
+            "latency": "延迟"
+          },
           "statuses": {
             "pass": "Astra 指纹正常",
             "mismatch": "Astra 指纹异常（强指向 {winner}）",

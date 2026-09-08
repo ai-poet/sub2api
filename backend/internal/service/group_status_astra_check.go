@@ -37,7 +37,7 @@ const (
 	groupStatusAstraCheckDefaultIntervalSecond = 3600
 	groupStatusAstraCheckMinIntervalSeconds    = 900
 	groupStatusAstraCheckDefaultConcurrency    = 8
-	groupStatusAstraCheckRequestTimeout        = 30 * time.Second
+	groupStatusAstraCheckRequestTimeout        = 45 * time.Second
 	groupStatusAstraCheckMaxAttempts           = 3
 	groupStatusAstraCheckSampleRatio           = 0.6
 	groupStatusAstraCheckMismatchThreshold     = 2
@@ -118,6 +118,7 @@ type GroupStatusAstraCheckResult struct {
 	Matches            []AstraCheckModelMatch
 	Cells              []AstraCheckCellSummary
 	Reasons            []string
+	Samples            []AstraCheckSampleRecord
 	RequestsPlanned    int
 	RequestsCompleted  int
 	ValidSamples       int
@@ -134,32 +135,33 @@ type GroupStatusAstraCheckResult struct {
 
 // GroupStatusAstraCheckRun 是落库后的运行记录。
 type GroupStatusAstraCheckRun struct {
-	ID                 int64                   `json:"id"`
-	GroupID            int64                   `json:"group_id"`
-	ConfigID           int64                   `json:"config_id"`
-	BenchmarkPackageID string                  `json:"benchmark_package_id"`
-	BenchmarkVersion   string                  `json:"benchmark_version"`
-	BenchmarkSHA256    string                  `json:"benchmark_sha256"`
-	RequestModel       string                  `json:"request_model"`
-	Tier               string                  `json:"tier"`
-	AccountID          *int64                  `json:"account_id"`
-	Verdict            string                  `json:"verdict"`
-	Winner             string                  `json:"winner_model"`
-	Matches            []AstraCheckModelMatch  `json:"matches"`
-	Cells              []AstraCheckCellSummary `json:"cells"`
-	Reasons            []string                `json:"reasons"`
-	RequestsPlanned    int                     `json:"requests_planned"`
-	RequestsCompleted  int                     `json:"requests_completed"`
-	ValidSamples       int                     `json:"valid_samples"`
-	InputTokens        int64                   `json:"input_tokens"`
-	OutputTokens       int64                   `json:"output_tokens"`
-	ReasoningTokens    int64                   `json:"reasoning_tokens"`
-	LatencyMS          *int64                  `json:"latency_ms"`
-	HTTPCode           *int                    `json:"http_code"`
-	ErrorDetail        string                  `json:"error_detail"`
-	StartedAt          time.Time               `json:"started_at"`
-	FinishedAt         time.Time               `json:"finished_at"`
-	CreatedAt          time.Time               `json:"created_at"`
+	ID                 int64                    `json:"id"`
+	GroupID            int64                    `json:"group_id"`
+	ConfigID           int64                    `json:"config_id"`
+	BenchmarkPackageID string                   `json:"benchmark_package_id"`
+	BenchmarkVersion   string                   `json:"benchmark_version"`
+	BenchmarkSHA256    string                   `json:"benchmark_sha256"`
+	RequestModel       string                   `json:"request_model"`
+	Tier               string                   `json:"tier"`
+	AccountID          *int64                   `json:"account_id"`
+	Verdict            string                   `json:"verdict"`
+	Winner             string                   `json:"winner_model"`
+	Matches            []AstraCheckModelMatch   `json:"matches"`
+	Cells              []AstraCheckCellSummary  `json:"cells"`
+	Reasons            []string                 `json:"reasons"`
+	Samples            []AstraCheckSampleRecord `json:"samples"`
+	RequestsPlanned    int                      `json:"requests_planned"`
+	RequestsCompleted  int                      `json:"requests_completed"`
+	ValidSamples       int                      `json:"valid_samples"`
+	InputTokens        int64                    `json:"input_tokens"`
+	OutputTokens       int64                    `json:"output_tokens"`
+	ReasoningTokens    int64                    `json:"reasoning_tokens"`
+	LatencyMS          *int64                   `json:"latency_ms"`
+	HTTPCode           *int                     `json:"http_code"`
+	ErrorDetail        string                   `json:"error_detail"`
+	StartedAt          time.Time                `json:"started_at"`
+	FinishedAt         time.Time                `json:"finished_at"`
+	CreatedAt          time.Time                `json:"created_at"`
 }
 
 type GroupStatusAstraCheckExecution struct {

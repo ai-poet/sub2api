@@ -41,6 +41,7 @@ type UpdateRuntimeStatusRequest struct {
 func (h *GroupHandler) withAstraCheckRunning(view *service.GroupStatusAdminView, groupID int64) *service.GroupStatusAdminView {
 	if view != nil && h.groupStatusProbeSvc != nil {
 		view.Summary.AstraCheckRunning = h.groupStatusProbeSvc.IsAstraCheckRunning(groupID)
+		view.AstraCheckProgress = h.groupStatusProbeSvc.AstraCheckProgress(groupID)
 	}
 	return view
 }
@@ -157,6 +158,7 @@ func (h *GroupHandler) ProbeRuntimeStatusAstraCheck(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
+	view = h.withAstraCheckRunning(view, groupID)
 	view.Summary.AstraCheckRunning = true
 	response.Success(c, view)
 }

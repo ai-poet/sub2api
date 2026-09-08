@@ -22,3 +22,11 @@ func TestGroupStatusAstraCheckMigration(t *testing.T) {
 	require.Contains(t, sql, "CREATE TABLE IF NOT EXISTS group_status_astra_check_runs")
 	require.Contains(t, sql, "CREATE INDEX IF NOT EXISTS idx_group_status_astra_check_runs_group_finished_at")
 }
+
+func TestGroupStatusAstraCheckSamplesMigration(t *testing.T) {
+	content, err := FS.ReadFile("237_group_status_astra_check_samples.sql")
+	require.NoError(t, err)
+
+	sql := strings.Join(strings.Fields(string(content)), " ")
+	require.Contains(t, sql, "ALTER TABLE group_status_astra_check_runs ADD COLUMN IF NOT EXISTS samples JSONB NOT NULL DEFAULT '[]'::jsonb")
+}

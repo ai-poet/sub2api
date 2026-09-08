@@ -345,6 +345,63 @@
             </button>
           </div>
 
+          <div
+            v-if="astraProgress"
+            class="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/40 px-3 py-3 dark:border-emerald-900/40 dark:bg-emerald-950/20"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <div class="font-medium text-gray-900 dark:text-white">
+                {{ t('admin.groups.runtimeStatus.astraCheck.progress.title', { round: astraProgress.round }) }}
+                <span class="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                  {{ t(`admin.groups.runtimeStatus.astraCheck.progress.phases.${astraProgress.phase}`) }}
+                  <template v-if="astraProgress.account_id">
+                    · {{ t('admin.groups.runtimeStatus.astraCheck.progress.account') }} #{{ astraProgress.account_id }}
+                  </template>
+                  · {{ formatGroupRuntimeLatency(astraProgress.elapsed_ms) }}
+                </span>
+              </div>
+              <div class="text-xs text-gray-600 dark:text-gray-300">
+                {{ astraProgress.completed }} / {{ astraProgress.planned }}
+                · {{ t('admin.groups.runtimeStatus.astraCheck.progress.valid') }} {{ astraProgress.valid }}
+                · {{ t('admin.groups.runtimeStatus.astraCheck.progress.invalid') }} {{ astraProgress.invalid }}
+                · {{ t('admin.groups.runtimeStatus.astraCheck.progress.failed') }} {{ astraProgress.failed }}
+                · {{ t('admin.groups.runtimeStatus.astraCheck.progress.requests') }} {{ astraProgress.requests }}
+                <template v-if="astraProgress.in_flight">
+                  · {{ t('admin.groups.runtimeStatus.astraCheck.progress.inFlight') }} {{ astraProgress.in_flight }}
+                </template>
+              </div>
+            </div>
+            <div class="h-2 w-full rounded bg-gray-200 dark:bg-dark-700">
+              <div class="h-2 rounded bg-emerald-500 transition-all" :style="{ width: `${astraProgressPercent}%` }"></div>
+            </div>
+            <div v-if="astraProgress.samples.length > 0" class="max-h-56 overflow-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="text-gray-500 dark:text-gray-400">
+                  <tr>
+                    <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.seq') }}</th>
+                    <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.cell') }}</th>
+                    <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.attempt') }}</th>
+                    <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.answer') }}</th>
+                    <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.category') }}</th>
+                    <th class="pr-2 font-medium">HTTP</th>
+                    <th class="font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.latency') }}</th>
+                  </tr>
+                </thead>
+                <tbody class="text-gray-700 dark:text-gray-200">
+                  <tr v-for="row in astraSampleRows(astraProgress.samples)" :key="row.seq" class="border-t border-gray-100 dark:border-dark-700">
+                    <td class="py-1 pr-2 text-gray-400">{{ row.seq }}</td>
+                    <td class="py-1 pr-2 font-mono">{{ row.cell_id }}</td>
+                    <td class="py-1 pr-2">{{ row.attempt }}</td>
+                    <td class="max-w-[16rem] truncate py-1 pr-2" :title="row.error || row.answer">{{ row.answer || row.error || '-' }}</td>
+                    <td class="py-1 pr-2" :class="astraSampleOutcomeClass(row.outcome)">{{ row.category || row.outcome }}</td>
+                    <td class="py-1 pr-2">{{ row.http_code ?? '-' }}</td>
+                    <td class="py-1">{{ formatGroupRuntimeLatency(row.latency_ms) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div v-if="summary.astra_check_checked_at" class="space-y-3">
             <div class="grid gap-3 md:grid-cols-4">
               <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
@@ -411,6 +468,57 @@
                 </div>
               </div>
             </div>
+
+            <details
+              v-if="astraLastRun && (astraLastRun.samples.length > 0 || astraLastRun.cells.length > 0)"
+              class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
+            >
+              <summary class="cursor-pointer text-xs font-medium text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.title', { count: astraLastRun.samples.length }) }}
+                <span class="ml-1 font-normal">
+                  · {{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.runMeta', {
+                    planned: astraLastRun.requests_planned,
+                    completed: astraLastRun.requests_completed,
+                    latency: formatGroupRuntimeLatency(astraLastRun.latency_ms)
+                  }) }}
+                </span>
+              </summary>
+              <div class="mt-2 space-y-2">
+                <div
+                  v-for="cell in astraLastRun.cells"
+                  :key="cell.cell_id"
+                  class="text-xs text-gray-600 dark:text-gray-300"
+                >
+                  <span class="font-mono font-medium">{{ cell.cell_id }}</span>: {{ formatAstraCellCounts(cell) }}
+                </div>
+                <div v-if="astraLastRun.samples.length > 0" class="max-h-72 overflow-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead class="text-gray-500 dark:text-gray-400">
+                      <tr>
+                        <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.seq') }}</th>
+                        <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.cell') }}</th>
+                        <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.attempt') }}</th>
+                        <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.answer') }}</th>
+                        <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.category') }}</th>
+                        <th class="pr-2 font-medium">HTTP</th>
+                        <th class="font-medium">{{ t('admin.groups.runtimeStatus.astraCheck.sampleTable.latency') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody class="text-gray-700 dark:text-gray-200">
+                      <tr v-for="row in astraLastRun.samples" :key="row.seq" class="border-t border-gray-100 dark:border-dark-700">
+                        <td class="py-1 pr-2 text-gray-400">{{ row.seq }}</td>
+                        <td class="py-1 pr-2 font-mono">{{ row.cell_id }}</td>
+                        <td class="py-1 pr-2">{{ row.attempt }}</td>
+                        <td class="max-w-[16rem] truncate py-1 pr-2" :title="row.error || row.answer">{{ row.answer || row.error || '-' }}</td>
+                        <td class="py-1 pr-2" :class="astraSampleOutcomeClass(row.outcome)">{{ row.category || row.outcome }}</td>
+                        <td class="py-1 pr-2">{{ row.http_code ?? '-' }}</td>
+                        <td class="py-1">{{ formatGroupRuntimeLatency(row.latency_ms) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </details>
 
             <div
               v-if="summary.astra_check_reasons.length > 0"
@@ -579,6 +687,10 @@ import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores'
 import type {
   AdminGroup,
+  AstraCheckCellSummary,
+  AstraCheckLastRun,
+  AstraCheckProgress,
+  AstraCheckSampleRecord,
   AstraCheckTier,
   GroupStatusAdminView,
   GroupStatusSummary,
@@ -756,6 +868,43 @@ function astraReasonLabel(reason: string): string {
   return te(key) ? t(key) : reason
 }
 
+// 验证进行中的实时进度（仅运行时后端才返回）与最近一次运行的完整记录
+const astraProgress = computed<AstraCheckProgress | null>(() => currentView.value?.astra_check_progress ?? null)
+const astraLastRun = computed<AstraCheckLastRun | null>(() => currentView.value?.astra_check_last_run ?? null)
+const astraProgressPercent = computed(() => {
+  const p = astraProgress.value
+  if (!p || p.planned <= 0) {
+    return 0
+  }
+  return Math.min(100, Math.round((p.completed / p.planned) * 100))
+})
+
+// 进度面板最新的放最上面
+function astraSampleRows(samples: AstraCheckSampleRecord[]): AstraCheckSampleRecord[] {
+  return [...samples].reverse()
+}
+
+function astraSampleOutcomeClass(outcome: string): string {
+  switch (outcome) {
+    case 'valid':
+      return 'text-emerald-600 dark:text-emerald-400'
+    case 'invalid':
+      return 'text-amber-600 dark:text-amber-400'
+    case 'failed':
+      return 'text-rose-600 dark:text-rose-400'
+    default:
+      return ''
+  }
+}
+
+function formatAstraCellCounts(cell: AstraCheckCellSummary): string {
+  const parts = Object.entries(cell.categories || {})
+    .sort((a, b) => b[1] - a[1])
+    .map(([category, count]) => `${category}×${count}`)
+  const counts = parts.length > 0 ? parts.join(' · ') : '-'
+  return `${counts}（${t('admin.groups.runtimeStatus.astraCheck.progress.valid')} ${cell.valid}/${cell.planned}）`
+}
+
 const solJuiceDisplayStatus = computed(() =>
   normalizeSolJuiceStatus(summary.value.sol_juice_stable_status || summary.value.sol_juice_status)
 )
@@ -836,6 +985,12 @@ async function loadRuntimeStatus(groupId: number) {
   try {
     const view = await adminAPI.groups.getRuntimeStatus(groupId)
     applyView(view)
+    // 打开弹窗时如果后台（定时调度或上次点击）正在跑 Astra 验证，直接接上进度轮询
+    if (view.summary.astra_check_running && !astraPollTimer) {
+      astraProbing.value = true
+      astraPollStartedAt = Date.now()
+      scheduleAstraPoll(groupId)
+    }
   } catch (error: any) {
     loadError.value = error?.message || t('admin.groups.runtimeStatus.failedToLoad')
   } finally {

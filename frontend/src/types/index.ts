@@ -2490,6 +2490,83 @@ export interface AstraBenchmarkTierMeta {
   calibrated: boolean
 }
 
+export type AstraCheckPhase = 'selecting_account' | 'running' | 'scoring'
+export type AstraCheckSampleOutcome = 'valid' | 'invalid' | 'failed'
+
+// 一次请求尝试（含重试）的摘要，验证进行中实时返回，结束后随运行记录落库
+export interface AstraCheckSampleRecord {
+  seq: number
+  cell_id: string
+  attempt: number
+  answer: string
+  category: string
+  outcome: AstraCheckSampleOutcome
+  final: boolean
+  http_code: number | null
+  latency_ms: number
+  error?: string
+  at: string
+}
+
+export interface AstraCheckProgress {
+  round: number
+  phase: AstraCheckPhase
+  account_id: number | null
+  planned: number
+  completed: number
+  valid: number
+  invalid: number
+  failed: number
+  requests: number
+  in_flight: number
+  started_at: string
+  updated_at: string
+  elapsed_ms: number
+  samples: AstraCheckSampleRecord[]
+}
+
+export interface AstraCheckCellSummary {
+  cell_id: string
+  family_id: string
+  planned: number
+  total: number
+  valid: number
+  invalid: number
+  minimum: number
+  weight: number
+  categories: Record<string, number>
+}
+
+export interface AstraCheckLastRun {
+  id: number
+  group_id: number
+  config_id: number
+  benchmark_package_id: string
+  benchmark_version: string
+  benchmark_sha256: string
+  request_model: string
+  tier: AstraCheckTier
+  account_id: number | null
+  verdict: AstraCheckVerdict
+  winner_model: string
+  matches: AstraCheckModelMatch[]
+  cells: AstraCheckCellSummary[]
+  reasons: string[]
+  samples: AstraCheckSampleRecord[]
+  requests_planned: number
+  requests_completed: number
+  valid_samples: number
+  input_tokens: number
+  output_tokens: number
+  reasoning_tokens: number
+  latency_ms: number | null
+  http_code: number | null
+  error_detail: string
+  started_at: string
+  finished_at: string
+  created_at: string
+}
+
 export interface GroupStatusConfig {
   id: number
   group_id: number
@@ -2569,6 +2646,8 @@ export interface GroupStatusAdminView {
   group: Group
   config: GroupStatusConfig
   summary: GroupStatusSummary
+  astra_check_progress?: AstraCheckProgress | null
+  astra_check_last_run?: AstraCheckLastRun | null
 }
 
 export interface GroupStatusHistoryBucket {

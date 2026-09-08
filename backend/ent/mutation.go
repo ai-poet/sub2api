@@ -22716,6 +22716,8 @@ type GroupStatusAstraCheckRunMutation struct {
 	appendcells           []map[string]interface{}
 	reasons               *[]string
 	appendreasons         []string
+	samples               *[]map[string]interface{}
+	appendsamples         []map[string]interface{}
 	requests_planned      *int
 	addrequests_planned   *int
 	requests_completed    *int
@@ -23427,6 +23429,57 @@ func (m *GroupStatusAstraCheckRunMutation) ResetReasons() {
 	m.appendreasons = nil
 }
 
+// SetSamples sets the "samples" field.
+func (m *GroupStatusAstraCheckRunMutation) SetSamples(value []map[string]interface{}) {
+	m.samples = &value
+	m.appendsamples = nil
+}
+
+// Samples returns the value of the "samples" field in the mutation.
+func (m *GroupStatusAstraCheckRunMutation) Samples() (r []map[string]interface{}, exists bool) {
+	v := m.samples
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSamples returns the old "samples" field's value of the GroupStatusAstraCheckRun entity.
+// If the GroupStatusAstraCheckRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusAstraCheckRunMutation) OldSamples(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSamples is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSamples requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSamples: %w", err)
+	}
+	return oldValue.Samples, nil
+}
+
+// AppendSamples adds value to the "samples" field.
+func (m *GroupStatusAstraCheckRunMutation) AppendSamples(value []map[string]interface{}) {
+	m.appendsamples = append(m.appendsamples, value...)
+}
+
+// AppendedSamples returns the list of values that were appended to the "samples" field in this mutation.
+func (m *GroupStatusAstraCheckRunMutation) AppendedSamples() ([]map[string]interface{}, bool) {
+	if len(m.appendsamples) == 0 {
+		return nil, false
+	}
+	return m.appendsamples, true
+}
+
+// ResetSamples resets all changes to the "samples" field.
+func (m *GroupStatusAstraCheckRunMutation) ResetSamples() {
+	m.samples = nil
+	m.appendsamples = nil
+}
+
 // SetRequestsPlanned sets the "requests_planned" field.
 func (m *GroupStatusAstraCheckRunMutation) SetRequestsPlanned(i int) {
 	m.requests_planned = &i
@@ -24094,7 +24147,7 @@ func (m *GroupStatusAstraCheckRunMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusAstraCheckRunMutation) Fields() []string {
-	fields := make([]string, 0, 25)
+	fields := make([]string, 0, 26)
 	if m.group_id != nil {
 		fields = append(fields, groupstatusastracheckrun.FieldGroupID)
 	}
@@ -24133,6 +24186,9 @@ func (m *GroupStatusAstraCheckRunMutation) Fields() []string {
 	}
 	if m.reasons != nil {
 		fields = append(fields, groupstatusastracheckrun.FieldReasons)
+	}
+	if m.samples != nil {
+		fields = append(fields, groupstatusastracheckrun.FieldSamples)
 	}
 	if m.requests_planned != nil {
 		fields = append(fields, groupstatusastracheckrun.FieldRequestsPlanned)
@@ -24204,6 +24260,8 @@ func (m *GroupStatusAstraCheckRunMutation) Field(name string) (ent.Value, bool) 
 		return m.Cells()
 	case groupstatusastracheckrun.FieldReasons:
 		return m.Reasons()
+	case groupstatusastracheckrun.FieldSamples:
+		return m.Samples()
 	case groupstatusastracheckrun.FieldRequestsPlanned:
 		return m.RequestsPlanned()
 	case groupstatusastracheckrun.FieldRequestsCompleted:
@@ -24263,6 +24321,8 @@ func (m *GroupStatusAstraCheckRunMutation) OldField(ctx context.Context, name st
 		return m.OldCells(ctx)
 	case groupstatusastracheckrun.FieldReasons:
 		return m.OldReasons(ctx)
+	case groupstatusastracheckrun.FieldSamples:
+		return m.OldSamples(ctx)
 	case groupstatusastracheckrun.FieldRequestsPlanned:
 		return m.OldRequestsPlanned(ctx)
 	case groupstatusastracheckrun.FieldRequestsCompleted:
@@ -24386,6 +24446,13 @@ func (m *GroupStatusAstraCheckRunMutation) SetField(name string, value ent.Value
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetReasons(v)
+		return nil
+	case groupstatusastracheckrun.FieldSamples:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSamples(v)
 		return nil
 	case groupstatusastracheckrun.FieldRequestsPlanned:
 		v, ok := value.(int)
@@ -24720,6 +24787,9 @@ func (m *GroupStatusAstraCheckRunMutation) ResetField(name string) error {
 		return nil
 	case groupstatusastracheckrun.FieldReasons:
 		m.ResetReasons()
+		return nil
+	case groupstatusastracheckrun.FieldSamples:
+		m.ResetSamples()
 		return nil
 	case groupstatusastracheckrun.FieldRequestsPlanned:
 		m.ResetRequestsPlanned()

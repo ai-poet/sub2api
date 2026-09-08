@@ -36,6 +36,7 @@ type GroupStatusProbeService struct {
 	astraConcurrency int
 	astraRunning     sync.Map
 	astraSleep       func(ctx context.Context, d time.Duration) error
+	astraProgress    sync.Map // groupID → *astraProgressTracker，验证进行中的实时进度
 }
 
 // groupStatusTransitionNotifier 消费探测落库后产生的稳定状态切换事件（如 Server酱³ 推送）。

@@ -156,6 +156,12 @@ func (_c *GroupStatusAstraCheckRunCreate) SetReasons(v []string) *GroupStatusAst
 	return _c
 }
 
+// SetSamples sets the "samples" field.
+func (_c *GroupStatusAstraCheckRunCreate) SetSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunCreate {
+	_c.mutation.SetSamples(v)
+	return _c
+}
+
 // SetRequestsPlanned sets the "requests_planned" field.
 func (_c *GroupStatusAstraCheckRunCreate) SetRequestsPlanned(v int) *GroupStatusAstraCheckRunCreate {
 	_c.mutation.SetRequestsPlanned(v)
@@ -379,6 +385,10 @@ func (_c *GroupStatusAstraCheckRunCreate) defaults() {
 		v := groupstatusastracheckrun.DefaultReasons
 		_c.mutation.SetReasons(v)
 	}
+	if _, ok := _c.mutation.Samples(); !ok {
+		v := groupstatusastracheckrun.DefaultSamples
+		_c.mutation.SetSamples(v)
+	}
 	if _, ok := _c.mutation.RequestsPlanned(); !ok {
 		v := groupstatusastracheckrun.DefaultRequestsPlanned
 		_c.mutation.SetRequestsPlanned(v)
@@ -446,6 +456,9 @@ func (_c *GroupStatusAstraCheckRunCreate) check() error {
 	}
 	if _, ok := _c.mutation.Reasons(); !ok {
 		return &ValidationError{Name: "reasons", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.reasons"`)}
+	}
+	if _, ok := _c.mutation.Samples(); !ok {
+		return &ValidationError{Name: "samples", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.samples"`)}
 	}
 	if _, ok := _c.mutation.RequestsPlanned(); !ok {
 		return &ValidationError{Name: "requests_planned", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.requests_planned"`)}
@@ -552,6 +565,10 @@ func (_c *GroupStatusAstraCheckRunCreate) createSpec() (*GroupStatusAstraCheckRu
 	if value, ok := _c.mutation.Reasons(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldReasons, field.TypeJSON, value)
 		_node.Reasons = value
+	}
+	if value, ok := _c.mutation.Samples(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldSamples, field.TypeJSON, value)
+		_node.Samples = value
 	}
 	if value, ok := _c.mutation.RequestsPlanned(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldRequestsPlanned, field.TypeInt, value)
@@ -830,6 +847,18 @@ func (u *GroupStatusAstraCheckRunUpsert) SetReasons(v []string) *GroupStatusAstr
 // UpdateReasons sets the "reasons" field to the value that was provided on create.
 func (u *GroupStatusAstraCheckRunUpsert) UpdateReasons() *GroupStatusAstraCheckRunUpsert {
 	u.SetExcluded(groupstatusastracheckrun.FieldReasons)
+	return u
+}
+
+// SetSamples sets the "samples" field.
+func (u *GroupStatusAstraCheckRunUpsert) SetSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunUpsert {
+	u.Set(groupstatusastracheckrun.FieldSamples, v)
+	return u
+}
+
+// UpdateSamples sets the "samples" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsert) UpdateSamples() *GroupStatusAstraCheckRunUpsert {
+	u.SetExcluded(groupstatusastracheckrun.FieldSamples)
 	return u
 }
 
@@ -1283,6 +1312,20 @@ func (u *GroupStatusAstraCheckRunUpsertOne) SetReasons(v []string) *GroupStatusA
 func (u *GroupStatusAstraCheckRunUpsertOne) UpdateReasons() *GroupStatusAstraCheckRunUpsertOne {
 	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
 		s.UpdateReasons()
+	})
+}
+
+// SetSamples sets the "samples" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) SetSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetSamples(v)
+	})
+}
+
+// UpdateSamples sets the "samples" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertOne) UpdateSamples() *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateSamples()
 	})
 }
 
@@ -1935,6 +1978,20 @@ func (u *GroupStatusAstraCheckRunUpsertBulk) SetReasons(v []string) *GroupStatus
 func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateReasons() *GroupStatusAstraCheckRunUpsertBulk {
 	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
 		s.UpdateReasons()
+	})
+}
+
+// SetSamples sets the "samples" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) SetSamples(v []map[string]interface{}) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetSamples(v)
+	})
+}
+
+// UpdateSamples sets the "samples" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateSamples() *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateSamples()
 	})
 }
 

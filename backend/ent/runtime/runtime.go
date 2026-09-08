@@ -1004,32 +1004,36 @@ func init() {
 	groupstatusastracheckrunDescReasons := groupstatusastracheckrunFields[12].Descriptor()
 	// groupstatusastracheckrun.DefaultReasons holds the default value on creation for the reasons field.
 	groupstatusastracheckrun.DefaultReasons = groupstatusastracheckrunDescReasons.Default.([]string)
+	// groupstatusastracheckrunDescSamples is the schema descriptor for samples field.
+	groupstatusastracheckrunDescSamples := groupstatusastracheckrunFields[13].Descriptor()
+	// groupstatusastracheckrun.DefaultSamples holds the default value on creation for the samples field.
+	groupstatusastracheckrun.DefaultSamples = groupstatusastracheckrunDescSamples.Default.([]map[string]interface{})
 	// groupstatusastracheckrunDescRequestsPlanned is the schema descriptor for requests_planned field.
-	groupstatusastracheckrunDescRequestsPlanned := groupstatusastracheckrunFields[13].Descriptor()
+	groupstatusastracheckrunDescRequestsPlanned := groupstatusastracheckrunFields[14].Descriptor()
 	// groupstatusastracheckrun.DefaultRequestsPlanned holds the default value on creation for the requests_planned field.
 	groupstatusastracheckrun.DefaultRequestsPlanned = groupstatusastracheckrunDescRequestsPlanned.Default.(int)
 	// groupstatusastracheckrunDescRequestsCompleted is the schema descriptor for requests_completed field.
-	groupstatusastracheckrunDescRequestsCompleted := groupstatusastracheckrunFields[14].Descriptor()
+	groupstatusastracheckrunDescRequestsCompleted := groupstatusastracheckrunFields[15].Descriptor()
 	// groupstatusastracheckrun.DefaultRequestsCompleted holds the default value on creation for the requests_completed field.
 	groupstatusastracheckrun.DefaultRequestsCompleted = groupstatusastracheckrunDescRequestsCompleted.Default.(int)
 	// groupstatusastracheckrunDescValidSamples is the schema descriptor for valid_samples field.
-	groupstatusastracheckrunDescValidSamples := groupstatusastracheckrunFields[15].Descriptor()
+	groupstatusastracheckrunDescValidSamples := groupstatusastracheckrunFields[16].Descriptor()
 	// groupstatusastracheckrun.DefaultValidSamples holds the default value on creation for the valid_samples field.
 	groupstatusastracheckrun.DefaultValidSamples = groupstatusastracheckrunDescValidSamples.Default.(int)
 	// groupstatusastracheckrunDescInputTokens is the schema descriptor for input_tokens field.
-	groupstatusastracheckrunDescInputTokens := groupstatusastracheckrunFields[16].Descriptor()
+	groupstatusastracheckrunDescInputTokens := groupstatusastracheckrunFields[17].Descriptor()
 	// groupstatusastracheckrun.DefaultInputTokens holds the default value on creation for the input_tokens field.
 	groupstatusastracheckrun.DefaultInputTokens = groupstatusastracheckrunDescInputTokens.Default.(int64)
 	// groupstatusastracheckrunDescOutputTokens is the schema descriptor for output_tokens field.
-	groupstatusastracheckrunDescOutputTokens := groupstatusastracheckrunFields[17].Descriptor()
+	groupstatusastracheckrunDescOutputTokens := groupstatusastracheckrunFields[18].Descriptor()
 	// groupstatusastracheckrun.DefaultOutputTokens holds the default value on creation for the output_tokens field.
 	groupstatusastracheckrun.DefaultOutputTokens = groupstatusastracheckrunDescOutputTokens.Default.(int64)
 	// groupstatusastracheckrunDescReasoningTokens is the schema descriptor for reasoning_tokens field.
-	groupstatusastracheckrunDescReasoningTokens := groupstatusastracheckrunFields[18].Descriptor()
+	groupstatusastracheckrunDescReasoningTokens := groupstatusastracheckrunFields[19].Descriptor()
 	// groupstatusastracheckrun.DefaultReasoningTokens holds the default value on creation for the reasoning_tokens field.
 	groupstatusastracheckrun.DefaultReasoningTokens = groupstatusastracheckrunDescReasoningTokens.Default.(int64)
 	// groupstatusastracheckrunDescCreatedAt is the schema descriptor for created_at field.
-	groupstatusastracheckrunDescCreatedAt := groupstatusastracheckrunFields[24].Descriptor()
+	groupstatusastracheckrunDescCreatedAt := groupstatusastracheckrunFields[25].Descriptor()
 	// groupstatusastracheckrun.DefaultCreatedAt holds the default value on creation for the created_at field.
 	groupstatusastracheckrun.DefaultCreatedAt = groupstatusastracheckrunDescCreatedAt.Default.(func() time.Time)
 	groupstatusconfigMixin := schema.GroupStatusConfig{}.Mixin()

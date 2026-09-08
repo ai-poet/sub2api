@@ -31,7 +31,7 @@ const (
 		created_at, updated_at`
 
 	groupStatusAstraRunColumns = `id, group_id, config_id, benchmark_package_id, benchmark_version, benchmark_sha256,
-		request_model, tier, account_id, verdict, winner_model, matches, cells, reasons,
+		request_model, tier, account_id, verdict, winner_model, matches, cells, reasons, samples,
 		requests_planned, requests_completed, valid_samples, input_tokens, output_tokens, reasoning_tokens,
 		latency_ms, http_code, error_detail, started_at, finished_at, created_at`
 
@@ -590,16 +590,16 @@ func (r *groupStatusRepository) SaveAstraCheckRun(ctx context.Context, result *s
 	row := tx.QueryRowContext(ctx, `
 		INSERT INTO group_status_astra_check_runs (
 			group_id, config_id, benchmark_package_id, benchmark_version, benchmark_sha256,
-			request_model, tier, account_id, verdict, winner_model, matches, cells, reasons,
+			request_model, tier, account_id, verdict, winner_model, matches, cells, reasons, samples,
 			requests_planned, requests_completed, valid_samples, input_tokens, output_tokens, reasoning_tokens,
 			latency_ms, http_code, error_detail, started_at, finished_at, created_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13::jsonb,
-		        $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, NOW())
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13::jsonb, $14::jsonb,
+		        $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, NOW())
 		RETURNING `+groupStatusAstraRunColumns+`
 	`, result.GroupID, result.ConfigID, result.BenchmarkPackageID, result.BenchmarkVersion, result.BenchmarkSHA256,
 		result.RequestModel, result.Tier, result.AccountID, result.Verdict, result.Winner,
-		mustJSONArray(result.Matches), mustJSONArray(result.Cells), mustJSONArray(result.Reasons),
+		mustJSONArray(result.Matches), mustJSONArray(result.Cells), mustJSONArray(result.Reasons), mustJSONArray(result.Samples),
 		result.RequestsPlanned, result.RequestsCompleted, result.ValidSamples, result.InputTokens, result.OutputTokens,
 		result.ReasoningTokens, result.LatencyMS, result.HTTPCode, nullIfEmpty(result.ErrorDetail), result.StartedAt, result.FinishedAt)
 	run, err := scanGroupStatusAstraCheckRun(row)
@@ -701,17 +701,23 @@ func (r *groupStatusRepository) DeleteAstraCheckRunsOlderThan(ctx context.Contex
 func scanGroupStatusAstraCheckRun(row scannable) (*service.GroupStatusAstraCheckRun, error) {
 	run := &service.GroupStatusAstraCheckRun{}
 	var accountID sql.NullInt64
-	var matchesRaw, cellsRaw, reasonsRaw []byte
+	var matchesRaw, cellsRaw, reasonsRaw, samplesRaw []byte
 	var latency sql.NullInt64
 	var httpCode sql.NullInt64
 	var errorDetail sql.NullString
 	if err := row.Scan(
 		&run.ID, &run.GroupID, &run.ConfigID, &run.BenchmarkPackageID, &run.BenchmarkVersion, &run.BenchmarkSHA256,
-		&run.RequestModel, &run.Tier, &accountID, &run.Verdict, &run.Winner, &matchesRaw, &cellsRaw, &reasonsRaw,
+		&run.RequestModel, &run.Tier, &accountID, &run.Verdict, &run.Winner, &matchesRaw, &cellsRaw, &reasonsRaw, &samplesRaw,
 		&run.RequestsPlanned, &run.RequestsCompleted, &run.ValidSamples, &run.InputTokens, &run.OutputTokens, &run.ReasoningTokens,
 		&latency, &httpCode, &errorDetail, &run.StartedAt, &run.FinishedAt, &run.CreatedAt,
 	); err != nil {
 		return nil, err
+	}
+	if len(samplesRaw) > 0 {
+		_ = json.Unmarshal(samplesRaw, &run.Samples)
+	}
+	if run.Samples == nil {
+		run.Samples = []service.AstraCheckSampleRecord{}
 	}
 	if accountID.Valid {
 		v := accountID.Int64

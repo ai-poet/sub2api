@@ -128,6 +128,22 @@ func TestAstraCheckProbe_MatchOnAstraLikeAnswers(t *testing.T) {
 	require.Empty(t, repo.events)
 	require.Equal(t, 0, notifier.calls)
 	require.False(t, svc.IsAstraCheckRunning(group.ID))
+	require.Nil(t, svc.AstraCheckProgress(group.ID))
+
+	// 逐请求样本随结果返回：4 个任务各一次尝试，全部有效
+	require.Len(t, execution.Result.Samples, 4)
+	for i, rec := range execution.Result.Samples {
+		require.Equal(t, i+1, rec.Seq)
+		require.Equal(t, 1, rec.Attempt)
+		require.Equal(t, AstraCheckSampleValid, rec.Outcome)
+		require.True(t, rec.Final)
+		require.NotNil(t, rec.HTTPCode)
+		require.Equal(t, 200, *rec.HTTPCode)
+	}
+	require.Equal(t, "country_low", execution.Result.Samples[0].CellID)
+	require.Equal(t, "Japan", execution.Result.Samples[0].Answer)
+	require.Equal(t, "japan", execution.Result.Samples[0].Category)
+	require.Equal(t, "exact_3", execution.Result.Samples[1].Category)
 
 	require.Len(t, upstream.requests, 4)
 	req := upstream.requests[0]
@@ -236,6 +252,13 @@ func TestAstraCheckProbe_InvalidAnswersRetryThenInsufficient(t *testing.T) {
 	require.Nil(t, execution.Event)
 	require.Empty(t, repo.events)
 	require.Equal(t, 0, notifier.calls)
+
+	// 每次尝试都留样本：前两次非最终、第三次最终且为无效
+	require.Len(t, execution.Result.Samples, 12)
+	require.Equal(t, 3, execution.Result.Samples[2].Attempt)
+	require.True(t, execution.Result.Samples[2].Final)
+	require.False(t, execution.Result.Samples[1].Final)
+	require.Equal(t, AstraCheckSampleInvalid, execution.Result.Samples[2].Outcome)
 }
 
 func TestAstraCheckProbe_FailsOverToNextAccountAfterRepeated429(t *testing.T) {
@@ -257,6 +280,53 @@ func TestAstraCheckProbe_FailsOverToNextAccountAfterRepeated429(t *testing.T) {
 	require.Contains(t, execution.Result.ErrorDetail, "account 1")
 	require.Contains(t, execution.Result.ErrorDetail, "429")
 	require.Equal(t, AstraCheckStatusPass, execution.State.AstraCheckStableStatus)
+
+	// 换号前的 3 次 429 也留在样本里，方便回看
+	require.Len(t, execution.Result.Samples, 7)
+	require.Equal(t, AstraCheckSampleFailed, execution.Result.Samples[0].Outcome)
+	require.Equal(t, 429, *execution.Result.Samples[0].HTTPCode)
+	require.Equal(t, AstraCheckSampleValid, execution.Result.Samples[3].Outcome)
+}
+
+func TestAstraProgressTracker_CountsAndSnapshot(t *testing.T) {
+	tracker := newAstraProgressTracker(2)
+	tracker.setPlanned(3)
+	tracker.setAccount(7)
+	tracker.setPhase(AstraCheckPhaseRunning)
+
+	code := 200
+	tracker.requestStarted()
+	tracker.record(AstraCheckSampleRecord{CellID: "a", Attempt: 1, Answer: "  Japan  ", Category: "japan", Outcome: AstraCheckSampleValid, Final: true, HTTPCode: &code}, true)
+	tracker.requestStarted()
+	tracker.record(AstraCheckSampleRecord{CellID: "b", Attempt: 1, Category: AstraCheckInvalidOutput, Outcome: AstraCheckSampleInvalid, Final: false}, true)
+	tracker.requestStarted()
+	snap := tracker.snapshot()
+	require.Equal(t, 2, snap.Round)
+	require.Equal(t, AstraCheckPhaseRunning, snap.Phase)
+	require.Equal(t, int64(7), *snap.AccountID)
+	require.Equal(t, 3, snap.Planned)
+	require.Equal(t, 1, snap.Completed)
+	require.Equal(t, 1, snap.Valid)
+	require.Equal(t, 0, snap.Invalid)
+	require.Equal(t, 3, snap.Requests)
+	require.Equal(t, 1, snap.InFlight)
+	require.Len(t, snap.Samples, 2)
+	require.Equal(t, "Japan", snap.Samples[0].Answer)
+	require.Equal(t, 1, snap.Samples[0].Seq)
+	require.Equal(t, 2, snap.Samples[1].Seq)
+
+	tracker.record(AstraCheckSampleRecord{CellID: "b", Attempt: 2, Outcome: AstraCheckSampleFailed, Final: true}, true)
+	tracker.rollbackJob(AstraCheckSampleFailed)
+	snap = tracker.snapshot()
+	require.Equal(t, 1, snap.Completed)
+	require.Equal(t, 0, snap.Failed)
+	require.Equal(t, 0, snap.InFlight)
+	require.Len(t, tracker.allSamples(), 3)
+
+	var nilTracker *astraProgressTracker
+	require.Nil(t, nilTracker.snapshot())
+	require.Empty(t, nilTracker.allSamples())
+	nilTracker.record(AstraCheckSampleRecord{}, true) // 不 panic
 }
 
 func TestAstraCheckProbe_AllAccountsFailingYieldsInsufficient(t *testing.T) {

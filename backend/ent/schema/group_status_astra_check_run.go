@@ -43,6 +43,9 @@ func (GroupStatusAstraCheckRun) Fields() []ent.Field {
 		field.JSON("reasons", []string{}).
 			Default([]string{}).
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
+		field.JSON("samples", []map[string]any{}).
+			Default([]map[string]any{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
 		field.Int("requests_planned").Default(0),
 		field.Int("requests_completed").Default(0),
 		field.Int("valid_samples").Default(0),

@@ -44,6 +44,8 @@ type GroupStatusAstraCheckRun struct {
 	Cells []map[string]interface{} `json:"cells,omitempty"`
 	// Reasons holds the value of the "reasons" field.
 	Reasons []string `json:"reasons,omitempty"`
+	// Samples holds the value of the "samples" field.
+	Samples []map[string]interface{} `json:"samples,omitempty"`
 	// RequestsPlanned holds the value of the "requests_planned" field.
 	RequestsPlanned int `json:"requests_planned,omitempty"`
 	// RequestsCompleted holds the value of the "requests_completed" field.
@@ -76,7 +78,7 @@ func (*GroupStatusAstraCheckRun) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case groupstatusastracheckrun.FieldMatches, groupstatusastracheckrun.FieldCells, groupstatusastracheckrun.FieldReasons:
+		case groupstatusastracheckrun.FieldMatches, groupstatusastracheckrun.FieldCells, groupstatusastracheckrun.FieldReasons, groupstatusastracheckrun.FieldSamples:
 			values[i] = new([]byte)
 		case groupstatusastracheckrun.FieldID, groupstatusastracheckrun.FieldGroupID, groupstatusastracheckrun.FieldConfigID, groupstatusastracheckrun.FieldAccountID, groupstatusastracheckrun.FieldRequestsPlanned, groupstatusastracheckrun.FieldRequestsCompleted, groupstatusastracheckrun.FieldValidSamples, groupstatusastracheckrun.FieldInputTokens, groupstatusastracheckrun.FieldOutputTokens, groupstatusastracheckrun.FieldReasoningTokens, groupstatusastracheckrun.FieldLatencyMs, groupstatusastracheckrun.FieldHTTPCode:
 			values[i] = new(sql.NullInt64)
@@ -188,6 +190,14 @@ func (_m *GroupStatusAstraCheckRun) assignValues(columns []string, values []any)
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &_m.Reasons); err != nil {
 					return fmt.Errorf("unmarshal field reasons: %w", err)
+				}
+			}
+		case groupstatusastracheckrun.FieldSamples:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field samples", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Samples); err != nil {
+					return fmt.Errorf("unmarshal field samples: %w", err)
 				}
 			}
 		case groupstatusastracheckrun.FieldRequestsPlanned:
@@ -341,6 +351,9 @@ func (_m *GroupStatusAstraCheckRun) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("reasons=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Reasons))
+	builder.WriteString(", ")
+	builder.WriteString("samples=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Samples))
 	builder.WriteString(", ")
 	builder.WriteString("requests_planned=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RequestsPlanned))
