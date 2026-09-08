@@ -32,6 +32,9 @@ const (
 	AstraCheckInvalidOutput = "__INVALID_OUTPUT__"
 	AstraCheckOtherCategory = "__OTHER__"
 
+	// AstraCheckReasonBelowThreshold：样本齐全但 Astra 未达自身阈值（单边反证，按 mismatch 计数）
+	AstraCheckReasonBelowThreshold = "astra_below_threshold"
+
 	groupStatusAstraCheckDefaultRequestModel   = "gpt-6-astra"
 	groupStatusAstraCheckDefaultTier           = AstraCheckTierLow
 	groupStatusAstraCheckDefaultIntervalSecond = 3600
@@ -446,14 +449,7 @@ func ScoreAstraCheck(bench *AstraBenchmark, tier string, observations []AstraCel
 			Passed:    passed,
 		})
 	}
-	if len(reasonList) == 0 && len(winners) != 1 {
-		if len(winners) == 0 {
-			reasonList = append(reasonList, "no_threshold")
-		} else {
-			reasonList = append(reasonList, "multiple_thresholds")
-		}
-	}
-	score.Reasons = reasonList
+	dataComplete := len(reasonList) == 0
 	switch {
 	case len(winners) == 1 && winners[0] == astraCheckClaimedModel:
 		score.Verdict = AstraCheckVerdictMatch
@@ -461,10 +457,48 @@ func ScoreAstraCheck(bench *AstraBenchmark, tier string, observations []AstraCel
 	case len(winners) == 1:
 		score.Verdict = AstraCheckVerdictMismatch
 		score.Winner = winners[0]
+	case dataComplete && len(winners) == 0:
+		// 样本齐全却没有模型越线，意味着 Astra 自己也没达到阈值。我们问的是「是不是纯 Astra」这个单边问题：
+		// 阈值是按真 Astra 几乎必然越线校准的，落到阈值下本身就是校准过的反证（低档漏判率约 0.1%），
+		// 所以按 mismatch 计数（仍要连续 2 次 + 立即复测才变红）。winner 记最接近的非 Astra 模型，
+		// 文案上与「强指向」区分为「最接近」。
+		reasonList = append(reasonList, AstraCheckReasonBelowThreshold)
+		score.Verdict = AstraCheckVerdictMismatch
+		score.Winner = astraClosestOtherModel(score.Matches)
+	case dataComplete:
+		reasonList = append(reasonList, "multiple_thresholds")
+		score.Verdict = AstraCheckVerdictInsufficient
 	default:
 		score.Verdict = AstraCheckVerdictInsufficient
 	}
+	score.Reasons = reasonList
 	return score, nil
+}
+
+// astraClosestOtherModel 返回匹配度最高的非 Astra 候选；没有则返回空串。
+func astraClosestOtherModel(matches []AstraCheckModelMatch) string {
+	best := ""
+	bestMatch := -1.0
+	for _, match := range matches {
+		if match.Model == astraCheckClaimedModel {
+			continue
+		}
+		if match.Match > bestMatch {
+			bestMatch = match.Match
+			best = match.Model
+		}
+	}
+	return best
+}
+
+// astraCheckIsSoftMismatch 报告一次 mismatch 是否只是「Astra 未达自身阈值」而非别的模型强指向。
+func astraCheckIsSoftMismatch(reasons []string) bool {
+	for _, reason := range reasons {
+		if reason == AstraCheckReasonBelowThreshold {
+			return true
+		}
+	}
+	return false
 }
 
 // ComputeAstraCheckTransition 是纯函数：把一次运行并进状态，稳定结论切换时产出事件。
@@ -508,7 +542,11 @@ func ComputeAstraCheckTransition(prev *GroupStatusState, result *GroupStatusAstr
 	newEvent := func(eventType, from, to string) *GroupStatusEvent {
 		subStatus := "winner_unknown"
 		if result.Winner != "" {
-			subStatus = "winner_" + result.Winner
+			if astraCheckIsSoftMismatch(result.Reasons) {
+				subStatus = "closest_" + result.Winner
+			} else {
+				subStatus = "winner_" + result.Winner
+			}
 		}
 		return &GroupStatusEvent{
 			GroupID:     result.GroupID,
@@ -629,11 +667,20 @@ func astraWinnerFromEvent(event *GroupStatusEvent) string {
 	if event == nil {
 		return "?"
 	}
-	winner := strings.TrimPrefix(strings.TrimSpace(event.SubStatus), "winner_")
-	if winner == "" || winner == "unknown" {
+	subStatus := strings.TrimSpace(event.SubStatus)
+	winner := strings.TrimPrefix(strings.TrimPrefix(subStatus, "winner_"), "closest_")
+	if winner == "" || winner == "unknown" || winner == subStatus {
 		return "?"
 	}
 	return astraModelShortName(winner)
+}
+
+// astraEventPointerText 生成推送标题里的括注：强指向某模型，或只是 Astra 未达自身阈值时最接近某模型。
+func astraEventPointerText(event *GroupStatusEvent) string {
+	if event != nil && strings.HasPrefix(strings.TrimSpace(event.SubStatus), "closest_") {
+		return "最接近 " + astraWinnerFromEvent(event) + "，Astra 未达自身阈值"
+	}
+	return "强指向 " + astraWinnerFromEvent(event)
 }
 
 // isAstraCheckEvent 报告事件是否来自 Astra 指纹验证。

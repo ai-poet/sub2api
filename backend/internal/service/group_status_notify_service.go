@@ -322,7 +322,7 @@ func buildGroupStatusNotifyMessage(siteName string, group *Group, event *GroupSt
 	case GroupStatusEventSolJuiceRecovered:
 		title = fmt.Sprintf("[%s] 分组「%s」Sol 验证已恢复", siteName, groupName)
 	case GroupStatusEventAstraMismatch:
-		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹疑似非 Astra（强指向 %s）", siteName, groupName, astraWinnerFromEvent(event))
+		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹疑似非 Astra（%s）", siteName, groupName, astraEventPointerText(event))
 	case GroupStatusEventAstraRecovered:
 		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹验证已恢复", siteName, groupName)
 	default:

@@ -29,6 +29,18 @@ func TestBuildGroupStatusNotifyMessage_AstraMismatch(t *testing.T) {
 	require.Contains(t, desp, "Sol 0.980/0.659")
 }
 
+func TestBuildGroupStatusNotifyMessage_AstraSoftMismatch(t *testing.T) {
+	group := &Group{ID: 9, Name: "Astra 高速", Platform: PlatformOpenAI}
+	event := &GroupStatusEvent{
+		EventType:  GroupStatusEventAstraMismatch,
+		ToStatus:   AstraCheckStatusMismatch,
+		SubStatus:  "closest_gpt-5.6-luna",
+		ObservedAt: time.Now(),
+	}
+	title, _ := buildGroupStatusNotifyMessage("My Gateway", group, event)
+	require.Equal(t, "[My Gateway] 分组「Astra 高速」Astra 指纹疑似非 Astra（最接近 Luna，Astra 未达自身阈值）", title)
+}
+
 func TestBuildGroupStatusNotifyMessage_AstraRecovered(t *testing.T) {
 	group := &Group{ID: 9, Name: "Astra 高速", Platform: PlatformOpenAI}
 	event := &GroupStatusEvent{

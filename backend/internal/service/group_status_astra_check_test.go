@@ -195,7 +195,8 @@ func TestScoreAstraCheck_MismatchPointsToSol(t *testing.T) {
 	require.InDelta(t, 0.955, astraMatchByModel(t, score.Matches, "gpt-5.6-sol").Match, 0.005)
 }
 
-func TestScoreAstraCheck_NoThresholdIsInsufficient(t *testing.T) {
+// 样本齐全但无人越线：Astra 未达自身阈值，按「软 mismatch」处理，winner 记最接近的非 Astra 模型。
+func TestScoreAstraCheck_AstraBelowThresholdIsSoftMismatch(t *testing.T) {
 	bench, _ := loadSyntheticAstraBenchmark(t)
 
 	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
@@ -203,13 +204,15 @@ func TestScoreAstraCheck_NoThresholdIsInsufficient(t *testing.T) {
 		{CellID: "strawberry_low", Counts: map[string]int{"other_integer": 2}},
 	})
 	require.NoError(t, err)
-	require.Equal(t, AstraCheckVerdictInsufficient, score.Verdict)
-	require.Equal(t, "", score.Winner)
-	require.Equal(t, []string{"no_threshold"}, score.Reasons)
+	require.Equal(t, AstraCheckVerdictMismatch, score.Verdict)
+	require.Equal(t, "gpt-5.6-sol", score.Winner)
+	require.Equal(t, []string{AstraCheckReasonBelowThreshold}, score.Reasons)
 	require.InDelta(t, 0.752, astraMatchByModel(t, score.Matches, "gpt-6-astra").Match, 0.005)
 	for _, match := range score.Matches {
 		require.False(t, match.Passed)
 	}
+	require.True(t, astraCheckIsSoftMismatch(score.Reasons))
+	require.False(t, astraCheckIsSoftMismatch([]string{"samples_incomplete"}))
 }
 
 func TestScoreAstraCheck_IncompleteSamplesBlocksVerdict(t *testing.T) {
@@ -251,9 +254,12 @@ func TestScoreAstraCheck_UnknownCategoryFoldsIntoOther(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Equal(t, map[string]int{AstraCheckOtherCategory: 2}, score.Cells[0].Categories)
-	// __OTHER__ 两模型同概率，只剩 strawberry 题区分：astra ln0.9 vs sol ln0.3，×0.5 权重 → 差 0.549，不足以越线
-	require.Equal(t, AstraCheckVerdictInsufficient, score.Verdict)
-	require.Equal(t, []string{"no_threshold"}, score.Reasons)
+	// __OTHER__ 两模型同概率，只剩 strawberry 题区分：astra ln0.9 vs sol ln0.3，×0.5 权重 → 差 0.549，
+	// astra 匹配度 ≈ 0.634 达不到 0.9 → 软 mismatch
+	require.Equal(t, AstraCheckVerdictMismatch, score.Verdict)
+	require.Equal(t, "gpt-5.6-sol", score.Winner)
+	require.Equal(t, []string{AstraCheckReasonBelowThreshold}, score.Reasons)
+	require.InDelta(t, 0.634, astraMatchByModel(t, score.Matches, "gpt-6-astra").Match, 0.005)
 }
 
 func TestScoreAstraCheck_UncalibratedAndMissingBaseline(t *testing.T) {
@@ -470,7 +476,33 @@ func TestNormalizeGroupStatusConfig_AstraCheckRules(t *testing.T) {
 func TestAstraWinnerFromEvent(t *testing.T) {
 	require.Equal(t, "?", astraWinnerFromEvent(nil))
 	require.Equal(t, "?", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_unknown"}))
+	require.Equal(t, "?", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "juice_32"}))
 	require.Equal(t, "Sol", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_gpt-5.6-sol"}))
+	require.Equal(t, "Luna", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "closest_gpt-5.6-luna"}))
 	require.Equal(t, "Astra", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_gpt-6-astra"}))
 	require.Equal(t, "gpt-7-x", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_gpt-7-x"}))
+
+	require.Equal(t, "强指向 Sol", astraEventPointerText(&GroupStatusEvent{SubStatus: "winner_gpt-5.6-sol"}))
+	require.Equal(t, "最接近 Luna，Astra 未达自身阈值", astraEventPointerText(&GroupStatusEvent{SubStatus: "closest_gpt-5.6-luna"}))
+}
+
+// 软 mismatch 与强指向走同一状态机：两次连续才变红，事件 sub_status 用 closest_ 前缀区分。
+func TestComputeAstraCheckTransition_SoftMismatchUsesClosestPrefix(t *testing.T) {
+	result := astraResultWithVerdict(AstraCheckVerdictMismatch, "gpt-5.6-luna")
+	result.Reasons = []string{AstraCheckReasonBelowThreshold}
+
+	next, event := ComputeAstraCheckTransition(&GroupStatusState{AstraCheckStableStatus: AstraCheckStatusPass}, result, 1)
+	require.Nil(t, event)
+	require.Equal(t, AstraCheckStatusPass, next.AstraCheckStableStatus)
+	require.Equal(t, 1, next.AstraCheckConsecutiveMismatch)
+	require.Equal(t, AstraCheckVerdictMismatch, next.AstraCheckVerdict)
+	require.Equal(t, "gpt-5.6-luna", next.AstraCheckWinner)
+	require.Equal(t, []string{AstraCheckReasonBelowThreshold}, next.AstraCheckReasons)
+
+	next, event = ComputeAstraCheckTransition(next, result, 2)
+	require.NotNil(t, event)
+	require.Equal(t, GroupStatusEventAstraMismatch, event.EventType)
+	require.Equal(t, "closest_gpt-5.6-luna", event.SubStatus)
+	require.Equal(t, AstraCheckStatusMismatch, next.AstraCheckStableStatus)
+	require.Contains(t, event.ErrorDetail, AstraCheckReasonBelowThreshold)
 }

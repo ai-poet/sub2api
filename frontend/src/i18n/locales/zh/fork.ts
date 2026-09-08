@@ -279,11 +279,15 @@ export default {
     "astraCheck": {
       "pass": "Astra 指纹 正常",
       "mismatch": "Astra 指纹 异常（强指向 {winner}）",
+      "mismatchSoft": "Astra 指纹 异常（非 Astra，最接近 {winner}）",
+      "mismatchNoWinner": "Astra 指纹 异常（非 Astra）",
+      "suspect": "Astra 指纹 疑似异常（待复测）",
       "insufficient": "Astra 指纹 证据不足",
       "pending": "Astra 指纹 待验证",
       "statuses": {
         "pass": "Astra 指纹正常",
         "mismatch": "Astra 指纹不符",
+        "suspect": "Astra 指纹疑似异常",
         "insufficient": "Astra 指纹证据不足",
         "unknown": "未知"
       }
@@ -511,10 +515,14 @@ export default {
           "statuses": {
             "pass": "Astra 指纹正常",
             "mismatch": "Astra 指纹异常（强指向 {winner}）",
+            "mismatchSoft": "Astra 指纹异常（非 Astra，最接近 {winner}）",
+            "mismatchNoWinner": "Astra 指纹异常（非 Astra）",
+            "suspect": "Astra 指纹疑似异常（待复测确认）",
             "insufficient": "Astra 指纹证据不足",
             "unknown": "待验证"
           },
           "reasons": {
+            "astra_below_threshold": "Astra 未达自身阈值（非 Astra 特征）",
             "samples_incomplete": "有效样本不足",
             "samples_exceed_plan": "样本数超出计划",
             "baseline_cell_missing": "基准缺少该题",

@@ -191,25 +191,33 @@ export function estimateSolJuiceMonthlyCostUsd(
 
 // ==================== Astra 指纹验证（meow 基准，行为指纹） ====================
 
-export type NormalizedAstraCheckStatus = 'pass' | 'mismatch' | 'insufficient' | 'unknown'
+export type NormalizedAstraCheckStatus = 'pass' | 'mismatch' | 'suspect' | 'insufficient' | 'unknown'
 
-// 稳定结论优先；没有稳定结论时用最近一次 verdict（match → pass）
+// 样本齐全但 Astra 未达自身阈值：后端按 mismatch 计数，文案区分为「最接近 X」而不是「强指向 X」
+export const ASTRA_BELOW_THRESHOLD_REASON = 'astra_below_threshold'
+
+export function isAstraSoftMismatch(reasons?: string[] | null): boolean {
+  return Array.isArray(reasons) && reasons.includes(ASTRA_BELOW_THRESHOLD_REASON)
+}
+
+// 稳定 mismatch（连续 2 次确认）优先显示红色；否则显示最近一次结果：
+// match → 正常，单次 mismatch → 疑似（等复测），insufficient → 证据不足。旧的绿色不会盖住新结果。
 export function normalizeAstraCheckStatus(
   stable?: string | null,
   verdict?: string | null
 ): NormalizedAstraCheckStatus {
-  if (stable === 'pass' || stable === 'mismatch') {
-    return stable
+  if (stable === 'mismatch') {
+    return 'mismatch'
   }
   switch (verdict) {
     case 'match':
       return 'pass'
     case 'mismatch':
-      return 'mismatch'
+      return 'suspect'
     case 'insufficient':
       return 'insufficient'
     default:
-      return 'unknown'
+      return stable === 'pass' ? 'pass' : 'unknown'
   }
 }
 
@@ -219,11 +227,20 @@ export function getAstraCheckBadgeClass(status?: string | null): string {
       return 'badge-success'
     case 'mismatch':
       return 'badge-danger'
+    case 'suspect':
     case 'insufficient':
       return 'badge-warning'
     default:
       return 'badge-gray'
   }
+}
+
+// mismatch 文案分三种：强指向某模型 / 只是 Astra 未达阈值（最接近某模型）/ 最近一次没有 winner
+export function astraMismatchTextKey(winner?: string | null, reasons?: string[] | null): 'mismatch' | 'mismatchSoft' | 'mismatchNoWinner' {
+  if (!(winner || '').trim()) {
+    return 'mismatchNoWinner'
+  }
+  return isAstraSoftMismatch(reasons) ? 'mismatchSoft' : 'mismatch'
 }
 
 export function isAstraCheckEvent(eventType?: string | null): boolean {

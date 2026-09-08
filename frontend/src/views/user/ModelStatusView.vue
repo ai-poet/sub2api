@@ -455,6 +455,7 @@ import type {
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
+  astraMismatchTextKey,
   astraModelShortName,
   formatGroupRuntimeAvailability,
   formatGroupRuntimeLatency,
@@ -642,9 +643,13 @@ function getAstraCheckStatus(summary: GroupStatusListItem['summary']): Normalize
 function getAstraCheckText(summary: GroupStatusListItem['summary']): string {
   const status = getAstraCheckStatus(summary)
   if (status === 'mismatch') {
-    return t('modelStatus.astraCheck.mismatch', { winner: astraModelShortName(summary.astra_check_winner) })
+    const key = astraMismatchTextKey(summary.astra_check_winner, summary.astra_check_reasons)
+    return t(`modelStatus.astraCheck.${key}`, { winner: astraModelShortName(summary.astra_check_winner) })
   }
-  return t(`modelStatus.astraCheck.${status === 'pass' ? 'pass' : status === 'insufficient' ? 'insufficient' : 'pending'}`)
+  if (status === 'unknown') {
+    return t('modelStatus.astraCheck.pending')
+  }
+  return t(`modelStatus.astraCheck.${status}`)
 }
 
 function getEventStatusBadgeClass(event: { event_type: string }, status: string): string {

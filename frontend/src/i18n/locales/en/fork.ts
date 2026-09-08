@@ -279,11 +279,15 @@ export default {
     "astraCheck": {
       "pass": "Astra fingerprint OK",
       "mismatch": "Astra fingerprint failed (points to {winner})",
+      "mismatchSoft": "Astra fingerprint failed (not Astra, closest to {winner})",
+      "mismatchNoWinner": "Astra fingerprint failed (not Astra)",
+      "suspect": "Astra fingerprint suspicious (awaiting re-check)",
       "insufficient": "Astra fingerprint inconclusive",
       "pending": "Astra fingerprint pending",
       "statuses": {
         "pass": "Astra fingerprint OK",
         "mismatch": "Astra fingerprint failed",
+        "suspect": "Astra fingerprint suspicious",
         "insufficient": "Astra fingerprint inconclusive",
         "unknown": "Unknown"
       }
@@ -511,10 +515,14 @@ export default {
           "statuses": {
             "pass": "Astra fingerprint OK",
             "mismatch": "Astra fingerprint failed (points to {winner})",
+            "mismatchSoft": "Astra fingerprint failed (not Astra, closest to {winner})",
+            "mismatchNoWinner": "Astra fingerprint failed (not Astra)",
+            "suspect": "Astra fingerprint suspicious (awaiting re-check)",
             "insufficient": "Astra fingerprint inconclusive",
             "unknown": "Pending"
           },
           "reasons": {
+            "astra_below_threshold": "Astra did not reach its own threshold (not Astra-like)",
             "samples_incomplete": "Not enough valid samples",
             "samples_exceed_plan": "More samples than planned",
             "baseline_cell_missing": "Benchmark lacks this probe",

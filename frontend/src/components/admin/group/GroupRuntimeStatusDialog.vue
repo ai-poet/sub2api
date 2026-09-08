@@ -698,6 +698,7 @@ import type {
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
+  astraMismatchTextKey,
   astraModelShortName,
   estimateSolJuiceMonthlyCostUsd,
   formatGroupRuntimeLatency,
@@ -851,12 +852,14 @@ const astraDisplayStatus = computed(() =>
 )
 
 const astraStatusText = computed(() => {
-  if (astraDisplayStatus.value === 'mismatch') {
-    return t('admin.groups.runtimeStatus.astraCheck.statuses.mismatch', {
+  const status = astraDisplayStatus.value
+  if (status === 'mismatch') {
+    const key = astraMismatchTextKey(summary.value.astra_check_winner, summary.value.astra_check_reasons)
+    return t(`admin.groups.runtimeStatus.astraCheck.statuses.${key}`, {
       winner: astraModelShortName(summary.value.astra_check_winner)
     })
   }
-  return t(`admin.groups.runtimeStatus.astraCheck.statuses.${astraDisplayStatus.value}`)
+  return t(`admin.groups.runtimeStatus.astraCheck.statuses.${status}`)
 })
 
 const astraMonthlyCost = computed(() =>
