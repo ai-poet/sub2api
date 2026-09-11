@@ -68,6 +68,20 @@ func (_c *GroupStatusRecordCreate) SetNillableLatencyMs(v *int64) *GroupStatusRe
 	return _c
 }
 
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (_c *GroupStatusRecordCreate) SetTotalLatencyMs(v int64) *GroupStatusRecordCreate {
+	_c.mutation.SetTotalLatencyMs(v)
+	return _c
+}
+
+// SetNillableTotalLatencyMs sets the "total_latency_ms" field if the given value is not nil.
+func (_c *GroupStatusRecordCreate) SetNillableTotalLatencyMs(v *int64) *GroupStatusRecordCreate {
+	if v != nil {
+		_c.SetTotalLatencyMs(*v)
+	}
+	return _c
+}
+
 // SetHTTPCode sets the "http_code" field.
 func (_c *GroupStatusRecordCreate) SetHTTPCode(v int) *GroupStatusRecordCreate {
 	_c.mutation.SetHTTPCode(v)
@@ -242,6 +256,10 @@ func (_c *GroupStatusRecordCreate) createSpec() (*GroupStatusRecord, *sqlgraph.C
 		_spec.SetField(groupstatusrecord.FieldLatencyMs, field.TypeInt64, value)
 		_node.LatencyMs = &value
 	}
+	if value, ok := _c.mutation.TotalLatencyMs(); ok {
+		_spec.SetField(groupstatusrecord.FieldTotalLatencyMs, field.TypeInt64, value)
+		_node.TotalLatencyMs = &value
+	}
 	if value, ok := _c.mutation.HTTPCode(); ok {
 		_spec.SetField(groupstatusrecord.FieldHTTPCode, field.TypeInt, value)
 		_node.HTTPCode = &value
@@ -401,6 +419,30 @@ func (u *GroupStatusRecordUpsert) AddLatencyMs(v int64) *GroupStatusRecordUpsert
 // ClearLatencyMs clears the value of the "latency_ms" field.
 func (u *GroupStatusRecordUpsert) ClearLatencyMs() *GroupStatusRecordUpsert {
 	u.SetNull(groupstatusrecord.FieldLatencyMs)
+	return u
+}
+
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsert) SetTotalLatencyMs(v int64) *GroupStatusRecordUpsert {
+	u.Set(groupstatusrecord.FieldTotalLatencyMs, v)
+	return u
+}
+
+// UpdateTotalLatencyMs sets the "total_latency_ms" field to the value that was provided on create.
+func (u *GroupStatusRecordUpsert) UpdateTotalLatencyMs() *GroupStatusRecordUpsert {
+	u.SetExcluded(groupstatusrecord.FieldTotalLatencyMs)
+	return u
+}
+
+// AddTotalLatencyMs adds v to the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsert) AddTotalLatencyMs(v int64) *GroupStatusRecordUpsert {
+	u.Add(groupstatusrecord.FieldTotalLatencyMs, v)
+	return u
+}
+
+// ClearTotalLatencyMs clears the value of the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsert) ClearTotalLatencyMs() *GroupStatusRecordUpsert {
+	u.SetNull(groupstatusrecord.FieldTotalLatencyMs)
 	return u
 }
 
@@ -617,6 +659,34 @@ func (u *GroupStatusRecordUpsertOne) UpdateLatencyMs() *GroupStatusRecordUpsertO
 func (u *GroupStatusRecordUpsertOne) ClearLatencyMs() *GroupStatusRecordUpsertOne {
 	return u.Update(func(s *GroupStatusRecordUpsert) {
 		s.ClearLatencyMs()
+	})
+}
+
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsertOne) SetTotalLatencyMs(v int64) *GroupStatusRecordUpsertOne {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.SetTotalLatencyMs(v)
+	})
+}
+
+// AddTotalLatencyMs adds v to the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsertOne) AddTotalLatencyMs(v int64) *GroupStatusRecordUpsertOne {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.AddTotalLatencyMs(v)
+	})
+}
+
+// UpdateTotalLatencyMs sets the "total_latency_ms" field to the value that was provided on create.
+func (u *GroupStatusRecordUpsertOne) UpdateTotalLatencyMs() *GroupStatusRecordUpsertOne {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.UpdateTotalLatencyMs()
+	})
+}
+
+// ClearTotalLatencyMs clears the value of the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsertOne) ClearTotalLatencyMs() *GroupStatusRecordUpsertOne {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.ClearTotalLatencyMs()
 	})
 }
 
@@ -1010,6 +1080,34 @@ func (u *GroupStatusRecordUpsertBulk) UpdateLatencyMs() *GroupStatusRecordUpsert
 func (u *GroupStatusRecordUpsertBulk) ClearLatencyMs() *GroupStatusRecordUpsertBulk {
 	return u.Update(func(s *GroupStatusRecordUpsert) {
 		s.ClearLatencyMs()
+	})
+}
+
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsertBulk) SetTotalLatencyMs(v int64) *GroupStatusRecordUpsertBulk {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.SetTotalLatencyMs(v)
+	})
+}
+
+// AddTotalLatencyMs adds v to the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsertBulk) AddTotalLatencyMs(v int64) *GroupStatusRecordUpsertBulk {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.AddTotalLatencyMs(v)
+	})
+}
+
+// UpdateTotalLatencyMs sets the "total_latency_ms" field to the value that was provided on create.
+func (u *GroupStatusRecordUpsertBulk) UpdateTotalLatencyMs() *GroupStatusRecordUpsertBulk {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.UpdateTotalLatencyMs()
+	})
+}
+
+// ClearTotalLatencyMs clears the value of the "total_latency_ms" field.
+func (u *GroupStatusRecordUpsertBulk) ClearTotalLatencyMs() *GroupStatusRecordUpsertBulk {
+	return u.Update(func(s *GroupStatusRecordUpsert) {
+		s.ClearTotalLatencyMs()
 	})
 }
 

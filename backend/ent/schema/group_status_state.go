@@ -38,6 +38,7 @@ func (GroupStatusState) Fields() []ent.Field {
 			Nillable().
 			SchemaType(map[string]string{dialect.Postgres: "text"}),
 		field.Int64("latency_ms").Optional().Nillable(),
+		field.Int64("total_latency_ms").Optional().Nillable(),
 		field.Int("http_code").Optional().Nillable(),
 		field.String("sub_status").Default(""),
 		field.String("error_detail").

@@ -27,6 +27,8 @@ type GroupStatusRecord struct {
 	ResponseExcerpt *string `json:"response_excerpt,omitempty"`
 	// LatencyMs holds the value of the "latency_ms" field.
 	LatencyMs *int64 `json:"latency_ms,omitempty"`
+	// TotalLatencyMs holds the value of the "total_latency_ms" field.
+	TotalLatencyMs *int64 `json:"total_latency_ms,omitempty"`
 	// HTTPCode holds the value of the "http_code" field.
 	HTTPCode *int `json:"http_code,omitempty"`
 	// SubStatus holds the value of the "sub_status" field.
@@ -45,7 +47,7 @@ func (*GroupStatusRecord) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case groupstatusrecord.FieldID, groupstatusrecord.FieldGroupID, groupstatusrecord.FieldConfigID, groupstatusrecord.FieldLatencyMs, groupstatusrecord.FieldHTTPCode:
+		case groupstatusrecord.FieldID, groupstatusrecord.FieldGroupID, groupstatusrecord.FieldConfigID, groupstatusrecord.FieldLatencyMs, groupstatusrecord.FieldTotalLatencyMs, groupstatusrecord.FieldHTTPCode:
 			values[i] = new(sql.NullInt64)
 		case groupstatusrecord.FieldStatus, groupstatusrecord.FieldResponseExcerpt, groupstatusrecord.FieldSubStatus, groupstatusrecord.FieldErrorDetail:
 			values[i] = new(sql.NullString)
@@ -103,6 +105,13 @@ func (_m *GroupStatusRecord) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.LatencyMs = new(int64)
 				*_m.LatencyMs = value.Int64
+			}
+		case groupstatusrecord.FieldTotalLatencyMs:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_latency_ms", values[i])
+			} else if value.Valid {
+				_m.TotalLatencyMs = new(int64)
+				*_m.TotalLatencyMs = value.Int64
 			}
 		case groupstatusrecord.FieldHTTPCode:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -188,6 +197,11 @@ func (_m *GroupStatusRecord) String() string {
 	builder.WriteString(", ")
 	if v := _m.LatencyMs; v != nil {
 		builder.WriteString("latency_ms=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.TotalLatencyMs; v != nil {
+		builder.WriteString("total_latency_ms=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

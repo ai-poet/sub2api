@@ -185,6 +185,12 @@
                       <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                         {{ formatGroupRuntimeLatency(item.summary.latency_ms) }}
                       </div>
+                      <div
+                        v-if="item.summary.total_latency_ms !== null && item.summary.total_latency_ms !== undefined"
+                        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                      >
+                        {{ t('modelStatus.totalLatency') }}: {{ formatGroupRuntimeLatency(item.summary.total_latency_ms) }}
+                      </div>
                     </div>
 
                     <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
@@ -271,6 +277,12 @@
             <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('modelStatus.latestLatency') }}</div>
             <div class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
               {{ formatGroupRuntimeLatency(selectedItem.summary.latency_ms) }}
+            </div>
+            <div
+              v-if="selectedItem.summary.total_latency_ms !== null && selectedItem.summary.total_latency_ms !== undefined"
+              class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+            >
+              {{ t('modelStatus.totalLatency') }}: {{ formatGroupRuntimeLatency(selectedItem.summary.total_latency_ms) }}
             </div>
           </div>
           <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-dark-700 dark:bg-dark-800">

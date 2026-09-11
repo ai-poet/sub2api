@@ -605,6 +605,12 @@
                 <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                   {{ formatGroupRuntimeLatency(summary.latency_ms) }}
                 </div>
+                <div
+                  v-if="summary.total_latency_ms !== null && summary.total_latency_ms !== undefined"
+                  class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  {{ t('admin.groups.runtimeStatus.totalLatency') }}: {{ formatGroupRuntimeLatency(summary.total_latency_ms) }}
+                </div>
               </div>
 
               <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
@@ -794,6 +800,7 @@ const summary = computed<GroupStatusSummary>(() => {
     stable_status: '',
     response_excerpt: '',
     latency_ms: null,
+    total_latency_ms: null,
     http_code: null,
     sub_status: '',
     error_detail: '',

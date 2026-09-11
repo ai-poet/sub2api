@@ -28857,27 +28857,29 @@ func (m *GroupStatusJuiceRecordMutation) ResetEdge(name string) error {
 // GroupStatusRecordMutation represents an operation that mutates the GroupStatusRecord nodes in the graph.
 type GroupStatusRecordMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int64
-	group_id         *int64
-	addgroup_id      *int64
-	config_id        *int64
-	addconfig_id     *int64
-	status           *string
-	response_excerpt *string
-	latency_ms       *int64
-	addlatency_ms    *int64
-	http_code        *int
-	addhttp_code     *int
-	sub_status       *string
-	error_detail     *string
-	observed_at      *time.Time
-	created_at       *time.Time
-	clearedFields    map[string]struct{}
-	done             bool
-	oldValue         func(context.Context) (*GroupStatusRecord, error)
-	predicates       []predicate.GroupStatusRecord
+	op                  Op
+	typ                 string
+	id                  *int64
+	group_id            *int64
+	addgroup_id         *int64
+	config_id           *int64
+	addconfig_id        *int64
+	status              *string
+	response_excerpt    *string
+	latency_ms          *int64
+	addlatency_ms       *int64
+	total_latency_ms    *int64
+	addtotal_latency_ms *int64
+	http_code           *int
+	addhttp_code        *int
+	sub_status          *string
+	error_detail        *string
+	observed_at         *time.Time
+	created_at          *time.Time
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*GroupStatusRecord, error)
+	predicates          []predicate.GroupStatusRecord
 }
 
 var _ ent.Mutation = (*GroupStatusRecordMutation)(nil)
@@ -29245,6 +29247,76 @@ func (m *GroupStatusRecordMutation) ResetLatencyMs() {
 	delete(m.clearedFields, groupstatusrecord.FieldLatencyMs)
 }
 
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (m *GroupStatusRecordMutation) SetTotalLatencyMs(i int64) {
+	m.total_latency_ms = &i
+	m.addtotal_latency_ms = nil
+}
+
+// TotalLatencyMs returns the value of the "total_latency_ms" field in the mutation.
+func (m *GroupStatusRecordMutation) TotalLatencyMs() (r int64, exists bool) {
+	v := m.total_latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalLatencyMs returns the old "total_latency_ms" field's value of the GroupStatusRecord entity.
+// If the GroupStatusRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusRecordMutation) OldTotalLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalLatencyMs: %w", err)
+	}
+	return oldValue.TotalLatencyMs, nil
+}
+
+// AddTotalLatencyMs adds i to the "total_latency_ms" field.
+func (m *GroupStatusRecordMutation) AddTotalLatencyMs(i int64) {
+	if m.addtotal_latency_ms != nil {
+		*m.addtotal_latency_ms += i
+	} else {
+		m.addtotal_latency_ms = &i
+	}
+}
+
+// AddedTotalLatencyMs returns the value that was added to the "total_latency_ms" field in this mutation.
+func (m *GroupStatusRecordMutation) AddedTotalLatencyMs() (r int64, exists bool) {
+	v := m.addtotal_latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTotalLatencyMs clears the value of the "total_latency_ms" field.
+func (m *GroupStatusRecordMutation) ClearTotalLatencyMs() {
+	m.total_latency_ms = nil
+	m.addtotal_latency_ms = nil
+	m.clearedFields[groupstatusrecord.FieldTotalLatencyMs] = struct{}{}
+}
+
+// TotalLatencyMsCleared returns if the "total_latency_ms" field was cleared in this mutation.
+func (m *GroupStatusRecordMutation) TotalLatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusrecord.FieldTotalLatencyMs]
+	return ok
+}
+
+// ResetTotalLatencyMs resets all changes to the "total_latency_ms" field.
+func (m *GroupStatusRecordMutation) ResetTotalLatencyMs() {
+	m.total_latency_ms = nil
+	m.addtotal_latency_ms = nil
+	delete(m.clearedFields, groupstatusrecord.FieldTotalLatencyMs)
+}
+
 // SetHTTPCode sets the "http_code" field.
 func (m *GroupStatusRecordMutation) SetHTTPCode(i int) {
 	m.http_code = &i
@@ -29506,7 +29578,7 @@ func (m *GroupStatusRecordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusRecordMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.group_id != nil {
 		fields = append(fields, groupstatusrecord.FieldGroupID)
 	}
@@ -29521,6 +29593,9 @@ func (m *GroupStatusRecordMutation) Fields() []string {
 	}
 	if m.latency_ms != nil {
 		fields = append(fields, groupstatusrecord.FieldLatencyMs)
+	}
+	if m.total_latency_ms != nil {
+		fields = append(fields, groupstatusrecord.FieldTotalLatencyMs)
 	}
 	if m.http_code != nil {
 		fields = append(fields, groupstatusrecord.FieldHTTPCode)
@@ -29555,6 +29630,8 @@ func (m *GroupStatusRecordMutation) Field(name string) (ent.Value, bool) {
 		return m.ResponseExcerpt()
 	case groupstatusrecord.FieldLatencyMs:
 		return m.LatencyMs()
+	case groupstatusrecord.FieldTotalLatencyMs:
+		return m.TotalLatencyMs()
 	case groupstatusrecord.FieldHTTPCode:
 		return m.HTTPCode()
 	case groupstatusrecord.FieldSubStatus:
@@ -29584,6 +29661,8 @@ func (m *GroupStatusRecordMutation) OldField(ctx context.Context, name string) (
 		return m.OldResponseExcerpt(ctx)
 	case groupstatusrecord.FieldLatencyMs:
 		return m.OldLatencyMs(ctx)
+	case groupstatusrecord.FieldTotalLatencyMs:
+		return m.OldTotalLatencyMs(ctx)
 	case groupstatusrecord.FieldHTTPCode:
 		return m.OldHTTPCode(ctx)
 	case groupstatusrecord.FieldSubStatus:
@@ -29638,6 +29717,13 @@ func (m *GroupStatusRecordMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetLatencyMs(v)
 		return nil
+	case groupstatusrecord.FieldTotalLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalLatencyMs(v)
+		return nil
 	case groupstatusrecord.FieldHTTPCode:
 		v, ok := value.(int)
 		if !ok {
@@ -29690,6 +29776,9 @@ func (m *GroupStatusRecordMutation) AddedFields() []string {
 	if m.addlatency_ms != nil {
 		fields = append(fields, groupstatusrecord.FieldLatencyMs)
 	}
+	if m.addtotal_latency_ms != nil {
+		fields = append(fields, groupstatusrecord.FieldTotalLatencyMs)
+	}
 	if m.addhttp_code != nil {
 		fields = append(fields, groupstatusrecord.FieldHTTPCode)
 	}
@@ -29707,6 +29796,8 @@ func (m *GroupStatusRecordMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedConfigID()
 	case groupstatusrecord.FieldLatencyMs:
 		return m.AddedLatencyMs()
+	case groupstatusrecord.FieldTotalLatencyMs:
+		return m.AddedTotalLatencyMs()
 	case groupstatusrecord.FieldHTTPCode:
 		return m.AddedHTTPCode()
 	}
@@ -29739,6 +29830,13 @@ func (m *GroupStatusRecordMutation) AddField(name string, value ent.Value) error
 		}
 		m.AddLatencyMs(v)
 		return nil
+	case groupstatusrecord.FieldTotalLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalLatencyMs(v)
+		return nil
 	case groupstatusrecord.FieldHTTPCode:
 		v, ok := value.(int)
 		if !ok {
@@ -29759,6 +29857,9 @@ func (m *GroupStatusRecordMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(groupstatusrecord.FieldLatencyMs) {
 		fields = append(fields, groupstatusrecord.FieldLatencyMs)
+	}
+	if m.FieldCleared(groupstatusrecord.FieldTotalLatencyMs) {
+		fields = append(fields, groupstatusrecord.FieldTotalLatencyMs)
 	}
 	if m.FieldCleared(groupstatusrecord.FieldHTTPCode) {
 		fields = append(fields, groupstatusrecord.FieldHTTPCode)
@@ -29785,6 +29886,9 @@ func (m *GroupStatusRecordMutation) ClearField(name string) error {
 		return nil
 	case groupstatusrecord.FieldLatencyMs:
 		m.ClearLatencyMs()
+		return nil
+	case groupstatusrecord.FieldTotalLatencyMs:
+		m.ClearTotalLatencyMs()
 		return nil
 	case groupstatusrecord.FieldHTTPCode:
 		m.ClearHTTPCode()
@@ -29814,6 +29918,9 @@ func (m *GroupStatusRecordMutation) ResetField(name string) error {
 		return nil
 	case groupstatusrecord.FieldLatencyMs:
 		m.ResetLatencyMs()
+		return nil
+	case groupstatusrecord.FieldTotalLatencyMs:
+		m.ResetTotalLatencyMs()
 		return nil
 	case groupstatusrecord.FieldHTTPCode:
 		m.ResetHTTPCode()
@@ -29899,6 +30006,8 @@ type GroupStatusStateMutation struct {
 	response_excerpt                    *string
 	latency_ms                          *int64
 	addlatency_ms                       *int64
+	total_latency_ms                    *int64
+	addtotal_latency_ms                 *int64
 	http_code                           *int
 	addhttp_code                        *int
 	sub_status                          *string
@@ -30421,6 +30530,76 @@ func (m *GroupStatusStateMutation) ResetLatencyMs() {
 	m.latency_ms = nil
 	m.addlatency_ms = nil
 	delete(m.clearedFields, groupstatusstate.FieldLatencyMs)
+}
+
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (m *GroupStatusStateMutation) SetTotalLatencyMs(i int64) {
+	m.total_latency_ms = &i
+	m.addtotal_latency_ms = nil
+}
+
+// TotalLatencyMs returns the value of the "total_latency_ms" field in the mutation.
+func (m *GroupStatusStateMutation) TotalLatencyMs() (r int64, exists bool) {
+	v := m.total_latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalLatencyMs returns the old "total_latency_ms" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldTotalLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalLatencyMs: %w", err)
+	}
+	return oldValue.TotalLatencyMs, nil
+}
+
+// AddTotalLatencyMs adds i to the "total_latency_ms" field.
+func (m *GroupStatusStateMutation) AddTotalLatencyMs(i int64) {
+	if m.addtotal_latency_ms != nil {
+		*m.addtotal_latency_ms += i
+	} else {
+		m.addtotal_latency_ms = &i
+	}
+}
+
+// AddedTotalLatencyMs returns the value that was added to the "total_latency_ms" field in this mutation.
+func (m *GroupStatusStateMutation) AddedTotalLatencyMs() (r int64, exists bool) {
+	v := m.addtotal_latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTotalLatencyMs clears the value of the "total_latency_ms" field.
+func (m *GroupStatusStateMutation) ClearTotalLatencyMs() {
+	m.total_latency_ms = nil
+	m.addtotal_latency_ms = nil
+	m.clearedFields[groupstatusstate.FieldTotalLatencyMs] = struct{}{}
+}
+
+// TotalLatencyMsCleared returns if the "total_latency_ms" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) TotalLatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldTotalLatencyMs]
+	return ok
+}
+
+// ResetTotalLatencyMs resets all changes to the "total_latency_ms" field.
+func (m *GroupStatusStateMutation) ResetTotalLatencyMs() {
+	m.total_latency_ms = nil
+	m.addtotal_latency_ms = nil
+	delete(m.clearedFields, groupstatusstate.FieldTotalLatencyMs)
 }
 
 // SetHTTPCode sets the "http_code" field.
@@ -31917,7 +32096,7 @@ func (m *GroupStatusStateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusStateMutation) Fields() []string {
-	fields := make([]string, 0, 37)
+	fields := make([]string, 0, 38)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusstate.FieldCreatedAt)
 	}
@@ -31941,6 +32120,9 @@ func (m *GroupStatusStateMutation) Fields() []string {
 	}
 	if m.latency_ms != nil {
 		fields = append(fields, groupstatusstate.FieldLatencyMs)
+	}
+	if m.total_latency_ms != nil {
+		fields = append(fields, groupstatusstate.FieldTotalLatencyMs)
 	}
 	if m.http_code != nil {
 		fields = append(fields, groupstatusstate.FieldHTTPCode)
@@ -32053,6 +32235,8 @@ func (m *GroupStatusStateMutation) Field(name string) (ent.Value, bool) {
 		return m.ResponseExcerpt()
 	case groupstatusstate.FieldLatencyMs:
 		return m.LatencyMs()
+	case groupstatusstate.FieldTotalLatencyMs:
+		return m.TotalLatencyMs()
 	case groupstatusstate.FieldHTTPCode:
 		return m.HTTPCode()
 	case groupstatusstate.FieldSubStatus:
@@ -32136,6 +32320,8 @@ func (m *GroupStatusStateMutation) OldField(ctx context.Context, name string) (e
 		return m.OldResponseExcerpt(ctx)
 	case groupstatusstate.FieldLatencyMs:
 		return m.OldLatencyMs(ctx)
+	case groupstatusstate.FieldTotalLatencyMs:
+		return m.OldTotalLatencyMs(ctx)
 	case groupstatusstate.FieldHTTPCode:
 		return m.OldHTTPCode(ctx)
 	case groupstatusstate.FieldSubStatus:
@@ -32258,6 +32444,13 @@ func (m *GroupStatusStateMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetLatencyMs(v)
+		return nil
+	case groupstatusstate.FieldTotalLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalLatencyMs(v)
 		return nil
 	case groupstatusstate.FieldHTTPCode:
 		v, ok := value.(int)
@@ -32479,6 +32672,9 @@ func (m *GroupStatusStateMutation) AddedFields() []string {
 	if m.addlatency_ms != nil {
 		fields = append(fields, groupstatusstate.FieldLatencyMs)
 	}
+	if m.addtotal_latency_ms != nil {
+		fields = append(fields, groupstatusstate.FieldTotalLatencyMs)
+	}
 	if m.addhttp_code != nil {
 		fields = append(fields, groupstatusstate.FieldHTTPCode)
 	}
@@ -32535,6 +32731,8 @@ func (m *GroupStatusStateMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedConfigID()
 	case groupstatusstate.FieldLatencyMs:
 		return m.AddedLatencyMs()
+	case groupstatusstate.FieldTotalLatencyMs:
+		return m.AddedTotalLatencyMs()
 	case groupstatusstate.FieldHTTPCode:
 		return m.AddedHTTPCode()
 	case groupstatusstate.FieldConsecutiveDown:
@@ -32592,6 +32790,13 @@ func (m *GroupStatusStateMutation) AddField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddLatencyMs(v)
+		return nil
+	case groupstatusstate.FieldTotalLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalLatencyMs(v)
 		return nil
 	case groupstatusstate.FieldHTTPCode:
 		v, ok := value.(int)
@@ -32705,6 +32910,9 @@ func (m *GroupStatusStateMutation) ClearedFields() []string {
 	if m.FieldCleared(groupstatusstate.FieldLatencyMs) {
 		fields = append(fields, groupstatusstate.FieldLatencyMs)
 	}
+	if m.FieldCleared(groupstatusstate.FieldTotalLatencyMs) {
+		fields = append(fields, groupstatusstate.FieldTotalLatencyMs)
+	}
 	if m.FieldCleared(groupstatusstate.FieldHTTPCode) {
 		fields = append(fields, groupstatusstate.FieldHTTPCode)
 	}
@@ -32748,6 +32956,9 @@ func (m *GroupStatusStateMutation) ClearField(name string) error {
 		return nil
 	case groupstatusstate.FieldLatencyMs:
 		m.ClearLatencyMs()
+		return nil
+	case groupstatusstate.FieldTotalLatencyMs:
+		m.ClearTotalLatencyMs()
 		return nil
 	case groupstatusstate.FieldHTTPCode:
 		m.ClearHTTPCode()
@@ -32804,6 +33015,9 @@ func (m *GroupStatusStateMutation) ResetField(name string) error {
 		return nil
 	case groupstatusstate.FieldLatencyMs:
 		m.ResetLatencyMs()
+		return nil
+	case groupstatusstate.FieldTotalLatencyMs:
+		m.ResetTotalLatencyMs()
 		return nil
 	case groupstatusstate.FieldHTTPCode:
 		m.ResetHTTPCode()

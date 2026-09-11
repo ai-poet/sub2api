@@ -79,6 +79,11 @@ func LatencyMs(v int64) predicate.GroupStatusRecord {
 	return predicate.GroupStatusRecord(sql.FieldEQ(FieldLatencyMs, v))
 }
 
+// TotalLatencyMs applies equality check predicate on the "total_latency_ms" field. It's identical to TotalLatencyMsEQ.
+func TotalLatencyMs(v int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldEQ(FieldTotalLatencyMs, v))
+}
+
 // HTTPCode applies equality check predicate on the "http_code" field. It's identical to HTTPCodeEQ.
 func HTTPCode(v int) predicate.GroupStatusRecord {
 	return predicate.GroupStatusRecord(sql.FieldEQ(FieldHTTPCode, v))
@@ -372,6 +377,56 @@ func LatencyMsIsNil() predicate.GroupStatusRecord {
 // LatencyMsNotNil applies the NotNil predicate on the "latency_ms" field.
 func LatencyMsNotNil() predicate.GroupStatusRecord {
 	return predicate.GroupStatusRecord(sql.FieldNotNull(FieldLatencyMs))
+}
+
+// TotalLatencyMsEQ applies the EQ predicate on the "total_latency_ms" field.
+func TotalLatencyMsEQ(v int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldEQ(FieldTotalLatencyMs, v))
+}
+
+// TotalLatencyMsNEQ applies the NEQ predicate on the "total_latency_ms" field.
+func TotalLatencyMsNEQ(v int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldNEQ(FieldTotalLatencyMs, v))
+}
+
+// TotalLatencyMsIn applies the In predicate on the "total_latency_ms" field.
+func TotalLatencyMsIn(vs ...int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldIn(FieldTotalLatencyMs, vs...))
+}
+
+// TotalLatencyMsNotIn applies the NotIn predicate on the "total_latency_ms" field.
+func TotalLatencyMsNotIn(vs ...int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldNotIn(FieldTotalLatencyMs, vs...))
+}
+
+// TotalLatencyMsGT applies the GT predicate on the "total_latency_ms" field.
+func TotalLatencyMsGT(v int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldGT(FieldTotalLatencyMs, v))
+}
+
+// TotalLatencyMsGTE applies the GTE predicate on the "total_latency_ms" field.
+func TotalLatencyMsGTE(v int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldGTE(FieldTotalLatencyMs, v))
+}
+
+// TotalLatencyMsLT applies the LT predicate on the "total_latency_ms" field.
+func TotalLatencyMsLT(v int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldLT(FieldTotalLatencyMs, v))
+}
+
+// TotalLatencyMsLTE applies the LTE predicate on the "total_latency_ms" field.
+func TotalLatencyMsLTE(v int64) predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldLTE(FieldTotalLatencyMs, v))
+}
+
+// TotalLatencyMsIsNil applies the IsNil predicate on the "total_latency_ms" field.
+func TotalLatencyMsIsNil() predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldIsNull(FieldTotalLatencyMs))
+}
+
+// TotalLatencyMsNotNil applies the NotNil predicate on the "total_latency_ms" field.
+func TotalLatencyMsNotNil() predicate.GroupStatusRecord {
+	return predicate.GroupStatusRecord(sql.FieldNotNull(FieldTotalLatencyMs))
 }
 
 // HTTPCodeEQ applies the EQ predicate on the "http_code" field.

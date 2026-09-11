@@ -34,6 +34,8 @@ type GroupStatusState struct {
 	ResponseExcerpt *string `json:"response_excerpt,omitempty"`
 	// LatencyMs holds the value of the "latency_ms" field.
 	LatencyMs *int64 `json:"latency_ms,omitempty"`
+	// TotalLatencyMs holds the value of the "total_latency_ms" field.
+	TotalLatencyMs *int64 `json:"total_latency_ms,omitempty"`
 	// HTTPCode holds the value of the "http_code" field.
 	HTTPCode *int `json:"http_code,omitempty"`
 	// SubStatus holds the value of the "sub_status" field.
@@ -102,7 +104,7 @@ func (*GroupStatusState) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case groupstatusstate.FieldAstraCheckMatches, groupstatusstate.FieldAstraCheckReasons:
 			values[i] = new([]byte)
-		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown, groupstatusstate.FieldSolJuiceConsecutiveMismatch, groupstatusstate.FieldSolJuiceInputTokens, groupstatusstate.FieldSolJuiceOutputTokens, groupstatusstate.FieldSolJuiceReasoningTokens, groupstatusstate.FieldAstraCheckConsecutiveMismatch, groupstatusstate.FieldAstraCheckValidSamples, groupstatusstate.FieldAstraCheckPlannedSamples, groupstatusstate.FieldAstraCheckInputTokens, groupstatusstate.FieldAstraCheckOutputTokens, groupstatusstate.FieldAstraCheckReasoningTokens, groupstatusstate.FieldAstraCheckLastRunID:
+		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldTotalLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown, groupstatusstate.FieldSolJuiceConsecutiveMismatch, groupstatusstate.FieldSolJuiceInputTokens, groupstatusstate.FieldSolJuiceOutputTokens, groupstatusstate.FieldSolJuiceReasoningTokens, groupstatusstate.FieldAstraCheckConsecutiveMismatch, groupstatusstate.FieldAstraCheckValidSamples, groupstatusstate.FieldAstraCheckPlannedSamples, groupstatusstate.FieldAstraCheckInputTokens, groupstatusstate.FieldAstraCheckOutputTokens, groupstatusstate.FieldAstraCheckReasoningTokens, groupstatusstate.FieldAstraCheckLastRunID:
 			values[i] = new(sql.NullInt64)
 		case groupstatusstate.FieldLatestStatus, groupstatusstate.FieldStableStatus, groupstatusstate.FieldResponseExcerpt, groupstatusstate.FieldSubStatus, groupstatusstate.FieldErrorDetail, groupstatusstate.FieldSolJuiceStatus, groupstatusstate.FieldSolJuiceStableStatus, groupstatusstate.FieldSolJuiceValue, groupstatusstate.FieldSolJuiceDetail, groupstatusstate.FieldAstraCheckVerdict, groupstatusstate.FieldAstraCheckStableStatus, groupstatusstate.FieldAstraCheckWinner, groupstatusstate.FieldAstraCheckDetail:
 			values[i] = new(sql.NullString)
@@ -178,6 +180,13 @@ func (_m *GroupStatusState) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.LatencyMs = new(int64)
 				*_m.LatencyMs = value.Int64
+			}
+		case groupstatusstate.FieldTotalLatencyMs:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_latency_ms", values[i])
+			} else if value.Valid {
+				_m.TotalLatencyMs = new(int64)
+				*_m.TotalLatencyMs = value.Int64
 			}
 		case groupstatusstate.FieldHTTPCode:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -426,6 +435,11 @@ func (_m *GroupStatusState) String() string {
 	builder.WriteString(", ")
 	if v := _m.LatencyMs; v != nil {
 		builder.WriteString("latency_ms=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.TotalLatencyMs; v != nil {
+		builder.WriteString("total_latency_ms=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

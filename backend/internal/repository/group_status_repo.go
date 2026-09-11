@@ -27,7 +27,7 @@ const (
 		astra_check_verdict, astra_check_stable_status, astra_check_winner, astra_check_matches, astra_check_reasons,
 		astra_check_detail, astra_check_checked_at, astra_check_consecutive_mismatch, astra_check_valid_samples,
 		astra_check_planned_samples, astra_check_input_tokens, astra_check_output_tokens, astra_check_reasoning_tokens,
-		astra_check_last_run_id,
+		astra_check_last_run_id, total_latency_ms,
 		created_at, updated_at`
 
 	groupStatusAstraRunColumns = `id, group_id, config_id, benchmark_package_id, benchmark_version, benchmark_sha256,
@@ -37,7 +37,7 @@ const (
 
 	groupStatusSummarySelect = `SELECT c.group_id, c.id, c.enabled, c.probe_model,
 		       COALESCE(s.latest_status, ''), COALESCE(s.stable_status, ''), COALESCE(s.response_excerpt, ''),
-		       s.latency_ms, s.http_code, COALESCE(s.sub_status, ''), COALESCE(s.error_detail, ''),
+		       s.latency_ms, s.http_code, s.total_latency_ms, COALESCE(s.sub_status, ''), COALESCE(s.error_detail, ''),
 		       s.observed_at, COALESCE(s.consecutive_down, 0), COALESCE(s.consecutive_non_down, 0),
 		       c.sol_juice_enabled, c.sol_juice_model, c.sol_juice_interval_seconds,
 		       COALESCE(s.sol_juice_status, ''), COALESCE(s.sol_juice_stable_status, ''), COALESCE(s.sol_juice_value, ''),
@@ -248,11 +248,11 @@ func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *ser
 
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO group_status_records (
-			group_id, config_id, status, response_excerpt, latency_ms, http_code, sub_status, error_detail, observed_at, created_at
+			group_id, config_id, status, response_excerpt, latency_ms, http_code, sub_status, error_detail, observed_at, total_latency_ms, created_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
 	`, result.GroupID, result.ConfigID, result.Status, nullIfEmpty(result.ResponseExcerpt), result.LatencyMS,
-		result.HTTPCode, result.SubStatus, nullIfEmpty(result.ErrorDetail), result.ObservedAt); err != nil {
+		result.HTTPCode, result.SubStatus, nullIfEmpty(result.ErrorDetail), result.ObservedAt, result.TotalLatencyMS); err != nil {
 		return nil, nil, err
 	}
 
@@ -267,15 +267,16 @@ func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *ser
 	row := tx.QueryRowContext(ctx, `
 		INSERT INTO group_status_states (
 			group_id, config_id, latest_status, stable_status, response_excerpt, latency_ms, http_code,
-			sub_status, error_detail, observed_at, consecutive_down, consecutive_non_down, created_at, updated_at
+			sub_status, error_detail, observed_at, consecutive_down, consecutive_non_down, total_latency_ms, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
 		ON CONFLICT (group_id) DO UPDATE SET
 			config_id = EXCLUDED.config_id,
 			latest_status = EXCLUDED.latest_status,
 			stable_status = EXCLUDED.stable_status,
 			response_excerpt = EXCLUDED.response_excerpt,
 			latency_ms = EXCLUDED.latency_ms,
+			total_latency_ms = EXCLUDED.total_latency_ms,
 			http_code = EXCLUDED.http_code,
 			sub_status = EXCLUDED.sub_status,
 			error_detail = EXCLUDED.error_detail,
@@ -286,7 +287,7 @@ func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *ser
 		RETURNING `+groupStatusStateColumns+`
 	`, next.GroupID, next.ConfigID, next.LatestStatus, next.StableStatus, nullIfEmpty(next.ResponseExcerpt),
 		next.LatencyMS, next.HTTPCode, next.SubStatus, nullIfEmpty(next.ErrorDetail), next.ObservedAt,
-		next.ConsecutiveDown, next.ConsecutiveNonDown)
+		next.ConsecutiveDown, next.ConsecutiveNonDown, next.TotalLatencyMS)
 	savedState, err := scanGroupStatusState(row)
 	if err != nil {
 		return nil, nil, err
@@ -393,7 +394,7 @@ func insertGroupStatusEvent(ctx context.Context, tx *sql.Tx, event *service.Grou
 
 func (r *groupStatusRepository) ListRecordsSince(ctx context.Context, groupID int64, since time.Time) ([]service.GroupStatusRecord, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, group_id, config_id, status, response_excerpt, latency_ms, http_code, sub_status, error_detail, observed_at, created_at
+		SELECT id, group_id, config_id, status, response_excerpt, latency_ms, total_latency_ms, http_code, sub_status, error_detail, observed_at, created_at
 		FROM group_status_records
 		WHERE group_id = $1 AND observed_at >= $2
 		ORDER BY observed_at ASC
@@ -419,7 +420,7 @@ func (r *groupStatusRepository) ListRecentRecords(ctx context.Context, groupID i
 		limit = 24
 	}
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, group_id, config_id, status, response_excerpt, latency_ms, http_code, sub_status, error_detail, observed_at, created_at
+		SELECT id, group_id, config_id, status, response_excerpt, latency_ms, total_latency_ms, http_code, sub_status, error_detail, observed_at, created_at
 		FROM group_status_records
 		WHERE group_id = $1
 		ORDER BY observed_at DESC
@@ -828,6 +829,7 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 	var astraDetail sql.NullString
 	var astraCheckedAt sql.NullTime
 	var astraLastRunID sql.NullInt64
+	var totalLatency sql.NullInt64
 	if err := row.Scan(
 		&state.ID, &state.GroupID, &state.ConfigID, &state.LatestStatus, &state.StableStatus, &responseExcerpt,
 		&latency, &httpCode, &subStatus, &errorDetail, &observedAt, &state.ConsecutiveDown,
@@ -837,10 +839,14 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 		&state.AstraCheckVerdict, &state.AstraCheckStableStatus, &state.AstraCheckWinner, &astraMatchesRaw, &astraReasonsRaw,
 		&astraDetail, &astraCheckedAt, &state.AstraCheckConsecutiveMismatch, &state.AstraCheckValidSamples,
 		&state.AstraCheckPlannedSamples, &state.AstraCheckInputTokens, &state.AstraCheckOutputTokens, &state.AstraCheckReasoningTokens,
-		&astraLastRunID,
+		&astraLastRunID, &totalLatency,
 		&state.CreatedAt, &state.UpdatedAt,
 	); err != nil {
 		return nil, err
+	}
+	if totalLatency.Valid {
+		v := totalLatency.Int64
+		state.TotalLatencyMS = &v
 	}
 	state.AstraCheckMatches = decodeAstraMatches(astraMatchesRaw)
 	state.AstraCheckReasons = decodeJSONStrings(astraReasonsRaw)
@@ -880,11 +886,12 @@ func scanGroupStatusRecord(row scannable) (*service.GroupStatusRecord, error) {
 	record := &service.GroupStatusRecord{}
 	var responseExcerpt sql.NullString
 	var latency sql.NullInt64
+	var totalLatency sql.NullInt64
 	var httpCode sql.NullInt64
 	var subStatus sql.NullString
 	var errorDetail sql.NullString
 	if err := row.Scan(
-		&record.ID, &record.GroupID, &record.ConfigID, &record.Status, &responseExcerpt, &latency, &httpCode,
+		&record.ID, &record.GroupID, &record.ConfigID, &record.Status, &responseExcerpt, &latency, &totalLatency, &httpCode,
 		&subStatus, &errorDetail, &record.ObservedAt, &record.CreatedAt,
 	); err != nil {
 		return nil, err
@@ -893,6 +900,10 @@ func scanGroupStatusRecord(row scannable) (*service.GroupStatusRecord, error) {
 	if latency.Valid {
 		v := latency.Int64
 		record.LatencyMS = &v
+	}
+	if totalLatency.Valid {
+		v := totalLatency.Int64
+		record.TotalLatencyMS = &v
 	}
 	if httpCode.Valid {
 		v := int(httpCode.Int64)
@@ -975,9 +986,10 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 	var astraMatchesRaw, astraReasonsRaw []byte
 	var astraCheckedAt sql.NullTime
 	var astraLastRunID sql.NullInt64
+	var totalLatency sql.NullInt64
 	if err := row.Scan(
 		&item.GroupID, &item.ConfigID, &item.Enabled, &item.ProbeModel,
-		&item.LatestStatus, &item.StableStatus, &item.ResponseExcerpt, &latency, &httpCode,
+		&item.LatestStatus, &item.StableStatus, &item.ResponseExcerpt, &latency, &httpCode, &totalLatency,
 		&item.SubStatus, &item.ErrorDetail, &observedAt, &item.ConsecutiveDown, &item.ConsecutiveNonDown,
 		&item.SolJuiceEnabled, &item.SolJuiceModel, &item.SolJuiceIntervalSeconds,
 		&item.SolJuiceStatus, &item.SolJuiceStableStatus, &item.SolJuiceValue,
@@ -991,6 +1003,10 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 		&item.AstraCheckReasoningTokens, &astraLastRunID,
 	); err != nil {
 		return nil, err
+	}
+	if totalLatency.Valid {
+		v := totalLatency.Int64
+		item.TotalLatencyMS = &v
 	}
 	item.AstraCheckMatches = decodeAstraMatches(astraMatchesRaw)
 	item.AstraCheckReasons = decodeJSONStrings(astraReasonsRaw)

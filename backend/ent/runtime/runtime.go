@@ -1166,11 +1166,11 @@ func init() {
 	groupstatusrecordFields := schema.GroupStatusRecord{}.Fields()
 	_ = groupstatusrecordFields
 	// groupstatusrecordDescSubStatus is the schema descriptor for sub_status field.
-	groupstatusrecordDescSubStatus := groupstatusrecordFields[6].Descriptor()
+	groupstatusrecordDescSubStatus := groupstatusrecordFields[7].Descriptor()
 	// groupstatusrecord.DefaultSubStatus holds the default value on creation for the sub_status field.
 	groupstatusrecord.DefaultSubStatus = groupstatusrecordDescSubStatus.Default.(string)
 	// groupstatusrecordDescCreatedAt is the schema descriptor for created_at field.
-	groupstatusrecordDescCreatedAt := groupstatusrecordFields[9].Descriptor()
+	groupstatusrecordDescCreatedAt := groupstatusrecordFields[10].Descriptor()
 	// groupstatusrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
 	groupstatusrecord.DefaultCreatedAt = groupstatusrecordDescCreatedAt.Default.(func() time.Time)
 	groupstatusstateMixin := schema.GroupStatusState{}.Mixin()
@@ -1197,87 +1197,87 @@ func init() {
 	// groupstatusstate.DefaultStableStatus holds the default value on creation for the stable_status field.
 	groupstatusstate.DefaultStableStatus = groupstatusstateDescStableStatus.Default.(string)
 	// groupstatusstateDescSubStatus is the schema descriptor for sub_status field.
-	groupstatusstateDescSubStatus := groupstatusstateFields[7].Descriptor()
+	groupstatusstateDescSubStatus := groupstatusstateFields[8].Descriptor()
 	// groupstatusstate.DefaultSubStatus holds the default value on creation for the sub_status field.
 	groupstatusstate.DefaultSubStatus = groupstatusstateDescSubStatus.Default.(string)
 	// groupstatusstateDescConsecutiveDown is the schema descriptor for consecutive_down field.
-	groupstatusstateDescConsecutiveDown := groupstatusstateFields[10].Descriptor()
+	groupstatusstateDescConsecutiveDown := groupstatusstateFields[11].Descriptor()
 	// groupstatusstate.DefaultConsecutiveDown holds the default value on creation for the consecutive_down field.
 	groupstatusstate.DefaultConsecutiveDown = groupstatusstateDescConsecutiveDown.Default.(int)
 	// groupstatusstateDescConsecutiveNonDown is the schema descriptor for consecutive_non_down field.
-	groupstatusstateDescConsecutiveNonDown := groupstatusstateFields[11].Descriptor()
+	groupstatusstateDescConsecutiveNonDown := groupstatusstateFields[12].Descriptor()
 	// groupstatusstate.DefaultConsecutiveNonDown holds the default value on creation for the consecutive_non_down field.
 	groupstatusstate.DefaultConsecutiveNonDown = groupstatusstateDescConsecutiveNonDown.Default.(int)
 	// groupstatusstateDescSolJuiceStatus is the schema descriptor for sol_juice_status field.
-	groupstatusstateDescSolJuiceStatus := groupstatusstateFields[12].Descriptor()
+	groupstatusstateDescSolJuiceStatus := groupstatusstateFields[13].Descriptor()
 	// groupstatusstate.DefaultSolJuiceStatus holds the default value on creation for the sol_juice_status field.
 	groupstatusstate.DefaultSolJuiceStatus = groupstatusstateDescSolJuiceStatus.Default.(string)
 	// groupstatusstateDescSolJuiceStableStatus is the schema descriptor for sol_juice_stable_status field.
-	groupstatusstateDescSolJuiceStableStatus := groupstatusstateFields[13].Descriptor()
+	groupstatusstateDescSolJuiceStableStatus := groupstatusstateFields[14].Descriptor()
 	// groupstatusstate.DefaultSolJuiceStableStatus holds the default value on creation for the sol_juice_stable_status field.
 	groupstatusstate.DefaultSolJuiceStableStatus = groupstatusstateDescSolJuiceStableStatus.Default.(string)
 	// groupstatusstateDescSolJuiceValue is the schema descriptor for sol_juice_value field.
-	groupstatusstateDescSolJuiceValue := groupstatusstateFields[14].Descriptor()
+	groupstatusstateDescSolJuiceValue := groupstatusstateFields[15].Descriptor()
 	// groupstatusstate.DefaultSolJuiceValue holds the default value on creation for the sol_juice_value field.
 	groupstatusstate.DefaultSolJuiceValue = groupstatusstateDescSolJuiceValue.Default.(string)
 	// groupstatusstateDescSolJuiceConsecutiveMismatch is the schema descriptor for sol_juice_consecutive_mismatch field.
-	groupstatusstateDescSolJuiceConsecutiveMismatch := groupstatusstateFields[17].Descriptor()
+	groupstatusstateDescSolJuiceConsecutiveMismatch := groupstatusstateFields[18].Descriptor()
 	// groupstatusstate.DefaultSolJuiceConsecutiveMismatch holds the default value on creation for the sol_juice_consecutive_mismatch field.
 	groupstatusstate.DefaultSolJuiceConsecutiveMismatch = groupstatusstateDescSolJuiceConsecutiveMismatch.Default.(int)
 	// groupstatusstateDescSolJuiceInputTokens is the schema descriptor for sol_juice_input_tokens field.
-	groupstatusstateDescSolJuiceInputTokens := groupstatusstateFields[18].Descriptor()
+	groupstatusstateDescSolJuiceInputTokens := groupstatusstateFields[19].Descriptor()
 	// groupstatusstate.DefaultSolJuiceInputTokens holds the default value on creation for the sol_juice_input_tokens field.
 	groupstatusstate.DefaultSolJuiceInputTokens = groupstatusstateDescSolJuiceInputTokens.Default.(int64)
 	// groupstatusstateDescSolJuiceOutputTokens is the schema descriptor for sol_juice_output_tokens field.
-	groupstatusstateDescSolJuiceOutputTokens := groupstatusstateFields[19].Descriptor()
+	groupstatusstateDescSolJuiceOutputTokens := groupstatusstateFields[20].Descriptor()
 	// groupstatusstate.DefaultSolJuiceOutputTokens holds the default value on creation for the sol_juice_output_tokens field.
 	groupstatusstate.DefaultSolJuiceOutputTokens = groupstatusstateDescSolJuiceOutputTokens.Default.(int64)
 	// groupstatusstateDescSolJuiceReasoningTokens is the schema descriptor for sol_juice_reasoning_tokens field.
-	groupstatusstateDescSolJuiceReasoningTokens := groupstatusstateFields[20].Descriptor()
+	groupstatusstateDescSolJuiceReasoningTokens := groupstatusstateFields[21].Descriptor()
 	// groupstatusstate.DefaultSolJuiceReasoningTokens holds the default value on creation for the sol_juice_reasoning_tokens field.
 	groupstatusstate.DefaultSolJuiceReasoningTokens = groupstatusstateDescSolJuiceReasoningTokens.Default.(int64)
 	// groupstatusstateDescAstraCheckVerdict is the schema descriptor for astra_check_verdict field.
-	groupstatusstateDescAstraCheckVerdict := groupstatusstateFields[21].Descriptor()
+	groupstatusstateDescAstraCheckVerdict := groupstatusstateFields[22].Descriptor()
 	// groupstatusstate.DefaultAstraCheckVerdict holds the default value on creation for the astra_check_verdict field.
 	groupstatusstate.DefaultAstraCheckVerdict = groupstatusstateDescAstraCheckVerdict.Default.(string)
 	// groupstatusstateDescAstraCheckStableStatus is the schema descriptor for astra_check_stable_status field.
-	groupstatusstateDescAstraCheckStableStatus := groupstatusstateFields[22].Descriptor()
+	groupstatusstateDescAstraCheckStableStatus := groupstatusstateFields[23].Descriptor()
 	// groupstatusstate.DefaultAstraCheckStableStatus holds the default value on creation for the astra_check_stable_status field.
 	groupstatusstate.DefaultAstraCheckStableStatus = groupstatusstateDescAstraCheckStableStatus.Default.(string)
 	// groupstatusstateDescAstraCheckWinner is the schema descriptor for astra_check_winner field.
-	groupstatusstateDescAstraCheckWinner := groupstatusstateFields[23].Descriptor()
+	groupstatusstateDescAstraCheckWinner := groupstatusstateFields[24].Descriptor()
 	// groupstatusstate.DefaultAstraCheckWinner holds the default value on creation for the astra_check_winner field.
 	groupstatusstate.DefaultAstraCheckWinner = groupstatusstateDescAstraCheckWinner.Default.(string)
 	// groupstatusstateDescAstraCheckMatches is the schema descriptor for astra_check_matches field.
-	groupstatusstateDescAstraCheckMatches := groupstatusstateFields[24].Descriptor()
+	groupstatusstateDescAstraCheckMatches := groupstatusstateFields[25].Descriptor()
 	// groupstatusstate.DefaultAstraCheckMatches holds the default value on creation for the astra_check_matches field.
 	groupstatusstate.DefaultAstraCheckMatches = groupstatusstateDescAstraCheckMatches.Default.([]map[string]interface{})
 	// groupstatusstateDescAstraCheckReasons is the schema descriptor for astra_check_reasons field.
-	groupstatusstateDescAstraCheckReasons := groupstatusstateFields[25].Descriptor()
+	groupstatusstateDescAstraCheckReasons := groupstatusstateFields[26].Descriptor()
 	// groupstatusstate.DefaultAstraCheckReasons holds the default value on creation for the astra_check_reasons field.
 	groupstatusstate.DefaultAstraCheckReasons = groupstatusstateDescAstraCheckReasons.Default.([]string)
 	// groupstatusstateDescAstraCheckConsecutiveMismatch is the schema descriptor for astra_check_consecutive_mismatch field.
-	groupstatusstateDescAstraCheckConsecutiveMismatch := groupstatusstateFields[28].Descriptor()
+	groupstatusstateDescAstraCheckConsecutiveMismatch := groupstatusstateFields[29].Descriptor()
 	// groupstatusstate.DefaultAstraCheckConsecutiveMismatch holds the default value on creation for the astra_check_consecutive_mismatch field.
 	groupstatusstate.DefaultAstraCheckConsecutiveMismatch = groupstatusstateDescAstraCheckConsecutiveMismatch.Default.(int)
 	// groupstatusstateDescAstraCheckValidSamples is the schema descriptor for astra_check_valid_samples field.
-	groupstatusstateDescAstraCheckValidSamples := groupstatusstateFields[29].Descriptor()
+	groupstatusstateDescAstraCheckValidSamples := groupstatusstateFields[30].Descriptor()
 	// groupstatusstate.DefaultAstraCheckValidSamples holds the default value on creation for the astra_check_valid_samples field.
 	groupstatusstate.DefaultAstraCheckValidSamples = groupstatusstateDescAstraCheckValidSamples.Default.(int)
 	// groupstatusstateDescAstraCheckPlannedSamples is the schema descriptor for astra_check_planned_samples field.
-	groupstatusstateDescAstraCheckPlannedSamples := groupstatusstateFields[30].Descriptor()
+	groupstatusstateDescAstraCheckPlannedSamples := groupstatusstateFields[31].Descriptor()
 	// groupstatusstate.DefaultAstraCheckPlannedSamples holds the default value on creation for the astra_check_planned_samples field.
 	groupstatusstate.DefaultAstraCheckPlannedSamples = groupstatusstateDescAstraCheckPlannedSamples.Default.(int)
 	// groupstatusstateDescAstraCheckInputTokens is the schema descriptor for astra_check_input_tokens field.
-	groupstatusstateDescAstraCheckInputTokens := groupstatusstateFields[31].Descriptor()
+	groupstatusstateDescAstraCheckInputTokens := groupstatusstateFields[32].Descriptor()
 	// groupstatusstate.DefaultAstraCheckInputTokens holds the default value on creation for the astra_check_input_tokens field.
 	groupstatusstate.DefaultAstraCheckInputTokens = groupstatusstateDescAstraCheckInputTokens.Default.(int64)
 	// groupstatusstateDescAstraCheckOutputTokens is the schema descriptor for astra_check_output_tokens field.
-	groupstatusstateDescAstraCheckOutputTokens := groupstatusstateFields[32].Descriptor()
+	groupstatusstateDescAstraCheckOutputTokens := groupstatusstateFields[33].Descriptor()
 	// groupstatusstate.DefaultAstraCheckOutputTokens holds the default value on creation for the astra_check_output_tokens field.
 	groupstatusstate.DefaultAstraCheckOutputTokens = groupstatusstateDescAstraCheckOutputTokens.Default.(int64)
 	// groupstatusstateDescAstraCheckReasoningTokens is the schema descriptor for astra_check_reasoning_tokens field.
-	groupstatusstateDescAstraCheckReasoningTokens := groupstatusstateFields[33].Descriptor()
+	groupstatusstateDescAstraCheckReasoningTokens := groupstatusstateFields[34].Descriptor()
 	// groupstatusstate.DefaultAstraCheckReasoningTokens holds the default value on creation for the astra_check_reasoning_tokens field.
 	groupstatusstate.DefaultAstraCheckReasoningTokens = groupstatusstateDescAstraCheckReasoningTokens.Default.(int64)
 	idempotencyrecordMixin := schema.IdempotencyRecord{}.Mixin()

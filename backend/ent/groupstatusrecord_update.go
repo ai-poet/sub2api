@@ -131,6 +131,33 @@ func (_u *GroupStatusRecordUpdate) ClearLatencyMs() *GroupStatusRecordUpdate {
 	return _u
 }
 
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (_u *GroupStatusRecordUpdate) SetTotalLatencyMs(v int64) *GroupStatusRecordUpdate {
+	_u.mutation.ResetTotalLatencyMs()
+	_u.mutation.SetTotalLatencyMs(v)
+	return _u
+}
+
+// SetNillableTotalLatencyMs sets the "total_latency_ms" field if the given value is not nil.
+func (_u *GroupStatusRecordUpdate) SetNillableTotalLatencyMs(v *int64) *GroupStatusRecordUpdate {
+	if v != nil {
+		_u.SetTotalLatencyMs(*v)
+	}
+	return _u
+}
+
+// AddTotalLatencyMs adds value to the "total_latency_ms" field.
+func (_u *GroupStatusRecordUpdate) AddTotalLatencyMs(v int64) *GroupStatusRecordUpdate {
+	_u.mutation.AddTotalLatencyMs(v)
+	return _u
+}
+
+// ClearTotalLatencyMs clears the value of the "total_latency_ms" field.
+func (_u *GroupStatusRecordUpdate) ClearTotalLatencyMs() *GroupStatusRecordUpdate {
+	_u.mutation.ClearTotalLatencyMs()
+	return _u
+}
+
 // SetHTTPCode sets the "http_code" field.
 func (_u *GroupStatusRecordUpdate) SetHTTPCode(v int) *GroupStatusRecordUpdate {
 	_u.mutation.ResetHTTPCode()
@@ -277,6 +304,15 @@ func (_u *GroupStatusRecordUpdate) sqlSave(ctx context.Context) (_node int, err 
 	if _u.mutation.LatencyMsCleared() {
 		_spec.ClearField(groupstatusrecord.FieldLatencyMs, field.TypeInt64)
 	}
+	if value, ok := _u.mutation.TotalLatencyMs(); ok {
+		_spec.SetField(groupstatusrecord.FieldTotalLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedTotalLatencyMs(); ok {
+		_spec.AddField(groupstatusrecord.FieldTotalLatencyMs, field.TypeInt64, value)
+	}
+	if _u.mutation.TotalLatencyMsCleared() {
+		_spec.ClearField(groupstatusrecord.FieldTotalLatencyMs, field.TypeInt64)
+	}
 	if value, ok := _u.mutation.HTTPCode(); ok {
 		_spec.SetField(groupstatusrecord.FieldHTTPCode, field.TypeInt, value)
 	}
@@ -418,6 +454,33 @@ func (_u *GroupStatusRecordUpdateOne) AddLatencyMs(v int64) *GroupStatusRecordUp
 // ClearLatencyMs clears the value of the "latency_ms" field.
 func (_u *GroupStatusRecordUpdateOne) ClearLatencyMs() *GroupStatusRecordUpdateOne {
 	_u.mutation.ClearLatencyMs()
+	return _u
+}
+
+// SetTotalLatencyMs sets the "total_latency_ms" field.
+func (_u *GroupStatusRecordUpdateOne) SetTotalLatencyMs(v int64) *GroupStatusRecordUpdateOne {
+	_u.mutation.ResetTotalLatencyMs()
+	_u.mutation.SetTotalLatencyMs(v)
+	return _u
+}
+
+// SetNillableTotalLatencyMs sets the "total_latency_ms" field if the given value is not nil.
+func (_u *GroupStatusRecordUpdateOne) SetNillableTotalLatencyMs(v *int64) *GroupStatusRecordUpdateOne {
+	if v != nil {
+		_u.SetTotalLatencyMs(*v)
+	}
+	return _u
+}
+
+// AddTotalLatencyMs adds value to the "total_latency_ms" field.
+func (_u *GroupStatusRecordUpdateOne) AddTotalLatencyMs(v int64) *GroupStatusRecordUpdateOne {
+	_u.mutation.AddTotalLatencyMs(v)
+	return _u
+}
+
+// ClearTotalLatencyMs clears the value of the "total_latency_ms" field.
+func (_u *GroupStatusRecordUpdateOne) ClearTotalLatencyMs() *GroupStatusRecordUpdateOne {
+	_u.mutation.ClearTotalLatencyMs()
 	return _u
 }
 
@@ -596,6 +659,15 @@ func (_u *GroupStatusRecordUpdateOne) sqlSave(ctx context.Context) (_node *Group
 	}
 	if _u.mutation.LatencyMsCleared() {
 		_spec.ClearField(groupstatusrecord.FieldLatencyMs, field.TypeInt64)
+	}
+	if value, ok := _u.mutation.TotalLatencyMs(); ok {
+		_spec.SetField(groupstatusrecord.FieldTotalLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedTotalLatencyMs(); ok {
+		_spec.AddField(groupstatusrecord.FieldTotalLatencyMs, field.TypeInt64, value)
+	}
+	if _u.mutation.TotalLatencyMsCleared() {
+		_spec.ClearField(groupstatusrecord.FieldTotalLatencyMs, field.TypeInt64)
 	}
 	if value, ok := _u.mutation.HTTPCode(); ok {
 		_spec.SetField(groupstatusrecord.FieldHTTPCode, field.TypeInt, value)

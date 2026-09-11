@@ -2598,7 +2598,9 @@ export interface GroupStatusSummary {
   latest_status: GroupRuntimeStatus | ''
   stable_status: GroupRuntimeStatus | ''
   response_excerpt: string
+  // latency_ms 是流式首字延迟；total_latency_ms 是完整返回耗时（仅供参考）
   latency_ms: number | null
+  total_latency_ms?: number | null
   http_code: number | null
   sub_status: string
   error_detail: string
@@ -2667,6 +2669,7 @@ export interface GroupStatusRecord {
   status: GroupRuntimeStatus
   response_excerpt: string
   latency_ms: number | null
+  total_latency_ms?: number | null
   http_code: number | null
   sub_status: string
   error_detail: string

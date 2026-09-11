@@ -29,6 +29,8 @@ const (
 	FieldResponseExcerpt = "response_excerpt"
 	// FieldLatencyMs holds the string denoting the latency_ms field in the database.
 	FieldLatencyMs = "latency_ms"
+	// FieldTotalLatencyMs holds the string denoting the total_latency_ms field in the database.
+	FieldTotalLatencyMs = "total_latency_ms"
 	// FieldHTTPCode holds the string denoting the http_code field in the database.
 	FieldHTTPCode = "http_code"
 	// FieldSubStatus holds the string denoting the sub_status field in the database.
@@ -102,6 +104,7 @@ var Columns = []string{
 	FieldStableStatus,
 	FieldResponseExcerpt,
 	FieldLatencyMs,
+	FieldTotalLatencyMs,
 	FieldHTTPCode,
 	FieldSubStatus,
 	FieldErrorDetail,
@@ -244,6 +247,11 @@ func ByResponseExcerpt(opts ...sql.OrderTermOption) OrderOption {
 // ByLatencyMs orders the results by the latency_ms field.
 func ByLatencyMs(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLatencyMs, opts...).ToFunc()
+}
+
+// ByTotalLatencyMs orders the results by the total_latency_ms field.
+func ByTotalLatencyMs(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalLatencyMs, opts...).ToFunc()
 }
 
 // ByHTTPCode orders the results by the http_code field.

@@ -69,6 +69,7 @@ type GroupStatusRecord struct {
 	Status          string    `json:"status"`
 	ResponseExcerpt string    `json:"response_excerpt"`
 	LatencyMS       *int64    `json:"latency_ms"`
+	TotalLatencyMS  *int64    `json:"total_latency_ms"`
 	HTTPCode        *int      `json:"http_code"`
 	SubStatus       string    `json:"sub_status"`
 	ErrorDetail     string    `json:"error_detail"`
@@ -84,6 +85,7 @@ type GroupStatusState struct {
 	StableStatus       string     `json:"stable_status"`
 	ResponseExcerpt    string     `json:"response_excerpt"`
 	LatencyMS          *int64     `json:"latency_ms"`
+	TotalLatencyMS     *int64     `json:"total_latency_ms"`
 	HTTPCode           *int       `json:"http_code"`
 	SubStatus          string     `json:"sub_status"`
 	ErrorDetail        string     `json:"error_detail"`
@@ -143,6 +145,7 @@ type GroupStatusSummary struct {
 	StableStatus       string     `json:"stable_status"`
 	ResponseExcerpt    string     `json:"response_excerpt"`
 	LatencyMS          *int64     `json:"latency_ms"`
+	TotalLatencyMS     *int64     `json:"total_latency_ms"`
 	HTTPCode           *int       `json:"http_code"`
 	SubStatus          string     `json:"sub_status"`
 	ErrorDetail        string     `json:"error_detail"`
@@ -231,15 +234,17 @@ type GroupStatusRepository interface {
 }
 
 type GroupStatusProbeResult struct {
-	GroupID         int64     `json:"group_id"`
-	ConfigID        int64     `json:"config_id"`
-	Status          string    `json:"status"`
-	ResponseExcerpt string    `json:"response_excerpt"`
-	LatencyMS       *int64    `json:"latency_ms"`
-	HTTPCode        *int      `json:"http_code"`
-	SubStatus       string    `json:"sub_status"`
-	ErrorDetail     string    `json:"error_detail"`
-	ObservedAt      time.Time `json:"observed_at"`
+	GroupID         int64  `json:"group_id"`
+	ConfigID        int64  `json:"config_id"`
+	Status          string `json:"status"`
+	ResponseExcerpt string `json:"response_excerpt"`
+	// LatencyMS 是流式首字延迟（首个内容 token 到达）；TotalLatencyMS 是完整返回耗时，仅供参考
+	LatencyMS      *int64    `json:"latency_ms"`
+	TotalLatencyMS *int64    `json:"total_latency_ms"`
+	HTTPCode       *int      `json:"http_code"`
+	SubStatus      string    `json:"sub_status"`
+	ErrorDetail    string    `json:"error_detail"`
+	ObservedAt     time.Time `json:"observed_at"`
 }
 
 type GroupStatusProbeExecution struct {
@@ -556,6 +561,7 @@ func ComputeGroupStatusTransition(prev *GroupStatusState, result *GroupStatusPro
 	next.LatestStatus = result.Status
 	next.ResponseExcerpt = result.ResponseExcerpt
 	next.LatencyMS = result.LatencyMS
+	next.TotalLatencyMS = result.TotalLatencyMS
 	next.HTTPCode = result.HTTPCode
 	next.SubStatus = result.SubStatus
 	next.ErrorDetail = result.ErrorDetail

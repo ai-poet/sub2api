@@ -474,6 +474,8 @@ func (s *GroupStatusProbeService) executeAccountProbe(ctx context.Context, accou
 	if account == nil {
 		return result, errors.New("nil account")
 	}
+	timing := newProbeTiming(startedAt)
+	ctx = withProbeTiming(ctx, timing)
 
 	var (
 		responseText string
@@ -494,10 +496,16 @@ func (s *GroupStatusProbeService) executeAccountProbe(ctx context.Context, accou
 		responseText, httpCode, err = s.probeAnthropic(ctx, account, cfg)
 	}
 
-	latency := time.Since(startedAt).Milliseconds()
+	total := time.Since(startedAt).Milliseconds()
+	// 延迟按流式首字（首个内容 token 到达）计；没拿到任何内容（出错 / 非流式探测）时退回完整返回耗时
+	latency := total
+	if firstToken, ok := timing.firstTokenMS(); ok {
+		latency = firstToken
+	}
 	result.ObservedAt = time.Now()
 	result.ResponseExcerpt = truncateProbeText(responseText)
 	result.LatencyMS = &latency
+	result.TotalLatencyMS = &total
 	result.HTTPCode = httpCode
 
 	if err != nil {
@@ -991,18 +999,21 @@ func probeUpstreamClientMessage(account *Account, statusCode int, body []byte) s
 	return msg
 }
 
-func (s *GroupStatusProbeService) executeStreamingProbe(req *http.Request, account *Account, parser func(io.Reader) (string, error)) (string, *int, error) {
+// executeStreamingProbe 发流式探测请求；parser 在拿到第一段内容时调用 onFirstToken，用来量首字延迟。
+func (s *GroupStatusProbeService) executeStreamingProbe(req *http.Request, account *Account, parser func(body io.Reader, onFirstToken func()) (string, error)) (string, *int, error) {
+	timing := probeTimingFromContext(req.Context())
 	resp, err := s.doHTTPRequest(req, account)
 	if err != nil {
 		return "", nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
+	timing.markHeaders()
 	code := resp.StatusCode
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		return string(body), &code, newProbeUpstreamError(account, code, body)
 	}
-	text, err := parser(resp.Body)
+	text, err := parser(resp.Body, timing.markFirstToken)
 	return text, &code, err
 }
 
@@ -1102,7 +1113,7 @@ func createOpenAIProbePayload(modelID, prompt string, isOAuth bool) map[string]a
 	return payload
 }
 
-func parseClaudeProbeStream(body io.Reader) (string, error) {
+func parseClaudeProbeStream(body io.Reader, onFirstToken func()) (string, error) {
 	reader := bufio.NewReader(body)
 	var parts []string
 	for {
@@ -1130,6 +1141,9 @@ func parseClaudeProbeStream(body io.Reader) (string, error) {
 		case "content_block_delta":
 			if delta, ok := data["delta"].(map[string]any); ok {
 				if text, ok := delta["text"].(string); ok && text != "" {
+					if len(parts) == 0 {
+						probeNotifyFirstToken(onFirstToken)
+					}
 					parts = append(parts, text)
 				}
 			}
@@ -1146,7 +1160,7 @@ func parseClaudeProbeStream(body io.Reader) (string, error) {
 	}
 }
 
-func parseOpenAIProbeStream(body io.Reader) (string, error) {
+func parseOpenAIProbeStream(body io.Reader, onFirstToken func()) (string, error) {
 	reader := bufio.NewReader(body)
 	var parts []string
 	for {
@@ -1172,6 +1186,9 @@ func parseOpenAIProbeStream(body io.Reader) (string, error) {
 		switch data["type"] {
 		case "response.output_text.delta":
 			if delta, ok := data["delta"].(string); ok && delta != "" {
+				if len(parts) == 0 {
+					probeNotifyFirstToken(onFirstToken)
+				}
 				parts = append(parts, delta)
 			}
 		case "response.completed":
@@ -1187,7 +1204,7 @@ func parseOpenAIProbeStream(body io.Reader) (string, error) {
 	}
 }
 
-func parseGeminiProbeStream(body io.Reader) (string, error) {
+func parseGeminiProbeStream(body io.Reader, onFirstToken func()) (string, error) {
 	reader := bufio.NewReader(body)
 	var parts []string
 	for {
@@ -1220,6 +1237,9 @@ func parseGeminiProbeStream(body io.Reader) (string, error) {
 						for _, part := range partsAny {
 							if partMap, ok := part.(map[string]any); ok {
 								if text, ok := partMap["text"].(string); ok && text != "" {
+									if len(parts) == 0 {
+										probeNotifyFirstToken(onFirstToken)
+									}
 									parts = append(parts, text)
 								}
 							}

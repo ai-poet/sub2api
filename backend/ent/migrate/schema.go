@@ -994,6 +994,7 @@ var (
 		{Name: "status", Type: field.TypeString},
 		{Name: "response_excerpt", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
 		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "total_latency_ms", Type: field.TypeInt64, Nullable: true},
 		{Name: "http_code", Type: field.TypeInt, Nullable: true},
 		{Name: "sub_status", Type: field.TypeString, Default: ""},
 		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
@@ -1009,12 +1010,12 @@ var (
 			{
 				Name:    "groupstatusrecord_group_id_observed_at",
 				Unique:  false,
-				Columns: []*schema.Column{GroupStatusRecordsColumns[1], GroupStatusRecordsColumns[9]},
+				Columns: []*schema.Column{GroupStatusRecordsColumns[1], GroupStatusRecordsColumns[10]},
 			},
 			{
 				Name:    "groupstatusrecord_config_id_observed_at",
 				Unique:  false,
-				Columns: []*schema.Column{GroupStatusRecordsColumns[2], GroupStatusRecordsColumns[9]},
+				Columns: []*schema.Column{GroupStatusRecordsColumns[2], GroupStatusRecordsColumns[10]},
 			},
 		},
 	}
@@ -1029,6 +1030,7 @@ var (
 		{Name: "stable_status", Type: field.TypeString, Default: ""},
 		{Name: "response_excerpt", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
 		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "total_latency_ms", Type: field.TypeInt64, Nullable: true},
 		{Name: "http_code", Type: field.TypeInt, Nullable: true},
 		{Name: "sub_status", Type: field.TypeString, Default: ""},
 		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
