@@ -118,10 +118,17 @@ The features below are locally maintained customizations of this fork. During up
   `enigo`/`xcap`/`image`/`cpal` left off (Waku has its own Computer Use).
 - Adapter, which is ours and where changes belong:
   `client/crates/waku-agent-bridge/` (engine lifecycle, permission bridge,
-  history ownership, steering) and
+  history ownership, steering, MCP tool wrapper, background-work snapshots,
+  user questions, one-shot prompts) and
   `client/crates/waku-core/src/driver/native.rs` (`AgentEvent` → `DriverEvent`,
-  `DriverControl`). The bridge depends on neither `waku-core` nor
-  `waku-protocol` on purpose.
+  `DriverControl`, transcript files). The bridge depends on neither
+  `waku-core` nor `waku-protocol` on purpose.
+- Settings surface: `client/src/app/agent_page.rs` (Settings → Agent) over
+  `client/crates/sub2api/src/agent_settings.rs`, which edits only the keys it
+  owns in the engine's `settings.json`; routing is written by
+  `client/crates/sub2api/src/global_config/native.rs` like every other
+  provider's. `client/src/app/native_agent.rs` feeds the picker from the
+  gateway catalog.
 - Upstream files carry only hook points: the `ProviderKind::Native` variant and
   its `is_builtin()` predicate (`waku-protocol/src/model.rs`), one match arm in
   `waku-core/src/driver/mod.rs`, and the built-in short-circuits in
