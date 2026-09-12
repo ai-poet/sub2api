@@ -22,8 +22,6 @@ export default {
       "badge": "Claude Code / Codex 一键接入",
       "titleLeadPrimary": "具有价格竞争力的 AI 中转站",
       "titleLeadSecondary": "× Agent 桌面客户端",
-      "titleAccent": "",
-      "titleTail": "",
       "description": "深度合一的 Claude Code · Codex · Grok · Pi 桌面 Agent 客户端，登录即路由，余额、分组倍率、在线率一目了然。",
       "primaryNote": "一个桌面端集中管理所有 Agent CLI",
       "downloadPrimary": "下载客户端",
@@ -223,7 +221,6 @@ export default {
     "comparison": {
       "overline": "换个角度看",
       "title": "你可能正在用这些方式之一",
-      "description": "",
       "headers": {
         "feature": "你正在用的方式",
         "official": "常见做法的盲点",

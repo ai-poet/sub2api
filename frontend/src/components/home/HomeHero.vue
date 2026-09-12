@@ -217,12 +217,15 @@ const props = withDefaults(defineProps<{
   siteName: 'CheapRouter',
 })
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const { copyToClipboard } = useClipboard()
 
 const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
-const titleAccent = computed(() => t('home.hero.titleAccent').trim())
-const titleTail = computed(() => t('home.hero.titleTail').trim())
+// 标题的强调行与尾行是可选文案：语言包未定义时不渲染，用 te() 判断避免缺键时回显 key。
+const HERO_TITLE_ACCENT_KEY = 'home.hero.titleAccent'
+const HERO_TITLE_TAIL_KEY = 'home.hero.titleTail'
+const titleAccent = computed(() => (te(HERO_TITLE_ACCENT_KEY) ? t(HERO_TITLE_ACCENT_KEY) : '').trim())
+const titleTail = computed(() => (te(HERO_TITLE_TAIL_KEY) ? t(HERO_TITLE_TAIL_KEY) : '').trim())
 const preferredClientPlatform = computed(() => detectPreferredClientPlatform())
 const clientDownloadOptions = computed(() =>
   getClientDownloadOptions(

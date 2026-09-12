@@ -14,8 +14,6 @@ export default {
       "badge": "Claude Code / Codex 一键接入",
       "titleLeadPrimary": "极具价格竞争力的 AI 中转站",
       "titleLeadSecondary": "× Agent 桌面客户端",
-      "titleAccent": "",
-      "titleTail": "",
       "description": "深度合一的 Claude Code · Codex · Grok · Pi 桌面 Agent 客户端，登录即路由，余额、分组倍率、在线率一目了然。",
       "primaryNote": "一个桌面端集中管理所有 Agent CLI",
       "downloadPrimary": "立即下载",
@@ -125,7 +123,6 @@ export default {
     },
     "comparison": {
       "overline": "换个角度看",
-      "description": ""
     },
     "pricingTable": {
       "overline": "价格优势",
@@ -544,46 +541,6 @@ export default {
       }
     },
     "accounts": {
-      "deleteConfirmMessage": "确定要删除账号 '{name}' 吗？",
-      "refreshCookie": "刷新 Cookie",
-      "testAccount": "测试账号",
-      "types": {
-        "api_key": "API Key",
-        "cookie": "Cookie"
-      },
-      "form": {
-        "nameLabel": "账号名称",
-        "namePlaceholder": "请输入账号名称",
-        "platformLabel": "平台",
-        "selectPlatform": "选择平台",
-        "typeLabel": "类型",
-        "selectType": "选择类型",
-        "credentialsLabel": "凭证",
-        "credentialsPlaceholder": "请输入 Cookie 或 API Key",
-        "priorityLabel": "优先级",
-        "priorityHint": "数值越小优先级越高",
-        "weightLabel": "权重",
-        "weightHint": "用于负载均衡的权重值",
-        "statusLabel": "状态"
-      },
-      "filters": {
-        "platform": "平台",
-        "allPlatforms": "全部平台",
-        "type": "类型",
-        "allTypes": "全部类型",
-        "status": "状态",
-        "allStatuses": "全部状态"
-      },
-      "saving": "保存中...",
-      "refreshing": "刷新中...",
-      "noAccounts": "暂无账号",
-      "noAccountsDescription": "添加 AI 平台账号以开始使用 API 网关。",
-      "accountCreatedSuccess": "账号添加成功",
-      "accountUpdatedSuccess": "账号更新成功",
-      "accountDeletedSuccess": "账号删除成功",
-      "cookieRefreshedSuccess": "Cookie 刷新成功",
-      "testSuccess": "账号测试通过",
-      "failedToSave": "保存账号失败",
       "sendingGeminiImageRequest": "发送 Gemini 生图测试请求...",
       "geminiImagePromptLabel": "生图提示词",
       "geminiImagePromptPlaceholder": "例如：生成一只戴宇航员头盔的橘猫，像素插画风格，纯色背景。",

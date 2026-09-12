@@ -9,8 +9,7 @@ const translations: Record<string, string> = {
   'home.hero.tags.more': 'More',
   'home.hero.titleLeadPrimary': 'A price-competitive AI relay',
   'home.hero.titleLeadSecondary': '× Agent desktop client',
-  'home.hero.titleAccent': '',
-  'home.hero.titleTail': '',
+
   'home.hero.primaryNote': 'Use one key everywhere.',
   'home.hero.downloadPrimary': 'Download client',
   'home.hero.installPrimary': 'Copy install command',
@@ -102,6 +101,7 @@ vi.mock('vue-i18n', async () => {
   return {
     ...actual,
     useI18n: () => ({
+      te: (key: string) => key in translations,
       t: (key: string, params?: Record<string, string | number>) => {
         const message = translations[key] || key
         return Object.entries(params || {}).reduce(

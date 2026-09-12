@@ -14,8 +14,6 @@ export default {
       "badge": "One-click access to Claude Code / Codex",
       "titleLeadPrimary": "Price-competitive AI relay",
       "titleLeadSecondary": "× Agent desktop client",
-      "titleAccent": "",
-      "titleTail": "",
       "description": "Deeply unified desktop agent client for Claude Code · Codex · Grok · Pi — sign in and you are routed, with balance, group rates, and uptime at a glance.",
       "primaryNote": "One desktop client for all your agent CLIs",
       "downloadPrimary": "Download now",
@@ -125,7 +123,6 @@ export default {
     },
     "comparison": {
       "overline": "A different angle",
-      "description": ""
     },
     "pricingTable": {
       "overline": "Pricing edge",
