@@ -175,8 +175,9 @@ func ProvideAdminGroupHandler(
 	groupCapacityService *service.GroupCapacityService,
 	groupStatusService *service.GroupStatusService,
 	groupStatusProbeSvc *service.GroupStatusProbeService,
+	cfg *config.Config,
 ) *admin.GroupHandler {
-	h := admin.NewGroupHandler(adminService, dashboardService, groupCapacityService)
+	h := admin.NewGroupHandlerWithConfig(adminService, dashboardService, groupCapacityService, cfg)
 	h.SetGroupStatusServices(groupStatusService, groupStatusProbeSvc)
 	return h
 }

@@ -555,6 +555,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.PublicPricingEnabled != after.PublicPricingEnabled {
 		changed = append(changed, "public_pricing_enabled")
 	}
+	if before.SubscriptionEnabled != after.SubscriptionEnabled {
+		changed = append(changed, "subscription_enabled")
+	}
 	if before.RiskControlEnabled != after.RiskControlEnabled {
 		changed = append(changed, "risk_control_enabled")
 	}

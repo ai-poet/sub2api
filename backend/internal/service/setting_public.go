@@ -240,8 +240,10 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyChannelMonitorDefaultIntervalSeconds,
 		SettingKeyChannelMonitorHideThroughput,
 		SettingKeyChannelMonitorShowQuota,
+		SettingKeyChannelMonitorHideUserRanking,
 		SettingKeyAvailableChannelsEnabled,
 		SettingKeyPublicPricingEnabled,
+		SettingKeySubscriptionEnabled,
 		SettingKeyPluginManagementEnabled,
 		SettingKeyRiskControlEnabled,
 		SettingKeyAllowUserViewErrorRequests,
@@ -370,7 +372,9 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		AvailableChannelsEnabled: settings[SettingKeyAvailableChannelsEnabled] == "true",
 
 		// opt-out：只有显式存成 false 才关闭，缺省/空值都视为开启。
-		PublicPricingEnabled:    !isFalseSettingValue(settings[SettingKeyPublicPricingEnabled]),
+		PublicPricingEnabled: !isFalseSettingValue(settings[SettingKeyPublicPricingEnabled]),
+		// Subscription feature switch (opt-out; only an explicit false disables)
+		SubscriptionEnabled:     !isFalseSettingValue(settings[SettingKeySubscriptionEnabled]),
 		PluginManagementEnabled: settings[SettingKeyPluginManagementEnabled] == "true",
 
 		RiskControlEnabled: settings[SettingKeyRiskControlEnabled] == "true",
@@ -443,6 +447,9 @@ type ChannelMonitorRuntime struct {
 	// snapshots; otherwise the user handler strips them server-side.
 	// Parsed fail-closed (only literal "true" enables). Admin always sees them.
 	ShowQuota bool
+	// HideUserRanking: when true, user-facing V2 views hide the user ranking tab
+	// and the /users payload. Parsed fail-open (only literal "true" hides it).
+	HideUserRanking bool
 }
 
 // ActiveProbesAllowed reports whether V1 active provider probes may run.
@@ -472,6 +479,7 @@ func (s *SettingService) GetChannelMonitorRuntime(ctx context.Context) ChannelMo
 		SettingKeyChannelMonitorDefaultIntervalSeconds,
 		SettingKeyChannelMonitorHideThroughput,
 		SettingKeyChannelMonitorShowQuota,
+		SettingKeyChannelMonitorHideUserRanking,
 	})
 	if err != nil {
 		return ChannelMonitorRuntime{
@@ -487,6 +495,7 @@ func (s *SettingService) GetChannelMonitorRuntime(ctx context.Context) ChannelMo
 		DefaultIntervalSeconds: parseChannelMonitorInterval(vals[SettingKeyChannelMonitorDefaultIntervalSeconds]),
 		HideThroughput:         !isFalseSettingValue(vals[SettingKeyChannelMonitorHideThroughput]),
 		ShowQuota:              vals[SettingKeyChannelMonitorShowQuota] == "true",
+		HideUserRanking:        isTrueSettingValue(vals[SettingKeyChannelMonitorHideUserRanking]),
 	}
 }
 
@@ -632,6 +641,7 @@ type PublicSettingsInjectionPayload struct {
 	RiskControlEnabled         bool `json:"risk_control_enabled"`
 	AllowUserViewErrorRequests bool `json:"allow_user_view_error_requests"`
 	PublicPricingEnabled       bool `json:"public_pricing_enabled"`
+	SubscriptionEnabled        bool `json:"subscription_enabled"`
 
 	ChannelMonitorEnabled                bool   `json:"channel_monitor_enabled"`
 	ChannelMonitorMode                   string `json:"channel_monitor_mode"`
@@ -728,6 +738,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 
 		AvailableChannelsEnabled:   settings.AvailableChannelsEnabled,
 		PublicPricingEnabled:       settings.PublicPricingEnabled,
+		SubscriptionEnabled:        settings.SubscriptionEnabled,
 		RiskControlEnabled:         settings.RiskControlEnabled,
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
 

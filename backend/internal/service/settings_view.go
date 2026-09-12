@@ -207,6 +207,7 @@ type SystemSettings struct {
 	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
 	ChannelMonitorHideThroughput         bool   `json:"channel_monitor_hide_throughput"`
 	ChannelMonitorShowQuota              bool   `json:"channel_monitor_show_quota"`
+	ChannelMonitorHideUserRanking        bool   `json:"channel_monitor_hide_user_ranking"`
 
 	// Grok model mapping policy (admin settings; empty mapping falls back to these).
 	GrokDefaultTextModel           string `json:"grok_default_text_model"`
@@ -218,6 +219,10 @@ type SystemSettings struct {
 
 	// Public pricing catalog on the landing page (opt-out, default enabled)
 	PublicPricingEnabled bool `json:"public_pricing_enabled"`
+	// Subscription feature switch: gates the whole user-facing subscription surface
+	// (sidebar entries, purchase-page subscription tab, header progress badge,
+	// usage billing-type filter, /subscriptions route).
+	SubscriptionEnabled bool `json:"subscription_enabled"`
 	// Plugin management menu visibility (plugin runtime is unaffected)
 	PluginManagementEnabled bool `json:"plugin_management_enabled"`
 
@@ -382,6 +387,7 @@ type PublicSettings struct {
 	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
 	ChannelMonitorHideThroughput         bool   `json:"channel_monitor_hide_throughput"`
 	ChannelMonitorShowQuota              bool   `json:"channel_monitor_show_quota"`
+	ChannelMonitorHideUserRanking        bool   `json:"channel_monitor_hide_user_ranking"`
 
 	// Grok model mapping policy (admin settings).
 	GrokDefaultTextModel           string `json:"grok_default_text_model"`
@@ -392,7 +398,9 @@ type PublicSettings struct {
 	AvailableChannelsEnabled bool `json:"available_channels_enabled"`
 
 	// Public pricing catalog on the landing page (opt-out, default enabled)
-	PublicPricingEnabled    bool `json:"public_pricing_enabled"`
+	PublicPricingEnabled bool `json:"public_pricing_enabled"`
+	// Subscription feature switch (see SystemSettings.SubscriptionEnabled)
+	SubscriptionEnabled     bool `json:"subscription_enabled"`
 	PluginManagementEnabled bool `json:"plugin_management_enabled"`
 
 	// 风控中心功能开关
