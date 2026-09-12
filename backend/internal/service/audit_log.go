@@ -37,6 +37,8 @@ const (
 	AuditActionSessionBindingMismatch = "auth.session_binding.mismatch"
 	AuditActionStepUpVerify           = "auth.step_up.verify"
 	AuditActionAuditLogClear          = "admin.audit_log.clear"
+	// AuditActionAdminScopeDenied 运维管理员（operator）请求了白名单之外的管理接口，在认证层被拒绝。
+	AuditActionAdminScopeDenied = "admin.scope.denied"
 )
 
 // AuditLog 一条管理面操作审计记录。

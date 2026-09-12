@@ -2,6 +2,7 @@
 package ip
 
 import (
+	"fmt"
 	"net"
 	"strings"
 
@@ -375,4 +376,28 @@ func ValidateIPPatterns(patterns []string) []string {
 		}
 	}
 	return invalid
+}
+
+// MaskIP 对 IP 做展示级脱敏：IPv4 保留前三段（1.2.3.x），IPv6 保留前三组（2001:db8:1::x，即 /48）。
+// 无法解析的输入返回空串——宁可不显示也不把原文泄露给受限角色。
+func MaskIP(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+	parsed := net.ParseIP(value)
+	if parsed == nil {
+		return ""
+	}
+	if v4 := parsed.To4(); v4 != nil {
+		return fmt.Sprintf("%d.%d.%d.x", v4[0], v4[1], v4[2])
+	}
+	v6 := parsed.To16()
+	if v6 == nil {
+		return ""
+	}
+	return fmt.Sprintf("%x:%x:%x::x",
+		uint16(v6[0])<<8|uint16(v6[1]),
+		uint16(v6[2])<<8|uint16(v6[3]),
+		uint16(v6[4])<<8|uint16(v6[5]))
 }

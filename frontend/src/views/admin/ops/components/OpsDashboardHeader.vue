@@ -29,6 +29,8 @@ interface Props {
   fullscreen?: boolean
   customStartTime?: string | null
   customEndTime?: string | null
+  /** 只读模式（运维管理员）：不加载分组列表、不显示告警规则与设置入口 */
+  readonly?: boolean
 }
 
 interface Emits {
@@ -150,6 +152,11 @@ watch(
 )
 
 onMounted(async () => {
+  // operator 无权读取分组列表（/admin/groups/all 不在白名单内），直接跳过。
+  if (props.readonly) {
+    groups.value = []
+    return
+  }
   try {
     const list = await adminAPI.groups.getAll()
     groups.value = list.map((g) => ({ id: g.id, name: g.name, platform: g.platform }))
@@ -903,6 +910,7 @@ function handleToolbarRefresh() {
           />
 
           <Select
+            v-if="!props.readonly"
             :model-value="groupId"
             :options="groupOptions"
             class="w-full sm:w-[160px]"
@@ -947,9 +955,9 @@ function handleToolbarRefresh() {
 
         <div v-if="!props.fullscreen" class="mx-1 hidden h-4 w-[1px] bg-gray-200 dark:bg-dark-700 sm:block"></div>
 
-        <!-- Alert Rules Button (hidden in fullscreen) -->
+        <!-- Alert Rules Button (hidden in fullscreen / read-only) -->
         <button
-          v-if="!props.fullscreen"
+          v-if="!props.fullscreen && !props.readonly"
           type="button"
           class="flex h-8 items-center gap-1.5 rounded-lg bg-blue-100 px-3 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
           :title="t('admin.ops.alertRules.title')"
@@ -961,9 +969,9 @@ function handleToolbarRefresh() {
           <span class="hidden sm:inline">{{ t('admin.ops.alertRules.manage') }}</span>
         </button>
 
-        <!-- Settings Button (hidden in fullscreen) -->
+        <!-- Settings Button (hidden in fullscreen / read-only) -->
         <button
-          v-if="!props.fullscreen"
+          v-if="!props.fullscreen && !props.readonly"
           type="button"
           class="flex h-8 items-center gap-1.5 rounded-lg bg-gray-100 px-3 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-gray-300 dark:hover:bg-dark-600"
           :title="t('admin.ops.settings.title')"

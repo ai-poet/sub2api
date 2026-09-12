@@ -731,6 +731,8 @@ func UsageLogFromServiceAdmin(l *service.UsageLog) *AdminUsageLog {
 	}
 	usageLog := usageLogFromServiceUser(l)
 	usageLog.UpstreamEndpoint = l.UpstreamEndpoint
+	// 管理员列表不下发明文 key（前端只用 name / status），明文 key 走受审计的用户 API Key 接口。
+	usageLog.APIKey = apiKeyWithoutSecret(l.APIKey)
 	return &AdminUsageLog{
 		UsageLog:                usageLog,
 		UpstreamModel:           l.UpstreamModel,

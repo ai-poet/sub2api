@@ -20,6 +20,13 @@ declare module 'vue-router' {
     requiresAdmin?: boolean
 
     /**
+     * 运维管理员（operator）是否可访问该管理路由。只在后端白名单覆盖的页面上标记，
+     * 未标记的 requiresAdmin 路由对 operator 默认拒绝（与后端默认拒绝的白名单一致）。
+     * @default false
+     */
+    operatorAllowed?: boolean
+
+    /**
      * Page title for this route
      */
     title?: string

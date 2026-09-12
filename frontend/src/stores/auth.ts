@@ -96,6 +96,19 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value?.role === 'admin'
   })
 
+  // 运维管理员（operator）：只读的排障角色，只能访问后端白名单内的管理页面（运维监控 / 调用日志）。
+  const isOperator = computed(() => user.value?.role === 'operator')
+
+  // 能进入管理控制台的角色（admin 或 operator）。注意这不等于拥有管理员权限。
+  const hasConsoleAccess = computed(() => isAdmin.value || isOperator.value)
+
+  // 登录后 / 兜底跳转的首页：管理员去仪表盘，operator 去运维监控（无仪表盘权限），普通用户去用户首页。
+  const homePath = computed(() => {
+    if (isAdmin.value) return '/admin/dashboard'
+    if (isOperator.value) return '/admin/ops'
+    return '/dashboard'
+  })
+
   const isSimpleMode = computed(() => runMode.value === 'simple')
   const hasPendingAuthSession = computed(() => pendingAuthSession.value !== null)
 
@@ -498,6 +511,9 @@ export const useAuthStore = defineStore('auth', () => {
     // Computed
     isAuthenticated,
     isAdmin,
+    isOperator,
+    hasConsoleAccess,
+    homePath,
     isSimpleMode,
     hasPendingAuthSession,
 

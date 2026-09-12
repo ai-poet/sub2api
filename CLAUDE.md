@@ -143,6 +143,11 @@ The features below are locally maintained customizations of this fork. During up
   `client/docs/providers.md` § "Waku Agent (the built-in one)" before changing
   the driver contract for it.
 
+### 守护进程断线重连与连接状态条 (Daemon socket reconnect + connection banner, local implementation)
+
+- 本地 daemon 的 WebSocket 断开而进程仍在时，`client/crates/waku-client/src/process.rs` 的监督线程用 `connect_with_resume` 重连同一进程（拨号不在 `target` 锁内；连续 6 次被拒后回退到重启进程；短时间内反复断开按 1/2/4/8 s 退避），`DaemonSupervisor::restart` 供界面手动重启。桌面端用 `client/src/app/daemon_banner.rs` 的连接相位和顶部状态条替代反复弹出的 "Waku daemon disconnected" toast：`client/src/driver/mod.rs` 的 `transport_failure_notice`、`client/src/app/background_work.rs` 的 `should_refresh_background_work`、`client/src/app/runtime.rs::save`、`client/src/app/drafts.rs`、`client/src/app.rs` 的 `ToastState::refresh_if_same` 与 `show_toast_with_tone`；传输层错误文案常量与 `is_daemon_transport_error` 在 `client/crates/waku-client/src/client.rs`。同一改动还包括 `client/crates/waku-daemon/src/main.rs` 的 Windows 父进程存活判断（只有 `ERROR_INVALID_PARAMETER` 算父进程已死）和 `client/crates/waku-core/src/server.rs` accept 循环对瞬时错误的容忍。
+- 上游 egoist/waku#218 是同一问题的未合并 PR（在 `target` 锁内阻塞拨号、无退避和回退）。上游合并时保留本地实现，不要用它替换；对应的 i18n 键 `daemon.restart` / `daemon.banner_*_detail` 在 `client/locales/{app,zh-CN,ja}.yml`。
+
 ### GitHub OAuth login (local implementation)
 
 - GitHub OAuth is a fork-local feature and must not be changed by upstream syncs: `backend/internal/handler/auth_github_oauth.go` (+ `_test.go`), `backend/internal/handler/auth_email_oauth.go`, `backend/internal/service/github_oauth_fork.go`, `backend/internal/service/setting_oauth.go`, the `github_oauth_*` settings/config in `backend/internal/config/config.go` and `backend/internal/handler/admin/setting_handler_*.go`; frontend `frontend/src/components/auth/EmailOAuthButtons.vue` (+ spec), the GitHub parts of `frontend/src/api/auth.ts`, `frontend/src/views/auth/LoginView.vue` / `RegisterView.vue`, and `frontend/src/components/admin/settings/ForkSettingsSection.vue`.
@@ -158,6 +163,13 @@ The features below are locally maintained customizations of this fork. During up
 - 上游只在安装路径（`AutoSetupFromEnv` / 向导安装）里执行迁移；本 fork 在 `backend/cmd/server/main.go` 的 `runMainServer` 里额外调用 `setup.MigrateOnStartup`（`backend/internal/setup/startup_migrations.go` + `_test.go`），让已安装实例升级重启时也对齐 schema。
 - `SKIP_SETUP=true` 的实例被视为只读接入一个已初始化的库：既跳过安装流程，也跳过启动期迁移，不会对 schema 做任何改动。这类实例要求库的 schema 不低于其镜像版本。
 - 上游合并时保留 `MigrateOnStartup` 调用与该开关，不要退回到"只在安装路径迁移"的上游行为。
+
+### 运维管理员角色 (Operator role, local implementation)
+
+- A read-only troubleshooting role `operator` (`domain.RoleOperator`, UI "运维管理员 / Operator") that can only reach the ops monitoring and global usage log pages. Authorization is a **default-deny static allowlist** of `METHOD + gin FullPath` entries in `backend/internal/server/middleware/console_scope.go`, enforced inside `validateJWTForAdmin` (`middleware/admin_auth.go`) so every reuse of `adminAuth` (pay probe, page routes, WebSocket handshake) denies operators by default; denials are audited as `admin.scope.denied`, and operator GET reads are always audited (`middleware/audit_log.go`). Golden test `backend/internal/server/routes/console_scope_coverage_test.go` pins the allowlist: any upstream route added later stays invisible to operators until explicitly allowlisted there.
+- Response projection for operators: `backend/internal/handler/dto/operator_usage.go` (no plaintext key / balances / session id / account cost, masked IP via `internal/pkg/ip.MaskIP`), `backend/internal/handler/admin/ops_operator_redact.go` (masked `client_ip`), `handler/admin/console_handler.go` (`GET /admin/console/session`), plus `IsPrivilegedRole` / `IsConsoleUser` in `internal/service/user.go`, step-up + self-demotion guards in `handler/admin/user_handler.go`, and the last-admin + single-admin guards (`ensureNotLastAdmin` / `ensureNoOtherAdmin`) in `service/admin_user.go` — the system allows exactly one `admin`; everyone else must be `operator` or `user`. The admin usage list also stopped embedding plaintext API keys (`apiKeyWithoutSecret` in `dto/mappers.go`).
+- Frontend: `isOperator` / `hasConsoleAccess` / `homePath` in `frontend/src/stores/auth.ts`, `meta.operatorAllowed` on `/admin/ops` and `/admin/usage` in `router/index.ts` (+ `meta.d.ts`, `setupRedirect.ts`), operator nav in `components/layout/AppSidebar.vue`, `api/admin/console.ts`, the operator branch in `stores/adminSettings.ts`, read-only mode in `views/admin/ops/OpsDashboard.vue` (+ `OpsDashboardHeader` / `OpsSystemLogTable` / `OpsAlertEventsCard`), `views/admin/UsageView.vue` (+ `UsageFilters`, `UsageTable`), admin-only IP geo lookups in `components/common/IpGeoCell.vue` / `IpGeoBatchToolbar.vue`, role labels `admin.users.roles.operator` and `operator.*` keys in `i18n/locales/{zh,en}/fork.ts`.
+- Design notes and the allowlist table live in `docs/OPERATOR_ROLE.md`. Keep this feature on upstream merges: resolve conflicts on the paths above in favour of the local version, never widen the allowlist while merging, and re-run the middleware / routes / handler tests afterwards.
 
 ## Working Boundary
 

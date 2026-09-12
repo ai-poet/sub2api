@@ -17,9 +17,12 @@ const isDesktopViewport = useMediaQuery('(min-width: 768px)')
 const props = withDefaults(defineProps<{
   platformFilter?: string
   refreshToken?: number
+  /** 只读模式（运维管理员）：不加载 / 不展示运行时日志配置，不提供清理 */
+  readonly?: boolean
 }>(), {
   platformFilter: '',
-  refreshToken: 0
+  refreshToken: 0,
+  readonly: false
 })
 
 const loading = ref(false)
@@ -379,7 +382,7 @@ onMounted(async () => {
   if (props.platformFilter) {
     filters.platform = props.platformFilter
   }
-  await Promise.all([fetchLogs(), fetchHealth(), loadRuntimeConfig()])
+  await Promise.all([fetchLogs(), fetchHealth(), props.readonly ? Promise.resolve() : loadRuntimeConfig()])
 })
 </script>
 
@@ -398,7 +401,7 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div class="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
+    <div v-if="!props.readonly" class="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
       <div class="mb-2 flex items-center justify-between">
         <div class="text-xs font-semibold text-gray-700 dark:text-gray-200">{{ t('admin.ops.systemLogs.runtimeConfig') }}</div>
         <span v-if="runtimeLoading" class="text-xs text-gray-500">{{ t('common.loading') }}</span>
@@ -518,7 +521,7 @@ onMounted(async () => {
     <div class="mb-3 flex flex-wrap gap-2">
       <button type="button" class="btn btn-primary btn-sm" @click="applyFilters">{{ t('admin.ops.systemLogs.search') }}</button>
       <button type="button" class="btn btn-secondary btn-sm" @click="resetFilters">{{ t('common.reset') }}</button>
-      <button type="button" class="btn btn-danger btn-sm" @click="cleanupCurrentFilter">{{ t('admin.ops.systemLogs.cleanCurrentFilters') }}</button>
+      <button v-if="!props.readonly" type="button" class="btn btn-danger btn-sm" @click="cleanupCurrentFilter">{{ t('admin.ops.systemLogs.cleanCurrentFilters') }}</button>
       <button type="button" class="btn btn-secondary btn-sm" @click="fetchHealth">{{ t('admin.ops.systemLogs.refreshHealth') }}</button>
     </div>
 

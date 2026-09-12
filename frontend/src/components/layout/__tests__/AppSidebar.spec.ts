@@ -80,3 +80,31 @@ describe('AppSidebar subscription feature flag', () => {
     expect(componentSource).toMatch(/path: '\/purchase'[^\n]*label: purchaseNavLabel\.value/)
   })
 })
+
+describe('AppSidebar operator (read-only ops role)', () => {
+  it('renders the console branch for any console role, not only admins', () => {
+    expect(componentSource).toContain('<template v-if="hasConsoleAccess">')
+    expect(componentSource).not.toContain('<template v-if="isAdmin">')
+  })
+
+  it('gives operators only the ops and usage entries', () => {
+    const start = componentSource.indexOf('const operatorNavItems = computed(')
+    expect(start).toBeGreaterThan(-1)
+    const block = componentSource.slice(start, componentSource.indexOf('// Admin navigation items', start))
+    expect(block).toContain("path: '/admin/ops'")
+    expect(block).toContain("path: '/admin/usage'")
+    for (const forbidden of ['/admin/users', '/admin/groups', '/admin/accounts', '/admin/settings', '/admin/dashboard']) {
+      expect(block).not.toContain(`path: '${forbidden}'`)
+    }
+    expect(componentSource).toContain('if (isOperator.value) {\n    return operatorNavItems.value\n  }')
+  })
+
+  it('fetches admin settings for every console role (store routes operators to the console session API)', () => {
+    expect(componentSource).toContain('watch(\n  hasConsoleAccess,')
+    expect(componentSource).toContain('if (hasConsoleAccess.value) {\n    adminSettingsStore.fetch()')
+  })
+
+  it('derives the home path from the auth store so operators land on ops monitoring', () => {
+    expect(componentSource).toContain('const homePath = computed(() => authStore.homePath)')
+  })
+})

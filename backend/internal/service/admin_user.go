@@ -110,8 +110,8 @@ func normalizeUserRole(role, fallback string) (string, error) {
 	if role == "" {
 		return fallback, nil
 	}
-	if role != RoleAdmin && role != RoleUser {
-		return "", fmt.Errorf("invalid role: %q (must be %s or %s)", role, RoleAdmin, RoleUser)
+	if role != RoleAdmin && role != RoleUser && role != RoleOperator {
+		return "", fmt.Errorf("invalid role: %q (must be %s, %s or %s)", role, RoleAdmin, RoleOperator, RoleUser)
 	}
 	return role, nil
 }
@@ -124,10 +124,16 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 		balance = s.settingService.GetDefaultBalance(ctx)
 	}
 
-	// 角色可由管理员在创建时指定(admin/user);未提供时默认 user。
+	// 角色可由管理员在创建时指定(admin/operator/user);未提供时默认 user。
 	role, err := normalizeUserRole(input.Role, RoleUser)
 	if err != nil {
 		return nil, err
+	}
+	// 单管理员约束：已存在管理员时不能再创建第二个。
+	if role == RoleAdmin {
+		if err := s.ensureNoOtherAdmin(ctx, 0); err != nil {
+			return nil, err
+		}
 	}
 
 	user := &User{
@@ -172,6 +178,25 @@ func (s *adminServiceImpl) ensureNotLastAdmin(ctx context.Context) error {
 	}
 	if result == nil || result.Total <= 1 {
 		return errors.New("cannot demote the last admin user")
+	}
+	return nil
+}
+
+// ensureNoOtherAdmin 单管理员约束：系统里只允许一个 admin，其余账号只能是 operator 或 user。
+// excludeUserID 为正在被编辑的用户（目标已是 admin 时不算"另一个"）。首个管理员由安装向导直接写库创建，不经过这里。
+func (s *adminServiceImpl) ensureNoOtherAdmin(ctx context.Context, excludeUserID int64) error {
+	noSubs := false
+	admins, _, err := s.userRepo.ListWithFilters(ctx,
+		pagination.PaginationParams{Page: 1, PageSize: 2},
+		UserListFilters{Role: RoleAdmin, IncludeSubscriptions: &noSubs},
+	)
+	if err != nil {
+		return fmt.Errorf("count admin users: %w", err)
+	}
+	for i := range admins {
+		if admins[i].ID != excludeUserID {
+			return ErrAdminAlreadyExists
+		}
 	}
 	return nil
 }
@@ -255,9 +280,15 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 			return nil, err
 		}
 		// 防锁死保护：不允许降级系统中最后一个管理员（自我降级已在 handler 层拦截，
-		// 此处兜底覆盖跨管理员互降导致零 admin 的场景）。
-		if user.Role == RoleAdmin && role == RoleUser {
+		// 此处兜底覆盖跨管理员互降导致零 admin 的场景）。降为 user 或 operator 都算降级。
+		if user.Role == RoleAdmin && role != RoleAdmin {
 			if err := s.ensureNotLastAdmin(ctx); err != nil {
+				return nil, err
+			}
+		}
+		// 单管理员约束：把其他用户提升为 admin 时，系统里不能已经有另一个管理员。
+		if role == RoleAdmin && user.Role != RoleAdmin {
+			if err := s.ensureNoOtherAdmin(ctx, user.ID); err != nil {
 				return nil, err
 			}
 		}

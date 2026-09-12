@@ -213,6 +213,16 @@ func (h *UsageHandler) List(c *gin.Context) {
 		return
 	}
 
+	if middleware.IsOperatorRequest(c) {
+		// 运维管理员：投影掉余额 / 明文 key / 账号侧成本，IP 掩码。
+		redacted := make([]dto.OperatorUsageLog, 0, len(records))
+		for i := range records {
+			redacted = append(redacted, *dto.UsageLogFromServiceOperator(&records[i]))
+		}
+		response.Paginated(c, redacted, result.Total, page, pageSize)
+		return
+	}
+
 	out := make([]dto.AdminUsageLog, 0, len(records))
 	for i := range records {
 		out = append(out, *dto.UsageLogFromServiceAdmin(&records[i]))

@@ -44,6 +44,7 @@ func ProvideAdminHandlers(
 	promptAuditHandler *securityaudit.PromptAdminHandler,
 	complianceHandler *admin.ComplianceHandler,
 	auditLogHandler *admin.AuditLogHandler,
+	consoleHandler *admin.ConsoleHandler,
 	upstreamBillingProbe *service.UpstreamBillingProbeService,
 	ollamaCloudUsage *service.OllamaCloudUsageService,
 ) *AdminHandlers {
@@ -83,6 +84,7 @@ func ProvideAdminHandlers(
 		Compliance:            complianceHandler,
 		AuditLog:              auditLogHandler,
 		Plugin:                pluginHandler,
+		Console:               consoleHandler,
 	}
 }
 
@@ -291,6 +293,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewContentModerationHandler,
 	admin.NewComplianceHandler,
 	admin.NewAuditLogHandler,
+	admin.NewConsoleHandler,
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,

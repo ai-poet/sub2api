@@ -101,9 +101,12 @@ const emit = defineEmits(['close', 'success'])
 const { t } = useI18n(); const appStore = useAppStore(); const { copyToClipboard } = useClipboard()
 
 const submitting = ref(false); const passwordCopied = ref(false)
+// 单管理员约束：系统只有一个 admin，其它账号只能是运维管理员或普通用户；
+// 「管理员」只在目标本来就是管理员时保留在下拉里（用于保持当前值）。
 const roleOptions = computed(() => [
   { value: 'user', label: t('admin.users.roles.user') },
-  { value: 'admin', label: t('admin.users.roles.admin') }
+  { value: 'operator', label: t('admin.users.roles.operator') },
+  ...(props.user?.role === 'admin' ? [{ value: 'admin', label: t('admin.users.roles.admin') }] : [])
 ])
 const form = reactive({
   email: '',

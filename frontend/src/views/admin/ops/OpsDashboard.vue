@@ -8,6 +8,13 @@
         {{ errorMessage }}
       </div>
 
+      <div
+        v-if="readonly && opsEnabled"
+        class="rounded-2xl bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+      >
+        {{ t('operator.readOnlyNotice') }}
+      </div>
+
       <OpsDashboardSkeleton v-if="loading && !hasLoadedOnce" :fullscreen="isFullscreen" />
 
       <OpsDashboardHeader
@@ -25,6 +32,7 @@
         :fullscreen="isFullscreen"
         :custom-start-time="customStartTime"
         :custom-end-time="customEndTime"
+        :readonly="readonly"
         @update:time-range="onTimeRangeChange"
         @update:platform="onPlatformChange"
         @update:group="onGroupChange"
@@ -94,17 +102,18 @@
       </div>
 
       <!-- Alert Events -->
-      <OpsAlertEventsCard v-if="opsEnabled && showAlertEvents && !(loading && !hasLoadedOnce)" />
+      <OpsAlertEventsCard v-if="opsEnabled && showAlertEvents && !(loading && !hasLoadedOnce)" :readonly="readonly" />
 
       <!-- System Logs -->
       <OpsSystemLogTable
         v-if="opsEnabled && !(loading && !hasLoadedOnce)"
         :platform-filter="platform"
         :refresh-token="dashboardRefreshToken"
+        :readonly="readonly"
       />
 
-      <!-- Settings Dialog (hidden in fullscreen mode) -->
-      <template v-if="!isFullscreen">
+      <!-- Settings Dialog (hidden in fullscreen mode and in read-only mode) -->
+      <template v-if="!isFullscreen && !readonly">
         <OpsSettingsDialog :show="showSettingsDialog" @close="showSettingsDialog = false" @saved="onSettingsSaved" />
 
         <BaseDialog :show="showAlertRulesCard" :title="t('admin.ops.alertRules.title')" width="extra-wide" @close="showAlertRulesCard = false">
@@ -156,7 +165,7 @@ import {
   type OpsThroughputTrendResponse,
   type OpsMetricThresholds
 } from '@/api/admin/ops'
-import { useAdminSettingsStore, useAppStore } from '@/stores'
+import { useAdminSettingsStore, useAppStore, useAuthStore } from '@/stores'
 import OpsDashboardHeader from './components/OpsDashboardHeader.vue'
 import OpsDashboardSkeleton from './components/OpsDashboardSkeleton.vue'
 import OpsConcurrencyCard from './components/OpsConcurrencyCard.vue'
@@ -178,6 +187,9 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const adminSettingsStore = useAdminSettingsStore()
+const authStore = useAuthStore()
+// 只读模式：运维管理员（operator）只能看，不能改设置 / 处理告警 / 清理日志；分组筛选也不可用。
+const readonly = computed(() => !authStore.isAdmin)
 const { t } = useI18n()
 
 const opsEnabled = computed(() => adminSettingsStore.opsMonitoringEnabled)
@@ -809,7 +821,8 @@ onMounted(async () => {
 
   await adminSettingsStore.fetch()
   if (!adminSettingsStore.opsMonitoringEnabled) {
-    await router.replace('/admin/settings')
+    // 管理员去设置页开启监控；operator 无权访问设置页，回到调用日志避免与路由守卫形成循环。
+    await router.replace(authStore.isAdmin ? '/admin/settings' : '/admin/usage')
     return
   }
 

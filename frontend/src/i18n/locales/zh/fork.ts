@@ -802,5 +802,10 @@ export default {
   },
   "announcements": {
     "newAnnouncement": "新公告"
+  },
+  "operator": {
+    "readOnlyNotice": "只读模式：运维管理员只能查看运维监控与调用日志，无法修改设置、处理告警或清理数据。",
+    "roleHint": "运维管理员：只读排障角色，可查看运维监控与调用日志，不能管理用户余额、上游账号与分组。",
+    "singleAdminHint": "系统只允许一个管理员，其余账号请使用运维管理员或普通用户。"
   }
 } as const

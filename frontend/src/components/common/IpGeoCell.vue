@@ -1,5 +1,7 @@
 <template>
-  <div v-if="entry.status === 'idle'" class="mt-0.5 text-xs">
+  <!-- 非管理员（运维管理员）不提供第三方归属地查询：IP 已掩码，且不应外发。 -->
+  <div v-if="!authStore.isAdmin" class="hidden"></div>
+  <div v-else-if="entry.status === 'idle'" class="mt-0.5 text-xs">
     <button
       type="button"
       class="text-primary-600 underline decoration-dashed underline-offset-2 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
@@ -63,9 +65,11 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import { fetchOne, getEntry } from '@/utils/ipGeoLookup'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ ip: string }>()
 const { t } = useI18n()
+const authStore = useAuthStore()
 
 const entry = computed(() => getEntry(props.ip))
 

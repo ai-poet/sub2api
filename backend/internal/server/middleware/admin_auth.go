@@ -197,10 +197,17 @@ func validateJWTForAdmin(
 		return false
 	}
 
-	// 检查管理员权限
+	// 检查控制台权限：admin 全权放行；operator 只能命中只读白名单（默认拒绝，见 console_scope.go）；
+	// 其它角色一律 403。operator 被拒绝的请求在此直接写审计——审计中间件挂在本中间件之后，
+	// 不会记录认证层的 403。admin API key 分支不经过这里，合成的始终是真 admin。
 	if !user.IsAdmin() {
-		AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
-		return false
+		if !user.IsOperator() || !OperatorScopeAllows(c.Request.Method, c.FullPath()) {
+			if user.IsOperator() {
+				recordOperatorScopeDenied(c, auditService, user)
+			}
+			AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
+			return false
+		}
 	}
 
 	c.Set(string(ContextKeyUser), AuthSubject{

@@ -32,7 +32,7 @@
     <!-- Navigation -->
     <nav ref="sidebarNavRef" class="sidebar-nav scrollbar-hide">
       <!-- Admin View: Admin menu first, then personal menu -->
-      <template v-if="isAdmin">
+      <template v-if="hasConsoleAccess">
         <!-- Admin Section -->
         <div class="sidebar-section">
           <template v-for="item in adminNavItems" :key="item.path">
@@ -248,11 +248,12 @@ const { canUseBatchImage, refreshBatchImageAccess } = useBatchImageAccess()
 
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const mobileOpen = computed(() => appStore.mobileOpen)
-const isAdmin = computed(() => authStore.isAdmin)
+const isOperator = computed(() => authStore.isOperator)
+const hasConsoleAccess = computed(() => authStore.hasConsoleAccess)
 const sidebarNavRef = ref<HTMLElement | null>(null)
 const isDark = ref(document.documentElement.classList.contains('dark'))
 
-const homePath = computed(() => (isAdmin.value ? '/admin/dashboard' : '/dashboard'))
+const homePath = computed(() => authStore.homePath)
 
 // Per-group expand/collapse overrides. A group with no entry follows the
 // automatic behavior (expanded while the active route is one of its children);
@@ -741,8 +742,18 @@ const customMenuItemsForAdmin = computed(() => {
     .sort((a, b) => a.sort_order - b.sort_order)
 })
 
+// 运维管理员（operator）只看得到后端白名单覆盖的两个页面：运维监控与调用日志。
+// 与 router 的 operatorAllowed 标记一致；不含自定义菜单与系统设置。
+const operatorNavItems = computed((): NavItem[] => applyFeatureFlags([
+  { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring },
+  { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon }
+]))
+
 // Admin navigation items
 const adminNavItems = computed((): NavItem[] => {
+  if (isOperator.value) {
+    return operatorNavItems.value
+  }
   const baseItems: NavItem[] = [
     { path: '/admin/dashboard', label: t('nav.dashboard'), icon: DashboardIcon },
     { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring },
@@ -880,9 +891,9 @@ if (
   document.documentElement.classList.add('dark')
 }
 
-// Fetch admin settings (for feature-gated nav items like Ops).
+// Fetch admin settings (for feature-gated nav items like Ops); operator 走控制台会话接口（store 内分流）。
 watch(
-  isAdmin,
+  hasConsoleAccess,
   (v) => {
     if (v) {
       adminSettingsStore.fetch()
@@ -893,7 +904,7 @@ watch(
 
 onMounted(() => {
   void refreshBatchImageAccess()
-  if (isAdmin.value) {
+  if (hasConsoleAccess.value) {
     adminSettingsStore.fetch()
   }
   // Restore sidebar scroll position after route change re-mounts the component

@@ -42,7 +42,7 @@ func (h *OpsHandler) GetErrorLogByID(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, detail)
+	response.Success(c, opsErrorLogDetailForViewer(c, detail))
 }
 
 const (
@@ -208,7 +208,7 @@ func (h *OpsHandler) GetErrorLogs(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Paginated(c, result.Errors, int64(result.Total), result.Page, result.PageSize)
+	response.Paginated(c, opsErrorLogsForViewer(c, result.Errors), int64(result.Total), result.Page, result.PageSize)
 }
 
 // ListRequestErrors lists client-visible request errors.
@@ -321,7 +321,7 @@ func (h *OpsHandler) ListRequestErrors(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Paginated(c, result.Errors, int64(result.Total), result.Page, result.PageSize)
+	response.Paginated(c, opsErrorLogsForViewer(c, result.Errors), int64(result.Total), result.Page, result.PageSize)
 }
 
 // GetRequestError returns request error detail.
@@ -426,11 +426,11 @@ func (h *OpsHandler) ListRequestErrorUpstreamErrors(c *gin.Context) {
 			}
 			details = append(details, d)
 		}
-		response.Paginated(c, details, int64(result.Total), result.Page, result.PageSize)
+		response.Paginated(c, opsErrorLogDetailsForViewer(c, details), int64(result.Total), result.Page, result.PageSize)
 		return
 	}
 
-	response.Paginated(c, result.Errors, int64(result.Total), result.Page, result.PageSize)
+	response.Paginated(c, opsErrorLogsForViewer(c, result.Errors), int64(result.Total), result.Page, result.PageSize)
 }
 
 // ResolveRequestError toggles resolved status.
@@ -535,7 +535,7 @@ func (h *OpsHandler) ListUpstreamErrors(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Paginated(c, result.Errors, int64(result.Total), result.Page, result.PageSize)
+	response.Paginated(c, opsErrorLogsForViewer(c, result.Errors), int64(result.Total), result.Page, result.PageSize)
 }
 
 // GetUpstreamError returns upstream error detail.

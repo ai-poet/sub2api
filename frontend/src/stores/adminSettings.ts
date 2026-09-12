@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { adminAPI } from '@/api'
+import { useAuthStore } from './auth'
 import type { CustomMenuItem } from '@/types'
 
 export const useAdminSettingsStore = defineStore('adminSettings', () => {
@@ -56,7 +57,17 @@ export const useAdminSettingsStore = defineStore('adminSettings', () => {
 
     loading.value = true
     try {
-      const settings = await adminAPI.settings.getSettings()
+      // 运维管理员（operator）无权读取 GET /admin/settings，改用控制台会话接口取同名字段；
+      // 自定义菜单只对管理员生效。
+      const authStore = useAuthStore()
+      const settings = authStore.isOperator
+        ? await adminAPI.console.getSession().then((session) => ({
+            ops_monitoring_enabled: session.ops_monitoring_enabled,
+            ops_realtime_monitoring_enabled: session.ops_realtime_monitoring_enabled,
+            ops_query_mode_default: session.ops_query_mode_default,
+            custom_menu_items: [] as CustomMenuItem[]
+          }))
+        : await adminAPI.settings.getSettings()
       opsMonitoringEnabled.value = settings.ops_monitoring_enabled ?? true
       writeCachedBool('ops_monitoring_enabled_cached', opsMonitoringEnabled.value)
 

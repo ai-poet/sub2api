@@ -802,5 +802,10 @@ export default {
   },
   "announcements": {
     "newAnnouncement": "New Announcement"
+  },
+  "operator": {
+    "readOnlyNotice": "Read-only mode: operators can view ops monitoring and usage logs but cannot change settings, handle alerts or clean up data.",
+    "roleHint": "Operator: read-only troubleshooting role with access to ops monitoring and usage logs; cannot manage user balances, upstream accounts or groups.",
+    "singleAdminHint": "Only one admin account is allowed; use the operator or user role for everyone else."
   }
 } as const

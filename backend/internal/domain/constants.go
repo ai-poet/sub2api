@@ -14,6 +14,8 @@ const (
 const (
 	RoleAdmin = "admin"
 	RoleUser  = "user"
+	// RoleOperator 运维管理员：只读的排障角色，只能访问 middleware.OperatorScopeAllows 白名单内的管理接口。
+	RoleOperator = "operator"
 )
 
 // Platform constants

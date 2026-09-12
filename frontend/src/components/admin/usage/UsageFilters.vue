@@ -186,7 +186,7 @@
         </button>
         <slot name="after-reset" />
         <template v-if="mode === 'usage'">
-          <button type="button" @click="$emit('cleanup')" class="btn btn-danger">
+          <button v-if="canCleanup" type="button" @click="$emit('cleanup')" class="btn btn-danger">
             {{ t('admin.usage.cleanup.button') }}
           </button>
           <button type="button" @click="$emit('export')" :disabled="exporting" class="btn btn-primary">
@@ -222,12 +222,18 @@ interface Props {
   mode?: 'usage' | 'errors' | 'ranking'
   /** 嵌入统一卡片内使用：去掉自身卡片外观 */
   flat?: boolean
+  /** 是否显示清理任务按钮（运维管理员只读，隐藏） */
+  canCleanup?: boolean
+  /** 只读模式：不加载账号 / 分组筛选项（运维管理员无权读取） */
+  readonly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showActions: true,
   mode: 'usage',
-  flat: false
+  flat: false,
+  canCleanup: true,
+  readonly: false
 })
 const emit = defineEmits([
   'update:modelValue',
@@ -430,6 +436,10 @@ const debounceAccountSearch = () => {
       accountResults.value = []
       return
     }
+    if (props.readonly) {
+      accountResults.value = []
+      return
+    }
     try {
       const res = await adminAPI.accounts.list(1, 20, { search: accountKeyword.value })
       accountResults.value = res.items.map((a) => ({ id: a.id, name: a.name }))
@@ -524,6 +534,7 @@ watch(
 
 onMounted(async () => {
   document.addEventListener('click', onDocumentClick)
+  if (props.readonly) return
   try {
     const gs = await adminAPI.groups.list(1, 1000)
     groupOptions.value.push(...gs.items.map((g: any) => ({ value: g.id, label: g.name })))

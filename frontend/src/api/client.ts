@@ -18,6 +18,18 @@ export { buildApiUrl, buildGatewayUrl } from './url'
 
 // ==================== Axios Instance Configuration ====================
 
+// 从本地持久化的登录用户读取角色（与 stores/auth.ts 的 auth_user 键一致）；api client 不能反向依赖 store。
+function readStoredUserRole(): string | null {
+  try {
+    const raw = localStorage.getItem('auth_user')
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { role?: string } | null
+    return parsed?.role ?? null
+  } catch {
+    return null
+  }
+}
+
 export const apiClient: AxiosInstance = axios.create({
   baseURL: getAPIBaseURL(),
   withCredentials: true,
@@ -129,7 +141,8 @@ apiClient.interceptors.response.use(
         }
 
         if (window.location.pathname.startsWith('/admin/ops')) {
-          window.location.href = '/admin/settings'
+          // 运维管理员（operator）无权访问设置页，回到调用日志；否则会和路由守卫形成重定向循环。
+          window.location.href = readStoredUserRole() === 'operator' ? '/admin/usage' : '/admin/settings'
         }
 
         return Promise.reject({

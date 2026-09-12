@@ -73,6 +73,22 @@ func (u *User) IsAdmin() bool {
 	return u.Role == RoleAdmin
 }
 
+// IsOperator 运维管理员：只读排障角色，可达接口由 middleware.OperatorScopeAllows 白名单决定。
+func (u *User) IsOperator() bool {
+	return u.Role == RoleOperator
+}
+
+// IsConsoleUser 是否可以进入管理控制台（admin 或 operator）。
+// 注意：这不等于拥有管理员权限——operator 只能访问白名单接口。
+func (u *User) IsConsoleUser() bool {
+	return IsPrivilegedRole(u.Role)
+}
+
+// IsPrivilegedRole 报告 role 是否为控制台角色（admin / operator）。
+func IsPrivilegedRole(role string) bool {
+	return role == RoleAdmin || role == RoleOperator
+}
+
 func (u *User) IsActive() bool {
 	return u.Status == StatusActive
 }

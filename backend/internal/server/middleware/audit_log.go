@@ -179,6 +179,9 @@ func NewAuditLogMiddleware(auditService *service.AuditLogService) AuditLogMiddle
 			if v, ok := auditSensitiveReads[routeKey]; ok {
 				record = true
 				action = v
+			} else if IsOperatorRequest(c) {
+				// operator 的所有读取都留痕：全站调用日志与错误日志本身就是敏感数据。
+				record = true
 			}
 		}
 		if !record {

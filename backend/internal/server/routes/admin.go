@@ -33,6 +33,9 @@ func RegisterAdminRoutes(
 		// 部署与运营合规确认
 		registerAdminComplianceRoutes(admin, h)
 
+		// 控制台会话信息（admin / operator 共用）
+		registerConsoleRoutes(admin, h)
+
 		// 仪表盘
 		registerDashboardRoutes(admin, h)
 
@@ -163,6 +166,15 @@ func registerAdminComplianceRoutes(admin *gin.RouterGroup, h *handler.Handlers) 
 	{
 		compliance.GET("", h.Admin.Compliance.GetStatus)
 		compliance.POST("/accept", h.Admin.Compliance.Accept)
+	}
+}
+
+// registerConsoleRoutes 控制台会话信息：角色、scope 与 ops 开关。
+// operator 的白名单见 middleware/console_scope.go。
+func registerConsoleRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	console := admin.Group("/console")
+	{
+		console.GET("/session", h.Admin.Console.GetSession)
 	}
 }
 

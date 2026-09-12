@@ -29,8 +29,9 @@
         <label class="input-label">{{ t('admin.users.form.roleLabel') }}</label>
         <select v-model="form.role" class="input">
           <option value="user">{{ t('admin.users.roles.user') }}</option>
-          <option value="admin">{{ t('admin.users.roles.admin') }}</option>
+          <option value="operator">{{ t('admin.users.roles.operator') }}</option>
         </select>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('operator.singleAdminHint') }}</p>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>

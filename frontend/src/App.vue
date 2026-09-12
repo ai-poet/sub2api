@@ -24,7 +24,7 @@ const adminSettingsStore = useAdminSettingsStore()
 function updateDocumentTitle() {
   const customMenuItems = [
     ...(appStore.cachedPublicSettings?.custom_menu_items ?? []),
-    ...(authStore.isAdmin ? adminSettingsStore.customMenuItems : []),
+    ...(authStore.hasConsoleAccess ? adminSettingsStore.customMenuItems : []),
   ]
   document.title = resolveRouteDocumentTitle(route, appStore.siteName, customMenuItems, {
     billingMode: resolveSiteBillingMode(appStore.cachedPublicSettings),
@@ -51,7 +51,7 @@ watch(
     () => appStore.cachedPublicSettings?.custom_menu_items,
     () => appStore.cachedPublicSettings?.subscription_enabled,
     () => appStore.cachedPublicSettings?.payment_balance_disabled,
-    () => authStore.isAdmin,
+    () => authStore.hasConsoleAccess,
     () => adminSettingsStore.customMenuItems,
   ],
   updateDocumentTitle,
@@ -93,7 +93,7 @@ watch(
   () => authStore.isAuthenticated,
   (isAuthenticated, oldValue) => {
     if (isAuthenticated) {
-      if (authStore.isAdmin) {
+      if (authStore.hasConsoleAccess) {
         adminComplianceStore.fetchStatus().catch((error) => {
           console.error('Failed to fetch admin compliance status:', error)
         })
