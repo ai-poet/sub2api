@@ -28,35 +28,41 @@ DECLARE
     monitor_constraint_def TEXT;
     template_constraint_def TEXT;
 BEGIN
-    SELECT pg_get_constraintdef(c.oid)
-      INTO monitor_constraint_def
-      FROM pg_constraint c
-      JOIN pg_class t ON t.oid = c.conrelid
-     WHERE t.relname = 'channel_monitors'
-       AND c.conname = 'channel_monitors_provider_check';
+    -- 本 fork 已移除渠道监控，channel_monitors / channel_monitor_request_templates 表可能不存在；
+    -- 仅在表仍存在的库上更新 provider CHECK，避免迁移在无表的库上直接报错。
+    IF to_regclass('channel_monitors') IS NOT NULL THEN
+        SELECT pg_get_constraintdef(c.oid)
+          INTO monitor_constraint_def
+          FROM pg_constraint c
+          JOIN pg_class t ON t.oid = c.conrelid
+         WHERE t.relname = 'channel_monitors'
+           AND c.conname = 'channel_monitors_provider_check';
 
-    IF monitor_constraint_def IS NULL OR position('opencode_go' IN monitor_constraint_def) = 0 THEN
-        ALTER TABLE channel_monitors
-            DROP CONSTRAINT IF EXISTS channel_monitors_provider_check;
-        ALTER TABLE channel_monitors
-            ADD CONSTRAINT channel_monitors_provider_check
-            CHECK (provider IN ('openai', 'anthropic', 'gemini', 'grok',
-                                'antigravity', 'kimi', 'zhipu', 'deepseek', 'minimax', 'opencode_go'));
+        IF monitor_constraint_def IS NULL OR position('opencode_go' IN monitor_constraint_def) = 0 THEN
+            ALTER TABLE channel_monitors
+                DROP CONSTRAINT IF EXISTS channel_monitors_provider_check;
+            ALTER TABLE channel_monitors
+                ADD CONSTRAINT channel_monitors_provider_check
+                CHECK (provider IN ('openai', 'anthropic', 'gemini', 'grok',
+                                    'antigravity', 'kimi', 'zhipu', 'deepseek', 'minimax', 'opencode_go'));
+        END IF;
     END IF;
 
-    SELECT pg_get_constraintdef(c.oid)
-      INTO template_constraint_def
-      FROM pg_constraint c
-      JOIN pg_class t ON t.oid = c.conrelid
-     WHERE t.relname = 'channel_monitor_request_templates'
-       AND c.conname = 'channel_monitor_request_templates_provider_check';
+    IF to_regclass('channel_monitor_request_templates') IS NOT NULL THEN
+        SELECT pg_get_constraintdef(c.oid)
+          INTO template_constraint_def
+          FROM pg_constraint c
+          JOIN pg_class t ON t.oid = c.conrelid
+         WHERE t.relname = 'channel_monitor_request_templates'
+           AND c.conname = 'channel_monitor_request_templates_provider_check';
 
-    IF template_constraint_def IS NULL OR position('opencode_go' IN template_constraint_def) = 0 THEN
-        ALTER TABLE channel_monitor_request_templates
-            DROP CONSTRAINT IF EXISTS channel_monitor_request_templates_provider_check;
-        ALTER TABLE channel_monitor_request_templates
-            ADD CONSTRAINT channel_monitor_request_templates_provider_check
-            CHECK (provider IN ('openai', 'anthropic', 'gemini', 'grok',
-                                'antigravity', 'kimi', 'zhipu', 'deepseek', 'minimax', 'opencode_go'));
+        IF template_constraint_def IS NULL OR position('opencode_go' IN template_constraint_def) = 0 THEN
+            ALTER TABLE channel_monitor_request_templates
+                DROP CONSTRAINT IF EXISTS channel_monitor_request_templates_provider_check;
+            ALTER TABLE channel_monitor_request_templates
+                ADD CONSTRAINT channel_monitor_request_templates_provider_check
+                CHECK (provider IN ('openai', 'anthropic', 'gemini', 'grok',
+                                    'antigravity', 'kimi', 'zhipu', 'deepseek', 'minimax', 'opencode_go'));
+        END IF;
     END IF;
 END $$;
