@@ -94,7 +94,7 @@ func newModelCatalogTestService(t *testing.T, groups []Group, modelsByGroup map[
 		},
 		&modelCatalogModelsStub{byGroup: modelsByGroup},
 		billing,
-		NewModelPricingResolver(NewChannelService(repo, nil, nil, nil), billing),
+		NewModelPricingResolver(NewChannelService(repo, nil, nil, nil, nil), billing),
 	)
 }
 
