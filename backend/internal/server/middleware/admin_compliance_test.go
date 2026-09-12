@@ -80,3 +80,29 @@ func TestAdminComplianceGuardBypassesComplianceEndpoint(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 	require.Equal(t, "ok", w.Body.String())
 }
+
+// 运维管理员（operator）是只读排障角色，不要求确认部署与运营合规承诺。
+func TestAdminComplianceGuardSkipsOperator(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := service.NewSettingService(&complianceGuardRepoStub{}, &config.Config{})
+
+	for role, want := range map[string]int{
+		service.RoleOperator: http.StatusOK,
+		service.RoleAdmin:    http.StatusLocked,
+	} {
+		router := gin.New()
+		router.Use(func(c *gin.Context) {
+			c.Set(string(ContextKeyUser), AuthSubject{UserID: 1})
+			c.Set(string(ContextKeyUserRole), role)
+			c.Next()
+		})
+		router.Use(AdminComplianceGuard(svc))
+		router.GET("/api/v1/admin/usage", func(c *gin.Context) {
+			c.String(http.StatusOK, "ok")
+		})
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/v1/admin/usage", nil))
+		require.Equalf(t, want, w.Code, "role %s", role)
+	}
+}

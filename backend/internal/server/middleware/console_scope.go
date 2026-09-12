@@ -18,13 +18,10 @@ import (
 // key 为 "METHOD <gin 路由模板>"，与 c.FullPath() 逐字比对；不在表内的一律拒绝。
 // 改动前先读 docs/OPERATOR_ROLE.md，设计约束：
 //   - 默认拒绝：上游合并新增的任何 /admin 路由对 operator 天然不可见；
-//   - 只读：本表只允许 GET，OperatorScopeAllows 在代码层再兜一次，误加的写条目不会生效；
+//   - 只读：本表只允许 GET，OperatorScopeAllows 在代码层再兜一次，误加的写条目不会生效（operatorWriteScope 为空）；
 //   - 每加一条都要评估返回字段是否含凭证 / 余额 / 明文 key / 完整 IP，必要时在 handler 做投影；
 //   - 与 routes/console_scope_coverage_test.go 的 golden 列表保持一致，放大权限必须显式改测试。
 var operatorReadScope = map[string]struct{}{
-	// 合规确认状态（AdminComplianceGuard 对 operator 同样生效，未确认前只能访问这里）
-	"GET /api/v1/admin/compliance": {},
-
 	// 控制台会话信息：角色、scope 与 ops 开关，替代 operator 无权访问的 GET /admin/settings
 	"GET /api/v1/admin/console/session": {},
 
@@ -65,11 +62,10 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/usage/search-api-keys": {},
 }
 
-// operatorWriteScope 白名单中唯一允许的非 GET 条目：合规确认是进入控制台的前置条件，
-// 不确认就无法使用任何管理接口。除此之外 operator 的所有写请求一律拒绝。
-var operatorWriteScope = map[string]struct{}{
-	"POST /api/v1/admin/compliance/accept": {},
-}
+// operatorWriteScope 允许 operator 调用的非 GET 条目。刻意保持为空：operator 是纯只读角色，
+// 合规确认也不要求（AdminComplianceGuard 对 operator 直接放行）。保留这张表只是为了让
+// "放开某个写接口"必须显式落在这里并同步 golden 测试，而不是散落在各处。
+var operatorWriteScope = map[string]struct{}{}
 
 // OperatorScopeAllows 报告 operator 是否可以访问 method + fullPath（gin 路由模板）。
 // 纯函数，不接触 gin.Context，便于单测；空路径（未匹配到路由）一律拒绝。

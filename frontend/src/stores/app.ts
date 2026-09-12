@@ -13,6 +13,7 @@ import {
   type ReleaseInfo
 } from '@/api/admin/system'
 import { getPublicSettings as fetchPublicSettingsAPI } from '@/api/auth'
+import { useAdminComplianceStore } from './adminCompliance'
 
 export const useAppStore = defineStore('app', () => {
   // ==================== State ====================
@@ -109,7 +110,19 @@ export const useAppStore = defineStore('app', () => {
    * @param duration - Auto-dismiss duration in ms (undefined = no auto-dismiss)
    * @returns Toast ID for manual dismissal
    */
+  // 合规声明未确认期间，所有管理接口都会返回 423；这些错误由合规弹窗统一承接，不再逐个弹错误 toast。
+  function complianceAcknowledgementPending(): boolean {
+    try {
+      return useAdminComplianceStore().shouldShow
+    } catch {
+      return false
+    }
+  }
+
   function showToast(type: ToastType, message: string, duration?: number): string {
+    if (type === 'error' && complianceAcknowledgementPending()) {
+      return ''
+    }
     const id = `toast-${++toastIdCounter}`
     const toast: Toast = {
       id,

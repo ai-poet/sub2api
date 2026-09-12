@@ -16,7 +16,6 @@ import (
 // operatorScopeGolden 是运维管理员（operator）白名单的快照。
 // 任何放大（新增条目）都必须显式改这里，防止上游合并或顺手改动悄悄扩大 operator 的可达面。
 var operatorScopeGolden = []string{
-	"GET /api/v1/admin/compliance",
 	"GET /api/v1/admin/console/session",
 	"GET /api/v1/admin/ops/account-availability",
 	"GET /api/v1/admin/ops/advanced-settings",
@@ -48,7 +47,6 @@ var operatorScopeGolden = []string{
 	"GET /api/v1/admin/usage/search-api-keys",
 	"GET /api/v1/admin/usage/search-users",
 	"GET /api/v1/admin/usage/stats",
-	"POST /api/v1/admin/compliance/accept",
 }
 
 // operatorForbiddenPrefixes 永远不允许出现在白名单里的管理域（余额 / 账号 / 分组 / 设置 / 备份 / 系统 / 仪表盘）。
@@ -108,9 +106,7 @@ func TestOperatorScopeIsReadOnlyAndStaysOutOfForbiddenDomains(t *testing.T) {
 	for _, entry := range servermiddleware.OperatorScopeRoutes() {
 		method, path, ok := strings.Cut(entry, " ")
 		require.True(t, ok, entry)
-		if method != http.MethodGet {
-			require.Equal(t, "POST /api/v1/admin/compliance/accept", entry, "the only allowed write is the compliance acknowledgement")
-		}
+		require.Equalf(t, http.MethodGet, method, "operator scope is read-only, got %s", entry)
 		for _, prefix := range operatorForbiddenPrefixes {
 			require.Falsef(t, strings.HasPrefix(path, prefix), "operator scope must never include %s (entry %s)", prefix, entry)
 		}

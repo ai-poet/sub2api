@@ -25,8 +25,8 @@ func TestOperatorScopeAllows(t *testing.T) {
 		{name: "ops ws", method: http.MethodGet, path: "/api/v1/admin/ops/ws/qps", want: true},
 		{name: "usage list", method: http.MethodGet, path: "/api/v1/admin/usage", want: true},
 		{name: "console session", method: http.MethodGet, path: "/api/v1/admin/console/session", want: true},
-		{name: "compliance status", method: http.MethodGet, path: "/api/v1/admin/compliance", want: true},
-		{name: "compliance accept is the only write", method: http.MethodPost, path: "/api/v1/admin/compliance/accept", want: true},
+		{name: "compliance status is not needed by operators", method: http.MethodGet, path: "/api/v1/admin/compliance", want: false},
+		{name: "compliance accept is a write", method: http.MethodPost, path: "/api/v1/admin/compliance/accept", want: false},
 		{name: "lowercase method normalized", method: "get", path: "/api/v1/admin/usage", want: true},
 
 		{name: "concrete path instead of template", method: http.MethodGet, path: "/api/v1/admin/ops/errors/42", want: false},
@@ -55,7 +55,7 @@ func TestOperatorScopeAllows(t *testing.T) {
 	}
 }
 
-// 白名单表本身的不变量：只读条目全是 GET，写条目只有合规确认。
+// 白名单表本身的不变量：只读条目全是 GET，写条目为空（operator 是纯只读角色）。
 func TestOperatorScopeTableInvariants(t *testing.T) {
 	t.Parallel()
 
@@ -63,7 +63,7 @@ func TestOperatorScopeTableInvariants(t *testing.T) {
 		require.Truef(t, strings.HasPrefix(key, "GET "), "read scope entry must be GET: %s", key)
 		require.Truef(t, strings.HasPrefix(key, "GET /api/v1/admin/"), "read scope entry must live under /api/v1/admin: %s", key)
 	}
-	require.Equal(t, map[string]struct{}{"POST /api/v1/admin/compliance/accept": {}}, operatorWriteScope)
+	require.Empty(t, operatorWriteScope)
 
 	routes := OperatorScopeRoutes()
 	require.Len(t, routes, len(operatorReadScope)+len(operatorWriteScope))

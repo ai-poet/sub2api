@@ -141,9 +141,9 @@ func TestAdminAuthOperatorScope(t *testing.T) {
 		require.Contains(t, w.Body.String(), `"role":"operator"`)
 	})
 
-	t.Run("operator_allowed_on_compliance_accept", func(t *testing.T) {
+	t.Run("operator_has_no_write_access_at_all", func(t *testing.T) {
 		w := f.do(t, 2, http.MethodPost, "/api/v1/admin/compliance/accept")
-		require.Equal(t, http.StatusOK, w.Code)
+		require.Equal(t, http.StatusForbidden, w.Code)
 	})
 
 	t.Run("operator_denied_outside_scope", func(t *testing.T) {
@@ -207,8 +207,8 @@ func TestAdminAuthOperatorScope(t *testing.T) {
 		require.Equal(t, http.StatusForbidden, entry.StatusCode)
 		require.Empty(t, entry.RequestBody)
 	}
-	// 5 条普通拒绝 + 1 条 WebSocket 握手拒绝。
-	require.Len(t, logs, 6)
+	// 1 条写请求 + 5 条普通拒绝 + 1 条 WebSocket 握手拒绝。
+	require.Len(t, logs, 7)
 
 	paths := map[string]bool{}
 	for _, entry := range logs {

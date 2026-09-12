@@ -16,6 +16,12 @@ func AdminComplianceGuard(settingService *service.SettingService) gin.HandlerFun
 			return
 		}
 
+		// 部署与运营合规承诺面向实例的部署运营者（admin）；运维管理员（operator）是只读排障角色，不要求确认。
+		if role, ok := GetUserRoleFromContext(c); ok && role == service.RoleOperator {
+			c.Next()
+			return
+		}
+
 		subject, ok := GetAuthSubjectFromContext(c)
 		if !ok {
 			AbortWithError(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authorization required")

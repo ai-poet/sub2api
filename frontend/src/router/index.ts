@@ -781,7 +781,8 @@ router.beforeEach(async (to, _from, next) => {
     }
   }
 
-  if (requiresAdmin && authStore.hasConsoleAccess) {
+  // 合规确认只针对管理员；运维管理员（operator）是只读排障角色，后端对其直接放行。
+  if (requiresAdmin && authStore.isAdmin) {
     const adminComplianceStore = useAdminComplianceStore()
     if (!adminComplianceStore.initialized) {
       try {
