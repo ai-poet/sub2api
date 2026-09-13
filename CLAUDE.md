@@ -114,8 +114,13 @@ The features below are locally maintained customizations of this fork. During up
   three deliberate departures recorded in its manifests: `rusqlite` bumped to
   0.37 (`links = "sqlite3"` cannot coexist with `waku-core`'s copy), `wreq`/
   BoringSSL removed in favour of `reqwest` (`api/src/bun_tls.rs` — the fork
-  routes through its own gateway and has no first-party client to imitate), and
-  `enigo`/`xcap`/`image`/`cpal` left off (Waku has its own Computer Use).
+  routes through its own gateway and has no first-party client to imitate),
+  `enigo`/`xcap`/`image`/`cpal` left off (Waku has its own Computer Use), and
+  the Responses adapter taught to take a gateway endpoint plus a bearer key
+  (`api/src/providers/codex.rs::with_gateway`, wired in `api/src/registry.rs`)
+  so any model can be driven through any of the three wire formats, and a
+  container-level `#[serde(default)]` on `Config` (`core/src/lib.rs`) so the
+  partial `config` block Waku writes loads instead of failing the file.
 - Adapter, which is ours and where changes belong:
   `client/crates/waku-agent-bridge/` (engine lifecycle, permission bridge,
   history ownership, steering, MCP tool wrapper, background-work snapshots,

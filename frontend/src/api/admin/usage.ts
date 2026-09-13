@@ -38,6 +38,19 @@ export interface SimpleApiKey {
   user_id: number
 }
 
+/** 调用日志筛选项的最小投影（运维管理员可用）：只有 id / name / platform。 */
+export interface UsageFilterGroup {
+  id: number
+  name: string
+  platform: string
+}
+
+export interface UsageFilterAccount {
+  id: number
+  name: string
+  platform: string
+}
+
 export interface UsageCleanupFilters {
   start_time: string
   end_time: string
@@ -171,6 +184,40 @@ export async function searchApiKeys(userId?: number, keyword?: string): Promise<
 }
 
 /**
+ * 分组下拉项（含已停用分组），只返回 id / name / platform。
+ * 运维管理员无权访问 /admin/groups，筛选项改走这里。
+ */
+export async function listFilterGroups(): Promise<UsageFilterGroup[]> {
+  const { data } = await apiClient.get<UsageFilterGroup[]>('/admin/usage/filter-groups')
+  return data
+}
+
+/**
+ * 按名称搜索账号，只返回 id / name / platform（最多 20 条）。
+ * 运维管理员无权访问 /admin/accounts，筛选项改走这里。
+ */
+export async function searchAccounts(keyword: string): Promise<UsageFilterAccount[]> {
+  const { data } = await apiClient.get<UsageFilterAccount[]>('/admin/usage/search-accounts', {
+    params: { q: keyword }
+  })
+  return data
+}
+
+/**
+ * 时间范围内出现过的请求模型名（去重排序），不带统计数字。
+ * 运维管理员无权访问 dashboard 模型统计，模型下拉改走这里。
+ */
+export async function listFilterModels(startDate?: string, endDate?: string): Promise<string[]> {
+  const params: Record<string, string> = {}
+  if (startDate && endDate) {
+    params.start_date = startDate
+    params.end_date = endDate
+  }
+  const { data } = await apiClient.get<string[]>('/admin/usage/filter-models', { params })
+  return data
+}
+
+/**
  * List usage cleanup tasks (admin only)
  * @param params - Query parameters for pagination
  * @returns Paginated list of cleanup tasks
@@ -212,6 +259,9 @@ export const adminUsageAPI = {
   getStats,
   searchUsers,
   searchApiKeys,
+  listFilterGroups,
+  searchAccounts,
+  listFilterModels,
   listCleanupTasks,
   createCleanupTask,
   cancelCleanupTask

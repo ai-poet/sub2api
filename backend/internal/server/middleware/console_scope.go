@@ -60,6 +60,11 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/usage/stats":           {},
 	"GET /api/v1/admin/usage/search-users":    {},
 	"GET /api/v1/admin/usage/search-api-keys": {},
+	// 调用日志筛选项：分组 / 账号只返回 id、name、platform，模型只返回名称（usage_handler_filter_options.go）；
+	// 替代 operator 无权访问的 /admin/groups、/admin/accounts、/admin/dashboard/models
+	"GET /api/v1/admin/usage/search-accounts": {},
+	"GET /api/v1/admin/usage/filter-groups":   {},
+	"GET /api/v1/admin/usage/filter-models":   {},
 }
 
 // operatorWriteScope 允许 operator 调用的非 GET 条目。刻意保持为空：operator 是纯只读角色，

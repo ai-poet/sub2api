@@ -723,6 +723,10 @@ func registerUsageRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		usage.GET("/stats", h.Admin.Usage.Stats)
 		usage.GET("/search-users", h.Admin.Usage.SearchUsers)
 		usage.GET("/search-api-keys", h.Admin.Usage.SearchAPIKeys)
+		// fork：调用日志筛选项的最小投影（id / name / platform、模型名），供运维管理员使用，见 docs/OPERATOR_ROLE.md
+		usage.GET("/search-accounts", h.Admin.Usage.SearchAccounts)
+		usage.GET("/filter-groups", h.Admin.Usage.FilterGroups)
+		usage.GET("/filter-models", h.Admin.Usage.FilterModels)
 		usage.GET("/cleanup-tasks", h.Admin.Usage.ListCleanupTasks)
 		usage.POST("/cleanup-tasks", h.Admin.Usage.CreateCleanupTask)
 		usage.POST("/cleanup-tasks/:id/cancel", h.Admin.Usage.CancelCleanupTask)

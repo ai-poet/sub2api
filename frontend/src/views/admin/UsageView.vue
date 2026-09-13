@@ -260,8 +260,30 @@ const breakdownFilters = computed(() => {
   return f
 })
 
+// 运维管理员无权访问 dashboard 模型统计，模型下拉改走只返回模型名的调用日志筛选接口。
+const operatorModelNames = ref<string[]>([])
+let operatorModelsReqSeq = 0
+const loadOperatorModelOptions = async () => {
+  if (!readonly.value) return
+  const seq = ++operatorModelsReqSeq
+  try {
+    const models = await adminAPI.usage.listFilterModels(
+      filters.value.start_date || startDate.value,
+      filters.value.end_date || endDate.value
+    )
+    if (seq !== operatorModelsReqSeq) return
+    operatorModelNames.value = models
+  } catch (error) {
+    if (seq !== operatorModelsReqSeq) return
+    console.error('Failed to load model filter options:', error)
+    operatorModelNames.value = []
+  }
+}
+
 const modelNameOptions = computed(() =>
-  Array.from(new Set(requestedModelStats.value.map((m) => m.model).filter(Boolean))).sort()
+  readonly.value
+    ? operatorModelNames.value
+    : Array.from(new Set(requestedModelStats.value.map((m) => m.model).filter(Boolean))).sort()
 )
 
 const handleUserClick = async (userId: number) => {
@@ -443,7 +465,11 @@ const invalidateModelStatsCache = () => {
 }
 
 const loadModelStats = async (source: ModelDistributionSource, force = false) => {
-  if (readonly.value) return
+  if (readonly.value) {
+    // 只读模式没有模型分布图，但模型筛选下拉仍要随时间范围刷新。
+    void loadOperatorModelOptions()
+    return
+  }
   if (!force && loadedModelSources[source]) {
     return
   }

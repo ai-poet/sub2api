@@ -112,14 +112,22 @@
         :readonly="readonly"
       />
 
-      <!-- Settings Dialog (hidden in fullscreen mode and in read-only mode) -->
+      <!-- Settings / Alert Rules dialogs (hidden in fullscreen mode and in read-only mode) -->
       <template v-if="!isFullscreen && !readonly">
         <OpsSettingsDialog :show="showSettingsDialog" @close="showSettingsDialog = false" @saved="onSettingsSaved" />
 
         <BaseDialog :show="showAlertRulesCard" :title="t('admin.ops.alertRules.title')" width="extra-wide" @close="showAlertRulesCard = false">
           <OpsAlertRulesCard />
         </BaseDialog>
+      </template>
 
+      <!--
+        Drill-down modals (hidden in fullscreen mode only).
+        只读模式（operator）保持可用：三者只读白名单内的 /admin/ops/requests、/request-errors*、/upstream-errors*，
+        后端已按 operator 投影（client_ip 掩码；错误体入库时凭证字段即已脱敏），弹窗内没有任何写操作。
+        不要再把它们并回上面的 !readonly 分支，否则 operator 点「明细」不会挂载弹窗、也不会发请求。
+      -->
+      <template v-if="!isFullscreen">
         <OpsErrorDetailsModal
           :show="showErrorDetails"
           :time-range="timeRange"

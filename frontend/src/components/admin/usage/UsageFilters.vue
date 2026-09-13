@@ -436,13 +436,15 @@ const debounceAccountSearch = () => {
       accountResults.value = []
       return
     }
-    if (props.readonly) {
-      accountResults.value = []
-      return
-    }
     try {
-      const res = await adminAPI.accounts.list(1, 20, { search: accountKeyword.value })
-      accountResults.value = res.items.map((a) => ({ id: a.id, name: a.name }))
+      if (props.readonly) {
+        // 运维管理员无权访问 /admin/accounts，改走只返回 id / name / platform 的调用日志筛选接口。
+        const res = await adminAPI.usage.searchAccounts(accountKeyword.value)
+        accountResults.value = res.map((a) => ({ id: a.id, name: a.name }))
+      } else {
+        const res = await adminAPI.accounts.list(1, 20, { search: accountKeyword.value })
+        accountResults.value = res.items.map((a) => ({ id: a.id, name: a.name }))
+      }
     } catch {
       accountResults.value = []
     }
@@ -534,10 +536,15 @@ watch(
 
 onMounted(async () => {
   document.addEventListener('click', onDocumentClick)
-  if (props.readonly) return
   try {
-    const gs = await adminAPI.groups.list(1, 1000)
-    groupOptions.value.push(...gs.items.map((g: any) => ({ value: g.id, label: g.name })))
+    if (props.readonly) {
+      // 运维管理员无权访问 /admin/groups，改走只返回 id / name / platform 的调用日志筛选接口。
+      const groups = await adminAPI.usage.listFilterGroups()
+      groupOptions.value.push(...groups.map((g) => ({ value: g.id, label: g.name })))
+    } else {
+      const gs = await adminAPI.groups.list(1, 1000)
+      groupOptions.value.push(...gs.items.map((g: any) => ({ value: g.id, label: g.name })))
+    }
   } catch {
     // Ignore filter option loading errors (page still usable)
   }

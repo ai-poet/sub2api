@@ -60,12 +60,16 @@ const mockSearchApiKeys = vi.fn().mockResolvedValue([])
 const mockGroupsList = vi.fn().mockResolvedValue({ items: [] })
 const mockGetModelStats = vi.fn().mockResolvedValue({ models: [] })
 const mockAccountsList = vi.fn().mockResolvedValue({ items: [] })
+const mockListFilterGroups = vi.fn().mockResolvedValue([])
+const mockSearchAccounts = vi.fn().mockResolvedValue([])
 
 vi.mock('@/api/admin', () => ({
   adminAPI: {
     usage: {
       searchUsers: (...args: any[]) => mockSearchUsers(...args),
       searchApiKeys: (...args: any[]) => mockSearchApiKeys(...args),
+      listFilterGroups: (...args: any[]) => mockListFilterGroups(...args),
+      searchAccounts: (...args: any[]) => mockSearchAccounts(...args),
     },
     groups: { list: (...args: any[]) => mockGroupsList(...args) },
     dashboard: { getModelStats: (...args: any[]) => mockGetModelStats(...args) },
@@ -303,5 +307,79 @@ describe('UsageFilters — native compaction filter', () => {
 
     expect(filters.native_compaction_v2).toBe(true)
     expect(wrapper.emitted('change')).toBeTruthy()
+  })
+})
+
+// 运维管理员（operator）只读模式：分组 / 账号筛选项改走调用日志下的最小投影接口，
+// 不再碰 operator 无权访问的 /admin/groups 与 /admin/accounts。
+describe('UsageFilters — read-only (operator) mode', () => {
+  function mountReadonlyFilters() {
+    return mount(UsageFilters, {
+      props: {
+        modelValue: defaultFilters(),
+        exporting: false,
+        startDate: '2026-05-01',
+        endDate: '2026-05-28',
+        showActions: false,
+        modelOptions: [],
+        readonly: true,
+      },
+      global: {
+        stubs: {
+          Select: true,
+          Teleport: true,
+        },
+      },
+    })
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    mockGroupsList.mockClear()
+    mockAccountsList.mockClear()
+    mockListFilterGroups.mockReset()
+    mockSearchAccounts.mockReset()
+    mockSearchApiKeys.mockResolvedValue([])
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('loads group options from the usage filter endpoint instead of /admin/groups', async () => {
+    mockListFilterGroups.mockResolvedValue([{ id: 3, name: 'ops-group', platform: 'openai' }])
+
+    const wrapper = mountReadonlyFilters()
+    await flushPromises()
+
+    expect(mockListFilterGroups).toHaveBeenCalledTimes(1)
+    expect(mockGroupsList).not.toHaveBeenCalled()
+
+    const selects = wrapper.findAllComponents({ name: 'Select' })
+    const groupSelect = selects.find((s) =>
+      (s.props('options') as Array<{ value: unknown; label: string }>).some((o) => o.label === 'ops-group')
+    )
+    expect(groupSelect, 'group select should list the operator-loaded group').toBeTruthy()
+    expect((groupSelect!.props('options') as Array<{ value: unknown }>).some((o) => o.value === 3)).toBe(true)
+  })
+
+  it('searches accounts through the usage filter endpoint instead of /admin/accounts', async () => {
+    mockSearchAccounts.mockResolvedValue([{ id: 7, name: 'acc-prod', platform: 'openai' }])
+
+    const wrapper = mountReadonlyFilters()
+    await flushPromises()
+
+    const input = wrapper.find('input[placeholder="Search account..."]')
+    expect(input.exists()).toBe(true)
+    await input.trigger('focus')
+    await input.setValue('prod')
+    await input.trigger('input')
+
+    vi.advanceTimersByTime(300)
+    await flushPromises()
+
+    expect(mockSearchAccounts).toHaveBeenCalledWith('prod')
+    expect(mockAccountsList).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('acc-prod')
   })
 })
