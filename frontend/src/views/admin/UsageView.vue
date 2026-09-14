@@ -1,15 +1,15 @@
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <UsageStatsCards :stats="usageStats" />
+      <UsageStatsCards :stats="usageStats" :show-account-cost="!readonly" />
       <div
         v-if="readonly"
         class="rounded-2xl bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
       >
         {{ t('operator.readOnlyNotice') }}
       </div>
-      <!-- Charts Section（依赖 dashboard 聚合接口，运维管理员无权访问，整体隐藏） -->
-      <div v-if="!readonly" class="space-y-4">
+      <!-- Charts Section：管理员走 dashboard 聚合接口；运维管理员走 /admin/usage/{charts,model-stats}（不含账号成本、不可下钻到用户） -->
+      <div class="space-y-4">
         <div class="card p-4">
           <div class="flex flex-wrap items-center gap-4">
             <div class="flex items-center gap-2">
@@ -38,6 +38,8 @@
             :loading="modelStatsLoading"
             :show-source-toggle="true"
             :show-metric-toggle="true"
+            :enable-breakdown="!readonly"
+            :show-account-cost="!readonly"
             :start-date="startDate"
             :end-date="endDate"
             :filters="breakdownFilters"
@@ -47,6 +49,8 @@
             :group-stats="groupStats"
             :loading="chartsLoading"
             :show-metric-toggle="true"
+            :enable-breakdown="!readonly"
+            :show-account-cost="!readonly"
             :start-date="startDate"
             :end-date="endDate"
             :filters="breakdownFilters"
@@ -62,6 +66,7 @@
             :loading="endpointStatsLoading"
             :show-source-toggle="true"
             :show-metric-toggle="true"
+            :enable-breakdown="!readonly"
             :title="t('usage.endpointDistribution')"
             :start-date="startDate"
             :end-date="endDate"
@@ -465,11 +470,8 @@ const invalidateModelStatsCache = () => {
 }
 
 const loadModelStats = async (source: ModelDistributionSource, force = false) => {
-  if (readonly.value) {
-    // 只读模式没有模型分布图，但模型筛选下拉仍要随时间范围刷新。
-    void loadOperatorModelOptions()
-    return
-  }
+  // 只读模式：模型筛选下拉走独立的模型名接口，随时间范围一起刷新。
+  if (readonly.value) void loadOperatorModelOptions()
   if (!force && loadedModelSources[source]) {
     return
   }
@@ -494,7 +496,10 @@ const loadModelStats = async (source: ModelDistributionSource, force = false) =>
 	  upstream_model_mismatch: filters.value.upstream_model_mismatch,
     }
 
-    const response = await adminAPI.dashboard.getModelStats({ ...baseParams, model_source: source })
+    // 运维管理员无权访问 dashboard 模型统计，改走 usage 域的同口径接口（不含账号成本）。
+    const response = readonly.value
+      ? await adminAPI.usage.getModelStats({ ...baseParams, model_source: source })
+      : await adminAPI.dashboard.getModelStats({ ...baseParams, model_source: source })
 
     if (seq !== modelStatsReqSeq) return
 
@@ -524,12 +529,33 @@ const loadModelStats = async (source: ModelDistributionSource, force = false) =>
 }
 
 const loadChartData = async () => {
-  if (readonly.value) return
   const seq = ++chartReqSeq
   chartsLoading.value = true
   try {
     const requestType = filters.value.request_type
     const legacyStream = requestType ? requestTypeToLegacyStream(requestType) : filters.value.stream
+    if (readonly.value) {
+      // 运维管理员无权访问 dashboard 快照，趋势 / 分组改走 usage 域的同口径接口（不含账号成本）。
+      const charts = await adminAPI.usage.getCharts({
+        start_date: filters.value.start_date || startDate.value,
+        end_date: filters.value.end_date || endDate.value,
+        granularity: granularity.value,
+        user_id: filters.value.user_id,
+        model: filters.value.model,
+        api_key_id: filters.value.api_key_id,
+        account_id: filters.value.account_id,
+        group_id: filters.value.group_id,
+        request_type: requestType,
+        stream: legacyStream === null ? undefined : legacyStream,
+        native_compaction_v2: filters.value.native_compaction_v2,
+        billing_type: filters.value.billing_type,
+        upstream_model_mismatch: filters.value.upstream_model_mismatch,
+      })
+      if (seq !== chartReqSeq) return
+      trendData.value = charts.trend || []
+      groupStats.value = charts.groups || []
+      return
+    }
     const snapshot = await adminAPI.dashboard.getSnapshotV2({
       start_date: filters.value.start_date || startDate.value,
       end_date: filters.value.end_date || endDate.value,

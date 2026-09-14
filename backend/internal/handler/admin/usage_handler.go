@@ -395,6 +395,13 @@ func (h *UsageHandler) Stats(c *gin.Context) {
 		c.Header("X-Usage-Stats-Cache", cacheStatusValue(hit))
 	}
 
+	// fork：运维管理员看不到账号侧成本（与调用日志的 operator 投影一致）；缓存对象可能被共享，先拷贝再抹。
+	if middleware.IsOperatorRequest(c) && stats != nil {
+		clone := *stats
+		clone.TotalAccountCost = nil
+		stats = &clone
+	}
+
 	response.Success(c, stats)
 }
 

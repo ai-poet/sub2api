@@ -65,6 +65,10 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/usage/search-accounts": {},
 	"GET /api/v1/admin/usage/filter-groups":   {},
 	"GET /api/v1/admin/usage/filter-models":   {},
+	// 调用日志图表：趋势 / 分组 / 模型分布聚合（usage_handler_charts.go），operator 响应抹掉 account_cost；
+	// 替代 operator 无权访问的 /admin/dashboard/{snapshot-v2,models}，不含用户级明细
+	"GET /api/v1/admin/usage/charts":      {},
+	"GET /api/v1/admin/usage/model-stats": {},
 }
 
 // operatorWriteScope 允许 operator 调用的非 GET 条目。刻意保持为空：operator 是纯只读角色，

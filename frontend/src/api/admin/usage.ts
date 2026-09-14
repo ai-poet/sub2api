@@ -5,7 +5,7 @@
 
 import { apiClient } from '../client'
 import type { AdminUsageLog, UsageQueryParams, PaginatedResponse, UsageRequestType } from '@/types'
-import type { EndpointStat } from '@/types'
+import type { EndpointStat, GroupStat, ModelStat, TrendDataPoint } from '@/types'
 
 // ==================== Types ====================
 
@@ -217,6 +217,61 @@ export async function listFilterModels(startDate?: string, endDate?: string): Pr
   return data
 }
 
+/** 调用日志页图表参数：与 getStats 相同的筛选 + 日期 / 粒度。 */
+export interface UsageChartsParams {
+  start_date?: string
+  end_date?: string
+  granularity?: 'day' | 'hour'
+  user_id?: number
+  api_key_id?: number
+  account_id?: number
+  group_id?: number
+  model?: string
+  request_type?: UsageRequestType
+  stream?: boolean
+  native_compaction_v2?: boolean | null
+  billing_type?: number | null
+  billing_mode?: string | null
+  upstream_model_mismatch?: boolean
+}
+
+export interface UsageChartsResponse {
+  trend: TrendDataPoint[]
+  groups: GroupStat[]
+  start_date: string
+  end_date: string
+  granularity: string
+}
+
+export interface UsageModelStatsParams extends Omit<UsageChartsParams, 'granularity'> {
+  model_source?: 'requested' | 'upstream' | 'mapping'
+}
+
+export interface UsageModelStatsResponse {
+  models: ModelStat[]
+  start_date: string
+  end_date: string
+  model_source: string
+}
+
+/**
+ * Token 使用趋势与分组分布（形状同 dashboard snapshot-v2 的 trend / groups）。
+ * 运维管理员无权访问 dashboard 快照，图表改走这里；operator 响应不含账号成本。
+ */
+export async function getCharts(params: UsageChartsParams): Promise<UsageChartsResponse> {
+  const { data } = await apiClient.get<UsageChartsResponse>('/admin/usage/charts', { params })
+  return data
+}
+
+/**
+ * 模型分布（形状同 dashboard models）。
+ * 运维管理员无权访问 dashboard 模型统计，图表改走这里；operator 响应不含账号成本。
+ */
+export async function getModelStats(params: UsageModelStatsParams): Promise<UsageModelStatsResponse> {
+  const { data } = await apiClient.get<UsageModelStatsResponse>('/admin/usage/model-stats', { params })
+  return data
+}
+
 /**
  * List usage cleanup tasks (admin only)
  * @param params - Query parameters for pagination
@@ -262,6 +317,8 @@ export const adminUsageAPI = {
   listFilterGroups,
   searchAccounts,
   listFilterModels,
+  getCharts,
+  getModelStats,
   listCleanupTasks,
   createCleanupTask,
   cancelCleanupTask

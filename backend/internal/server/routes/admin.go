@@ -727,6 +727,9 @@ func registerUsageRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		usage.GET("/search-accounts", h.Admin.Usage.SearchAccounts)
 		usage.GET("/filter-groups", h.Admin.Usage.FilterGroups)
 		usage.GET("/filter-models", h.Admin.Usage.FilterModels)
+		// fork：调用日志页图表（趋势 / 分组 / 模型分布），供运维管理员使用；operator 响应抹掉 account_cost
+		usage.GET("/charts", h.Admin.Usage.Charts)
+		usage.GET("/model-stats", h.Admin.Usage.ModelStats)
 		usage.GET("/cleanup-tasks", h.Admin.Usage.ListCleanupTasks)
 		usage.POST("/cleanup-tasks", h.Admin.Usage.CreateCleanupTask)
 		usage.POST("/cleanup-tasks/:id/cancel", h.Admin.Usage.CancelCleanupTask)

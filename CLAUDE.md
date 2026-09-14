@@ -118,9 +118,18 @@ The features below are locally maintained customizations of this fork. During up
   `enigo`/`xcap`/`image`/`cpal` left off (Waku has its own Computer Use), and
   the Responses adapter taught to take a gateway endpoint plus a bearer key
   (`api/src/providers/codex.rs::with_gateway`, wired in `api/src/registry.rs`)
-  so any model can be driven through any of the three wire formats, and a
+  so any model can be driven through any of the three wire formats, a
   container-level `#[serde(default)]` on `Config` (`core/src/lib.rs`) so the
-  partial `config` block Waku writes loads instead of failing the file.
+  partial `config` block Waku writes loads instead of failing the file, an
+  explicit `config.provider` honoured even when it is `anthropic`
+  (`query/src/lib.rs` — otherwise the engine's model-name family table
+  re-routes `grok-*` to xai and `gemini-*` to google, neither configured
+  here), a stream's first `error` event kept and used to end the turn
+  (`api/src/lib.rs` + `query/src/lib.rs` — it used to be logged and dropped,
+  surfacing as a turn that finished with nothing to say), and
+  `attribution_text` naming the product instead of claiming to be Anthropic's
+  official CLI (`core/src/system_prompt.rs`, brand from
+  `SUB2API_BRAND_NAME`).
 - Adapter, which is ours and where changes belong:
   `client/crates/waku-agent-bridge/` (engine lifecycle, permission bridge,
   history ownership, steering, MCP tool wrapper, background-work snapshots,

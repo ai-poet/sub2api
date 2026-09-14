@@ -4,7 +4,7 @@ import { defineComponent, ref } from 'vue'
 
 import UsageView from '../UsageView.vue'
 
-const { list, exportList, getStats, getSnapshotV2, getById, getModelStats, listErrorLogs, routeQuery, aoaToSheet, sheetAddAoa, saveAs, xlsxWrite } = vi.hoisted(() => {
+const { list, exportList, getStats, getSnapshotV2, getById, getModelStats, getCharts, usageGetModelStats, listFilterModels, authState, listErrorLogs, routeQuery, aoaToSheet, sheetAddAoa, saveAs, xlsxWrite } = vi.hoisted(() => {
   vi.stubGlobal('localStorage', {
     getItem: vi.fn(() => null),
     setItem: vi.fn(),
@@ -18,6 +18,10 @@ const { list, exportList, getStats, getSnapshotV2, getById, getModelStats, listE
     getSnapshotV2: vi.fn(),
     getById: vi.fn(),
     getModelStats: vi.fn(),
+    getCharts: vi.fn(),
+    usageGetModelStats: vi.fn(),
+    listFilterModels: vi.fn(),
+    authState: { isAdmin: true },
     listErrorLogs: vi.fn(),
     routeQuery: {} as Record<string, string>,
 		aoaToSheet: vi.fn(() => ({})),
@@ -54,6 +58,9 @@ vi.mock('@/api/admin', () => ({
     usage: {
       list,
       getStats,
+      getCharts,
+      getModelStats: usageGetModelStats,
+      listFilterModels,
     },
     dashboard: {
       getSnapshotV2,
@@ -85,6 +92,18 @@ vi.mock('xlsx', () => ({
 
 vi.mock('@/api/admin/ops', () => ({
   listErrorLogs,
+}))
+
+// 视图通过 useAuthStore().isAdmin 区分管理员 / 运维管理员（只读）；这里不挂 pinia，直接给一个可切换的桩。
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => ({
+    get isAdmin() {
+      return authState.isAdmin
+    },
+    get isOperator() {
+      return !authState.isAdmin
+    },
+  }),
 }))
 
 vi.mock('@/stores/app', () => ({
@@ -799,4 +818,77 @@ describe('admin UsageView model audit export', () => {
 		expect(row.slice(4, 8)).toEqual(['gpt-5.6-sol', 'gpt-5.5', 'gpt-5.4', 'Yes'])
 		expect(saveAs).toHaveBeenCalledTimes(1)
 	})
+})
+
+// 运维管理员（operator）只读模式：图表照常展示，但数据改走 /admin/usage/{charts,model-stats}，
+// 不再请求 operator 无权访问的 dashboard 接口；图表不可下钻到用户、不展示账号成本。
+describe('admin UsageView read-only (operator) charts', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    authState.isAdmin = false
+    list.mockReset().mockResolvedValue({ items: [], total: 0, pages: 0 })
+    getStats.mockReset().mockResolvedValue({
+      total_requests: 0,
+      total_input_tokens: 0,
+      total_output_tokens: 0,
+      total_cache_tokens: 0,
+      total_tokens: 0,
+      total_cost: 0,
+      total_actual_cost: 0,
+      average_duration_ms: 0,
+    })
+    getSnapshotV2.mockReset().mockResolvedValue({ trend: [], models: [], groups: [] })
+    getModelStats.mockReset().mockResolvedValue({ models: [] })
+    getCharts.mockReset().mockResolvedValue({
+      trend: [{ date: '2026-09-01', requests: 1, total_tokens: 10, cost: 0, actual_cost: 0 }],
+      groups: [{ group_id: 1, group_name: 'g1', requests: 1, total_tokens: 10, cost: 0, actual_cost: 0 }],
+    })
+    usageGetModelStats.mockReset().mockResolvedValue({ models: [{ model: 'gpt-5.6', requests: 1, total_tokens: 10 }] })
+    listFilterModels.mockReset().mockResolvedValue(['gpt-5.6'])
+  })
+
+  afterEach(() => {
+    authState.isAdmin = true
+    vi.useRealTimers()
+  })
+
+  it('renders the charts from the usage endpoints and never touches dashboard endpoints', async () => {
+    const wrapper = mountRouteFilteredUsageView()
+    vi.advanceTimersByTime(120)
+    await flushPromises()
+
+    expect(getCharts).toHaveBeenCalledWith(expect.objectContaining({ granularity: 'hour' }))
+    expect(usageGetModelStats).toHaveBeenCalledWith(expect.objectContaining({ model_source: 'requested' }))
+    expect(listFilterModels).toHaveBeenCalled()
+    expect(getSnapshotV2).not.toHaveBeenCalled()
+    expect(getModelStats).not.toHaveBeenCalled()
+
+    expect(wrapper.findComponent({ name: 'TokenUsageTrend' }).exists()).toBe(true)
+    expect((wrapper.vm as any).trendData).toHaveLength(1)
+    expect((wrapper.vm as any).groupStats).toHaveLength(1)
+    expect((wrapper.vm as any).requestedModelStats).toHaveLength(1)
+    expect((wrapper.vm as any).modelNameOptions).toEqual(['gpt-5.6'])
+
+    for (const name of ['ModelDistributionChart', 'GroupDistributionChart', 'EndpointDistributionChart']) {
+      const chart = wrapper.findComponent({ name })
+      expect(chart.exists(), name).toBe(true)
+      expect(chart.props('enableBreakdown'), `${name} breakdown`).toBe(false)
+    }
+    // 端点分布图本身没有账号成本列；模型 / 分组分布图对 operator 隐藏该列。
+    for (const name of ['ModelDistributionChart', 'GroupDistributionChart']) {
+      expect(wrapper.findComponent({ name }).props('showAccountCost'), `${name} account cost`).toBe(false)
+    }
+  })
+
+  it('keeps the dashboard endpoints for admins', async () => {
+    authState.isAdmin = true
+    mountRouteFilteredUsageView()
+    vi.advanceTimersByTime(120)
+    await flushPromises()
+
+    expect(getSnapshotV2).toHaveBeenCalled()
+    expect(getModelStats).toHaveBeenCalled()
+    expect(getCharts).not.toHaveBeenCalled()
+    expect(usageGetModelStats).not.toHaveBeenCalled()
+  })
 })
