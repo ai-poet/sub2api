@@ -357,6 +357,34 @@ func TestAdminApprovalService_CaptureLimitsAndValidation(t *testing.T) {
 	require.ErrorIs(t, err, ErrApprovalGateUnavailable)
 }
 
+func TestAdminApprovalService_CaptureClampsColumnLengths(t *testing.T) {
+	repo := newApprovalRepoStub()
+	svc := newApprovalServiceForTest(repo)
+
+	longEmail := strings.Repeat("e", 300) + "@example.com"
+	in := &AdminApprovalCaptureInput{
+		Method:          http.MethodPost,
+		RouteTemplate:   "/api/v1/admin/users",
+		Path:            "/api/v1/admin/users",
+		ContentType:     "application/json; charset=utf-8; x=" + strings.Repeat("y", 200),
+		Action:          "admin.users.create",
+		Body:            []byte(`{"email":"` + longEmail + `","password":"secret-pass"}`),
+		RequesterUserID: 2,
+		RequesterEmail:  strings.Repeat("r", 300) + "@example.com",
+		RequesterIP:     strings.Repeat("1", 80),
+		RequestID:       strings.Repeat("q", 100),
+	}
+	created, err := svc.Capture(context.Background(), in)
+	require.NoError(t, err, "超长的客户端可控字段不应导致入队失败")
+	require.Len(t, []rune(created.ContentType), 128)
+	require.Len(t, []rune(created.TargetSummary), 255)
+	require.Len(t, []rune(created.RequesterEmail), 255)
+	require.Len(t, []rune(created.RequesterIP), 64)
+	require.Len(t, []rune(created.RequestID), 64)
+	require.Equal(t, "admin.users.create", created.Action)
+	require.True(t, strings.HasPrefix(created.ContentType, "application/json"))
+}
+
 // ---------- Approve / Reject / Cancel ----------
 
 type capturedReplay struct {

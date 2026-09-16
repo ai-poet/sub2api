@@ -219,24 +219,25 @@ func (s *AdminApprovalService) Capture(ctx context.Context, in *AdminApprovalCap
 	sum := sha256.Sum256(in.Body)
 	targetType, targetID, summary := s.resolveTarget(ctx, in, &peek)
 
+	// 与迁移 239 的 VARCHAR 长度对齐；Content-Type / Request-ID 等由客户端控制，超长不能让入库 500。
 	req := &AdminApprovalRequest{
 		Status:              ApprovalStatusPending,
-		Action:              in.Action,
-		Method:              in.Method,
-		RouteTemplate:       in.RouteTemplate,
-		RequestPath:         in.Path,
+		Action:              clampRunes(in.Action, 128),
+		Method:              clampRunes(in.Method, 10),
+		RouteTemplate:       clampRunes(in.RouteTemplate, 255),
+		RequestPath:         clampRunes(in.Path, 1024),
 		RequestQuery:        in.RawQuery,
-		ContentType:         in.ContentType,
+		ContentType:         clampRunes(in.ContentType, 128),
 		RequestBodyEnc:      encrypted,
 		RequestBodyRedacted: RedactAuditBody(in.Body, in.ContentType),
 		RequestBodySHA256:   hex.EncodeToString(sum[:]),
-		TargetType:          targetType,
+		TargetType:          clampRunes(targetType, 32),
 		TargetID:            targetID,
-		TargetSummary:       summary,
+		TargetSummary:       clampRunes(summary, 255),
 		RequesterUserID:     in.RequesterUserID,
-		RequesterEmail:      in.RequesterEmail,
-		RequesterIP:         in.RequesterIP,
-		RequestID:           in.RequestID,
+		RequesterEmail:      clampRunes(in.RequesterEmail, 255),
+		RequesterIP:         clampRunes(in.RequesterIP, 64),
+		RequestID:           clampRunes(in.RequestID, 64),
 		ExpiresAt:           now.Add(AdminApprovalTTL),
 	}
 	created, err := s.repo.Create(ctx, req)
@@ -735,6 +736,18 @@ func extractApprovalErrorCode(body string) string {
 		return "code_" + strconv.FormatInt(int64(v), 10)
 	}
 	return ""
+}
+
+// clampRunes 按字符数截断（Postgres VARCHAR(n) 以字符计），避免超长字段让入库失败。
+func clampRunes(v string, max int) string {
+	if max <= 0 || len(v) <= max {
+		return v
+	}
+	r := []rune(v)
+	if len(r) <= max {
+		return v
+	}
+	return string(r[:max])
 }
 
 func truncateApprovalErrorCode(v string) string {

@@ -127,9 +127,11 @@ func TestAdminService_UpdateUser_DemoteAdminAllowedWhenOthersExist(t *testing.T)
 	require.Equal(t, RoleUser, repo.lastUpdated.Role, "存在其他管理员时允许降级")
 }
 
-func TestAdminService_UpdateUser_PromoteDoesNotCountAdmins(t *testing.T) {
+// fork：系统只允许一个 admin，升级路径必须先查一次现有管理员（ensureNoOtherAdmin）；
+// 桩返回的列表为空表示没有其它管理员，升级应成功。
+func TestAdminService_UpdateUser_PromoteChecksSingleAdmin(t *testing.T) {
 	base := &userRepoStub{user: &User{ID: 42, Email: "u@example.com", Role: RoleUser}}
-	repo := &roleGuardUserRepoStub{rpmUserRepoStub: &rpmUserRepoStub{userRepoStub: base}, adminTotal: 1}
+	repo := &roleGuardUserRepoStub{rpmUserRepoStub: &rpmUserRepoStub{userRepoStub: base}}
 	svc := &adminServiceImpl{
 		userRepo:             repo,
 		redeemCodeRepo:       &redeemRepoStub{},
@@ -139,5 +141,5 @@ func TestAdminService_UpdateUser_PromoteDoesNotCountAdmins(t *testing.T) {
 	updated, err := svc.UpdateUser(context.Background(), 42, &UpdateUserInput{Role: RoleAdmin})
 	require.NoError(t, err)
 	require.Equal(t, RoleAdmin, updated.Role)
-	require.Equal(t, 0, repo.listCalls, "升级路径不应触发管理员计数")
+	require.Equal(t, 1, repo.listCalls, "升级路径应触发一次单管理员校验")
 }

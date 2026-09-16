@@ -34,6 +34,8 @@ type userRepoStub struct {
 	domainCountErr       error
 	domainLimitErr       error
 	domainLimitedCreates int
+	// listed 是 ListWithFilters 的固定返回值；默认空，表示"系统里没有其它匹配用户"（单管理员守卫据此放行）。
+	listed []User
 }
 
 func (s *userRepoStub) CountUsersByEmailDomain(_ context.Context, domain string) (int, error) {
@@ -152,7 +154,7 @@ func (s *userRepoStub) List(ctx context.Context, params pagination.PaginationPar
 }
 
 func (s *userRepoStub) ListWithFilters(ctx context.Context, params pagination.PaginationParams, filters UserListFilters) ([]User, *pagination.PaginationResult, error) {
-	panic("unexpected ListWithFilters call")
+	return s.listed, &pagination.PaginationResult{Total: int64(len(s.listed)), Page: params.Page, PageSize: params.PageSize}, nil
 }
 
 func (s *userRepoStub) GetLatestUsedAtByUserIDs(ctx context.Context, userIDs []int64) (map[int64]*time.Time, error) {
