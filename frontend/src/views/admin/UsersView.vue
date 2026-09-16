@@ -253,7 +253,7 @@
             </button>
 
             <button
-              v-if="selectedCount > 0"
+              v-if="selectedCount > 0 && !readonly"
               class="btn btn-danger flex-1 md:flex-initial"
               data-test="bulk-delete-users"
               :disabled="bulkDeleting"
@@ -743,9 +743,9 @@
 
               <div class="my-1 border-t border-gray-100 dark:border-dark-700"></div>
 
-              <!-- Delete (not for admin) -->
+              <!-- Delete (not for admin; operators cannot request deletion either) -->
               <button
-                v-if="user.role !== 'admin'"
+                v-if="user.role !== 'admin' && !readonly"
                 @click="handleDelete(user); closeActionMenu()"
                 class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
               >
@@ -768,8 +768,8 @@
       @confirm="confirmBulkDelete"
       @cancel="bulkDeleteIds = []"
     />
-    <UserCreateModal :show="showCreateModal" @close="showCreateModal = false" @success="loadUsers" />
-    <UserEditModal :show="showEditModal" :user="editingUser" @close="closeEditModal" @success="loadUsers" />
+    <UserCreateModal :show="showCreateModal" :readonly="readonly" @close="showCreateModal = false" @success="loadUsers" />
+    <UserEditModal :show="showEditModal" :user="editingUser" :readonly="readonly" @close="closeEditModal" @success="loadUsers" />
     <BulkEditUserModal
       :show="showBulkEditModal"
       :selected-ids="selectedIds"
@@ -782,8 +782,8 @@
       @close="closePlatformQuotaModal"
       @success="loadUsers"
     />
-    <UserApiKeysModal :show="showApiKeysModal" :user="viewingUser" @close="closeApiKeysModal" />
-    <UserAllowedGroupsModal :show="showAllowedGroupsModal" :user="allowedGroupsUser" @close="closeAllowedGroupsModal" @success="loadUsers" />
+    <UserApiKeysModal :show="showApiKeysModal" :user="viewingUser" :readonly="readonly" @close="closeApiKeysModal" />
+    <UserAllowedGroupsModal :show="showAllowedGroupsModal" :user="allowedGroupsUser" :readonly="readonly" @close="closeAllowedGroupsModal" @success="loadUsers" />
     <UserBalanceModal :show="showBalanceModal" :user="balanceUser" :operation="balanceOperation" @close="closeBalanceModal" @success="loadUsers" />
     <UserBalanceHistoryModal :show="showBalanceHistoryModal" :user="balanceHistoryUser" @close="closeBalanceHistoryModal" @deposit="handleDepositFromHistory" @withdraw="handleWithdrawFromHistory" />
     <GroupReplaceModal :show="showGroupReplaceModal" :user="groupReplaceUser" :old-group="groupReplaceOldGroup" :all-groups="allGroups" @close="closeGroupReplaceModal" @success="loadUsers" />
@@ -795,6 +795,8 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
+import { isApprovalQueued } from '@/utils/approval'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { useTableSelection } from '@/composables/useTableSelection'
 import { formatDateTime } from '@/utils/format'
@@ -832,6 +834,12 @@ import UserBalanceHistoryModal from '@/components/admin/user/UserBalanceHistoryM
 import GroupReplaceModal from '@/components/admin/user/GroupReplaceModal.vue'
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
+// 只读模式（运维管理员）：写操作由后端排队等待管理员审批；删除用户 / 角色变更不允许发起，
+// 用量列依赖无权访问的 dashboard 接口，分组下拉改用调用日志域的最小分组投影。
+const readonly = computed(() => !authStore.isAdmin)
+// 运维管理员隐藏的列：用量（dashboard 域）与分组（需要完整分组信息）
+const OPERATOR_HIDDEN_COLUMN_KEYS = new Set(['usage', 'usage_anthropic', 'usage_openai', 'usage_gemini', 'usage_antigravity', 'groups'])
 
 // Generate dynamic attribute columns from enabled definitions
 const attributeColumns = computed<Column[]>(() =>
@@ -903,7 +911,7 @@ const allColumns = computed<Column[]>(() => [
   { key: 'last_used_at', label: t('admin.users.columns.lastUsed'), sortable: true },
   { key: 'created_at', label: t('admin.users.columns.created'), sortable: true },
   { key: 'actions', label: t('admin.users.columns.actions'), sortable: false }
-])
+].filter((col) => !readonly.value || !OPERATOR_HIDDEN_COLUMN_KEYS.has(col.key)))
 
 // Columns that can be toggled (exclude email and actions which are always visible)
 const toggleableColumns = computed(() =>
@@ -1064,10 +1072,22 @@ const sortState = reactive(loadInitialSortState())
 
 // Groups data for the groups column and the existing "authorised group" filter (active only)
 const allGroups = ref<AdminGroup[]>([])
+// 运维管理员无权访问 /admin/groups*，下拉改用调用日志域的最小分组投影（id / name / platform）。
+const loadOperatorGroups = async (): Promise<AdminGroup[]> => {
+  const groups = await adminAPI.usage.listFilterGroups()
+  return groups.map((g) => ({
+    id: g.id,
+    name: g.name,
+    platform: g.platform,
+    status: 'active',
+    subscription_type: 'standard',
+    is_exclusive: false
+  }) as unknown as AdminGroup)
+}
 const loadAllGroups = async () => {
   if (allGroups.value.length > 0) return
   try {
-    allGroups.value = await adminAPI.groups.getAll()
+    allGroups.value = readonly.value ? await loadOperatorGroups() : await adminAPI.groups.getAll()
   } catch (e) {
     console.error('Failed to load groups:', e)
   }
@@ -1079,7 +1099,7 @@ const allGroupsForApiKeyFilter = ref<AdminGroup[]>([])
 const loadAllGroupsForApiKeyFilter = async () => {
   if (allGroupsForApiKeyFilter.value.length > 0) return
   try {
-    allGroupsForApiKeyFilter.value = await adminAPI.groups.getAllIncludingInactive()
+    allGroupsForApiKeyFilter.value = readonly.value ? await loadOperatorGroups() : await adminAPI.groups.getAllIncludingInactive()
   } catch (e) {
     console.error('Failed to load groups for API key filter:', e)
   }
@@ -1374,7 +1394,7 @@ const loadUsersSecondaryData = async (
 
   const tasks: Promise<void>[] = []
 
-  if (hasVisibleUsageColumn.value) {
+  if (hasVisibleUsageColumn.value && !readonly.value) {
     tasks.push(
       (async () => {
         try {
@@ -1751,7 +1771,9 @@ const handleToggleStatus = async (user: AdminUser) => {
     )
     loadUsers()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.users.failedToToggle'))
+    // 运维管理员：已排队等待审批（全局提示已弹出）
+    if (isApprovalQueued(error)) return
+    appStore.showError(error?.message || t('admin.users.failedToToggle'))
     console.error('Error toggling user status:', error)
   }
 }

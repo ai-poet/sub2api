@@ -455,6 +455,8 @@ const (
 	SettingKeyGroupStatusNotifyServerChanEnabled = "group_status_notify_serverchan_enabled"
 	SettingKeyGroupStatusNotifyServerChanUID     = "group_status_notify_serverchan_uid"
 	SettingKeyGroupStatusNotifyServerChanSendKey = "group_status_notify_serverchan_sendkey"
+	// 运维写操作审批 → Server酱³ 推送开关（复用上面的 UID / SendKey；本 fork 自有功能）
+	SettingKeyApprovalNotifyServerChanEnabled = "approval_notify_serverchan_enabled"
 
 	// =========================
 	// Ops Monitoring (vNext)

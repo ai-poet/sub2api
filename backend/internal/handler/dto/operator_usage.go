@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"strings"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ip"
@@ -89,6 +90,48 @@ func maskedIPPtr(value *string) *string {
 		return nil
 	}
 	return &masked
+}
+
+// maskAPIKeySecret 把明文 key 折成前 7 位 + … + 后 4 位，仅用于运维管理员辨认是哪把 key。
+func maskAPIKeySecret(key string) string {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return ""
+	}
+	runes := []rune(key)
+	if len(runes) <= 12 {
+		return "••••"
+	}
+	return string(runes[:7]) + "…" + string(runes[len(runes)-4:])
+}
+
+// APIKeyFromServiceOperator 运维管理员看到的 API Key：无明文 key（只有掩码）、无 IP 名单 / 最近使用 IP / 嵌套用户。
+// 额度、限速窗口与分组保留用于排障。
+func APIKeyFromServiceOperator(k *service.APIKey) *APIKey {
+	out := apiKeyWithoutSecret(k)
+	if out == nil {
+		return nil
+	}
+	out.KeyMasked = maskAPIKeySecret(k.Key)
+	return out
+}
+
+// AdminUserForOperator 运维管理员看到的用户视图：余额保留（用户管理页需要），
+// 内嵌的 API Key 去明文（见 docs/OPERATOR_ROLE.md「审批」一节）。原地修改并返回同一指针。
+func AdminUserForOperator(u *AdminUser) *AdminUser {
+	if u == nil {
+		return nil
+	}
+	for i := range u.APIKeys {
+		k := &u.APIKeys[i]
+		k.KeyMasked = maskAPIKeySecret(k.Key)
+		k.Key = ""
+		k.IPWhitelist = nil
+		k.IPBlacklist = nil
+		k.LastUsedIP = nil
+		k.User = nil
+	}
+	return u
 }
 
 // apiKeyWithoutSecret 列表类接口用的 API Key 视图：去掉明文 key、IP 名单、最近使用 IP 与嵌套用户（含余额）。

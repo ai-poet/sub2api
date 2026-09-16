@@ -58,6 +58,8 @@ var auditExtraAllowedKeys = map[string]struct{}{
 	"http_status": {}, "latency_ms": {}, "token_applied": {}, "retryable": {},
 	"event_id": {}, "requested_count": {}, "deleted_events": {}, "deleted_jobs": {},
 	"matched_count": {}, "snapshot_max_id": {}, "filter_hash": {}, "confirm": {},
+	// fork：运维审批（申请 id / 申请人 / 结果状态）
+	"approval_id": {}, "approval_requester_id": {}, "approval_status": {},
 }
 
 // SetAuditExtra adds allowlisted, scalar details to the current audit entry.
@@ -142,6 +144,11 @@ var auditActionOverrides = map[string]string{
 	"POST /api/v1/admin/prompt-audit/events/batch-delete":     "admin.prompt_audit.events.batch_delete",
 	"POST /api/v1/admin/prompt-audit/events/delete-preview":   "admin.prompt_audit.events.delete_preview",
 	"POST /api/v1/admin/prompt-audit/events/delete-by-filter": "admin.prompt_audit.events.filter_delete",
+	// fork：运维审批的决策动作
+	"POST /api/v1/admin/approvals/:id/approve":   service.AuditActionAdminApprovalApprove,
+	"POST /api/v1/admin/approvals/batch-approve": service.AuditActionAdminApprovalBatch,
+	"POST /api/v1/admin/approvals/:id/reject":    service.AuditActionAdminApprovalReject,
+	"POST /api/v1/admin/approvals/:id/cancel":    service.AuditActionAdminApprovalCancel,
 }
 
 // auditBodyOmittedRoutes 请求体几乎整体由凭证构成的路由（如整块粘贴 auth JSON 的导入接口）。

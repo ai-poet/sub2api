@@ -460,6 +460,8 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
+      // 运维管理员可进（写操作在后端被排队等待管理员审批）
+      operatorAllowed: true,
       title: 'User Management',
       titleKey: 'admin.users.title',
       descriptionKey: 'admin.users.description'
@@ -500,9 +502,25 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
+      // 运维管理员可进（写操作在后端被排队等待管理员审批）
+      operatorAllowed: true,
       title: 'Subscription Management',
       titleKey: 'admin.subscriptions.title',
       descriptionKey: 'admin.subscriptions.description'
+    }
+  },
+  {
+    // fork：运维写操作审批（管理员一键通过 / 运维管理员查看与撤回自己的申请）
+    path: '/admin/approvals',
+    name: 'AdminApprovals',
+    component: () => import('@/views/admin/ApprovalsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      operatorAllowed: true,
+      title: 'Approvals',
+      titleKey: 'operator.approval.title',
+      descriptionKey: 'operator.approval.description'
     }
   },
   {

@@ -169,7 +169,9 @@ type SystemSettings struct {
 	ClientDownloadMacOSURL       string
 	GroupStatusEnabled           bool
 	// 分组运行状态 → Server酱³ 推送（fork 自有）；SendKey 只用于写入，读取侧只暴露 Configured
-	GroupStatusNotifyServerChanEnabled           bool
+	GroupStatusNotifyServerChanEnabled bool
+	// 运维写操作审批 → Server酱³ 推送（fork 自有，复用上面的 UID / SendKey）
+	ApprovalNotifyServerChanEnabled              bool
 	GroupStatusNotifyServerChanUID               string
 	GroupStatusNotifyServerChanSendKey           string
 	GroupStatusNotifyServerChanSendKeyConfigured bool

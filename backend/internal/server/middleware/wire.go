@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"github.com/Wei-Shaw/sub2api/internal/service"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 )
@@ -21,8 +23,19 @@ type APIKeyAuthMiddleware gin.HandlerFunc
 var ProviderSet = wire.NewSet(
 	NewJWTAuthMiddleware,
 	NewOptionalJWTAuthMiddleware,
-	NewAdminAuthMiddleware,
+	ProvideAdminAuthMiddleware,
 	NewAPIKeyAuthMiddleware,
 	NewAuditLogMiddleware,
 	NewStepUpAuthMiddleware,
 )
+
+// ProvideAdminAuthMiddleware 生产环境的管理员认证中间件：带运维写操作审批门（fork 本地）。
+func ProvideAdminAuthMiddleware(
+	authService *service.AuthService,
+	userService *service.UserService,
+	settingService *service.SettingService,
+	auditService *service.AuditLogService,
+	gate service.AdminApprovalGate,
+) AdminAuthMiddleware {
+	return NewAdminAuthMiddlewareWithApprovalGate(authService, userService, settingService, auditService, gate)
+}

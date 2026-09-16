@@ -118,6 +118,7 @@
 import { ref, reactive, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { isApprovalQueued } from '@/utils/approval'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser, PlatformQuotaItem, PlatformQuotaPlatform, PlatformQuotaWindow } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -261,7 +262,12 @@ async function onSave() {
     emit('success')
     emit('close')
   } catch (e: any) {
-    appStore.showError(e?.response?.data?.message || t('admin.users.platformQuota.updateFailed'))
+    if (isApprovalQueued(e)) {
+      // 运维管理员：已排队等待管理员审批（全局提示已弹出）
+      emit('close')
+      return
+    }
+    appStore.showError(e?.message || t('admin.users.platformQuota.updateFailed'))
   } finally {
     submitting.value = false
   }
@@ -290,7 +296,10 @@ async function onReset(platform: PlatformQuotaPlatform, quotaWindow: PlatformQuo
     savedConfigured.value = configuredPlatforms(data.platform_quotas || [])
     appStore.showSuccess(t('admin.users.platformQuota.reset.success', { platform, window: windowLabel }))
   } catch (e: any) {
-    appStore.showError(e?.response?.data?.message || t('admin.users.platformQuota.reset.failed'))
+    // 运维管理员：重置窗口已排队等待审批，本地数据保持不变
+    if (!isApprovalQueued(e)) {
+      appStore.showError(e?.message || t('admin.users.platformQuota.reset.failed'))
+    }
   } finally {
     resetting[key] = false
   }

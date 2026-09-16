@@ -304,7 +304,8 @@ export default {
     "communityGroup": "加入交流群",
     "communityGroupTooltip": "扫码加入交流群",
     "communityGroupScanHint": "使用手机扫码加入",
-    "communityGroupJoin": "点击加入"
+    "communityGroupJoin": "点击加入",
+    "approvals": "审批"
   },
   "auth": {
     "referralCodeLabel": "推荐码",
@@ -669,6 +670,10 @@ export default {
           "testSucceeded": "测试推送已发送",
           "testFailed": "测试推送失败"
         },
+        "approvalNotify": {
+          "enabled": "审批申请推送",
+          "enabledHint": "运维管理员提交用户 / 订阅管理的写操作申请时，向管理员推送一条带审批页链接的消息（沿用上方 UID / SendKey）。"
+        },
         "communityQRCodePlaceholder": "粘贴二维码图片的 base64 或 URL",
         "communityQRCode": "交流群二维码",
         "uploadQRCode": "上传二维码",
@@ -805,7 +810,85 @@ export default {
   },
   "operator": {
     "readOnlyNotice": "只读模式：运维管理员只能查看运维监控与调用日志，无法修改设置、处理告警或清理数据。",
-    "roleHint": "运维管理员：只读排障角色，可查看运维监控与调用日志，不能管理用户余额、上游账号与分组。",
-    "singleAdminHint": "系统只允许一个管理员，其余账号请使用运维管理员或普通用户。"
+    "roleHint": "运维管理员：排障角色，可查看运维监控与调用日志；用户管理与订阅管理的修改需经管理员审批后才会执行，不能管理上游账号与分组。",
+    "singleAdminHint": "系统只允许一个管理员，其余账号请使用运维管理员或普通用户。",
+    "approval": {
+      "title": "审批",
+      "description": "运维管理员提交的用户 / 订阅管理写操作，由管理员一键通过后执行。",
+      "queuedToast": "操作已提交审批，等待管理员通过：{target}",
+      "operatorHint": "这里只显示你自己提交的申请；通过后由管理员身份执行。",
+      "approving": "执行中...",
+      "approveSuccess": "已通过并执行：{target}",
+      "approveFailed": "已通过但执行失败：{error}",
+      "rejected": "已拒绝该申请",
+      "cancelled": "已撤回该申请",
+      "rejectTitle": "拒绝申请",
+      "rejectReasonPlaceholder": "拒绝理由（可选，申请人可见）",
+      "cancelTitle": "撤回申请",
+      "cancelConfirm": "确定撤回这条待审申请？撤回后需要重新提交。",
+      "empty": "暂无审批申请",
+      "loadFailed": "加载审批申请失败",
+      "tabs": {
+        "pending": "待处理",
+        "processed": "已处理"
+      },
+      "columns": {
+        "time": "时间",
+        "requester": "申请人",
+        "action": "操作",
+        "target": "对象",
+        "status": "状态",
+        "actions": "操作"
+      },
+      "status": {
+        "pending": "待审批",
+        "executing": "执行中",
+        "approved": "已通过",
+        "failed": "执行失败",
+        "rejected": "已拒绝",
+        "cancelled": "已撤回",
+        "expired": "已过期"
+      },
+      "actions": {
+        "approve": "通过",
+        "approveSelected": "通过选中（{count}）",
+        "approveAll": "一键通过全部待审",
+        "reject": "拒绝",
+        "cancel": "撤回",
+        "detail": "详情"
+      },
+      "batchConfirm": "确定通过 {count} 条待审申请？通过后会立即以你的身份逐条执行。",
+      "batchResult": "批量通过完成：成功 {approved}，失败 {failed}，跳过 {skipped}",
+      "batchEmpty": "没有可通过的待审申请",
+      "detail": {
+        "title": "申请详情",
+        "titleWithId": "申请详情 #{id}",
+        "payload": "请求内容（已脱敏）",
+        "decision": "处理结果",
+        "result": "执行结果",
+        "statusCode": "HTTP 状态",
+        "expiresAt": "有效期至",
+        "close": "关闭"
+      },
+      "actionLabels": {
+        "userCreate": "新建用户",
+        "userUpdate": "编辑用户",
+        "userBalance": "调整余额",
+        "userReplaceGroup": "更换专属分组",
+        "userBatchConcurrency": "批量调整并发",
+        "userBatchLimits": "批量调整限额",
+        "userPlatformQuotas": "修改平台额度",
+        "userPlatformQuotaReset": "重置平台额度窗口",
+        "userAttributes": "修改用户属性",
+        "userAuthIdentity": "绑定登录身份",
+        "apiKeyUpdate": "调整 API Key 分组",
+        "subscriptionAssign": "分配订阅",
+        "subscriptionBulkAssign": "批量分配订阅",
+        "subscriptionExtend": "调整订阅有效期",
+        "subscriptionResetQuota": "重置订阅额度",
+        "subscriptionRevoke": "撤销订阅",
+        "subscriptionRestore": "恢复订阅"
+      }
+    }
   }
 } as const

@@ -45,6 +45,18 @@ func (f AccountGroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccountGroupMutation", m)
 }
 
+// The AdminApprovalRequestFunc type is an adapter to allow the use of ordinary
+// function as AdminApprovalRequest mutator.
+type AdminApprovalRequestFunc func(context.Context, *ent.AdminApprovalRequestMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AdminApprovalRequestFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AdminApprovalRequestMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AdminApprovalRequestMutation", m)
+}
+
 // The AnnouncementFunc type is an adapter to allow the use of ordinary
 // function as Announcement mutator.
 type AnnouncementFunc func(context.Context, *ent.AnnouncementMutation) (ent.Value, error)

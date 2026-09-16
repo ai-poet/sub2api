@@ -97,6 +97,12 @@
               <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
               <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
               <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{ item.label }}</span>
+              <span
+                v-if="item.badge && (item.badge() ?? 0) > 0"
+                class="sidebar-badge"
+                :class="{ 'sidebar-badge-collapsed': sidebarCollapsed }"
+                :data-test="`sidebar-badge-${item.path}`"
+              >{{ sidebarCollapsed ? '' : item.badge() }}</span>
             </router-link>
           </template>
         </div>
@@ -191,7 +197,7 @@
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAdminSettingsStore, useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
+import { useAdminSettingsStore, useAppStore, useApprovalsStore, useAuthStore, useOnboardingStore } from '@/stores'
 import VersionBadge from '@/components/common/VersionBadge.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
@@ -219,6 +225,8 @@ interface NavItem {
    * 开关切换时菜单自动更新。
    */
   featureFlag?: () => boolean | undefined
+  /** 可选的角标计数 getter（如待审批数量）；返回 0 / undefined 时不显示。 */
+  badge?: () => number | undefined
 }
 
 // applyFeatureFlags 递归过滤掉 featureFlag() === false 的节点（含子节点）。
@@ -244,6 +252,9 @@ const appStore = useAppStore()
 const authStore = useAuthStore()
 const onboardingStore = useOnboardingStore()
 const adminSettingsStore = useAdminSettingsStore()
+// 运维写操作审批：待审数量角标（管理员：全站；运维管理员：自己的）
+const approvalsStore = useApprovalsStore()
+const approvalBadge = () => approvalsStore.pendingCount
 const { canUseBatchImage, refreshBatchImageAccess } = useBatchImageAccess()
 
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
@@ -742,11 +753,15 @@ const customMenuItemsForAdmin = computed(() => {
     .sort((a, b) => a.sort_order - b.sort_order)
 })
 
-// 运维管理员（operator）只看得到后端白名单覆盖的两个页面：运维监控与调用日志。
-// 与 router 的 operatorAllowed 标记一致；不含自定义菜单与系统设置。
+// 运维管理员（operator）只看得到后端白名单覆盖的页面：运维监控、调用日志，
+// 以及走审批的用户管理 / 订阅管理和自己的审批申请。与 router 的 operatorAllowed 标记一致；
+// 不含自定义菜单与系统设置。
 const operatorNavItems = computed((): NavItem[] => applyFeatureFlags([
   { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring },
-  { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon }
+  { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
+  { path: '/admin/users', label: t('nav.users'), icon: UsersIcon },
+  { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, featureFlag: flagSubscription },
+  { path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, badge: approvalBadge }
 ]))
 
 // Admin navigation items
@@ -761,6 +776,8 @@ const adminNavItems = computed((): NavItem[] => {
     { path: '/admin/groups', label: t('nav.groups'), icon: FolderIcon },
     // 「仅充值」站点连管理端的「订阅管理」入口也一并收起（路由本身不拦截）。
     { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription },
+    // fork：运维写操作审批（带待审角标）
+    { path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, hideInSimpleMode: true, badge: approvalBadge },
     { path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon },
     { path: '/admin/plugins', label: t('nav.plugins'), icon: PluginIcon, featureFlag: flagPluginManagement },
     { path: '/admin/announcements', label: t('nav.announcements'), icon: BellIcon },

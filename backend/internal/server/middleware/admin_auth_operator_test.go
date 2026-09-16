@@ -146,9 +146,15 @@ func TestAdminAuthOperatorScope(t *testing.T) {
 		require.Equal(t, http.StatusForbidden, w.Code)
 	})
 
+	// 审批范围的写请求在没有注入审批门时必须 fail-closed：503 而不是放行。
+	t.Run("operator_approval_route_without_gate_fails_closed", func(t *testing.T) {
+		w := f.do(t, 2, http.MethodPost, "/api/v1/admin/users/7/balance")
+		require.Equal(t, http.StatusServiceUnavailable, w.Code)
+		require.Contains(t, w.Body.String(), "APPROVAL_GATE_UNAVAILABLE")
+	})
+
 	t.Run("operator_denied_outside_scope", func(t *testing.T) {
 		for _, tc := range []struct{ method, path string }{
-			{http.MethodPost, "/api/v1/admin/users/7/balance"},
 			{http.MethodGet, "/api/v1/admin/settings"},
 			{http.MethodGet, "/api/v1/admin/accounts"},
 			{http.MethodPut, "/api/v1/admin/ops/errors/42/resolve"},
@@ -193,21 +199,33 @@ func TestAdminAuthOperatorScope(t *testing.T) {
 		}
 	})
 
-	// 排空异步队列后检查审计：只有 operator 的拒绝被记录，普通用户与 admin 不产生 scope.denied。
+	// 排空异步队列后检查审计：只有 operator 的拒绝被记录，普通用户与 admin 不产生 scope.denied；
+	// 没有审批门时的 503 记为 admin.approval.refused。
 	f.audit.Stop()
 	logs := f.auditRepo.snapshot()
 	require.NotEmpty(t, logs)
+	denied, refused := 0, 0
 	for _, entry := range logs {
-		require.Equal(t, service.AuditActionAdminScopeDenied, entry.Action)
+		switch entry.Action {
+		case service.AuditActionAdminScopeDenied:
+			denied++
+			require.Equal(t, http.StatusForbidden, entry.StatusCode)
+		case service.AuditActionAdminApprovalRefused:
+			refused++
+			require.Equal(t, http.StatusServiceUnavailable, entry.StatusCode)
+		default:
+			t.Fatalf("unexpected audit action %q", entry.Action)
+		}
 		require.Equal(t, service.RoleOperator, entry.ActorRole)
 		require.Equal(t, "ops@example.com", entry.ActorEmail)
 		require.NotNil(t, entry.ActorUserID)
 		require.Equal(t, int64(2), *entry.ActorUserID)
 		require.Equal(t, service.AuditAuthMethodJWT, entry.AuthMethod)
-		require.Equal(t, http.StatusForbidden, entry.StatusCode)
 		require.Empty(t, entry.RequestBody)
 	}
-	// 1 条写请求 + 5 条普通拒绝 + 1 条 WebSocket 握手拒绝。
+	// 1 条写请求 + 4 条普通拒绝 + 1 条 WebSocket 握手拒绝；1 条审批范围写请求（无审批门 → 503）。
+	require.Equal(t, 6, denied)
+	require.Equal(t, 1, refused)
 	require.Len(t, logs, 7)
 
 	paths := map[string]bool{}

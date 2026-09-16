@@ -54,9 +54,11 @@ type AdminUser struct {
 }
 
 type APIKey struct {
-	ID          int64      `json:"id"`
-	UserID      int64      `json:"user_id"`
-	Key         string     `json:"key"`
+	ID     int64  `json:"id"`
+	UserID int64  `json:"user_id"`
+	Key    string `json:"key"`
+	// KeyMasked 运维管理员视图里代替明文 key 的掩码（前 7 位 + … + 后 4 位）。
+	KeyMasked   string     `json:"key_masked,omitempty"`
 	Name        string     `json:"name"`
 	GroupID     *int64     `json:"group_id"`
 	Status      string     `json:"status"`

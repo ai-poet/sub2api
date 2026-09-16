@@ -7,6 +7,7 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
+	"github.com/Wei-Shaw/sub2api/ent/adminapprovalrequest"
 	"github.com/Wei-Shaw/sub2api/ent/announcement"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
@@ -265,6 +266,117 @@ func init() {
 	accountgroupDescCreatedAt := accountgroupFields[3].Descriptor()
 	// accountgroup.DefaultCreatedAt holds the default value on creation for the created_at field.
 	accountgroup.DefaultCreatedAt = accountgroupDescCreatedAt.Default.(func() time.Time)
+	adminapprovalrequestMixin := schema.AdminApprovalRequest{}.Mixin()
+	adminapprovalrequestMixinFields0 := adminapprovalrequestMixin[0].Fields()
+	_ = adminapprovalrequestMixinFields0
+	adminapprovalrequestFields := schema.AdminApprovalRequest{}.Fields()
+	_ = adminapprovalrequestFields
+	// adminapprovalrequestDescCreatedAt is the schema descriptor for created_at field.
+	adminapprovalrequestDescCreatedAt := adminapprovalrequestMixinFields0[0].Descriptor()
+	// adminapprovalrequest.DefaultCreatedAt holds the default value on creation for the created_at field.
+	adminapprovalrequest.DefaultCreatedAt = adminapprovalrequestDescCreatedAt.Default.(func() time.Time)
+	// adminapprovalrequestDescUpdatedAt is the schema descriptor for updated_at field.
+	adminapprovalrequestDescUpdatedAt := adminapprovalrequestMixinFields0[1].Descriptor()
+	// adminapprovalrequest.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	adminapprovalrequest.DefaultUpdatedAt = adminapprovalrequestDescUpdatedAt.Default.(func() time.Time)
+	// adminapprovalrequest.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	adminapprovalrequest.UpdateDefaultUpdatedAt = adminapprovalrequestDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// adminapprovalrequestDescStatus is the schema descriptor for status field.
+	adminapprovalrequestDescStatus := adminapprovalrequestFields[0].Descriptor()
+	// adminapprovalrequest.DefaultStatus holds the default value on creation for the status field.
+	adminapprovalrequest.DefaultStatus = adminapprovalrequestDescStatus.Default.(string)
+	// adminapprovalrequest.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	adminapprovalrequest.StatusValidator = adminapprovalrequestDescStatus.Validators[0].(func(string) error)
+	// adminapprovalrequestDescAction is the schema descriptor for action field.
+	adminapprovalrequestDescAction := adminapprovalrequestFields[1].Descriptor()
+	// adminapprovalrequest.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	adminapprovalrequest.ActionValidator = adminapprovalrequestDescAction.Validators[0].(func(string) error)
+	// adminapprovalrequestDescMethod is the schema descriptor for method field.
+	adminapprovalrequestDescMethod := adminapprovalrequestFields[2].Descriptor()
+	// adminapprovalrequest.MethodValidator is a validator for the "method" field. It is called by the builders before save.
+	adminapprovalrequest.MethodValidator = adminapprovalrequestDescMethod.Validators[0].(func(string) error)
+	// adminapprovalrequestDescRouteTemplate is the schema descriptor for route_template field.
+	adminapprovalrequestDescRouteTemplate := adminapprovalrequestFields[3].Descriptor()
+	// adminapprovalrequest.RouteTemplateValidator is a validator for the "route_template" field. It is called by the builders before save.
+	adminapprovalrequest.RouteTemplateValidator = adminapprovalrequestDescRouteTemplate.Validators[0].(func(string) error)
+	// adminapprovalrequestDescRequestPath is the schema descriptor for request_path field.
+	adminapprovalrequestDescRequestPath := adminapprovalrequestFields[4].Descriptor()
+	// adminapprovalrequest.RequestPathValidator is a validator for the "request_path" field. It is called by the builders before save.
+	adminapprovalrequest.RequestPathValidator = adminapprovalrequestDescRequestPath.Validators[0].(func(string) error)
+	// adminapprovalrequestDescRequestQuery is the schema descriptor for request_query field.
+	adminapprovalrequestDescRequestQuery := adminapprovalrequestFields[5].Descriptor()
+	// adminapprovalrequest.DefaultRequestQuery holds the default value on creation for the request_query field.
+	adminapprovalrequest.DefaultRequestQuery = adminapprovalrequestDescRequestQuery.Default.(string)
+	// adminapprovalrequestDescContentType is the schema descriptor for content_type field.
+	adminapprovalrequestDescContentType := adminapprovalrequestFields[6].Descriptor()
+	// adminapprovalrequest.DefaultContentType holds the default value on creation for the content_type field.
+	adminapprovalrequest.DefaultContentType = adminapprovalrequestDescContentType.Default.(string)
+	// adminapprovalrequest.ContentTypeValidator is a validator for the "content_type" field. It is called by the builders before save.
+	adminapprovalrequest.ContentTypeValidator = adminapprovalrequestDescContentType.Validators[0].(func(string) error)
+	// adminapprovalrequestDescRequestBodyEnc is the schema descriptor for request_body_enc field.
+	adminapprovalrequestDescRequestBodyEnc := adminapprovalrequestFields[7].Descriptor()
+	// adminapprovalrequest.DefaultRequestBodyEnc holds the default value on creation for the request_body_enc field.
+	adminapprovalrequest.DefaultRequestBodyEnc = adminapprovalrequestDescRequestBodyEnc.Default.(string)
+	// adminapprovalrequestDescRequestBodyRedacted is the schema descriptor for request_body_redacted field.
+	adminapprovalrequestDescRequestBodyRedacted := adminapprovalrequestFields[8].Descriptor()
+	// adminapprovalrequest.DefaultRequestBodyRedacted holds the default value on creation for the request_body_redacted field.
+	adminapprovalrequest.DefaultRequestBodyRedacted = adminapprovalrequestDescRequestBodyRedacted.Default.(string)
+	// adminapprovalrequestDescRequestBodySha256 is the schema descriptor for request_body_sha256 field.
+	adminapprovalrequestDescRequestBodySha256 := adminapprovalrequestFields[9].Descriptor()
+	// adminapprovalrequest.DefaultRequestBodySha256 holds the default value on creation for the request_body_sha256 field.
+	adminapprovalrequest.DefaultRequestBodySha256 = adminapprovalrequestDescRequestBodySha256.Default.(string)
+	// adminapprovalrequest.RequestBodySha256Validator is a validator for the "request_body_sha256" field. It is called by the builders before save.
+	adminapprovalrequest.RequestBodySha256Validator = adminapprovalrequestDescRequestBodySha256.Validators[0].(func(string) error)
+	// adminapprovalrequestDescTargetType is the schema descriptor for target_type field.
+	adminapprovalrequestDescTargetType := adminapprovalrequestFields[10].Descriptor()
+	// adminapprovalrequest.DefaultTargetType holds the default value on creation for the target_type field.
+	adminapprovalrequest.DefaultTargetType = adminapprovalrequestDescTargetType.Default.(string)
+	// adminapprovalrequest.TargetTypeValidator is a validator for the "target_type" field. It is called by the builders before save.
+	adminapprovalrequest.TargetTypeValidator = adminapprovalrequestDescTargetType.Validators[0].(func(string) error)
+	// adminapprovalrequestDescTargetSummary is the schema descriptor for target_summary field.
+	adminapprovalrequestDescTargetSummary := adminapprovalrequestFields[12].Descriptor()
+	// adminapprovalrequest.DefaultTargetSummary holds the default value on creation for the target_summary field.
+	adminapprovalrequest.DefaultTargetSummary = adminapprovalrequestDescTargetSummary.Default.(string)
+	// adminapprovalrequest.TargetSummaryValidator is a validator for the "target_summary" field. It is called by the builders before save.
+	adminapprovalrequest.TargetSummaryValidator = adminapprovalrequestDescTargetSummary.Validators[0].(func(string) error)
+	// adminapprovalrequestDescRequesterEmail is the schema descriptor for requester_email field.
+	adminapprovalrequestDescRequesterEmail := adminapprovalrequestFields[14].Descriptor()
+	// adminapprovalrequest.DefaultRequesterEmail holds the default value on creation for the requester_email field.
+	adminapprovalrequest.DefaultRequesterEmail = adminapprovalrequestDescRequesterEmail.Default.(string)
+	// adminapprovalrequest.RequesterEmailValidator is a validator for the "requester_email" field. It is called by the builders before save.
+	adminapprovalrequest.RequesterEmailValidator = adminapprovalrequestDescRequesterEmail.Validators[0].(func(string) error)
+	// adminapprovalrequestDescRequesterIP is the schema descriptor for requester_ip field.
+	adminapprovalrequestDescRequesterIP := adminapprovalrequestFields[15].Descriptor()
+	// adminapprovalrequest.DefaultRequesterIP holds the default value on creation for the requester_ip field.
+	adminapprovalrequest.DefaultRequesterIP = adminapprovalrequestDescRequesterIP.Default.(string)
+	// adminapprovalrequest.RequesterIPValidator is a validator for the "requester_ip" field. It is called by the builders before save.
+	adminapprovalrequest.RequesterIPValidator = adminapprovalrequestDescRequesterIP.Validators[0].(func(string) error)
+	// adminapprovalrequestDescRequestID is the schema descriptor for request_id field.
+	adminapprovalrequestDescRequestID := adminapprovalrequestFields[16].Descriptor()
+	// adminapprovalrequest.DefaultRequestID holds the default value on creation for the request_id field.
+	adminapprovalrequest.DefaultRequestID = adminapprovalrequestDescRequestID.Default.(string)
+	// adminapprovalrequest.RequestIDValidator is a validator for the "request_id" field. It is called by the builders before save.
+	adminapprovalrequest.RequestIDValidator = adminapprovalrequestDescRequestID.Validators[0].(func(string) error)
+	// adminapprovalrequestDescDecidedByEmail is the schema descriptor for decided_by_email field.
+	adminapprovalrequestDescDecidedByEmail := adminapprovalrequestFields[18].Descriptor()
+	// adminapprovalrequest.DefaultDecidedByEmail holds the default value on creation for the decided_by_email field.
+	adminapprovalrequest.DefaultDecidedByEmail = adminapprovalrequestDescDecidedByEmail.Default.(string)
+	// adminapprovalrequest.DecidedByEmailValidator is a validator for the "decided_by_email" field. It is called by the builders before save.
+	adminapprovalrequest.DecidedByEmailValidator = adminapprovalrequestDescDecidedByEmail.Validators[0].(func(string) error)
+	// adminapprovalrequestDescDecisionReason is the schema descriptor for decision_reason field.
+	adminapprovalrequestDescDecisionReason := adminapprovalrequestFields[20].Descriptor()
+	// adminapprovalrequest.DefaultDecisionReason holds the default value on creation for the decision_reason field.
+	adminapprovalrequest.DefaultDecisionReason = adminapprovalrequestDescDecisionReason.Default.(string)
+	// adminapprovalrequestDescResultBody is the schema descriptor for result_body field.
+	adminapprovalrequestDescResultBody := adminapprovalrequestFields[23].Descriptor()
+	// adminapprovalrequest.DefaultResultBody holds the default value on creation for the result_body field.
+	adminapprovalrequest.DefaultResultBody = adminapprovalrequestDescResultBody.Default.(string)
+	// adminapprovalrequestDescResultError is the schema descriptor for result_error field.
+	adminapprovalrequestDescResultError := adminapprovalrequestFields[24].Descriptor()
+	// adminapprovalrequest.DefaultResultError holds the default value on creation for the result_error field.
+	adminapprovalrequest.DefaultResultError = adminapprovalrequestDescResultError.Default.(string)
+	// adminapprovalrequest.ResultErrorValidator is a validator for the "result_error" field. It is called by the builders before save.
+	adminapprovalrequest.ResultErrorValidator = adminapprovalrequestDescResultError.Validators[0].(func(string) error)
 	announcementFields := schema.Announcement{}.Fields()
 	_ = announcementFields
 	// announcementDescTitle is the schema descriptor for title field.

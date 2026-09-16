@@ -20,6 +20,8 @@ const (
 	AuditAuthMethodJWT         = "jwt"
 	AuditAuthMethodAdminAPIKey = "admin_api_key"
 	AuditAuthMethodPasskey     = "passkey"
+	// AuditAuthMethodApprovalReplay 运维审批通过后由审批服务以管理员身份内部重放的请求。
+	AuditAuthMethodApprovalReplay = "approval_replay"
 
 	// auditRequestBodyMaxBytes 请求体脱敏后入库的最大长度（字节），超出截断。
 	auditRequestBodyMaxBytes = 16 * 1024
@@ -39,6 +41,13 @@ const (
 	AuditActionAuditLogClear          = "admin.audit_log.clear"
 	// AuditActionAdminScopeDenied 运维管理员（operator）请求了白名单之外的管理接口，在认证层被拒绝。
 	AuditActionAdminScopeDenied = "admin.scope.denied"
+	// 运维审批（fork 本地）：申请入队 / 被认证层拒绝 / 管理员通过 / 拒绝 / 申请人撤回。
+	AuditActionAdminApprovalRequested = "admin.approval.requested"
+	AuditActionAdminApprovalRefused   = "admin.approval.refused"
+	AuditActionAdminApprovalApprove   = "admin.approval.approve"
+	AuditActionAdminApprovalBatch     = "admin.approval.batch_approve"
+	AuditActionAdminApprovalReject    = "admin.approval.reject"
+	AuditActionAdminApprovalCancel    = "admin.approval.cancel"
 )
 
 // AuditLog 一条管理面操作审计记录。

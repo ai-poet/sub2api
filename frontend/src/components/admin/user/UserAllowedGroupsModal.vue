@@ -206,6 +206,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser, Group, GroupPlatform } from '@/types'
+import { isApprovalQueued } from '@/utils/approval'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 
@@ -219,7 +220,8 @@ interface GroupRateConfig {
   isSelected: boolean
 }
 
-const props = defineProps<{ show: boolean; user: AdminUser | null }>()
+// readonly：运维管理员（写操作排队等待审批；分组列表改用调用日志域的最小投影）
+const props = withDefaults(defineProps<{ show: boolean; user: AdminUser | null; readonly?: boolean }>(), { readonly: false })
 const emit = defineEmits(['close', 'success'])
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -250,9 +252,14 @@ watch(
 const load = async () => {
   loading.value = true
   try {
-    const res = await adminAPI.groups.list(1, 1000)
+    // 运维管理员无权访问 /admin/groups，改用调用日志域的最小分组投影（视为标准、活跃、非专属）
+    const items = props.readonly
+      ? (await adminAPI.usage.listFilterGroups()).map((g) => ({
+          id: g.id, name: g.name, platform: g.platform, status: 'active', subscription_type: 'standard', is_exclusive: false
+        }) as unknown as Group)
+      : (await adminAPI.groups.list(1, 1000)).items
     // 只显示标准类型且活跃的分组
-    groups.value = res.items.filter((g) => g.subscription_type === 'standard' && g.status === 'active')
+    groups.value = items.filter((g) => g.subscription_type === 'standard' && g.status === 'active')
 
     // 初始化配置
     const userAllowedGroups = props.user?.allowed_groups || []
@@ -353,8 +360,14 @@ const handleSave = async () => {
     appStore.showSuccess(t('admin.users.groupConfigUpdated'))
     emit('success')
     emit('close')
-  } catch (error) {
+  } catch (error: any) {
+    if (isApprovalQueued(error)) {
+      // 运维管理员：已排队等待管理员审批（全局提示已弹出）
+      emit('close')
+      return
+    }
     console.error('Failed to update user group config:', error)
+    appStore.showError(error?.message || t('common.error'))
   } finally {
     submitting.value = false
   }

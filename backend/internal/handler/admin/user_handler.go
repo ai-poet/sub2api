@@ -180,6 +180,12 @@ func (h *UserHandler) List(c *gin.Context) {
 			out[i].CurrentConcurrency = info.CurrentConcurrency
 		}
 	}
+	// fork：运维管理员看不到内嵌 API Key 的明文（余额保留）。
+	if middleware.IsOperatorRequest(c) {
+		for i := range out {
+			dto.AdminUserForOperator(&out[i].AdminUser)
+		}
+	}
 
 	response.Paginated(c, out, total, page, pageSize)
 }
@@ -227,7 +233,11 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, dto.UserFromServiceAdmin(user))
+	view := dto.UserFromServiceAdmin(user)
+	if middleware.IsOperatorRequest(c) {
+		dto.AdminUserForOperator(view)
+	}
+	response.Success(c, view)
 }
 
 // BindAuthIdentity manually binds a canonical auth identity to a user.
@@ -437,6 +447,11 @@ func (h *UserHandler) GetUserAPIKeys(c *gin.Context) {
 
 	out := make([]dto.APIKey, 0, len(keys))
 	for i := range keys {
+		if middleware.IsOperatorRequest(c) {
+			// fork：运维管理员只看掩码，不下发明文 key
+			out = append(out, *dto.APIKeyFromServiceOperator(&keys[i]))
+			continue
+		}
 		out = append(out, *dto.APIKeyFromService(&keys[i]))
 	}
 	response.Paginated(c, out, total, page, pageSize)
@@ -486,6 +501,12 @@ func (h *UserHandler) GetBalanceHistory(c *gin.Context) {
 	out := make([]dto.AdminRedeemCode, 0, len(codes))
 	for i := range codes {
 		out = append(out, *dto.RedeemCodeFromServiceAdmin(&codes[i]))
+	}
+	// fork：运维管理员看不到卡密串本身（可被再次兑换的凭证）。
+	if middleware.IsOperatorRequest(c) {
+		for i := range out {
+			out[i].Code = ""
+		}
 	}
 
 	// Custom response with total_recharged alongside pagination

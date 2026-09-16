@@ -129,6 +129,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		ClientDownloadMacOSURL:                                 settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
 		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
+		ApprovalNotifyServerChanEnabled:                        settings.ApprovalNotifyServerChanEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           settings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,

@@ -28,6 +28,7 @@
 import { reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { isApprovalQueued } from '@/utils/approval'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -79,8 +80,13 @@ const handleBalanceSubmit = async () => {
     await adminAPI.users.updateBalance(props.user.id, form.amount, props.operation, form.notes)
     appStore.showSuccess(t('common.success')); emit('success'); emit('close')
   } catch (e: any) {
+    if (isApprovalQueued(e)) {
+      // 运维管理员：已排队等待管理员审批（全局提示已弹出）
+      emit('close')
+      return
+    }
     console.error('Failed to update balance:', e)
-    appStore.showError(e.response?.data?.detail || t('common.error'))
+    appStore.showError(e?.message || t('common.error'))
   } finally { submitting.value = false }
 }
 </script>

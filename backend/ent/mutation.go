@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
+	"github.com/Wei-Shaw/sub2api/ent/adminapprovalrequest"
 	"github.com/Wei-Shaw/sub2api/ent/announcement"
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
@@ -66,6 +67,7 @@ const (
 	TypeAPIKey                   = "APIKey"
 	TypeAccount                  = "Account"
 	TypeAccountGroup             = "AccountGroup"
+	TypeAdminApprovalRequest     = "AdminApprovalRequest"
 	TypeAnnouncement             = "Announcement"
 	TypeAnnouncementRead         = "AnnouncementRead"
 	TypeAuthIdentity             = "AuthIdentity"
@@ -5566,6 +5568,2099 @@ func (m *AccountGroupMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown AccountGroup edge %s", name)
+}
+
+// AdminApprovalRequestMutation represents an operation that mutates the AdminApprovalRequest nodes in the graph.
+type AdminApprovalRequestMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *int64
+	created_at            *time.Time
+	updated_at            *time.Time
+	status                *string
+	action                *string
+	method                *string
+	route_template        *string
+	request_path          *string
+	request_query         *string
+	content_type          *string
+	request_body_enc      *string
+	request_body_redacted *string
+	request_body_sha256   *string
+	target_type           *string
+	target_id             *int64
+	addtarget_id          *int64
+	target_summary        *string
+	requester_user_id     *int64
+	addrequester_user_id  *int64
+	requester_email       *string
+	requester_ip          *string
+	request_id            *string
+	decided_by_user_id    *int64
+	adddecided_by_user_id *int64
+	decided_by_email      *string
+	decided_at            *time.Time
+	decision_reason       *string
+	executed_at           *time.Time
+	result_status_code    *int
+	addresult_status_code *int
+	result_body           *string
+	result_error          *string
+	notified_at           *time.Time
+	expires_at            *time.Time
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*AdminApprovalRequest, error)
+	predicates            []predicate.AdminApprovalRequest
+}
+
+var _ ent.Mutation = (*AdminApprovalRequestMutation)(nil)
+
+// adminapprovalrequestOption allows management of the mutation configuration using functional options.
+type adminapprovalrequestOption func(*AdminApprovalRequestMutation)
+
+// newAdminApprovalRequestMutation creates new mutation for the AdminApprovalRequest entity.
+func newAdminApprovalRequestMutation(c config, op Op, opts ...adminapprovalrequestOption) *AdminApprovalRequestMutation {
+	m := &AdminApprovalRequestMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAdminApprovalRequest,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAdminApprovalRequestID sets the ID field of the mutation.
+func withAdminApprovalRequestID(id int64) adminapprovalrequestOption {
+	return func(m *AdminApprovalRequestMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *AdminApprovalRequest
+		)
+		m.oldValue = func(ctx context.Context) (*AdminApprovalRequest, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().AdminApprovalRequest.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAdminApprovalRequest sets the old AdminApprovalRequest of the mutation.
+func withAdminApprovalRequest(node *AdminApprovalRequest) adminapprovalrequestOption {
+	return func(m *AdminApprovalRequestMutation) {
+		m.oldValue = func(context.Context) (*AdminApprovalRequest, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AdminApprovalRequestMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AdminApprovalRequestMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *AdminApprovalRequestMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *AdminApprovalRequestMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().AdminApprovalRequest.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *AdminApprovalRequestMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *AdminApprovalRequestMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *AdminApprovalRequestMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *AdminApprovalRequestMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *AdminApprovalRequestMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *AdminApprovalRequestMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *AdminApprovalRequestMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *AdminApprovalRequestMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *AdminApprovalRequestMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAction sets the "action" field.
+func (m *AdminApprovalRequestMutation) SetAction(s string) {
+	m.action = &s
+}
+
+// Action returns the value of the "action" field in the mutation.
+func (m *AdminApprovalRequestMutation) Action() (r string, exists bool) {
+	v := m.action
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAction returns the old "action" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldAction(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAction: %w", err)
+	}
+	return oldValue.Action, nil
+}
+
+// ResetAction resets all changes to the "action" field.
+func (m *AdminApprovalRequestMutation) ResetAction() {
+	m.action = nil
+}
+
+// SetMethod sets the "method" field.
+func (m *AdminApprovalRequestMutation) SetMethod(s string) {
+	m.method = &s
+}
+
+// Method returns the value of the "method" field in the mutation.
+func (m *AdminApprovalRequestMutation) Method() (r string, exists bool) {
+	v := m.method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMethod returns the old "method" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldMethod(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMethod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMethod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMethod: %w", err)
+	}
+	return oldValue.Method, nil
+}
+
+// ResetMethod resets all changes to the "method" field.
+func (m *AdminApprovalRequestMutation) ResetMethod() {
+	m.method = nil
+}
+
+// SetRouteTemplate sets the "route_template" field.
+func (m *AdminApprovalRequestMutation) SetRouteTemplate(s string) {
+	m.route_template = &s
+}
+
+// RouteTemplate returns the value of the "route_template" field in the mutation.
+func (m *AdminApprovalRequestMutation) RouteTemplate() (r string, exists bool) {
+	v := m.route_template
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRouteTemplate returns the old "route_template" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRouteTemplate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRouteTemplate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRouteTemplate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRouteTemplate: %w", err)
+	}
+	return oldValue.RouteTemplate, nil
+}
+
+// ResetRouteTemplate resets all changes to the "route_template" field.
+func (m *AdminApprovalRequestMutation) ResetRouteTemplate() {
+	m.route_template = nil
+}
+
+// SetRequestPath sets the "request_path" field.
+func (m *AdminApprovalRequestMutation) SetRequestPath(s string) {
+	m.request_path = &s
+}
+
+// RequestPath returns the value of the "request_path" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequestPath() (r string, exists bool) {
+	v := m.request_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestPath returns the old "request_path" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequestPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestPath: %w", err)
+	}
+	return oldValue.RequestPath, nil
+}
+
+// ResetRequestPath resets all changes to the "request_path" field.
+func (m *AdminApprovalRequestMutation) ResetRequestPath() {
+	m.request_path = nil
+}
+
+// SetRequestQuery sets the "request_query" field.
+func (m *AdminApprovalRequestMutation) SetRequestQuery(s string) {
+	m.request_query = &s
+}
+
+// RequestQuery returns the value of the "request_query" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequestQuery() (r string, exists bool) {
+	v := m.request_query
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestQuery returns the old "request_query" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequestQuery(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestQuery is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestQuery requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestQuery: %w", err)
+	}
+	return oldValue.RequestQuery, nil
+}
+
+// ResetRequestQuery resets all changes to the "request_query" field.
+func (m *AdminApprovalRequestMutation) ResetRequestQuery() {
+	m.request_query = nil
+}
+
+// SetContentType sets the "content_type" field.
+func (m *AdminApprovalRequestMutation) SetContentType(s string) {
+	m.content_type = &s
+}
+
+// ContentType returns the value of the "content_type" field in the mutation.
+func (m *AdminApprovalRequestMutation) ContentType() (r string, exists bool) {
+	v := m.content_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContentType returns the old "content_type" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldContentType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContentType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContentType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContentType: %w", err)
+	}
+	return oldValue.ContentType, nil
+}
+
+// ResetContentType resets all changes to the "content_type" field.
+func (m *AdminApprovalRequestMutation) ResetContentType() {
+	m.content_type = nil
+}
+
+// SetRequestBodyEnc sets the "request_body_enc" field.
+func (m *AdminApprovalRequestMutation) SetRequestBodyEnc(s string) {
+	m.request_body_enc = &s
+}
+
+// RequestBodyEnc returns the value of the "request_body_enc" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequestBodyEnc() (r string, exists bool) {
+	v := m.request_body_enc
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestBodyEnc returns the old "request_body_enc" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequestBodyEnc(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestBodyEnc is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestBodyEnc requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestBodyEnc: %w", err)
+	}
+	return oldValue.RequestBodyEnc, nil
+}
+
+// ResetRequestBodyEnc resets all changes to the "request_body_enc" field.
+func (m *AdminApprovalRequestMutation) ResetRequestBodyEnc() {
+	m.request_body_enc = nil
+}
+
+// SetRequestBodyRedacted sets the "request_body_redacted" field.
+func (m *AdminApprovalRequestMutation) SetRequestBodyRedacted(s string) {
+	m.request_body_redacted = &s
+}
+
+// RequestBodyRedacted returns the value of the "request_body_redacted" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequestBodyRedacted() (r string, exists bool) {
+	v := m.request_body_redacted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestBodyRedacted returns the old "request_body_redacted" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequestBodyRedacted(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestBodyRedacted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestBodyRedacted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestBodyRedacted: %w", err)
+	}
+	return oldValue.RequestBodyRedacted, nil
+}
+
+// ResetRequestBodyRedacted resets all changes to the "request_body_redacted" field.
+func (m *AdminApprovalRequestMutation) ResetRequestBodyRedacted() {
+	m.request_body_redacted = nil
+}
+
+// SetRequestBodySha256 sets the "request_body_sha256" field.
+func (m *AdminApprovalRequestMutation) SetRequestBodySha256(s string) {
+	m.request_body_sha256 = &s
+}
+
+// RequestBodySha256 returns the value of the "request_body_sha256" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequestBodySha256() (r string, exists bool) {
+	v := m.request_body_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestBodySha256 returns the old "request_body_sha256" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequestBodySha256(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestBodySha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestBodySha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestBodySha256: %w", err)
+	}
+	return oldValue.RequestBodySha256, nil
+}
+
+// ResetRequestBodySha256 resets all changes to the "request_body_sha256" field.
+func (m *AdminApprovalRequestMutation) ResetRequestBodySha256() {
+	m.request_body_sha256 = nil
+}
+
+// SetTargetType sets the "target_type" field.
+func (m *AdminApprovalRequestMutation) SetTargetType(s string) {
+	m.target_type = &s
+}
+
+// TargetType returns the value of the "target_type" field in the mutation.
+func (m *AdminApprovalRequestMutation) TargetType() (r string, exists bool) {
+	v := m.target_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetType returns the old "target_type" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldTargetType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetType: %w", err)
+	}
+	return oldValue.TargetType, nil
+}
+
+// ResetTargetType resets all changes to the "target_type" field.
+func (m *AdminApprovalRequestMutation) ResetTargetType() {
+	m.target_type = nil
+}
+
+// SetTargetID sets the "target_id" field.
+func (m *AdminApprovalRequestMutation) SetTargetID(i int64) {
+	m.target_id = &i
+	m.addtarget_id = nil
+}
+
+// TargetID returns the value of the "target_id" field in the mutation.
+func (m *AdminApprovalRequestMutation) TargetID() (r int64, exists bool) {
+	v := m.target_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetID returns the old "target_id" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldTargetID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetID: %w", err)
+	}
+	return oldValue.TargetID, nil
+}
+
+// AddTargetID adds i to the "target_id" field.
+func (m *AdminApprovalRequestMutation) AddTargetID(i int64) {
+	if m.addtarget_id != nil {
+		*m.addtarget_id += i
+	} else {
+		m.addtarget_id = &i
+	}
+}
+
+// AddedTargetID returns the value that was added to the "target_id" field in this mutation.
+func (m *AdminApprovalRequestMutation) AddedTargetID() (r int64, exists bool) {
+	v := m.addtarget_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTargetID clears the value of the "target_id" field.
+func (m *AdminApprovalRequestMutation) ClearTargetID() {
+	m.target_id = nil
+	m.addtarget_id = nil
+	m.clearedFields[adminapprovalrequest.FieldTargetID] = struct{}{}
+}
+
+// TargetIDCleared returns if the "target_id" field was cleared in this mutation.
+func (m *AdminApprovalRequestMutation) TargetIDCleared() bool {
+	_, ok := m.clearedFields[adminapprovalrequest.FieldTargetID]
+	return ok
+}
+
+// ResetTargetID resets all changes to the "target_id" field.
+func (m *AdminApprovalRequestMutation) ResetTargetID() {
+	m.target_id = nil
+	m.addtarget_id = nil
+	delete(m.clearedFields, adminapprovalrequest.FieldTargetID)
+}
+
+// SetTargetSummary sets the "target_summary" field.
+func (m *AdminApprovalRequestMutation) SetTargetSummary(s string) {
+	m.target_summary = &s
+}
+
+// TargetSummary returns the value of the "target_summary" field in the mutation.
+func (m *AdminApprovalRequestMutation) TargetSummary() (r string, exists bool) {
+	v := m.target_summary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetSummary returns the old "target_summary" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldTargetSummary(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetSummary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetSummary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetSummary: %w", err)
+	}
+	return oldValue.TargetSummary, nil
+}
+
+// ResetTargetSummary resets all changes to the "target_summary" field.
+func (m *AdminApprovalRequestMutation) ResetTargetSummary() {
+	m.target_summary = nil
+}
+
+// SetRequesterUserID sets the "requester_user_id" field.
+func (m *AdminApprovalRequestMutation) SetRequesterUserID(i int64) {
+	m.requester_user_id = &i
+	m.addrequester_user_id = nil
+}
+
+// RequesterUserID returns the value of the "requester_user_id" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequesterUserID() (r int64, exists bool) {
+	v := m.requester_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequesterUserID returns the old "requester_user_id" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequesterUserID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequesterUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequesterUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequesterUserID: %w", err)
+	}
+	return oldValue.RequesterUserID, nil
+}
+
+// AddRequesterUserID adds i to the "requester_user_id" field.
+func (m *AdminApprovalRequestMutation) AddRequesterUserID(i int64) {
+	if m.addrequester_user_id != nil {
+		*m.addrequester_user_id += i
+	} else {
+		m.addrequester_user_id = &i
+	}
+}
+
+// AddedRequesterUserID returns the value that was added to the "requester_user_id" field in this mutation.
+func (m *AdminApprovalRequestMutation) AddedRequesterUserID() (r int64, exists bool) {
+	v := m.addrequester_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRequesterUserID resets all changes to the "requester_user_id" field.
+func (m *AdminApprovalRequestMutation) ResetRequesterUserID() {
+	m.requester_user_id = nil
+	m.addrequester_user_id = nil
+}
+
+// SetRequesterEmail sets the "requester_email" field.
+func (m *AdminApprovalRequestMutation) SetRequesterEmail(s string) {
+	m.requester_email = &s
+}
+
+// RequesterEmail returns the value of the "requester_email" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequesterEmail() (r string, exists bool) {
+	v := m.requester_email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequesterEmail returns the old "requester_email" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequesterEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequesterEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequesterEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequesterEmail: %w", err)
+	}
+	return oldValue.RequesterEmail, nil
+}
+
+// ResetRequesterEmail resets all changes to the "requester_email" field.
+func (m *AdminApprovalRequestMutation) ResetRequesterEmail() {
+	m.requester_email = nil
+}
+
+// SetRequesterIP sets the "requester_ip" field.
+func (m *AdminApprovalRequestMutation) SetRequesterIP(s string) {
+	m.requester_ip = &s
+}
+
+// RequesterIP returns the value of the "requester_ip" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequesterIP() (r string, exists bool) {
+	v := m.requester_ip
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequesterIP returns the old "requester_ip" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequesterIP(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequesterIP is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequesterIP requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequesterIP: %w", err)
+	}
+	return oldValue.RequesterIP, nil
+}
+
+// ResetRequesterIP resets all changes to the "requester_ip" field.
+func (m *AdminApprovalRequestMutation) ResetRequesterIP() {
+	m.requester_ip = nil
+}
+
+// SetRequestID sets the "request_id" field.
+func (m *AdminApprovalRequestMutation) SetRequestID(s string) {
+	m.request_id = &s
+}
+
+// RequestID returns the value of the "request_id" field in the mutation.
+func (m *AdminApprovalRequestMutation) RequestID() (r string, exists bool) {
+	v := m.request_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestID returns the old "request_id" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldRequestID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
+	}
+	return oldValue.RequestID, nil
+}
+
+// ResetRequestID resets all changes to the "request_id" field.
+func (m *AdminApprovalRequestMutation) ResetRequestID() {
+	m.request_id = nil
+}
+
+// SetDecidedByUserID sets the "decided_by_user_id" field.
+func (m *AdminApprovalRequestMutation) SetDecidedByUserID(i int64) {
+	m.decided_by_user_id = &i
+	m.adddecided_by_user_id = nil
+}
+
+// DecidedByUserID returns the value of the "decided_by_user_id" field in the mutation.
+func (m *AdminApprovalRequestMutation) DecidedByUserID() (r int64, exists bool) {
+	v := m.decided_by_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecidedByUserID returns the old "decided_by_user_id" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldDecidedByUserID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecidedByUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecidedByUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecidedByUserID: %w", err)
+	}
+	return oldValue.DecidedByUserID, nil
+}
+
+// AddDecidedByUserID adds i to the "decided_by_user_id" field.
+func (m *AdminApprovalRequestMutation) AddDecidedByUserID(i int64) {
+	if m.adddecided_by_user_id != nil {
+		*m.adddecided_by_user_id += i
+	} else {
+		m.adddecided_by_user_id = &i
+	}
+}
+
+// AddedDecidedByUserID returns the value that was added to the "decided_by_user_id" field in this mutation.
+func (m *AdminApprovalRequestMutation) AddedDecidedByUserID() (r int64, exists bool) {
+	v := m.adddecided_by_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearDecidedByUserID clears the value of the "decided_by_user_id" field.
+func (m *AdminApprovalRequestMutation) ClearDecidedByUserID() {
+	m.decided_by_user_id = nil
+	m.adddecided_by_user_id = nil
+	m.clearedFields[adminapprovalrequest.FieldDecidedByUserID] = struct{}{}
+}
+
+// DecidedByUserIDCleared returns if the "decided_by_user_id" field was cleared in this mutation.
+func (m *AdminApprovalRequestMutation) DecidedByUserIDCleared() bool {
+	_, ok := m.clearedFields[adminapprovalrequest.FieldDecidedByUserID]
+	return ok
+}
+
+// ResetDecidedByUserID resets all changes to the "decided_by_user_id" field.
+func (m *AdminApprovalRequestMutation) ResetDecidedByUserID() {
+	m.decided_by_user_id = nil
+	m.adddecided_by_user_id = nil
+	delete(m.clearedFields, adminapprovalrequest.FieldDecidedByUserID)
+}
+
+// SetDecidedByEmail sets the "decided_by_email" field.
+func (m *AdminApprovalRequestMutation) SetDecidedByEmail(s string) {
+	m.decided_by_email = &s
+}
+
+// DecidedByEmail returns the value of the "decided_by_email" field in the mutation.
+func (m *AdminApprovalRequestMutation) DecidedByEmail() (r string, exists bool) {
+	v := m.decided_by_email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecidedByEmail returns the old "decided_by_email" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldDecidedByEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecidedByEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecidedByEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecidedByEmail: %w", err)
+	}
+	return oldValue.DecidedByEmail, nil
+}
+
+// ResetDecidedByEmail resets all changes to the "decided_by_email" field.
+func (m *AdminApprovalRequestMutation) ResetDecidedByEmail() {
+	m.decided_by_email = nil
+}
+
+// SetDecidedAt sets the "decided_at" field.
+func (m *AdminApprovalRequestMutation) SetDecidedAt(t time.Time) {
+	m.decided_at = &t
+}
+
+// DecidedAt returns the value of the "decided_at" field in the mutation.
+func (m *AdminApprovalRequestMutation) DecidedAt() (r time.Time, exists bool) {
+	v := m.decided_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecidedAt returns the old "decided_at" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldDecidedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecidedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecidedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecidedAt: %w", err)
+	}
+	return oldValue.DecidedAt, nil
+}
+
+// ClearDecidedAt clears the value of the "decided_at" field.
+func (m *AdminApprovalRequestMutation) ClearDecidedAt() {
+	m.decided_at = nil
+	m.clearedFields[adminapprovalrequest.FieldDecidedAt] = struct{}{}
+}
+
+// DecidedAtCleared returns if the "decided_at" field was cleared in this mutation.
+func (m *AdminApprovalRequestMutation) DecidedAtCleared() bool {
+	_, ok := m.clearedFields[adminapprovalrequest.FieldDecidedAt]
+	return ok
+}
+
+// ResetDecidedAt resets all changes to the "decided_at" field.
+func (m *AdminApprovalRequestMutation) ResetDecidedAt() {
+	m.decided_at = nil
+	delete(m.clearedFields, adminapprovalrequest.FieldDecidedAt)
+}
+
+// SetDecisionReason sets the "decision_reason" field.
+func (m *AdminApprovalRequestMutation) SetDecisionReason(s string) {
+	m.decision_reason = &s
+}
+
+// DecisionReason returns the value of the "decision_reason" field in the mutation.
+func (m *AdminApprovalRequestMutation) DecisionReason() (r string, exists bool) {
+	v := m.decision_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDecisionReason returns the old "decision_reason" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldDecisionReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDecisionReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDecisionReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDecisionReason: %w", err)
+	}
+	return oldValue.DecisionReason, nil
+}
+
+// ResetDecisionReason resets all changes to the "decision_reason" field.
+func (m *AdminApprovalRequestMutation) ResetDecisionReason() {
+	m.decision_reason = nil
+}
+
+// SetExecutedAt sets the "executed_at" field.
+func (m *AdminApprovalRequestMutation) SetExecutedAt(t time.Time) {
+	m.executed_at = &t
+}
+
+// ExecutedAt returns the value of the "executed_at" field in the mutation.
+func (m *AdminApprovalRequestMutation) ExecutedAt() (r time.Time, exists bool) {
+	v := m.executed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExecutedAt returns the old "executed_at" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldExecutedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExecutedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExecutedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExecutedAt: %w", err)
+	}
+	return oldValue.ExecutedAt, nil
+}
+
+// ClearExecutedAt clears the value of the "executed_at" field.
+func (m *AdminApprovalRequestMutation) ClearExecutedAt() {
+	m.executed_at = nil
+	m.clearedFields[adminapprovalrequest.FieldExecutedAt] = struct{}{}
+}
+
+// ExecutedAtCleared returns if the "executed_at" field was cleared in this mutation.
+func (m *AdminApprovalRequestMutation) ExecutedAtCleared() bool {
+	_, ok := m.clearedFields[adminapprovalrequest.FieldExecutedAt]
+	return ok
+}
+
+// ResetExecutedAt resets all changes to the "executed_at" field.
+func (m *AdminApprovalRequestMutation) ResetExecutedAt() {
+	m.executed_at = nil
+	delete(m.clearedFields, adminapprovalrequest.FieldExecutedAt)
+}
+
+// SetResultStatusCode sets the "result_status_code" field.
+func (m *AdminApprovalRequestMutation) SetResultStatusCode(i int) {
+	m.result_status_code = &i
+	m.addresult_status_code = nil
+}
+
+// ResultStatusCode returns the value of the "result_status_code" field in the mutation.
+func (m *AdminApprovalRequestMutation) ResultStatusCode() (r int, exists bool) {
+	v := m.result_status_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResultStatusCode returns the old "result_status_code" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldResultStatusCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResultStatusCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResultStatusCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResultStatusCode: %w", err)
+	}
+	return oldValue.ResultStatusCode, nil
+}
+
+// AddResultStatusCode adds i to the "result_status_code" field.
+func (m *AdminApprovalRequestMutation) AddResultStatusCode(i int) {
+	if m.addresult_status_code != nil {
+		*m.addresult_status_code += i
+	} else {
+		m.addresult_status_code = &i
+	}
+}
+
+// AddedResultStatusCode returns the value that was added to the "result_status_code" field in this mutation.
+func (m *AdminApprovalRequestMutation) AddedResultStatusCode() (r int, exists bool) {
+	v := m.addresult_status_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearResultStatusCode clears the value of the "result_status_code" field.
+func (m *AdminApprovalRequestMutation) ClearResultStatusCode() {
+	m.result_status_code = nil
+	m.addresult_status_code = nil
+	m.clearedFields[adminapprovalrequest.FieldResultStatusCode] = struct{}{}
+}
+
+// ResultStatusCodeCleared returns if the "result_status_code" field was cleared in this mutation.
+func (m *AdminApprovalRequestMutation) ResultStatusCodeCleared() bool {
+	_, ok := m.clearedFields[adminapprovalrequest.FieldResultStatusCode]
+	return ok
+}
+
+// ResetResultStatusCode resets all changes to the "result_status_code" field.
+func (m *AdminApprovalRequestMutation) ResetResultStatusCode() {
+	m.result_status_code = nil
+	m.addresult_status_code = nil
+	delete(m.clearedFields, adminapprovalrequest.FieldResultStatusCode)
+}
+
+// SetResultBody sets the "result_body" field.
+func (m *AdminApprovalRequestMutation) SetResultBody(s string) {
+	m.result_body = &s
+}
+
+// ResultBody returns the value of the "result_body" field in the mutation.
+func (m *AdminApprovalRequestMutation) ResultBody() (r string, exists bool) {
+	v := m.result_body
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResultBody returns the old "result_body" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldResultBody(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResultBody is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResultBody requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResultBody: %w", err)
+	}
+	return oldValue.ResultBody, nil
+}
+
+// ResetResultBody resets all changes to the "result_body" field.
+func (m *AdminApprovalRequestMutation) ResetResultBody() {
+	m.result_body = nil
+}
+
+// SetResultError sets the "result_error" field.
+func (m *AdminApprovalRequestMutation) SetResultError(s string) {
+	m.result_error = &s
+}
+
+// ResultError returns the value of the "result_error" field in the mutation.
+func (m *AdminApprovalRequestMutation) ResultError() (r string, exists bool) {
+	v := m.result_error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResultError returns the old "result_error" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldResultError(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResultError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResultError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResultError: %w", err)
+	}
+	return oldValue.ResultError, nil
+}
+
+// ResetResultError resets all changes to the "result_error" field.
+func (m *AdminApprovalRequestMutation) ResetResultError() {
+	m.result_error = nil
+}
+
+// SetNotifiedAt sets the "notified_at" field.
+func (m *AdminApprovalRequestMutation) SetNotifiedAt(t time.Time) {
+	m.notified_at = &t
+}
+
+// NotifiedAt returns the value of the "notified_at" field in the mutation.
+func (m *AdminApprovalRequestMutation) NotifiedAt() (r time.Time, exists bool) {
+	v := m.notified_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotifiedAt returns the old "notified_at" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldNotifiedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotifiedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotifiedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotifiedAt: %w", err)
+	}
+	return oldValue.NotifiedAt, nil
+}
+
+// ClearNotifiedAt clears the value of the "notified_at" field.
+func (m *AdminApprovalRequestMutation) ClearNotifiedAt() {
+	m.notified_at = nil
+	m.clearedFields[adminapprovalrequest.FieldNotifiedAt] = struct{}{}
+}
+
+// NotifiedAtCleared returns if the "notified_at" field was cleared in this mutation.
+func (m *AdminApprovalRequestMutation) NotifiedAtCleared() bool {
+	_, ok := m.clearedFields[adminapprovalrequest.FieldNotifiedAt]
+	return ok
+}
+
+// ResetNotifiedAt resets all changes to the "notified_at" field.
+func (m *AdminApprovalRequestMutation) ResetNotifiedAt() {
+	m.notified_at = nil
+	delete(m.clearedFields, adminapprovalrequest.FieldNotifiedAt)
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *AdminApprovalRequestMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *AdminApprovalRequestMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the AdminApprovalRequest entity.
+// If the AdminApprovalRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AdminApprovalRequestMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *AdminApprovalRequestMutation) ResetExpiresAt() {
+	m.expires_at = nil
+}
+
+// Where appends a list predicates to the AdminApprovalRequestMutation builder.
+func (m *AdminApprovalRequestMutation) Where(ps ...predicate.AdminApprovalRequest) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the AdminApprovalRequestMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *AdminApprovalRequestMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.AdminApprovalRequest, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *AdminApprovalRequestMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *AdminApprovalRequestMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (AdminApprovalRequest).
+func (m *AdminApprovalRequestMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AdminApprovalRequestMutation) Fields() []string {
+	fields := make([]string, 0, 29)
+	if m.created_at != nil {
+		fields = append(fields, adminapprovalrequest.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, adminapprovalrequest.FieldUpdatedAt)
+	}
+	if m.status != nil {
+		fields = append(fields, adminapprovalrequest.FieldStatus)
+	}
+	if m.action != nil {
+		fields = append(fields, adminapprovalrequest.FieldAction)
+	}
+	if m.method != nil {
+		fields = append(fields, adminapprovalrequest.FieldMethod)
+	}
+	if m.route_template != nil {
+		fields = append(fields, adminapprovalrequest.FieldRouteTemplate)
+	}
+	if m.request_path != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequestPath)
+	}
+	if m.request_query != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequestQuery)
+	}
+	if m.content_type != nil {
+		fields = append(fields, adminapprovalrequest.FieldContentType)
+	}
+	if m.request_body_enc != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequestBodyEnc)
+	}
+	if m.request_body_redacted != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequestBodyRedacted)
+	}
+	if m.request_body_sha256 != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequestBodySha256)
+	}
+	if m.target_type != nil {
+		fields = append(fields, adminapprovalrequest.FieldTargetType)
+	}
+	if m.target_id != nil {
+		fields = append(fields, adminapprovalrequest.FieldTargetID)
+	}
+	if m.target_summary != nil {
+		fields = append(fields, adminapprovalrequest.FieldTargetSummary)
+	}
+	if m.requester_user_id != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequesterUserID)
+	}
+	if m.requester_email != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequesterEmail)
+	}
+	if m.requester_ip != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequesterIP)
+	}
+	if m.request_id != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequestID)
+	}
+	if m.decided_by_user_id != nil {
+		fields = append(fields, adminapprovalrequest.FieldDecidedByUserID)
+	}
+	if m.decided_by_email != nil {
+		fields = append(fields, adminapprovalrequest.FieldDecidedByEmail)
+	}
+	if m.decided_at != nil {
+		fields = append(fields, adminapprovalrequest.FieldDecidedAt)
+	}
+	if m.decision_reason != nil {
+		fields = append(fields, adminapprovalrequest.FieldDecisionReason)
+	}
+	if m.executed_at != nil {
+		fields = append(fields, adminapprovalrequest.FieldExecutedAt)
+	}
+	if m.result_status_code != nil {
+		fields = append(fields, adminapprovalrequest.FieldResultStatusCode)
+	}
+	if m.result_body != nil {
+		fields = append(fields, adminapprovalrequest.FieldResultBody)
+	}
+	if m.result_error != nil {
+		fields = append(fields, adminapprovalrequest.FieldResultError)
+	}
+	if m.notified_at != nil {
+		fields = append(fields, adminapprovalrequest.FieldNotifiedAt)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, adminapprovalrequest.FieldExpiresAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AdminApprovalRequestMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case adminapprovalrequest.FieldCreatedAt:
+		return m.CreatedAt()
+	case adminapprovalrequest.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case adminapprovalrequest.FieldStatus:
+		return m.Status()
+	case adminapprovalrequest.FieldAction:
+		return m.Action()
+	case adminapprovalrequest.FieldMethod:
+		return m.Method()
+	case adminapprovalrequest.FieldRouteTemplate:
+		return m.RouteTemplate()
+	case adminapprovalrequest.FieldRequestPath:
+		return m.RequestPath()
+	case adminapprovalrequest.FieldRequestQuery:
+		return m.RequestQuery()
+	case adminapprovalrequest.FieldContentType:
+		return m.ContentType()
+	case adminapprovalrequest.FieldRequestBodyEnc:
+		return m.RequestBodyEnc()
+	case adminapprovalrequest.FieldRequestBodyRedacted:
+		return m.RequestBodyRedacted()
+	case adminapprovalrequest.FieldRequestBodySha256:
+		return m.RequestBodySha256()
+	case adminapprovalrequest.FieldTargetType:
+		return m.TargetType()
+	case adminapprovalrequest.FieldTargetID:
+		return m.TargetID()
+	case adminapprovalrequest.FieldTargetSummary:
+		return m.TargetSummary()
+	case adminapprovalrequest.FieldRequesterUserID:
+		return m.RequesterUserID()
+	case adminapprovalrequest.FieldRequesterEmail:
+		return m.RequesterEmail()
+	case adminapprovalrequest.FieldRequesterIP:
+		return m.RequesterIP()
+	case adminapprovalrequest.FieldRequestID:
+		return m.RequestID()
+	case adminapprovalrequest.FieldDecidedByUserID:
+		return m.DecidedByUserID()
+	case adminapprovalrequest.FieldDecidedByEmail:
+		return m.DecidedByEmail()
+	case adminapprovalrequest.FieldDecidedAt:
+		return m.DecidedAt()
+	case adminapprovalrequest.FieldDecisionReason:
+		return m.DecisionReason()
+	case adminapprovalrequest.FieldExecutedAt:
+		return m.ExecutedAt()
+	case adminapprovalrequest.FieldResultStatusCode:
+		return m.ResultStatusCode()
+	case adminapprovalrequest.FieldResultBody:
+		return m.ResultBody()
+	case adminapprovalrequest.FieldResultError:
+		return m.ResultError()
+	case adminapprovalrequest.FieldNotifiedAt:
+		return m.NotifiedAt()
+	case adminapprovalrequest.FieldExpiresAt:
+		return m.ExpiresAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AdminApprovalRequestMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case adminapprovalrequest.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case adminapprovalrequest.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case adminapprovalrequest.FieldStatus:
+		return m.OldStatus(ctx)
+	case adminapprovalrequest.FieldAction:
+		return m.OldAction(ctx)
+	case adminapprovalrequest.FieldMethod:
+		return m.OldMethod(ctx)
+	case adminapprovalrequest.FieldRouteTemplate:
+		return m.OldRouteTemplate(ctx)
+	case adminapprovalrequest.FieldRequestPath:
+		return m.OldRequestPath(ctx)
+	case adminapprovalrequest.FieldRequestQuery:
+		return m.OldRequestQuery(ctx)
+	case adminapprovalrequest.FieldContentType:
+		return m.OldContentType(ctx)
+	case adminapprovalrequest.FieldRequestBodyEnc:
+		return m.OldRequestBodyEnc(ctx)
+	case adminapprovalrequest.FieldRequestBodyRedacted:
+		return m.OldRequestBodyRedacted(ctx)
+	case adminapprovalrequest.FieldRequestBodySha256:
+		return m.OldRequestBodySha256(ctx)
+	case adminapprovalrequest.FieldTargetType:
+		return m.OldTargetType(ctx)
+	case adminapprovalrequest.FieldTargetID:
+		return m.OldTargetID(ctx)
+	case adminapprovalrequest.FieldTargetSummary:
+		return m.OldTargetSummary(ctx)
+	case adminapprovalrequest.FieldRequesterUserID:
+		return m.OldRequesterUserID(ctx)
+	case adminapprovalrequest.FieldRequesterEmail:
+		return m.OldRequesterEmail(ctx)
+	case adminapprovalrequest.FieldRequesterIP:
+		return m.OldRequesterIP(ctx)
+	case adminapprovalrequest.FieldRequestID:
+		return m.OldRequestID(ctx)
+	case adminapprovalrequest.FieldDecidedByUserID:
+		return m.OldDecidedByUserID(ctx)
+	case adminapprovalrequest.FieldDecidedByEmail:
+		return m.OldDecidedByEmail(ctx)
+	case adminapprovalrequest.FieldDecidedAt:
+		return m.OldDecidedAt(ctx)
+	case adminapprovalrequest.FieldDecisionReason:
+		return m.OldDecisionReason(ctx)
+	case adminapprovalrequest.FieldExecutedAt:
+		return m.OldExecutedAt(ctx)
+	case adminapprovalrequest.FieldResultStatusCode:
+		return m.OldResultStatusCode(ctx)
+	case adminapprovalrequest.FieldResultBody:
+		return m.OldResultBody(ctx)
+	case adminapprovalrequest.FieldResultError:
+		return m.OldResultError(ctx)
+	case adminapprovalrequest.FieldNotifiedAt:
+		return m.OldNotifiedAt(ctx)
+	case adminapprovalrequest.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown AdminApprovalRequest field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AdminApprovalRequestMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case adminapprovalrequest.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case adminapprovalrequest.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case adminapprovalrequest.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case adminapprovalrequest.FieldAction:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAction(v)
+		return nil
+	case adminapprovalrequest.FieldMethod:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMethod(v)
+		return nil
+	case adminapprovalrequest.FieldRouteTemplate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRouteTemplate(v)
+		return nil
+	case adminapprovalrequest.FieldRequestPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestPath(v)
+		return nil
+	case adminapprovalrequest.FieldRequestQuery:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestQuery(v)
+		return nil
+	case adminapprovalrequest.FieldContentType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContentType(v)
+		return nil
+	case adminapprovalrequest.FieldRequestBodyEnc:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestBodyEnc(v)
+		return nil
+	case adminapprovalrequest.FieldRequestBodyRedacted:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestBodyRedacted(v)
+		return nil
+	case adminapprovalrequest.FieldRequestBodySha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestBodySha256(v)
+		return nil
+	case adminapprovalrequest.FieldTargetType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetType(v)
+		return nil
+	case adminapprovalrequest.FieldTargetID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetID(v)
+		return nil
+	case adminapprovalrequest.FieldTargetSummary:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetSummary(v)
+		return nil
+	case adminapprovalrequest.FieldRequesterUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequesterUserID(v)
+		return nil
+	case adminapprovalrequest.FieldRequesterEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequesterEmail(v)
+		return nil
+	case adminapprovalrequest.FieldRequesterIP:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequesterIP(v)
+		return nil
+	case adminapprovalrequest.FieldRequestID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestID(v)
+		return nil
+	case adminapprovalrequest.FieldDecidedByUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecidedByUserID(v)
+		return nil
+	case adminapprovalrequest.FieldDecidedByEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecidedByEmail(v)
+		return nil
+	case adminapprovalrequest.FieldDecidedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecidedAt(v)
+		return nil
+	case adminapprovalrequest.FieldDecisionReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDecisionReason(v)
+		return nil
+	case adminapprovalrequest.FieldExecutedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExecutedAt(v)
+		return nil
+	case adminapprovalrequest.FieldResultStatusCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResultStatusCode(v)
+		return nil
+	case adminapprovalrequest.FieldResultBody:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResultBody(v)
+		return nil
+	case adminapprovalrequest.FieldResultError:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResultError(v)
+		return nil
+	case adminapprovalrequest.FieldNotifiedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotifiedAt(v)
+		return nil
+	case adminapprovalrequest.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AdminApprovalRequest field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AdminApprovalRequestMutation) AddedFields() []string {
+	var fields []string
+	if m.addtarget_id != nil {
+		fields = append(fields, adminapprovalrequest.FieldTargetID)
+	}
+	if m.addrequester_user_id != nil {
+		fields = append(fields, adminapprovalrequest.FieldRequesterUserID)
+	}
+	if m.adddecided_by_user_id != nil {
+		fields = append(fields, adminapprovalrequest.FieldDecidedByUserID)
+	}
+	if m.addresult_status_code != nil {
+		fields = append(fields, adminapprovalrequest.FieldResultStatusCode)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AdminApprovalRequestMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case adminapprovalrequest.FieldTargetID:
+		return m.AddedTargetID()
+	case adminapprovalrequest.FieldRequesterUserID:
+		return m.AddedRequesterUserID()
+	case adminapprovalrequest.FieldDecidedByUserID:
+		return m.AddedDecidedByUserID()
+	case adminapprovalrequest.FieldResultStatusCode:
+		return m.AddedResultStatusCode()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AdminApprovalRequestMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case adminapprovalrequest.FieldTargetID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTargetID(v)
+		return nil
+	case adminapprovalrequest.FieldRequesterUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRequesterUserID(v)
+		return nil
+	case adminapprovalrequest.FieldDecidedByUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDecidedByUserID(v)
+		return nil
+	case adminapprovalrequest.FieldResultStatusCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResultStatusCode(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AdminApprovalRequest numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AdminApprovalRequestMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(adminapprovalrequest.FieldTargetID) {
+		fields = append(fields, adminapprovalrequest.FieldTargetID)
+	}
+	if m.FieldCleared(adminapprovalrequest.FieldDecidedByUserID) {
+		fields = append(fields, adminapprovalrequest.FieldDecidedByUserID)
+	}
+	if m.FieldCleared(adminapprovalrequest.FieldDecidedAt) {
+		fields = append(fields, adminapprovalrequest.FieldDecidedAt)
+	}
+	if m.FieldCleared(adminapprovalrequest.FieldExecutedAt) {
+		fields = append(fields, adminapprovalrequest.FieldExecutedAt)
+	}
+	if m.FieldCleared(adminapprovalrequest.FieldResultStatusCode) {
+		fields = append(fields, adminapprovalrequest.FieldResultStatusCode)
+	}
+	if m.FieldCleared(adminapprovalrequest.FieldNotifiedAt) {
+		fields = append(fields, adminapprovalrequest.FieldNotifiedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AdminApprovalRequestMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AdminApprovalRequestMutation) ClearField(name string) error {
+	switch name {
+	case adminapprovalrequest.FieldTargetID:
+		m.ClearTargetID()
+		return nil
+	case adminapprovalrequest.FieldDecidedByUserID:
+		m.ClearDecidedByUserID()
+		return nil
+	case adminapprovalrequest.FieldDecidedAt:
+		m.ClearDecidedAt()
+		return nil
+	case adminapprovalrequest.FieldExecutedAt:
+		m.ClearExecutedAt()
+		return nil
+	case adminapprovalrequest.FieldResultStatusCode:
+		m.ClearResultStatusCode()
+		return nil
+	case adminapprovalrequest.FieldNotifiedAt:
+		m.ClearNotifiedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown AdminApprovalRequest nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AdminApprovalRequestMutation) ResetField(name string) error {
+	switch name {
+	case adminapprovalrequest.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case adminapprovalrequest.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case adminapprovalrequest.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case adminapprovalrequest.FieldAction:
+		m.ResetAction()
+		return nil
+	case adminapprovalrequest.FieldMethod:
+		m.ResetMethod()
+		return nil
+	case adminapprovalrequest.FieldRouteTemplate:
+		m.ResetRouteTemplate()
+		return nil
+	case adminapprovalrequest.FieldRequestPath:
+		m.ResetRequestPath()
+		return nil
+	case adminapprovalrequest.FieldRequestQuery:
+		m.ResetRequestQuery()
+		return nil
+	case adminapprovalrequest.FieldContentType:
+		m.ResetContentType()
+		return nil
+	case adminapprovalrequest.FieldRequestBodyEnc:
+		m.ResetRequestBodyEnc()
+		return nil
+	case adminapprovalrequest.FieldRequestBodyRedacted:
+		m.ResetRequestBodyRedacted()
+		return nil
+	case adminapprovalrequest.FieldRequestBodySha256:
+		m.ResetRequestBodySha256()
+		return nil
+	case adminapprovalrequest.FieldTargetType:
+		m.ResetTargetType()
+		return nil
+	case adminapprovalrequest.FieldTargetID:
+		m.ResetTargetID()
+		return nil
+	case adminapprovalrequest.FieldTargetSummary:
+		m.ResetTargetSummary()
+		return nil
+	case adminapprovalrequest.FieldRequesterUserID:
+		m.ResetRequesterUserID()
+		return nil
+	case adminapprovalrequest.FieldRequesterEmail:
+		m.ResetRequesterEmail()
+		return nil
+	case adminapprovalrequest.FieldRequesterIP:
+		m.ResetRequesterIP()
+		return nil
+	case adminapprovalrequest.FieldRequestID:
+		m.ResetRequestID()
+		return nil
+	case adminapprovalrequest.FieldDecidedByUserID:
+		m.ResetDecidedByUserID()
+		return nil
+	case adminapprovalrequest.FieldDecidedByEmail:
+		m.ResetDecidedByEmail()
+		return nil
+	case adminapprovalrequest.FieldDecidedAt:
+		m.ResetDecidedAt()
+		return nil
+	case adminapprovalrequest.FieldDecisionReason:
+		m.ResetDecisionReason()
+		return nil
+	case adminapprovalrequest.FieldExecutedAt:
+		m.ResetExecutedAt()
+		return nil
+	case adminapprovalrequest.FieldResultStatusCode:
+		m.ResetResultStatusCode()
+		return nil
+	case adminapprovalrequest.FieldResultBody:
+		m.ResetResultBody()
+		return nil
+	case adminapprovalrequest.FieldResultError:
+		m.ResetResultError()
+		return nil
+	case adminapprovalrequest.FieldNotifiedAt:
+		m.ResetNotifiedAt()
+		return nil
+	case adminapprovalrequest.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	}
+	return fmt.Errorf("unknown AdminApprovalRequest field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AdminApprovalRequestMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AdminApprovalRequestMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AdminApprovalRequestMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AdminApprovalRequestMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AdminApprovalRequestMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AdminApprovalRequestMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AdminApprovalRequestMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown AdminApprovalRequest unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AdminApprovalRequestMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown AdminApprovalRequest edge %s", name)
 }
 
 // AnnouncementMutation represents an operation that mutates the Announcement nodes in the graph.

@@ -766,7 +766,9 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
 import { adminAPI } from '@/api/admin'
+import { isApprovalQueued } from '@/utils/approval'
 import type { AdminUser, UserSubscription, Group, GroupPlatform, SubscriptionType } from '@/types'
 import type { SimpleUser } from '@/api/admin/usage'
 import type { Column } from '@/components/common/types'
@@ -1063,9 +1065,17 @@ const loadSubscriptions = async () => {
   }
 }
 
+// 只读模式（运维管理员）：写操作由后端排队等待管理员审批；分组下拉改用调用日志域的最小分组投影。
+const authStore = useAuthStore()
+const readonly = computed(() => !authStore.isAdmin)
+
 const loadGroups = async () => {
   try {
-    groups.value = await adminAPI.groups.getAll()
+    groups.value = readonly.value
+      ? (await adminAPI.usage.listFilterGroups()).map((g) => ({
+          id: g.id, name: g.name, platform: g.platform, status: 'active', subscription_type: 'standard', is_exclusive: false
+        }) as unknown as Group)
+      : await adminAPI.groups.getAll()
   } catch (error) {
     console.error('Error loading groups:', error)
   }
@@ -1227,7 +1237,12 @@ const handleAssignSubscription = async () => {
     closeAssignModal()
     loadSubscriptions()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.subscriptions.failedToAssign'))
+    if (isApprovalQueued(error)) {
+      // 运维管理员：已排队等待管理员审批（全局提示已弹出）
+      closeAssignModal()
+      return
+    }
+    appStore.showError(error?.message || t('admin.subscriptions.failedToAssign'))
     console.error('Error assigning subscription:', error)
   } finally {
     submitting.value = false
@@ -1267,7 +1282,11 @@ const handleExtendSubscription = async () => {
     closeExtendModal()
     loadSubscriptions()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.subscriptions.failedToAdjust'))
+    if (isApprovalQueued(error)) {
+      closeExtendModal()
+      return
+    }
+    appStore.showError(error?.message || t('admin.subscriptions.failedToAdjust'))
     console.error('Error adjusting subscription:', error)
   } finally {
     submitting.value = false
@@ -1289,7 +1308,12 @@ const confirmRevoke = async () => {
     revokingSubscription.value = null
     loadSubscriptions()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.subscriptions.failedToRevoke'))
+    if (isApprovalQueued(error)) {
+      showRevokeDialog.value = false
+      revokingSubscription.value = null
+      return
+    }
+    appStore.showError(error?.message || t('admin.subscriptions.failedToRevoke'))
     console.error('Error revoking subscription:', error)
   }
 }
@@ -1309,7 +1333,12 @@ const confirmRestore = async () => {
     restoringSubscription.value = null
     loadSubscriptions()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.subscriptions.failedToRestore'))
+    if (isApprovalQueued(error)) {
+      showRestoreDialog.value = false
+      restoringSubscription.value = null
+      return
+    }
+    appStore.showError(error?.message || t('admin.subscriptions.failedToRestore'))
     console.error('Error restoring subscription:', error)
   }
 }
@@ -1330,7 +1359,12 @@ const confirmResetQuota = async () => {
     resettingSubscription.value = null
     await loadSubscriptions()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.subscriptions.failedToResetQuota'))
+    if (isApprovalQueued(error)) {
+      showResetQuotaConfirm.value = false
+      resettingSubscription.value = null
+      return
+    }
+    appStore.showError(error?.message || t('admin.subscriptions.failedToResetQuota'))
     console.error('Error resetting quota:', error)
   } finally {
     resettingQuota.value = false

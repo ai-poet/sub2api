@@ -95,6 +95,7 @@ import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { BatchUpdateUserLimitsRequest } from '@/api/admin/users'
 import { useAppStore } from '@/stores/app'
+import { isApprovalQueued } from '@/utils/approval'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Toggle from '@/components/common/Toggle.vue'
 
@@ -202,11 +203,12 @@ const handleSubmit = async () => {
     emit('success', result.affected)
     emit('close')
   } catch (error: any) {
-    appStore.showError(
-      error.response?.data?.message
-      || error.response?.data?.detail
-      || t('admin.users.bulkLimits.failed')
-    )
+    if (isApprovalQueued(error)) {
+      // 运维管理员：批量调整已排队等待管理员审批（全局提示已弹出）
+      emit('close')
+      return
+    }
+    appStore.showError(error?.message || t('admin.users.bulkLimits.failed'))
   } finally {
     submitting.value = false
   }

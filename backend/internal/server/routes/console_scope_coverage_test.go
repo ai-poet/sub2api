@@ -52,11 +52,63 @@ var operatorScopeGolden = []string{
 	"GET /api/v1/admin/usage/search-api-keys",
 	"GET /api/v1/admin/usage/search-users",
 	"GET /api/v1/admin/usage/stats",
+	// 用户 / 订阅管理（只读部分）与审批申请
+	"GET /api/v1/admin/approvals",
+	"GET /api/v1/admin/approvals/:id",
+	"GET /api/v1/admin/approvals/pending-count",
+	"GET /api/v1/admin/subscriptions",
+	"GET /api/v1/admin/subscriptions/:id",
+	"GET /api/v1/admin/subscriptions/:id/progress",
+	"GET /api/v1/admin/user-attributes",
+	"GET /api/v1/admin/users",
+	"GET /api/v1/admin/users/:id",
+	"GET /api/v1/admin/users/:id/api-keys",
+	"GET /api/v1/admin/users/:id/attributes",
+	"GET /api/v1/admin/users/:id/balance-history",
+	"GET /api/v1/admin/users/:id/platform-quotas",
+	"GET /api/v1/admin/users/:id/rpm-status",
+	"GET /api/v1/admin/users/:id/subscriptions",
+	"GET /api/v1/admin/users/:id/usage",
+	// 显式放开的非 GET：读语义的 POST 与撤回自己的申请
+	"POST /api/v1/admin/approvals/:id/cancel",
+	"POST /api/v1/admin/user-attributes/batch",
+}
+
+// operatorWriteScopeGolden 显式放开、不经审批的非 GET 条目；operator 白名单里出现的非 GET 必须在此登记。
+var operatorWriteScopeGolden = []string{
+	"POST /api/v1/admin/approvals/:id/cancel",
+	"POST /api/v1/admin/user-attributes/batch",
+}
+
+// operatorApprovalScopeGolden operator 可发起、须管理员一键通过后重放的写接口快照。
+var operatorApprovalScopeGolden = []string{
+	"DELETE /api/v1/admin/subscriptions/:id",
+	"POST /api/v1/admin/subscriptions/:id/extend",
+	"POST /api/v1/admin/subscriptions/:id/reset-quota",
+	"POST /api/v1/admin/subscriptions/:id/restore",
+	"POST /api/v1/admin/subscriptions/:id/revoke",
+	"POST /api/v1/admin/subscriptions/assign",
+	"POST /api/v1/admin/subscriptions/bulk-assign",
+	"POST /api/v1/admin/users",
+	"POST /api/v1/admin/users/:id/auth-identities",
+	"POST /api/v1/admin/users/:id/balance",
+	"POST /api/v1/admin/users/:id/platform-quotas/reset",
+	"POST /api/v1/admin/users/:id/replace-group",
+	"POST /api/v1/admin/users/batch-concurrency",
+	"POST /api/v1/admin/users/batch-limits",
+	"PUT /api/v1/admin/api-keys/:id",
+	"PUT /api/v1/admin/users/:id",
+	"PUT /api/v1/admin/users/:id/attributes",
+	"PUT /api/v1/admin/users/:id/platform-quotas",
+}
+
+// operatorRefusedScopeGolden operator 永远不能发起、也不入队的动作。
+var operatorRefusedScopeGolden = []string{
+	"DELETE /api/v1/admin/users/:id",
 }
 
 // operatorForbiddenPrefixes 永远不允许出现在白名单里的管理域（余额 / 账号 / 分组 / 设置 / 备份 / 系统 / 仪表盘）。
 var operatorForbiddenPrefixes = []string{
-	"/api/v1/admin/users",
 	"/api/v1/admin/accounts",
 	"/api/v1/admin/groups",
 	"/api/v1/admin/settings",
@@ -66,7 +118,13 @@ var operatorForbiddenPrefixes = []string{
 	"/api/v1/admin/data-management",
 	"/api/v1/admin/audit-logs",
 	"/api/v1/admin/redeem-codes",
+}
+
+// operatorApprovalAllowedPrefixes 审批范围只能落在用户 / 订阅管理与用户 API Key 上。
+var operatorApprovalAllowedPrefixes = []string{
+	"/api/v1/admin/users",
 	"/api/v1/admin/subscriptions",
+	"/api/v1/admin/api-keys/:id",
 }
 
 func registerAllAdminAuthRoutesForTest(t *testing.T) *gin.Engine {
@@ -111,7 +169,9 @@ func TestOperatorScopeIsReadOnlyAndStaysOutOfForbiddenDomains(t *testing.T) {
 	for _, entry := range servermiddleware.OperatorScopeRoutes() {
 		method, path, ok := strings.Cut(entry, " ")
 		require.True(t, ok, entry)
-		require.Equalf(t, http.MethodGet, method, "operator scope is read-only, got %s", entry)
+		if method != http.MethodGet {
+			require.Containsf(t, operatorWriteScopeGolden, entry, "operator 白名单里的非 GET 条目必须显式登记在 operatorWriteScopeGolden：%s", entry)
+		}
 		for _, prefix := range operatorForbiddenPrefixes {
 			require.Falsef(t, strings.HasPrefix(path, prefix), "operator scope must never include %s (entry %s)", prefix, entry)
 		}
@@ -130,4 +190,61 @@ func TestOperatorScopeIsASmallSubsetOfAdminRoutes(t *testing.T) {
 	}
 	whitelisted := len(servermiddleware.OperatorScopeRoutes())
 	require.Greater(t, adminRoutes, whitelisted*5, "operator whitelist (%d) should stay a small fraction of admin routes (%d)", whitelisted, adminRoutes)
+}
+
+// 审批范围 golden：operator 可发起的写接口一旦变化必须显式改这里。
+func TestOperatorApprovalScopeMatchesGolden(t *testing.T) {
+	actual := servermiddleware.OperatorApprovalScopeRoutes()
+	golden := append([]string(nil), operatorApprovalScopeGolden...)
+	sort.Strings(golden)
+	require.Equal(t, golden, actual, "operator 审批范围变了：必须同步更新 golden 并评估该写接口是否适合由运维发起")
+
+	refused := servermiddleware.OperatorRefusedScopeRoutes()
+	refusedGolden := append([]string(nil), operatorRefusedScopeGolden...)
+	sort.Strings(refusedGolden)
+	require.Equal(t, refusedGolden, refused)
+}
+
+// 审批范围里的每一条都必须是已注册的非 GET 路由，且只落在用户 / 订阅 / 用户 API Key 域内；
+// 三张表（直接放行 / 须审批 / 永不允许）两两不相交。
+func TestOperatorApprovalScopeInvariants(t *testing.T) {
+	router := registerAllAdminAuthRoutesForTest(t)
+	registered := map[string]struct{}{}
+	for _, route := range router.Routes() {
+		registered[route.Method+" "+route.Path] = struct{}{}
+	}
+
+	allowed := map[string]struct{}{}
+	for _, entry := range servermiddleware.OperatorScopeRoutes() {
+		allowed[entry] = struct{}{}
+	}
+	refused := map[string]struct{}{}
+	for _, entry := range servermiddleware.OperatorRefusedScopeRoutes() {
+		refused[entry] = struct{}{}
+		_, ok := registered[entry]
+		require.Truef(t, ok, "stale refused entry %q", entry)
+		_, overlap := allowed[entry]
+		require.Falsef(t, overlap, "refused entry must not be whitelisted: %s", entry)
+	}
+	for _, entry := range servermiddleware.OperatorApprovalScopeRoutes() {
+		method, path, ok := strings.Cut(entry, " ")
+		require.True(t, ok, entry)
+		require.NotEqualf(t, http.MethodGet, method, "approval scope must be write-only: %s", entry)
+		_, ok = registered[entry]
+		require.Truef(t, ok, "stale approval scope entry %q: route no longer registered", entry)
+		_, overlap := allowed[entry]
+		require.Falsef(t, overlap, "approval entry must not also be directly allowed: %s", entry)
+		_, overlap = refused[entry]
+		require.Falsef(t, overlap, "approval entry must not also be refused: %s", entry)
+		inDomain := false
+		for _, prefix := range operatorApprovalAllowedPrefixes {
+			if strings.HasPrefix(path, prefix) {
+				inDomain = true
+				break
+			}
+		}
+		require.Truef(t, inDomain, "approval scope must stay within users / subscriptions / api-keys: %s", entry)
+	}
+	require.True(t, servermiddleware.OperatorActionRefused(http.MethodDelete, "/api/v1/admin/users/:id"), "deleting users must stay refused")
+	require.False(t, servermiddleware.OperatorApprovalRequired(http.MethodDelete, "/api/v1/admin/users/:id"))
 }

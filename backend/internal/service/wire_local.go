@@ -37,3 +37,29 @@ func ProvideGroupStatusProbeService(
 func ProvideReferralRewardRecordRepository(redeemRepo RedeemCodeRepository) ReferralRewardRecordRepository {
 	return redeemRepo
 }
+
+// ProvideAdminApprovalService 构造运维写操作审批服务（fork 本地）。
+// 推送钩子（Server酱³）通过 SetNotifier 挂载，保持构造函数签名稳定。
+func ProvideAdminApprovalService(
+	repo AdminApprovalRepository,
+	users *UserService,
+	subs *SubscriptionService,
+	groups GroupRepository,
+	apiKeys APIKeyRepository,
+	encryptor SecretEncryptor,
+	notifier *ApprovalNotifyService,
+) *AdminApprovalService {
+	svc := NewAdminApprovalService(repo, users, subs, groups, apiKeys, encryptor)
+	// 显式判空，避免 nil 指针包进非 nil 接口
+	if notifier != nil {
+		svc.SetNotifier(notifier)
+	}
+	return svc
+}
+
+// ProvideAdminApprovalSweeper 构造并启动过期 / 卡住申请的回收器。
+func ProvideAdminApprovalSweeper(svc *AdminApprovalService) *AdminApprovalSweeper {
+	w := NewAdminApprovalSweeper(svc, 0)
+	w.Start()
+	return w
+}

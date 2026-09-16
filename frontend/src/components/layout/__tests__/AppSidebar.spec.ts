@@ -87,16 +87,23 @@ describe('AppSidebar operator (read-only ops role)', () => {
     expect(componentSource).not.toContain('<template v-if="isAdmin">')
   })
 
-  it('gives operators only the ops and usage entries', () => {
+  it('gives operators the ops, usage, users, subscriptions and approvals entries only', () => {
     const start = componentSource.indexOf('const operatorNavItems = computed(')
     expect(start).toBeGreaterThan(-1)
     const block = componentSource.slice(start, componentSource.indexOf('// Admin navigation items', start))
-    expect(block).toContain("path: '/admin/ops'")
-    expect(block).toContain("path: '/admin/usage'")
-    for (const forbidden of ['/admin/users', '/admin/groups', '/admin/accounts', '/admin/settings', '/admin/dashboard']) {
+    for (const allowed of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/subscriptions', '/admin/approvals']) {
+      expect(block).toContain(`path: '${allowed}'`)
+    }
+    for (const forbidden of ['/admin/groups', '/admin/accounts', '/admin/settings', '/admin/dashboard', '/admin/audit-logs']) {
       expect(block).not.toContain(`path: '${forbidden}'`)
     }
+    expect(block).toContain('badge: approvalBadge')
     expect(componentSource).toContain('if (isOperator.value) {\n    return operatorNavItems.value\n  }')
+  })
+
+  it('shows the pending approvals badge on the approvals entry for admins too', () => {
+    expect(componentSource).toContain("{ path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, hideInSimpleMode: true, badge: approvalBadge }")
+    expect(componentSource).toContain('v-if="item.badge && (item.badge() ?? 0) > 0"')
   })
 
   it('fetches admin settings for every console role (store routes operators to the console session API)', () => {

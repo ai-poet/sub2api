@@ -341,6 +341,7 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyClientDownloadMacOSURL] = strings.TrimSpace(settings.ClientDownloadMacOSURL)
 	updates[SettingKeyGroupStatusEnabled] = strconv.FormatBool(settings.GroupStatusEnabled)
 	updates[SettingKeyGroupStatusNotifyServerChanEnabled] = strconv.FormatBool(settings.GroupStatusNotifyServerChanEnabled)
+	updates[SettingKeyApprovalNotifyServerChanEnabled] = strconv.FormatBool(settings.ApprovalNotifyServerChanEnabled)
 	updates[SettingKeyGroupStatusNotifyServerChanUID] = strings.TrimSpace(settings.GroupStatusNotifyServerChanUID)
 	// SendKey 留空表示保留已保存的密钥
 	if settings.GroupStatusNotifyServerChanSendKey != "" {

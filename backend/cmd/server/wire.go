@@ -116,6 +116,7 @@ func provideCleanup(
 	openAIGateway *service.OpenAIGatewayService,
 	scheduledTestRunner *service.ScheduledTestRunnerService,
 	groupStatusRunner *service.GroupStatusRunnerService,
+	approvalSweeper *service.AdminApprovalSweeper,
 	backupSvc *service.BackupService,
 	quotaFlusher *service.UserPlatformQuotaUsageFlusher,
 	upstreamBillingProbe *service.UpstreamBillingProbeService,
@@ -331,6 +332,12 @@ func provideCleanup(
 			{"GroupStatusRunnerService", func() error {
 				if groupStatusRunner != nil {
 					groupStatusRunner.Stop()
+				}
+				return nil
+			}},
+			{"AdminApprovalSweeper", func() error {
+				if approvalSweeper != nil {
+					approvalSweeper.Stop()
 				}
 				return nil
 			}},

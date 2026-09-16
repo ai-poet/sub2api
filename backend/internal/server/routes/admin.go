@@ -35,6 +35,7 @@ func RegisterAdminRoutes(
 
 		// 控制台会话信息（admin / operator 共用）
 		registerConsoleRoutes(admin, h)
+		registerApprovalRoutes(admin, h)
 
 		// 仪表盘
 		registerDashboardRoutes(admin, h)
@@ -175,6 +176,21 @@ func registerConsoleRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	console := admin.Group("/console")
 	{
 		console.GET("/session", h.Admin.Console.GetSession)
+	}
+}
+
+// registerApprovalRoutes 运维管理员写操作审批（fork 本地）：管理员一键通过 / 拒绝，运维管理员查看与撤回自己的申请。
+// 读接口与 cancel 对 operator 的放行见 middleware/console_scope.go；approve / reject 只允许 admin。
+func registerApprovalRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	approvals := admin.Group("/approvals")
+	{
+		approvals.GET("", h.Admin.Approval.List)
+		approvals.GET("/pending-count", h.Admin.Approval.PendingCount)
+		approvals.GET("/:id", h.Admin.Approval.Get)
+		approvals.POST("/batch-approve", middleware.AdminOnly(), h.Admin.Approval.BatchApprove)
+		approvals.POST("/:id/approve", middleware.AdminOnly(), h.Admin.Approval.Approve)
+		approvals.POST("/:id/reject", middleware.AdminOnly(), h.Admin.Approval.Reject)
+		approvals.POST("/:id/cancel", h.Admin.Approval.Cancel)
 	}
 }
 

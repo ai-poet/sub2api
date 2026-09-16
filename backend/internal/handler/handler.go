@@ -41,6 +41,7 @@ type AdminHandlers struct {
 	AuditLog              *admin.AuditLogHandler
 	Plugin                *admin.PluginHandler
 	Console               *admin.ConsoleHandler
+	Approval              *admin.ApprovalHandler
 }
 
 // Handlers contains all HTTP handlers

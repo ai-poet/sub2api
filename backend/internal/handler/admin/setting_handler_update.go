@@ -28,6 +28,7 @@ type UpdateSettingsRequest struct {
 	ClientDownloadMacOSURL             *string                         `json:"client_download_macos_url"`
 	GroupStatusEnabled                 *bool                           `json:"group_status_enabled"`
 	GroupStatusNotifyServerChanEnabled *bool                           `json:"group_status_notify_serverchan_enabled"`
+	ApprovalNotifyServerChanEnabled    *bool                           `json:"approval_notify_serverchan_enabled"`
 	GroupStatusNotifyServerChanUID     *string                         `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKey *string                         `json:"group_status_notify_serverchan_sendkey"`
 	CommunityQRCode                    *string                         `json:"community_qr_code"`
@@ -2010,6 +2011,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		ClientDownloadMacOSURL:                                 settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
 		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
+		ApprovalNotifyServerChanEnabled:                        settings.ApprovalNotifyServerChanEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
@@ -2386,6 +2388,11 @@ func applyForkSettingsFromRequest(
 	settings.GroupStatusNotifyServerChanEnabled = previous.GroupStatusNotifyServerChanEnabled
 	if req.GroupStatusNotifyServerChanEnabled != nil {
 		settings.GroupStatusNotifyServerChanEnabled = *req.GroupStatusNotifyServerChanEnabled
+	}
+	// 运维写操作审批 → Server酱³ 推送（复用同一 UID / SendKey）
+	settings.ApprovalNotifyServerChanEnabled = previous.ApprovalNotifyServerChanEnabled
+	if req.ApprovalNotifyServerChanEnabled != nil {
+		settings.ApprovalNotifyServerChanEnabled = *req.ApprovalNotifyServerChanEnabled
 	}
 	settings.GroupStatusNotifyServerChanUID = previous.GroupStatusNotifyServerChanUID
 	if req.GroupStatusNotifyServerChanUID != nil {

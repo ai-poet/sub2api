@@ -287,12 +287,13 @@ describe('路由守卫逻辑', () => {
     })
 
     it('访问标了 operatorAllowed 的管理页面允许通过', () => {
-      expect(simulateGuard('/admin/ops', { requiresAdmin: true, operatorAllowed: true }, authState)).toBeNull()
-      expect(simulateGuard('/admin/usage', { requiresAdmin: true, operatorAllowed: true }, authState)).toBeNull()
+      for (const path of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/subscriptions', '/admin/approvals']) {
+        expect(simulateGuard(path, { requiresAdmin: true, operatorAllowed: true }, authState)).toBeNull()
+      }
     })
 
     it('未标 operatorAllowed 的管理页面（默认拒绝）重定向到 /admin/ops', () => {
-      for (const path of ['/admin/dashboard', '/admin/users', '/admin/groups', '/admin/accounts', '/admin/settings']) {
+      for (const path of ['/admin/dashboard', '/admin/groups', '/admin/accounts', '/admin/settings']) {
         expect(simulateGuard(path, { requiresAdmin: true }, authState)).toBe('/admin/ops')
       }
     })

@@ -6,6 +6,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
 import type { ApiResponse } from '@/types'
 import { getLocale } from '@/i18n'
+import { APPROVAL_PENDING_CODE, dispatchApprovalQueued, isApprovalQueuedPayload } from '@/utils/approval'
 import {
   ADMIN_UI_REQUEST_HEADER,
   USER_UI_REQUEST_HEADER,
@@ -95,6 +96,18 @@ apiClient.interceptors.response.use(
     // Unwrap standard API response format { code, message, data }
     const apiResponse = response.data as ApiResponse<unknown>
     if (apiResponse && typeof apiResponse === 'object' && 'code' in apiResponse) {
+      // fork：运维管理员的写操作被后端排队等待管理员审批（202 + approval_request_id）。
+      // 当作成功返回会让各弹窗误报"操作成功"，所以转成带 APPROVAL_PENDING 的拒绝，
+      // 并广播 approval-queued 事件，由 App.vue 统一弹"已提交审批"提示并刷新角标。
+      if (response.status === 202 && apiResponse.code === 0 && isApprovalQueuedPayload(apiResponse.data)) {
+        dispatchApprovalQueued(apiResponse.data)
+        return Promise.reject({
+          status: 202,
+          code: APPROVAL_PENDING_CODE,
+          message: apiResponse.message || 'accepted',
+          approval: apiResponse.data
+        })
+      }
       if (apiResponse.code === 0) {
         // Success - return the data portion
         response.data = apiResponse.data

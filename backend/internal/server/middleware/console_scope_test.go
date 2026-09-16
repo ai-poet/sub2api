@@ -36,7 +36,13 @@ func TestOperatorScopeAllows(t *testing.T) {
 		{name: "resolve is a write", method: http.MethodPut, path: "/api/v1/admin/ops/errors/:id/resolve", want: false},
 		{name: "usage cleanup write", method: http.MethodPost, path: "/api/v1/admin/usage/cleanup-tasks", want: false},
 		{name: "usage cleanup read is not whitelisted", method: http.MethodGet, path: "/api/v1/admin/usage/cleanup-tasks", want: false},
-		{name: "balance", method: http.MethodPost, path: "/api/v1/admin/users/:id/balance", want: false},
+		{name: "balance is approval-only, never directly allowed", method: http.MethodPost, path: "/api/v1/admin/users/:id/balance", want: false},
+		{name: "users list is readable", method: http.MethodGet, path: "/api/v1/admin/users", want: true},
+		{name: "subscriptions list is readable", method: http.MethodGet, path: "/api/v1/admin/subscriptions", want: true},
+		{name: "attribute batch is a read-shaped POST", method: http.MethodPost, path: "/api/v1/admin/user-attributes/batch", want: true},
+		{name: "cancel own approval", method: http.MethodPost, path: "/api/v1/admin/approvals/:id/cancel", want: true},
+		{name: "approve is admin only", method: http.MethodPost, path: "/api/v1/admin/approvals/:id/approve", want: false},
+		{name: "delete user is refused, not allowed", method: http.MethodDelete, path: "/api/v1/admin/users/:id", want: false},
 		{name: "settings", method: http.MethodGet, path: "/api/v1/admin/settings", want: false},
 		{name: "accounts", method: http.MethodGet, path: "/api/v1/admin/accounts", want: false},
 		{name: "groups", method: http.MethodGet, path: "/api/v1/admin/groups", want: false},
@@ -55,7 +61,8 @@ func TestOperatorScopeAllows(t *testing.T) {
 	}
 }
 
-// 白名单表本身的不变量：只读条目全是 GET，写条目为空（operator 是纯只读角色）。
+// 白名单表本身的不变量：只读条目全是 GET；直接放行的写条目只有读语义的 POST 与撤回自己的申请；
+// 直接放行 / 须审批 / 永不允许三张表两两不相交。
 func TestOperatorScopeTableInvariants(t *testing.T) {
 	t.Parallel()
 
@@ -63,11 +70,46 @@ func TestOperatorScopeTableInvariants(t *testing.T) {
 		require.Truef(t, strings.HasPrefix(key, "GET "), "read scope entry must be GET: %s", key)
 		require.Truef(t, strings.HasPrefix(key, "GET /api/v1/admin/"), "read scope entry must live under /api/v1/admin: %s", key)
 	}
-	require.Empty(t, operatorWriteScope)
+	require.Equal(t, map[string]struct{}{
+		"POST /api/v1/admin/user-attributes/batch": {},
+		"POST /api/v1/admin/approvals/:id/cancel":  {},
+	}, operatorWriteScope, "直接放行的写条目必须保持最小；新的写接口应走审批范围")
 
 	routes := OperatorScopeRoutes()
 	require.Len(t, routes, len(operatorReadScope)+len(operatorWriteScope))
 	require.IsIncreasing(t, routes)
+
+	for key := range operatorApprovalScope {
+		require.Falsef(t, strings.HasPrefix(key, "GET "), "approval scope must be write-only: %s", key)
+		_, allowed := operatorReadScope[key]
+		_, allowedWrite := operatorWriteScope[key]
+		_, refused := operatorRefusedScope[key]
+		require.Falsef(t, allowed || allowedWrite || refused, "approval entry overlaps another table: %s", key)
+	}
+	for key := range operatorRefusedScope {
+		_, allowed := operatorReadScope[key]
+		_, allowedWrite := operatorWriteScope[key]
+		require.Falsef(t, allowed || allowedWrite, "refused entry overlaps allow tables: %s", key)
+	}
+	require.IsIncreasing(t, OperatorApprovalScopeRoutes())
+	require.IsIncreasing(t, OperatorRefusedScopeRoutes())
+}
+
+func TestOperatorApprovalAndRefusedScopes(t *testing.T) {
+	t.Parallel()
+
+	require.True(t, OperatorApprovalRequired(http.MethodPost, "/api/v1/admin/users/:id/balance"))
+	require.True(t, OperatorApprovalRequired("put", "/api/v1/admin/users/:id"))
+	require.True(t, OperatorApprovalRequired(http.MethodPut, "/api/v1/admin/api-keys/:id"))
+	require.True(t, OperatorApprovalRequired(http.MethodDelete, "/api/v1/admin/subscriptions/:id"))
+	require.False(t, OperatorApprovalRequired(http.MethodGet, "/api/v1/admin/users"))
+	require.False(t, OperatorApprovalRequired(http.MethodPost, "/api/v1/admin/users/7/balance"), "concrete path instead of template")
+	require.False(t, OperatorApprovalRequired(http.MethodPost, ""))
+	require.False(t, OperatorApprovalRequired(http.MethodPost, "/api/v1/admin/compliance/accept"))
+
+	require.True(t, OperatorActionRefused(http.MethodDelete, "/api/v1/admin/users/:id"))
+	require.False(t, OperatorActionRefused(http.MethodDelete, "/api/v1/admin/subscriptions/:id"))
+	require.False(t, OperatorActionRefused(http.MethodGet, "/api/v1/admin/users/:id"))
 }
 
 func TestOperatorDenyAuditLimiter(t *testing.T) {

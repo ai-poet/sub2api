@@ -29,7 +29,7 @@
         <label class="input-label">{{ t('admin.users.username') }}</label>
         <input v-model="form.username" type="text" class="input" />
       </div>
-      <div>
+      <div v-if="!readonly">
         <label class="input-label">{{ t('admin.users.form.roleLabel') }}</label>
         <Select
           v-model="form.role"
@@ -95,8 +95,10 @@ import UserAttributeForm from '@/components/user/UserAttributeForm.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { useStepUp, isStepUpBlocked, isStepUpCancelled, stepUpBlockReason } from '@/composables/useStepUp'
 import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
+import { isApprovalQueued } from '@/utils/approval'
 
-const props = defineProps<{ show: boolean, user: AdminUser | null }>()
+// readonly：运维管理员（写操作排队等待审批）——不能改角色，payload 不带 role
+const props = withDefaults(defineProps<{ show: boolean, user: AdminUser | null, readonly?: boolean }>(), { readonly: false })
 const emit = defineEmits(['close', 'success'])
 const { t } = useI18n(); const appStore = useAppStore(); const { copyToClipboard } = useClipboard()
 
@@ -152,7 +154,8 @@ const handleUpdateUser = async () => {
   const userId = props.user.id
   submitting.value = true
   try {
-    const data: any = { email: form.email, username: form.username, notes: form.notes, role: form.role, concurrency: form.concurrency, rpm_limit: form.rpm_limit }
+    const data: any = { email: form.email, username: form.username, notes: form.notes, concurrency: form.concurrency, rpm_limit: form.rpm_limit }
+    if (!props.readonly) data.role = form.role
     if (form.password.trim()) data.password = form.password.trim()
     // 提升为管理员属敏感操作：后端返回 STEP_UP_REQUIRED 时弹 TOTP 验证并重试
     await stepUp.run(() => adminAPI.users.update(userId, data))
@@ -160,7 +163,17 @@ const handleUpdateUser = async () => {
     appStore.showSuccess(t('admin.users.userUpdated'))
     emit('success'); emit('close')
   } catch (e: any) {
-    if (isStepUpCancelled(e)) {
+    if (isApprovalQueued(e)) {
+      // 运维管理员：用户资料修改已排队等待审批；自定义属性是另一条写请求，同样入队后关闭表单
+      if (Object.keys(form.customAttributes).length > 0) {
+        try {
+          await adminAPI.userAttributes.updateUserAttributeValues(userId, form.customAttributes)
+        } catch (attrErr: any) {
+          if (!isApprovalQueued(attrErr)) console.error('Failed to queue attribute update:', attrErr)
+        }
+      }
+      emit('close')
+    } else if (isStepUpCancelled(e)) {
       // 用户主动取消二次验证：静默返回，表单保持打开。
     } else if (isStepUpBlocked(e)) {
       appStore.showError(

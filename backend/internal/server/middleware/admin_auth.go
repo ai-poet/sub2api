@@ -11,14 +11,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// NewAdminAuthMiddleware 创建管理员认证中间件
+// NewAdminAuthMiddleware 创建管理员认证中间件（不带审批门：operator 的审批范围写请求会 503，fail-closed）。
 func NewAdminAuthMiddleware(
 	authService *service.AuthService,
 	userService *service.UserService,
 	settingService *service.SettingService,
 	auditService *service.AuditLogService,
 ) AdminAuthMiddleware {
-	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService))
+	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService, nil))
+}
+
+// NewAdminAuthMiddlewareWithApprovalGate 创建带运维审批门的管理员认证中间件（生产 wire 使用）。
+func NewAdminAuthMiddlewareWithApprovalGate(
+	authService *service.AuthService,
+	userService *service.UserService,
+	settingService *service.SettingService,
+	auditService *service.AuditLogService,
+	gate service.AdminApprovalGate,
+) AdminAuthMiddleware {
+	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService, gate))
 }
 
 // adminAuth 管理员认证中间件实现
@@ -30,15 +41,26 @@ func adminAuth(
 	userService *service.UserService,
 	settingService *service.SettingService,
 	auditService *service.AuditLogService,
+	gate service.AdminApprovalGate,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 审批通过后的内部重放：request context 带 ApprovalReplay 标记（只能由 Go 代码设置），
+		// 直接以审批人（管理员）身份放行，不再校验 token。
+		if replay, ok := service.ApprovalReplayFromContext(c.Request.Context()); ok {
+			if !applyApprovalReplayIdentity(c, replay) {
+				return
+			}
+			c.Next()
+			return
+		}
+
 		// WebSocket upgrade requests cannot set Authorization headers in browsers.
 		// For admin WebSocket endpoints (e.g. Ops realtime), allow passing the JWT via
 		// Sec-WebSocket-Protocol (subprotocol list) using a prefixed token item:
 		//   Sec-WebSocket-Protocol: sub2api-admin, jwt.<token>
 		if isWebSocketUpgradeRequest(c) {
 			if token := extractJWTFromWebSocketSubprotocol(c); token != "" {
-				if !validateJWTForAdmin(c, token, authService, userService, settingService, auditService) {
+				if !validateJWTForAdmin(c, token, authService, userService, settingService, auditService, gate) {
 					return
 				}
 				c.Next()
@@ -66,7 +88,7 @@ func adminAuth(
 					AbortWithError(c, 401, "UNAUTHORIZED", "Authorization required")
 					return
 				}
-				if !validateJWTForAdmin(c, token, authService, userService, settingService, auditService) {
+				if !validateJWTForAdmin(c, token, authService, userService, settingService, auditService, gate) {
 					return
 				}
 				c.Next()
@@ -161,6 +183,7 @@ func validateJWTForAdmin(
 	userService *service.UserService,
 	settingService *service.SettingService,
 	auditService *service.AuditLogService,
+	gate service.AdminApprovalGate,
 ) bool {
 	// 验证 JWT token
 	claims, err := authService.ValidateToken(token)
@@ -197,14 +220,31 @@ func validateJWTForAdmin(
 		return false
 	}
 
-	// 检查控制台权限：admin 全权放行；operator 只能命中只读白名单（默认拒绝，见 console_scope.go）；
-	// 其它角色一律 403。operator 被拒绝的请求在此直接写审计——审计中间件挂在本中间件之后，
-	// 不会记录认证层的 403。admin API key 分支不经过这里，合成的始终是真 admin。
+	// 检查控制台权限：admin 全权放行；operator 按 console_scope.go 的表决定出口（默认拒绝）：
+	//   - 读白名单 / 显式写条目 → 放行；
+	//   - 永不允许的动作（删除用户）→ 403，不入队；
+	//   - 用户 / 订阅管理的写操作 → 交给审批门入队并返回 202，绝不到达 handler；
+	//   - 其它 → 403。
+	// 其它角色一律 403。operator 被拒绝 / 入队的请求在此直接写审计——审计中间件挂在本中间件之后，
+	// 不会记录认证层的响应。admin API key 分支不经过这里，合成的始终是真 admin。
 	if !user.IsAdmin() {
-		if !user.IsOperator() || !OperatorScopeAllows(c.Request.Method, c.FullPath()) {
-			if user.IsOperator() {
-				recordOperatorScopeDenied(c, auditService, user)
-			}
+		if !user.IsOperator() {
+			AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
+			return false
+		}
+		method, fullPath := c.Request.Method, c.FullPath()
+		switch {
+		case OperatorScopeAllows(method, fullPath):
+			// 放行
+		case OperatorActionRefused(method, fullPath):
+			recordOperatorApprovalAudit(c, auditService, user, nil, nil, 403, "OPERATOR_ACTION_FORBIDDEN")
+			AbortWithError(c, 403, "OPERATOR_ACTION_FORBIDDEN", "This action requires the administrator")
+			return false
+		case OperatorApprovalRequired(method, fullPath):
+			captureOperatorApproval(c, gate, auditService, user)
+			return false
+		default:
+			recordOperatorScopeDenied(c, auditService, user)
 			AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
 			return false
 		}

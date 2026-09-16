@@ -304,7 +304,8 @@ export default {
     "communityGroup": "Join Community",
     "communityGroupTooltip": "Scan to join our community group",
     "communityGroupScanHint": "Scan the QR code with your phone",
-    "communityGroupJoin": "Join Now"
+    "communityGroupJoin": "Join Now",
+    "approvals": "Approvals"
   },
   "auth": {
     "referralCodeLabel": "Referral Code",
@@ -669,6 +670,10 @@ export default {
           "testSucceeded": "Test push sent",
           "testFailed": "Test push failed"
         },
+        "approvalNotify": {
+          "enabled": "Approval request push",
+          "enabledHint": "Push a message with a link to the approvals page whenever an operator submits a user / subscription management change (uses the UID / SendKey above)."
+        },
         "communityQRCodePlaceholder": "Paste the QR image base64 or URL",
         "communityQRCode": "Community Group QR Code",
         "uploadQRCode": "Upload QR Code",
@@ -805,7 +810,85 @@ export default {
   },
   "operator": {
     "readOnlyNotice": "Read-only mode: operators can view ops monitoring and usage logs but cannot change settings, handle alerts or clean up data.",
-    "roleHint": "Operator: read-only troubleshooting role with access to ops monitoring and usage logs; cannot manage user balances, upstream accounts or groups.",
-    "singleAdminHint": "Only one admin account is allowed; use the operator or user role for everyone else."
+    "roleHint": "Operator: troubleshooting role with access to ops monitoring and usage logs; user and subscription management changes only execute after admin approval, and upstream accounts or groups cannot be managed.",
+    "singleAdminHint": "Only one admin account is allowed; use the operator or user role for everyone else.",
+    "approval": {
+      "title": "Approvals",
+      "description": "User / subscription management changes submitted by operators, executed once the admin approves them with one click.",
+      "queuedToast": "Submitted for admin approval: {target}",
+      "operatorHint": "Only your own requests are listed here; approved requests run under the admin's identity.",
+      "approving": "Executing...",
+      "approveSuccess": "Approved and executed: {target}",
+      "approveFailed": "Approved but execution failed: {error}",
+      "rejected": "Request rejected",
+      "cancelled": "Request withdrawn",
+      "rejectTitle": "Reject request",
+      "rejectReasonPlaceholder": "Reason (optional, visible to the requester)",
+      "cancelTitle": "Withdraw request",
+      "cancelConfirm": "Withdraw this pending request? You will need to submit it again.",
+      "empty": "No approval requests",
+      "loadFailed": "Failed to load approval requests",
+      "tabs": {
+        "pending": "Pending",
+        "processed": "Processed"
+      },
+      "columns": {
+        "time": "Time",
+        "requester": "Requester",
+        "action": "Action",
+        "target": "Target",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "pending": "Pending",
+        "executing": "Executing",
+        "approved": "Approved",
+        "failed": "Failed",
+        "rejected": "Rejected",
+        "cancelled": "Withdrawn",
+        "expired": "Expired"
+      },
+      "actions": {
+        "approve": "Approve",
+        "approveSelected": "Approve selected ({count})",
+        "approveAll": "Approve all pending",
+        "reject": "Reject",
+        "cancel": "Withdraw",
+        "detail": "Details"
+      },
+      "batchConfirm": "Approve {count} pending request(s)? They execute immediately, one by one, under your identity.",
+      "batchResult": "Batch approval finished: {approved} approved, {failed} failed, {skipped} skipped",
+      "batchEmpty": "No pending requests to approve",
+      "detail": {
+        "title": "Request details",
+        "titleWithId": "Request #{id}",
+        "payload": "Request body (redacted)",
+        "decision": "Decision",
+        "result": "Execution result",
+        "statusCode": "HTTP status",
+        "expiresAt": "Expires at",
+        "close": "Close"
+      },
+      "actionLabels": {
+        "userCreate": "Create user",
+        "userUpdate": "Edit user",
+        "userBalance": "Adjust balance",
+        "userReplaceGroup": "Replace exclusive group",
+        "userBatchConcurrency": "Batch update concurrency",
+        "userBatchLimits": "Batch update limits",
+        "userPlatformQuotas": "Update platform quotas",
+        "userPlatformQuotaReset": "Reset platform quota window",
+        "userAttributes": "Update user attributes",
+        "userAuthIdentity": "Bind login identity",
+        "apiKeyUpdate": "Change API key group",
+        "subscriptionAssign": "Assign subscription",
+        "subscriptionBulkAssign": "Bulk assign subscriptions",
+        "subscriptionExtend": "Adjust subscription validity",
+        "subscriptionResetQuota": "Reset subscription quota",
+        "subscriptionRevoke": "Revoke subscription",
+        "subscriptionRestore": "Restore subscription"
+      }
+    }
   }
 } as const

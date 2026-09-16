@@ -8861,6 +8861,7 @@ const form = reactive<SettingsForm>({
   client_download_macos_url: "",
   group_status_enabled: false,
   group_status_notify_serverchan_enabled: false,
+  approval_notify_serverchan_enabled: false,
   group_status_notify_serverchan_uid: "",
   group_status_notify_serverchan_sendkey: "",
   group_status_notify_serverchan_sendkey_configured: false,
@@ -10547,6 +10548,8 @@ async function saveSettings() {
       group_status_enabled: form.group_status_enabled,
       group_status_notify_serverchan_enabled:
         form.group_status_notify_serverchan_enabled,
+      approval_notify_serverchan_enabled:
+        form.approval_notify_serverchan_enabled,
       group_status_notify_serverchan_uid:
         form.group_status_notify_serverchan_uid,
       group_status_notify_serverchan_sendkey:

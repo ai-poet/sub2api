@@ -69,12 +69,71 @@ var operatorReadScope = map[string]struct{}{
 	// 替代 operator 无权访问的 /admin/dashboard/{snapshot-v2,models}，不含用户级明细
 	"GET /api/v1/admin/usage/charts":      {},
 	"GET /api/v1/admin/usage/model-stats": {},
+
+	// 用户管理（只读部分；写操作走审批，见 operatorApprovalScope）。
+	// api-keys / balance-history 在 handler 层按 operator 投影：无明文 key、无卡密串。
+	"GET /api/v1/admin/users":                     {},
+	"GET /api/v1/admin/users/:id":                 {},
+	"GET /api/v1/admin/users/:id/api-keys":        {},
+	"GET /api/v1/admin/users/:id/usage":           {},
+	"GET /api/v1/admin/users/:id/balance-history": {},
+	"GET /api/v1/admin/users/:id/rpm-status":      {},
+	"GET /api/v1/admin/users/:id/platform-quotas": {},
+	"GET /api/v1/admin/users/:id/attributes":      {},
+	"GET /api/v1/admin/users/:id/subscriptions":   {},
+	"GET /api/v1/admin/user-attributes":           {},
+
+	// 订阅管理（只读部分）
+	"GET /api/v1/admin/subscriptions":              {},
+	"GET /api/v1/admin/subscriptions/:id":          {},
+	"GET /api/v1/admin/subscriptions/:id/progress": {},
+
+	// 审批申请：operator 只能看到自己的（handler 强制按申请人过滤）
+	"GET /api/v1/admin/approvals":               {},
+	"GET /api/v1/admin/approvals/pending-count": {},
+	"GET /api/v1/admin/approvals/:id":           {},
 }
 
-// operatorWriteScope 允许 operator 调用的非 GET 条目。刻意保持为空：operator 是纯只读角色，
-// 合规确认也不要求（AdminComplianceGuard 对 operator 直接放行）。保留这张表只是为了让
-// "放开某个写接口"必须显式落在这里并同步 golden 测试，而不是散落在各处。
-var operatorWriteScope = map[string]struct{}{}
+// operatorWriteScope 允许 operator 直接调用（不经审批）的非 GET 条目。只放两类：
+// 读语义的 POST（批量取用户属性）与撤回自己的审批申请。其它写操作要么走 operatorApprovalScope，
+// 要么默认拒绝。每加一条都必须同步 golden 测试。
+var operatorWriteScope = map[string]struct{}{
+	"POST /api/v1/admin/user-attributes/batch": {},
+	"POST /api/v1/admin/approvals/:id/cancel":  {},
+}
+
+// operatorApprovalScope operator 可以发起、但必须由管理员在审批页一键通过后才会执行的写接口。
+// 认证层把这些请求交给 AdminApprovalGate 入队并返回 202，绝不直接到达 handler；
+// 审批通过后以管理员身份内部重放（见 admin_auth_approval.go / service.AdminApprovalService）。
+// 角色变更（body.role 与目标当前角色不同）即使命中本表也会被审批服务拒绝。
+var operatorApprovalScope = map[string]struct{}{
+	// 用户管理
+	"POST /api/v1/admin/users":                           {},
+	"PUT /api/v1/admin/users/:id":                        {},
+	"POST /api/v1/admin/users/:id/balance":               {},
+	"POST /api/v1/admin/users/:id/replace-group":         {},
+	"POST /api/v1/admin/users/batch-concurrency":         {},
+	"POST /api/v1/admin/users/batch-limits":              {},
+	"PUT /api/v1/admin/users/:id/platform-quotas":        {},
+	"POST /api/v1/admin/users/:id/platform-quotas/reset": {},
+	"PUT /api/v1/admin/users/:id/attributes":             {},
+	"POST /api/v1/admin/users/:id/auth-identities":       {},
+	// 用户 API Key 的分组调整（用户管理页的 API Key 弹窗）
+	"PUT /api/v1/admin/api-keys/:id": {},
+	// 订阅管理
+	"POST /api/v1/admin/subscriptions/assign":          {},
+	"POST /api/v1/admin/subscriptions/bulk-assign":     {},
+	"POST /api/v1/admin/subscriptions/:id/extend":      {},
+	"POST /api/v1/admin/subscriptions/:id/reset-quota": {},
+	"POST /api/v1/admin/subscriptions/:id/revoke":      {},
+	"POST /api/v1/admin/subscriptions/:id/restore":     {},
+	"DELETE /api/v1/admin/subscriptions/:id":           {},
+}
+
+// operatorRefusedScope 永远不允许 operator 发起、也不入队的动作：直接 403 并审计。
+var operatorRefusedScope = map[string]struct{}{
+	"DELETE /api/v1/admin/users/:id": {},
+}
 
 // OperatorScopeAllows 报告 operator 是否可以访问 method + fullPath（gin 路由模板）。
 // 纯函数，不接触 gin.Context，便于单测；空路径（未匹配到路由）一律拒绝。
@@ -100,6 +159,53 @@ func OperatorScopeRoutes() []string {
 		out = append(out, key)
 	}
 	for key := range operatorWriteScope {
+		out = append(out, key)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// OperatorApprovalRequired 报告 method + fullPath 是否属于"operator 可发起、须管理员审批"的写接口。
+func OperatorApprovalRequired(method, fullPath string) bool {
+	key := scopeKey(method, fullPath)
+	if key == "" {
+		return false
+	}
+	_, ok := operatorApprovalScope[key]
+	return ok
+}
+
+// OperatorActionRefused 报告 method + fullPath 是否属于 operator 永远不能发起的动作。
+func OperatorActionRefused(method, fullPath string) bool {
+	key := scopeKey(method, fullPath)
+	if key == "" {
+		return false
+	}
+	_, ok := operatorRefusedScope[key]
+	return ok
+}
+
+// OperatorApprovalScopeRoutes / OperatorRefusedScopeRoutes 返回对应表的全部条目（已排序），供 golden 测试使用。
+func OperatorApprovalScopeRoutes() []string {
+	return sortedScopeKeys(operatorApprovalScope)
+}
+
+func OperatorRefusedScopeRoutes() []string {
+	return sortedScopeKeys(operatorRefusedScope)
+}
+
+func scopeKey(method, fullPath string) string {
+	method = strings.ToUpper(strings.TrimSpace(method))
+	fullPath = strings.TrimSpace(fullPath)
+	if method == "" || fullPath == "" {
+		return ""
+	}
+	return method + " " + fullPath
+}
+
+func sortedScopeKeys(table map[string]struct{}) []string {
+	out := make([]string, 0, len(table))
+	for key := range table {
 		out = append(out, key)
 	}
 	sort.Strings(out)

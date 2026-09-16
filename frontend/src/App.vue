@@ -6,7 +6,9 @@ import NavigationProgress from '@/components/common/NavigationProgress.vue'
 import AdminComplianceDialog from '@/components/admin/AdminComplianceDialog.vue'
 import { resolveRouteDocumentTitle } from '@/router/title'
 import AnnouncementPopup from '@/components/common/AnnouncementPopup.vue'
-import { useAppStore, useAuthStore, useSubscriptionStore, useAnnouncementStore, useAdminComplianceStore, useAdminSettingsStore } from '@/stores'
+import { useI18n } from 'vue-i18n'
+import { useAppStore, useAuthStore, useSubscriptionStore, useAnnouncementStore, useAdminComplianceStore, useAdminSettingsStore, useApprovalsStore } from '@/stores'
+import { APPROVAL_QUEUED_EVENT, type ApprovalQueuedPayload } from '@/utils/approval'
 import { getSetupStatus } from '@/api/setup'
 import { updateFavicon } from '@/utils/branding'
 import { FeatureFlags, isFeatureFlagEnabled } from '@/utils/featureFlags'
@@ -20,6 +22,8 @@ const subscriptionStore = useSubscriptionStore()
 const announcementStore = useAnnouncementStore()
 const adminComplianceStore = useAdminComplianceStore()
 const adminSettingsStore = useAdminSettingsStore()
+const approvalsStore = useApprovalsStore()
+const { t } = useI18n()
 
 function updateDocumentTitle() {
   const customMenuItems = [
@@ -70,6 +74,13 @@ function onAdminComplianceRequired(event: Event) {
   adminComplianceStore.requireAcknowledgement(detail)
 }
 
+// fork：运维管理员的写操作被排队等待审批时，apiClient 会广播 approval-queued；这里统一提示并刷新角标。
+function onApprovalQueued(event: Event) {
+  const detail = (event as CustomEvent<ApprovalQueuedPayload>).detail
+  appStore.showInfo(t('operator.approval.queuedToast', { target: detail?.target_summary || '' }), 5000)
+  void approvalsStore.fetchPendingCount()
+}
+
 // 订阅功能开关（opt-out）。关闭后不再预加载/轮询订阅接口；开关在登录后才到达时补启动，反向则清空。
 const subscriptionFeatureEnabled = computed(() => isFeatureFlagEnabled(FeatureFlags.subscription))
 
@@ -98,6 +109,10 @@ watch(
           console.error('Failed to fetch admin compliance status:', error)
         })
       }
+      // 运维审批角标：管理员与运维管理员都轮询（口径由后端按角色决定）
+      if (authStore.hasConsoleAccess) {
+        approvalsStore.start()
+      }
 
       // User logged in: preload subscriptions and start polling (skipped when the
       // subscription feature is switched off; see the flag watcher below)
@@ -121,6 +136,7 @@ watch(
       subscriptionStore.clear()
       announcementStore.reset()
       adminComplianceStore.reset()
+      approvalsStore.reset()
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   },
@@ -137,10 +153,12 @@ router.afterEach(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onVisibilityChange)
   window.removeEventListener('admin-compliance-required', onAdminComplianceRequired)
+  window.removeEventListener(APPROVAL_QUEUED_EVENT, onApprovalQueued)
 })
 
 onMounted(async () => {
   window.addEventListener('admin-compliance-required', onAdminComplianceRequired)
+  window.addEventListener(APPROVAL_QUEUED_EVENT, onApprovalQueued)
 
   // Check if setup is needed
   try {

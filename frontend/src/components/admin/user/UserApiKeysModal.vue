@@ -14,7 +14,7 @@
           <div class="flex items-start justify-between">
             <div class="min-w-0 flex-1">
               <div class="mb-1 flex items-center gap-2"><span class="font-medium text-gray-900 dark:text-white">{{ key.name }}</span><span :class="['badge text-xs', key.status === 'active' ? 'badge-success' : 'badge-danger']">{{ key.status }}</span></div>
-              <p class="truncate font-mono text-sm text-gray-500">{{ key.key.substring(0, 20) }}...{{ key.key.substring(key.key.length - 8) }}</p>
+              <p class="truncate font-mono text-sm text-gray-500">{{ keyDisplay(key) }}</p>
             </div>
           </div>
           <div class="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
@@ -112,11 +112,13 @@ import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
 import { formatDateTime } from '@/utils/format'
 import type { AdminUser, AdminGroup, ApiKey } from '@/types'
+import { isApprovalQueued } from '@/utils/approval'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
 import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 
-const props = defineProps<{ show: boolean; user: AdminUser | null }>()
+// readonly：运维管理员（分组调整排队等待审批；分组列表改用调用日志域的最小投影）
+const props = withDefaults(defineProps<{ show: boolean; user: AdminUser | null; readonly?: boolean }>(), { readonly: false })
 const emit = defineEmits(['close'])
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -167,9 +169,20 @@ const load = async () => {
   }
 }
 
+// 运维管理员视图：后端不下发明文 key，只给掩码（key_masked）
+const keyDisplay = (key: ApiKey): string => {
+  if (key.key) return `${key.key.substring(0, 20)}...${key.key.substring(key.key.length - 8)}`
+  return key.key_masked || '••••'
+}
+
 const loadGroups = async () => {
   try {
-    const groups = await adminAPI.groups.getAll()
+    // 运维管理员无权访问 /admin/groups，改用调用日志域的最小分组投影
+    const groups = props.readonly
+      ? (await adminAPI.usage.listFilterGroups()).map((g) => ({
+          id: g.id, name: g.name, platform: g.platform, status: 'active', subscription_type: 'standard', is_exclusive: false
+        }) as unknown as AdminGroup)
+      : await adminAPI.groups.getAll()
     allGroups.value = groups
   } catch (error) {
     console.error('Failed to load groups:', error)
@@ -220,7 +233,10 @@ const changeGroup = async (key: ApiKey, newGroupId: number | null) => {
       appStore.showSuccess(t('admin.users.groupChangedSuccess'))
     }
   } catch (error: any) {
-    appStore.showError(error?.message || t('admin.users.groupChangeFailed'))
+    // 运维管理员：分组调整已排队等待管理员审批（全局提示已弹出），本地不改
+    if (!isApprovalQueued(error)) {
+      appStore.showError(error?.message || t('admin.users.groupChangeFailed'))
+    }
   } finally {
     updatingKeyIds.value.delete(key.id)
   }

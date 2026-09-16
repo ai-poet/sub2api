@@ -259,6 +259,62 @@ var (
 			},
 		},
 	}
+	// AdminApprovalRequestsColumns holds the columns for the "admin_approval_requests" table.
+	AdminApprovalRequestsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "status", Type: field.TypeString, Size: 20, Default: "pending"},
+		{Name: "action", Type: field.TypeString, Size: 128},
+		{Name: "method", Type: field.TypeString, Size: 10},
+		{Name: "route_template", Type: field.TypeString, Size: 255},
+		{Name: "request_path", Type: field.TypeString, Size: 1024},
+		{Name: "request_query", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "content_type", Type: field.TypeString, Size: 128, Default: ""},
+		{Name: "request_body_enc", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "request_body_redacted", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "request_body_sha256", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "target_type", Type: field.TypeString, Size: 32, Default: ""},
+		{Name: "target_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "target_summary", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "requester_user_id", Type: field.TypeInt64},
+		{Name: "requester_email", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "requester_ip", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "request_id", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "decided_by_user_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "decided_by_email", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "decided_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "decision_reason", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "executed_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "result_status_code", Type: field.TypeInt, Nullable: true},
+		{Name: "result_body", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "result_error", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "notified_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "expires_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// AdminApprovalRequestsTable holds the schema information for the "admin_approval_requests" table.
+	AdminApprovalRequestsTable = &schema.Table{
+		Name:       "admin_approval_requests",
+		Columns:    AdminApprovalRequestsColumns,
+		PrimaryKey: []*schema.Column{AdminApprovalRequestsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "adminapprovalrequest_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AdminApprovalRequestsColumns[3], AdminApprovalRequestsColumns[1]},
+			},
+			{
+				Name:    "adminapprovalrequest_requester_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AdminApprovalRequestsColumns[16], AdminApprovalRequestsColumns[1]},
+			},
+			{
+				Name:    "adminapprovalrequest_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{AdminApprovalRequestsColumns[29]},
+			},
+		},
+	}
 	// AnnouncementsColumns holds the columns for the "announcements" table.
 	AnnouncementsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -2015,6 +2071,7 @@ var (
 		APIKeysTable,
 		AccountsTable,
 		AccountGroupsTable,
+		AdminApprovalRequestsTable,
 		AnnouncementsTable,
 		AnnouncementReadsTable,
 		AuthIdentitiesTable,
@@ -2068,6 +2125,9 @@ func init() {
 	AccountGroupsTable.ForeignKeys[1].RefTable = GroupsTable
 	AccountGroupsTable.Annotation = &entsql.Annotation{
 		Table: "account_groups",
+	}
+	AdminApprovalRequestsTable.Annotation = &entsql.Annotation{
+		Table: "admin_approval_requests",
 	}
 	AnnouncementsTable.Annotation = &entsql.Annotation{
 		Table: "announcements",

@@ -744,6 +744,8 @@ export interface ApiKey {
   id: number
   user_id: number
   key: string
+  /** 运维管理员视图：明文 key 被后端置空，只给掩码（fork） */
+  key_masked?: string
   name: string
   group_id: number | null
   status: 'active' | 'inactive' | 'quota_exhausted' | 'expired'

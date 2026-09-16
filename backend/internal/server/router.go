@@ -38,6 +38,7 @@ func SetupRouter(
 	compositeResolver *service.CompositeRouteResolver,
 	cfg *config.Config,
 	redisClient *redis.Client,
+	approvalService *service.AdminApprovalService,
 ) *gin.Engine {
 	middleware2.SetIngressRejectRecorder(opsService)
 	// 缓存 iframe 页面的 origin 列表，用于动态注入 CSP frame-src
@@ -96,6 +97,11 @@ func SetupRouter(
 
 	// 注册路由
 	registerRoutes(r, handlers, jwtAuth, optionalJWTAuth, adminAuth, apiKeyAuth, auditLog, stepUpAuth, apiKeyService, subscriptionService, userService, opsService, settingService, compositeResolver, cfg, redisClient)
+
+	// fork：运维写操作审批通过后在进程内重放，重放走完整的 gin 中间件链，所以把引擎本身交给审批服务。
+	if approvalService != nil {
+		approvalService.SetDispatcher(r)
+	}
 
 	return r
 }
