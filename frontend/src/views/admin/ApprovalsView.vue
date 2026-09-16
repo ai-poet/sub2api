@@ -89,8 +89,21 @@
 
           <template #cell-status="{ row }">
             <span :class="statusBadgeClass(row.status)" :data-test="`approval-status-${row.id}`">{{ statusLabel(row.status) }}</span>
-            <div v-if="row.status === 'failed' && row.result_error" class="mt-0.5 max-w-[200px] truncate font-mono text-[11px] text-red-500" :title="row.result_error">
-              {{ row.result_error }}
+            <div v-if="activeTab === 'pending'" class="mt-0.5 whitespace-nowrap text-[11px] text-gray-400">
+              {{ t('operator.approval.decision.expiresAt', { time: formatDateTime(row.expires_at) }) }}
+            </div>
+          </template>
+
+          <!-- 已处理：处理人 / 时间 / 拒绝理由 / 执行结果直接进表格，不用点详情 -->
+          <template #cell-decision="{ row }">
+            <div class="min-w-[200px] max-w-sm whitespace-normal text-xs leading-snug" :data-test="`decision-${row.id}`">
+              <div
+                v-for="(line, idx) in decisionLines(row)"
+                :key="idx"
+                :class="line.tone === 'error' ? 'text-red-600 dark:text-red-400' : line.tone === 'ok' ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-300'"
+              >
+                <span class="text-gray-400 dark:text-gray-500">{{ line.label }}：</span><span class="break-words">{{ line.value }}</span>
+              </div>
             </div>
           </template>
 
@@ -324,6 +337,7 @@ const columns = computed<Column[]>(() => [
   ...(isAdmin.value ? [{ key: 'requester', label: t('operator.approval.columns.requester') }] : []),
   { key: 'action', label: t('operator.approval.columns.action'), class: 'w-full' },
   { key: 'status', label: t('operator.approval.columns.status') },
+  ...(activeTab.value === 'processed' ? [{ key: 'decision', label: t('operator.approval.columns.decision') }] : []),
   { key: 'actions', label: t('operator.approval.columns.actions') }
 ])
 
@@ -350,6 +364,56 @@ const describeCtx = computed<ApprovalDescribeContext>(() => ({
   attributeName: (id) => attributeNames.value.get(id)
 }))
 const describe = (row: AdminApprovalRequest): ApprovalDescription => describeApproval(row, describeCtx.value)
+
+// ---------- 已处理：处理结果 ----------
+interface DecisionLine {
+  label: string
+  value: string
+  tone?: 'ok' | 'error'
+}
+
+const actorLabel = (row: AdminApprovalRequest): string => row.decided_by?.email || (row.decided_by ? `#${row.decided_by.id}` : '-')
+
+const decisionLines = (row: AdminApprovalRequest): DecisionLine[] => {
+  const D = 'operator.approval.decision'
+  const lines: DecisionLine[] = []
+  const when = row.decided_at ? formatDateTime(row.decided_at) : ''
+  switch (row.status) {
+    case 'approved':
+    case 'failed':
+    case 'executing':
+      lines.push({ label: t(`${D}.approvedBy`), value: when ? `${actorLabel(row)} · ${when}` : actorLabel(row) })
+      if (row.status === 'approved') {
+        lines.push({
+          label: t(`${D}.result`),
+          value: t(`${D}.executedOk`, { code: row.result_status_code ?? '-', time: row.executed_at ? formatDateTime(row.executed_at) : '' }),
+          tone: 'ok'
+        })
+      } else if (row.status === 'failed') {
+        lines.push({
+          label: t(`${D}.result`),
+          value: t(`${D}.executedFailed`, { error: row.result_error || '-', code: row.result_status_code ?? '-' }),
+          tone: 'error'
+        })
+      } else {
+        lines.push({ label: t(`${D}.result`), value: t('operator.approval.status.executing') })
+      }
+      break
+    case 'rejected':
+      lines.push({ label: t(`${D}.rejectedBy`), value: when ? `${actorLabel(row)} · ${when}` : actorLabel(row) })
+      lines.push({ label: t(`${D}.reason`), value: row.decision_reason || t(`${D}.noReason`) })
+      break
+    case 'cancelled':
+      lines.push({ label: t(`${D}.cancelledBy`), value: when ? `${actorLabel(row)} · ${when}` : actorLabel(row) })
+      break
+    case 'expired':
+      lines.push({ label: t(`${D}.expired`), value: formatDateTime(row.expires_at) })
+      break
+    default:
+      lines.push({ label: t('operator.approval.detail.expiresAt'), value: formatDateTime(row.expires_at) })
+  }
+  return lines
+}
 
 const statusLabel = (status: AdminApprovalStatus | string): string => {
   const known: AdminApprovalStatus[] = ['pending', 'executing', 'approved', 'failed', 'rejected', 'cancelled', 'expired']

@@ -838,7 +838,20 @@ export default {
         "action": "Request",
         "target": "Target",
         "status": "Status",
+        "decision": "Outcome",
         "actions": "Actions"
+      },
+      "decision": {
+        "approvedBy": "Approved by",
+        "rejectedBy": "Rejected by",
+        "cancelledBy": "Withdrawn by",
+        "reason": "Reason",
+        "noReason": "No reason given",
+        "result": "Execution",
+        "executedOk": "Succeeded (HTTP {code}) · {time}",
+        "executedFailed": "Failed: {error} (HTTP {code})",
+        "expired": "Expired at",
+        "expiresAt": "Valid until {time}"
       },
       "status": {
         "pending": "Pending",

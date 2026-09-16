@@ -838,7 +838,20 @@ export default {
         "action": "操作内容",
         "target": "对象",
         "status": "状态",
+        "decision": "处理结果",
         "actions": "操作"
+      },
+      "decision": {
+        "approvedBy": "通过人",
+        "rejectedBy": "拒绝人",
+        "cancelledBy": "撤回人",
+        "reason": "理由",
+        "noReason": "未填写理由",
+        "result": "执行",
+        "executedOk": "成功（HTTP {code}）· {time}",
+        "executedFailed": "失败：{error}（HTTP {code}）",
+        "expired": "过期时间",
+        "expiresAt": "有效期至 {time}"
       },
       "status": {
         "pending": "待审批",

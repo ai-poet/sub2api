@@ -73,11 +73,17 @@ const AppLayoutStub = { template: '<div><slot /></div>' }
 const TablePageLayoutStub = { template: '<div><slot name="actions" /><slot name="table" /><slot name="pagination" /></div>' }
 const DataTableStub = defineComponent({
   props: ['columns', 'data', 'loading', 'rowKey'],
+  methods: {
+    hasColumn(key: string): boolean {
+      return (this.columns as Array<{ key: string }>).some((c) => c.key === key)
+    }
+  },
   template: `
     <div>
       <div v-for="row in data" :key="row.id" :data-test="'row-' + row.id">
         <slot name="cell-action" :row="row" :value="row.action" />
         <slot name="cell-status" :row="row" :value="row.status" />
+        <slot v-if="hasColumn('decision')" name="cell-decision" :row="row" :value="null" />
         <slot name="cell-actions" :row="row" :value="null" />
       </div>
       <slot v-if="!data.length" name="empty" />
@@ -282,6 +288,39 @@ describe('ApprovalsView', () => {
     expect(second).toContain('operator.approval.describe.fields.group：Pro 分组')
     expect(second).toContain('operator.approval.describe.values.days:{"n":30}')
     expect(state.listFilterGroups).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows who decided, the reason and the execution result inline on the processed tab', async () => {
+    state.isAdmin = false
+    state.list.mockResolvedValue({ items: [pendingRow(1), pendingRow(2)], total: 2, page: 1, page_size: 20, pages: 1 })
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.find('[data-test="decision-1"]').exists()).toBe(false, 'pending tab has no outcome column')
+
+    state.list.mockResolvedValue({
+      items: [
+        pendingRow(1, { status: 'approved', decided_by: { id: 1, email: 'admin@example.com' }, decided_at: '2026-09-17T01:00:00Z', executed_at: '2026-09-17T01:00:01Z', result_status_code: 200 }),
+        pendingRow(2, { status: 'failed', decided_by: { id: 1, email: 'admin@example.com' }, decided_at: '2026-09-17T02:00:00Z', result_status_code: 403, result_error: 'STEP_UP_REQUIRED' }),
+        pendingRow(3, { status: 'rejected', decided_by: { id: 1, email: 'admin@example.com' }, decided_at: '2026-09-17T03:00:00Z', decision_reason: '金额有误' }),
+        pendingRow(4, { status: 'cancelled', decided_by: { id: 2, email: 'ops@example.com' }, decided_at: '2026-09-17T04:00:00Z' }),
+        pendingRow(5, { status: 'expired' })
+      ],
+      total: 5, page: 1, page_size: 20, pages: 1
+    })
+    await wrapper.find('[data-test="approvals-tab-processed"]').trigger('click')
+    await flushPromises()
+
+    expect(state.list).toHaveBeenLastCalledWith(1, 20, { status: 'processed' }, expect.anything())
+    const approved = wrapper.find('[data-test="decision-1"]').text()
+    expect(approved).toContain('operator.approval.decision.approvedBy：admin@example.com · 2026-09-17T01:00:00Z')
+    expect(approved).toContain('operator.approval.decision.executedOk:{"code":200,"time":"2026-09-17T01:00:01Z"}')
+    const failed = wrapper.find('[data-test="decision-2"]').text()
+    expect(failed).toContain('operator.approval.decision.executedFailed:{"error":"STEP_UP_REQUIRED","code":403}')
+    const rejected = wrapper.find('[data-test="decision-3"]').text()
+    expect(rejected).toContain('operator.approval.decision.rejectedBy：admin@example.com')
+    expect(rejected).toContain('operator.approval.decision.reason：金额有误')
+    expect(wrapper.find('[data-test="decision-4"]').text()).toContain('operator.approval.decision.cancelledBy：ops@example.com')
+    expect(wrapper.find('[data-test="decision-5"]').text()).toContain('operator.approval.decision.expired：2026-09-19T00:00:00Z')
   })
 
   it('opens the detail dialog from a deep link and switches to the processed tab for a decided request', async () => {
