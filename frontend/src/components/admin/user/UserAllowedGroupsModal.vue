@@ -252,10 +252,10 @@ watch(
 const load = async () => {
   loading.value = true
   try {
-    // 运维管理员无权访问 /admin/groups，改用调用日志域的最小分组投影（视为标准、活跃、非专属）
+    // 运维管理员无权访问 /admin/groups，改用调用日志域的最小分组投影（带状态 / 订阅类型 / 专属标记）
     const items = props.readonly
       ? (await adminAPI.usage.listFilterGroups()).map((g) => ({
-          id: g.id, name: g.name, platform: g.platform, status: 'active', subscription_type: 'standard', is_exclusive: false
+          id: g.id, name: g.name, platform: g.platform, status: g.status, subscription_type: g.subscription_type, is_exclusive: g.is_exclusive
         }) as unknown as Group)
       : (await adminAPI.groups.list(1, 1000)).items
     // 只显示标准类型且活跃的分组

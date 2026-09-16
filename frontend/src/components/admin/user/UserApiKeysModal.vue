@@ -180,7 +180,7 @@ const loadGroups = async () => {
     // 运维管理员无权访问 /admin/groups，改用调用日志域的最小分组投影
     const groups = props.readonly
       ? (await adminAPI.usage.listFilterGroups()).map((g) => ({
-          id: g.id, name: g.name, platform: g.platform, status: 'active', subscription_type: 'standard', is_exclusive: false
+          id: g.id, name: g.name, platform: g.platform, status: g.status, subscription_type: g.subscription_type, is_exclusive: g.is_exclusive
         }) as unknown as AdminGroup)
       : await adminAPI.groups.getAll()
     allGroups.value = groups

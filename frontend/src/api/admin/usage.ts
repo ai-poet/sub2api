@@ -43,6 +43,10 @@ export interface UsageFilterGroup {
   id: number
   name: string
   platform: string
+  /** 非敏感元数据：运维管理员的用户 / 订阅管理页用它们过滤活跃的标准 / 订阅分组 */
+  status: 'active' | 'inactive'
+  subscription_type: 'standard' | 'subscription'
+  is_exclusive: boolean
 }
 
 export interface UsageFilterAccount {

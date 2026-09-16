@@ -72,17 +72,19 @@
             </div>
           </template>
 
+          <!-- 操作内容：把脱敏后的请求体翻译成一句话 + 逐项字段，直接摆在列表里，审批时不用点开详情 -->
           <template #cell-action="{ row }">
-            <div class="min-w-0 max-w-xs">
-              <div class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ actionLabel(row.action) }}</div>
-              <div class="mt-0.5 truncate font-mono text-xs text-gray-400" :title="`${row.method} ${row.request_path}`">
-                {{ row.method }} {{ row.request_path }}
+            <div class="min-w-[260px] max-w-2xl whitespace-normal" :data-test="`summary-${row.id}`">
+              <div class="text-sm font-semibold leading-snug text-gray-900 dark:text-white">{{ describe(row).summary }}</div>
+              <ul v-if="describe(row).lines.length" class="mt-1 space-y-0.5">
+                <li v-for="(line, idx) in describe(row).lines" :key="idx" class="text-xs leading-snug text-gray-700 dark:text-gray-300">
+                  <span class="text-gray-400 dark:text-gray-500">{{ line.label }}：</span><span class="break-all">{{ line.value }}</span>
+                </li>
+              </ul>
+              <div class="mt-1 text-[11px] text-gray-400" :title="`${row.method} ${row.request_path}`">
+                {{ actionLabel(row.action) }}
               </div>
             </div>
-          </template>
-
-          <template #cell-target="{ row }">
-            <span class="break-all text-sm text-gray-700 dark:text-gray-200">{{ row.target_summary || '—' }}</span>
           </template>
 
           <template #cell-status="{ row }">
@@ -190,10 +192,20 @@
           </div>
         </div>
 
-        <div>
-          <div class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ t('operator.approval.detail.payload') }}</div>
-          <pre class="max-h-[320px] overflow-auto rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-800 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-100"><code>{{ prettyJSON(detail.request_body) }}</code></pre>
+        <div class="rounded-xl border border-primary-100 bg-primary-50/60 p-4 dark:border-primary-900/40 dark:bg-primary-900/10" data-test="detail-summary">
+          <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ describe(detail).summary }}</div>
+          <ul v-if="describe(detail).lines.length" class="mt-2 space-y-1">
+            <li v-for="(line, idx) in describe(detail).lines" :key="idx" class="text-sm text-gray-700 dark:text-gray-300">
+              <span class="text-gray-500 dark:text-gray-400">{{ line.label }}：</span><span class="break-all">{{ line.value }}</span>
+            </li>
+          </ul>
+          <p v-else class="mt-1 text-xs text-gray-500">{{ t('operator.approval.noFields') }}</p>
         </div>
+
+        <details class="group">
+          <summary class="cursor-pointer select-none text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ t('operator.approval.rawToggle') }}</summary>
+          <pre class="mt-2 max-h-[320px] overflow-auto rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-800 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-100"><code>{{ prettyJSON(detail.request_body) }}</code></pre>
+        </details>
 
         <div v-if="detail.decided_by || detail.decision_reason" class="rounded-xl bg-gray-50 p-4 dark:bg-dark-900">
           <div class="text-xs font-bold uppercase tracking-wider text-gray-400">{{ t('operator.approval.detail.decision') }}</div>
@@ -230,7 +242,7 @@
     <!-- 拒绝理由 -->
     <BaseDialog :show="rejectVisible" :title="t('operator.approval.rejectTitle')" width="narrow" @close="rejectVisible = false">
       <div class="space-y-3">
-        <p class="text-sm text-gray-600 dark:text-gray-300">{{ rejectTarget ? `${actionLabel(rejectTarget.action)} · ${rejectTarget.target_summary}` : '' }}</p>
+        <p class="text-sm text-gray-600 dark:text-gray-300">{{ rejectTarget ? describe(rejectTarget).summary : '' }}</p>
         <textarea v-model="rejectReason" rows="3" class="input" maxlength="500" :placeholder="t('operator.approval.rejectReasonPlaceholder')" data-test="reject-reason"></textarea>
       </div>
       <template #footer>
@@ -282,6 +294,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useApprovalsStore } from '@/stores/approvals'
 import { formatDateTime } from '@/utils/format'
 import { APPROVAL_QUEUED_EVENT, approvalActionLabelKey } from '@/utils/approval'
+import { describeApproval, type ApprovalDescribeContext, type ApprovalDescription } from '@/utils/approvalDescribe'
 
 type TabKey = 'pending' | 'processed'
 
@@ -309,8 +322,7 @@ let abortController: AbortController | null = null
 const columns = computed<Column[]>(() => [
   { key: 'created_at', label: t('operator.approval.columns.time') },
   ...(isAdmin.value ? [{ key: 'requester', label: t('operator.approval.columns.requester') }] : []),
-  { key: 'action', label: t('operator.approval.columns.action') },
-  { key: 'target', label: t('operator.approval.columns.target') },
+  { key: 'action', label: t('operator.approval.columns.action'), class: 'w-full' },
   { key: 'status', label: t('operator.approval.columns.status') },
   { key: 'actions', label: t('operator.approval.columns.actions') }
 ])
@@ -319,6 +331,25 @@ const actionLabel = (action: string): string => {
   const key = approvalActionLabelKey(action)
   return key ? t(key) : action
 }
+
+// ---------- 文字化描述 ----------
+// 分组 / 用户属性只在请求体里以 id 出现，这里拉一份 id → 名称 映射（两个接口管理员和运维都能读）。
+const groupNames = ref<Map<number, string>>(new Map())
+const attributeNames = ref<Map<number, string>>(new Map())
+const loadLookups = async () => {
+  const [groups, attrs] = await Promise.allSettled([
+    adminAPI.usage.listFilterGroups(),
+    adminAPI.userAttributes.listDefinitions()
+  ])
+  if (groups.status === 'fulfilled') groupNames.value = new Map((groups.value || []).map((g) => [g.id, g.name]))
+  if (attrs.status === 'fulfilled') attributeNames.value = new Map((attrs.value || []).map((a) => [a.id, a.name]))
+}
+const describeCtx = computed<ApprovalDescribeContext>(() => ({
+  t: (key, params) => (params ? t(key, params) : t(key)),
+  groupName: (id) => groupNames.value.get(id),
+  attributeName: (id) => attributeNames.value.get(id)
+}))
+const describe = (row: AdminApprovalRequest): ApprovalDescription => describeApproval(row, describeCtx.value)
 
 const statusLabel = (status: AdminApprovalStatus | string): string => {
   const known: AdminApprovalStatus[] = ['pending', 'executing', 'approved', 'failed', 'rejected', 'cancelled', 'expired']
@@ -582,6 +613,7 @@ const openDeepLink = async () => {
 
 onMounted(() => {
   window.addEventListener(APPROVAL_QUEUED_EVENT, onQueued)
+  void loadLookups()
   void load()
   void approvalsStore.fetchPendingCount()
   void openDeepLink()

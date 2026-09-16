@@ -1072,16 +1072,16 @@ const sortState = reactive(loadInitialSortState())
 
 // Groups data for the groups column and the existing "authorised group" filter (active only)
 const allGroups = ref<AdminGroup[]>([])
-// 运维管理员无权访问 /admin/groups*，下拉改用调用日志域的最小分组投影（id / name / platform）。
+// 运维管理员无权访问 /admin/groups*，下拉改用调用日志域的最小分组投影（id / name / platform + 状态 / 订阅类型 / 专属）。
 const loadOperatorGroups = async (): Promise<AdminGroup[]> => {
   const groups = await adminAPI.usage.listFilterGroups()
   return groups.map((g) => ({
     id: g.id,
     name: g.name,
     platform: g.platform,
-    status: 'active',
-    subscription_type: 'standard',
-    is_exclusive: false
+    status: g.status,
+    subscription_type: g.subscription_type,
+    is_exclusive: g.is_exclusive
   }) as unknown as AdminGroup)
 }
 const loadAllGroups = async () => {

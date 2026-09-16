@@ -13,6 +13,8 @@ const state = vi.hoisted(() => ({
   reject: vi.fn(),
   cancel: vi.fn(),
   batchApprove: vi.fn(),
+  listFilterGroups: vi.fn(),
+  listAttributeDefinitions: vi.fn(),
   fetchPendingCount: vi.fn(),
   showSuccess: vi.fn(),
   showError: vi.fn()
@@ -28,7 +30,9 @@ vi.mock('@/api/admin', () => ({
       reject: state.reject,
       cancel: state.cancel,
       batchApprove: state.batchApprove
-    }
+    },
+    usage: { listFilterGroups: state.listFilterGroups },
+    userAttributes: { listDefinitions: state.listAttributeDefinitions }
   }
 }))
 
@@ -72,6 +76,7 @@ const DataTableStub = defineComponent({
   template: `
     <div>
       <div v-for="row in data" :key="row.id" :data-test="'row-' + row.id">
+        <slot name="cell-action" :row="row" :value="row.action" />
         <slot name="cell-status" :row="row" :value="row.status" />
         <slot name="cell-actions" :row="row" :value="null" />
       </div>
@@ -134,6 +139,8 @@ describe('ApprovalsView', () => {
     state.reject.mockReset()
     state.cancel.mockReset()
     state.batchApprove.mockReset()
+    state.listFilterGroups.mockReset().mockResolvedValue([{ id: 3, name: 'Pro 分组', platform: 'openai', status: 'active', subscription_type: 'subscription', is_exclusive: false }])
+    state.listAttributeDefinitions.mockReset().mockResolvedValue([{ id: 5, name: '公司', key: 'company' }])
     state.fetchPendingCount.mockReset()
     state.showSuccess.mockReset()
     state.showError.mockReset()
@@ -245,6 +252,36 @@ describe('ApprovalsView', () => {
 
     expect(state.cancel).toHaveBeenCalledWith(1)
     expect(state.fetchPendingCount).toHaveBeenCalled()
+  })
+
+  it('renders a plain-language description of each request inline, resolving group names', async () => {
+    state.list.mockResolvedValue({
+      items: [
+        pendingRow(1, { request_body: '{"balance":10,"operation":"add","notes":"充值"}' }),
+        pendingRow(2, {
+          action: 'admin.subscriptions.assign.create',
+          method: 'POST',
+          route_template: '/api/v1/admin/subscriptions/assign',
+          request_path: '/api/v1/admin/subscriptions/assign',
+          target_type: 'subscription',
+          target_summary: 'user2@example.com · Pro 分组',
+          request_body: '{"user_id":2,"group_id":3,"validity_days":30}'
+        })
+      ],
+      total: 2, page: 1, page_size: 20, pages: 1
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    const first = wrapper.find('[data-test="summary-1"]').text()
+    expect(first).toContain('operator.approval.describe.summary.balanceAdd:{"target":"user1@example.com","amount":"10"}')
+    expect(first).toContain('operator.approval.describe.fields.notes：充值')
+
+    const second = wrapper.find('[data-test="summary-2"]').text()
+    expect(second).toContain('operator.approval.describe.summary.subscriptionAssign')
+    expect(second).toContain('operator.approval.describe.fields.group：Pro 分组')
+    expect(second).toContain('operator.approval.describe.values.days:{"n":30}')
+    expect(state.listFilterGroups).toHaveBeenCalledTimes(1)
   })
 
   it('opens the detail dialog from a deep link and switches to the processed tab for a decided request', async () => {

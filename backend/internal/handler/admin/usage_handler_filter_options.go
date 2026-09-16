@@ -23,6 +23,11 @@ type UsageFilterGroup struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`
 	Platform string `json:"platform"`
+	// 下面三个是分组的非敏感元数据：运维管理员无权访问 /admin/groups，
+	// 用户 / 订阅管理页的分组下拉（只显示活跃的标准 / 订阅分组）靠它们过滤。
+	Status           string `json:"status"`
+	SubscriptionType string `json:"subscription_type"`
+	IsExclusive      bool   `json:"is_exclusive"`
 }
 
 // UsageFilterAccount 账号下拉项。
@@ -38,7 +43,7 @@ const (
 )
 
 // FilterGroups GET /admin/usage/filter-groups
-// 返回全部分组（含已停用，历史日志可能仍引用）的 id / name / platform，按名称排序。
+// 返回全部分组（含已停用，历史日志可能仍引用）的 id / name / platform 与状态 / 订阅类型 / 是否专属，按名称排序。
 func (h *UsageHandler) FilterGroups(c *gin.Context) {
 	groups, err := h.adminService.GetAllGroupsIncludingInactive(c.Request.Context())
 	if err != nil {
@@ -47,7 +52,14 @@ func (h *UsageHandler) FilterGroups(c *gin.Context) {
 	}
 	result := make([]UsageFilterGroup, 0, len(groups))
 	for _, g := range groups {
-		result = append(result, UsageFilterGroup{ID: g.ID, Name: g.Name, Platform: g.Platform})
+		result = append(result, UsageFilterGroup{
+			ID:               g.ID,
+			Name:             g.Name,
+			Platform:         g.Platform,
+			Status:           g.Status,
+			SubscriptionType: g.SubscriptionType,
+			IsExclusive:      g.IsExclusive,
+		})
 	}
 	sort.SliceStable(result, func(i, j int) bool { return result[i].Name < result[j].Name })
 	response.Success(c, result)

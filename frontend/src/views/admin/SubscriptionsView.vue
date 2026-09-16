@@ -1073,7 +1073,7 @@ const loadGroups = async () => {
   try {
     groups.value = readonly.value
       ? (await adminAPI.usage.listFilterGroups()).map((g) => ({
-          id: g.id, name: g.name, platform: g.platform, status: 'active', subscription_type: 'standard', is_exclusive: false
+          id: g.id, name: g.name, platform: g.platform, status: g.status, subscription_type: g.subscription_type, is_exclusive: g.is_exclusive
         }) as unknown as Group)
       : await adminAPI.groups.getAll()
   } catch (error) {

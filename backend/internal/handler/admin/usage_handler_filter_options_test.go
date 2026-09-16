@@ -24,8 +24,8 @@ type filterOptionsAdminStub struct {
 
 func (s *filterOptionsAdminStub) GetAllGroupsIncludingInactive(ctx context.Context) ([]service.Group, error) {
 	return []service.Group{
-		{ID: 2, Name: "zeta", Platform: "openai", RateMultiplier: 1.5},
-		{ID: 1, Name: "alpha", Platform: "anthropic", RateMultiplier: 2},
+		{ID: 2, Name: "zeta", Platform: "openai", RateMultiplier: 1.5, Status: "active", SubscriptionType: "subscription", IsExclusive: true},
+		{ID: 1, Name: "alpha", Platform: "anthropic", RateMultiplier: 2, Status: "inactive", SubscriptionType: "standard"},
 	}, nil
 }
 
@@ -90,9 +90,15 @@ func TestAdminUsageFilterGroups_MinimalProjectionSortedByName(t *testing.T) {
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
 	require.Len(t, resp.Data, 2)
 	require.Equal(t, "alpha", resp.Data[0]["name"])
+	require.Equal(t, "inactive", resp.Data[0]["status"])
+	require.Equal(t, "standard", resp.Data[0]["subscription_type"])
+	require.Equal(t, false, resp.Data[0]["is_exclusive"])
 	require.Equal(t, "zeta", resp.Data[1]["name"])
+	require.Equal(t, "active", resp.Data[1]["status"])
+	require.Equal(t, "subscription", resp.Data[1]["subscription_type"])
+	require.Equal(t, true, resp.Data[1]["is_exclusive"])
 	for _, row := range resp.Data {
-		require.Equal(t, []string{"id", "name", "platform"}, sortedKeys(row), "分组筛选项只能带 id / name / platform")
+		require.Equal(t, []string{"id", "is_exclusive", "name", "platform", "status", "subscription_type"}, sortedKeys(row), "分组筛选项只能带 id / name / platform 与非敏感元数据（状态 / 订阅类型 / 专属）")
 	}
 }
 
