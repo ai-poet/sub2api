@@ -122,6 +122,7 @@
             :key="column.key"
             scope="col"
             :aria-sort="column.sortable ? getColumnAriaSort(column.key) : undefined"
+            :data-col-key="column.key"
             :class="[
               'sticky-header-cell py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-dark-400',
               getAdaptivePaddingClass(),
@@ -129,6 +130,7 @@
               getStickyColumnClass(column, index),
               column.class
             ]"
+            :style="getStickyColumnStyle(column)"
             @click="column.sortable && handleSort(column.key)"
           >
             <div :class="['flex items-center space-x-1', getHeaderContentAlignmentClass(column)]">
@@ -240,6 +242,7 @@
                 getStickyColumnClass(column, colIndex),
                 column.class
               ]"
+              :style="getStickyColumnStyle(column)"
             >
               <slot :name="`cell-${column.key}`"
                     :row="item.row"
@@ -385,10 +388,12 @@ const detachDesktopTableTracking = () => {
 const attachDesktopTableTracking = () => {
   checkScrollable()
   checkActionsColumnWidth()
+  measureStickyRightOffsets()
   if (tableWrapperRef.value && typeof ResizeObserver !== 'undefined') {
     resizeObserver = new ResizeObserver(() => {
       checkScrollable()
       checkActionsColumnWidth()
+      measureStickyRightOffsets()
     })
     resizeObserver.observe(tableWrapperRef.value)
   } else {
@@ -396,6 +401,7 @@ const attachDesktopTableTracking = () => {
     resizeHandler = () => {
       checkScrollable()
       checkActionsColumnWidth()
+      measureStickyRightOffsets()
     }
     window.addEventListener('resize', resizeHandler)
   }
@@ -435,6 +441,11 @@ interface Props {
   loading?: boolean
   stickyFirstColumn?: boolean
   stickyActionsColumn?: boolean
+  /**
+   * 额外固定在右侧的列（按 key），可与 actions 一起形成右侧固定块。
+   * 各列的 right 偏移按表头实际宽度实时测量，因此列宽可以不固定。
+   */
+  stickyRightColumns?: string[]
   expandableActions?: boolean
   actionsCount?: number // 操作按钮总数，用于判断是否需要展开功能
   rowKey?: string | ((row: any) => string | number)
@@ -477,6 +488,7 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
   stickyFirstColumn: true,
   stickyActionsColumn: true,
+  stickyRightColumns: () => [],
   expandableActions: true,
   defaultSortOrder: 'asc',
   serverSideSort: false,
@@ -872,13 +884,58 @@ const getStickyColumnClass = (column: Column, index: number) => {
     }
   }
 
-  // 操作列固定（最后一列）
-  if (props.stickyActionsColumn && column.key === 'actions') {
+  // 右侧固定块：stickyRightColumns 指定的列 + 操作列；最左边那一列负责画分隔阴影
+  const rightKeys = stickyRightKeys.value
+  if (rightKeys.includes(column.key)) {
     classes.push('sticky-col sticky-col-right')
+    if (rightKeys[0] === column.key) {
+      classes.push('sticky-col-right-edge')
+    }
   }
 
   return classes.join(' ')
 }
+
+// 右侧固定列（按列顺序）
+const stickyRightKeys = computed<string[]>(() => {
+  const wanted = new Set(props.stickyRightColumns)
+  if (props.stickyActionsColumn) wanted.add('actions')
+  return props.columns.map((c) => c.key).filter((key) => wanted.has(key))
+})
+
+// 每个右侧固定列的 right 偏移（px）：等于它右边所有固定列的表头宽度之和；最右一列为 0（走 CSS）
+const stickyRightOffsets = ref<Record<string, number>>({})
+
+const measureStickyRightOffsets = () => {
+  const keys = stickyRightKeys.value
+  if (keys.length <= 1 || !tableWrapperRef.value) {
+    if (Object.keys(stickyRightOffsets.value).length > 0) stickyRightOffsets.value = {}
+    return
+  }
+  const next: Record<string, number> = {}
+  let acc = 0
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const key = keys[i]
+    if (i < keys.length - 1) next[key] = acc
+    const th = tableWrapperRef.value.querySelector<HTMLElement>(`thead th[data-col-key="${key}"]`)
+    acc += th ? th.getBoundingClientRect().width : 0
+  }
+  const prev = stickyRightOffsets.value
+  const changed = Object.keys(next).length !== Object.keys(prev).length || Object.keys(next).some((k) => Math.abs((prev[k] ?? -1) - next[k]) > 0.5)
+  if (changed) stickyRightOffsets.value = next
+}
+
+const getStickyColumnStyle = (column: Column) => {
+  const offset = stickyRightOffsets.value[column.key]
+  return offset && offset > 0 ? { right: `${offset}px` } : undefined
+}
+
+watch(
+  () => [props.columns, props.data, props.stickyRightColumns, props.stickyActionsColumn],
+  () => {
+    nextTick(measureStickyRightOffsets)
+  }
+)
 
 // 根据列数自适应调整内边距
 const getAdaptivePaddingClass = () => {
@@ -1068,8 +1125,8 @@ tbody tr:hover .sticky-col {
   pointer-events: none;
 }
 
-/* 操作列左侧阴影 */
-.is-scrollable .sticky-col-right::before {
+/* 右侧固定块左侧阴影（只画在块的最左一列） */
+.is-scrollable .sticky-col-right-edge::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1087,7 +1144,7 @@ tbody tr:hover .sticky-col {
   background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent);
 }
 
-.dark .is-scrollable .sticky-col-right::before {
+.dark .is-scrollable .sticky-col-right-edge::before {
   background: linear-gradient(to left, rgba(0, 0, 0, 0.2), transparent);
 }
 </style>

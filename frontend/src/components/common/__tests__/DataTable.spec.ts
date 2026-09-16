@@ -47,6 +47,52 @@ describe('DataTable', () => {
     localStorage.clear()
   })
 
+  it('pins the requested columns to the right as one block and draws the divider on its left edge', async () => {
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [
+          { key: 'name', label: 'Name' },
+          { key: 'body', label: 'Body' },
+          { key: 'status', label: 'Status' },
+          { key: 'decision', label: 'Decision' },
+          { key: 'actions', label: 'Actions' }
+        ],
+        data: [{ id: 1, name: 'a', body: 'b', status: 'ok', decision: 'x' }],
+        stickyRightColumns: ['status', 'decision']
+      }
+    })
+    await wrapper.vm.$nextTick()
+
+    const headers = wrapper.findAll('thead th')
+    const classesOf = (key: string) => headers.find((th) => th.attributes('data-col-key') === key)!.classes()
+    expect(classesOf('body')).not.toContain('sticky-col-right')
+    expect(classesOf('status')).toEqual(expect.arrayContaining(['sticky-col', 'sticky-col-right', 'sticky-col-right-edge']))
+    expect(classesOf('decision')).toEqual(expect.arrayContaining(['sticky-col', 'sticky-col-right']))
+    expect(classesOf('decision')).not.toContain('sticky-col-right-edge')
+    expect(classesOf('actions')).toEqual(expect.arrayContaining(['sticky-col', 'sticky-col-right']))
+    expect(classesOf('actions')).not.toContain('sticky-col-right-edge')
+
+    const cells = wrapper.findAll('tbody tr td')
+    expect(cells[2].classes()).toContain('sticky-col-right-edge')
+    expect(cells[4].classes()).toContain('sticky-col-right')
+  })
+
+  it('keeps the legacy single sticky actions column when no extra right columns are requested', async () => {
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [
+          { key: 'name', label: 'Name' },
+          { key: 'actions', label: 'Actions' }
+        ],
+        data: [{ id: 1, name: 'a' }]
+      }
+    })
+    await wrapper.vm.$nextTick()
+    const actions = wrapper.findAll('thead th').find((th) => th.attributes('data-col-key') === 'actions')!
+    expect(actions.classes()).toEqual(expect.arrayContaining(['sticky-col', 'sticky-col-right', 'sticky-col-right-edge']))
+    expect(actions.attributes('style') ?? '').not.toContain('right:')
+  })
+
   it('renders paired sort arrows and highlights the active direction', async () => {
     const wrapper = mount(DataTable, {
       props: {

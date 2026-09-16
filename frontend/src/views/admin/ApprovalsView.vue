@@ -58,6 +58,7 @@
           :data="items"
           :loading="loading"
           row-key="id"
+          :sticky-right-columns="['status', 'decision']"
           :selectable="isAdmin && activeTab === 'pending'"
           :selected-keys="selectedIds"
           @update:selected-keys="onSelectionChange"
