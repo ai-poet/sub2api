@@ -1040,6 +1040,17 @@ export default {
       "closedHint": "工单已关闭，重新打开后才能继续回复",
       "unread": "有新回复"
     },
+    "attachments": {
+      "insertImage": "插入图片",
+      "hint": "支持粘贴、拖拽或选择图片，单张不超过 5MB",
+      "uploading": "图片上传中...",
+      "uploadFailed": "图片上传失败",
+      "errors": {
+        "storageNotConfigured": "工单附件存储未配置，请联系管理员",
+        "tooLarge": "图片超过大小限制（单张最大 5MB）",
+        "badType": "只支持图片文件"
+      }
+    },
     "actions": {
       "close": "关闭工单",
       "reopen": "重新打开",

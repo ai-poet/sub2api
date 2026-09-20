@@ -224,3 +224,79 @@ func TestModelCatalogService_GetCatalog_TokenModelHasNoMediaTiers(t *testing.T) 
 	require.Equal(t, "", result.Items[0].PricingDetails.MediaUnit)
 	require.Nil(t, result.Items[0].OfficialPricing.PerImageUSD)
 }
+
+// 没有显式定价卡的图片模型：扣费侧默认按张计费（只有定价卡显式 token 模式才按
+// token 计），目录此前却回落到 LiteLLM token 参考价显示每百万 token 价格，
+// 与账单对不上。gpt-image-2 必须按张展示，价格与 getDefaultImagePrice 同源。
+func TestModelCatalogService_GetCatalog_ImageModelWithoutCardShowsPerImagePrice(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{{
+			ID: 10, Name: "Image", Platform: PlatformOpenAI, Status: StatusActive,
+			RateMultiplier: 0.2, SubscriptionType: SubscriptionTypeStandard,
+		}},
+		map[int64][]string{10: {"gpt-image-2"}},
+		nil,
+		map[string]*LiteLLMModelPricing{
+			"gpt-image-2": {
+				InputCostPerToken:  5e-6,
+				OutputCostPerToken: 10e-6,
+				OutputCostPerImage: 0.1,
+			},
+		},
+		nil,
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	item := result.Items[0]
+
+	require.Equal(t, string(BillingModeImage), item.BillingMode)
+	require.Equal(t, MediaPriceUnitImage, item.PricingDetails.MediaUnit)
+	require.Len(t, item.PricingDetails.MediaTiers, 3)
+	require.True(t, findMediaTier(t, item.PricingDetails.MediaTiers, "2K").IsDefaultTier)
+
+	// 主展示价 = 默认档位（2K = 1.5 倍基准）× 分组倍率，与扣费口径一致。
+	require.NotNil(t, item.EffectivePricingUSD.PerImageUSD)
+	require.InDelta(t, 0.1*1.5*0.2, *item.EffectivePricingUSD.PerImageUSD, 1e-12)
+	require.NotNil(t, item.OfficialPricing.PerImageUSD)
+	require.InDelta(t, 0.1*1.5, *item.OfficialPricing.PerImageUSD, 1e-12)
+
+	// 图片模式下不再把 LiteLLM token 价当主价展示。
+	require.Nil(t, item.EffectivePricingUSD.InputPerMTokUSD)
+	require.Nil(t, item.EffectivePricingUSD.OutputPerMTokUSD)
+}
+
+// 显式配置 token 模式的定价卡优先：管理员明确要求按 token 计费时，
+// 目录与扣费都保持 token 口径，不做隐式切换。
+func TestModelCatalogService_GetCatalog_ImageModelWithExplicitTokenCardStaysToken(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{{
+			ID: 10, Name: "Image", Platform: PlatformAnthropic, Status: StatusActive,
+			RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+		}},
+		map[int64][]string{10: {"gpt-image-2"}},
+		nil,
+		map[string]*LiteLLMModelPricing{
+			"gpt-image-2": {
+				InputCostPerToken:  5e-6,
+				OutputCostPerToken: 10e-6,
+				OutputCostPerImage: 0.1,
+			},
+		},
+		[]ChannelModelPricing{{
+			Platform:    PlatformAnthropic,
+			Models:      []string{"gpt-image-2"},
+			BillingMode: BillingModeToken,
+		}},
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	item := result.Items[0]
+
+	require.Equal(t, string(BillingModeToken), item.BillingMode)
+	require.Empty(t, item.PricingDetails.MediaTiers)
+	require.NotNil(t, item.EffectivePricingUSD.InputPerMTokUSD)
+}

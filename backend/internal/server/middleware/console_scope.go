@@ -97,6 +97,8 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/tickets":            {},
 	"GET /api/v1/admin/tickets/open-count": {},
 	"GET /api/v1/admin/tickets/:id":        {},
+	// 工单图片附件的同源回传：handler 按附件前缀做授权边界，响应只有图片字节
+	"GET /api/v1/admin/tickets/attachments/content": {},
 }
 
 // operatorWriteScope 允许 operator 直接调用（不经审批）的非 GET 条目。只放三类：
@@ -109,6 +111,8 @@ var operatorWriteScope = map[string]struct{}{
 	"POST /api/v1/admin/tickets/:id/messages":  {},
 	"POST /api/v1/admin/tickets/:id/close":     {},
 	"POST /api/v1/admin/tickets/:id/reopen":    {},
+	// 工单图片附件上传：与工单回复同属客服工作流，key 由服务端生成、类型与大小双重受限
+	"POST /api/v1/admin/tickets/attachments": {},
 }
 
 // operatorApprovalScope operator 可以发起、但必须由管理员在审批页一键通过后才会执行的写接口。

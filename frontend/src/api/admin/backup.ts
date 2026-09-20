@@ -174,6 +174,54 @@ export async function testInvoiceStorageConnection(
   return data
 }
 
+// Ticket attachment object storage
+//
+// Same split as the invoice storage above: retargeting it only changes where newly
+// uploaded ticket images land, so these endpoints are not step-up gated either.
+// `reuse_backup_s3` borrows the backup endpoint and credentials.
+export interface TicketAttachmentStorageConfig {
+  reuse_backup_s3: boolean
+  bucket: string
+  prefix: string
+  endpoint: string
+  region: string
+  access_key_id: string
+  secret_access_key?: string
+  force_path_style: boolean
+}
+
+export interface TicketAttachmentStorageConfigResponse {
+  config: TicketAttachmentStorageConfig
+  secret_configured: boolean
+}
+
+export async function getTicketAttachmentStorageConfig(): Promise<TicketAttachmentStorageConfigResponse> {
+  const { data } = await apiClient.get<TicketAttachmentStorageConfigResponse>(
+    '/admin/backups/ticket-attachment-storage',
+  )
+  return data
+}
+
+export async function updateTicketAttachmentStorageConfig(
+  config: TicketAttachmentStorageConfig,
+): Promise<TicketAttachmentStorageConfig> {
+  const { data } = await apiClient.put<TicketAttachmentStorageConfig>(
+    '/admin/backups/ticket-attachment-storage',
+    config,
+  )
+  return data
+}
+
+export async function testTicketAttachmentStorageConnection(
+  config: TicketAttachmentStorageConfig,
+): Promise<TestS3Response> {
+  const { data } = await apiClient.post<TestS3Response>(
+    '/admin/backups/ticket-attachment-storage/test',
+    config,
+  )
+  return data
+}
+
 // Schedule
 export async function getSchedule(): Promise<BackupScheduleConfig> {
   const { data } = await apiClient.get<BackupScheduleConfig>('/admin/backups/schedule')
@@ -226,6 +274,9 @@ export const backupAPI = {
   getInvoiceStorageConfig,
   updateInvoiceStorageConfig,
   testInvoiceStorageConnection,
+  getTicketAttachmentStorageConfig,
+  updateTicketAttachmentStorageConfig,
+  testTicketAttachmentStorageConnection,
   getSchedule,
   updateSchedule,
   createBackup,

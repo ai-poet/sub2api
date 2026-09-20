@@ -77,6 +77,7 @@ func TestOperatorScopeTableInvariants(t *testing.T) {
 		"POST /api/v1/admin/tickets/:id/messages":   {},
 		"POST /api/v1/admin/tickets/:id/close":      {},
 		"POST /api/v1/admin/tickets/:id/reopen":     {},
+		"POST /api/v1/admin/tickets/attachments":    {},
 	}, operatorWriteScope, "直接放行的写条目必须保持最小；除工单客服动作外，新的写接口应走审批范围")
 
 	routes := OperatorScopeRoutes()

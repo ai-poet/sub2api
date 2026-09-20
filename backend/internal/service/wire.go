@@ -854,6 +854,8 @@ var ProviderSet = wire.NewSet(
 	ProvideImageStorageSettingService,
 	NewInvoiceStorageSettingService,
 	NewPayAttachmentService,
+	NewTicketAttachmentStorageSettingService,
+	NewTicketAttachmentService,
 	NewPayInvoiceNotifyService,
 	ProvideImageTaskService,
 	ProvideBatchImageModelPricingResolver,

@@ -114,6 +114,7 @@
           :ticket="detail"
           :messages="messages"
           viewer="staff"
+          side="admin"
           :submitting="replying"
           :loading="detailLoading"
           @reply="sendReply"

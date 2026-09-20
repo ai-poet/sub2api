@@ -142,6 +142,10 @@ func RegisterUserRoutes(
 			tickets.GET("", h.Ticket.List)
 			tickets.GET("/unread-count", h.Ticket.UnreadCount)
 			tickets.POST("", panelRateLimiter.Heavy(), h.Ticket.Create)
+			// 图片附件：multipart 上传 + 同源回传；body 上限留出 multipart 框架开销
+			tickets.POST("/attachments", panelRateLimiter.Heavy(),
+				middleware.RequestBodyLimit(service.MaxTicketAttachmentBytes+(1<<20)), h.TicketAttachment.Upload)
+			tickets.GET("/attachments/content", h.TicketAttachment.Content)
 			tickets.GET("/:id", h.Ticket.Get)
 			tickets.POST("/:id/messages", panelRateLimiter.Heavy(), h.Ticket.Reply)
 			tickets.POST("/:id/close", h.Ticket.Close)

@@ -22,7 +22,7 @@
               <span class="font-medium text-gray-700 dark:text-gray-200">{{ authorLabel(msg) }}</span>
               <span>{{ formatDateTime(msg.created_at) }}</span>
             </div>
-            <MarkdownRenderer :content="msg.body" />
+            <MarkdownRenderer :content="renderedBody(msg.body)" />
           </div>
         </div>
       </template>
@@ -33,11 +33,43 @@
         {{ t('tickets.thread.closedHint') }}
       </p>
       <template v-else>
-        <TextArea v-model="draft" :rows="4" :placeholder="t('tickets.thread.placeholder')" :disabled="submitting" />
+        <TextArea
+          v-model="draft"
+          :rows="4"
+          :placeholder="t('tickets.thread.placeholder')"
+          :disabled="submitting"
+          @paste="onPaste"
+          @drop="onDrop"
+          @dragover.prevent
+        />
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          class="hidden"
+          data-test="ticket-attachment-input"
+          @change="onFileChange"
+        />
         <div class="mt-2 flex items-center justify-between gap-3">
-          <span class="text-xs" :class="overLimit ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'">
-            {{ draft.length }} / {{ TICKET_BODY_MAX }}
-          </span>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              :disabled="submitting"
+              :title="t('tickets.attachments.hint')"
+              data-test="ticket-insert-image"
+              @click="pickImage"
+            >
+              {{ t('tickets.attachments.insertImage') }}
+            </button>
+            <span v-if="uploadingCount > 0" class="text-xs text-gray-400 dark:text-gray-500" data-test="ticket-uploading">
+              {{ t('tickets.attachments.uploading') }}
+            </span>
+            <span class="text-xs" :class="overLimit ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'">
+              {{ draft.length }} / {{ TICKET_BODY_MAX }}
+            </span>
+          </div>
           <button type="button" class="btn btn-primary btn-sm" :disabled="!canSend" data-test="ticket-send" @click="send">
             {{ submitting ? t('tickets.thread.sending') : t('tickets.thread.send') }}
           </button>
@@ -55,14 +87,17 @@ import TextArea from '@/components/common/TextArea.vue'
 import type { SupportTicket, SupportTicketMessage } from '@/api/tickets'
 import type { AdminSupportTicket } from '@/api/admin/tickets'
 import { formatDateTime } from '@/utils/format'
-import { TICKET_BODY_MAX } from '@/utils/tickets'
+import { TICKET_BODY_MAX, rewriteTicketAttachmentUrls, type TicketSide } from '@/utils/tickets'
+import { useTicketAttachments } from '@/components/tickets/useTicketAttachments'
 
 // 工单线程（fork 本地功能）：用户页与客服页共用。viewer 决定"我方"是哪一边以及作者怎么称呼。
+// side 决定图片附件走哪一侧的上传 / 内容路由（用户侧与客服侧附件鉴权不同）。
 const props = withDefaults(
   defineProps<{
     ticket: SupportTicket | AdminSupportTicket | null
     messages: SupportTicketMessage[]
     viewer: 'user' | 'staff'
+    side: TicketSide
     submitting?: boolean
     loading?: boolean
   }>(),
@@ -76,9 +111,17 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const draft = ref('')
+const { fileInput, uploadingCount, pickImage, onFileChange, onPaste, onDrop } = useTicketAttachments({
+  side: props.side,
+  draft
+})
 const closed = computed(() => props.ticket?.status === 'closed')
 const overLimit = computed(() => draft.value.length > TICKET_BODY_MAX)
-const canSend = computed(() => !props.submitting && draft.value.trim().length > 0 && !overLimit.value)
+const canSend = computed(() => !props.submitting && uploadingCount.value === 0 && draft.value.trim().length > 0 && !overLimit.value)
+
+function renderedBody(body: string): string {
+  return rewriteTicketAttachmentUrls(body, props.side)
+}
 
 function isMine(msg: SupportTicketMessage): boolean {
   const fromUser = msg.author_role === 'user'

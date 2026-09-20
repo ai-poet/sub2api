@@ -82,7 +82,7 @@ const ConfirmDialogStub = defineComponent({
   template: '<div v-if="show" data-test="confirm-dialog"><button data-test="confirm-ok" @click="$emit(\'confirm\')">ok</button></div>'
 })
 const TicketThreadStub = defineComponent({
-  props: ['ticket', 'messages', 'viewer', 'submitting', 'loading'],
+  props: ['ticket', 'messages', 'viewer', 'side', 'submitting', 'loading'],
   emits: ['reply'],
   methods: {
     clearDraft() {
@@ -90,7 +90,7 @@ const TicketThreadStub = defineComponent({
     }
   },
   template: `
-    <div data-test="thread" :data-viewer="viewer" :data-count="messages.length">
+    <div data-test="thread" :data-viewer="viewer" :data-side="side" :data-count="messages.length">
       <button data-test="thread-send" @click="$emit('reply', 'hello there')">send</button>
     </div>
   `
@@ -171,6 +171,7 @@ describe('admin TicketsView (fork)', () => {
     const thread = wrapper.find('[data-test="thread"]')
     expect(thread.exists()).toBe(true)
     expect(thread.attributes('data-viewer')).toBe('staff')
+    expect(thread.attributes('data-side')).toBe('admin')
     expect(wrapper.find('[data-test="ticket-detail-user"]').text()).toBe('user1@example.com')
 
     state.list.mockClear()

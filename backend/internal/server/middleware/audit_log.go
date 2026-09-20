@@ -170,6 +170,9 @@ var auditBodyOmittedRoutes = map[string]struct{}{
 	"POST /api/v1/admin/prompt-audit/events/batch-delete":       {},
 	"POST /api/v1/admin/prompt-audit/events/delete-preview":     {},
 	"POST /api/v1/admin/prompt-audit/events/delete-by-filter":   {},
+	// fork：工单图片上传是二进制 multipart，即使 handler 未及执行（如被限流拦截）也不捕获 body
+	"POST /api/v1/tickets/attachments":       {},
+	"POST /api/v1/admin/tickets/attachments": {},
 }
 
 // NewAuditLogMiddleware 创建审计中间件。

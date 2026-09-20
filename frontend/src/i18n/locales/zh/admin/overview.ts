@@ -123,6 +123,14 @@ export default {
         prefixHint: '发票对象的存放前缀，不能与备份前缀重叠',
         saved: '发票文件存储配置已保存'
       },
+      ticketAttachmentStorage: {
+        title: '工单附件存储',
+        description:
+          '工单里图片附件存放的对象存储，未配置时工单无法上传图片。与备份分开配置：改这里影响不到数据库备份，因此保存时不需要二次验证。默认复用上方备份的凭证，也可以整套单独配置到别的存储桶或服务商。',
+        reuseBackupS3: '复用上方备份的 S3 配置（只用不同的存储桶/前缀）',
+        prefixHint: '工单附件对象的存放前缀，不能与备份前缀重叠',
+        saved: '工单附件存储配置已保存'
+      },
       schedule: {
         title: '定时备份',
         description: '配置自动定时备份',

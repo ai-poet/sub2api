@@ -101,6 +101,32 @@
           :hint="`${t('tickets.form.bodyHint', { max: TICKET_BODY_MAX })} · ${form.body.length} / ${TICKET_BODY_MAX}`"
           :rows="8"
           required
+          @paste="onCreatePaste"
+          @drop="onCreateDrop"
+          @dragover.prevent
+        />
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            :title="t('tickets.attachments.hint')"
+            data-test="ticket-create-insert-image"
+            @click="pickCreateImage"
+          >
+            {{ t('tickets.attachments.insertImage') }}
+          </button>
+          <span v-if="createUploadingCount > 0" class="text-xs text-gray-400 dark:text-gray-500" data-test="ticket-create-uploading">
+            {{ t('tickets.attachments.uploading') }}
+          </span>
+        </div>
+        <input
+          ref="createFileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          class="hidden"
+          data-test="ticket-create-attachment-input"
+          @change="onCreateFileChange"
         />
       </div>
       <template #footer>
@@ -124,6 +150,7 @@
           :ticket="detail"
           :messages="messages"
           viewer="user"
+          side="user"
           :submitting="replying"
           :loading="detailLoading"
           @reply="sendReply"
@@ -167,7 +194,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -180,6 +207,7 @@ import Input from '@/components/common/Input.vue'
 import Select from '@/components/common/Select.vue'
 import TextArea from '@/components/common/TextArea.vue'
 import TicketThread from '@/components/tickets/TicketThread.vue'
+import { useTicketAttachments } from '@/components/tickets/useTicketAttachments'
 import type { Column } from '@/components/common/types'
 import ticketsAPI, { type SupportTicket, type SupportTicketMessage, type TicketCategory, type TicketStatus } from '@/api/tickets'
 import { useAppStore } from '@/stores/app'
@@ -278,12 +306,29 @@ const createVisible = ref(false)
 const creating = ref(false)
 const form = reactive<{ title: string; category: TicketCategory; body: string }>({ title: '', category: 'other', body: '' })
 
+// 新建表单的图片附件上传（side='user'），与线程回复框共用同一套逻辑
+const {
+  fileInput: createFileInput,
+  uploadingCount: createUploadingCount,
+  pickImage: pickCreateImage,
+  onFileChange: onCreateFileChange,
+  onPaste: onCreatePaste,
+  onDrop: onCreateDrop
+} = useTicketAttachments({ side: 'user', draft: toRef(form, 'body') })
+
 const categoryOptions = computed(() => TICKET_CATEGORIES.map((value) => ({ value, label: ticketCategoryLabel(t, value) })))
 
 const canSubmit = computed(() => {
   const title = form.title.trim()
   const body = form.body.trim()
-  return !creating.value && title.length > 0 && title.length <= TICKET_TITLE_MAX && body.length > 0 && body.length <= TICKET_BODY_MAX
+  return (
+    !creating.value &&
+    createUploadingCount.value === 0 &&
+    title.length > 0 &&
+    title.length <= TICKET_TITLE_MAX &&
+    body.length > 0 &&
+    body.length <= TICKET_BODY_MAX
+  )
 })
 
 const openCreate = () => {

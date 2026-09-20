@@ -192,6 +192,69 @@
         </div>
       </div>
 
+      <!-- Ticket attachment object storage -->
+      <div class="card p-6">
+        <div class="mb-4">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            {{ t('admin.backup.ticketAttachmentStorage.title') }}
+          </h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {{ t('admin.backup.ticketAttachmentStorage.description') }}
+          </p>
+        </div>
+
+        <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input v-model="ticketAttachmentStorageForm.reuse_backup_s3" type="checkbox" />
+          <span>{{ t('admin.backup.ticketAttachmentStorage.reuseBackupS3') }}</span>
+        </label>
+
+        <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.bucket') }}</label>
+            <input v-model="ticketAttachmentStorageForm.bucket" class="input w-full" :placeholder="ticketAttachmentStorageForm.reuse_backup_s3 ? t('admin.backup.imageStorage.bucketInherited') : ''" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.prefix') }}</label>
+            <input v-model="ticketAttachmentStorageForm.prefix" class="input w-full" placeholder="tickets/" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.backup.ticketAttachmentStorage.prefixHint') }}
+            </p>
+          </div>
+
+          <template v-if="!ticketAttachmentStorageForm.reuse_backup_s3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.endpoint') }}</label>
+              <input v-model="ticketAttachmentStorageForm.endpoint" class="input w-full" placeholder="https://<account_id>.r2.cloudflarestorage.com" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.region') }}</label>
+              <input v-model="ticketAttachmentStorageForm.region" class="input w-full" placeholder="auto" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.accessKeyId') }}</label>
+              <input v-model="ticketAttachmentStorageForm.access_key_id" class="input w-full" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('admin.backup.s3.secretAccessKey') }}</label>
+              <input v-model="ticketAttachmentStorageForm.secret_access_key" type="password" class="input w-full" :placeholder="ticketAttachmentStorageSecretConfigured ? t('admin.backup.s3.secretConfigured') : ''" />
+            </div>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 md:col-span-2">
+              <input v-model="ticketAttachmentStorageForm.force_path_style" type="checkbox" />
+              <span>{{ t('admin.backup.s3.forcePathStyle') }}</span>
+            </label>
+          </template>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" :disabled="testingTicketAttachmentStorage" @click="testTicketAttachmentStorage">
+            {{ testingTicketAttachmentStorage ? t('common.loading') : t('admin.backup.s3.testConnection') }}
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" :disabled="savingTicketAttachmentStorage" @click="saveTicketAttachmentStorageConfig">
+            {{ savingTicketAttachmentStorage ? t('common.loading') : t('common.save') }}
+          </button>
+        </div>
+      </div>
+
       <!-- Schedule Config -->
       <div class="card p-6">
         <div class="mb-4">
@@ -474,6 +537,7 @@ import type {
   BackupDownloadPart,
   ImageStorageConfig,
   InvoiceStorageConfig,
+  TicketAttachmentStorageConfig,
 } from '@/api/admin/backup'
 import { useStepUp, isStepUpBlocked, isStepUpCancelled, stepUpBlockReason } from '@/composables/useStepUp'
 import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
@@ -542,6 +606,22 @@ const invoiceStorageForm = ref<InvoiceStorageConfig>({
 const invoiceStorageSecretConfigured = ref(false)
 const savingInvoiceStorage = ref(false)
 const testingInvoiceStorage = ref(false)
+
+// Ticket attachment object storage. Same split-brain rationale as the invoice storage
+// above — retargeting it cannot affect database backups, so saving skips the step-up.
+const ticketAttachmentStorageForm = ref<TicketAttachmentStorageConfig>({
+  reuse_backup_s3: true,
+  bucket: '',
+  prefix: 'tickets/',
+  endpoint: '',
+  region: 'auto',
+  access_key_id: '',
+  secret_access_key: '',
+  force_path_style: false,
+})
+const ticketAttachmentStorageSecretConfigured = ref(false)
+const savingTicketAttachmentStorage = ref(false)
+const testingTicketAttachmentStorage = ref(false)
 
 // Schedule config
 const scheduleForm = ref<BackupScheduleConfig>({
@@ -806,6 +886,51 @@ async function testInvoiceStorage() {
   }
 }
 
+async function loadTicketAttachmentStorageConfig() {
+  try {
+    const { config, secret_configured } = await adminAPI.backup.getTicketAttachmentStorageConfig()
+    ticketAttachmentStorageForm.value = {
+      ...config,
+      prefix: config.prefix || 'tickets/',
+      region: config.region || 'auto',
+      secret_access_key: '',
+    }
+    ticketAttachmentStorageSecretConfigured.value = secret_configured
+  } catch (error) {
+    appStore.showError((error as { message?: string })?.message || t('errors.networkError'))
+  }
+}
+
+async function saveTicketAttachmentStorageConfig() {
+  savingTicketAttachmentStorage.value = true
+  try {
+    // 无 step-up：改附件存储目标影响不到数据库备份，与发票存储同一处理。
+    await adminAPI.backup.updateTicketAttachmentStorageConfig(ticketAttachmentStorageForm.value)
+    appStore.showSuccess(t('admin.backup.ticketAttachmentStorage.saved'))
+    await loadTicketAttachmentStorageConfig()
+  } catch (error) {
+    appStore.showError((error as { message?: string })?.message || t('errors.networkError'))
+  } finally {
+    savingTicketAttachmentStorage.value = false
+  }
+}
+
+async function testTicketAttachmentStorage() {
+  testingTicketAttachmentStorage.value = true
+  try {
+    const result = await adminAPI.backup.testTicketAttachmentStorageConnection(ticketAttachmentStorageForm.value)
+    if (result.ok) {
+      appStore.showSuccess(result.message || t('admin.backup.s3.testSuccess'))
+    } else {
+      appStore.showError(result.message || t('admin.backup.s3.testFailed'))
+    }
+  } catch (error) {
+    appStore.showError((error as { message?: string })?.message || t('errors.networkError'))
+  } finally {
+    testingTicketAttachmentStorage.value = false
+  }
+}
+
 async function testS3() {
   testingS3.value = true
   try {
@@ -980,6 +1105,7 @@ onMounted(async () => {
     loadS3Config(),
     loadImageStorageConfig(),
     loadInvoiceStorageConfig(),
+    loadTicketAttachmentStorageConfig(),
     loadSchedule(),
     loadBackups(),
   ])

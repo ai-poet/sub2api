@@ -294,6 +294,7 @@ func (s *ModelCatalogService) buildEntry(
 	if resolved == nil {
 		return modelCatalogEntry{}, false
 	}
+	s.applyImplicitImageBillingMode(model, resolved)
 
 	// 图片/视频可以配独立倍率，扣费时用的是它而不是分组文本倍率；展示价必须同源。
 	rateMultiplier = resolveCatalogModeRate(resolved.Mode, group, rateMultiplier)
@@ -330,6 +331,28 @@ func (s *ModelCatalogService) buildEntry(
 		primarySavings: primarySavings,
 		primaryInput:   primaryInput,
 	}, true
+}
+
+// applyImplicitImageBillingMode 把"没有显式定价卡的图片模型"从 token 展示切回按张展示。
+//
+// 扣费侧（GatewayService.calculateRecordUsageCost）对 ImageCount > 0 的请求，
+// 只有分组/渠道定价卡显式配置了 token 模式才按 token 计费，否则一律按张计费。
+// 而解析器在没有定价卡时会回落到 LiteLLM token 参考价，若不在这里对齐，
+// gpt-image-2 这类模型在模型广场会显示每百万 token 的价格，和实际账单对不上。
+// 显式定价卡（含显式 token 模式）优先，与扣费侧同口径。
+func (s *ModelCatalogService) applyImplicitImageBillingMode(model string, resolved *ResolvedPricing) {
+	if resolved == nil {
+		return
+	}
+	if resolved.Mode != "" && resolved.Mode != BillingModeToken {
+		return
+	}
+	if resolved.Source == PricingSourceGroup || resolved.Source == PricingSourceChannel {
+		return
+	}
+	if isOpenAIImageGenerationModel(model) || s.hasImageReferencePrice(model) {
+		resolved.Mode = BillingModeImage
+	}
 }
 
 func (s *ModelCatalogService) buildOfficialPricing(model string, group Group) (ModelCatalogPricing, *ModelPricing, string) {

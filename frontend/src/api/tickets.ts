@@ -49,6 +49,12 @@ export interface TicketCountResponse {
   count: number
 }
 
+export interface TicketAttachmentUploadResult {
+  key: string
+  content_type: string
+  size: number
+}
+
 export interface CreateTicketPayload {
   title: string
   category: TicketCategory
@@ -103,6 +109,17 @@ export async function unreadCount(): Promise<TicketCountResponse> {
   return data
 }
 
+/** 上传工单图片附件（multipart 字段 file），消息体里用 ticket-attachment://<key> 引用 */
+export async function uploadAttachment(file: File): Promise<TicketAttachmentUploadResult> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await apiClient.post<TicketAttachmentUploadResult>('/tickets/attachments', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000
+  })
+  return data
+}
+
 export const ticketsAPI = {
   list,
   create,
@@ -110,7 +127,8 @@ export const ticketsAPI = {
   reply,
   close,
   reopen,
-  unreadCount
+  unreadCount,
+  uploadAttachment
 }
 
 export default ticketsAPI

@@ -1040,6 +1040,17 @@ export default {
       "closedHint": "This ticket is closed. Reopen it to continue the conversation.",
       "unread": "New reply"
     },
+    "attachments": {
+      "insertImage": "Insert image",
+      "hint": "Paste, drop or pick an image, up to 5 MB each",
+      "uploading": "Uploading image...",
+      "uploadFailed": "Image upload failed",
+      "errors": {
+        "storageNotConfigured": "Ticket attachment storage is not configured. Please contact an administrator.",
+        "tooLarge": "Image exceeds the size limit (max 5 MB each)",
+        "badType": "Only image files are supported"
+      }
+    },
     "actions": {
       "close": "Close ticket",
       "reopen": "Reopen",

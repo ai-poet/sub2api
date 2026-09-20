@@ -151,6 +151,9 @@ var ProviderSet = wire.NewSet(
 	// Pay-service attachment storage (invoice files), reusing the backup S3 credentials
 	NewPayAttachmentStoreFactory,
 
+	// Ticket attachment storage (fork 本地：工单图片)
+	NewTicketAttachmentStoreFactory,
+
 	// Image storage (async image task result offload)
 	ProvideImageStorageFactory,
 

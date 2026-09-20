@@ -72,12 +72,14 @@ var operatorScopeGolden = []string{
 	// 工单（fork 本地）：admin / operator 同权
 	"GET /api/v1/admin/tickets",
 	"GET /api/v1/admin/tickets/:id",
+	"GET /api/v1/admin/tickets/attachments/content",
 	"GET /api/v1/admin/tickets/open-count",
-	// 显式放开的非 GET：读语义的 POST、撤回自己的申请、客服工单的回复 / 关闭 / 重开
+	// 显式放开的非 GET：读语义的 POST、撤回自己的申请、客服工单的回复 / 关闭 / 重开 / 图片上传
 	"POST /api/v1/admin/approvals/:id/cancel",
 	"POST /api/v1/admin/tickets/:id/close",
 	"POST /api/v1/admin/tickets/:id/messages",
 	"POST /api/v1/admin/tickets/:id/reopen",
+	"POST /api/v1/admin/tickets/attachments",
 	"POST /api/v1/admin/user-attributes/batch",
 }
 
@@ -87,6 +89,7 @@ var operatorWriteScopeGolden = []string{
 	"POST /api/v1/admin/tickets/:id/close",
 	"POST /api/v1/admin/tickets/:id/messages",
 	"POST /api/v1/admin/tickets/:id/reopen",
+	"POST /api/v1/admin/tickets/attachments",
 	"POST /api/v1/admin/user-attributes/batch",
 }
 

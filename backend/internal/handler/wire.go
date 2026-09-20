@@ -47,6 +47,7 @@ func ProvideAdminHandlers(
 	consoleHandler *admin.ConsoleHandler,
 	approvalHandler *admin.ApprovalHandler,
 	ticketHandler *admin.TicketHandler,
+	ticketAttachmentHandler *admin.TicketAttachmentHandler,
 	upstreamBillingProbe *service.UpstreamBillingProbeService,
 	ollamaCloudUsage *service.OllamaCloudUsageService,
 ) *AdminHandlers {
@@ -89,6 +90,7 @@ func ProvideAdminHandlers(
 		Console:               consoleHandler,
 		Approval:              approvalHandler,
 		Ticket:                ticketHandler,
+		TicketAttachment:      ticketAttachmentHandler,
 	}
 }
 
@@ -212,6 +214,7 @@ func ProvideHandlers(
 	batchImageHandler *BatchImageHandler,
 	payBridgeHandler *PayBridgeHandler,
 	ticketHandler *TicketHandler,
+	ticketAttachmentHandler *TicketAttachmentHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 	_ *service.OpenAIQuotaAutoResetService,
@@ -239,6 +242,7 @@ func ProvideHandlers(
 		BatchImage:       batchImageHandler,
 		PayBridge:        payBridgeHandler,
 		Ticket:           ticketHandler,
+		TicketAttachment: ticketAttachmentHandler,
 	}
 }
 
@@ -266,6 +270,7 @@ var ProviderSet = wire.NewSet(
 	ProvideBatchImageHandler,
 	NewPayBridgeHandler,
 	NewTicketHandler,
+	NewTicketAttachmentHandler,
 
 	// Admin handlers
 	admin.NewDashboardHandler,
@@ -303,6 +308,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewConsoleHandler,
 	admin.NewApprovalHandler,
 	admin.NewTicketHandler,
+	admin.NewTicketAttachmentHandler,
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,

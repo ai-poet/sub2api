@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   reply: vi.fn(),
   close: vi.fn(),
   reopen: vi.fn(),
+  uploadAttachment: vi.fn(),
   fetchCounts: vi.fn(),
   showSuccess: vi.fn(),
   showError: vi.fn()
@@ -24,9 +25,10 @@ vi.mock('@/api/tickets', () => {
     reply: state.reply,
     close: state.close,
     reopen: state.reopen,
-    unreadCount: vi.fn()
+    unreadCount: vi.fn(),
+    uploadAttachment: state.uploadAttachment
   }
-  return { default: api, ticketsAPI: api }
+  return { default: api, ticketsAPI: api, uploadAttachment: state.uploadAttachment }
 })
 
 vi.mock('@/stores/app', () => ({
@@ -90,7 +92,7 @@ const ConfirmDialogStub = defineComponent({
   template: '<div v-if="show" data-test="confirm-dialog"><button data-test="confirm-ok" @click="$emit(\'confirm\')">ok</button></div>'
 })
 const TicketThreadStub = defineComponent({
-  props: ['ticket', 'messages', 'viewer', 'submitting', 'loading'],
+  props: ['ticket', 'messages', 'viewer', 'side', 'submitting', 'loading'],
   emits: ['reply'],
   methods: {
     clearDraft() {
@@ -98,7 +100,7 @@ const TicketThreadStub = defineComponent({
     }
   },
   template: `
-    <div data-test="thread" :data-viewer="viewer" :data-count="messages.length">
+    <div data-test="thread" :data-viewer="viewer" :data-side="side" :data-count="messages.length">
       <button data-test="thread-send" @click="$emit('reply', 'more details')">send</button>
     </div>
   `
@@ -152,6 +154,7 @@ describe('user TicketsView (fork)', () => {
     state.reply.mockImplementation(async (id: number) => ({ ticket: ticketRow(id, { status: 'open' }), message: message(3, 'user', 'more details') }))
     state.close.mockImplementation(async (id: number) => ticketRow(id, { status: 'closed' }))
     state.reopen.mockImplementation(async (id: number) => ticketRow(id, { status: 'open' }))
+    state.uploadAttachment.mockResolvedValue({ key: 'tickets/3/shot.png', content_type: 'image/png', size: 1 })
     state.fetchCounts.mockResolvedValue(undefined)
   })
 
@@ -187,6 +190,7 @@ describe('user TicketsView (fork)', () => {
     expect(state.fetchCounts).toHaveBeenCalledTimes(1)
     const thread = wrapper.find('[data-test="thread"]')
     expect(thread.attributes('data-viewer')).toBe('user')
+    expect(thread.attributes('data-side')).toBe('user')
     expect(thread.attributes('data-count')).toBe('2')
 
     await wrapper.find('[data-test="thread-send"]').trigger('click')
@@ -215,6 +219,49 @@ describe('user TicketsView (fork)', () => {
     expect(state.showSuccess).toHaveBeenCalledWith('tickets.toast.created')
     expect(state.list).toHaveBeenCalledTimes(2)
     expect(state.get).toHaveBeenCalledWith(3)
+  })
+
+  it('inserts attachment markdown into the create form after a successful upload', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.find('[data-test="ticket-create"]').trigger('click')
+    const input = wrapper.find('[data-test="ticket-create-attachment-input"]')
+    const file = new File(['x'], 'shot.png', { type: 'image/png' })
+    Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
+    await input.trigger('change')
+    await flushPromises()
+
+    expect(state.uploadAttachment).toHaveBeenCalledTimes(1)
+    const body = wrapper.find('[data-test="stub-body"]').element as HTMLTextAreaElement
+    expect(body.value).toContain('![image](ticket-attachment://tickets/3/shot.png)')
+
+    await wrapper.find('[data-test="stub-title"]').setValue('New problem')
+    await wrapper.find('[data-test="ticket-submit"]').trigger('click')
+    await flushPromises()
+    expect(state.create).toHaveBeenCalledWith({
+      title: 'New problem',
+      category: 'other',
+      body: '![image](ticket-attachment://tickets/3/shot.png)'
+    })
+  })
+
+  it('shows the mapped error when the create-form upload fails', async () => {
+    state.uploadAttachment.mockRejectedValueOnce({ status: 503, reason: 'TICKET_ATTACHMENT_STORAGE_NOT_CONFIGURED', message: 'not configured' })
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.find('[data-test="ticket-create"]').trigger('click')
+    const input = wrapper.find('[data-test="ticket-create-attachment-input"]')
+    const file = new File(['x'], 'shot.png', { type: 'image/png' })
+    Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
+    await input.trigger('change')
+    await flushPromises()
+
+    expect(state.showError).toHaveBeenCalledWith('tickets.attachments.errors.storageNotConfigured')
+    const body = wrapper.find('[data-test="stub-body"]').element as HTMLTextAreaElement
+    expect(body.value).not.toContain('uploading-')
+    expect(body.value).not.toContain('ticket-attachment://')
   })
 
   it('maps the open-limit error to a friendly message', async () => {

@@ -7,6 +7,7 @@ import { apiClient } from '../client'
 import type { FetchOptions, PaginatedResponse } from '@/types'
 import type {
   SupportTicket,
+  TicketAttachmentUploadResult,
   TicketCategory,
   TicketCountResponse,
   TicketDetail,
@@ -71,13 +72,25 @@ export async function openCount(): Promise<TicketCountResponse> {
   return data
 }
 
+/** 客服侧上传工单图片附件（multipart 字段 file），与用户侧附件互不可见 */
+export async function uploadAttachment(file: File): Promise<TicketAttachmentUploadResult> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await apiClient.post<TicketAttachmentUploadResult>('/admin/tickets/attachments', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000
+  })
+  return data
+}
+
 export const ticketsAPI = {
   list,
   get,
   reply,
   close,
   reopen,
-  openCount
+  openCount,
+  uploadAttachment
 }
 
 export default ticketsAPI

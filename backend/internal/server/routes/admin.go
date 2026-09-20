@@ -202,6 +202,10 @@ func registerTicketRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	{
 		tickets.GET("", h.Admin.Ticket.List)
 		tickets.GET("/open-count", h.Admin.Ticket.OpenCount)
+		// 图片附件：operator 与 admin 同权（写操作在 operatorWriteScope 显式放行）
+		tickets.POST("/attachments",
+			middleware.RequestBodyLimit(service.MaxTicketAttachmentBytes+(1<<20)), h.Admin.TicketAttachment.Upload)
+		tickets.GET("/attachments/content", h.Admin.TicketAttachment.Content)
 		tickets.GET("/:id", h.Admin.Ticket.Get)
 		tickets.POST("/:id/messages", h.Admin.Ticket.Reply)
 		tickets.POST("/:id/close", h.Admin.Ticket.Close)
@@ -695,6 +699,14 @@ func registerBackupRoutes(admin *gin.RouterGroup, h *handler.Handlers, stepUpAut
 		backup.GET("/invoice-storage", h.Admin.Backup.GetInvoiceStorageConfig)
 		backup.PUT("/invoice-storage", h.Admin.Backup.UpdateInvoiceStorageConfig)
 		backup.POST("/invoice-storage/test", h.Admin.Backup.TestInvoiceStorageConnection)
+
+		// 工单图片附件对象存储配置（fork 本地）。
+		// 只允许管理员（operator 不放行）；PUT 挂 step-up 2FA：附件的 content 端点对
+		// 客服侧放行整个前缀，改存储目标的影响面比发票更贴近用户流量。设置服务同样
+		// 会拒绝与备份前缀重叠的取值。
+		backup.GET("/ticket-attachment-storage", middleware.AdminOnly(), h.Admin.Backup.GetTicketAttachmentStorageConfig)
+		backup.PUT("/ticket-attachment-storage", middleware.AdminOnly(), gin.HandlerFunc(stepUpAuth), h.Admin.Backup.UpdateTicketAttachmentStorageConfig)
+		backup.POST("/ticket-attachment-storage/test", middleware.AdminOnly(), h.Admin.Backup.TestTicketAttachmentStorageConnection)
 
 		// 定时备份配置
 		backup.GET("/schedule", h.Admin.Backup.GetSchedule)

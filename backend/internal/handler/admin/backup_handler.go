@@ -8,10 +8,11 @@ import (
 )
 
 type BackupHandler struct {
-	backupService  *service.BackupService
-	userService    *service.UserService
-	imageStorage   *service.ImageStorageSettingService
-	invoiceStorage *service.InvoiceStorageSettingService
+	backupService           *service.BackupService
+	userService             *service.UserService
+	imageStorage            *service.ImageStorageSettingService
+	invoiceStorage          *service.InvoiceStorageSettingService
+	ticketAttachmentStorage *service.TicketAttachmentStorageSettingService
 }
 
 func NewBackupHandler(
@@ -19,12 +20,14 @@ func NewBackupHandler(
 	userService *service.UserService,
 	imageStorage *service.ImageStorageSettingService,
 	invoiceStorage *service.InvoiceStorageSettingService,
+	ticketAttachmentStorage *service.TicketAttachmentStorageSettingService,
 ) *BackupHandler {
 	return &BackupHandler{
-		backupService:  backupService,
-		userService:    userService,
-		imageStorage:   imageStorage,
-		invoiceStorage: invoiceStorage,
+		backupService:           backupService,
+		userService:             userService,
+		imageStorage:            imageStorage,
+		invoiceStorage:          invoiceStorage,
+		ticketAttachmentStorage: ticketAttachmentStorage,
 	}
 }
 
@@ -299,6 +302,51 @@ func (h *BackupHandler) TestInvoiceStorageConnection(c *gin.Context) {
 		return
 	}
 	if err := h.invoiceStorage.TestConnection(c.Request.Context(), req); err != nil {
+		response.Success(c, gin.H{"ok": false, "message": err.Error()})
+		return
+	}
+	response.Success(c, gin.H{"ok": true, "message": "connection successful"})
+}
+
+// ─── 工单图片附件对象存储配置（fork 本地） ───
+//
+// 与发票存储同一模式，但 PUT 挂了 step-up 2FA：工单附件的 content 端点对客服侧
+// 放行整个前缀，改存储目标的影响面比发票更贴近用户流量，收敛一点。
+
+func (h *BackupHandler) GetTicketAttachmentStorageConfig(c *gin.Context) {
+	ctx := c.Request.Context()
+	cfg, err := h.ticketAttachmentStorage.Get(ctx)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{
+		"config":            cfg,
+		"secret_configured": h.ticketAttachmentStorage.SecretConfigured(ctx),
+	})
+}
+
+func (h *BackupHandler) UpdateTicketAttachmentStorageConfig(c *gin.Context) {
+	var req service.TicketAttachmentStorageSettings
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	cfg, err := h.ticketAttachmentStorage.Update(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, cfg)
+}
+
+func (h *BackupHandler) TestTicketAttachmentStorageConnection(c *gin.Context) {
+	var req service.TicketAttachmentStorageSettings
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	if err := h.ticketAttachmentStorage.TestConnection(c.Request.Context(), req); err != nil {
 		response.Success(c, gin.H{"ok": false, "message": err.Error()})
 		return
 	}
