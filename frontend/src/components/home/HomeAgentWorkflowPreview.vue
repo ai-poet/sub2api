@@ -193,7 +193,7 @@
 
       <!-- ===== ACCOUNT MENU OVERLAY ===== -->
       <div
-        class="absolute bottom-11 left-2 z-20 w-[236px] origin-bottom-left rounded-xl border border-black/10 bg-white p-1.5 shadow-xl transition-all duration-200 ease-out dark:border-white/10 dark:bg-[#232629]"
+        class="absolute bottom-11 left-2 z-20 w-[236px] origin-bottom-left rounded-xl border border-black/10 bg-white p-1.5 shadow-xl transition-all duration-200 ease-out dark:border-white/10 dark:bg-[#262626]"
         :class="frame.menuOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'"
         data-test="preview-account-menu"
       >
@@ -242,7 +242,7 @@
 
       <!-- ===== SECOND-LEVEL GROUP SUBMENU ===== -->
       <div
-        class="absolute bottom-[10rem] left-[244px] z-30 w-[236px] origin-left rounded-xl border border-black/10 bg-white p-1.5 shadow-xl transition-all duration-200 ease-out max-sm:left-auto max-sm:right-2 dark:border-white/10 dark:bg-[#232629]"
+        class="absolute bottom-[10rem] left-[244px] z-30 w-[236px] origin-left rounded-xl border border-black/10 bg-white p-1.5 shadow-xl transition-all duration-200 ease-out max-sm:left-auto max-sm:right-2 dark:border-white/10 dark:bg-[#262626]"
         :class="frame.submenuOpen ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-1 opacity-0'"
         data-test="preview-group-submenu"
       >

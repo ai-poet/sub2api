@@ -229,7 +229,7 @@
                   <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     {{ row.unit }}
                   </div>
-                  <div v-if="row.hint" class="mt-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                  <div v-if="row.hint" class="mt-1 text-[11px] font-medium text-gray-500 dark:text-gray-400">
                     {{ row.hint }}
                   </div>
                 </div>
@@ -955,7 +955,7 @@ function formatNumber(value: number): string {
 }
 
 .mode-pill-token {
-  @apply bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200;
+  @apply bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200;
 }
 
 .mode-pill-request {
@@ -1015,7 +1015,7 @@ function formatNumber(value: number): string {
 }
 
 .cap-badge-slate {
-  @apply bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200;
+  @apply bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200;
 }
 
 .cap-badge-emerald {

@@ -126,7 +126,7 @@ export default {
       ticketAttachmentStorage: {
         title: 'Ticket attachment storage',
         description:
-          'Object storage for image attachments in support tickets; image uploads are disabled until configured. Configured separately from backups: changing it cannot affect database backups, so saving does not require a step-up challenge. Reuses the backup credentials above by default, or point it at a different bucket or provider entirely.',
+          'Object storage for image attachments in support tickets; image uploads are disabled until configured. Configured separately from backups, so changing it cannot affect database backups; but the attachment content endpoint serves everything under this prefix to staff, so saving requires a step-up challenge. Reuses the backup credentials above by default, or point it at a different bucket or provider entirely.',
         reuseBackupS3: 'Reuse the backup S3 configuration above (different bucket/prefix only)',
         prefixHint: 'Key prefix for ticket attachment objects; must not overlap the backup prefix',
         saved: 'Ticket attachment storage saved'

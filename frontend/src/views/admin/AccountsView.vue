@@ -128,7 +128,7 @@
                         <span class="flex-1 text-left">{{ t('admin.errorPassthrough.title') }}</span>
                       </button>
                       <button class="account-tools-menu-item" @click="openTLSFingerprintProfiles">
-                        <span class="account-tools-menu-icon bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                        <span class="account-tools-menu-icon bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
                           <Icon name="lock" size="sm" />
                         </span>
                         <span class="flex-1 text-left">{{ t('admin.tlsFingerprintProfiles.title') }}</span>
@@ -1754,8 +1754,8 @@ function getOpenAICompactMeta(row: any): { label: string; className: string; dot
     case 'auto':
       return {
         label: t('admin.accounts.openai.compactAuto'),
-        className: 'text-slate-500 dark:text-slate-400',
-        dotClass: 'bg-slate-300 dark:bg-slate-500'
+        className: 'text-gray-500 dark:text-gray-400',
+        dotClass: 'bg-gray-300 dark:bg-gray-500'
       }
   }
 }

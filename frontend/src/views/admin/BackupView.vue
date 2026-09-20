@@ -904,11 +904,18 @@ async function loadTicketAttachmentStorageConfig() {
 async function saveTicketAttachmentStorageConfig() {
   savingTicketAttachmentStorage.value = true
   try {
-    // 无 step-up：改附件存储目标影响不到数据库备份，与发票存储同一处理。
-    await adminAPI.backup.updateTicketAttachmentStorageConfig(ticketAttachmentStorageForm.value)
+    // 走 step-up：附件 content 端点对客服侧放行整个前缀，改存储目标比改发票存储
+    // 更贴近用户流量，后端 PUT 同样挂了 step-up（routes/admin.go）。
+    await backupStepUp.run(() =>
+      adminAPI.backup.updateTicketAttachmentStorageConfig(ticketAttachmentStorageForm.value),
+    )
     appStore.showSuccess(t('admin.backup.ticketAttachmentStorage.saved'))
     await loadTicketAttachmentStorageConfig()
   } catch (error) {
+    if (isStepUpCancelled(error)) {
+      savingTicketAttachmentStorage.value = false
+      return
+    }
     appStore.showError((error as { message?: string })?.message || t('errors.networkError'))
   } finally {
     savingTicketAttachmentStorage.value = false

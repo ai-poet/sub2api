@@ -391,7 +391,7 @@ const rankingChartData = computed(() => {
   if (otherRankingItem.value) {
     labels.push(t('admin.dashboard.spendingRankingOther'))
     data.push(otherRankingItem.value.actual_cost)
-    backgroundColor.push('#a8a199')
+    backgroundColor.push('#a3a3a3')
   }
 
   return {

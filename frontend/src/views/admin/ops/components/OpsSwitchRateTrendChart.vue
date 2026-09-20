@@ -35,8 +35,8 @@ const isDarkMode = computed(() => document.documentElement.classList.contains('d
 const colors = computed(() => ({
   teal: '#14b8a6',
   tealAlpha: '#14b8a620',
-  grid: isDarkMode.value ? '#302c28' : '#f2f0ec',
-  text: isDarkMode.value ? '#a8a199' : '#7a7268'
+  grid: isDarkMode.value ? '#3d3d3d' : '#f4f4f4',
+  text: isDarkMode.value ? '#a3a3a3' : '#737373'
 }))
 
 const totalRequests = computed(() => sumNumbers(props.points.map((p) => p.request_count)))
@@ -84,9 +84,9 @@ const options = computed(() => {
         labels: { color: c.text, usePointStyle: true, boxWidth: 6, font: { size: 10 } }
       },
       tooltip: {
-        backgroundColor: isDarkMode.value ? '#232629' : '#ffffff',
-        titleColor: isDarkMode.value ? '#f2f0ec' : '#16181d',
-        bodyColor: isDarkMode.value ? '#cfc9c1' : '#4d4842',
+        backgroundColor: isDarkMode.value ? '#262626' : '#ffffff',
+        titleColor: isDarkMode.value ? '#f4f4f4' : '#171717',
+        bodyColor: isDarkMode.value ? '#d4d4d4' : '#525252',
         borderColor: c.grid,
         borderWidth: 1,
         padding: 10,

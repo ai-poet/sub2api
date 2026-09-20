@@ -160,7 +160,7 @@ const labelClass = computed(() => {
     return `${base} bg-purple-200/60 text-purple-800 dark:bg-purple-800/40 dark:text-purple-300`
   }
   if (props.platform === 'grok') {
-    return `${base} bg-zinc-300/70 text-zinc-800 dark:bg-zinc-700/60 dark:text-zinc-200`
+    return `${base} bg-gray-300/70 text-gray-800 dark:bg-gray-700/60 dark:text-gray-200`
   }
   if (props.platform === 'kimi') {
     return `${base} bg-pink-200/60 text-pink-800 dark:bg-pink-800/40 dark:text-pink-300`
@@ -209,8 +209,8 @@ const badgeClass = computed(() => {
   }
   if (props.platform === 'grok') {
     return isSubscription.value
-      ? 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100'
-      : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
+      ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
+      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
   }
   if (props.platform === 'kimi') {
     return isSubscription.value

@@ -176,9 +176,10 @@ export async function testInvoiceStorageConnection(
 
 // Ticket attachment object storage
 //
-// Same split as the invoice storage above: retargeting it only changes where newly
-// uploaded ticket images land, so these endpoints are not step-up gated either.
-// `reuse_backup_s3` borrows the backup endpoint and credentials.
+// Same split as the invoice storage above, but the PUT is step-up gated: the content
+// endpoint serves everything under the prefix to staff, so retargeting the bucket sits
+// closer to user traffic than the invoice storage does. Callers must wrap the update in
+// the step-up runner. `reuse_backup_s3` borrows the backup endpoint and credentials.
 export interface TicketAttachmentStorageConfig {
   reuse_backup_s3: boolean
   bucket: string

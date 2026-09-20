@@ -1820,7 +1820,7 @@
                   {{ codexImageToolBadgeLabel }}
                 </span>
               </div>
-              <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">
+              <p class="mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300">
                 {{ t('admin.accounts.openai.codexImageToolDesc') }}
               </p>
             </div>
@@ -1837,7 +1837,7 @@
                   'group flex min-h-[62px] items-start gap-2 rounded-md border px-3 py-2 text-left transition-all',
                   codexImageToolMode === option.value
                     ? option.selectedCardClass
-                    : 'border-transparent bg-transparent text-slate-600 hover:border-gray-200 hover:bg-gray-50 dark:text-slate-300 dark:hover:border-dark-500 dark:hover:bg-dark-700'
+                    : 'border-transparent bg-transparent text-gray-600 hover:border-gray-200 hover:bg-gray-50 dark:text-gray-300 dark:hover:border-dark-500 dark:hover:bg-dark-700'
                 ]"
               >
                 <span
@@ -1852,7 +1852,7 @@
                 </span>
                 <span class="min-w-0">
                   <span class="block text-sm font-medium">{{ option.label }}</span>
-                  <span class="mt-0.5 block text-xs leading-4 text-slate-500 dark:text-slate-400">{{ option.description }}</span>
+                  <span class="mt-0.5 block text-xs leading-4 text-gray-500 dark:text-gray-400">{{ option.description }}</span>
                 </span>
               </button>
             </div>
@@ -3648,7 +3648,7 @@ const codexImageToolBadgeClass = computed(() => {
     case 'block':
       return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
     default:
-      return 'bg-slate-100 text-slate-600 dark:bg-dark-600 dark:text-slate-300'
+      return 'bg-gray-100 text-gray-600 dark:bg-dark-600 dark:text-gray-300'
   }
 })
 const openAICompactModeOptions = computed(() => [

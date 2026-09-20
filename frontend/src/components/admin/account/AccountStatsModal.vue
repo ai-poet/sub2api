@@ -502,8 +502,8 @@ const isDarkMode = computed(() => {
 
 // Chart colors
 const chartColors = computed(() => ({
-  text: isDarkMode.value ? '#e5e1db' : '#302c28',
-  grid: isDarkMode.value ? '#302c28' : '#e5e1db'
+  text: isDarkMode.value ? '#e6e6e6' : '#3d3d3d',
+  grid: isDarkMode.value ? '#3d3d3d' : '#e6e6e6'
 }))
 
 // Line chart data
