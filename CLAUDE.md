@@ -133,7 +133,16 @@ The features below are locally maintained customizations of this fork. During up
   so its effort picker reaches the request at all
   (`query/src/runner/provider_options.rs`), and truncation on character
   rather than byte boundaries in `tools/src/{pty_bash,powershell,web_fetch}.rs`
-  (the byte slices panicked on any long non-ASCII output).
+  (the byte slices panicked on any long non-ASCII output), plan mode widened
+  from "reads only" to also allow the tools planning itself needs and any
+  shell invocation the classifier proves read-only
+  (`core/src/lib.rs`, `core/src/bash_classifier.rs`,
+  `tools/src/{lib,pty_bash}.rs` — without this the agent could not take
+  notes, ask a question, or leave plan mode, and `ls -la | head` was
+  refused), and refusals that carry their reason
+  (`tools/src/lib.rs::denial_message` plus the exported
+  `PLAN_MODE_DENIAL_SUFFIX` / `KEEP_PLANNING_DENIAL` markers, which
+  `waku-core`'s driver matches to say them in the user's language).
 - Adapter, which is ours and where changes belong:
   `client/crates/waku-agent-bridge/` (engine lifecycle, permission bridge,
   history ownership, steering, MCP tool wrapper, background-work snapshots,
