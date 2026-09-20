@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   let currentOrder = order;
   if (order.status === 'PENDING') {
-    await reconcilePendingOrderPayment(order.id);
+    await reconcilePendingOrderPayment(order.id, 'poll');
     const refreshedOrder = await prisma.order.findUnique({
       where: { id },
       select: {

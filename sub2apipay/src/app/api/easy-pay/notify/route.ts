@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { handlePaymentNotify } from '@/lib/order/service';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
-import type { PaymentType, PaymentProvider } from '@/lib/payment';
+import type { PaymentType, PaymentProvider, PaymentNotification } from '@/lib/payment';
 import { EasyPayProvider } from '@/lib/easy-pay/provider';
 import { getInstanceConfig } from '@/lib/payment/load-balancer';
 import { extractHeaders } from '@/lib/utils/api';
@@ -23,24 +23,39 @@ async function getProvider(request: NextRequest): Promise<PaymentProvider> {
   return paymentRegistry.getProvider('easypay' as PaymentType);
 }
 
+function textResponse(body: 'success' | 'fail', status: number) {
+  return new Response(body, { status, headers: { 'Content-Type': 'text/plain' } });
+}
+
+/**
+ * 易支付异步通知。
+ *
+ * 处理失败一律回 HTTP 500 + 正文 fail：按正文判定的平台照旧看到 fail，按 HTTP 状态判定的平台
+ * 也会重试——以前失败也回 200，这类平台会把通知记成"成功"且不再重试，订单就卡在未支付。
+ * 所有失败日志都带 out_trade_no，排查时直接按订单号搜。
+ */
 async function processNotification(request: NextRequest, rawBody: string) {
+  let notification: PaymentNotification | null = null;
   try {
     const provider = await getProvider(request);
     const headers = extractHeaders(request);
 
-    const notification = await provider.verifyNotification(rawBody, headers);
+    notification = await provider.verifyNotification(rawBody, headers);
     if (!notification) {
-      return new Response('success', { headers: { 'Content-Type': 'text/plain' } });
+      return textResponse('success', 200);
     }
     const success = await handlePaymentNotify(notification, provider.name);
-    return new Response(success ? 'success' : 'fail', {
-      headers: { 'Content-Type': 'text/plain' },
-    });
+    if (!success) {
+      console.error(
+        `EasyPay notify rejected: order=${notification.orderId} trade=${notification.tradeNo} amount=${notification.amount}`,
+      );
+      return textResponse('fail', 500);
+    }
+    return textResponse('success', 200);
   } catch (error) {
-    console.error('EasyPay notify error:', error);
-    return new Response('fail', {
-      headers: { 'Content-Type': 'text/plain' },
-    });
+    const scope = notification ? ` (order=${notification.orderId} trade=${notification.tradeNo})` : '';
+    console.error(`EasyPay notify error${scope}:`, error);
+    return textResponse('fail', 500);
   }
 }
 

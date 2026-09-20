@@ -62,6 +62,8 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyGroupStatusEnabled:                        "false",
 		SettingKeyGroupStatusNotifyServerChanEnabled:        "false",
 		SettingKeyApprovalNotifyServerChanEnabled:           "false",
+		SettingKeyApprovalPendingLimitPerUser:               strconv.Itoa(AdminApprovalPendingLimitPerUser),
+		SettingKeyApprovalBatchLimit:                        strconv.Itoa(AdminApprovalBatchLimit),
 		SettingKeyTicketNotifyServerChanEnabled:             "false",
 		SettingKeyGroupStatusNotifyServerChanUID:            "",
 		SettingKeyCommunityQRCode:                           "",
@@ -381,6 +383,10 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		CommunityGroupURL:                  strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 	}
 	result.GroupStatusNotifyServerChanSendKeyConfigured = result.GroupStatusNotifyServerChanSendKey != ""
+	// 运维写操作审批的数量上限：缺失 / 非法 / 越界回退默认（见 admin_approval_limits.go）
+	approvalLimits := ParseApprovalLimits(settings)
+	result.ApprovalPendingLimitPerUser = approvalLimits.PendingPerUser
+	result.ApprovalBatchLimit = approvalLimits.Batch
 	result.TableDefaultPageSize, result.TablePageSizeOptions = parseTablePreferences(
 		settings[SettingKeyTableDefaultPageSize],
 		settings[SettingKeyTablePageSizeOptions],

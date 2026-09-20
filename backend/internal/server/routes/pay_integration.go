@@ -94,17 +94,14 @@ func registerPayProxyRoutes(r *gin.Engine) {
 		originalHost := req.Host
 		originalPath := req.URL.Path
 		originalQuery := req.URL.RawQuery
+		forwardedProto := payProxyForwardedProto(req)
 		req.URL.Path = rewritePayProxyPath(req.URL.Path)
 		req.URL.RawPath = rewritePayProxyPath(req.URL.RawPath)
 		originalDirector(req)
 		if originalHost != "" {
 			req.Header.Set("X-Forwarded-Host", originalHost)
 		}
-		if req.TLS != nil {
-			req.Header.Set("X-Forwarded-Proto", "https")
-		} else {
-			req.Header.Set("X-Forwarded-Proto", "http")
-		}
+		req.Header.Set("X-Forwarded-Proto", forwardedProto)
 		// Always force the integrated pay prefix so embedded navigation
 		// consistently generates /pay/... URLs even behind extra reverse proxies.
 		req.Header.Set("X-Forwarded-Prefix", "/pay")
@@ -125,6 +122,29 @@ func registerPayProxyRoutes(r *gin.Engine) {
 	r.Any("/_next/*proxyPath", handler)
 	r.Any("/pay", handler)
 	r.Any("/pay/*proxyPath", handler)
+}
+
+// payProxyForwardedProto 决定透传给支付服务的协议。
+//
+// 上游反代（Caddy / Nginx）已经设置的 X-Forwarded-Proto 优先：本服务自己不终止 TLS，以前无条件按
+// req.TLS 判断，经边缘终止 TLS 后支付服务永远看到 http，据此生成的 notify_url / return_url 都指向
+// http://，被边缘 308 跳到 https 后第三方支付的回调客户端拿不到 "success"，订单只能靠页面轮询兜底。
+// 没有上游头（直连本服务）时才回退到 req.TLS。值只认 http / https，其它一律按无头处理。
+func payProxyForwardedProto(req *http.Request) string {
+	raw := req.Header.Get("X-Forwarded-Proto")
+	if i := strings.IndexByte(raw, ','); i >= 0 {
+		raw = raw[:i]
+	}
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "https":
+		return "https"
+	case "http":
+		return "http"
+	}
+	if req.TLS != nil {
+		return "https"
+	}
+	return "http"
 }
 
 func rewritePayProxyPath(path string) string {

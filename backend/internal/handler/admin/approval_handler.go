@@ -104,7 +104,13 @@ func (h *ApprovalHandler) PendingCount(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, dto.ApprovalPendingCountResponse{Pending: pending})
+	// 顺带返回生效中的数量上限：审批页据此决定每批条数，运维侧据此展示"待审 x / 上限 n"。
+	limits := h.svc.Limits(c.Request.Context())
+	response.Success(c, dto.ApprovalPendingCountResponse{
+		Pending:      pending,
+		PendingLimit: limits.PendingPerUser,
+		BatchLimit:   limits.Batch,
+	})
 }
 
 // Get GET /api/v1/admin/approvals/:id

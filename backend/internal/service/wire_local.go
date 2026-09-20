@@ -39,7 +39,8 @@ func ProvideReferralRewardRecordRepository(redeemRepo RedeemCodeRepository) Refe
 }
 
 // ProvideAdminApprovalService 构造运维写操作审批服务（fork 本地）。
-// 推送钩子（Server酱³）通过 SetNotifier 挂载，保持构造函数签名稳定。
+// 推送钩子（Server酱³）通过 SetNotifier 挂载、可配置的数量上限通过 SetSettingRepository 挂载，
+// 保持构造函数签名稳定。
 func ProvideAdminApprovalService(
 	repo AdminApprovalRepository,
 	users *UserService,
@@ -48,11 +49,15 @@ func ProvideAdminApprovalService(
 	apiKeys APIKeyRepository,
 	encryptor SecretEncryptor,
 	notifier *ApprovalNotifyService,
+	settingRepo SettingRepository,
 ) *AdminApprovalService {
 	svc := NewAdminApprovalService(repo, users, subs, groups, apiKeys, encryptor)
 	// 显式判空，避免 nil 指针包进非 nil 接口
 	if notifier != nil {
 		svc.SetNotifier(notifier)
+	}
+	if settingRepo != nil {
+		svc.SetSettingRepository(settingRepo)
 	}
 	return svc
 }

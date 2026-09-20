@@ -117,6 +117,54 @@
       </div>
     </div>
 
+    <!-- 运维写操作审批的数量上限 -->
+    <div class="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+      <div>
+        <label class="font-medium text-gray-900 dark:text-white">
+          {{ t('admin.settings.site.approvalLimits.title') }}
+        </label>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          {{ t('admin.settings.site.approvalLimits.description') }}
+        </p>
+      </div>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ t('admin.settings.site.approvalLimits.pendingPerUser') }}
+          </label>
+          <input
+            v-model.number="form.approval_pending_limit_per_user"
+            type="number"
+            min="1"
+            max="1000"
+            step="1"
+            class="input text-sm"
+            data-test="approval-pending-limit"
+          />
+          <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            {{ t('admin.settings.site.approvalLimits.pendingPerUserHint') }}
+          </p>
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ t('admin.settings.site.approvalLimits.batch') }}
+          </label>
+          <input
+            v-model.number="form.approval_batch_limit"
+            type="number"
+            min="1"
+            max="500"
+            step="1"
+            class="input text-sm"
+            data-test="approval-batch-limit"
+          />
+          <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            {{ t('admin.settings.site.approvalLimits.batchHint') }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- 购买订阅（sub2apipay 集成） -->
     <div class="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-600">
       <div class="flex items-center justify-between">
@@ -256,6 +304,9 @@ interface ForkSettingsForm {
   group_status_notify_serverchan_sendkey_configured: boolean
   // 运维写操作审批 → Server酱³ 推送（复用同一 UID / SendKey）
   approval_notify_serverchan_enabled: boolean
+  // 运维写操作审批的数量上限：每个运维管理员待审上限 / 批量通过单次上限
+  approval_pending_limit_per_user: number
+  approval_batch_limit: number
   // 工单（新工单 / 用户回复）→ Server酱³ 推送（复用同一 UID / SendKey）
   ticket_notify_serverchan_enabled: boolean
   purchase_subscription_enabled: boolean

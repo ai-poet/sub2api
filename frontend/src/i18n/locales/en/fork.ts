@@ -675,6 +675,14 @@ export default {
           "enabled": "Approval request push",
           "enabledHint": "Push a message with a link to the approvals page whenever an operator submits a user / subscription management change (uses the UID / SendKey above)."
         },
+        "approvalLimits": {
+          "title": "Operator approval limits",
+          "description": "Operator write requests wait in the approval queue; tune the queue and batch-approve limits here. Changes apply immediately after saving.",
+          "pendingPerUser": "Pending requests per operator",
+          "pendingPerUserHint": "How many pending requests one operator may have at the same time; further requests are refused (1–1000, default 20).",
+          "batch": "Batch approve size",
+          "batchHint": "How many requests \"Approve selected / Approve all pending\" execute per batch; larger sets are split automatically (1–500, default 50)."
+        },
         "ticketNotify": {
           "enabled": "Ticket push",
           "enabledHint": "Push a message with a link to the ticket whenever a user opens a ticket or adds a reply (uses the UID / SendKey above); staff replies are not pushed."
@@ -883,6 +891,7 @@ export default {
       "batchConfirm": "Approve {count} pending request(s)? They execute immediately, one by one, under your identity.",
       "batchResult": "Batch approval finished: {approved} approved, {failed} failed, {skipped} skipped",
       "batchEmpty": "No pending requests to approve",
+      "batchLimitHint": "Up to {count} per batch; larger sets run in several batches (adjustable in system settings)",
       "detail": {
         "title": "Request details",
         "titleWithId": "Request #{id}",

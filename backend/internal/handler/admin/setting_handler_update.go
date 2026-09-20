@@ -29,6 +29,8 @@ type UpdateSettingsRequest struct {
 	GroupStatusEnabled                 *bool                           `json:"group_status_enabled"`
 	GroupStatusNotifyServerChanEnabled *bool                           `json:"group_status_notify_serverchan_enabled"`
 	ApprovalNotifyServerChanEnabled    *bool                           `json:"approval_notify_serverchan_enabled"`
+	ApprovalPendingLimitPerUser        *int                            `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
+	ApprovalBatchLimit                 *int                            `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
 	TicketNotifyServerChanEnabled      *bool                           `json:"ticket_notify_serverchan_enabled"`
 	GroupStatusNotifyServerChanUID     *string                         `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKey *string                         `json:"group_status_notify_serverchan_sendkey"`
@@ -2013,6 +2015,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
 		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
 		ApprovalNotifyServerChanEnabled:                        settings.ApprovalNotifyServerChanEnabled,
+		ApprovalPendingLimitPerUser:                            updatedSettings.ApprovalPendingLimitPerUser,
+		ApprovalBatchLimit:                                     updatedSettings.ApprovalBatchLimit,
 		TicketNotifyServerChanEnabled:                          settings.TicketNotifyServerChanEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
@@ -2395,6 +2399,23 @@ func applyForkSettingsFromRequest(
 	settings.ApprovalNotifyServerChanEnabled = previous.ApprovalNotifyServerChanEnabled
 	if req.ApprovalNotifyServerChanEnabled != nil {
 		settings.ApprovalNotifyServerChanEnabled = *req.ApprovalNotifyServerChanEnabled
+	}
+	// 运维写操作审批的数量上限（省略 = 保持现值；范围校验与 service.ParseApprovalLimits 一致）
+	settings.ApprovalPendingLimitPerUser = previous.ApprovalPendingLimitPerUser
+	if req.ApprovalPendingLimitPerUser != nil {
+		if !service.ValidateApprovalLimit(*req.ApprovalPendingLimitPerUser, service.AdminApprovalPendingLimitMax) {
+			response.BadRequest(c, "approval_pending_limit_per_user must be between 1 and "+strconv.Itoa(service.AdminApprovalPendingLimitMax))
+			return false
+		}
+		settings.ApprovalPendingLimitPerUser = *req.ApprovalPendingLimitPerUser
+	}
+	settings.ApprovalBatchLimit = previous.ApprovalBatchLimit
+	if req.ApprovalBatchLimit != nil {
+		if !service.ValidateApprovalLimit(*req.ApprovalBatchLimit, service.AdminApprovalBatchLimitMax) {
+			response.BadRequest(c, "approval_batch_limit must be between 1 and "+strconv.Itoa(service.AdminApprovalBatchLimitMax))
+			return false
+		}
+		settings.ApprovalBatchLimit = *req.ApprovalBatchLimit
 	}
 	// 工单（新工单 / 用户回复）→ Server酱³ 推送（复用同一 UID / SendKey）
 	settings.TicketNotifyServerChanEnabled = previous.TicketNotifyServerChanEnabled

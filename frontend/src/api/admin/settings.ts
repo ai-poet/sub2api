@@ -498,6 +498,9 @@ export interface SystemSettings {
   group_status_notify_serverchan_sendkey_configured: boolean
   // 运维写操作审批 → Server酱³ 推送（fork 自有，复用上面的 UID / SendKey）
   approval_notify_serverchan_enabled: boolean
+  // 运维写操作审批的数量上限（fork 自有）：每个运维管理员待审上限 / 批量通过单次上限
+  approval_pending_limit_per_user: number
+  approval_batch_limit: number
   // 工单（新工单 / 用户回复）→ Server酱³ 推送（fork 自有，复用同一 UID / SendKey）
   ticket_notify_serverchan_enabled: boolean
   community_qr_code: string
@@ -766,6 +769,8 @@ export interface UpdateSettingsRequest {
   group_status_enabled?: boolean;
   group_status_notify_serverchan_enabled?: boolean;
   approval_notify_serverchan_enabled?: boolean;
+  approval_pending_limit_per_user?: number;
+  approval_batch_limit?: number;
   ticket_notify_serverchan_enabled?: boolean;
   group_status_notify_serverchan_uid?: string;
   group_status_notify_serverchan_sendkey?: string;

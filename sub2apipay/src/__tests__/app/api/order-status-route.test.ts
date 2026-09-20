@@ -66,7 +66,7 @@ describe('GET /api/orders/[id]', () => {
     expect(response.status).toBe(200);
     expect(data.id).toBe('order-001');
     expect(data.paymentSuccess).toBe(false);
-    expect(mockReconcilePendingOrderPayment).toHaveBeenCalledWith('order-001');
+    expect(mockReconcilePendingOrderPayment).toHaveBeenCalledWith('order-001', 'poll');
   });
 
   it('allows admin-authenticated access as fallback', async () => {

@@ -275,7 +275,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	consoleHandler := admin.NewConsoleHandler(settingService, opsService)
 	adminApprovalRepository := repository.NewAdminApprovalRepository(db)
 	approvalNotifyService := service.NewApprovalNotifyService(settingRepository, adminApprovalRepository)
-	adminApprovalService := service.ProvideAdminApprovalService(adminApprovalRepository, userService, subscriptionService, groupRepository, apiKeyRepository, secretEncryptor, approvalNotifyService)
+	adminApprovalService := service.ProvideAdminApprovalService(adminApprovalRepository, userService, subscriptionService, groupRepository, apiKeyRepository, secretEncryptor, approvalNotifyService, settingRepository)
 	approvalHandler := admin.NewApprovalHandler(adminApprovalService)
 	supportTicketRepository := repository.NewSupportTicketRepository(db)
 	ticketNotifyService := service.NewTicketNotifyService(settingRepository)

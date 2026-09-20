@@ -112,7 +112,25 @@ function resolveProviderQueryReference(
   return order.paymentTradeNo;
 }
 
-export async function reconcilePendingOrderPayment(orderId: string): Promise<void> {
+/**
+ * 支付确认的触发来源，写进 ORDER_PAID 审计的 operator（`<provider>:<source>`）。
+ * 事后按 operator 就能看出订单到底是异步通知（notify）推进的，还是页面轮询（poll）、
+ * 周期对账（sweep）、到期扫描（expire）或手动取消前查单（cancel）兜底的——通知失效时不再无感。
+ */
+export type PaymentConfirmSource = 'notify' | 'poll' | 'sweep' | 'cancel' | 'expire';
+
+function paymentOperator(providerName: string, source?: PaymentConfirmSource): string {
+  return source ? `${providerName}:${source}` : providerName;
+}
+
+/**
+ * 主动向支付平台查单：PENDING 且平台已收款 → 走 confirmPayment 履约。
+ * 返回是否确认了付款；查询失败只记日志、返回 false，调用方（轮询 / 周期对账）下次再试。
+ */
+export async function reconcilePendingOrderPayment(
+  orderId: string,
+  source: PaymentConfirmSource = 'poll',
+): Promise<boolean> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     select: {
@@ -125,7 +143,7 @@ export async function reconcilePendingOrderPayment(orderId: string): Promise<voi
   });
 
   if (!order || order.status !== ORDER_STATUS.PENDING || !order.paymentType) {
-    return;
+    return false;
   }
 
   let provider: PaymentProvider | null = null;
@@ -141,22 +159,24 @@ export async function reconcilePendingOrderPayment(orderId: string): Promise<voi
 
     const queryReference = resolveProviderQueryReference(order, provider);
     if (!queryReference) {
-      return;
+      return false;
     }
 
     const queryResult = await provider.queryOrder(queryReference);
     if (queryResult.status !== 'paid') {
-      return;
+      return false;
     }
 
-    await confirmPayment({
+    return await confirmPayment({
       orderId: order.id,
       tradeNo: queryResult.tradeNo || order.paymentTradeNo || queryReference,
       paidAmount: queryResult.amount,
       providerName: provider.name,
+      source,
     });
   } catch (error) {
-    console.warn(`Failed to reconcile payment status for order ${orderId}:`, error);
+    console.warn(`Failed to reconcile payment status for order ${orderId} (${source}):`, error);
+    return false;
   }
 }
 
@@ -660,7 +680,14 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   }
 }
 
-export type CancelOutcome = 'cancelled' | 'already_paid';
+/**
+ * 取消的结果：
+ * - cancelled            已置为 CANCELLED / EXPIRED（或订单早已不是 PENDING，幂等）
+ * - already_paid         平台显示已付款，已按成功履约，订单未取消
+ * - paid_unconfirmed     平台显示已付款但本地入账失败（金额不符 / 另一路径正在处理），订单原样保留，绝不取消
+ * - platform_unavailable 平台查单失败且调用方要求跳过（onPlatformError = 'skip'），订单保持 PENDING
+ */
+export type CancelOutcome = 'cancelled' | 'already_paid' | 'paid_unconfirmed' | 'platform_unavailable';
 
 /**
  * 核心取消逻辑 — 所有取消路径共用。
@@ -674,10 +701,26 @@ export async function cancelOrderCore(options: {
   finalStatus: 'CANCELLED' | 'EXPIRED';
   operator: string;
   auditDetail: string;
+  /**
+   * 平台查单失败时怎么办：
+   * - cancel（默认）照常本地取消——手动取消用，平台不可用不应把用户卡住；
+   * - skip 本轮跳过、订单保持 PENDING——到期扫描用，避免把已付款的订单"本地过期"掉。
+   */
+  onPlatformError?: 'cancel' | 'skip';
 }): Promise<CancelOutcome> {
-  const { orderId, paymentTradeNo, paymentType, providerInstanceId, finalStatus, operator, auditDetail } = options;
+  const {
+    orderId,
+    paymentTradeNo,
+    paymentType,
+    providerInstanceId,
+    finalStatus,
+    operator,
+    auditDetail,
+    onPlatformError = 'cancel',
+  } = options;
+  const source: PaymentConfirmSource = finalStatus === ORDER_STATUS.EXPIRED ? 'expire' : 'cancel';
 
-  // 1. 平台侧处理
+  // 1. 平台侧处理：先查单，平台已收款就履约而不是取消
   if (paymentTradeNo && paymentType) {
     try {
       let provider;
@@ -696,13 +739,21 @@ export async function cancelOrderCore(options: {
       const queryResult = await provider.queryOrder(queryReference);
 
       if (queryResult.status === 'paid') {
-        await confirmPayment({
+        const confirmed = await confirmPayment({
           orderId,
           tradeNo: paymentTradeNo,
           paidAmount: queryResult.amount,
           providerName: provider.name,
+          source,
         });
-        console.log(`Order ${orderId} was paid during cancel (${operator}), processed as success`);
+        if (!confirmed) {
+          // 钱已经到平台，本地却没能入账：订单一动不动地留给调用方处理，绝不能顺手取消
+          console.error(
+            `Order ${orderId} is paid on platform but could not be confirmed during ${source} (${operator}); left untouched`,
+          );
+          return 'paid_unconfirmed';
+        }
+        console.log(`Order ${orderId} was paid during ${source} (${operator}), processed as success`);
         return 'already_paid';
       }
 
@@ -714,6 +765,10 @@ export async function cancelOrderCore(options: {
         }
       }
     } catch (platformErr) {
+      if (onPlatformError === 'skip') {
+        console.warn(`Platform check failed for order ${orderId}, skipping this round:`, platformErr);
+        return 'platform_unavailable';
+      }
       console.warn(`Platform check failed for order ${orderId}, cancelling locally:`, platformErr);
     }
   }
@@ -791,25 +846,44 @@ export async function confirmPayment(input: {
   tradeNo: string;
   paidAmount: number;
   providerName: string;
+  /** 触发来源，落进 ORDER_PAID 审计的 operator；缺省时 operator 只写 provider 名（兼容旧调用） */
+  source?: PaymentConfirmSource;
 }): Promise<boolean> {
+  const operator = paymentOperator(input.providerName, input.source);
   const order = await prisma.order.findUnique({
     where: { id: input.orderId },
   });
   if (!order) {
-    console.error(`${input.providerName} notify: order not found:`, input.orderId);
+    console.error(`${operator}: order not found:`, input.orderId);
     return false;
   }
 
+  // 被拒的付款确认都留一条带原因的审计，事后排查不用翻日志
+  const rejectPayment = async (reason: string, extra: Record<string, unknown> = {}) => {
+    console.error(`${operator}: payment rejected for order ${order.id}: ${reason}`, extra);
+    await prisma.auditLog.create({
+      data: {
+        orderId: order.id,
+        action: 'PAYMENT_NOTIFY_REJECTED',
+        detail: JSON.stringify({ reason, tradeNo: input.tradeNo, paidAmount: input.paidAmount, ...extra }),
+        operator,
+      },
+    });
+    return false;
+  };
+
+  // Decimal 能接受 "NaN" 且和 NaN 的比较全为 false，不先挡掉的话平台查单缺 money 字段会被当成金额一致
+  if (typeof input.paidAmount !== 'number' || !Number.isFinite(input.paidAmount)) {
+    return rejectPayment('invalid_amount');
+  }
   let paidAmount: Prisma.Decimal;
   try {
     paidAmount = new Prisma.Decimal(input.paidAmount.toFixed(2));
   } catch {
-    console.error(`${input.providerName} notify: invalid amount:`, input.paidAmount);
-    return false;
+    return rejectPayment('invalid_amount');
   }
   if (paidAmount.lte(0)) {
-    console.error(`${input.providerName} notify: non-positive amount:`, input.paidAmount);
-    return false;
+    return rejectPayment('non_positive_amount');
   }
   const expectedAmount = order.payAmount ?? order.amount;
   if (!paidAmount.equals(expectedAmount)) {
@@ -826,28 +900,29 @@ export async function confirmPayment(input: {
             diff: diff.toString(),
             tradeNo: input.tradeNo,
           }),
-          operator: input.providerName,
+          operator,
         },
       });
       console.error(
-        `${input.providerName} notify: amount mismatch beyond threshold`,
+        `${operator}: amount mismatch beyond threshold for order ${order.id}`,
         `expected=${expectedAmount.toString()}, paid=${paidAmount.toString()}, diff=${diff.toString()}`,
       );
       return false;
     }
     console.warn(
-      `${input.providerName} notify: minor amount difference (rounding)`,
+      `${operator}: minor amount difference (rounding) for order ${order.id}`,
       expectedAmount.toString(),
       paidAmount.toString(),
     );
   }
 
-  // 只接受 PENDING 状态，或过期不超过 5 分钟的 EXPIRED 订单（支付在过期边缘完成的宽限窗口）
-  const graceDeadline = new Date(Date.now() - 5 * 60 * 1000);
+  // 钱已经到平台，未付款侧的任何状态都照收：PENDING 之外，EXPIRED（用户在本地过期后才付款）和
+  // CANCELLED（易支付不支持关单，二维码取消后仍可付）也一并转 PAID 并履约。以前只给 EXPIRED
+  // 5 分钟宽限、CANCELLED 直接回 success 丢弃，等于用户付了钱我们告诉平台"收到"然后什么都不记。
   const result = await prisma.order.updateMany({
     where: {
       id: order.id,
-      OR: [{ status: ORDER_STATUS.PENDING }, { status: ORDER_STATUS.EXPIRED, updatedAt: { gte: graceDeadline } }],
+      status: { in: [ORDER_STATUS.PENDING, ORDER_STATUS.EXPIRED, ORDER_STATUS.CANCELLED] },
     },
     data: {
       status: ORDER_STATUS.PAID,
@@ -888,7 +963,7 @@ export async function confirmPayment(input: {
       return false;
     }
 
-    // 其他状态（CANCELLED 等）— 不应该出现，返回 true 停止重试
+    // 剩下的都是退款相关状态：款项早已入账并进入退款流程，告知平台成功、停止重试
     return true;
   }
 
@@ -901,8 +976,9 @@ export async function confirmPayment(input: {
         trade_no: input.tradeNo,
         expected_amount: order.amount.toString(),
         paid_amount: paidAmount.toString(),
+        source: input.source ?? null,
       }),
-      operator: input.providerName,
+      operator,
     },
   });
 
@@ -923,6 +999,12 @@ export async function confirmPayment(input: {
  */
 export async function handlePaymentNotify(notification: PaymentNotification, providerName: string): Promise<boolean> {
   if (notification.status !== 'success') {
+    // 非成功状态的通知（平台侧关闭 / 等待付款等）不是错误，但要留痕：以前这里静默返回 success，
+    // 平台若把成功交易的 trade_status 写成别的值，订单就会无声地卡在未支付。
+    console.warn(
+      `${providerName}:notify ignored non-success notification for order ${notification.orderId} trade=${notification.tradeNo}`,
+      notification.rawData,
+    );
     return true;
   }
 
@@ -931,6 +1013,7 @@ export async function handlePaymentNotify(notification: PaymentNotification, pro
     tradeNo: notification.tradeNo,
     paidAmount: notification.amount,
     providerName,
+    source: 'notify',
   });
 }
 

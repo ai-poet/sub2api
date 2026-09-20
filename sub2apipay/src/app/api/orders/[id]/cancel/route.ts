@@ -30,6 +30,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (outcome === 'already_paid') {
       return NextResponse.json({ success: true, status: 'PAID', message: '订单已支付完成' });
     }
+    if (outcome === 'paid_unconfirmed') {
+      // 平台已收款但本地没能入账：订单原样保留，提示用户联系管理员而不是让其重复下单
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'PAYMENT_CONFIRM_FAILED',
+          error: '支付平台显示该订单已付款，但入账尚未完成，订单未取消；请联系管理员处理，不要重复支付。',
+        },
+        { status: 409 },
+      );
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error, '取消订单失败');

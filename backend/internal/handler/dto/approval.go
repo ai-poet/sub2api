@@ -104,9 +104,13 @@ type ApprovalDecisionResponse struct {
 	Replay   *ApprovalReplayResult `json:"replay,omitempty"`
 }
 
-// ApprovalPendingCountResponse 待审数量。
+// ApprovalPendingCountResponse 待审数量，附带生效中的数量上限（站点设置可调）。
 type ApprovalPendingCountResponse struct {
 	Pending int64 `json:"pending"`
+	// PendingLimit 每个运维管理员同时最多的待审申请数（approval_pending_limit_per_user）。
+	PendingLimit int `json:"pending_limit"`
+	// BatchLimit 批量通过单次最多条数（approval_batch_limit）；前端按它分批。
+	BatchLimit int `json:"batch_limit"`
 }
 
 // RejectApprovalRequest 拒绝申请的请求体。
@@ -114,9 +118,10 @@ type RejectApprovalRequest struct {
 	Reason string `json:"reason" binding:"max=500"`
 }
 
-// BatchApproveRequest 批量通过的请求体（最多 50 条）。
+// BatchApproveRequest 批量通过的请求体。绑定层只挡住离谱的请求体（硬上限 500，与
+// service.AdminApprovalBatchLimitMax 对齐）；实际生效的上限由设置 approval_batch_limit 决定，在服务层校验。
 type BatchApproveRequest struct {
-	IDs []int64 `json:"ids" binding:"required,min=1,max=50,dive,gt=0"`
+	IDs []int64 `json:"ids" binding:"required,min=1,max=500,dive,gt=0"`
 }
 
 // ApprovalBatchItem 批量通过里单条的结果。

@@ -61,6 +61,10 @@ export interface ApprovalDecisionResponse {
 
 export interface ApprovalPendingCountResponse {
   pending: number
+  /** 每个运维管理员待审上限（站点设置 approval_pending_limit_per_user） */
+  pending_limit?: number
+  /** 批量通过单次上限（站点设置 approval_batch_limit）；审批页按它分批 */
+  batch_limit?: number
 }
 
 export async function list(
@@ -113,7 +117,7 @@ export interface ApprovalBatchResponse {
   skipped: number
 }
 
-/** 批量一键通过（最多 50 条）：逐条重放，单条失败不影响其它。 */
+/** 批量一键通过（单次上限由站点设置 approval_batch_limit 决定，默认 50）：逐条重放，单条失败不影响其它。 */
 export async function batchApprove(ids: number[]): Promise<ApprovalBatchResponse> {
   const { data } = await apiClient.post<ApprovalBatchResponse>('/admin/approvals/batch-approve', { ids })
   return data

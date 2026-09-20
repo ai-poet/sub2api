@@ -457,6 +457,10 @@ const (
 	SettingKeyGroupStatusNotifyServerChanSendKey = "group_status_notify_serverchan_sendkey"
 	// 运维写操作审批 → Server酱³ 推送开关（复用上面的 UID / SendKey；本 fork 自有功能）
 	SettingKeyApprovalNotifyServerChanEnabled = "approval_notify_serverchan_enabled"
+	// 运维写操作审批的数量上限（本 fork 自有功能）：每个运维管理员同时最多的待审申请数 / 批量通过单次最多条数，
+	// 默认值见 admin_approval.go，解析规则见 admin_approval_limits.go
+	SettingKeyApprovalPendingLimitPerUser = "approval_pending_limit_per_user"
+	SettingKeyApprovalBatchLimit          = "approval_batch_limit"
 	// 工单（新工单 / 用户回复）→ Server酱³ 推送开关（复用上面的 UID / SendKey；本 fork 自有功能）
 	SettingKeyTicketNotifyServerChanEnabled = "ticket_notify_serverchan_enabled"
 

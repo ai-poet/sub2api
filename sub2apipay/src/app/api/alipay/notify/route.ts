@@ -40,12 +40,18 @@ export async function POST(request: NextRequest) {
       return new Response('success', { headers: { 'Content-Type': 'text/plain' } });
     }
     const success = await handlePaymentNotify(notification, provider.name);
-    return new Response(success ? 'success' : 'fail', {
-      headers: { 'Content-Type': 'text/plain' },
-    });
+    if (!success) {
+      // 失败回 500 + fail：支付宝按正文 success 判定，非 success 会按其重试策略重发；带订单号便于排查
+      console.error(
+        `Alipay notify rejected: order=${notification.orderId} trade=${notification.tradeNo} amount=${notification.amount}`,
+      );
+      return new Response('fail', { status: 500, headers: { 'Content-Type': 'text/plain' } });
+    }
+    return new Response('success', { headers: { 'Content-Type': 'text/plain' } });
   } catch (error) {
     console.error('Alipay notify error:', error);
     return new Response('fail', {
+      status: 500,
       headers: { 'Content-Type': 'text/plain' },
     });
   }

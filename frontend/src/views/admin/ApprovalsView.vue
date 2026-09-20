@@ -43,6 +43,9 @@
                 >
                   {{ batchRunning ? t('operator.approval.approving') : t('operator.approval.actions.approveAll') }}
                 </button>
+                <span class="text-xs text-gray-500 dark:text-gray-400" data-test="batch-limit-hint">
+                  {{ t('operator.approval.batchLimitHint', { count: batchChunk }) }}
+                </span>
               </template>
               <button type="button" class="btn btn-secondary btn-sm" :disabled="loading" @click="load">
                 {{ t('common.refresh') }}
@@ -488,8 +491,13 @@ const batchVisible = ref(false)
 const batchMode = ref<BatchMode>('selected')
 const batchCount = ref(0)
 const batchRunning = ref(false)
-const BATCH_CHUNK = 50
-const BATCH_ALL_LIMIT = 100
+// 每批条数跟随站点设置 approval_batch_limit（pending-count 接口带回，store 兜底 50）。
+const batchChunk = computed(() => {
+  const n = Number(approvalsStore.batchLimit)
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 50
+})
+// 「一键通过全部」逐批处理完所有待审；这里只是防止某批全部被跳过时无限循环的安全阀。
+const BATCH_ALL_MAX_ROUNDS = 20
 
 const openBatch = (mode: BatchMode) => {
   batchMode.value = mode
@@ -501,10 +509,9 @@ const openBatch = (mode: BatchMode) => {
   batchVisible.value = true
 }
 
-const collectBatchIds = async (): Promise<number[]> => {
-  if (batchMode.value === 'selected') return [...selectedIds.value]
-  // 一键通过全部：取当前全部待审（最多 100 条），而不是只看当前页
-  const res = await adminAPI.approvals.list(1, BATCH_ALL_LIMIT, { status: 'pending' })
+// 取一批当前待审的 id（按每批上限取第一页，通过后再取下一页，直到没有待审为止）。
+const fetchPendingBatchIds = async (): Promise<number[]> => {
+  const res = await adminAPI.approvals.list(1, batchChunk.value, { status: 'pending' })
   return (res.items || []).filter((item) => item.status === 'pending').map((item) => item.id)
 }
 
@@ -513,19 +520,38 @@ const confirmBatch = async () => {
   batchVisible.value = false
   batchRunning.value = true
   try {
-    const ids = await collectBatchIds()
-    if (ids.length === 0) {
-      appStore.showInfo(t('operator.approval.batchEmpty'))
-      return
-    }
     let approved = 0
     let failed = 0
     let skipped = 0
-    for (let i = 0; i < ids.length; i += BATCH_CHUNK) {
-      const res = await adminAPI.approvals.batchApprove(ids.slice(i, i + BATCH_CHUNK))
+    let executed = 0
+    const runBatch = async (ids: number[]) => {
+      const res = await adminAPI.approvals.batchApprove(ids)
       approved += res.approved
       failed += res.failed
       skipped += res.skipped
+      executed += ids.length
+      return res
+    }
+
+    if (batchMode.value === 'selected') {
+      const ids = [...selectedIds.value]
+      for (let i = 0; i < ids.length; i += batchChunk.value) {
+        await runBatch(ids.slice(i, i + batchChunk.value))
+      }
+    } else {
+      // 一键通过全部：逐批取当前待审直到为空；整批都被跳过（状态已变 / 已过期未回收）时停下，避免空转。
+      for (let round = 0; round < BATCH_ALL_MAX_ROUNDS; round++) {
+        const ids = await fetchPendingBatchIds()
+        if (ids.length === 0) break
+        const res = await runBatch(ids)
+        if (res.approved + res.failed === 0) break
+        if (ids.length < batchChunk.value) break
+      }
+    }
+
+    if (executed === 0) {
+      appStore.showInfo(t('operator.approval.batchEmpty'))
+      return
     }
     const summary = t('operator.approval.batchResult', { approved, failed, skipped })
     if (failed > 0) appStore.showError(summary)

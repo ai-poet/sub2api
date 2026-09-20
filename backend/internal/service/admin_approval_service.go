@@ -93,6 +93,8 @@ type AdminApprovalService struct {
 	mu         sync.RWMutex
 	notifier   ApprovalNotifier
 	dispatcher http.Handler
+	// settingRepo 读取站点设置里的数量上限（approval_pending_limit_per_user / approval_batch_limit）；nil 时用默认常量。
+	settingRepo SettingRepository
 
 	now         func() time.Time
 	createLimit *approvalCreateLimiter
@@ -174,6 +176,40 @@ type approvalBodyPeek struct {
 	All     bool    `json:"all"`
 }
 
+// SetSettingRepository 挂载设置仓储，让 Limits 读取站点设置里的数量上限；未挂载时用默认常量。
+func (s *AdminApprovalService) SetSettingRepository(repo SettingRepository) {
+	if s == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settingRepo = repo
+}
+
+func (s *AdminApprovalService) getSettingRepo() SettingRepository {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.settingRepo
+}
+
+// Limits 返回生效中的审批数量上限：未挂载设置仓储、读取失败或值非法时回退默认，
+// 绝不因为设置表故障把审批入队或批量通过拒掉。
+func (s *AdminApprovalService) Limits(ctx context.Context) ApprovalLimits {
+	if s == nil {
+		return DefaultApprovalLimits()
+	}
+	repo := s.getSettingRepo()
+	if repo == nil {
+		return DefaultApprovalLimits()
+	}
+	values, err := repo.GetMultiple(ctx, ApprovalLimitSettingKeys())
+	if err != nil {
+		slog.Warn("admin approval: read limit settings failed, using defaults", "error", err)
+		return DefaultApprovalLimits()
+	}
+	return ParseApprovalLimits(values)
+}
+
 // Capture 校验并落库一条待审申请；返回值即 202 响应体的数据来源。
 func (s *AdminApprovalService) Capture(ctx context.Context, in *AdminApprovalCaptureInput) (*AdminApprovalRequest, error) {
 	if s == nil || s.repo == nil || s.encryptor == nil {
@@ -205,7 +241,7 @@ func (s *AdminApprovalService) Capture(ctx context.Context, in *AdminApprovalCap
 	if err != nil {
 		return nil, fmt.Errorf("count pending approvals: %w", err)
 	}
-	if pending >= AdminApprovalPendingLimitPerUser {
+	if pending >= int64(s.Limits(ctx).PendingPerUser) {
 		return nil, ErrApprovalPendingLimit
 	}
 
@@ -866,7 +902,8 @@ type ApprovalBatchItem struct {
 }
 
 // ApproveBatch 逐条一键通过：审批人校验一次，各条顺序重放、互不影响，单条失败不中断整批。
-// 去重后为空 → ErrApprovalBatchEmpty；超过 AdminApprovalBatchLimit → ErrApprovalBatchTooLarge。
+// 去重后为空 → ErrApprovalBatchEmpty；超过 Limits(ctx).Batch（设置 approval_batch_limit，默认 AdminApprovalBatchLimit）
+// → ErrApprovalBatchTooLarge。
 func (s *AdminApprovalService) ApproveBatch(ctx context.Context, ids []int64, approver ApprovalActor) ([]ApprovalBatchItem, error) {
 	if s == nil || s.repo == nil {
 		return nil, ErrApprovalGateUnavailable
@@ -892,7 +929,7 @@ func (s *AdminApprovalService) ApproveBatch(ctx context.Context, ids []int64, ap
 	if len(unique) == 0 {
 		return nil, ErrApprovalBatchEmpty
 	}
-	if len(unique) > AdminApprovalBatchLimit {
+	if len(unique) > s.Limits(ctx).Batch {
 		return nil, ErrApprovalBatchTooLarge
 	}
 

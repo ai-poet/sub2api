@@ -40,6 +40,11 @@ export async function POST(request: NextRequest) {
       return Response.json({ code: 'SUCCESS', message: '成功' });
     }
     const success = await handlePaymentNotify(notification, provider.name);
+    if (!success) {
+      console.error(
+        `Wxpay notify rejected: order=${notification.orderId} trade=${notification.tradeNo} amount=${notification.amount}`,
+      );
+    }
     return Response.json(success ? { code: 'SUCCESS', message: '成功' } : { code: 'FAIL', message: '处理失败' }, {
       status: success ? 200 : 500,
     });

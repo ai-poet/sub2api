@@ -179,6 +179,8 @@ type SystemSettings struct {
 	GroupStatusEnabled                           bool             `json:"group_status_enabled"`
 	GroupStatusNotifyServerChanEnabled           bool             `json:"group_status_notify_serverchan_enabled"`
 	ApprovalNotifyServerChanEnabled              bool             `json:"approval_notify_serverchan_enabled"`
+	ApprovalPendingLimitPerUser                  int              `json:"approval_pending_limit_per_user"`
+	ApprovalBatchLimit                           int              `json:"approval_batch_limit"`
 	TicketNotifyServerChanEnabled                bool             `json:"ticket_notify_serverchan_enabled"`
 	GroupStatusNotifyServerChanUID               string           `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKeyConfigured bool             `json:"group_status_notify_serverchan_sendkey_configured"`

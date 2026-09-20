@@ -130,6 +130,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
 		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
 		ApprovalNotifyServerChanEnabled:                        settings.ApprovalNotifyServerChanEnabled,
+		ApprovalPendingLimitPerUser:                            settings.ApprovalPendingLimitPerUser,
+		ApprovalBatchLimit:                                     settings.ApprovalBatchLimit,
 		TicketNotifyServerChanEnabled:                          settings.TicketNotifyServerChanEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           settings.GroupStatusNotifyServerChanSendKeyConfigured,

@@ -675,6 +675,14 @@ export default {
           "enabled": "审批申请推送",
           "enabledHint": "运维管理员提交用户 / 订阅管理的写操作申请时，向管理员推送一条带审批页链接的消息（沿用上方 UID / SendKey）。"
         },
+        "approvalLimits": {
+          "title": "运维审批数量上限",
+          "description": "运维管理员的写操作会进入审批队列；这里调整队列与批量通过的数量上限，保存后立即生效。",
+          "pendingPerUser": "每个运维管理员待审上限",
+          "pendingPerUserHint": "同一运维管理员同时最多可有多少条待审申请，超出后新申请会被拒绝（1–1000，默认 20）。",
+          "batch": "批量通过单次上限",
+          "batchHint": "审批页「通过选中 / 一键通过全部」每批最多处理多少条，超出会自动分批（1–500，默认 50）。"
+        },
         "ticketNotify": {
           "enabled": "工单推送",
           "enabledHint": "用户提交新工单或追加回复时，推送一条带工单页链接的消息（沿用上方 UID / SendKey）；客服自己的回复不推送。"
@@ -883,6 +891,7 @@ export default {
       "batchConfirm": "确定通过 {count} 条待审申请？通过后会立即以你的身份逐条执行。",
       "batchResult": "批量通过完成：成功 {approved}，失败 {failed}，跳过 {skipped}",
       "batchEmpty": "没有可通过的待审申请",
+      "batchLimitHint": "每批最多 {count} 条，超出自动分批执行（可在系统设置中调整）",
       "detail": {
         "title": "申请详情",
         "titleWithId": "申请详情 #{id}",

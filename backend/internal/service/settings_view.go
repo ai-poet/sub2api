@@ -172,6 +172,9 @@ type SystemSettings struct {
 	GroupStatusNotifyServerChanEnabled bool
 	// 运维写操作审批 → Server酱³ 推送（fork 自有，复用上面的 UID / SendKey）
 	ApprovalNotifyServerChanEnabled bool
+	// 运维写操作审批的数量上限（fork 自有）：每人待审上限 / 批量通过单次上限，默认见 admin_approval.go
+	ApprovalPendingLimitPerUser int
+	ApprovalBatchLimit          int
 	// 工单（新工单 / 用户回复）→ Server酱³ 推送（fork 自有，复用同一 UID / SendKey）
 	TicketNotifyServerChanEnabled                bool
 	GroupStatusNotifyServerChanUID               string
