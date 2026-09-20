@@ -47,7 +47,10 @@ describe('expireOrders', () => {
   });
 
   it('到期未满 1 小时：平台查单失败时跳过（skip），满 1 小时后才允许本地过期', async () => {
-    mockOrderFindMany.mockResolvedValue([pendingOrder('fresh', 5 * 60 * 1000), pendingOrder('stale', 2 * 60 * 60 * 1000)]);
+    mockOrderFindMany.mockResolvedValue([
+      pendingOrder('fresh', 5 * 60 * 1000),
+      pendingOrder('stale', 2 * 60 * 60 * 1000),
+    ]);
     mockCancelOrderCore.mockResolvedValueOnce('platform_unavailable').mockResolvedValueOnce('cancelled');
 
     const expired = await expireOrders(NOW);

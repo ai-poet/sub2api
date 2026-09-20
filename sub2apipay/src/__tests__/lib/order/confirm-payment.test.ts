@@ -114,7 +114,10 @@ describe('confirmPayment', () => {
     });
 
     expect(ok).toBe(true);
-    const firstUpdate = mockOrderUpdateMany.mock.calls[0][0] as { where: { status: { in: string[] } }; data: { status: string } };
+    const firstUpdate = mockOrderUpdateMany.mock.calls[0][0] as {
+      where: { status: { in: string[] } };
+      data: { status: string };
+    };
     expect(firstUpdate.data.status).toBe(ORDER_STATUS.PAID);
     expect(firstUpdate.where.status.in).toEqual([ORDER_STATUS.PENDING, ORDER_STATUS.EXPIRED, ORDER_STATUS.CANCELLED]);
     const paid = auditByAction('ORDER_PAID');
@@ -183,12 +186,15 @@ describe('confirmPayment', () => {
   });
 
   it('订单已被另一路径推进到 PAID / RECHARGING：返回 false 让平台稍后重试', async () => {
-    mockOrderFindUnique
-      .mockResolvedValueOnce(makeOrder())
-      .mockResolvedValueOnce({ status: ORDER_STATUS.RECHARGING });
+    mockOrderFindUnique.mockResolvedValueOnce(makeOrder()).mockResolvedValueOnce({ status: ORDER_STATUS.RECHARGING });
     mockOrderUpdateMany.mockResolvedValue({ count: 0 });
 
-    const ok = await confirmPayment({ orderId: 'order-001', tradeNo: 'T-1', paidAmount: 100, providerName: 'easy-pay' });
+    const ok = await confirmPayment({
+      orderId: 'order-001',
+      tradeNo: 'T-1',
+      paidAmount: 100,
+      providerName: 'easy-pay',
+    });
 
     expect(ok).toBe(false);
     expect(mockCreateAndRedeem).not.toHaveBeenCalled();
@@ -200,7 +206,12 @@ describe('confirmPayment', () => {
       .mockResolvedValueOnce({ status: ORDER_STATUS.COMPLETED });
     mockOrderUpdateMany.mockResolvedValue({ count: 0 });
 
-    const ok = await confirmPayment({ orderId: 'order-001', tradeNo: 'T-1', paidAmount: 100, providerName: 'easy-pay' });
+    const ok = await confirmPayment({
+      orderId: 'order-001',
+      tradeNo: 'T-1',
+      paidAmount: 100,
+      providerName: 'easy-pay',
+    });
 
     expect(ok).toBe(true);
   });

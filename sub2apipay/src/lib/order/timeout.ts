@@ -17,7 +17,8 @@ let timer: ReturnType<typeof setInterval> | null = null;
  * 进行的 PAID / RECHARGING。
  */
 async function markPaidUnconfirmed(orderId: string): Promise<void> {
-  const reason = 'PAID_ON_PLATFORM_BUT_UNCONFIRMED: platform reports the trade as paid but local crediting failed (see PAYMENT_AMOUNT_MISMATCH / PAYMENT_NOTIFY_REJECTED audit)';
+  const reason =
+    'PAID_ON_PLATFORM_BUT_UNCONFIRMED: platform reports the trade as paid but local crediting failed (see PAYMENT_AMOUNT_MISMATCH / PAYMENT_NOTIFY_REJECTED audit)';
   const result = await prisma.order.updateMany({
     where: { id: orderId, status: ORDER_STATUS.PENDING },
     data: { status: ORDER_STATUS.FAILED, failedAt: new Date(), failedReason: reason },

@@ -186,7 +186,11 @@ describe('cancelOrderCore', () => {
   it('平台查单失败、skip 策略：本轮跳过，订单保持 PENDING', async () => {
     mockQueryOrder.mockRejectedValue(new Error('gateway timeout'));
 
-    const outcome = await cancelOrderCore({ ...baseOptions, finalStatus: ORDER_STATUS.EXPIRED, onPlatformError: 'skip' });
+    const outcome = await cancelOrderCore({
+      ...baseOptions,
+      finalStatus: ORDER_STATUS.EXPIRED,
+      onPlatformError: 'skip',
+    });
 
     expect(outcome).toBe('platform_unavailable');
     expect(mockOrderUpdateMany).not.toHaveBeenCalled();
