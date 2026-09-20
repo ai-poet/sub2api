@@ -13,9 +13,13 @@ import { renderSafeMarkdown } from '@/utils/markdown'
 const props = defineProps<{
   content: string
   className?: string
+  /** 允许 <img src="blob:…">，见 utils/markdown.ts。目前只有工单线程需要。 */
+  allowBlobImages?: boolean
 }>()
 
-const html = computed(() => renderSafeMarkdown(props.content || ''))
+const html = computed(() =>
+  renderSafeMarkdown(props.content || '', { allowBlobImages: props.allowBlobImages === true })
+)
 </script>
 
 <style>

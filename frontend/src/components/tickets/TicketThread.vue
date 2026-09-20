@@ -22,7 +22,7 @@
               <span class="font-medium text-gray-700 dark:text-gray-200">{{ authorLabel(msg) }}</span>
               <span>{{ formatDateTime(msg.created_at) }}</span>
             </div>
-            <MarkdownRenderer :content="renderedBody(msg.body)" />
+            <MarkdownRenderer :content="renderedBody(msg.body)" allow-blob-images />
           </div>
         </div>
       </template>
@@ -80,15 +80,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MarkdownRenderer from '@/components/common/MarkdownRenderer.vue'
 import TextArea from '@/components/common/TextArea.vue'
 import type { SupportTicket, SupportTicketMessage } from '@/api/tickets'
 import type { AdminSupportTicket } from '@/api/admin/tickets'
 import { formatDateTime } from '@/utils/format'
-import { TICKET_BODY_MAX, rewriteTicketAttachmentUrls, type TicketSide } from '@/utils/tickets'
+import {
+  TICKET_BODY_MAX,
+  rewriteTicketAttachmentUrls,
+  ticketAttachmentKeys,
+  type TicketSide
+} from '@/utils/tickets'
 import { useTicketAttachments } from '@/components/tickets/useTicketAttachments'
+import { useTicketAttachmentImages } from '@/components/tickets/useTicketAttachmentImages'
 
 // 工单线程（fork 本地功能）：用户页与客服页共用。viewer 决定"我方"是哪一边以及作者怎么称呼。
 // side 决定图片附件走哪一侧的上传 / 内容路由（用户侧与客服侧附件鉴权不同）。
@@ -119,8 +125,23 @@ const closed = computed(() => props.ticket?.status === 'closed')
 const overLimit = computed(() => draft.value.length > TICKET_BODY_MAX)
 const canSend = computed(() => !props.submitting && uploadingCount.value === 0 && draft.value.trim().length > 0 && !overLimit.value)
 
+// 正文里的附件先带鉴权取回、再以 blob: URL 渲染；<img> 自己请求是不带鉴权头的。
+const { ensure: ensureAttachments, resolve: resolveAttachment } = useTicketAttachmentImages(props.side)
+
+watch(
+  () => props.messages,
+  (messages) => {
+    const keys = new Set<string>()
+    for (const msg of messages ?? []) {
+      for (const key of ticketAttachmentKeys(msg.body)) keys.add(key)
+    }
+    ensureAttachments([...keys])
+  },
+  { immediate: true, deep: true }
+)
+
 function renderedBody(body: string): string {
-  return rewriteTicketAttachmentUrls(body, props.side)
+  return rewriteTicketAttachmentUrls(body, resolveAttachment)
 }
 
 function isMine(msg: SupportTicketMessage): boolean {

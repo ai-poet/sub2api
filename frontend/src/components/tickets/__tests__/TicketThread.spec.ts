@@ -1,20 +1,24 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import TicketThread from '@/components/tickets/TicketThread.vue'
 
 const state = vi.hoisted(() => ({
   uploadUser: vi.fn(),
   uploadAdmin: vi.fn(),
+  fetchUser: vi.fn(),
+  fetchAdmin: vi.fn(),
   showSuccess: vi.fn(),
   showError: vi.fn()
 }))
 
 vi.mock('@/api/tickets', () => ({
-  uploadAttachment: state.uploadUser
+  uploadAttachment: state.uploadUser,
+  fetchAttachment: state.fetchUser
 }))
 
 vi.mock('@/api/admin/tickets', () => ({
-  uploadAttachment: state.uploadAdmin
+  uploadAttachment: state.uploadAdmin,
+  fetchAttachment: state.fetchAdmin
 }))
 
 vi.mock('@/stores/app', () => ({
@@ -70,11 +74,25 @@ function draftValue(wrapper: ReturnType<typeof mountThread>): string {
   return (wrapper.find('textarea').element as HTMLTextAreaElement).value
 }
 
+let objectUrlSeq = 0
+
 describe('TicketThread attachments (fork)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     state.uploadUser.mockResolvedValue({ key: 'tickets/1/a.png', content_type: 'image/png', size: 1 })
     state.uploadAdmin.mockResolvedValue({ key: 'tickets/1/b.png', content_type: 'image/png', size: 1 })
+    state.fetchUser.mockResolvedValue(new Blob(['x'], { type: 'image/png' }))
+    state.fetchAdmin.mockResolvedValue(new Blob(['x'], { type: 'image/png' }))
+    objectUrlSeq = 0
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: vi.fn(() => `blob:http://localhost/obj-${++objectUrlSeq}`),
+      revokeObjectURL: vi.fn()
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('uploads a picked image on the user side and replaces the placeholder with attachment markdown', async () => {
@@ -147,19 +165,56 @@ describe('TicketThread attachments (fork)', () => {
     expect(state.showError).toHaveBeenNthCalledWith(2, 'tickets.attachments.errors.badType')
   })
 
-  it('rewrites ticket-attachment urls to the user-side content endpoint when rendering', async () => {
+  // <img> 自己请求时不会带 Authorization 头，所以正文里的图必须先经鉴权取回、
+  // 再以 blob: URL 渲染，不能直接挂同源的 content 地址（那样一律 401 / 裂图）。
+  it('fetches user-side attachments through the api and renders them as object urls', async () => {
     const wrapper = mountThread('user', [message(1, 'staff', '看图 ![image](ticket-attachment://tickets/1/a.png)')])
+    await flushPromises()
+
+    expect(state.fetchUser).toHaveBeenCalledWith('tickets/1/a.png')
+    expect(state.fetchAdmin).not.toHaveBeenCalled()
+    const img = wrapper.find('img')
+    expect(img.exists()).toBe(true)
+    expect(img.attributes('src')).toBe('blob:http://localhost/obj-1')
+  })
+
+  it('fetches admin-side attachments through the admin endpoint', async () => {
+    const wrapper = mountThread('admin', [message(1, 'user', '![image](ticket-attachment://k.png)')])
+    await flushPromises()
+
+    expect(state.fetchAdmin).toHaveBeenCalledWith('k.png')
+    expect(state.fetchUser).not.toHaveBeenCalled()
+    expect(wrapper.find('img').attributes('src')).toBe('blob:http://localhost/obj-1')
+  })
+
+  it('fetches each distinct key once even when it appears in several messages', async () => {
+    mountThread('user', [
+      message(1, 'user', '![image](ticket-attachment://same.png)'),
+      message(2, 'staff', '还是它 ![image](ticket-attachment://same.png) 加一张 ![image](ticket-attachment://other.png)')
+    ])
+    await flushPromises()
+
+    expect(state.fetchUser).toHaveBeenCalledTimes(2)
+    expect(state.fetchUser.mock.calls.map(([key]) => key).sort()).toEqual(['other.png', 'same.png'])
+  })
+
+  it('leaves the image without a src when the attachment cannot be fetched', async () => {
+    state.fetchUser.mockRejectedValueOnce(new Error('403'))
+    const wrapper = mountThread('user', [message(1, 'staff', '![image](ticket-attachment://gone.png)')])
     await flushPromises()
 
     const img = wrapper.find('img')
     expect(img.exists()).toBe(true)
-    expect(img.attributes('src')).toBe('/api/v1/tickets/attachments/content?key=tickets%2F1%2Fa.png')
+    expect(img.attributes('src')).toBeUndefined()
+    // 单张取不回来不弹 toast——一条工单里可能有多张图，逐张报错只会刷屏。
+    expect(state.showError).not.toHaveBeenCalled()
   })
 
-  it('rewrites ticket-attachment urls to the admin-side content endpoint when rendering', async () => {
-    const wrapper = mountThread('admin', [message(1, 'user', '![image](ticket-attachment://k.png)')])
+  it('revokes the object urls it created when the thread unmounts', async () => {
+    const wrapper = mountThread('user', [message(1, 'staff', '![image](ticket-attachment://a.png)')])
     await flushPromises()
+    wrapper.unmount()
 
-    expect(wrapper.find('img').attributes('src')).toBe('/api/v1/admin/tickets/attachments/content?key=k.png')
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/obj-1')
   })
 })

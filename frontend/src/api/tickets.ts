@@ -120,6 +120,18 @@ export async function uploadAttachment(file: File): Promise<TicketAttachmentUplo
   return data
 }
 
+/**
+ * 取回工单图片附件的字节。必须走 apiClient——附件内容端点只认 Authorization 头，
+ * 而浏览器给 <img src> 发请求时不带这个头，同源地址直挂必然 401。
+ */
+export async function fetchAttachment(key: string): Promise<Blob> {
+  const response = await apiClient.get('/tickets/attachments/content', {
+    params: { key },
+    responseType: 'blob'
+  })
+  return response.data
+}
+
 export const ticketsAPI = {
   list,
   create,
@@ -128,7 +140,8 @@ export const ticketsAPI = {
   close,
   reopen,
   unreadCount,
-  uploadAttachment
+  uploadAttachment,
+  fetchAttachment
 }
 
 export default ticketsAPI

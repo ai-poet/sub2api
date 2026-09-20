@@ -83,6 +83,15 @@ export async function uploadAttachment(file: File): Promise<TicketAttachmentUplo
   return data
 }
 
+/** 客服侧取回工单图片附件的字节，理由同用户侧 fetchAttachment（<img> 不带鉴权头）。 */
+export async function fetchAttachment(key: string): Promise<Blob> {
+  const response = await apiClient.get('/admin/tickets/attachments/content', {
+    params: { key },
+    responseType: 'blob'
+  })
+  return response.data
+}
+
 export const ticketsAPI = {
   list,
   get,
@@ -90,7 +99,8 @@ export const ticketsAPI = {
   close,
   reopen,
   openCount,
-  uploadAttachment
+  uploadAttachment,
+  fetchAttachment
 }
 
 export default ticketsAPI
