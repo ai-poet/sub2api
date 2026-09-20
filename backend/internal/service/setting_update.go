@@ -342,6 +342,7 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyGroupStatusEnabled] = strconv.FormatBool(settings.GroupStatusEnabled)
 	updates[SettingKeyGroupStatusNotifyServerChanEnabled] = strconv.FormatBool(settings.GroupStatusNotifyServerChanEnabled)
 	updates[SettingKeyApprovalNotifyServerChanEnabled] = strconv.FormatBool(settings.ApprovalNotifyServerChanEnabled)
+	updates[SettingKeyTicketNotifyServerChanEnabled] = strconv.FormatBool(settings.TicketNotifyServerChanEnabled)
 	updates[SettingKeyGroupStatusNotifyServerChanUID] = strings.TrimSpace(settings.GroupStatusNotifyServerChanUID)
 	// SendKey 留空表示保留已保存的密钥
 	if settings.GroupStatusNotifyServerChanSendKey != "" {

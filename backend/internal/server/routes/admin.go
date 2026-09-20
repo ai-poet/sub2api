@@ -36,6 +36,7 @@ func RegisterAdminRoutes(
 		// 控制台会话信息（admin / operator 共用）
 		registerConsoleRoutes(admin, h)
 		registerApprovalRoutes(admin, h)
+		registerTicketRoutes(admin, h)
 
 		// 仪表盘
 		registerDashboardRoutes(admin, h)
@@ -191,6 +192,20 @@ func registerApprovalRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		approvals.POST("/:id/approve", middleware.AdminOnly(), h.Admin.Approval.Approve)
 		approvals.POST("/:id/reject", middleware.AdminOnly(), h.Admin.Approval.Reject)
 		approvals.POST("/:id/cancel", h.Admin.Approval.Cancel)
+	}
+}
+
+// registerTicketRoutes 工单（fork 本地）：管理员与运维管理员同权看全部并回复，不加 AdminOnly。
+// operator 的读写放行见 middleware/console_scope.go（operatorReadScope / operatorWriteScope），写操作直接执行、全部留审计。
+func registerTicketRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	tickets := admin.Group("/tickets")
+	{
+		tickets.GET("", h.Admin.Ticket.List)
+		tickets.GET("/open-count", h.Admin.Ticket.OpenCount)
+		tickets.GET("/:id", h.Admin.Ticket.Get)
+		tickets.POST("/:id/messages", h.Admin.Ticket.Reply)
+		tickets.POST("/:id/close", h.Admin.Ticket.Close)
+		tickets.POST("/:id/reopen", h.Admin.Ticket.Reopen)
 	}
 }
 

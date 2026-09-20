@@ -957,6 +957,8 @@ var ProviderSet = wire.NewSet(
 	ProvideAdminApprovalService,
 	ProvideAdminApprovalSweeper,
 	wire.Bind(new(AdminApprovalGate), new(*AdminApprovalService)),
+	NewTicketNotifyService,
+	ProvideTicketService,
 	ProvideReferralRewardRecordRepository,
 	NewReferralService,
 	wire.Bind(new(modelCatalogAccessService), new(*APIKeyService)),

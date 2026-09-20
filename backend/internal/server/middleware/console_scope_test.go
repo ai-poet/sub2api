@@ -61,7 +61,8 @@ func TestOperatorScopeAllows(t *testing.T) {
 	}
 }
 
-// 白名单表本身的不变量：只读条目全是 GET；直接放行的写条目只有读语义的 POST 与撤回自己的申请；
+// 白名单表本身的不变量：只读条目全是 GET；直接放行的写条目只有读语义的 POST、撤回自己的申请与工单客服动作
+// （工单是同权客服工作流，直接放行是设计决策，见 docs/TICKETS.md）；
 // 直接放行 / 须审批 / 永不允许三张表两两不相交。
 func TestOperatorScopeTableInvariants(t *testing.T) {
 	t.Parallel()
@@ -71,9 +72,12 @@ func TestOperatorScopeTableInvariants(t *testing.T) {
 		require.Truef(t, strings.HasPrefix(key, "GET /api/v1/admin/"), "read scope entry must live under /api/v1/admin: %s", key)
 	}
 	require.Equal(t, map[string]struct{}{
-		"POST /api/v1/admin/user-attributes/batch": {},
-		"POST /api/v1/admin/approvals/:id/cancel":  {},
-	}, operatorWriteScope, "直接放行的写条目必须保持最小；新的写接口应走审批范围")
+		"POST /api/v1/admin/user-attributes/batch":  {},
+		"POST /api/v1/admin/approvals/:id/cancel":   {},
+		"POST /api/v1/admin/tickets/:id/messages":   {},
+		"POST /api/v1/admin/tickets/:id/close":      {},
+		"POST /api/v1/admin/tickets/:id/reopen":     {},
+	}, operatorWriteScope, "直接放行的写条目必须保持最小；除工单客服动作外，新的写接口应走审批范围")
 
 	routes := OperatorScopeRoutes()
 	require.Len(t, routes, len(operatorReadScope)+len(operatorWriteScope))
@@ -110,6 +114,27 @@ func TestOperatorApprovalAndRefusedScopes(t *testing.T) {
 	require.True(t, OperatorActionRefused(http.MethodDelete, "/api/v1/admin/users/:id"))
 	require.False(t, OperatorActionRefused(http.MethodDelete, "/api/v1/admin/subscriptions/:id"))
 	require.False(t, OperatorActionRefused(http.MethodGet, "/api/v1/admin/users/:id"))
+}
+
+// 工单（fork 本地）：客服写操作对 operator 直接放行，既不排队审批也不拒绝。
+func TestOperatorTicketScopeIsDirectWrite(t *testing.T) {
+	for _, path := range []string{
+		"/api/v1/admin/tickets",
+		"/api/v1/admin/tickets/open-count",
+		"/api/v1/admin/tickets/:id",
+	} {
+		require.Truef(t, OperatorScopeAllows(http.MethodGet, path), "GET %s", path)
+	}
+	for _, path := range []string{
+		"/api/v1/admin/tickets/:id/messages",
+		"/api/v1/admin/tickets/:id/close",
+		"/api/v1/admin/tickets/:id/reopen",
+	} {
+		require.Truef(t, OperatorScopeAllows(http.MethodPost, path), "POST %s", path)
+		require.Falsef(t, OperatorApprovalRequired(http.MethodPost, path), "ticket writes must not be queued: %s", path)
+		require.Falsef(t, OperatorActionRefused(http.MethodPost, path), "ticket writes must not be refused: %s", path)
+	}
+	require.False(t, OperatorScopeAllows(http.MethodDelete, "/api/v1/admin/tickets/:id"), "no delete route exists")
 }
 
 func TestOperatorDenyAuditLimiter(t *testing.T) {

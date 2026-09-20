@@ -38,7 +38,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
   font-size: 1.45rem;
   line-height: 1.25;
   font-weight: 800;
-  color: #111827;
+  color: #16181d;
 }
 
 .markdown-renderer h2 {
@@ -46,7 +46,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
   font-size: 1.25rem;
   line-height: 1.3;
   font-weight: 800;
-  color: #111827;
+  color: #16181d;
 }
 
 .markdown-renderer h3 {
@@ -54,7 +54,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
   font-size: 1.08rem;
   line-height: 1.35;
   font-weight: 700;
-  color: #1f2937;
+  color: #232629;
 }
 
 .markdown-renderer h4,
@@ -64,7 +64,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
   font-size: 0.98rem;
   line-height: 1.4;
   font-weight: 700;
-  color: #1f2937;
+  color: #232629;
 }
 
 .markdown-renderer p {
@@ -104,7 +104,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
 
 .markdown-renderer strong {
   font-weight: 700;
-  color: #111827;
+  color: #16181d;
 }
 
 .markdown-renderer em {
@@ -113,7 +113,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
 
 .markdown-renderer code {
   border-radius: 0.35rem;
-  background: rgba(15, 23, 42, 0.06);
+  background: rgba(22, 24, 29, 0.06);
   padding: 0.08rem 0.32rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.9em;
@@ -124,15 +124,15 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
   margin: 0.85rem 0;
   overflow-x: auto;
   border-radius: 0.65rem;
-  border: 1px solid #e5e7eb;
-  background: #f8fafc;
+  border: 1px solid #e5e1db;
+  background: #f8f7f5;
   padding: 0.85rem;
 }
 
 .markdown-renderer pre code {
   background: transparent;
   padding: 0;
-  color: #334155;
+  color: #302c28;
 }
 
 .markdown-renderer blockquote {
@@ -140,13 +140,13 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
   border-left: 3px solid #14b8a6;
   background: rgba(20, 184, 166, 0.08);
   padding: 0.55rem 0.8rem;
-  color: #475569;
+  color: #4d4842;
 }
 
 .markdown-renderer hr {
   margin: 1rem 0;
   border: 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e1db;
 }
 
 .markdown-renderer table {
@@ -158,15 +158,15 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
 
 .markdown-renderer th,
 .markdown-renderer td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5e1db;
   padding: 0.45rem 0.6rem;
   text-align: left;
 }
 
 .markdown-renderer th {
-  background: #f8fafc;
+  background: #f8f7f5;
   font-weight: 700;
-  color: #111827;
+  color: #16181d;
 }
 
 .markdown-renderer img {
@@ -177,7 +177,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
 
 .dark .markdown-renderer h1,
 .dark .markdown-renderer h2 {
-  color: #f8fafc;
+  color: #f8f7f5;
 }
 
 .dark .markdown-renderer h3,
@@ -185,7 +185,7 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
 .dark .markdown-renderer h5,
 .dark .markdown-renderer h6,
 .dark .markdown-renderer strong {
-  color: #f1f5f9;
+  color: #f2f0ec;
 }
 
 .dark .markdown-renderer a {
@@ -203,27 +203,27 @@ const html = computed(() => renderSafeMarkdown(props.content || ''))
 }
 
 .dark .markdown-renderer pre {
-  border-color: #334155;
-  background: rgba(15, 23, 42, 0.7);
+  border-color: #302c28;
+  background: rgba(22, 24, 29, 0.7);
 }
 
 .dark .markdown-renderer pre code {
-  color: #e2e8f0;
+  color: #e5e1db;
 }
 
 .dark .markdown-renderer blockquote {
   background: rgba(20, 184, 166, 0.12);
-  color: #cbd5e1;
+  color: #cfc9c1;
 }
 
 .dark .markdown-renderer hr,
 .dark .markdown-renderer th,
 .dark .markdown-renderer td {
-  border-color: #334155;
+  border-color: #302c28;
 }
 
 .dark .markdown-renderer th {
-  background: rgba(15, 23, 42, 0.75);
-  color: #f8fafc;
+  background: rgba(22, 24, 29, 0.75);
+  color: #f8f7f5;
 }
 </style>

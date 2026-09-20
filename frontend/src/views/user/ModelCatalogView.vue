@@ -109,6 +109,7 @@
               <option value="token">{{ t('modelCatalog.billingMode.token') }}</option>
               <option value="per_request">{{ t('modelCatalog.billingMode.perRequest') }}</option>
               <option value="image">{{ t('modelCatalog.billingMode.image') }}</option>
+              <option value="video">{{ t('modelCatalog.billingMode.video') }}</option>
             </select>
           </div>
 
@@ -209,7 +210,7 @@
                 {{ formatPrimaryDisplayPrice(item) }}
               </div>
               <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {{ `${displayedChargeLabel()} · ${billingUnitLabel(item.billing_mode)}` }}
+                {{ primaryPriceSubtitle(item) }}
               </div>
             </div>
           </div>
@@ -227,6 +228,9 @@
                   </div>
                   <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     {{ row.unit }}
+                  </div>
+                  <div v-if="row.hint" class="mt-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                    {{ row.hint }}
                   </div>
                 </div>
 
@@ -254,7 +258,10 @@
             <span v-if="item.pricing_details.has_long_context_multiplier" class="cap-badge cap-badge-amber">
               {{ t('modelCatalog.capabilities.longContext', { threshold: formatThreshold(item.pricing_details.long_context_input_threshold) }) }}
             </span>
-            <span v-if="item.pricing_details.intervals.length" class="cap-badge cap-badge-slate">
+            <span v-if="mediaTierCount(item)" class="cap-badge cap-badge-slate">
+              {{ t('modelCatalog.capabilities.resolutionTiers', { count: mediaTierCount(item) }) }}
+            </span>
+            <span v-else-if="item.pricing_details.intervals.length" class="cap-badge cap-badge-slate">
               {{ t('modelCatalog.capabilities.tieredPricing', { count: item.pricing_details.intervals.length }) }}
             </span>
             <span v-if="item.official_pricing.has_reference" class="cap-badge cap-badge-emerald">
@@ -291,9 +298,10 @@
                   >
                     <div class="flex flex-wrap items-center justify-between gap-2">
                       <div class="text-sm font-medium text-gray-900 dark:text-white">
-                        {{ formatIntervalRange(interval) }}
+                        {{ formatIntervalHeading(interval, item.billing_mode) }}
                       </div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">
+                      <!-- 非 token 模式下标题已经是档位名，再重复一次没有信息量 -->
+                      <div v-if="item.billing_mode === 'token'" class="text-xs text-gray-500 dark:text-gray-400">
                         {{ interval.tier_label || t('modelCatalog.intervalDefaultLabel') }}
                       </div>
                     </div>
@@ -383,6 +391,7 @@ import {
   sortModelCatalogItems,
   type ModelCatalogBillingMode,
   type ModelCatalogItem,
+  type ModelCatalogMediaUnit,
   type ModelCatalogPriceInterval,
   type ModelCatalogSortKey,
 } from '@/api/modelCatalog'
@@ -391,6 +400,8 @@ interface PriceRow {
   key: string
   label: string
   unit: string
+  /** 附加说明，如「未指定尺寸时按此档计费」 */
+  hint?: string
   officialUsd: number | null
   balanceUsd: number | null
   actualCny: number | null
@@ -581,15 +592,36 @@ function buildPriceRows(item: ModelCatalogItem): PriceRow[] {
     ]
   }
 
-  if (item.billing_mode === 'image') {
+  if (isMediaBillingMode(item.billing_mode)) {
+    const tiers = item.pricing_details.media_tiers ?? []
+    if (tiers.length > 0) {
+      return tiers.map(tier => ({
+        key: `media_${tier.tier}`,
+        label: tier.tier,
+        unit: mediaUnitLabel(item.pricing_details.media_unit),
+        hint: tier.is_default_tier ? t('modelCatalog.defaultTierHint') : undefined,
+        officialUsd: tier.official_usd,
+        balanceUsd: tier.effective_usd,
+        actualCny: toCny(tier.effective_usd),
+      }))
+    }
+
+    // 后端没下发档位时退回单行，避免整张卡片空掉。
+    const isImage = item.billing_mode === 'image'
+    const officialUsd = isImage
+      ? item.official_pricing.per_image_usd
+      : item.official_pricing.per_second_usd
+    const balanceUsd = isImage
+      ? item.effective_pricing_usd.per_image_usd
+      : item.effective_pricing_usd.per_second_usd
     return [
       {
-        key: 'per_image',
-        label: t('modelCatalog.priceLabels.perImage'),
-        unit: t('modelCatalog.units.perImage'),
-        officialUsd: item.official_pricing.per_image_usd,
-        balanceUsd: item.effective_pricing_usd.per_image_usd,
-        actualCny: toCny(item.effective_pricing_usd.per_image_usd),
+        key: isImage ? 'per_image' : 'per_second',
+        label: isImage ? t('modelCatalog.priceLabels.perImage') : t('modelCatalog.priceLabels.perSecond'),
+        unit: billingUnitLabel(item.billing_mode),
+        officialUsd,
+        balanceUsd,
+        actualCny: toCny(balanceUsd),
       },
     ]
   }
@@ -650,6 +682,14 @@ function buildIntervalDetails(
     }]
   }
 
+  if (billingMode === 'video') {
+    return [{
+      key: 'per_second',
+      label: t('modelCatalog.priceLabels.perSecond'),
+      value: interval.per_request_usd,
+    }]
+  }
+
   return [
     {
       key: 'input',
@@ -677,13 +717,41 @@ function buildIntervalDetails(
 function billingModeLabel(mode: ModelCatalogBillingMode): string {
   if (mode === 'per_request') return t('modelCatalog.billingMode.perRequest')
   if (mode === 'image') return t('modelCatalog.billingMode.image')
+  if (mode === 'video') return t('modelCatalog.billingMode.video')
   return t('modelCatalog.billingMode.token')
 }
 
 function billingUnitLabel(mode: ModelCatalogBillingMode): string {
   if (mode === 'per_request') return t('modelCatalog.units.perRequest')
   if (mode === 'image') return t('modelCatalog.units.perImage')
+  if (mode === 'video') return t('modelCatalog.units.perSecond')
   return t('modelCatalog.units.perMillionTokens')
+}
+
+/** 图片/视频按分辨率分档，与 token 模式的上下文区间是两条不同的分档轴。 */
+function isMediaBillingMode(mode: ModelCatalogBillingMode): boolean {
+  return mode === 'image' || mode === 'video'
+}
+
+function mediaUnitLabel(unit: ModelCatalogMediaUnit): string {
+  return unit === 'second' ? t('modelCatalog.units.perSecond') : t('modelCatalog.units.perImage')
+}
+
+function mediaTierCount(item: ModelCatalogItem): number {
+  return item.pricing_details.media_tiers?.length ?? 0
+}
+
+/**
+ * 主价格副标题。图片/视频的主价取的是「未指定尺寸时落账的档位」，不点名档位
+ * 的话，用户会以为那是唯一价格。
+ */
+function primaryPriceSubtitle(item: ModelCatalogItem): string {
+  const base = `${displayedChargeLabel()} · ${billingUnitLabel(item.billing_mode)}`
+  if (!isMediaBillingMode(item.billing_mode)) {
+    return base
+  }
+  const defaultTier = (item.pricing_details.media_tiers ?? []).find(tier => tier.is_default_tier)
+  return defaultTier ? `${base} · ${defaultTier.tier}` : base
 }
 
 function platformLabel(platform: string): string {
@@ -768,6 +836,20 @@ function formatThreshold(value: number): string {
   return `${value}`
 }
 
+/**
+ * 区间标题。非 token 模式的分档靠 tier_label 承载，min/max_tokens 恒为 0/null，
+ * 用 token 区间格式化器会渲染成「≥ —」。
+ */
+function formatIntervalHeading(
+  interval: ModelCatalogPriceInterval,
+  mode: ModelCatalogBillingMode,
+): string {
+  if (mode !== 'token') {
+    return interval.tier_label || t('modelCatalog.intervalDefaultLabel')
+  }
+  return formatIntervalRange(interval)
+}
+
 function formatIntervalRange(interval: ModelCatalogPriceInterval): string {
   if (interval.max_tokens == null) {
     return `≥ ${formatThreshold(interval.min_tokens)}`
@@ -781,6 +863,9 @@ function formatIntervalRange(interval: ModelCatalogPriceInterval): string {
 function getCardClass(item: ModelCatalogItem): string {
   if (item.billing_mode === 'image') {
     return 'model-card-image'
+  }
+  if (item.billing_mode === 'video') {
+    return 'model-card-video'
   }
   if (item.billing_mode === 'per_request') {
     return 'model-card-request'
@@ -797,6 +882,7 @@ function getPlatformBadgeClass(platform: string): string {
 
 function getModeBadgeClass(mode: ModelCatalogBillingMode): string {
   if (mode === 'image') return 'mode-pill-image'
+  if (mode === 'video') return 'mode-pill-video'
   if (mode === 'per_request') return 'mode-pill-request'
   return 'mode-pill-token'
 }
@@ -837,6 +923,10 @@ function formatNumber(value: number): string {
   @apply bg-gradient-to-r from-fuchsia-500 via-rose-400 to-orange-400;
 }
 
+.model-card-video::before {
+  @apply bg-gradient-to-r from-violet-500 via-indigo-400 to-sky-400;
+}
+
 .platform-pill,
 .mode-pill,
 .group-pill,
@@ -874,6 +964,10 @@ function formatNumber(value: number): string {
 
 .mode-pill-image {
   @apply bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300;
+}
+
+.mode-pill-video {
+  @apply bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300;
 }
 
 .group-tab {

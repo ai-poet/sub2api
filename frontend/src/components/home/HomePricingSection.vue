@@ -4,13 +4,13 @@
       <!-- Header -->
       <div class="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
         <div>
-          <p class="text-[11px] uppercase tracking-[0.24em] text-[#7a7268] dark:text-white/42">
+          <p class="text-[11px] uppercase tracking-[0.24em] text-gray-500 dark:text-white/42">
             {{ t('home.pricingTable.overline') }}
           </p>
-          <h2 class="mt-3 text-3xl font-semibold leading-[1.12] tracking-[-0.04em] text-[#111111] dark:text-white md:text-4xl [text-wrap:balance]">
+          <h2 class="mt-3 text-3xl font-semibold leading-[1.12] tracking-[-0.04em] text-gray-900 dark:text-white md:text-4xl [text-wrap:balance]">
             {{ t('home.pricingTable.title') }}
           </h2>
-          <p class="mt-3 max-w-[44rem] text-base leading-7 text-[#5f5850] dark:text-white/68">
+          <p class="mt-3 max-w-[44rem] text-base leading-7 text-gray-600 dark:text-white/68">
             {{ t('home.pricingTable.description') }}
           </p>
         </div>
@@ -33,10 +33,10 @@
           class="mb-8 last:mb-0"
         >
           <div class="mb-3 flex items-baseline gap-2">
-            <h3 class="text-sm font-semibold uppercase tracking-[0.14em] text-[#111] dark:text-white">
+            <h3 class="text-sm font-semibold uppercase tracking-[0.14em] text-gray-900 dark:text-white">
               {{ section.platform }}
             </h3>
-            <span class="text-xs text-[#7a7268] dark:text-white/45">
+            <span class="text-xs text-gray-500 dark:text-white/45">
               {{ t('home.pricingTable.table.modelCount', { count: section.rows.length }) }}
             </span>
           </div>
@@ -45,7 +45,7 @@
           <div class="overflow-x-auto rounded-2xl border border-black/8 bg-white dark:border-white/10 dark:bg-white/[0.03]">
             <table class="w-full min-w-[46rem] border-collapse text-left text-sm">
               <thead>
-                <tr class="border-b border-black/8 text-[11px] uppercase tracking-[0.12em] text-[#7a7268] dark:border-white/10 dark:text-white/45">
+                <tr class="border-b border-black/8 text-[11px] uppercase tracking-[0.12em] text-gray-500 dark:border-white/10 dark:text-white/45">
                   <th scope="col" class="px-4 py-3 font-medium">{{ t('home.pricingTable.table.model') }}</th>
                   <th scope="col" class="px-4 py-3 font-medium">{{ t('home.pricingTable.table.group') }}</th>
                   <th scope="col" class="px-4 py-3 text-right font-medium">{{ t('home.pricingTable.table.input') }}</th>
@@ -61,25 +61,25 @@
                   :key="`${row.platform}-${row.model}-${row.group.name}`"
                   class="border-b border-black/5 last:border-0 dark:border-white/5"
                 >
-                  <td class="px-4 py-3 font-medium text-[#111] dark:text-white">{{ row.display_name }}</td>
-                  <td class="px-4 py-3 text-[#5f5850] dark:text-white/65">
+                  <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ row.display_name }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-white/65">
                     <span>{{ row.group.name }}</span>
                     <span
                       v-if="row.group.rate_multiplier !== 1"
-                      class="ml-1.5 rounded-full bg-[#f7f3ee] px-1.5 py-0.5 font-mono text-[11px] text-[#3d362e] dark:bg-white/10 dark:text-white/70"
+                      class="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] text-gray-700 dark:bg-white/10 dark:text-white/70"
                     >×{{ row.group.rate_multiplier }}</span>
                   </td>
 
                   <!-- Token billing: four per-1M-token columns. -->
                   <template v-if="isTokenBilling(row)">
-                    <td class="px-4 py-3 text-right font-mono text-[#111] dark:text-white">{{ perMTok(row.effective_pricing_usd.input_per_mtok_usd) }}</td>
-                    <td class="px-4 py-3 text-right font-mono text-[#111] dark:text-white">{{ perMTok(row.effective_pricing_usd.output_per_mtok_usd) }}</td>
-                    <td class="px-4 py-3 text-right font-mono text-[#5f5850] dark:text-white/65">{{ perMTok(row.effective_pricing_usd.cache_write_per_mtok_usd) }}</td>
-                    <td class="px-4 py-3 text-right font-mono text-[#5f5850] dark:text-white/65">{{ perMTok(row.effective_pricing_usd.cache_read_per_mtok_usd) }}</td>
+                    <td class="px-4 py-3 text-right font-mono text-gray-900 dark:text-white">{{ perMTok(row.effective_pricing_usd.input_per_mtok_usd) }}</td>
+                    <td class="px-4 py-3 text-right font-mono text-gray-900 dark:text-white">{{ perMTok(row.effective_pricing_usd.output_per_mtok_usd) }}</td>
+                    <td class="px-4 py-3 text-right font-mono text-gray-600 dark:text-white/65">{{ perMTok(row.effective_pricing_usd.cache_write_per_mtok_usd) }}</td>
+                    <td class="px-4 py-3 text-right font-mono text-gray-600 dark:text-white/65">{{ perMTok(row.effective_pricing_usd.cache_read_per_mtok_usd) }}</td>
                   </template>
 
                   <!-- Per-request / per-image billing: a single merged price cell. -->
-                  <td v-else colspan="4" class="px-4 py-3 text-right font-mono text-[#111] dark:text-white">
+                  <td v-else colspan="4" class="px-4 py-3 text-right font-mono text-gray-900 dark:text-white">
                     {{ flatPrice(row) }}
                   </td>
 
@@ -88,7 +88,7 @@
                       v-if="discountLabel(row)"
                       class="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
                     >{{ discountLabel(row) }}</span>
-                    <span v-else class="text-xs text-[#7a7268] dark:text-white/40">—</span>
+                    <span v-else class="text-xs text-gray-500 dark:text-white/40">—</span>
                   </td>
                 </tr>
               </tbody>
@@ -99,7 +99,7 @@
         <button
           v-if="canExpand"
           type="button"
-          class="mt-2 rounded-full border border-black/10 px-4 py-2 text-sm text-[#3d362e] transition hover:bg-black/5 dark:border-white/15 dark:text-white/75 dark:hover:bg-white/5"
+          class="mt-2 rounded-full border border-black/10 px-4 py-2 text-sm text-gray-700 transition hover:bg-black/5 dark:border-white/15 dark:text-white/75 dark:hover:bg-white/5"
           @click="expanded = !expanded"
         >
           {{ expanded ? t('home.pricingTable.table.collapse') : t('home.pricingTable.table.expand', { count: hiddenCount }) }}
@@ -118,15 +118,15 @@
 
           <div class="relative">
             <div class="flex items-center gap-2">
-              <span class="rounded-full bg-[#111] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white dark:bg-white dark:text-[#111]">
+              <span class="rounded-full bg-gray-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white dark:bg-white dark:text-gray-900">
                 {{ card.tag }}
               </span>
             </div>
 
-            <h3 class="mt-5 text-lg font-semibold tracking-tight text-[#111] dark:text-white">
+            <h3 class="mt-5 text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
               {{ card.title }}
             </h3>
-            <p class="mt-2 text-sm leading-6 text-[#5f5850] dark:text-white/65">
+            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-white/65">
               {{ card.description }}
             </p>
 
@@ -134,7 +134,7 @@
               <span
                 v-for="model in card.models"
                 :key="model"
-                class="rounded-full border border-black/8 bg-[#f7f3ee] px-2.5 py-1 text-xs text-[#3d362e] dark:border-white/10 dark:bg-white/5 dark:text-white/70"
+                class="rounded-full border border-black/8 bg-gray-100 px-2.5 py-1 text-xs text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70"
               >
                 {{ model }}
               </span>
@@ -143,7 +143,7 @@
         </article>
       </div>
 
-      <p class="mt-8 text-xs leading-6 text-[#7a7268] dark:text-white/45">
+      <p class="mt-8 text-xs leading-6 text-gray-500 dark:text-white/45">
         <span v-if="hasPricing && cnyPerUsd != null">
           {{ t('home.pricingTable.currencyNote', { rate: cnyPerUsd.toFixed(2) }) }}
         </span>

@@ -42,6 +42,7 @@ type AdminHandlers struct {
 	Plugin                *admin.PluginHandler
 	Console               *admin.ConsoleHandler
 	Approval              *admin.ApprovalHandler
+	Ticket                *admin.TicketHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -67,6 +68,7 @@ type Handlers struct {
 	AsyncImage       *AsyncImageHandler
 	BatchImage       *BatchImageHandler
 	PayBridge        *PayBridgeHandler
+	Ticket           *TicketHandler
 }
 
 // BuildInfo contains build-time information

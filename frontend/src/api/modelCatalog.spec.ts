@@ -31,6 +31,7 @@ const createItem = (overrides: Partial<ModelCatalogItem> = {}): ModelCatalogItem
     cache_read_per_mtok_usd: 0.25,
     per_request_usd: null,
     per_image_usd: null,
+    per_second_usd: null,
     source: 'litellm',
     has_reference: true,
   },
@@ -41,6 +42,7 @@ const createItem = (overrides: Partial<ModelCatalogItem> = {}): ModelCatalogItem
     cache_read_per_mtok_usd: 0.125,
     per_request_usd: null,
     per_image_usd: null,
+    per_second_usd: null,
     source: 'effective',
     has_reference: false,
   },
@@ -51,12 +53,15 @@ const createItem = (overrides: Partial<ModelCatalogItem> = {}): ModelCatalogItem
     delta_output_per_mtok_usd: 7.5,
     delta_per_request_usd: null,
     delta_per_image_usd: null,
+    delta_per_second_usd: null,
   },
   pricing_details: {
     supports_prompt_caching: true,
     has_long_context_multiplier: false,
     long_context_input_threshold: 0,
     intervals: [],
+    media_tiers: [],
+    media_unit: '',
   },
   other_groups: [],
   ...overrides,
@@ -87,6 +92,7 @@ describe('modelCatalog helpers', () => {
           delta_output_per_mtok_usd: 0,
           delta_per_request_usd: null,
           delta_per_image_usd: null,
+          delta_per_second_usd: null,
         },
       }),
       createItem({
@@ -101,6 +107,7 @@ describe('modelCatalog helpers', () => {
           cache_read_per_mtok_usd: null,
           per_request_usd: null,
           per_image_usd: 0.2,
+          per_second_usd: null,
           source: 'litellm',
           has_reference: true,
         },
@@ -111,6 +118,7 @@ describe('modelCatalog helpers', () => {
           cache_read_per_mtok_usd: null,
           per_request_usd: null,
           per_image_usd: 0.08,
+          per_second_usd: null,
           source: 'effective',
           has_reference: false,
         },
@@ -121,6 +129,7 @@ describe('modelCatalog helpers', () => {
           delta_output_per_mtok_usd: null,
           delta_per_request_usd: null,
           delta_per_image_usd: 0.12,
+          delta_per_second_usd: null,
         },
       }),
     ]
@@ -149,6 +158,7 @@ describe('modelCatalog helpers', () => {
           delta_output_per_mtok_usd: 3,
           delta_per_request_usd: null,
           delta_per_image_usd: null,
+          delta_per_second_usd: null,
         },
         effective_pricing_usd: {
           input_per_mtok_usd: 1.5,
@@ -172,6 +182,7 @@ describe('modelCatalog helpers', () => {
           delta_output_per_mtok_usd: 4,
           delta_per_request_usd: null,
           delta_per_image_usd: null,
+          delta_per_second_usd: null,
         },
         effective_pricing_usd: {
           input_per_mtok_usd: 1.1,
@@ -195,6 +206,7 @@ describe('modelCatalog helpers', () => {
           delta_output_per_mtok_usd: null,
           delta_per_request_usd: null,
           delta_per_image_usd: null,
+          delta_per_second_usd: null,
         },
       }),
     ]
@@ -206,6 +218,84 @@ describe('modelCatalog helpers', () => {
     ])
 
     expect(compareModelCatalogItems(items[0], items[1], 'model_asc')).toBeGreaterThan(0)
+  })
+
+  it('never compares prices across billing units when sorting', () => {
+    // $0.134/张 和 $2.50/1M tokens 是两个不同单位的数，直接比大小会让图像模型
+    // 冒充「最便宜的模型」排到列表最前面。
+    const tokenModel = createItem({ model: 'token-model' })
+    const imageModel = createItem({
+      model: 'image-model',
+      billing_mode: 'image',
+      effective_pricing_usd: {
+        input_per_mtok_usd: null,
+        output_per_mtok_usd: null,
+        cache_write_per_mtok_usd: null,
+        cache_read_per_mtok_usd: null,
+        per_request_usd: null,
+        per_image_usd: 0.134,
+        per_second_usd: null,
+        source: 'effective',
+        has_reference: false,
+      },
+    })
+    const videoModel = createItem({
+      model: 'video-model',
+      billing_mode: 'video',
+      effective_pricing_usd: {
+        input_per_mtok_usd: null,
+        output_per_mtok_usd: null,
+        cache_write_per_mtok_usd: null,
+        cache_read_per_mtok_usd: null,
+        per_request_usd: null,
+        per_image_usd: null,
+        per_second_usd: 0.05,
+        source: 'effective',
+        has_reference: false,
+      },
+    })
+
+    expect(
+      sortModelCatalogItems([imageModel, videoModel, tokenModel], 'effective_price_asc')
+        .map(item => item.model),
+    ).toEqual(['token-model', 'image-model', 'video-model'])
+  })
+
+  it('sorts image models by price within the image bucket', () => {
+    const cheap = createItem({
+      model: 'cheap-image',
+      billing_mode: 'image',
+      effective_pricing_usd: {
+        input_per_mtok_usd: null,
+        output_per_mtok_usd: null,
+        cache_write_per_mtok_usd: null,
+        cache_read_per_mtok_usd: null,
+        per_request_usd: null,
+        per_image_usd: 0.02,
+        per_second_usd: null,
+        source: 'effective',
+        has_reference: false,
+      },
+    })
+    const pricey = createItem({
+      model: 'pricey-image',
+      billing_mode: 'image',
+      effective_pricing_usd: {
+        input_per_mtok_usd: null,
+        output_per_mtok_usd: null,
+        cache_write_per_mtok_usd: null,
+        cache_read_per_mtok_usd: null,
+        per_request_usd: null,
+        per_image_usd: 0.268,
+        per_second_usd: null,
+        source: 'effective',
+        has_reference: false,
+      },
+    })
+
+    expect(
+      sortModelCatalogItems([pricey, cheap], 'effective_price_asc').map(item => item.model),
+    ).toEqual(['cheap-image', 'pricey-image'])
   })
 
   it('normalizes payment center origin and fetches balance conversion config', async () => {

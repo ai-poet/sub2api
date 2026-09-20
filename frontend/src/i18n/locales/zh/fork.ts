@@ -305,7 +305,8 @@ export default {
     "communityGroupTooltip": "扫码加入交流群",
     "communityGroupScanHint": "使用手机扫码加入",
     "communityGroupJoin": "点击加入",
-    "approvals": "审批"
+    "approvals": "审批",
+    "tickets": "工单"
   },
   "auth": {
     "referralCodeLabel": "推荐码",
@@ -674,6 +675,10 @@ export default {
           "enabled": "审批申请推送",
           "enabledHint": "运维管理员提交用户 / 订阅管理的写操作申请时，向管理员推送一条带审批页链接的消息（沿用上方 UID / SendKey）。"
         },
+        "ticketNotify": {
+          "enabled": "工单推送",
+          "enabledHint": "用户提交新工单或追加回复时，推送一条带工单页链接的消息（沿用上方 UID / SendKey）；客服自己的回复不推送。"
+        },
         "communityQRCodePlaceholder": "粘贴二维码图片的 base64 或 URL",
         "communityQRCode": "交流群二维码",
         "uploadQRCode": "上传二维码",
@@ -760,7 +765,8 @@ export default {
     "billingMode": {
       "token": "Token",
       "perRequest": "按次",
-      "image": "按张"
+      "image": "按张",
+      "video": "按秒"
     },
     "rateSource": {
       "groupDefault": "分组默认倍率",
@@ -780,12 +786,14 @@ export default {
       "cacheWrite": "缓存写入",
       "cacheRead": "缓存读取",
       "perRequest": "每次请求",
-      "perImage": "每张图片"
+      "perImage": "每张图片",
+      "perSecond": "每秒"
     },
     "units": {
       "perMillionTokens": "每百万 Tokens",
       "perRequest": "每次请求",
-      "perImage": "每张图片"
+      "perImage": "每张图片",
+      "perSecond": "每秒视频"
     },
     "priceColumns": {
       "official": "官方价",
@@ -796,8 +804,10 @@ export default {
       "promptCaching": "支持提示缓存",
       "longContext": "长上下文阈值 {threshold}",
       "tieredPricing": "{count} 档区间价",
+      "resolutionTiers": "{count} 档分辨率",
       "userRateOverride": "专属倍率"
     },
+    "defaultTierHint": "未指定尺寸时按此档计费",
     "expandDetails": "展开分组与区间详情",
     "collapseDetails": "收起详情",
     "intervalSectionTitle": "渠道区间价",
@@ -971,6 +981,101 @@ export default {
         "subscriptionResetQuota": "重置订阅额度",
         "subscriptionRevoke": "撤销订阅",
         "subscriptionRestore": "恢复订阅"
+      }
+    }
+  },
+  "tickets": {
+    "title": "工单",
+    "description": "提交问题并与客服沟通",
+    "caption": "工单",
+    "intro": "遇到账号、计费或 API 调用问题？在这里提交工单，客服会在同一个线程里回复你。",
+    "create": "新建工单",
+    "createTitle": "新建工单",
+    "empty": "还没有工单",
+    "loading": "加载中...",
+    "loadFailed": "加载工单失败",
+    "form": {
+      "title": "标题",
+      "titlePlaceholder": "一句话概括你的问题",
+      "category": "分类",
+      "body": "问题描述",
+      "bodyPlaceholder": "请尽量详细描述：出现的现象、涉及的模型 / 密钥、报错内容、发生时间等。支持 Markdown。",
+      "bodyHint": "支持 Markdown，最多 {max} 字",
+      "submit": "提交工单",
+      "submitting": "提交中..."
+    },
+    "status": {
+      "open": "待处理",
+      "replied": "已回复",
+      "closed": "已关闭"
+    },
+    "statusFilter": {
+      "all": "全部"
+    },
+    "category": {
+      "account": "账号",
+      "billing": "计费 / 额度",
+      "api": "API 调用",
+      "other": "其他"
+    },
+    "columns": {
+      "id": "ID",
+      "user": "用户",
+      "title": "标题",
+      "category": "分类",
+      "status": "状态",
+      "messages": "消息",
+      "lastMessage": "最后更新",
+      "actions": "操作"
+    },
+    "thread": {
+      "you": "我",
+      "user": "用户",
+      "staff": "客服",
+      "roleAdmin": "管理员",
+      "roleOperator": "运维管理员",
+      "placeholder": "输入回复内容，支持 Markdown",
+      "send": "发送",
+      "sending": "发送中...",
+      "closedHint": "工单已关闭，重新打开后才能继续回复",
+      "unread": "有新回复"
+    },
+    "actions": {
+      "close": "关闭工单",
+      "reopen": "重新打开",
+      "view": "查看",
+      "dismiss": "收起"
+    },
+    "confirmClose": {
+      "title": "关闭工单",
+      "message": "关闭后将无法继续回复，如有需要可以重新打开。确定关闭吗？"
+    },
+    "toast": {
+      "created": "工单已提交",
+      "replied": "回复已发送",
+      "closed": "工单已关闭",
+      "reopened": "工单已重新打开"
+    },
+    "errors": {
+      "openLimit": "未关闭的工单太多了，请先处理或关闭已有工单",
+      "closed": "工单已关闭",
+      "notClosed": "工单未关闭"
+    },
+    "detail": {
+      "title": "工单详情",
+      "titleWithId": "工单 #{id}"
+    },
+    "admin": {
+      "title": "工单管理",
+      "description": "查看并回复用户提交的工单",
+      "empty": "没有符合条件的工单",
+      "searchPlaceholder": "搜索标题或用户邮箱",
+      "categoryAll": "全部分类",
+      "tabs": {
+        "open": "待处理",
+        "replied": "已回复",
+        "closed": "已关闭",
+        "all": "全部"
       }
     }
   }

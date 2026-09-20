@@ -16,6 +16,7 @@ import systemAPI from './system'
 import subscriptionsAPI from './subscriptions'
 import usageAPI from './usage'
 import approvalsAPI from './approvals'
+import ticketsAPI from './tickets'
 import geminiAPI from './gemini'
 import antigravityAPI from './antigravity'
 import grokAPI from './grok'
@@ -52,6 +53,7 @@ export const adminAPI = {
   subscriptions: subscriptionsAPI,
   usage: usageAPI,
   approvals: approvalsAPI,
+  tickets: ticketsAPI,
   gemini: geminiAPI,
   antigravity: antigravityAPI,
   grok: grokAPI,
@@ -86,6 +88,7 @@ export {
   subscriptionsAPI,
   usageAPI,
   approvalsAPI,
+  ticketsAPI,
   geminiAPI,
   antigravityAPI,
   grokAPI,
@@ -109,6 +112,7 @@ export default adminAPI
 
 // Re-export types used by components
 export type { AuditLog, AuditLogQuery, AuditLogListResponse } from './audit'
+export type { AdminSupportTicket, AdminTicketDetail, AdminTicketListFilters } from './tickets'
 export type { BalanceHistoryItem } from './users'
 export type { ErrorPassthroughRule, CreateRuleRequest, UpdateRuleRequest } from './errorPassthrough'
 export type { BackupAgentHealth, DataManagementConfig } from './dataManagement'

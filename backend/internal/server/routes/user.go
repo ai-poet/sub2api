@@ -136,6 +136,18 @@ func RegisterUserRoutes(
 			models.GET("/catalog", h.ModelCatalog.List)
 		}
 
+		// 工单（fork 本地）：用户只能操作自己的工单；创建 / 回复叠加重限流，防刷
+		tickets := authenticated.Group("/tickets")
+		{
+			tickets.GET("", h.Ticket.List)
+			tickets.GET("/unread-count", h.Ticket.UnreadCount)
+			tickets.POST("", panelRateLimiter.Heavy(), h.Ticket.Create)
+			tickets.GET("/:id", h.Ticket.Get)
+			tickets.POST("/:id/messages", panelRateLimiter.Heavy(), h.Ticket.Reply)
+			tickets.POST("/:id/close", h.Ticket.Close)
+			tickets.POST("/:id/reopen", h.Ticket.Reopen)
+		}
+
 		groupStatus := authenticated.Group("/group-status")
 		{
 			groupStatus.GET("", h.GroupStatus.List)

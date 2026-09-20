@@ -1,13 +1,13 @@
 <template>
   <section class="mx-auto max-w-[1380px]">
     <div class="max-w-[920px]">
-      <p class="text-[11px] uppercase tracking-[0.24em] text-[#7a7268] dark:text-white/42">
+      <p class="text-[11px] uppercase tracking-[0.24em] text-gray-500 dark:text-white/42">
         {{ t('home.trust.overline') }}
       </p>
-      <h2 class="mt-4 max-w-[15ch] text-4xl font-semibold leading-[1.1] tracking-[-0.04em] text-[#111111] dark:text-white md:text-5xl [text-wrap:balance]">
+      <h2 class="mt-4 max-w-[15ch] text-4xl font-semibold leading-[1.1] tracking-[-0.04em] text-gray-900 dark:text-white md:text-5xl [text-wrap:balance]">
         {{ t('home.trust.title') }}
       </h2>
-      <p class="mt-5 max-w-[48rem] text-lg leading-8 text-[#5f5850] dark:text-white/68">
+      <p class="mt-5 max-w-[48rem] text-lg leading-8 text-gray-600 dark:text-white/68">
         {{ t('home.trust.description', { siteName: props.siteName }) }}
       </p>
     </div>
@@ -17,7 +17,7 @@
         <span
           v-for="(item, index) in marqueeItems"
           :key="`${item}-${index}`"
-          class="inline-flex items-center rounded-full border border-black/8 bg-[#f7f2ea] px-4 py-2 text-sm font-medium text-[#2e2923] dark:border-white/8 dark:bg-[#11151b] dark:text-white/75"
+          class="inline-flex items-center rounded-full border border-black/8 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 dark:border-white/8 dark:bg-gray-900 dark:text-white/75"
         >
           {{ item }}
         </span>
@@ -30,10 +30,10 @@
         :key="card.title"
         class="rounded-[28px] border border-black/8 bg-white/70 p-6 shadow-[0_18px_60px_rgba(15,15,15,0.05)] backdrop-blur dark:border-white/10 dark:bg-white/5"
       >
-        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#121316] text-white dark:bg-white dark:text-[#0f1114]">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-950 text-white dark:bg-white dark:text-gray-950">
           <Icon :name="card.icon" size="md" />
         </div>
-        <h3 class="mt-6 text-2xl font-semibold tracking-[-0.04em] text-[#111111] dark:text-white">
+        <h3 class="mt-6 text-2xl font-semibold tracking-[-0.04em] text-gray-900 dark:text-white">
           {{ card.title }}
         </h3>
       </article>

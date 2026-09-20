@@ -7,7 +7,7 @@ import AdminComplianceDialog from '@/components/admin/AdminComplianceDialog.vue'
 import { resolveRouteDocumentTitle } from '@/router/title'
 import AnnouncementPopup from '@/components/common/AnnouncementPopup.vue'
 import { useI18n } from 'vue-i18n'
-import { useAppStore, useAuthStore, useSubscriptionStore, useAnnouncementStore, useAdminComplianceStore, useAdminSettingsStore, useApprovalsStore } from '@/stores'
+import { useAppStore, useAuthStore, useSubscriptionStore, useAnnouncementStore, useAdminComplianceStore, useAdminSettingsStore, useApprovalsStore, useTicketsStore } from '@/stores'
 import { APPROVAL_QUEUED_EVENT, type ApprovalQueuedPayload } from '@/utils/approval'
 import { getSetupStatus } from '@/api/setup'
 import { updateFavicon } from '@/utils/branding'
@@ -23,6 +23,7 @@ const announcementStore = useAnnouncementStore()
 const adminComplianceStore = useAdminComplianceStore()
 const adminSettingsStore = useAdminSettingsStore()
 const approvalsStore = useApprovalsStore()
+const ticketsStore = useTicketsStore()
 const { t } = useI18n()
 
 function updateDocumentTitle() {
@@ -113,6 +114,11 @@ watch(
       if (authStore.hasConsoleAccess) {
         approvalsStore.start()
       }
+      // 工单角标：客服（admin / operator）轮询待处理数，普通用户轮询未读回复数；
+      // 后端模式下普通用户会被 BackendModeUserGuard 拦下，不轮询。
+      if (authStore.hasConsoleAccess || !appStore.backendModeEnabled) {
+        ticketsStore.start()
+      }
 
       // User logged in: preload subscriptions and start polling (skipped when the
       // subscription feature is switched off; see the flag watcher below)
@@ -137,6 +143,7 @@ watch(
       announcementStore.reset()
       adminComplianceStore.reset()
       approvalsStore.reset()
+      ticketsStore.reset()
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   },

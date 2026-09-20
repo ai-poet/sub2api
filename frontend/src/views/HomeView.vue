@@ -14,7 +14,7 @@
   <!-- Default Home Page -->
   <div
     v-else
-    class="home-font-sans relative min-h-screen overflow-hidden bg-[#f8fafb] text-[#161616] dark:bg-[#0f1114] dark:text-[#f3f1ed]"
+    class="home-font-sans relative min-h-screen overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100"
   >
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
       <div class="home-grid-pattern absolute inset-0 opacity-[0.25] dark:opacity-[0.16]"></div>

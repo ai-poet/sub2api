@@ -9,7 +9,7 @@
           <div class="text-[11px] uppercase tracking-[0.24em] text-primary-600 dark:text-primary-400">
             {{ t('home.proofStrip.overline') }}
           </div>
-          <h2 class="mt-4 max-w-[18ch] text-3xl font-semibold leading-[1.12] tracking-[-0.04em] text-[#111] md:text-4xl [text-wrap:balance] dark:text-white">
+          <h2 class="mt-4 max-w-[18ch] text-3xl font-semibold leading-[1.12] tracking-[-0.04em] text-gray-900 md:text-4xl [text-wrap:balance] dark:text-white">
             {{ t('home.pricing.barTitle') }}
           </h2>
           <p class="mt-4 max-w-[42rem] text-base leading-7 text-gray-500 dark:text-white/60">
@@ -27,7 +27,7 @@
             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
               <Icon :name="point.icon" size="md" />
             </div>
-            <div class="mt-4 text-sm font-semibold text-[#111] dark:text-white">
+            <div class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">
               {{ point.label }}
             </div>
           </div>

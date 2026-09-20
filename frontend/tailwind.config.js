@@ -1,3 +1,20 @@
+// 一条暖中性色阶，与首页共用；浅色模式与深色模式同一套色相。
+// gray / dark / accent 全部指向它：dark:text-gray-400 与 dark:text-dark-400 由此得到同一颜色。
+// 深色端三档取首页原值（页面底 #0f1114 / 面板 #16181d / 卡片 #232629）。
+const neutral = {
+  50: '#f8f7f5',
+  100: '#f2f0ec',
+  200: '#e5e1db',
+  300: '#cfc9c1',
+  400: '#a8a199',
+  500: '#7a7268',
+  600: '#4d4842',
+  700: '#302c28',
+  800: '#232629',
+  900: '#16181d',
+  950: '#0f1114'
+}
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
@@ -19,34 +36,11 @@ export default {
           900: '#134e4a',
           950: '#042f2e'
         },
-        // 辅助色 - 深蓝灰
-        accent: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617'
-        },
-        // 深色模式背景
-        dark: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617'
-        }
+        // 中性色阶 - 与首页共用（gray 默认色阶被完整覆盖）
+        gray: { ...neutral },
+        accent: { ...neutral },
+        // 深色模式背景（gray 的别名，深色表面专用）
+        dark: { ...neutral }
       },
       fontFamily: {
         sans: [
@@ -76,11 +70,9 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-primary': 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-        'gradient-dark': 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        'gradient-dark': 'linear-gradient(135deg, #232629 0%, #16181d 100%)',
         'gradient-glass':
-          'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-        'mesh-gradient':
-          'radial-gradient(at 40% 20%, rgba(20, 184, 166, 0.12) 0px, transparent 50%), radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.08) 0px, transparent 50%), radial-gradient(at 0% 50%, rgba(20, 184, 166, 0.08) 0px, transparent 50%)'
+          'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

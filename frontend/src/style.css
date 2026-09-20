@@ -31,12 +31,12 @@
 
   *:hover,
   *:focus-within {
-    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+    scrollbar-color: rgba(168, 161, 153, 0.5) transparent;
   }
 
   .dark *:hover,
   .dark *:focus-within {
-    scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+    scrollbar-color: rgba(77, 72, 66, 0.5) transparent;
   }
 
   ::-webkit-scrollbar {
@@ -79,10 +79,10 @@
    */
   .table-wrapper {
     scrollbar-width: auto;
-    scrollbar-color: rgba(156, 163, 175, 0.7) transparent;
+    scrollbar-color: rgba(168, 161, 153, 0.7) transparent;
   }
   .dark .table-wrapper {
-    scrollbar-color: rgba(75, 85, 99, 0.7) transparent;
+    scrollbar-color: rgba(77, 72, 66, 0.7) transparent;
   }
   /* 旧版 Chrome (< 121) 兼容回退 */
   .table-wrapper::-webkit-scrollbar {
@@ -235,9 +235,9 @@
 
   /* ============ 卡片样式 ============ */
   .card {
-    @apply bg-white dark:bg-dark-800/50;
+    @apply bg-white dark:bg-dark-800;
     @apply rounded-2xl;
-    @apply border border-gray-100 dark:border-dark-700/50;
+    @apply border border-gray-100 dark:border-dark-700;
     @apply shadow-card;
     @apply transition-all duration-300;
   }
@@ -328,7 +328,7 @@
   .table th {
     @apply px-4 py-3 text-left font-medium;
     @apply text-gray-600 dark:text-dark-300;
-    @apply bg-gray-50 dark:bg-dark-800/50;
+    @apply bg-gray-50 dark:bg-dark-900;
     @apply border-b border-gray-200 dark:border-dark-700;
   }
 

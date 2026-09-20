@@ -92,14 +92,23 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/approvals":               {},
 	"GET /api/v1/admin/approvals/pending-count": {},
 	"GET /api/v1/admin/approvals/:id":           {},
+
+	// 工单（fork 本地）：admin 与 operator 同权看全部并回复；响应只含用户邮箱与工单文本，无凭证 / 余额 / IP
+	"GET /api/v1/admin/tickets":            {},
+	"GET /api/v1/admin/tickets/open-count": {},
+	"GET /api/v1/admin/tickets/:id":        {},
 }
 
-// operatorWriteScope 允许 operator 直接调用（不经审批）的非 GET 条目。只放两类：
-// 读语义的 POST（批量取用户属性）与撤回自己的审批申请。其它写操作要么走 operatorApprovalScope，
-// 要么默认拒绝。每加一条都必须同步 golden 测试。
+// operatorWriteScope 允许 operator 直接调用（不经审批）的非 GET 条目。只放三类：
+// 读语义的 POST（批量取用户属性）、撤回自己的审批申请、以及客服工单的回复 / 关闭 / 重开
+// （工单是客服工作流，排队审批没有意义；只触及工单表，全部留审计）。其它写操作要么走
+// operatorApprovalScope，要么默认拒绝。每加一条都必须同步 golden 测试。
 var operatorWriteScope = map[string]struct{}{
 	"POST /api/v1/admin/user-attributes/batch": {},
 	"POST /api/v1/admin/approvals/:id/cancel":  {},
+	"POST /api/v1/admin/tickets/:id/messages":  {},
+	"POST /api/v1/admin/tickets/:id/close":     {},
+	"POST /api/v1/admin/tickets/:id/reopen":    {},
 }
 
 // operatorApprovalScope operator 可以发起、但必须由管理员在审批页一键通过后才会执行的写接口。

@@ -5,7 +5,7 @@
     >
       <!-- Logo -->
       <router-link to="/home" class="flex min-w-0 flex-1 items-center gap-2.5 lg:flex-none">
-        <div class="home-font-serif truncate text-[1.2rem] font-black leading-none tracking-[-0.04em] text-[#111] dark:text-white sm:text-[1.35rem]">
+        <div class="home-font-serif truncate text-[1.2rem] font-black leading-none tracking-[-0.04em] text-gray-900 dark:text-white sm:text-[1.35rem]">
           {{ siteName }}
         </div>
       </router-link>
@@ -17,19 +17,19 @@
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-gray-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
         >
           {{ t('home.docs') }}
         </a>
         <router-link
           to="/models"
-          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-gray-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
         >
           {{ t('home.navModels') }}
         </router-link>
         <a
           href="#pricing"
-          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-gray-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
           @click.prevent="navigateToPricing"
         >
           {{ t('home.navPricing') }}
@@ -38,7 +38,7 @@
           v-if="showChangelog"
           to="/changelog"
           data-test="nav-changelog"
-          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-[#111] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          class="rounded-full px-3.5 py-2 text-[13.5px] font-medium text-[#555] transition hover:bg-black/5 hover:text-gray-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
         >
           {{ t('home.navChangelog') }}
         </router-link>
@@ -50,7 +50,7 @@
 
         <button
           type="button"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#777] transition hover:bg-black/5 hover:text-[#111] dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#777] transition hover:bg-black/5 hover:text-gray-900 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
           :title="isDark ? t('home.switchToLight') : t('home.switchToDark')"
           @click="$emit('toggleTheme')"
         >

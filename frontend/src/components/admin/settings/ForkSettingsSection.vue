@@ -45,6 +45,19 @@
         <Toggle v-model="form.approval_notify_serverchan_enabled" />
       </div>
 
+      <!-- 工单（新工单 / 用户回复）→ Server酱³ 推送（复用同一 UID / SendKey） -->
+      <div class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700">
+        <div>
+          <label class="font-medium text-gray-900 dark:text-white">
+            {{ t('admin.settings.site.ticketNotify.enabled') }}
+          </label>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ t('admin.settings.site.ticketNotify.enabledHint') }}
+          </p>
+        </div>
+        <Toggle v-model="form.ticket_notify_serverchan_enabled" />
+      </div>
+
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
           <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -243,6 +256,8 @@ interface ForkSettingsForm {
   group_status_notify_serverchan_sendkey_configured: boolean
   // 运维写操作审批 → Server酱³ 推送（复用同一 UID / SendKey）
   approval_notify_serverchan_enabled: boolean
+  // 工单（新工单 / 用户回复）→ Server酱³ 推送（复用同一 UID / SendKey）
+  ticket_notify_serverchan_enabled: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
   purchase_subscription_open_mode: string

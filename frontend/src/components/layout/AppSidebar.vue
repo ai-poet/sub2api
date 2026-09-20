@@ -148,6 +148,12 @@
             <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
             <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
             <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{ item.label }}</span>
+            <span
+              v-if="item.badge && (item.badge() ?? 0) > 0"
+              class="sidebar-badge"
+              :class="{ 'sidebar-badge-collapsed': sidebarCollapsed }"
+              :data-test="`sidebar-badge-${item.path}`"
+            >{{ sidebarCollapsed ? '' : item.badge() }}</span>
           </router-link>
         </div>
       </template>
@@ -197,7 +203,7 @@
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAdminSettingsStore, useAppStore, useApprovalsStore, useAuthStore, useOnboardingStore } from '@/stores'
+import { useAdminSettingsStore, useAppStore, useApprovalsStore, useAuthStore, useOnboardingStore, useTicketsStore } from '@/stores'
 import VersionBadge from '@/components/common/VersionBadge.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { sanitizeSvg } from '@/utils/sanitize'
@@ -255,6 +261,10 @@ const adminSettingsStore = useAdminSettingsStore()
 // 运维写操作审批：待审数量角标（管理员：全站；运维管理员：自己的）
 const approvalsStore = useApprovalsStore()
 const approvalBadge = () => approvalsStore.pendingCount
+// 工单角标：客服侧（admin / operator）= 待处理数；用户侧 = 有未读客服回复的工单数
+const ticketsStore = useTicketsStore()
+const ticketOpenBadge = () => ticketsStore.openCount
+const ticketUnreadBadge = () => ticketsStore.unreadCount
 const { canUseBatchImage, refreshBatchImageAccess } = useBatchImageAccess()
 
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
@@ -289,6 +299,22 @@ const DashboardIcon = {
           'stroke-linecap': 'round',
           'stroke-linejoin': 'round',
           d: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z'
+        })
+      ]
+    )
+}
+
+// 工单入口图标（heroicons chat-bubble-left-right；TicketIcon 已被兑换码占用）
+const SupportIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155'
         })
       ]
     )
@@ -690,6 +716,8 @@ const flagForkPurchase = () => forkPublicSettings()?.purchase_subscription_enabl
 const flagForkGroupStatus = () => forkPublicSettings()?.group_status_enabled === true
 const flagForkReferral = () => forkPublicSettings()?.referral_enabled === true
 const flagBatchImageAccess = () => canUseBatchImage.value
+// 工单：用户侧入口只给普通用户；admin / operator 走控制台的「工单管理」，不在"我的账户"区重复出现
+const flagUserTickets = () => !authStore.hasConsoleAccess
 
 // buildSelfNavItems 构造用户自己的导航项（用户端主菜单和管理员的"我的账户"子菜单共享这组声明）。
 // withDashboard=true 时包含仪表盘（用户端），false 时不含（管理员的个人区已经有独立仪表盘入口）。
@@ -710,6 +738,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/purchase', label: purchaseNavLabel.value, icon: RechargeSubscriptionIcon, hideInSimpleMode: true, featureFlag: flagForkPurchase },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/integration-guide', label: t('nav.integrationGuide'), icon: GuideIcon },
+    { path: '/tickets', label: t('nav.tickets'), icon: SupportIcon, badge: ticketUnreadBadge, featureFlag: flagUserTickets },
     { path: '/models', label: t('nav.modelCatalog'), icon: ChartIcon },
     { path: '/model-status', label: t('nav.modelStatus'), icon: ServerIcon, featureFlag: flagForkGroupStatus },
     { path: '/referral', label: t('nav.referral'), icon: UsersIcon, hideInSimpleMode: true, featureFlag: flagForkReferral },
@@ -761,7 +790,8 @@ const operatorNavItems = computed((): NavItem[] => applyFeatureFlags([
   { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
   { path: '/admin/users', label: t('nav.users'), icon: UsersIcon },
   { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, featureFlag: flagSubscription },
-  { path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, badge: approvalBadge }
+  { path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, badge: approvalBadge },
+  { path: '/admin/tickets', label: t('nav.tickets'), icon: SupportIcon, badge: ticketOpenBadge }
 ]))
 
 // Admin navigation items
@@ -778,6 +808,8 @@ const adminNavItems = computed((): NavItem[] => {
     { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription },
     // fork：运维写操作审批（带待审角标）
     { path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, hideInSimpleMode: true, badge: approvalBadge },
+    // fork：工单管理（带待处理角标）
+    { path: '/admin/tickets', label: t('nav.tickets'), icon: SupportIcon, badge: ticketOpenBadge },
     { path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon },
     { path: '/admin/plugins', label: t('nav.plugins'), icon: PluginIcon, featureFlag: flagPluginManagement },
     { path: '/admin/announcements', label: t('nav.announcements'), icon: BellIcon },
@@ -1067,5 +1099,38 @@ onBeforeUnmount(() => {
   display: block;
   width: 1.25rem;
   height: 1.25rem;
+}
+
+/* 菜单角标（待审批 / 工单数）：展开时靠右显示数字，折叠时缩成右上角小红点 */
+.sidebar-link {
+  position: relative;
+}
+
+.sidebar-badge {
+  margin-left: auto;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 9999px;
+  background: rgb(239 68 68);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sidebar-badge-collapsed {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  margin-left: 0;
+  min-width: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
 }
 </style>

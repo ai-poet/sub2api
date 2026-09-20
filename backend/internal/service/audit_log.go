@@ -48,6 +48,10 @@ const (
 	AuditActionAdminApprovalBatch     = "admin.approval.batch_approve"
 	AuditActionAdminApprovalReject    = "admin.approval.reject"
 	AuditActionAdminApprovalCancel    = "admin.approval.cancel"
+	// 工单（fork 本地）：客服回复 / 关闭 / 重开。
+	AuditActionAdminTicketReply  = "admin.tickets.reply"
+	AuditActionAdminTicketClose  = "admin.tickets.close"
+	AuditActionAdminTicketReopen = "admin.tickets.reopen"
 )
 
 // AuditLog 一条管理面操作审计记录。

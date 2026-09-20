@@ -179,6 +179,7 @@ type SystemSettings struct {
 	GroupStatusEnabled                           bool             `json:"group_status_enabled"`
 	GroupStatusNotifyServerChanEnabled           bool             `json:"group_status_notify_serverchan_enabled"`
 	ApprovalNotifyServerChanEnabled              bool             `json:"approval_notify_serverchan_enabled"`
+	TicketNotifyServerChanEnabled                bool             `json:"ticket_notify_serverchan_enabled"`
 	GroupStatusNotifyServerChanUID               string           `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKeyConfigured bool             `json:"group_status_notify_serverchan_sendkey_configured"`
 	CommunityQRCode                              string           `json:"community_qr_code"`

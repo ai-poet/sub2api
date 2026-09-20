@@ -1,41 +1,41 @@
 <template>
-  <div class="home-font-sans min-h-screen bg-[#f8fafb] text-[#161616] dark:bg-[#0f1114] dark:text-[#f3f1ed]">
+  <div class="home-font-sans min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
     <!-- Header -->
     <div class="border-b border-black/8 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-white/5">
       <div class="mx-auto flex max-w-[860px] items-center justify-between px-6 py-4">
         <RouterLink
           to="/home"
-          class="flex items-center gap-2 text-sm text-[#666] transition hover:text-[#111] dark:text-white/50 dark:hover:text-white"
+          class="flex items-center gap-2 text-sm text-[#666] transition hover:text-gray-900 dark:text-white/50 dark:hover:text-white"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           {{ pt('home.privacy.backHome') }}
         </RouterLink>
-        <span class="text-sm font-medium text-[#111] dark:text-white">{{ pt('home.privacy.title') }}</span>
+        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ pt('home.privacy.title') }}</span>
       </div>
     </div>
 
     <!-- Content -->
     <article class="mx-auto max-w-[860px] px-6 py-14">
-      <h1 class="text-3xl font-semibold tracking-[-0.03em] text-[#111] dark:text-white">
+      <h1 class="text-3xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
         {{ pt('home.privacy.title') }}
       </h1>
       <p class="mt-2 text-sm text-[#999] dark:text-white/38">{{ pt('home.privacy.lastUpdated') }}</p>
 
-      <p class="mt-6 text-base leading-8 text-[#5f5850] dark:text-white/65">
+      <p class="mt-6 text-base leading-8 text-gray-600 dark:text-white/65">
         {{ pt('home.privacy.intro') }}
       </p>
 
       <div class="mt-10 space-y-10">
         <section v-for="section in sections" :key="section.id">
-          <h2 class="text-lg font-semibold tracking-[-0.02em] text-[#111] dark:text-white">
+          <h2 class="text-lg font-semibold tracking-[-0.02em] text-gray-900 dark:text-white">
             {{ section.title }}
           </h2>
-          <div class="mt-3 space-y-3 text-base leading-8 text-[#5f5850] dark:text-white/65">
+          <div class="mt-3 space-y-3 text-base leading-8 text-gray-600 dark:text-white/65">
             <p v-for="(para, i) in section.paragraphs" :key="i">{{ para }}</p>
           </div>
-          <ul v-if="section.items" class="mt-3 space-y-2 pl-5 text-base leading-7 text-[#5f5850] dark:text-white/65">
+          <ul v-if="section.items" class="mt-3 space-y-2 pl-5 text-base leading-7 text-gray-600 dark:text-white/65">
             <li v-for="(item, i) in section.items" :key="i" class="list-disc">{{ item }}</li>
           </ul>
         </section>

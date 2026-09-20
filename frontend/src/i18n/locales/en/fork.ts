@@ -305,7 +305,8 @@ export default {
     "communityGroupTooltip": "Scan to join our community group",
     "communityGroupScanHint": "Scan the QR code with your phone",
     "communityGroupJoin": "Join Now",
-    "approvals": "Approvals"
+    "approvals": "Approvals",
+    "tickets": "Tickets"
   },
   "auth": {
     "referralCodeLabel": "Referral Code",
@@ -674,6 +675,10 @@ export default {
           "enabled": "Approval request push",
           "enabledHint": "Push a message with a link to the approvals page whenever an operator submits a user / subscription management change (uses the UID / SendKey above)."
         },
+        "ticketNotify": {
+          "enabled": "Ticket push",
+          "enabledHint": "Push a message with a link to the ticket whenever a user opens a ticket or adds a reply (uses the UID / SendKey above); staff replies are not pushed."
+        },
         "communityQRCodePlaceholder": "Paste the QR image base64 or URL",
         "communityQRCode": "Community Group QR Code",
         "uploadQRCode": "Upload QR Code",
@@ -760,7 +765,8 @@ export default {
     "billingMode": {
       "token": "Token",
       "perRequest": "Per request",
-      "image": "Per image"
+      "image": "Per image",
+      "video": "Per second"
     },
     "rateSource": {
       "groupDefault": "Group default multiplier",
@@ -780,12 +786,14 @@ export default {
       "cacheWrite": "Cache write",
       "cacheRead": "Cache read",
       "perRequest": "Per request",
-      "perImage": "Per image"
+      "perImage": "Per image",
+      "perSecond": "Per second"
     },
     "units": {
       "perMillionTokens": "Per 1M tokens",
       "perRequest": "Per request",
-      "perImage": "Per image"
+      "perImage": "Per image",
+      "perSecond": "Per second of video"
     },
     "priceColumns": {
       "official": "Official",
@@ -796,8 +804,10 @@ export default {
       "promptCaching": "Prompt caching",
       "longContext": "Long context threshold {threshold}",
       "tieredPricing": "{count} pricing tiers",
+      "resolutionTiers": "{count} resolution tiers",
       "userRateOverride": "User override"
     },
+    "defaultTierHint": "Billed at this tier when no size is given",
     "expandDetails": "Expand tiers and peer groups",
     "collapseDetails": "Collapse details",
     "intervalSectionTitle": "Channel tier pricing",
@@ -971,6 +981,101 @@ export default {
         "subscriptionResetQuota": "Reset subscription quota",
         "subscriptionRevoke": "Revoke subscription",
         "subscriptionRestore": "Restore subscription"
+      }
+    }
+  },
+  "tickets": {
+    "title": "Support Tickets",
+    "description": "Report a problem and talk to support",
+    "caption": "Support Tickets",
+    "intro": "Having trouble with your account, billing or API calls? Open a ticket and support will reply in the same thread.",
+    "create": "New ticket",
+    "createTitle": "New ticket",
+    "empty": "No tickets yet",
+    "loading": "Loading...",
+    "loadFailed": "Failed to load tickets",
+    "form": {
+      "title": "Title",
+      "titlePlaceholder": "Summarize the problem in one line",
+      "category": "Category",
+      "body": "Description",
+      "bodyPlaceholder": "Describe what happened: symptoms, the model / API key involved, error messages, when it started. Markdown is supported.",
+      "bodyHint": "Markdown supported, up to {max} characters",
+      "submit": "Submit ticket",
+      "submitting": "Submitting..."
+    },
+    "status": {
+      "open": "Open",
+      "replied": "Replied",
+      "closed": "Closed"
+    },
+    "statusFilter": {
+      "all": "All"
+    },
+    "category": {
+      "account": "Account",
+      "billing": "Billing / Quota",
+      "api": "API calls",
+      "other": "Other"
+    },
+    "columns": {
+      "id": "ID",
+      "user": "User",
+      "title": "Title",
+      "category": "Category",
+      "status": "Status",
+      "messages": "Messages",
+      "lastMessage": "Last updated",
+      "actions": "Actions"
+    },
+    "thread": {
+      "you": "You",
+      "user": "User",
+      "staff": "Support",
+      "roleAdmin": "Admin",
+      "roleOperator": "Operator",
+      "placeholder": "Write a reply, Markdown supported",
+      "send": "Send",
+      "sending": "Sending...",
+      "closedHint": "This ticket is closed. Reopen it to continue the conversation.",
+      "unread": "New reply"
+    },
+    "actions": {
+      "close": "Close ticket",
+      "reopen": "Reopen",
+      "view": "View",
+      "dismiss": "Dismiss"
+    },
+    "confirmClose": {
+      "title": "Close ticket",
+      "message": "Replies are disabled once the ticket is closed. You can reopen it later if needed. Close it now?"
+    },
+    "toast": {
+      "created": "Ticket submitted",
+      "replied": "Reply sent",
+      "closed": "Ticket closed",
+      "reopened": "Ticket reopened"
+    },
+    "errors": {
+      "openLimit": "Too many open tickets. Please close or resolve an existing one first.",
+      "closed": "This ticket is closed",
+      "notClosed": "This ticket is not closed"
+    },
+    "detail": {
+      "title": "Ticket",
+      "titleWithId": "Ticket #{id}"
+    },
+    "admin": {
+      "title": "Tickets",
+      "description": "Review and reply to user tickets",
+      "empty": "No tickets match the current filters",
+      "searchPlaceholder": "Search by title or user email",
+      "categoryAll": "All categories",
+      "tabs": {
+        "open": "Open",
+        "replied": "Replied",
+        "closed": "Closed",
+        "all": "All"
       }
     }
   }

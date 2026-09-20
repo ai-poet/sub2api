@@ -1,5 +1,5 @@
 <template>
-  <div class="home-font-sans relative min-h-screen overflow-hidden bg-[#f8fafb] text-[#161616] dark:bg-[#0f1114] dark:text-[#f3f1ed]">
+  <div class="home-font-sans relative min-h-screen overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
     <!-- Background grid pattern -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
       <div class="home-grid-pattern absolute inset-0 opacity-[0.25] dark:opacity-[0.16]"></div>
@@ -20,10 +20,10 @@
       <!-- Page Header -->
       <section class="px-4 pb-8 pt-12 md:px-6 md:pb-12 md:pt-16">
         <div class="mx-auto max-w-[900px] text-center">
-          <h1 class="mb-3 text-3xl font-bold tracking-tight text-[#111] dark:text-white md:text-4xl">
+          <h1 class="mb-3 text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
             {{ t('changelog.title') }}
           </h1>
-          <p class="mx-auto max-w-[520px] text-base text-[#645d54] dark:text-white/60">
+          <p class="mx-auto max-w-[520px] text-base text-gray-600 dark:text-white/60">
             {{ t('changelog.subtitle') }}
           </p>
         </div>
@@ -60,7 +60,7 @@
               >
                 <!-- Dot -->
                 <div
-                  class="absolute left-[7px] top-2 h-4 w-4 rounded-full border-2 border-white bg-primary-500 shadow-sm dark:border-[#0f1114] md:left-[11px]"
+                  class="absolute left-[7px] top-2 h-4 w-4 rounded-full border-2 border-white bg-primary-500 shadow-sm dark:border-gray-950 md:left-[11px]"
                 ></div>
 
                 <!-- Card -->

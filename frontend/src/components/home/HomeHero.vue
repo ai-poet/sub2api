@@ -1,5 +1,5 @@
 <template>
-  <section class="relative w-full overflow-hidden bg-white px-4 pt-12 md:px-6 md:pt-16 dark:bg-[#0f1114]">
+  <section class="relative w-full overflow-hidden bg-white px-4 pt-12 md:px-6 md:pt-16 dark:bg-gray-950">
 
     <div class="mx-auto w-full max-w-[1380px] min-w-0">
 
@@ -12,12 +12,12 @@
 
       <!-- Headline -->
       <h1 class="mt-6 max-w-full text-[clamp(1.95rem,7.8vw,5rem)] font-black leading-[1.06] tracking-[-0.04em] [overflow-wrap:anywhere] [text-wrap:balance] sm:text-[clamp(2.6rem,6vw,5rem)]">
-        <span class="block text-[#111] dark:text-white">
+        <span class="block text-gray-900 dark:text-white">
           <span class="block sm:inline">{{ t('home.hero.titleLeadPrimary') }}</span>
           <span v-if="hasClientDownloads" class="block sm:ml-[0.18em] sm:inline">{{ t('home.hero.titleLeadSecondary') }}</span>
         </span>
         <span v-if="titleAccent" class="block text-primary-600 dark:text-primary-400">{{ titleAccent }}</span>
-        <span v-if="titleTail" class="block text-[#111] dark:text-white">{{ titleTail }}</span>
+        <span v-if="titleTail" class="block text-gray-900 dark:text-white">{{ titleTail }}</span>
       </h1>
 
       <!-- CLI icons strip -->
@@ -47,7 +47,7 @@
           type="button"
           :data-platform="primaryClientDownloadOption.id"
           data-test="hero-primary-download"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gray-900 px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 sm:w-auto"
           @click="handlePrimaryClick"
         >
           <span>{{ t('home.hero.installPrimary') }}</span>
@@ -61,7 +61,7 @@
           data-test="hero-primary-download"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gray-900 px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 sm:w-auto"
         >
           <span>{{ t('home.hero.downloadPrimary') }}</span>
           <Icon name="download" size="sm" />
@@ -70,7 +70,7 @@
           v-if="primaryClientDownloadOption"
           :to="dashboardPath"
           data-test="hero-connect-api"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 active:translate-y-0 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-gray-900 transition hover:-translate-y-[1px] hover:bg-gray-50 active:translate-y-0 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
         >
           <span>{{ t('home.hero.connectApi') }}</span>
           <Icon name="arrowRight" size="sm" />
@@ -79,7 +79,7 @@
           v-if="!primaryClientDownloadOption"
           :to="primaryTo"
           data-test="hero-primary-fallback"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5] sm:w-auto"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gray-900 px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 sm:w-auto"
         >
           <span>{{ t('home.hero.startApi') }}</span>
           <Icon name="arrowRight" size="sm" />
@@ -90,7 +90,7 @@
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-gray-900 transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
         >
           <span>{{ t('home.viewDocs') }}</span>
           <Icon name="externalLink" size="sm" />
@@ -98,7 +98,7 @@
         <router-link
           v-else-if="!primaryClientDownloadOption"
           to="/login"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-[#111] transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
+          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-gray-900 transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
         >
           <span>{{ t('home.login') }}</span>
           <Icon name="arrowRight" size="sm" />
@@ -108,7 +108,7 @@
       <!-- macOS install command preview -->
       <div
         v-if="primaryClientDownloadOption && primaryClientDownloadOption.type === 'command'"
-        class="mt-4 flex max-w-2xl items-center gap-2 rounded-2xl border border-black/8 bg-[#16181d] p-2 pl-4 font-mono text-sm text-white shadow-sm dark:border-white/10 dark:bg-[#0f1114]"
+        class="mt-4 flex max-w-2xl items-center gap-2 rounded-2xl border border-black/8 bg-gray-900 p-2 pl-4 font-mono text-sm text-white shadow-sm dark:border-white/10 dark:bg-gray-950"
         data-test="hero-install-command"
       >
         <code class="min-w-0 flex-1 truncate text-white/90">{{ primaryClientDownloadOption.url }}</code>
@@ -148,7 +148,7 @@
           :key="card.title"
           class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"
         >
-          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">{{ card.title }}</h3>
+          <h3 class="text-[15px] font-semibold text-gray-900 dark:text-white">{{ card.title }}</h3>
           <p class="mt-1.5 text-sm leading-6 text-gray-500 dark:text-white/55">{{ card.body }}</p>
         </div>
       </div>
@@ -159,7 +159,7 @@
         class="mt-6 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
       >
         <div>
-          <h3 class="text-[15px] font-semibold text-[#111] dark:text-white">
+          <h3 class="text-[15px] font-semibold text-gray-900 dark:text-white">
             {{ t('home.clientShowcase.apiOnly.title') }}
           </h3>
           <p class="mt-1.5 max-w-[38rem] text-sm leading-6 text-gray-500 dark:text-white/55">
@@ -170,7 +170,7 @@
           <router-link
             :to="dashboardPath"
             data-test="api-only-dashboard"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-[#111] px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-[#111] dark:hover:bg-[#ece9e5]"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-gray-900 px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
           >
             <span>{{ t('home.clientShowcase.apiOnly.dashboardCta') }}</span>
             <Icon name="arrowRight" size="sm" />
@@ -181,7 +181,7 @@
             target="_blank"
             rel="noopener noreferrer"
             data-test="api-only-docs"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-[#111] transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
           >
             <span>{{ t('home.clientShowcase.apiOnly.docsCta') }}</span>
             <Icon name="externalLink" size="sm" />

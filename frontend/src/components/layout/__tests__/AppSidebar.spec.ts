@@ -91,7 +91,7 @@ describe('AppSidebar operator (read-only ops role)', () => {
     const start = componentSource.indexOf('const operatorNavItems = computed(')
     expect(start).toBeGreaterThan(-1)
     const block = componentSource.slice(start, componentSource.indexOf('// Admin navigation items', start))
-    for (const allowed of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/subscriptions', '/admin/approvals']) {
+    for (const allowed of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/subscriptions', '/admin/approvals', '/admin/tickets']) {
       expect(block).toContain(`path: '${allowed}'`)
     }
     for (const forbidden of ['/admin/groups', '/admin/accounts', '/admin/settings', '/admin/dashboard', '/admin/audit-logs']) {
@@ -104,6 +104,31 @@ describe('AppSidebar operator (read-only ops role)', () => {
   it('shows the pending approvals badge on the approvals entry for admins too', () => {
     expect(componentSource).toContain("{ path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, hideInSimpleMode: true, badge: approvalBadge }")
     expect(componentSource).toContain('v-if="item.badge && (item.badge() ?? 0) > 0"')
+  })
+})
+
+describe('AppSidebar tickets (fork)', () => {
+  it('gives regular users a tickets entry with the unread badge, hidden for console roles', () => {
+    expect(componentSource).toContain(
+      "{ path: '/tickets', label: t('nav.tickets'), icon: SupportIcon, badge: ticketUnreadBadge, featureFlag: flagUserTickets }"
+    )
+    expect(componentSource).toContain('const flagUserTickets = () => !authStore.hasConsoleAccess')
+  })
+
+  it('gives admins and operators the tickets console entry with the open-count badge', () => {
+    const operatorBlock = componentSource.slice(
+      componentSource.indexOf('const operatorNavItems = computed('),
+      componentSource.indexOf('// Admin navigation items')
+    )
+    expect(operatorBlock).toContain("{ path: '/admin/tickets', label: t('nav.tickets'), icon: SupportIcon, badge: ticketOpenBadge }")
+    expect(componentSource.split("path: '/admin/tickets'").length - 1).toBe(2)
+  })
+
+  it('renders badges in the regular-user nav loop and ships the badge styles', () => {
+    const userLoop = componentSource.slice(componentSource.indexOf('v-for="item in userNavItems"'), componentSource.indexOf('</nav>'))
+    expect(userLoop).toContain('class="sidebar-badge"')
+    expect(componentSource).toContain('.sidebar-badge {')
+    expect(componentSource).toContain('.sidebar-badge-collapsed {')
   })
 
   it('fetches admin settings for every console role (store routes operators to the console session API)', () => {

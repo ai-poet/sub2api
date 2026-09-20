@@ -325,3 +325,37 @@ func TestModelCatalogService_GetCatalog_SupportsPerRequestAndImageModes(t *testi
 	require.NotNil(t, result.Items[1].EffectivePricingUSD.PerRequestUSD)
 	require.InDelta(t, 0.04, *result.Items[1].EffectivePricingUSD.PerRequestUSD, 1e-12)
 }
+
+// 上下文窗口：客户端用量计的分母。来源不知道时必须整个缺省，
+// 不能退化成 0 —— 客户端靠字段缺失来决定不显示百分比。
+func TestCatalogContextWindow_OmittedWhenUnknown(t *testing.T) {
+	if got := catalogContextWindow(nil); got != nil {
+		t.Fatalf("nil pricing should yield no window, got %v", *got)
+	}
+	if got := catalogContextWindow(&LiteLLMModelPricing{}); got != nil {
+		t.Fatalf("absent max_input_tokens should yield no window, got %v", *got)
+	}
+	// 负数/零同样算不知道，而不是一个宽度为零的窗口。
+	if got := catalogContextWindow(&LiteLLMModelPricing{MaxInputTokens: 0}); got != nil {
+		t.Fatalf("zero should yield no window, got %v", *got)
+	}
+}
+
+func TestCatalogContextWindow_UsesMaxInputTokens(t *testing.T) {
+	got := catalogContextWindow(&LiteLLMModelPricing{MaxInputTokens: 200000})
+	if got == nil {
+		t.Fatal("expected a window")
+	}
+	if *got != 200000 {
+		t.Fatalf("expected 200000, got %d", *got)
+	}
+}
+
+// long_context_input_token_threshold 是计价分档边界，不是容量。
+// 两者数值相近，混用会给出看似合理的错值。
+func TestCatalogContextWindow_IgnoresThePricingTierThreshold(t *testing.T) {
+	got := catalogContextWindow(&LiteLLMModelPricing{LongContextInputTokenThreshold: 272000})
+	if got != nil {
+		t.Fatalf("the pricing threshold must not be read as capacity, got %d", *got)
+	}
+}

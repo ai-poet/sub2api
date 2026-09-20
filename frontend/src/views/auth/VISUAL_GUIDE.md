@@ -242,12 +242,12 @@ Centered: Both horizontally and vertically
 
 ### Neutral Colors
 
-- **Gray-900**: `#111827` - Headings
-- **Gray-700**: `#374151` - Labels
-- **Gray-600**: `#4B5563` - Body text
-- **Gray-500**: `#6B7280` - Helper text
-- **Gray-300**: `#D1D5DB` - Borders
-- **Gray-100**: `#F3F4F6` - Disabled backgrounds
+- **Gray-900**: `#16181d` - Headings
+- **Gray-700**: `#302c28` - Labels
+- **Gray-600**: `#4d4842` - Body text
+- **Gray-500**: `#7a7268` - Helper text
+- **Gray-300**: `#cfc9c1` - Borders
+- **Gray-100**: `#f2f0ec` - Disabled backgrounds
 - **White**: `#FFFFFF` - Card backgrounds
 
 ### Error Colors
@@ -314,7 +314,7 @@ Centered: Both horizontally and vertically
 **Default:**
 
 ```css
-border: 1px solid #D1D5DB (gray-300)
+border: 1px solid #cfc9c1 (gray-300)
 focus: 2px ring #6366F1 (indigo-500)
 ```
 
@@ -328,7 +328,7 @@ focus: 2px ring #EF4444 (red-500)
 **Disabled:**
 
 ```css
-background: #F3F4F6 (gray-100)
+background: #f2f0ec (gray-100)
 cursor: not-allowed
 opacity: 0.6
 ```

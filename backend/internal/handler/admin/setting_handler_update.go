@@ -29,6 +29,7 @@ type UpdateSettingsRequest struct {
 	GroupStatusEnabled                 *bool                           `json:"group_status_enabled"`
 	GroupStatusNotifyServerChanEnabled *bool                           `json:"group_status_notify_serverchan_enabled"`
 	ApprovalNotifyServerChanEnabled    *bool                           `json:"approval_notify_serverchan_enabled"`
+	TicketNotifyServerChanEnabled      *bool                           `json:"ticket_notify_serverchan_enabled"`
 	GroupStatusNotifyServerChanUID     *string                         `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKey *string                         `json:"group_status_notify_serverchan_sendkey"`
 	CommunityQRCode                    *string                         `json:"community_qr_code"`
@@ -2012,6 +2013,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
 		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
 		ApprovalNotifyServerChanEnabled:                        settings.ApprovalNotifyServerChanEnabled,
+		TicketNotifyServerChanEnabled:                          settings.TicketNotifyServerChanEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
@@ -2393,6 +2395,11 @@ func applyForkSettingsFromRequest(
 	settings.ApprovalNotifyServerChanEnabled = previous.ApprovalNotifyServerChanEnabled
 	if req.ApprovalNotifyServerChanEnabled != nil {
 		settings.ApprovalNotifyServerChanEnabled = *req.ApprovalNotifyServerChanEnabled
+	}
+	// 工单（新工单 / 用户回复）→ Server酱³ 推送（复用同一 UID / SendKey）
+	settings.TicketNotifyServerChanEnabled = previous.TicketNotifyServerChanEnabled
+	if req.TicketNotifyServerChanEnabled != nil {
+		settings.TicketNotifyServerChanEnabled = *req.TicketNotifyServerChanEnabled
 	}
 	settings.GroupStatusNotifyServerChanUID = previous.GroupStatusNotifyServerChanUID
 	if req.GroupStatusNotifyServerChanUID != nil {

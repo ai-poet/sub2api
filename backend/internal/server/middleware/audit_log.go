@@ -60,6 +60,8 @@ var auditExtraAllowedKeys = map[string]struct{}{
 	"matched_count": {}, "snapshot_max_id": {}, "filter_hash": {}, "confirm": {},
 	// fork：运维审批（申请 id / 申请人 / 结果状态）
 	"approval_id": {}, "approval_requester_id": {}, "approval_status": {},
+	// fork：工单（工单 id / 状态 / 发起人）
+	"ticket_id": {}, "ticket_status": {}, "ticket_user_id": {},
 }
 
 // SetAuditExtra adds allowlisted, scalar details to the current audit entry.
@@ -149,6 +151,10 @@ var auditActionOverrides = map[string]string{
 	"POST /api/v1/admin/approvals/batch-approve": service.AuditActionAdminApprovalBatch,
 	"POST /api/v1/admin/approvals/:id/reject":    service.AuditActionAdminApprovalReject,
 	"POST /api/v1/admin/approvals/:id/cancel":    service.AuditActionAdminApprovalCancel,
+	// fork：客服工单
+	"POST /api/v1/admin/tickets/:id/messages": service.AuditActionAdminTicketReply,
+	"POST /api/v1/admin/tickets/:id/close":    service.AuditActionAdminTicketClose,
+	"POST /api/v1/admin/tickets/:id/reopen":   service.AuditActionAdminTicketReopen,
 }
 
 // auditBodyOmittedRoutes 请求体几乎整体由凭证构成的路由（如整块粘贴 auth JSON 的导入接口）。

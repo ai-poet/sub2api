@@ -90,6 +90,19 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    // fork：工单（用户提交、客服回复）
+    path: '/tickets',
+    name: 'Tickets',
+    component: () => import('@/views/user/TicketsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Support Tickets',
+      titleKey: 'tickets.title',
+      descriptionKey: 'tickets.description'
+    }
+  },
+  {
     path: '/model-status',
     name: 'ModelStatus',
     component: () => import('@/views/user/ModelStatusView.vue'),
@@ -521,6 +534,20 @@ const routes: RouteRecordRaw[] = [
       title: 'Approvals',
       titleKey: 'operator.approval.title',
       descriptionKey: 'operator.approval.description'
+    }
+  },
+  {
+    // fork：工单管理（管理员与运维管理员同权查看并回复）
+    path: '/admin/tickets',
+    name: 'AdminTickets',
+    component: () => import('@/views/admin/TicketsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      operatorAllowed: true,
+      title: 'Tickets',
+      titleKey: 'tickets.admin.title',
+      descriptionKey: 'tickets.admin.description'
     }
   },
   {

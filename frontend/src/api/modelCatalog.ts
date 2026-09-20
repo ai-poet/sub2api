@@ -1,6 +1,6 @@
 import { apiClient } from './client'
 
-export type ModelCatalogBillingMode = 'token' | 'per_request' | 'image'
+export type ModelCatalogBillingMode = 'token' | 'per_request' | 'image' | 'video'
 export type ModelCatalogSortKey = 'effective_price_asc' | 'model_asc'
 
 export interface ModelCatalogSummary {
@@ -25,6 +25,8 @@ export interface ModelCatalogPricing {
   cache_read_per_mtok_usd: number | null
   per_request_usd: number | null
   per_image_usd: number | null
+  /** 视频按秒计费：总价 = 每秒价 x 时长 x 条数 */
+  per_second_usd: number | null
   source: string
   has_reference: boolean
 }
@@ -36,6 +38,7 @@ export interface ModelCatalogComparison {
   delta_output_per_mtok_usd: number | null
   delta_per_request_usd: number | null
   delta_per_image_usd: number | null
+  delta_per_second_usd: number | null
 }
 
 export interface ModelCatalogPriceInterval {
@@ -50,11 +53,30 @@ export interface ModelCatalogPriceInterval {
   per_image_usd: number | null
 }
 
+/**
+ * 图片/视频模型按分辨率分档的单价。
+ *
+ * 这条分档轴和 `intervals` 不同：`intervals` 按上下文 token 区间分档，
+ * `min_tokens` / `max_tokens` 对分辨率档位没有意义，用它渲染会得到 ">= -"。
+ */
+export interface ModelCatalogMediaTier {
+  /** 图片为 1K/2K/4K，视频为 480p/720p/1080p */
+  tier: string
+  official_usd: number | null
+  effective_usd: number | null
+  /** 请求未指定尺寸时，计费实际落到的档位 */
+  is_default_tier: boolean
+}
+
+export type ModelCatalogMediaUnit = 'image' | 'second' | ''
+
 export interface ModelCatalogPricingDetails {
   supports_prompt_caching: boolean
   has_long_context_multiplier: boolean
   long_context_input_threshold: number
   intervals: ModelCatalogPriceInterval[]
+  media_tiers: ModelCatalogMediaTier[]
+  media_unit: ModelCatalogMediaUnit
 }
 
 export interface ModelCatalogGroupCompanion {
@@ -119,7 +141,28 @@ export function getPrimaryPrice(pricing: ModelCatalogPricing, billingMode: strin
   if (billingMode === 'image') {
     return pricing.per_image_usd ?? null
   }
+  if (billingMode === 'video') {
+    return pricing.per_second_usd ?? null
+  }
   return pricing.input_per_mtok_usd ?? null
+}
+
+/**
+ * 各计费模式的排序分桶。
+ *
+ * 不同模式的主价单位不同（$/1M tokens、$/次、$/张、$/秒），直接比数值大小没有
+ * 意义 —— $0.134/张 会排在 $2.50/1M tokens 前面，读起来像"更便宜"。所以先按
+ * 模式分桶，只在同一单位内部比价格。
+ */
+const BILLING_MODE_SORT_RANK: Record<string, number> = {
+  token: 0,
+  per_request: 1,
+  image: 2,
+  video: 3,
+}
+
+export function getBillingModeSortRank(billingMode: string): number {
+  return BILLING_MODE_SORT_RANK[billingMode] ?? BILLING_MODE_SORT_RANK.token
 }
 
 export function filterModelCatalogItems(
@@ -177,15 +220,13 @@ export function compareModelCatalogItems(
   b: ModelCatalogItem,
   sortKey: ModelCatalogSortKey,
 ): number {
-  if (sortKey === 'effective_price_asc') {
-    const byEffective = compareNullableNumberAsc(getPrimaryEffectivePrice(a), getPrimaryEffectivePrice(b))
-    if (byEffective !== 0) {
-      return byEffective
-    }
-  }
-
   if (sortKey === 'model_asc') {
     return compareModelCatalogFallback(a, b)
+  }
+
+  const byMode = getBillingModeSortRank(a.billing_mode) - getBillingModeSortRank(b.billing_mode)
+  if (byMode !== 0) {
+    return byMode
   }
 
   const byEffective = compareNullableNumberAsc(getPrimaryEffectivePrice(a), getPrimaryEffectivePrice(b))
