@@ -97,7 +97,7 @@ function PayContent() {
   const [activeMobileTab, setActiveMobileTab] = useState<'pay' | 'orders'>('pay');
   const [pendingCount, setPendingCount] = useState(0);
 
-  // 新增状态
+  // 顶部 tab：按量付费 / 套餐，同一个页面里切换，不靠 URL 参数分入口；默认落在按量付费。
   const [mainTab, setMainTab] = useState<'topup' | 'subscribe'>('topup');
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [plans, setPlans] = useState<PlanInfo[]>([]);
@@ -154,6 +154,35 @@ function PayContent() {
             ))}
           </div>
         )}
+      </div>
+    );
+  };
+
+  // 「我的订阅」区块。正常只出现在套餐 tab 里（续费入口就是下面的套餐列表），
+  // 站点撤掉套餐、没有套餐 tab 时才退回充值区下方，免得历史订阅无处可看。
+  const renderUserSubscriptions = (className = '') => {
+    if (userSubscriptions.length === 0) return null;
+    return (
+      <div className={className}>
+        <h3 className={['text-lg font-semibold mb-3', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
+          {pickLocaleText(locale, '我的订阅', 'My Subscriptions')}
+        </h3>
+        <UserSubscriptions
+          subscriptions={userSubscriptions}
+          canRenew={(groupId) => plans.some((p) => p.groupId === groupId)}
+          onRenew={(groupId) => {
+            const groupPlans = plans.filter((p) => p.groupId === groupId);
+            if (groupPlans.length === 1) {
+              setSelectedPlan(groupPlans[0]);
+              setMainTab('subscribe');
+            } else if (groupPlans.length > 1) {
+              setRenewGroupId(groupId);
+              setMainTab('subscribe');
+            }
+          }}
+          isDark={isDark}
+          locale={locale}
+        />
       </div>
     );
   };
@@ -656,14 +685,21 @@ function PayContent() {
   const showTabBar = canTopUp && hasPlans;
   // 移动端「充值」分页是否可见；桌面端恒为 true
   const payTabVisible = activeMobileTab === 'pay' || !isMobile;
+  // 标题：两个入口都在时固定写「充值与订阅」，不随 tab 切换；只剩一个入口才写具体的那个。
+  // 数据没回来之前也用固定标题——那时 canTopUp 还是 false，按 effectiveTab 算会先闪出「套餐订阅」。
+  const headerMode: 'both' | 'topup' | 'subscribe' = !entriesReady || showTabBar ? 'both' : effectiveTab;
   const pageTitle =
-    effectiveTab === 'subscribe'
-      ? pickLocaleText(locale, '套餐订阅', 'Subscription Plans')
-      : pickLocaleText(locale, '余额充值', 'Balance Recharge');
+    headerMode === 'both'
+      ? pickLocaleText(locale, '充值与订阅', 'Recharge & Subscription')
+      : headerMode === 'subscribe'
+        ? pickLocaleText(locale, '套餐订阅', 'Subscription Plans')
+        : pickLocaleText(locale, '余额充值', 'Balance Recharge');
   const pageSubtitle =
-    effectiveTab === 'subscribe'
-      ? pickLocaleText(locale, '选择适合你的套餐', 'Choose the plan that fits you')
-      : pickLocaleText(locale, '安全支付，自动到账', 'Secure payment, automatic crediting');
+    headerMode === 'both'
+      ? pickLocaleText(locale, '按量充值余额，或购买套餐', 'Top up your balance or buy a plan')
+      : headerMode === 'subscribe'
+        ? pickLocaleText(locale, '选择适合你的套餐', 'Choose the plan that fits you')
+        : pickLocaleText(locale, '安全支付，自动到账', 'Secure payment, automatic crediting');
 
   return (
     <PayPageLayout
@@ -965,71 +1001,60 @@ function PayContent() {
                       {renderPaymentForm()}
                     </TopUpFormSection>
                   )}
+                  {/* 没有套餐 tab 的站点：历史订阅仍列在充值区下面 */}
+                  {!hasPlans && renderUserSubscriptions('mt-8')}
                 </div>
               )}
 
               {effectiveTab === 'subscribe' && (
-                <div className="mt-6">
-                  {renewGroupId !== null && (
-                    <button
-                      type="button"
-                      onClick={() => setRenewGroupId(null)}
-                      className={[
-                        'mb-4 flex items-center gap-1 text-sm transition-colors',
-                        isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
-                      ].join(' ')}
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                      </svg>
-                      {pickLocaleText(locale, '查看全部套餐', 'View All Plans')}
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => (
-                      <SubscriptionPlanCard
-                        key={plan.id}
-                        plan={plan}
-                        onSubscribe={() => setSelectedPlan(plan)}
-                        isDark={isDark}
-                        locale={locale}
-                      />
-                    ))}
+                <div className="mt-6 space-y-8">
+                  {/* 我的订阅只放在套餐 tab：续费入口就是下面的套餐列表 */}
+                  {renderUserSubscriptions()}
+
+                  <div>
+                    {renewGroupId !== null && (
+                      <button
+                        type="button"
+                        onClick={() => setRenewGroupId(null)}
+                        className={[
+                          'mb-4 flex items-center gap-1 text-sm transition-colors',
+                          isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
+                        ].join(' ')}
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        {pickLocaleText(locale, '查看全部套餐', 'View All Plans')}
+                      </button>
+                    )}
+                    {userSubscriptions.length > 0 && renewGroupId === null && (
+                      <h3
+                        className={['text-lg font-semibold mb-3', isDark ? 'text-slate-200' : 'text-slate-800'].join(
+                          ' ',
+                        )}
+                      >
+                        {pickLocaleText(locale, '可选套餐', 'Available Plans')}
+                      </h3>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => (
+                        <SubscriptionPlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onSubscribe={() => setSelectedPlan(plan)}
+                          isDark={isDark}
+                          locale={locale}
+                        />
+                      ))}
+                    </div>
                   </div>
 
-                  {renderHelpSection()}
+                  {/* 购买流程说明写的是「选择套餐 → 获取激活码」，只属于套餐 tab */}
+                  {hasPlans && <PurchaseFlow isDark={isDark} locale={locale} />}
+
+                  {renderHelpSection('')}
                 </div>
               )}
-
-              {/* 用户已有订阅 — 所有 tab 共用 */}
-              {userSubscriptions.length > 0 && (
-                <div className="mt-8">
-                  <h3
-                    className={['text-lg font-semibold mb-3', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}
-                  >
-                    {pickLocaleText(locale, '我的订阅', 'My Subscriptions')}
-                  </h3>
-                  <UserSubscriptions
-                    subscriptions={userSubscriptions}
-                    canRenew={(groupId) => plans.some((p) => p.groupId === groupId)}
-                    onRenew={(groupId) => {
-                      const groupPlans = plans.filter((p) => p.groupId === groupId);
-                      if (groupPlans.length === 1) {
-                        setSelectedPlan(groupPlans[0]);
-                        setMainTab('subscribe');
-                      } else if (groupPlans.length > 1) {
-                        setRenewGroupId(groupId);
-                        setMainTab('subscribe');
-                      }
-                    }}
-                    isDark={isDark}
-                    locale={locale}
-                  />
-                </div>
-              )}
-
-              {/* 购买流程说明写的是「选择套餐 → 获取激活码」，没有可售套餐时不该出现 */}
-              {hasPlans && <PurchaseFlow isDark={isDark} locale={locale} />}
             </>
           )}
 
