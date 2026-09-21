@@ -282,7 +282,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	ticketService := service.ProvideTicketService(supportTicketRepository, ticketNotifyService)
 	ticketHandler := admin.NewTicketHandler(ticketService)
 	ticketAttachmentStoreFactory := repository.NewTicketAttachmentStoreFactory()
-	ticketAttachmentService := service.NewTicketAttachmentService(ticketAttachmentStorageSettingService, ticketAttachmentStoreFactory)
+	ticketAttachmentService := service.NewTicketAttachmentService(ticketAttachmentStorageSettingService, ticketAttachmentStoreFactory, supportTicketRepository)
 	ticketAttachmentHandler := admin.NewTicketAttachmentHandler(ticketAttachmentService)
 	upstreamBillingProbeService := service.ProvideUpstreamBillingProbeService(accountRepository, accountTestService, settingService, leaderLockCache, db)
 	ollamaCloudUsageService := service.ProvideOllamaCloudUsageService(accountRepository, httpUpstream, settingService, secretEncryptor, configConfig, leaderLockCache, db)

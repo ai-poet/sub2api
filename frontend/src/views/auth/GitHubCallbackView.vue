@@ -79,6 +79,7 @@ import {
   rememberPaseoBridgeTargetIfApplicable,
 } from '@/utils/auth-redirect'
 import { sanitizeOAuthFrontendRedirect } from '@/utils/oauth-redirect-sanitize'
+import { clearAllAffiliateReferralCodes, loadOAuthAffiliateCode } from '@/utils/oauthAffiliate'
 
 const route = useRoute()
 const router = useRouter()
@@ -109,9 +110,11 @@ async function handleSubmitInvitation() {
 
   isSubmitting.value = true
   try {
+    // 推荐码主要由后端随 state cookie / pending token 携带；这里再把 sessionStorage 那份带上兜底。
     const tokenData = await completeGitHubOAuthRegistration(
       pendingOAuthToken.value,
-      invitationCode.value.trim()
+      invitationCode.value.trim(),
+      loadOAuthAffiliateCode()
     )
     if (tokenData.refresh_token) {
       localStorage.setItem('refresh_token', tokenData.refresh_token)
@@ -120,6 +123,7 @@ async function handleSubmitInvitation() {
       localStorage.setItem('token_expires_at', String(Date.now() + tokenData.expires_in * 1000))
     }
     await authStore.setToken(tokenData.access_token)
+    clearAllAffiliateReferralCodes()
     appStore.showSuccess(t('auth.loginSuccess'))
     const target = sanitizeOAuthFrontendRedirect(redirectTo.value)
     rememberPaseoBridgeTargetIfApplicable(target)
@@ -186,6 +190,7 @@ onMounted(async () => {
     }
 
     await authStore.setToken(token)
+    clearAllAffiliateReferralCodes()
     appStore.showSuccess(t('auth.loginSuccess'))
     clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect(redirect)
     await router.replace(parseAppInternalRedirect(redirect))

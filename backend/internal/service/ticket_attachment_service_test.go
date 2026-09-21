@@ -37,6 +37,13 @@ func (f *fakeTicketAttachmentStore) Open(_ context.Context, key string) (io.Read
 
 func newTicketAttachmentServiceForTest(t *testing.T) (*TicketAttachmentService, *fakeTicketAttachmentStore) {
 	t.Helper()
+	return newTicketAttachmentServiceWithTicketsForTest(t, newTicketRepoStub())
+}
+
+// newTicketAttachmentServiceWithTicketsForTest 接一个工单仓储（可为 nil），供读取授权的测试注入
+// "客服消息引用了哪个 key" 的关系。
+func newTicketAttachmentServiceWithTicketsForTest(t *testing.T, tickets SupportTicketRepository) (*TicketAttachmentService, *fakeTicketAttachmentStore) {
+	t.Helper()
 
 	repo := newPayAttachmentSettingRepo()
 	encryptor := payAttachmentEncryptor{}
@@ -64,8 +71,24 @@ func newTicketAttachmentServiceForTest(t *testing.T) (*TicketAttachmentService, 
 	settings := NewTicketAttachmentStorageSettingService(repo, encryptor, backup)
 	svc := NewTicketAttachmentService(settings, func(context.Context, *BackupS3Config) (TicketAttachmentStore, error) {
 		return store, nil
-	})
+	}, tickets)
 	return svc, store
+}
+
+// seedTicketWithMessages 直接往桩仓储里放一张工单及其消息（同包可访问内部 map）。
+func seedTicketWithMessages(tickets *ticketRepoStub, ticketID, userID int64, msgs ...*SupportTicketMessage) {
+	tickets.mu.Lock()
+	defer tickets.mu.Unlock()
+	tickets.tickets[ticketID] = &SupportTicket{ID: ticketID, UserID: userID, Status: TicketStatusReplied}
+	for i, m := range msgs {
+		m.ID = int64(i + 1)
+		m.TicketID = ticketID
+	}
+	tickets.messages[ticketID] = msgs
+}
+
+func staffAttachmentMarkdown(key string) string {
+	return "看图 ![image](" + TicketAttachmentURLScheme + key + ")"
 }
 
 // pngBytes 复用 image_storage_test.go 里的最小 PNG 魔数负载。
@@ -229,7 +252,8 @@ func TestTicketAttachmentOpenForUserEnforcesPerUserPrefix(t *testing.T) {
 		t.Fatalf("opened key = %q, want %q", store.openedKey, ownKey)
 	}
 
-	// 他人 / 客服 / 前缀外 / 穿越的 key 一律按不存在处理，不泄露存在性。
+	// 他人 / 未被引用的客服 / 前缀外 / 穿越的 key 一律按不存在处理，不泄露存在性。
+	// （客服 key 只有被自己工单里的客服消息引用才放行，见下一条测试。）
 	badKeys := []string{
 		DefaultTicketAttachmentStoragePrefix + "43/202601/a1b2c3d4.png",
 		DefaultTicketAttachmentStoragePrefix + "staff/7/202601/a1b2c3d4.png",
@@ -243,6 +267,66 @@ func TestTicketAttachmentOpenForUserEnforcesPerUserPrefix(t *testing.T) {
 		if _, err := svc.OpenForUser(ctx, key, 42); err != ErrTicketAttachmentNotFound {
 			t.Fatalf("OpenForUser(%q): got %v, want ErrTicketAttachmentNotFound", key, err)
 		}
+	}
+}
+
+// 客服回复里贴的图落在 staff/ 前缀下，工单发起人必须能看到——但只限被自己工单里
+// 客服消息引用的 key：这是用户读到非自己前缀 key 的唯一通道。
+func TestTicketAttachmentOpenForUserAllowsStaffKeyReferencedInOwnTicket(t *testing.T) {
+	ctx := context.Background()
+	staffKey := DefaultTicketAttachmentStoragePrefix + "staff/7/202601/a1b2c3d4.png"
+	otherStaffKey := DefaultTicketAttachmentStoragePrefix + "staff/7/202601/ffffffff.png"
+	otherUserKey := DefaultTicketAttachmentStoragePrefix + "43/202601/a1b2c3d4.png"
+
+	tickets := newTicketRepoStub()
+	// 工单 1：user 42 的，客服回复引用 staffKey，同时（误）引用了 user 43 的 key。
+	seedTicketWithMessages(tickets, 1, 42,
+		&SupportTicketMessage{AuthorUserID: 42, AuthorRole: TicketAuthorRoleUser, Body: "求助"},
+		&SupportTicketMessage{AuthorUserID: 7, AuthorRole: RoleAdmin, Body: staffAttachmentMarkdown(staffKey) + " " + staffAttachmentMarkdown(otherUserKey)},
+	)
+	// 工单 2：user 42 自己在正文里夹带另一个客服 key——用户写的消息不构成授权。
+	seedTicketWithMessages(tickets, 2, 42,
+		&SupportTicketMessage{AuthorUserID: 42, AuthorRole: TicketAuthorRoleUser, Body: staffAttachmentMarkdown(otherStaffKey)},
+	)
+	svc, store := newTicketAttachmentServiceWithTicketsForTest(t, tickets)
+
+	content, err := svc.OpenForUser(ctx, staffKey, 42)
+	if err != nil {
+		t.Fatalf("OpenForUser(referenced staff key): %v", err)
+	}
+	_ = content.Body.Close()
+	if store.openedKey != staffKey {
+		t.Fatalf("opened key = %q, want %q", store.openedKey, staffKey)
+	}
+
+	// 不是工单发起人 → 404；被用户消息夹带的 → 404；客服消息里贴的他人前缀 key → 404；穿越 / 未引用 → 404。
+	store.openedKey = ""
+	for _, tc := range []struct {
+		name   string
+		key    string
+		userID int64
+	}{
+		{"other user", staffKey, 43},
+		{"smuggled by user message", otherStaffKey, 42},
+		{"another user's own-prefix key pasted by staff", otherUserKey, 42},
+		{"traversal under staff prefix", DefaultTicketAttachmentStoragePrefix + "staff/../backups/dump.sql.gz", 42},
+		{"unreferenced staff key", DefaultTicketAttachmentStoragePrefix + "staff/7/202601/deadbeef.png", 42},
+	} {
+		if _, err := svc.OpenForUser(ctx, tc.key, tc.userID); err != ErrTicketAttachmentNotFound {
+			t.Fatalf("%s: OpenForUser(%q, %d): got %v, want ErrTicketAttachmentNotFound", tc.name, tc.key, tc.userID, err)
+		}
+		if store.openedKey != "" {
+			t.Fatalf("%s: store must not be touched, opened %q", tc.name, store.openedKey)
+		}
+	}
+
+	// 没接工单仓储（nil）就退回只读自己前缀的旧行为，绝不放行 staff key。
+	svcNoTickets, storeNoTickets := newTicketAttachmentServiceWithTicketsForTest(t, nil)
+	if _, err := svcNoTickets.OpenForUser(ctx, staffKey, 42); err != ErrTicketAttachmentNotFound {
+		t.Fatalf("OpenForUser without ticket repo: got %v, want ErrTicketAttachmentNotFound", err)
+	}
+	if storeNoTickets.openedKey != "" {
+		t.Fatalf("store must not be touched without ticket repo, opened %q", storeNoTickets.openedKey)
 	}
 }
 
@@ -290,7 +374,7 @@ func TestTicketAttachmentFailsClosedWithoutS3Config(t *testing.T) {
 	svc := NewTicketAttachmentService(settings, func(context.Context, *BackupS3Config) (TicketAttachmentStore, error) {
 		t.Fatal("factory must not be called when S3 is unconfigured")
 		return nil, nil
-	})
+	}, nil)
 
 	_, err := svc.Put(context.Background(), TicketAttachmentPutInput{
 		UserID: 1, DeclaredContentType: "image/png", Data: pngBytes,

@@ -33,11 +33,17 @@ const (
 	oauthPendingSessionCookiePath = "/api/v1/auth/oauth"
 	oauthPendingSessionCookieName = "oauth_pending_session"
 	oauthPromoCodeCookieName      = "oauth_promo_code"
+	oauthAffiliateCodeCookieName  = "oauth_aff_code"
 	oauthPendingCookieMaxAgeSec   = 10 * 60
 	oauthPendingChoiceStep        = "choose_account_action_required"
 
 	oauthCompletionResponseKey = "completion_response"
 	oauthPromoCodeStateKey     = "promo_code"
+	oauthAffiliateCodeStateKey = "aff_code"
+
+	// oauthAffiliateCodeMaxLen 邀请码（fork 推荐码本身只有 8 字符）在 cookie / state 里的长度上限，
+	// 防止把任意长的查询串塞进 cookie。
+	oauthAffiliateCodeMaxLen = 64
 )
 
 var pendingOAuthCreateAccountPreCommitHook func(context.Context, *dbent.PendingAuthSession) error
@@ -215,6 +221,68 @@ func pendingOAuthPromoCode(session *dbent.PendingAuthSession) string {
 	return pendingSessionStringValue(session.LocalFlowState, oauthPromoCodeStateKey)
 }
 
+// sanitizeOAuthAffiliateCode 规整 OAuth 往返里携带的邀请码：去空白、截断到上限。
+// 它只进 JSON / JWT / 参数化查找，不做字符集过滤。
+func sanitizeOAuthAffiliateCode(value string) string {
+	code := strings.TrimSpace(value)
+	if runes := []rune(code); len(runes) > oauthAffiliateCodeMaxLen {
+		code = string(runes[:oauthAffiliateCodeMaxLen])
+	}
+	return code
+}
+
+// captureOAuthAffiliateCode 把 start 请求里的邀请码（?aff_code= / ?aff=，前端从 /register?ref= 邀请链接解析）
+// 暂存进 cookie，回调建号时交给 bindOAuthAffiliate；参数为空则清掉，免得上一次尝试残留的码粘住。
+// 新用户直登分支不经过前端，浏览器 sessionStorage 里那份用不上，这个 cookie 是唯一通道。
+func captureOAuthAffiliateCode(c *gin.Context, secure bool) {
+	code := sanitizeOAuthAffiliateCode(firstNonEmpty(c.Query("aff_code"), c.Query("aff")))
+	if code == "" {
+		clearOAuthAffiliateCodeCookie(c, secure)
+		return
+	}
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     oauthAffiliateCodeCookieName,
+		Value:    encodeCookieValue(code),
+		Path:     oauthPendingBrowserCookiePath,
+		MaxAge:   oauthPendingCookieMaxAgeSec,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func clearOAuthAffiliateCodeCookie(c *gin.Context, secure bool) {
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     oauthAffiliateCodeCookieName,
+		Value:    "",
+		Path:     oauthPendingBrowserCookiePath,
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func readOAuthAffiliateCode(c *gin.Context) string {
+	if c == nil {
+		return ""
+	}
+	code, err := readCookieDecoded(c, oauthAffiliateCodeCookieName)
+	if err != nil {
+		return ""
+	}
+	return sanitizeOAuthAffiliateCode(code)
+}
+
+// pendingOAuthAffiliateCode 取 start 时捕获、随 pending session 保存的邀请码，
+// 供补邀请码 / 补邮箱建号这些回调之后的步骤使用。
+func pendingOAuthAffiliateCode(session *dbent.PendingAuthSession) string {
+	if session == nil {
+		return ""
+	}
+	return sanitizeOAuthAffiliateCode(pendingSessionStringValue(session.LocalFlowState, oauthAffiliateCodeStateKey))
+}
+
 func redirectToFrontendCallback(c *gin.Context, frontendCallback string) {
 	u, err := url.Parse(frontendCallback)
 	if err != nil {
@@ -242,6 +310,9 @@ func (h *AuthHandler) createOAuthPendingSession(c *gin.Context, payload oauthPen
 	}
 	if promoCode := readOAuthPromoCode(c); promoCode != "" {
 		localFlowState[oauthPromoCodeStateKey] = promoCode
+	}
+	if affiliateCode := readOAuthAffiliateCode(c); affiliateCode != "" {
+		localFlowState[oauthAffiliateCodeStateKey] = affiliateCode
 	}
 
 	session, err := svc.CreatePendingSession(c.Request.Context(), service.CreatePendingAuthSessionInput{
@@ -1848,7 +1919,8 @@ func (h *AuthHandler) createPendingOAuthAccount(c *gin.Context, provider string)
 		user,
 		strings.TrimSpace(req.InvitationCode),
 		strings.TrimSpace(session.ProviderType),
-		strings.TrimSpace(req.AffCode),
+		// 浏览器从 sessionStorage 重发的码优先；丢了（换标签页等）就退回 start 时捕获进 session 的那份。
+		firstNonEmpty(sanitizeOAuthAffiliateCode(req.AffCode), pendingOAuthAffiliateCode(session)),
 	); err != nil {
 		_ = tx.Rollback()
 		if rollbackCreatedUser(err) {

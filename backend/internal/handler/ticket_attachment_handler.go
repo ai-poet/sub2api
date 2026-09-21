@@ -15,7 +15,8 @@ import (
 )
 
 // TicketAttachmentHandler 用户侧工单图片附件接口（fork 本地功能）：
-// 上传走 multipart，读取按 prefix+<自己的uid>/ 前缀授权，越界一律 404。
+// 上传走 multipart；读取放行 prefix+<自己的uid>/ 下的 key 与自己工单里客服消息引用的
+// prefix+staff/ key（授权在 service 层），其余一律 404。
 type TicketAttachmentHandler struct {
 	svc *service.TicketAttachmentService
 }

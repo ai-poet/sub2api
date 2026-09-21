@@ -19,11 +19,18 @@ import (
 // 渲染时换成同源回传端点 /api/v1/tickets/attachments/content?key=...。
 //
 // 对象前缀由 TicketAttachmentStorageSettingService 提供（后台可配置，默认
-// DefaultTicketAttachmentStoragePrefix）。它同时是读取的授权边界：用户只能读
-// prefix+<自己的uid>/ 下的 key，客服侧只能读 prefix 下的 key。
+// DefaultTicketAttachmentStoragePrefix）。它同时是读取的授权边界：用户能读
+// prefix+<自己的uid>/ 下的 key，以及 prefix+staff/ 下、被自己工单里某条客服消息
+// 引用的 key（客服回复里贴的图）；客服侧只能读 prefix 下的 key。
 
 // MaxTicketAttachmentBytes 单张工单图片上限（5 MiB）。
 const MaxTicketAttachmentBytes = 5 << 20
+
+// TicketAttachmentURLScheme 消息正文里引用附件的 URL scheme：![...](ticket-attachment://<key>)。
+const TicketAttachmentURLScheme = "ticket-attachment://"
+
+// ticketAttachmentStaffSegment 客服上传的 key 在前缀后的固定段：<prefix>staff/<uid>/...。
+const ticketAttachmentStaffSegment = "staff/"
 
 var (
 	ErrTicketAttachmentStorageNotConfigured = infraerrors.ServiceUnavailable(
@@ -83,13 +90,15 @@ type TicketAttachmentStore interface {
 type TicketAttachmentStoreFactory func(ctx context.Context, cfg *BackupS3Config) (TicketAttachmentStore, error)
 
 // TicketAttachmentService 为工单消息里的图片附件提供对象存储读写能力。
+// tickets 用来回答"这个客服 key 是否被该用户的工单引用"；为 nil 时用户只能读自己前缀下的 key。
 type TicketAttachmentService struct {
 	settings *TicketAttachmentStorageSettingService
 	factory  TicketAttachmentStoreFactory
+	tickets  SupportTicketRepository
 }
 
-func NewTicketAttachmentService(settings *TicketAttachmentStorageSettingService, factory TicketAttachmentStoreFactory) *TicketAttachmentService {
-	return &TicketAttachmentService{settings: settings, factory: factory}
+func NewTicketAttachmentService(settings *TicketAttachmentStorageSettingService, factory TicketAttachmentStoreFactory, tickets SupportTicketRepository) *TicketAttachmentService {
+	return &TicketAttachmentService{settings: settings, factory: factory, tickets: tickets}
 }
 
 // TicketAttachmentPutInput 描述一次附件上传。UserID 是当前登录用户；
@@ -158,14 +167,33 @@ type TicketAttachmentContent struct {
 	Size        int64
 }
 
-// OpenForUser 取回用户侧附件内容。授权边界是 prefix+<userID>/：读到他人或
-// 前缀之外的 key 一律按不存在处理（404），不泄露对象是否存在。
+// OpenForUser 取回用户侧附件内容。放行两类 key：
+//   - prefix+<userID>/ 下的（自己上传的）；
+//   - prefix+staff/ 下、且被该用户拥有的某个工单里的一条客服消息引用的（客服回复里贴的图）。
+//
+// 引用只认客服写的消息（author_role 不是 user），用户在自己正文里塞进别人的 key 读不到；
+// 也只放行 staff/ 段，客服误贴另一个用户 prefix+<他人uid>/ 下的 key 不会让他人的上传物外泄。
+// 其余（他人的、未被引用的、前缀之外的、穿越的）一律按不存在处理（404），不泄露对象是否存在。
 func (s *TicketAttachmentService) OpenForUser(ctx context.Context, key string, userID int64) (*TicketAttachmentContent, error) {
 	store, prefix, err := s.resolve(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if userID <= 0 || !validTicketAttachmentKeyWithin(key, prefix+strconv.FormatInt(userID, 10)+"/") {
+	key = strings.TrimSpace(key)
+	if userID <= 0 {
+		return nil, ErrTicketAttachmentNotFound
+	}
+	if validTicketAttachmentKeyWithin(key, prefix+strconv.FormatInt(userID, 10)+"/") {
+		return openTicketAttachment(ctx, store, key)
+	}
+	if s.tickets == nil || !validTicketAttachmentKeyWithin(key, prefix+ticketAttachmentStaffSegment) {
+		return nil, ErrTicketAttachmentNotFound
+	}
+	referenced, err := s.tickets.StaffAttachmentReferencedForUser(ctx, userID, key)
+	if err != nil {
+		return nil, err
+	}
+	if !referenced {
 		return nil, ErrTicketAttachmentNotFound
 	}
 	return openTicketAttachment(ctx, store, key)
@@ -221,7 +249,7 @@ func buildTicketAttachmentKey(prefix string, userID int64, staff bool, ext strin
 	}
 	owner := strconv.FormatInt(userID, 10)
 	if staff {
-		owner = "staff/" + owner
+		owner = ticketAttachmentStaffSegment + owner
 	}
 	now := time.Now().UTC()
 	return prefix + owner + "/" + now.Format("200601") + "/" + hex.EncodeToString(suffix) + ext, nil

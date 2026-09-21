@@ -44,7 +44,7 @@ func (s *ticketAttachmentFakeStore) Open(_ context.Context, key string) (io.Read
 
 // newTicketAttachmentServiceForHandlerTest 用种子备份配置 + fake store 构造真实服务，
 // 覆盖 settings 解析与 key 前缀边界，而不是只测 handler 的空壳。
-func newTicketAttachmentServiceForHandlerTest(t *testing.T) (*service.TicketAttachmentService, *ticketAttachmentFakeStore) {
+func newTicketAttachmentServiceForHandlerTest(t *testing.T, tickets service.SupportTicketRepository) (*service.TicketAttachmentService, *ticketAttachmentFakeStore) {
 	t.Helper()
 	repo := &stubSettingRepoForPublicSettings{values: map[string]string{}}
 	backup := service.NewBackupService(repo, &config.Config{
@@ -61,14 +61,20 @@ func newTicketAttachmentServiceForHandlerTest(t *testing.T) (*service.TicketAtta
 	settings := service.NewTicketAttachmentStorageSettingService(repo, payBridgeEncryptor{}, backup)
 	svc := service.NewTicketAttachmentService(settings, func(context.Context, *service.BackupS3Config) (service.TicketAttachmentStore, error) {
 		return store, nil
-	})
+	}, tickets)
 	return svc, store
 }
 
 func newTicketAttachmentUserRouter(t *testing.T, userID int64) (*gin.Engine, *ticketAttachmentFakeStore) {
 	t.Helper()
+	return newTicketAttachmentUserRouterWithTickets(t, userID, newTicketRepoMem())
+}
+
+// newTicketAttachmentUserRouterWithTickets 接一个内存工单仓储，供"客服回复引用的 staff key"授权测试预置关系。
+func newTicketAttachmentUserRouterWithTickets(t *testing.T, userID int64, tickets *ticketRepoMem) (*gin.Engine, *ticketAttachmentFakeStore) {
+	t.Helper()
 	gin.SetMode(gin.TestMode)
-	svc, store := newTicketAttachmentServiceForHandlerTest(t)
+	svc, store := newTicketAttachmentServiceForHandlerTest(t, tickets)
 	h := NewTicketAttachmentHandler(svc)
 
 	router := gin.New()
@@ -176,12 +182,55 @@ func TestTicketAttachmentContentStreamsOwnKey(t *testing.T) {
 	require.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
 }
 
+// seedTicketWithStaffAttachment 往内存仓储放一张 userID 的工单，客服回复引用 key。
+func seedTicketWithStaffAttachment(tickets *ticketRepoMem, ticketID, userID int64, key string) {
+	tickets.mu.Lock()
+	defer tickets.mu.Unlock()
+	tickets.tickets[ticketID] = &service.SupportTicket{ID: ticketID, UserID: userID, Status: service.TicketStatusReplied}
+	tickets.messages[ticketID] = []*service.SupportTicketMessage{
+		{ID: 1, TicketID: ticketID, AuthorUserID: userID, AuthorRole: service.TicketAuthorRoleUser, Body: "求助"},
+		{ID: 2, TicketID: ticketID, AuthorUserID: 7, AuthorRole: service.RoleAdmin, Body: "看图 ![image](" + service.TicketAttachmentURLScheme + key + ")"},
+	}
+}
+
+// 客服回复里贴的图（staff/ 前缀）工单发起人必须能看到。
+func TestTicketAttachmentContentStreamsStaffKeyReferencedByStaffReply(t *testing.T) {
+	tickets := newTicketRepoMem()
+	key := service.DefaultTicketAttachmentStoragePrefix + "staff/7/202601/a1b2c3d4.png"
+	seedTicketWithStaffAttachment(tickets, 1, 42, key)
+	router, store := newTicketAttachmentUserRouterWithTickets(t, 42, tickets)
+
+	req := httptest.NewRequest(http.MethodGet, "/tickets/attachments/content?key="+url.QueryEscape(key), nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+	require.Equal(t, key, store.openedKey)
+	require.Equal(t, "image/png", w.Header().Get("Content-Type"))
+	require.Contains(t, w.Header().Get("Cache-Control"), "no-store")
+}
+
+// 同一个 staff key，不是那张工单的发起人就还是 404，且不碰对象存储。
+func TestTicketAttachmentContentHidesStaffKeyFromOtherUsers(t *testing.T) {
+	tickets := newTicketRepoMem()
+	key := service.DefaultTicketAttachmentStoragePrefix + "staff/7/202601/a1b2c3d4.png"
+	seedTicketWithStaffAttachment(tickets, 1, 42, key)
+	router, store := newTicketAttachmentUserRouterWithTickets(t, 43, tickets)
+
+	req := httptest.NewRequest(http.MethodGet, "/tickets/attachments/content?key="+url.QueryEscape(key), nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+	require.Empty(t, store.openedKey)
+}
+
 func TestTicketAttachmentContentHidesOtherUsersKeys(t *testing.T) {
 	router, store := newTicketAttachmentUserRouter(t, 42)
 
 	for _, key := range []string{
-		service.DefaultTicketAttachmentStoragePrefix + "43/202601/a1b2c3d4.png", // 他人的 key
-		service.DefaultTicketAttachmentStoragePrefix + "staff/7/202601/a1b2c3d4.png",
+		service.DefaultTicketAttachmentStoragePrefix + "43/202601/a1b2c3d4.png",      // 他人的 key
+		service.DefaultTicketAttachmentStoragePrefix + "staff/7/202601/a1b2c3d4.png", // 未被任何客服消息引用的 staff key
 		service.DefaultTicketAttachmentStoragePrefix + "42/../backups/dump.sql.gz",
 		"backups/2026/08/14/dump.sql.gz",
 	} {

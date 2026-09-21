@@ -114,6 +114,7 @@ func (h *AuthHandler) LinuxDoOAuthStart(c *gin.Context) {
 	intent := normalizeOAuthIntent(c.Query("intent"))
 	setCookie(c, linuxDoOAuthIntentCookieName, encodeCookieValue(intent), linuxDoOAuthCookieMaxAgeSec, secureCookie)
 	captureOAuthPromoCode(c, secureCookie)
+	captureOAuthAffiliateCode(c, secureCookie)
 	setOAuthPendingBrowserCookie(c, browserSessionKey, secureCookie)
 	clearOAuthPendingSessionCookie(c, secureCookie)
 	if intent == oauthIntentBindCurrentUser {
@@ -187,6 +188,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		clearCookie(c, linuxDoOAuthIntentCookieName, secureCookie)
 		clearCookie(c, linuxDoOAuthBindUserCookieName, secureCookie)
 		clearOAuthPromoCodeCookie(c, secureCookie)
+		clearOAuthAffiliateCodeCookie(c, secureCookie)
 	}()
 
 	expectedState, err := readCookieDecoded(c, linuxDoOAuthStateCookieName)
@@ -340,7 +342,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 			email,
 			username,
 			"",
-			"",
+			readOAuthAffiliateCode(c),
 			readOAuthPromoCode(c),
 			"linuxdo",
 		)
@@ -369,6 +371,8 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 			h.authService.RecordSuccessfulLogin(c.Request.Context(), user.ID)
 			clearOAuthPendingSessionCookie(c, secureCookie)
 			clearOAuthPendingBrowserCookie(c, secureCookie)
+			// 推荐码已交给 bindOAuthAffiliate；要在写响应头之前清，deferred 里的清理在 redirect 之后已经不生效。
+			clearOAuthAffiliateCodeCookie(c, secureCookie)
 			redirectOAuthTokenPair(c, frontendCallback, tokenPair, redirectTo)
 			return
 		}
@@ -593,7 +597,7 @@ func (h *AuthHandler) CompleteLinuxDoOAuthRegistration(c *gin.Context) {
 		email,
 		username,
 		req.InvitationCode,
-		req.AffCode,
+		firstNonEmpty(sanitizeOAuthAffiliateCode(req.AffCode), pendingOAuthAffiliateCode(session)),
 		pendingOAuthPromoCode(session),
 		"linuxdo",
 	)

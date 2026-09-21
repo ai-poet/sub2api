@@ -225,6 +225,23 @@ func (r *ticketRepoStub) CountUserUnread(_ context.Context, userID int64) (int64
 	return n, nil
 }
 
+func (r *ticketRepoStub) StaffAttachmentReferencedForUser(_ context.Context, userID int64, key string) (bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	needle := TicketAttachmentURLScheme + key
+	for id, item := range r.tickets {
+		if item.UserID != userID {
+			continue
+		}
+		for _, m := range r.messages[id] {
+			if m.AuthorRole != TicketAuthorRoleUser && strings.Contains(m.Body, needle) {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 type ticketNotifierStub struct {
 	mu     sync.Mutex
 	events []string

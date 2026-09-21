@@ -680,8 +680,10 @@ export async function exchangePendingOAuthCompletion(
 
 export async function completeGitHubOAuthRegistration(
   pendingOAuthToken: string,
-  invitationCode: string
+  invitationCode: string,
+  affiliateCode?: string
 ): Promise<{ access_token: string; refresh_token: string; expires_in: number; token_type: string }> {
+  const normalizedAffiliateCode = affiliateCode?.trim()
   const { data } = await apiClient.post<{
     access_token: string
     refresh_token: string
@@ -689,7 +691,8 @@ export async function completeGitHubOAuthRegistration(
     token_type: string
   }>('/auth/oauth/github/complete-registration', {
     pending_oauth_token: pendingOAuthToken,
-    invitation_code: invitationCode
+    invitation_code: invitationCode,
+    ...(normalizedAffiliateCode ? { aff_code: normalizedAffiliateCode } : {})
   })
   return data
 }

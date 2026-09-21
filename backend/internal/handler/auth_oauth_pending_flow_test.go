@@ -2518,6 +2518,7 @@ type oauthPendingFlowTestHandlerOptions struct {
 	emailCache         service.EmailCache
 	settingValues      map[string]string
 	promoRepo          service.PromoCodeRepository
+	referralRepo       service.ReferralRepository
 	defaultSubAssigner service.DefaultSubscriptionAssigner
 	totpCache          service.TotpCache
 	totpEncryptor      service.SecretEncryptor
@@ -2608,6 +2609,11 @@ CREATE TABLE IF NOT EXISTS user_affiliates (
 	if options.promoRepo != nil {
 		promoService = service.NewPromoService(options.promoRepo, userRepo, nil, client, nil)
 	}
+	// 推荐关系：RegisterReferral 只用 referralRepo / userRepo.GetByReferralCode / settingRepo(referral_enabled)。
+	var referralService *service.ReferralService
+	if options.referralRepo != nil {
+		referralService = service.NewReferralService(options.referralRepo, nil, userRepo, &oauthPendingFlowSettingRepoStub{values: settingValues}, nil, nil)
+	}
 	var emailService *service.EmailService
 	if options.emailCache != nil {
 		emailService = service.NewEmailService(&oauthPendingFlowSettingRepoStub{
@@ -2627,7 +2633,7 @@ CREATE TABLE IF NOT EXISTS user_affiliates (
 		nil,
 		nil,
 		promoService,
-		nil,
+		referralService,
 		options.defaultSubAssigner,
 		nil,
 	)
@@ -3588,6 +3594,13 @@ func (oauthPendingFlowTotpEncryptorStub) Decrypt(ciphertext string) (string, err
 	return ciphertext, nil
 }
 
-func (r *oauthPendingFlowUserRepo) GetByReferralCode(context.Context, string) (*service.User, error) {
-	return nil, service.ErrUserNotFound
+func (r *oauthPendingFlowUserRepo) GetByReferralCode(ctx context.Context, code string) (*service.User, error) {
+	entity, err := r.client.User.Query().Where(dbuser.ReferralCodeEQ(code)).Only(ctx)
+	if err != nil {
+		if dbent.IsNotFound(err) {
+			return nil, service.ErrUserNotFound
+		}
+		return nil, err
+	}
+	return oauthPendingFlowServiceUser(entity), nil
 }

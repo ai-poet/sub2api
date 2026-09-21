@@ -25,17 +25,27 @@ const pendingOAuthPurpose = "pending_oauth_registration"
 type pendingOAuthClaims struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
-	Purpose  string `json:"purpose"`
+	// AffCode 是 start 时从邀请链接捕获的推荐码，补完邀请码建号时交给 bindOAuthAffiliate。
+	AffCode string `json:"aff_code,omitempty"`
+	Purpose string `json:"purpose"`
 	jwt.RegisteredClaims
 }
 
+// PendingOAuthIdentity 是 pending token 里承载的 OAuth 身份与注册上下文。
+type PendingOAuthIdentity struct {
+	Email    string
+	Username string
+	AffCode  string
+}
+
 // CreatePendingOAuthToken generates a short-lived JWT that carries the OAuth identity
-// while waiting for the user to supply an invitation code.
-func (s *AuthService) CreatePendingOAuthToken(email, username string) (string, error) {
+// (plus the referral code captured at start) while waiting for the user to supply an invitation code.
+func (s *AuthService) CreatePendingOAuthToken(email, username, affCode string) (string, error) {
 	now := time.Now()
 	claims := &pendingOAuthClaims{
 		Email:    email,
 		Username: username,
+		AffCode:  strings.TrimSpace(affCode),
 		Purpose:  pendingOAuthPurpose,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(pendingOAuthTokenTTL)),
@@ -49,9 +59,9 @@ func (s *AuthService) CreatePendingOAuthToken(email, username string) (string, e
 
 // VerifyPendingOAuthToken validates a pending OAuth token and returns the embedded identity.
 // Returns ErrInvalidToken when the token is invalid or expired.
-func (s *AuthService) VerifyPendingOAuthToken(tokenStr string) (email, username string, err error) {
+func (s *AuthService) VerifyPendingOAuthToken(tokenStr string) (PendingOAuthIdentity, error) {
 	if len(tokenStr) > maxTokenLength {
-		return "", "", ErrInvalidToken
+		return PendingOAuthIdentity{}, ErrInvalidToken
 	}
 	parser := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
 	token, parseErr := parser.ParseWithClaims(tokenStr, &pendingOAuthClaims{}, func(t *jwt.Token) (any, error) {
@@ -61,16 +71,20 @@ func (s *AuthService) VerifyPendingOAuthToken(tokenStr string) (email, username 
 		return []byte(s.cfg.JWT.Secret), nil
 	})
 	if parseErr != nil {
-		return "", "", ErrInvalidToken
+		return PendingOAuthIdentity{}, ErrInvalidToken
 	}
 	claims, ok := token.Claims.(*pendingOAuthClaims)
 	if !ok || !token.Valid {
-		return "", "", ErrInvalidToken
+		return PendingOAuthIdentity{}, ErrInvalidToken
 	}
 	if claims.Purpose != pendingOAuthPurpose {
-		return "", "", ErrInvalidToken
+		return PendingOAuthIdentity{}, ErrInvalidToken
 	}
-	return claims.Email, claims.Username, nil
+	return PendingOAuthIdentity{
+		Email:    claims.Email,
+		Username: claims.Username,
+		AffCode:  strings.TrimSpace(claims.AffCode),
+	}, nil
 }
 
 // GetGitHubOAuthConfig 返回用于登录的"最终生效" GitHub OAuth 配置。

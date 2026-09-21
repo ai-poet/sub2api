@@ -61,8 +61,14 @@ const { t } = useI18n()
 
 function startLogin(): void {
   const redirectTo = (route.query.redirect as string) || '/dashboard'
-  storeOAuthAffiliateCode(resolveAffiliateReferralCodeFromQuery(route.query, props.affCode))
-  emit('start', { provider: 'linuxdo', params: { redirect: redirectTo } })
+  const affiliateCode = resolveAffiliateReferralCodeFromQuery(route.query, props.affCode)
+  storeOAuthAffiliateCode(affiliateCode)
+  // 邀请码要随 start 请求带给后端存进 cookie：新用户直登分支不经过前端，sessionStorage 里那份用不上。
+  const params: Record<string, string> = { redirect: redirectTo }
+  if (affiliateCode) {
+    params.aff_code = affiliateCode
+  }
+  emit('start', { provider: 'linuxdo', params })
 }
 </script>
 

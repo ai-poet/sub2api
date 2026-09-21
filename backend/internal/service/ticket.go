@@ -172,6 +172,10 @@ type SupportTicketRepository interface {
 	CountActiveByUser(ctx context.Context, userID int64) (int64, error)
 	// CountUserUnread 某用户有未读客服回复的工单数（用户角标）。
 	CountUserUnread(ctx context.Context, userID int64) (int64, error)
+	// StaffAttachmentReferencedForUser 报告 key 是否被 userID 拥有的某个工单里的一条客服消息
+	// （author_role 不是 user）正文以 ticket-attachment://<key> 引用。只读，是用户侧读取
+	// 客服附件的授权依据：只认客服写的消息，用户自己在正文里塞的 key 不算。
+	StaffAttachmentReferencedForUser(ctx context.Context, userID int64, key string) (bool, error)
 }
 
 // TicketNotifier 新工单 / 用户回复后的推送钩子（Server酱³ 实现见 ticket_notify_service.go）。

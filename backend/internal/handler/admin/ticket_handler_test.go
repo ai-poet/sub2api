@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -187,6 +188,23 @@ func (r *ticketRepoMem) CountUserUnread(_ context.Context, userID int64) (int64,
 		}
 	}
 	return n, nil
+}
+
+func (r *ticketRepoMem) StaffAttachmentReferencedForUser(_ context.Context, userID int64, key string) (bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	needle := service.TicketAttachmentURLScheme + key
+	for id, item := range r.tickets {
+		if item.UserID != userID {
+			continue
+		}
+		for _, m := range r.messages[id] {
+			if m.AuthorRole != service.TicketAuthorRoleUser && strings.Contains(m.Body, needle) {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 // ---------- 测试骨架 ----------

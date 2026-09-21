@@ -41,11 +41,14 @@ const (
 	gitHubOAuthScopes   = "read:user user:email"
 )
 
-// gitHubOAuthStatePayload binds CSRF nonce and post-login redirect in one cookie so the
-// redirect cannot be lost if a second HttpOnly cookie is dropped by the browser or proxy.
+// gitHubOAuthStatePayload binds CSRF nonce, post-login redirect and the referral code
+// (?aff_code= / ?aff= on start, resolved by the frontend from a /register?ref= invite link)
+// in one cookie so none of them can be lost if a second HttpOnly cookie is dropped by the
+// browser or proxy.
 type gitHubOAuthStatePayload struct {
 	N string `json:"n"`
 	R string `json:"r"`
+	A string `json:"a,omitempty"`
 }
 
 type gitHubTokenResponse struct {
@@ -102,7 +105,7 @@ func clearGitHubCookie(c *gin.Context, name string, secure bool) {
 }
 
 // GitHubOAuthStart 启动 GitHub OAuth 登录流程。
-// GET /api/v1/auth/oauth/github/start?redirect=/dashboard
+// GET /api/v1/auth/oauth/github/start?redirect=/dashboard&aff_code=<推荐码>
 func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) {
 	if !h.requireActionCaptchaForOAuthLoginStart(c) {
 		return
@@ -124,7 +127,9 @@ func (h *AuthHandler) GitHubOAuthStart(c *gin.Context) {
 		redirectTo = gitHubOAuthDefaultRedirectTo
 	}
 
-	payloadJSON, err := json.Marshal(gitHubOAuthStatePayload{N: nonce, R: redirectTo})
+	// 推荐码随 state cookie 往返：回调建号时交给 bindOAuthAffiliate，否则邀请链接来的 GitHub 注册不建立推荐关系。
+	affiliateCode := sanitizeOAuthAffiliateCode(firstNonEmpty(c.Query("aff_code"), c.Query("aff")))
+	payloadJSON, err := json.Marshal(gitHubOAuthStatePayload{N: nonce, R: redirectTo, A: affiliateCode})
 	if err != nil {
 		response.ErrorFrom(c, infraerrors.InternalServer("OAUTH_STATE_GEN_FAILED", "failed to encode oauth state").WithCause(err))
 		return
@@ -184,6 +189,8 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 	}
 
 	var redirectTo string
+	// affiliateCode 由 start 从邀请链接捕获、随 state cookie 往返；legacy 分支（老 cookie 只有 nonce）自然为空。
+	var affiliateCode string
 	var payload gitHubOAuthStatePayload
 	if err := json.Unmarshal([]byte(rawStateCookie), &payload); err == nil && payload.N != "" {
 		if state != payload.N {
@@ -194,6 +201,7 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 		if redirectTo == "" {
 			redirectTo = gitHubOAuthDefaultRedirectTo
 		}
+		affiliateCode = sanitizeOAuthAffiliateCode(payload.A)
 	} else if state == rawStateCookie {
 		// Legacy: state cookie held only the nonce; redirect lived in github_oauth_redirect.
 		legacyRedirect, _ := readCookieDecoded(c, gitHubOAuthRedirectCookie)
@@ -243,11 +251,12 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 		email = githubSyntheticEmail(subject)
 	}
 
-	// 传入空邀请码；如果需要邀请码，服务层返回 ErrOAuthInvitationRequired
-	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), email, username, "", "", "github")
+	// 传入空邀请码（invitation code）；如果需要邀请码，服务层返回 ErrOAuthInvitationRequired。
+	// 推荐码（affiliateCode）只在新建用户时由 bindOAuthAffiliate 消费，老用户登录不受影响。
+	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), email, username, "", affiliateCode, "github")
 	if err != nil {
 		if errors.Is(err, service.ErrOAuthInvitationRequired) {
-			pendingToken, tokenErr := h.authService.CreatePendingOAuthToken(email, username)
+			pendingToken, tokenErr := h.authService.CreatePendingOAuthToken(email, username, affiliateCode)
 			if tokenErr != nil {
 				redirectOAuthError(c, frontendCallback, "login_failed", "service_error", "")
 				return
@@ -276,6 +285,8 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 type completeGitHubOAuthRequest struct {
 	PendingOAuthToken string `json:"pending_oauth_token" binding:"required"`
 	InvitationCode    string `json:"invitation_code"     binding:"required"`
+	// AffCode 是前端从 sessionStorage 重发的推荐码，只在 pending token 里没带时兜底。
+	AffCode string `json:"aff_code,omitempty"`
 }
 
 // CompleteGitHubOAuthRegistration completes a pending OAuth registration by validating
@@ -288,13 +299,14 @@ func (h *AuthHandler) CompleteGitHubOAuthRegistration(c *gin.Context) {
 		return
 	}
 
-	email, username, err := h.authService.VerifyPendingOAuthToken(req.PendingOAuthToken)
+	identity, err := h.authService.VerifyPendingOAuthToken(req.PendingOAuthToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "INVALID_TOKEN", "message": "invalid or expired registration token"})
 		return
 	}
 
-	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), email, username, req.InvitationCode, "", "github")
+	affiliateCode := firstNonEmpty(identity.AffCode, sanitizeOAuthAffiliateCode(req.AffCode))
+	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), identity.Email, identity.Username, req.InvitationCode, affiliateCode, "github")
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return

@@ -51,7 +51,9 @@ func (r *ticketAttachmentSettingRepo) Set(_ context.Context, key, value string) 
 func (r *ticketAttachmentSettingRepo) GetMultiple(context.Context, []string) (map[string]string, error) {
 	return map[string]string{}, nil
 }
-func (r *ticketAttachmentSettingRepo) SetMultiple(context.Context, map[string]string) error { return nil }
+func (r *ticketAttachmentSettingRepo) SetMultiple(context.Context, map[string]string) error {
+	return nil
+}
 func (r *ticketAttachmentSettingRepo) GetAll(context.Context) (map[string]string, error) {
 	return map[string]string{}, nil
 }
@@ -95,9 +97,10 @@ func newTicketAttachmentAdminRouter(t *testing.T, userID int64, role string) (*g
 
 	store := &ticketAttachmentMemStore{}
 	settings := service.NewTicketAttachmentStorageSettingService(repo, ticketAttachmentEncryptor{}, backup)
+	// 客服侧只走 OpenForStaff（整个前缀可读），用不到工单仓储。
 	svc := service.NewTicketAttachmentService(settings, func(context.Context, *service.BackupS3Config) (service.TicketAttachmentStore, error) {
 		return store, nil
-	})
+	}, nil)
 	h := NewTicketAttachmentHandler(svc)
 
 	router := gin.New()

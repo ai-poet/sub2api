@@ -300,6 +300,20 @@ func (r *supportTicketRepository) CountUserUnread(ctx context.Context, userID in
 	return total, err
 }
 
+// StaffAttachmentReferencedForUser 用 strpos 做子串匹配而不是 LIKE，key 里的 '_' / '%' 无需转义。
+// 客服生成的 key 固定为 <prefix>staff/<uid>/<yyyymm>/<rand8hex><ext>，不存在一个 key 是另一个 key 前缀的情况。
+func (r *supportTicketRepository) StaffAttachmentReferencedForUser(ctx context.Context, userID int64, key string) (bool, error) {
+	var referenced bool
+	err := r.db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM support_ticket_messages m
+			JOIN support_tickets t ON t.id = m.ticket_id
+			WHERE t.user_id = $1 AND m.author_role <> $2 AND strpos(m.body, $3) > 0
+		)`, userID, service.TicketAuthorRoleUser, service.TicketAttachmentURLScheme+key).Scan(&referenced)
+	return referenced, err
+}
+
 // escapeSupportTicketLike 转义 LIKE 通配符（配合 ESCAPE '\'）。
 func escapeSupportTicketLike(v string) string {
 	replacer := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
