@@ -66,3 +66,29 @@ export function formatValidityDisplay(value: number, unit: ValidityUnit, locale:
   const label = locale === 'zh' ? unitLabels[unit].zh : unitLabels[unit].en;
   return `${value} ${label}`;
 }
+
+/**
+ * 用量金额展示：常规两位小数；小于 1 分但不为 0 时给四位，
+ * 免得几次小模型的测试请求显示成 $0.00 让人以为没记上。
+ */
+export function formatUsageUsd(value: number | null | undefined): string {
+  const v = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+  if (v > 0 && v < 0.01) return v.toFixed(4);
+  return v.toFixed(2);
+}
+
+/** 已用 / 上限 的比例，截到 [0, 1]；没有上限（null / 0 / 非法）返回 null。 */
+export function usageWindowRatio(used: number | null | undefined, limit: number | null | undefined): number | null {
+  if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 0) return null;
+  const u = typeof used === 'number' && Number.isFinite(used) ? used : 0;
+  return Math.min(1, Math.max(0, u / limit));
+}
+
+export type UsageWindowTone = 'ok' | 'warn' | 'over';
+
+/** 进度条配色：≥100% 红，≥80% 黄，其余绿。 */
+export function usageWindowTone(ratio: number): UsageWindowTone {
+  if (ratio >= 1) return 'over';
+  if (ratio >= 0.8) return 'warn';
+  return 'ok';
+}

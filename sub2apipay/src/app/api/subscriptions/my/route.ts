@@ -20,12 +20,17 @@ export async function GET(request: NextRequest) {
 
     const groupMap = new Map(groups.map((g) => [g.id, g]));
 
+    // 三个额度上限随订阅一起下发：卡片要显示「已用 / 上限」，只给用量会让用户把上限当成用量、
+    // 或以为额度没生效。优先用分组列表里的分组（管理端可能刚改过限额），拿不到时退回订阅自带的 group。
     const enriched = subscriptions.map((sub) => {
-      const group = groupMap.get(sub.group_id);
+      const group = groupMap.get(sub.group_id) ?? sub.group ?? null;
       return {
         ...sub,
         group_name: group?.name ?? null,
         platform: group?.platform ?? null,
+        daily_limit_usd: group?.daily_limit_usd ?? null,
+        weekly_limit_usd: group?.weekly_limit_usd ?? null,
+        monthly_limit_usd: group?.monthly_limit_usd ?? null,
       };
     });
 

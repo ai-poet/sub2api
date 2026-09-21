@@ -4,6 +4,7 @@ import React from 'react';
 import type { Locale } from '@/lib/locale';
 import { pickLocaleText } from '@/lib/locale';
 import { PlatformBadge } from '@/lib/platform-style';
+import { formatUsageUsd, usageWindowRatio, usageWindowTone, type UsageWindowTone } from '@/lib/subscription-utils';
 
 export interface UserSub {
   id: number;
@@ -16,7 +17,17 @@ export interface UserSub {
   monthly_usage_usd: number;
   group_name: string | null;
   platform: string | null;
+  /** 分组额度上限（USD）；null 表示该窗口不限额 */
+  daily_limit_usd?: number | null;
+  weekly_limit_usd?: number | null;
+  monthly_limit_usd?: number | null;
 }
+
+const USAGE_BAR_CLASS: Record<UsageWindowTone, string> = {
+  ok: 'bg-emerald-500',
+  warn: 'bg-amber-500',
+  over: 'bg-red-500',
+};
 
 interface UserSubscriptionsProps {
   subscriptions: UserSub[];
@@ -190,37 +201,59 @@ export default function UserSubscriptions({
               </div>
             )}
 
-            {/* Usage stats */}
+            {/* Usage stats：已用 / 上限，有上限的窗口带进度条 */}
             <div
               className={[
                 'grid grid-cols-3 gap-2 rounded-lg p-3 text-center text-xs',
                 isDark ? 'bg-slate-900/60' : 'bg-slate-50',
               ].join(' ')}
             >
-              <div>
-                <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
-                  {pickLocaleText(locale, '日用量', 'Daily')}
-                </span>
-                <p className={['mt-0.5 font-semibold', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-                  ${sub.daily_usage_usd.toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
-                  {pickLocaleText(locale, '周用量', 'Weekly')}
-                </span>
-                <p className={['mt-0.5 font-semibold', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-                  ${sub.weekly_usage_usd.toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
-                  {pickLocaleText(locale, '月用量', 'Monthly')}
-                </span>
-                <p className={['mt-0.5 font-semibold', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
-                  ${sub.monthly_usage_usd.toFixed(2)}
-                </p>
-              </div>
+              {[
+                {
+                  label: pickLocaleText(locale, '日用量', 'Daily'),
+                  used: sub.daily_usage_usd,
+                  limit: sub.daily_limit_usd ?? null,
+                },
+                {
+                  label: pickLocaleText(locale, '周用量', 'Weekly'),
+                  used: sub.weekly_usage_usd,
+                  limit: sub.weekly_limit_usd ?? null,
+                },
+                {
+                  label: pickLocaleText(locale, '月用量', 'Monthly'),
+                  used: sub.monthly_usage_usd,
+                  limit: sub.monthly_limit_usd ?? null,
+                },
+              ].map((win) => {
+                const ratio = usageWindowRatio(win.used, win.limit);
+                return (
+                  <div key={win.label}>
+                    <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>{win.label}</span>
+                    <p className={['mt-0.5 font-semibold', isDark ? 'text-slate-200' : 'text-slate-700'].join(' ')}>
+                      ${formatUsageUsd(win.used)}
+                      <span className={['font-normal', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+                        {' / '}
+                        {win.limit === null
+                          ? pickLocaleText(locale, '不限', 'Unlimited')
+                          : `$${formatUsageUsd(win.limit)}`}
+                      </span>
+                    </p>
+                    {ratio !== null && (
+                      <div
+                        className={[
+                          'mt-1.5 h-1 overflow-hidden rounded-full',
+                          isDark ? 'bg-slate-700' : 'bg-slate-200',
+                        ].join(' ')}
+                      >
+                        <div
+                          className={['h-full rounded-full', USAGE_BAR_CLASS[usageWindowTone(ratio)]].join(' ')}
+                          style={{ width: `${Math.round(ratio * 100)}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         );

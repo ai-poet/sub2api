@@ -64,4 +64,6 @@ export interface Sub2ApiSubscription {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  /** 管理端 DTO 会把分组一并带回（含三个额度上限），列表接口才有 */
+  group?: Sub2ApiGroup | null;
 }
