@@ -18,6 +18,7 @@ import SubscriptionConfirm from '@/components/SubscriptionConfirm';
 import UserSubscriptions from '@/components/UserSubscriptions';
 import PurchaseFlow from '@/components/PurchaseFlow';
 import PromotionBanner from '@/components/PromotionBanner';
+import TopUpFormSection from '@/components/TopUpFormSection';
 import { getRechargeAccessHint } from '@/lib/branding';
 import { resolveLocale, pickLocaleText, applyLocaleToSearchParams } from '@/lib/locale';
 import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrder } from '@/lib/pay-utils';
@@ -123,14 +124,17 @@ function PayContent() {
   const hasHelpContent = Boolean(helpImageUrl || helpText);
 
   // 通用帮助/客服信息区块
-  const renderHelpSection = () => {
+  const renderHelpSection = (className = 'mt-6') => {
     if (!hasHelpContent) return null;
     return (
       <div
         className={[
-          'mt-6 rounded-2xl border p-4',
+          className,
+          'rounded-2xl border p-4',
           isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-slate-50',
-        ].join(' ')}
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
         <div className={['text-xs font-medium', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
           {pickLocaleText(locale, '帮助', 'Support')}
@@ -153,6 +157,28 @@ function PayContent() {
       </div>
     );
   };
+
+  // 充值表单：原本同样的 16 个 prop 在页面里重复了四次
+  const renderPaymentForm = () => (
+    <PaymentForm
+      userId={resolvedUserId ?? 0}
+      userName={userInfo?.username}
+      userBalance={userInfo?.balance}
+      enabledPaymentTypes={config.enabledPaymentTypes}
+      methodLimits={config.methodLimits}
+      minAmount={config.minAmount}
+      maxAmount={config.maxAmount}
+      usdExchangeRate={config.usdExchangeRate}
+      balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
+      onSubmit={handleSubmit}
+      loading={loading}
+      dark={isDark}
+      pendingBlocked={pendingBlocked}
+      pendingCount={pendingCount}
+      locale={locale}
+      promotions={config.promotions}
+    />
+  );
 
   const MAX_PENDING = config.maxPendingOrders ?? 3;
   const pendingBlocked = pendingCount >= MAX_PENDING;
@@ -375,10 +401,7 @@ function PayContent() {
     loadUserAndOrders();
     loadChannelsAndPlans();
     // 到账发生在 iframe 内，宿主顶栏的余额不会自己更新，通知它重新拉一次用户信息。
-    notifyParentPaymentSuccess(
-      { orderId: finalOrderState.id, orderType: orderResult?.orderType },
-      srcHost,
-    );
+    notifyParentPaymentSuccess({ orderId: finalOrderState.id, orderType: orderResult?.orderType }, srcHost);
     const timer = setTimeout(() => {
       setStep('form');
       setOrderResult(null);
@@ -410,7 +433,9 @@ function PayContent() {
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <div className="text-center text-red-500">
           <p className="text-lg font-medium">{pickLocaleText(locale, '缺少认证信息', 'Missing authentication info')}</p>
-          <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>{getRechargeAccessHint(locale)}</p>
+          <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+            {getRechargeAccessHint(locale)}
+          </p>
         </div>
       </div>
     );
@@ -624,20 +649,27 @@ function PayContent() {
   // ── 渲染 ──
   // R7: 检查是否所有入口都关闭（无可用充值方式 且 无订阅套餐）
   const allEntriesClosed = channelsLoaded && userLoaded && !canTopUp && !hasPlans;
-  const showMainTabs = channelsLoaded && userLoaded && !allEntriesClosed && (hasChannels || hasPlans);
+  // 入口数据就绪就渲染主区域：充值内容只取决于 hasChannels，套餐只负责多出一个 tab
+  const entriesReady = channelsLoaded && userLoaded && !allEntriesClosed;
   const effectiveTab = !canTopUp ? 'subscribe' : !hasPlans ? 'topup' : mainTab;
-  const pageTitle = showMainTabs
-    ? pickLocaleText(locale, '选择适合你的 充值/订单服务', 'Choose Your Recharge / Orders')
-    : pickLocaleText(locale, '余额充值', 'Balance Recharge');
-  const pageSubtitle = showMainTabs
-    ? pickLocaleText(locale, '充值余额或者订阅套餐', 'Top up balance or subscribe to a plan')
-    : pickLocaleText(locale, '安全支付，自动到账', 'Secure payment, automatic crediting');
+  // 两个入口都在时才会真正出现 tab 栏（MainTabs 自身在只剩一个时也会返回 null）
+  const showTabBar = canTopUp && hasPlans;
+  // 移动端「充值」分页是否可见；桌面端恒为 true
+  const payTabVisible = activeMobileTab === 'pay' || !isMobile;
+  const pageTitle =
+    effectiveTab === 'subscribe'
+      ? pickLocaleText(locale, '套餐订阅', 'Subscription Plans')
+      : pickLocaleText(locale, '余额充值', 'Balance Recharge');
+  const pageSubtitle =
+    effectiveTab === 'subscribe'
+      ? pickLocaleText(locale, '选择适合你的套餐', 'Choose the plan that fits you')
+      : pickLocaleText(locale, '安全支付，自动到账', 'Secure payment, automatic crediting');
 
   return (
     <PayPageLayout
       isDark={isDark}
       isEmbedded={isEmbedded}
-      maxWidth={showMainTabs ? 'full' : isMobile ? 'sm' : 'lg'}
+      maxWidth={isMobile ? 'sm' : 'lg'}
       title={pageTitle}
       subtitle={pageSubtitle}
       locale={locale}
@@ -757,7 +789,7 @@ function PayContent() {
           )}
 
           {/* 加载中 */}
-          {(!channelsLoaded || !userLoaded) && !allEntriesClosed && (
+          {(!channelsLoaded || !userLoaded) && !allEntriesClosed && payTabVisible && (
             <div className="flex items-center justify-center py-12">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
               <span className={['ml-3 text-sm', isDark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
@@ -767,7 +799,7 @@ function PayContent() {
           )}
 
           {/* R7: 所有入口关闭提示 */}
-          {allEntriesClosed && (activeMobileTab === 'pay' || !isMobile) && (
+          {allEntriesClosed && payTabVisible && (
             <div
               className={[
                 'rounded-2xl border p-8 text-center',
@@ -799,121 +831,120 @@ function PayContent() {
             </div>
           )}
 
-          {/* ── 有渠道配置：新版UI ── */}
-          {channelsLoaded &&
-            showMainTabs &&
-            (activeMobileTab === 'pay' || !isMobile) &&
-            !selectedPlan &&
-            !showTopUpForm && (
-              <>
-                <MainTabs
-                  activeTab={effectiveTab}
-                  onTabChange={setMainTab}
-                  showSubscribeTab={hasPlans}
-                  showTopUpTab={canTopUp}
-                  isDark={isDark}
-                  locale={locale}
-                />
+          {/* ── 充值 / 套餐主区域 ── */}
+          {entriesReady && payTabVisible && !selectedPlan && !showTopUpForm && (
+            <>
+              <MainTabs
+                activeTab={effectiveTab}
+                onTabChange={setMainTab}
+                showSubscribeTab={hasPlans}
+                showTopUpTab={canTopUp}
+                isDark={isDark}
+                locale={locale}
+              />
 
-                {effectiveTab === 'topup' && canTopUp && (
-                  <div className="mt-6">
-                    {/* 按量付费说明 banner */}
-                    <div
-                      className={[
-                        'mb-6 rounded-2xl border p-6',
-                        isDark
-                          ? 'border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-purple-500/10'
-                          : 'border-emerald-500/20 bg-gradient-to-r from-emerald-50 to-purple-50',
-                      ].join(' ')}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div
-                          className={[
-                            'flex-shrink-0 rounded-lg p-2',
-                            isDark ? 'bg-emerald-500/20' : 'bg-emerald-500/15',
-                          ].join(' ')}
-                        >
-                          <svg
-                            className="h-6 w-6 text-emerald-500"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <h3
+              {effectiveTab === 'topup' && canTopUp && (
+                <div className={showTabBar ? 'mt-6' : ''}>
+                  {hasChannels ? (
+                    <>
+                      {/* 按量付费说明 banner */}
+                      <div
+                        className={[
+                          'mb-6 rounded-2xl border p-6',
+                          isDark
+                            ? 'border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-purple-500/10'
+                            : 'border-emerald-500/20 bg-gradient-to-r from-emerald-50 to-purple-50',
+                        ].join(' ')}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div
                             className={[
-                              'text-lg font-semibold mb-2',
-                              isDark ? 'text-emerald-400' : 'text-emerald-700',
+                              'flex-shrink-0 rounded-lg p-2',
+                              isDark ? 'bg-emerald-500/20' : 'bg-emerald-500/15',
                             ].join(' ')}
                           >
-                            {pickLocaleText(locale, '按量付费模式', 'Pay-as-you-go')}
-                          </h3>
-                          <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                            {pickLocaleText(
-                              locale,
-                              '无需订阅，充值即用，按实际消耗扣费。账户余额按 USD 展示；支付宝/微信会显示实付 CNY，USDT/USDC 会显示实付 USD。',
-                              'No subscription needed. Top up and use. Charged by actual usage. Balance is shown in USD; Alipay/WeChat display paid CNY, while USDT/USDC display paid USD.',
-                            )}
-                          </p>
-                          <div className="flex flex-wrap gap-4 text-sm">
-                            <div
-                              className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(
-                                ' ',
-                              )}
+                            <svg
+                              className="h-6 w-6 text-emerald-500"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
                             >
-                              <svg
-                                className="h-4 w-4 text-green-500"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                              >
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                                <polyline points="17 6 23 6 23 12" />
-                              </svg>
-                              <span>{pickLocaleText(locale, '倍率越低越划算', 'Lower rate = better value')}</span>
-                            </div>
-                            <div
-                              className={['flex items-center gap-2', isDark ? 'text-slate-400' : 'text-slate-500'].join(
-                                ' ',
-                              )}
+                              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h3
+                              className={[
+                                'text-lg font-semibold mb-2',
+                                isDark ? 'text-emerald-400' : 'text-emerald-700',
+                              ].join(' ')}
                             >
-                              <svg
-                                className="h-4 w-4 text-blue-500"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
+                              {pickLocaleText(locale, '按量付费模式', 'Pay-as-you-go')}
+                            </h3>
+                            <p className={['text-sm mb-4', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                              {pickLocaleText(
+                                locale,
+                                '无需订阅，充值即用，按实际消耗扣费。账户余额按 USD 展示；支付宝/微信会显示实付 CNY，USDT/USDC 会显示实付 USD。',
+                                'No subscription needed. Top up and use. Charged by actual usage. Balance is shown in USD; Alipay/WeChat display paid CNY, while USDT/USDC display paid USD.',
+                              )}
+                            </p>
+                            <div className="flex flex-wrap gap-4 text-sm">
+                              <div
+                                className={[
+                                  'flex items-center gap-2',
+                                  isDark ? 'text-slate-400' : 'text-slate-500',
+                                ].join(' ')}
                               >
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                              </svg>
-                              <span>
-                                {pickLocaleText(
-                                  locale,
-                                  '0.15倍率 = 1美元余额可用约6.67美元额度',
-                                  '0.15 rate = 1 USD balance ≈ $6.67 quota',
-                                )}
-                              </span>
+                                <svg
+                                  className="h-4 w-4 text-green-500"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth={2}
+                                >
+                                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                  <polyline points="17 6 23 6 23 12" />
+                                </svg>
+                                <span>{pickLocaleText(locale, '倍率越低越划算', 'Lower rate = better value')}</span>
+                              </div>
+                              <div
+                                className={[
+                                  'flex items-center gap-2',
+                                  isDark ? 'text-slate-400' : 'text-slate-500',
+                                ].join(' ')}
+                              >
+                                <svg
+                                  className="h-4 w-4 text-blue-500"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth={2}
+                                >
+                                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                </svg>
+                                <span>
+                                  {pickLocaleText(
+                                    locale,
+                                    '0.15倍率 = 1美元余额可用约6.67美元额度',
+                                    '0.15 rate = 1 USD balance ≈ $6.67 quota',
+                                  )}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {hasChannels && (config.promotions?.length ?? 0) > 0 && (
-                      <PromotionBanner
-                        promotions={config.promotions ?? []}
-                        isDark={isDark}
-                        locale={locale}
-                        className="mb-6"
-                      />
-                    )}
+                      {(config.promotions?.length ?? 0) > 0 && (
+                        <PromotionBanner
+                          promotions={config.promotions ?? []}
+                          isDark={isDark}
+                          locale={locale}
+                          className="mb-6"
+                        />
+                      )}
 
-                    {hasChannels ? (
                       <ChannelGrid
                         channels={channels}
                         onTopUp={() => setShowTopUpForm(true)}
@@ -921,96 +952,89 @@ function PayContent() {
                         locale={locale}
                         userBalance={userInfo?.balance}
                       />
-                    ) : (
-                      <PaymentForm
-                        userId={resolvedUserId ?? 0}
-                        userName={userInfo?.username}
-                        userBalance={userInfo?.balance}
-                        enabledPaymentTypes={config.enabledPaymentTypes}
-                        methodLimits={config.methodLimits}
-                        minAmount={config.minAmount}
-                        maxAmount={config.maxAmount}
-                        usdExchangeRate={config.usdExchangeRate}
-                        balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
-                        onSubmit={handleSubmit}
-                        loading={loading}
-                        dark={isDark}
-                        pendingBlocked={pendingBlocked}
-                        pendingCount={pendingCount}
-                        locale={locale}
-                        promotions={config.promotions}
-                      />
-                    )}
 
-                    {renderHelpSection()}
-                  </div>
-                )}
-
-                {effectiveTab === 'subscribe' && (
-                  <div className="mt-6">
-                    {renewGroupId !== null && (
-                      <button
-                        type="button"
-                        onClick={() => setRenewGroupId(null)}
-                        className={[
-                          'mb-4 flex items-center gap-1 text-sm transition-colors',
-                          isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
-                        ].join(' ')}
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
-                        {pickLocaleText(locale, '查看全部套餐', 'View All Plans')}
-                      </button>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => (
-                        <SubscriptionPlanCard
-                          key={plan.id}
-                          plan={plan}
-                          onSubscribe={() => setSelectedPlan(plan)}
-                          isDark={isDark}
-                          locale={locale}
-                        />
-                      ))}
-                    </div>
-
-                    {renderHelpSection()}
-                  </div>
-                )}
-
-                {/* 用户已有订阅 — 所有 tab 共用 */}
-                {userSubscriptions.length > 0 && (
-                  <div className="mt-8">
-                    <h3
-                      className={['text-lg font-semibold mb-3', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}
-                    >
-                      {pickLocaleText(locale, '我的订阅', 'My Subscriptions')}
-                    </h3>
-                    <UserSubscriptions
-                      subscriptions={userSubscriptions}
-                      onRenew={(groupId) => {
-                        const groupPlans = plans.filter((p) => p.groupId === groupId);
-                        if (groupPlans.length === 1) {
-                          setSelectedPlan(groupPlans[0]);
-                          setMainTab('subscribe');
-                        } else if (groupPlans.length > 1) {
-                          setRenewGroupId(groupId);
-                          setMainTab('subscribe');
-                        }
-                      }}
+                      {renderHelpSection()}
+                    </>
+                  ) : (
+                    <TopUpFormSection
                       isDark={isDark}
                       locale={locale}
-                    />
-                  </div>
-                )}
+                      maxDailyAmount={config.maxDailyAmount}
+                      aside={renderHelpSection('')}
+                    >
+                      {renderPaymentForm()}
+                    </TopUpFormSection>
+                  )}
+                </div>
+              )}
 
-                <PurchaseFlow isDark={isDark} locale={locale} />
-              </>
-            )}
+              {effectiveTab === 'subscribe' && (
+                <div className="mt-6">
+                  {renewGroupId !== null && (
+                    <button
+                      type="button"
+                      onClick={() => setRenewGroupId(null)}
+                      className={[
+                        'mb-4 flex items-center gap-1 text-sm transition-colors',
+                        isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700',
+                      ].join(' ')}
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                      {pickLocaleText(locale, '查看全部套餐', 'View All Plans')}
+                    </button>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => (
+                      <SubscriptionPlanCard
+                        key={plan.id}
+                        plan={plan}
+                        onSubscribe={() => setSelectedPlan(plan)}
+                        isDark={isDark}
+                        locale={locale}
+                      />
+                    ))}
+                  </div>
+
+                  {renderHelpSection()}
+                </div>
+              )}
+
+              {/* 用户已有订阅 — 所有 tab 共用 */}
+              {userSubscriptions.length > 0 && (
+                <div className="mt-8">
+                  <h3
+                    className={['text-lg font-semibold mb-3', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}
+                  >
+                    {pickLocaleText(locale, '我的订阅', 'My Subscriptions')}
+                  </h3>
+                  <UserSubscriptions
+                    subscriptions={userSubscriptions}
+                    canRenew={(groupId) => plans.some((p) => p.groupId === groupId)}
+                    onRenew={(groupId) => {
+                      const groupPlans = plans.filter((p) => p.groupId === groupId);
+                      if (groupPlans.length === 1) {
+                        setSelectedPlan(groupPlans[0]);
+                        setMainTab('subscribe');
+                      } else if (groupPlans.length > 1) {
+                        setRenewGroupId(groupId);
+                        setMainTab('subscribe');
+                      }
+                    }}
+                    isDark={isDark}
+                    locale={locale}
+                  />
+                </div>
+              )}
+
+              {/* 购买流程说明写的是「选择套餐 → 获取激活码」，没有可售套餐时不该出现 */}
+              {hasPlans && <PurchaseFlow isDark={isDark} locale={locale} />}
+            </>
+          )}
 
           {/* 点击"立即充值"后：直接显示 PaymentForm（含金额选择） */}
-          {showTopUpForm && step === 'form' && (
+          {showTopUpForm && step === 'form' && payTabVisible && (
             <div>
               <button
                 type="button"
@@ -1025,30 +1049,19 @@ function PayContent() {
                 </svg>
                 {pickLocaleText(locale, '返回', 'Back')}
               </button>
-              <PaymentForm
-                userId={resolvedUserId ?? 0}
-                userName={userInfo?.username}
-                userBalance={userInfo?.balance}
-                enabledPaymentTypes={config.enabledPaymentTypes}
-                methodLimits={config.methodLimits}
-                minAmount={config.minAmount}
-                maxAmount={config.maxAmount}
-                usdExchangeRate={config.usdExchangeRate}
-                balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
-                onSubmit={handleSubmit}
-                loading={loading}
-                dark={isDark}
-                pendingBlocked={pendingBlocked}
-                pendingCount={pendingCount}
+              <TopUpFormSection
+                isDark={isDark}
                 locale={locale}
-                promotions={config.promotions}
-              />
-              {renderHelpSection()}
+                maxDailyAmount={config.maxDailyAmount}
+                aside={renderHelpSection('')}
+              >
+                {renderPaymentForm()}
+              </TopUpFormSection>
             </div>
           )}
 
           {/* 订阅确认页 */}
-          {selectedPlan && step === 'form' && (
+          {selectedPlan && step === 'form' && payTabVisible && (
             <>
               <SubscriptionConfirm
                 plan={selectedPlan}
@@ -1064,136 +1077,8 @@ function PayContent() {
             </>
           )}
 
-          {/* ── 无渠道配置：传统充值UI ── */}
-          {channelsLoaded && userLoaded && !showMainTabs && canTopUp && !selectedPlan && (
-            <>
-              {isMobile ? (
-                activeMobileTab === 'pay' ? (
-                  <PaymentForm
-                    userId={resolvedUserId ?? 0}
-                    userName={userInfo?.username}
-                    userBalance={userInfo?.balance}
-                    enabledPaymentTypes={config.enabledPaymentTypes}
-                    methodLimits={config.methodLimits}
-                    minAmount={config.minAmount}
-                    maxAmount={config.maxAmount}
-                    usdExchangeRate={config.usdExchangeRate}
-                    balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
-                    onSubmit={handleSubmit}
-                    loading={loading}
-                    dark={isDark}
-                    pendingBlocked={pendingBlocked}
-                    pendingCount={pendingCount}
-                    locale={locale}
-                    promotions={config.promotions}
-                  />
-                ) : (
-                  <MobileOrderList
-                    isDark={isDark}
-                    hasToken={hasToken}
-                    orders={myOrders}
-                    hasMore={ordersHasMore}
-                    loadingMore={ordersLoadingMore}
-                    onRefresh={loadUserAndOrders}
-                    onLoadMore={loadMoreOrders}
-                    locale={locale}
-                    onInvoiceRequest={invoiceEnabled ? openInvoiceDialog : undefined}
-                    onInvoiceDownload={invoiceEnabled ? handleInvoiceDownload : undefined}
-                  />
-                )
-              ) : (
-                <div className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.8fr)]">
-                  <div className="min-w-0">
-                    <PaymentForm
-                      userId={resolvedUserId ?? 0}
-                      userName={userInfo?.username}
-                      userBalance={userInfo?.balance}
-                      enabledPaymentTypes={config.enabledPaymentTypes}
-                      methodLimits={config.methodLimits}
-                      minAmount={config.minAmount}
-                      maxAmount={config.maxAmount}
-                      usdExchangeRate={config.usdExchangeRate}
-                      balanceCreditCnyPerUsd={config.balanceCreditCnyPerUsd}
-                      onSubmit={handleSubmit}
-                      loading={loading}
-                      dark={isDark}
-                      pendingBlocked={pendingBlocked}
-                      pendingCount={pendingCount}
-                      locale={locale}
-                      promotions={config.promotions}
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <div
-                      className={[
-                        'rounded-2xl border p-4',
-                        isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-slate-50',
-                      ].join(' ')}
-                    >
-                      <div className={['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                        {pickLocaleText(locale, '支付说明', 'Payment Notes')}
-                      </div>
-                      <ul
-                        className={['mt-2 space-y-1 text-sm', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}
-                      >
-                        <li>
-                          {pickLocaleText(locale, '订单完成后会自动到账', 'Balance will be credited automatically')}
-                        </li>
-                        <li>
-                          {pickLocaleText(
-                            locale,
-                            '如需历史记录和开票请查看「我的订单」',
-                            'Check "My Orders" for history and invoices',
-                          )}
-                        </li>
-                        {config.maxDailyAmount > 0 && (
-                          <li>
-                            {pickLocaleText(locale, '每日累计到账上限', 'Max daily credited balance')} $
-                            {config.maxDailyAmount.toFixed(2)}
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                    {hasHelpContent && (
-                      <div
-                        className={[
-                          'rounded-2xl border p-4',
-                          isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-slate-50',
-                        ].join(' ')}
-                      >
-                        <div className={['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-                          {pickLocaleText(locale, '帮助', 'Support')}
-                        </div>
-                        {helpImageUrl && (
-                          <img
-                            src={helpImageUrl}
-                            alt="help"
-                            onClick={() => setHelpImageOpen(true)}
-                            className={`mt-3 max-h-40 w-full cursor-zoom-in rounded-lg object-contain p-2 ${isDark ? 'bg-slate-700/50' : 'bg-white/70'}`}
-                          />
-                        )}
-                        {helpText && (
-                          <div
-                            className={[
-                              'mt-3 space-y-1 text-sm leading-6',
-                              isDark ? 'text-slate-300' : 'text-slate-600',
-                            ].join(' ')}
-                          >
-                            {helpText.split('\n').map((line, i) => (
-                              <p key={i}>{line}</p>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
           {/* 移动端订单列表 */}
-          {isMobile && activeMobileTab === 'orders' && showMainTabs && (
+          {isMobile && activeMobileTab === 'orders' && userLoaded && (
             <MobileOrderList
               isDark={isDark}
               hasToken={hasToken}

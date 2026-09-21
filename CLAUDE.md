@@ -143,6 +143,17 @@ The features below are locally maintained customizations of this fork. During up
   (`tools/src/lib.rs::denial_message` plus the exported
   `PLAN_MODE_DENIAL_SUFFIX` / `KEEP_PLANNING_DENIAL` markers, which
   `waku-core`'s driver matches to say them in the user's language).
+- Computer Use and image generation reach the built-in agent with **no engine
+  change at all**: the bridge pushes `waku_js_repl` into the session's
+  `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
+  requests for those tools to `Allow` (plan mode and written deny rules still
+  win), and the bundled skill is written to the engine's own config directory
+  because its `Skill` tool reads flat `<name>.md` files rather than the
+  `SKILL.md` directories the app ships. `generate_image` is a third tool on
+  the REPL (`client/src/js_repl_image.rs`) so one implementation serves the
+  built-in agent and every wired CLI; its key is the gateway's `openai` one
+  (falling back to `default`, never `anthropic` — images dispatch on the
+  key's group platform).
 - Adapter, which is ours and where changes belong:
   `client/crates/waku-agent-bridge/` (engine lifecycle, permission bridge,
   history ownership, steering, MCP tool wrapper, background-work snapshots,
@@ -152,7 +163,11 @@ The features below are locally maintained customizations of this fork. During up
   `waku-core` nor `waku-protocol` on purpose.
 - Settings surface: `client/src/app/agent_page.rs` (Settings → Agent) over
   `client/crates/sub2api/src/agent_settings.rs`, which edits only the keys it
-  owns in the engine's `settings.json`; routing is written by
+  owns in the engine's `settings.json`. **Everything** about the built-in
+  agent lives on that page — its three endpoints (a list beside one shared
+  form), behaviour, tools, MCP servers, permission rules and its enable
+  switch. It deliberately has no card on the Providers page: no binary, no
+  version, no installer. Do not let a merge re-add one. routing is written by
   `client/crates/sub2api/src/global_config/native.rs` like every other
   provider's. `client/src/app/native_agent.rs` feeds the picker from the
   gateway catalog.

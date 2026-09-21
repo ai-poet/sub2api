@@ -21,6 +21,12 @@ export interface UserSub {
 interface UserSubscriptionsProps {
   subscriptions: UserSub[];
   onRenew: (groupId: number) => void;
+  /**
+   * 该分组当前是否还有可售套餐。返回 false 时隐藏「续费」按钮——
+   * 站点撤掉套餐后 onRenew 无处可跳，按钮点了不会有任何反应。
+   * 不传则一律可续费。
+   */
+  canRenew?: (groupId: number) => boolean;
   isDark: boolean;
   locale: Locale;
 }
@@ -65,7 +71,13 @@ function getStatusBadge(status: string, isDark: boolean, locale: Locale): { text
   };
 }
 
-export default function UserSubscriptions({ subscriptions, onRenew, isDark, locale }: UserSubscriptionsProps) {
+export default function UserSubscriptions({
+  subscriptions,
+  onRenew,
+  canRenew,
+  isDark,
+  locale,
+}: UserSubscriptionsProps) {
   if (subscriptions.length === 0) {
     return (
       <div
@@ -118,7 +130,7 @@ export default function UserSubscriptions({ subscriptions, onRenew, isDark, loca
                   {badge.text}
                 </span>
               </div>
-              {sub.status === 'active' && (
+              {sub.status === 'active' && (!canRenew || canRenew(sub.group_id)) && (
                 <button
                   type="button"
                   onClick={() => onRenew(sub.group_id)}
