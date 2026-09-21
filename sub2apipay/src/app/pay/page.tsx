@@ -16,7 +16,6 @@ import ChannelGrid from '@/components/ChannelGrid';
 import SubscriptionPlanCard from '@/components/SubscriptionPlanCard';
 import SubscriptionConfirm from '@/components/SubscriptionConfirm';
 import UserSubscriptions from '@/components/UserSubscriptions';
-import PurchaseFlow from '@/components/PurchaseFlow';
 import PromotionBanner from '@/components/PromotionBanner';
 import TopUpFormSection from '@/components/TopUpFormSection';
 import { getRechargeAccessHint } from '@/lib/branding';
@@ -1048,9 +1047,6 @@ function PayContent() {
                       ))}
                     </div>
                   </div>
-
-                  {/* 购买流程说明写的是「选择套餐 → 获取激活码」，只属于套餐 tab */}
-                  {hasPlans && <PurchaseFlow isDark={isDark} locale={locale} />}
 
                   {renderHelpSection('')}
                 </div>
