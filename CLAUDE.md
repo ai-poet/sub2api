@@ -173,10 +173,16 @@ The features below are locally maintained customizations of this fork. During up
 - Settings surface: `client/src/app/agent_page.rs` (Settings → Agent) over
   `client/crates/sub2api/src/agent_settings.rs`, which edits only the keys it
   owns in the engine's `settings.json`. **Everything** about the built-in
-  agent lives on that page — its three endpoints (a list beside one shared
-  form), behaviour, tools, MCP servers, permission rules and its enable
-  switch. It deliberately has no card on the Providers page: no binary, no
-  version, no installer. Do not let a merge re-add one. routing is written by
+  agent lives on that page — which endpoint serves each of its three APIs (a
+  list beside one detail pane), behaviour, tools, MCP servers, permission
+  rules and its enable switch. It deliberately has no card on the Providers
+  page: no binary, no version, no installer. Do not let a merge re-add one.
+  What an endpoint *is* — address, key, wire format, models — lives in the
+  fork-local provider registry (`client/crates/sub2api/src/providers.rs`,
+  edited on Settings → Model providers, `client/src/app/model_providers_page.rs`);
+  every slot, CLI and built-in alike, only points at one by `provider_ref`,
+  and `CustomApiConfig::resolved_endpoint` is the single place that
+  resolution happens. Routing is written by
   `client/crates/sub2api/src/global_config/native.rs` like every other
   provider's. `client/src/app/native_agent.rs` feeds the picker from the
   gateway catalog.
