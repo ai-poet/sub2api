@@ -492,27 +492,20 @@ name = "OpenAI"
 base_url = "${baseUrl}"
 wire_api = "responses"
 requires_openai_auth = false
+experimental_bearer_token = "${escapeTomlBasicString(apiKey)}"
 
 [model_providers.OpenAI.http_headers]
-x-openai-actor-authorization = "local-relay"
+x-openai-actor-authorization = "local-image-extension"
 
 [features]
 image_generation = true
 remote_compaction_v2 = true`
-
-  const authContent = `{
-  "OPENAI_API_KEY": "${apiKey}"
-}`
 
   return [
     {
       path: `${configDir}/config.toml`,
       content: configContent,
       hint: t('keys.useKeyModal.openai.configTomlHint')
-    },
-    {
-      path: `${configDir}/auth.json`,
-      content: authContent
     }
   ]
 }
@@ -537,30 +530,27 @@ base_url = "${baseUrl}"
 wire_api = "responses"
 supports_websockets = true
 requires_openai_auth = false
+experimental_bearer_token = "${escapeTomlBasicString(apiKey)}"
 
 [model_providers.OpenAI.http_headers]
-x-openai-actor-authorization = "local-relay"
+x-openai-actor-authorization = "local-image-extension"
 
 [features]
 image_generation = true
 remote_compaction_v2 = true
 responses_websockets_v2 = true`
 
-  const authContent = `{
-  "OPENAI_API_KEY": "${apiKey}"
-}`
-
   return [
     {
       path: `${configDir}/config.toml`,
       content: configContent,
       hint: t('keys.useKeyModal.openai.configTomlHint')
-    },
-    {
-      path: `${configDir}/auth.json`,
-      content: authContent
     }
   ]
+}
+
+function escapeTomlBasicString(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
 function maskKey(key: string): string {

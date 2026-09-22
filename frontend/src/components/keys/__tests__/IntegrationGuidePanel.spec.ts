@@ -164,13 +164,14 @@ describe('IntegrationGuidePanel', () => {
     })
 
     expect(wrapper.text()).toContain('Claude Code')
-    expect(wrapper.findAll('pre code')[1].text()).toContain('sk-live-example-1234567890')
+    // API key 内联在 config.toml 的 experimental_bearer_token 中(不再有 auth.json)
+    expect(wrapper.findAll('pre code')[0].text()).toContain('sk-live-example-1234567890')
 
     await wrapper.find('select').setValue('2')
     await nextTick()
 
     expect(wrapper.text()).not.toContain('Claude Code')
-    expect(wrapper.findAll('pre code')[1].text()).toContain('sk-plain-example-abcdef123456')
+    expect(wrapper.findAll('pre code')[0].text()).toContain('sk-plain-example-abcdef123456')
   })
 
   it('renders Grok CLI install command and config.toml for OpenAI groups', async () => {
