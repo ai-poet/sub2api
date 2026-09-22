@@ -142,7 +142,16 @@ The features below are locally maintained customizations of this fork. During up
   refused), and refusals that carry their reason
   (`tools/src/lib.rs::denial_message` plus the exported
   `PLAN_MODE_DENIAL_SUFFIX` / `KEEP_PLANNING_DENIAL` markers, which
-  `waku-core`'s driver matches to say them in the user's language).
+  `waku-core`'s driver matches to say them in the user's language), leaving
+  plan mode gated on the user seeing the plan (`tools/src/exit_plan_mode.rs`
+  declares `self_gates` and asks for permission itself, passing the summary),
+  and a Responses `function_call`'s `arguments` read as the already-parsed
+  object a normalizing gateway returns and not only as the string the API
+  specifies (`api/src/providers/codex.rs::decode_tool_arguments` — the string
+  form alone dropped the arguments and ran the tool with none, which is
+  indistinguishable from a call that takes none; a parse failure still yields
+  `{}` but now logs, in `api/src/provider_types.rs` and
+  `query/src/runner/tools.rs`).
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
