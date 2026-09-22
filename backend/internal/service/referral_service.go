@@ -21,6 +21,7 @@ var (
 	ErrReferralAlreadyExist = infraerrors.Conflict("REFERRAL_ALREADY_EXIST", "user already has a referrer")
 	ErrReferralMaxReached   = infraerrors.Forbidden("REFERRAL_MAX_REACHED", "referrer has reached maximum referral limit")
 	ErrReferralCodeInvalid  = infraerrors.BadRequest("REFERRAL_CODE_INVALID", "invalid referral code")
+	ErrReferralCodeTaken    = infraerrors.Conflict("REFERRAL_CODE_TAKEN", "referral code already taken")
 )
 
 // Referral status constants
@@ -158,7 +159,15 @@ func (s *ReferralService) IsReferralEnabled(ctx context.Context) bool {
 	return value == "true"
 }
 
-// GenerateReferralCode 生成 8 字符 URL-safe 唯一推荐码
+// referralCodeConditionalWriter 是仓储的可选能力：仅当库中 referral_code 为空时
+// 才写入（见 repository/user_repo_referral.go）。真实仓储必须实现；测试桩可不实现，
+// 走下面的掩码更新兜底。
+type referralCodeConditionalWriter interface {
+	SetReferralCodeIfEmpty(ctx context.Context, userID int64, code string) (bool, error)
+}
+
+// GenerateReferralCode 生成 8 字符 URL-safe 唯一推荐码。
+// 推荐码一经生成必须终身稳定：已分发的邀请链接靠它匹配，任何路径都不得覆盖已有码。
 func (s *ReferralService) GenerateReferralCode(ctx context.Context, userID int64) (string, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -170,6 +179,8 @@ func (s *ReferralService) GenerateReferralCode(ctx context.Context, userID int64
 		return user.ReferralCode, nil
 	}
 
+	conditionalWriter, hasConditionalWriter := s.userRepo.(referralCodeConditionalWriter)
+
 	// 生成 6 字节随机数据 → base64url 编码 → 8 字符
 	for i := 0; i < 10; i++ {
 		bytes := make([]byte, 6)
@@ -178,11 +189,37 @@ func (s *ReferralService) GenerateReferralCode(ctx context.Context, userID int64
 		}
 		code := base64.RawURLEncoding.EncodeToString(bytes)
 
-		// 保存到用户记录
+		if hasConditionalWriter {
+			written, err := conditionalWriter.SetReferralCodeIfEmpty(ctx, userID, code)
+			if err != nil {
+				if errors.Is(err, ErrReferralCodeTaken) {
+					continue // 码撞车，换一个重试
+				}
+				return "", fmt.Errorf("save referral code: %w", err)
+			}
+			if written {
+				return code, nil
+			}
+			// 库中已有码而上面读到空：要么并发生成刚落库，要么读取路径的
+			// ReferralCode 映射又丢了。以库为准重读返回，绝不覆盖。
+			refreshed, err := s.userRepo.GetByID(ctx, userID)
+			if err != nil {
+				return "", fmt.Errorf("reload user after conditional write: %w", err)
+			}
+			if refreshed.ReferralCode != "" {
+				return refreshed.ReferralCode, nil
+			}
+			return "", fmt.Errorf("referral code exists in db but read path returns empty; refusing to overwrite (check userEntityToService mapping)")
+		}
+
+		// 兜底路径（不支持条件写的仓储，如测试桩）：掩码更新。
 		user.ReferralCode = code
 		if err := s.userRepo.Update(ctx, user, UserUpdateFields{ReferralCode: true}); err != nil {
-			// 唯一约束冲突，重试
-			continue
+			user.ReferralCode = ""
+			if errors.Is(err, ErrEmailExists) || errors.Is(err, ErrReferralCodeTaken) {
+				continue // 唯一约束冲突，换码重试；其它错误直接失败
+			}
+			return "", fmt.Errorf("save referral code: %w", err)
 		}
 		return code, nil
 	}
@@ -233,15 +270,19 @@ func (s *ReferralService) GetReferralInfo(ctx context.Context, userID int64) (*R
 	}, nil
 }
 
-// RegisterReferral 注册时记录推荐关系
+// RegisterReferral 注册时记录推荐关系。
+// 所有不建关系的分支都必须留下日志:该函数对调用方恒返回 nil(不阻止注册),
+// 日志是排查"邀请没生效"的唯一线索。
 func (s *ReferralService) RegisterReferral(ctx context.Context, referrerCode string, refereeUserID int64) error {
 	if referrerCode == "" {
+		log.Printf("[Referral] Skipped for referee %d: empty referral code", refereeUserID)
 		return nil
 	}
 
 	// 检查推荐功能是否启用
 	if !s.IsReferralEnabled(ctx) {
-		return nil // 静默忽略
+		log.Printf("[Referral] Skipped for referee %d: referral system disabled", refereeUserID)
+		return nil
 	}
 
 	// 查找推荐人
@@ -253,13 +294,15 @@ func (s *ReferralService) RegisterReferral(ctx context.Context, referrerCode str
 
 	// 不能推荐自己
 	if referrer.ID == refereeUserID {
+		log.Printf("[Referral] Skipped for referee %d: self-referral", refereeUserID)
 		return nil
 	}
 
 	// 检查被推荐人是否已有推荐记录
 	_, err = s.referralRepo.GetByRefereeID(ctx, refereeUserID)
 	if err == nil {
-		return nil // 已有推荐记录，静默忽略
+		log.Printf("[Referral] Skipped for referee %d: referral record already exists", refereeUserID)
+		return nil
 	}
 	if !errors.Is(err, ErrReferralNotFound) {
 		return fmt.Errorf("check existing referral: %w", err)

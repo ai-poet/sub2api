@@ -117,7 +117,9 @@ func (User) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0),
 
-		// 推荐码
+		// 推荐码。唯一性由迁移 053_add_referral_system.sql 的 partial unique index
+		// 保证（WHERE referral_code != '' AND deleted_at IS NULL）；这里不能加
+		// .Unique()——全量唯一索引会被大量空串默认值违反。
 		field.String("referral_code").
 			MaxLen(32).
 			Default(""),

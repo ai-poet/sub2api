@@ -11,6 +11,7 @@ import { useAdminComplianceStore } from '@/stores/adminCompliance'
 import { useNavigationLoadingState } from '@/composables/useNavigationLoading'
 import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
 import { getSetupStatus } from '@/api/setup'
+import { resolveAffiliateReferralCodeFromQuery } from '@/utils/oauthAffiliate'
 import { resolveCompletedSetupRedirectPath } from './setupRedirect'
 import { resolveRouteDocumentTitle } from './title'
 
@@ -783,6 +784,11 @@ router.beforeEach(async (to, _from, next) => {
   if (!requiresAuth) {
     // If already authenticated and trying to access login/register, redirect to appropriate dashboard
     if (authStore.isAuthenticated && (to.path === '/login' || to.path === '/register')) {
+      // 共享浏览器场景:已登录状态下点开别人的邀请链接(?ref=/aff=/aff_code=)会被
+      // 重定向而丢失查询串,先把邀请码存入 localStorage(30 天),登出后注册仍可续上。
+      if (to.query.ref || to.query.aff || to.query.aff_code) {
+        resolveAffiliateReferralCodeFromQuery(to.query)
+      }
       // In backend mode, non-admin users should NOT be redirected away from login
       // (they are blocked from all protected routes, so redirecting would cause a loop)
       if (appStore.backendModeEnabled && !authStore.hasConsoleAccess) {
