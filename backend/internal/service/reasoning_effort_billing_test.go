@@ -170,24 +170,8 @@ func TestDisplayPricingPreservesConfiguredReasoningEffortMultipliers(t *testing.
 		display.ReasoningEffortMultipliers["high"] = 9
 		require.Equal(t, 1.5, raw.ReasoningEffortMultipliers["high"])
 	}
-	display := plazaPricingFromSchedule(raw, &ContextPricingSchedule{Tiers: []ContextPricingTier{{Input: testPtrFloat64(1e-6)}}})
-	require.Equal(t, raw.ReasoningEffortMultipliers, display.ReasoningEffortMultipliers)
-	display.ReasoningEffortMultipliers["max"] = 9
-	require.Equal(t, 3.0, raw.ReasoningEffortMultipliers["max"])
-}
-
-func TestPlazaUsesGroupReasoningEffortMultipliers(t *testing.T) {
-	m := &PlazaModel{Name: "custom-model", Platform: PlatformOpenAI, Pricing: &ChannelModelPricing{
-		ReasoningEffortMultipliers: map[string]float64{"max": 3},
-	}}
-	g := &Group{ModelPricing: []ChannelModelPricing{{
-		Models: []string{"custom-model"}, BillingMode: BillingModeToken,
-		ReasoningEffortMultipliers: map[string]float64{"high": 1.5},
-	}}}
-	(&ModelPlazaService{}).fillDisplayPricing(context.Background(), m, g)
-	require.Equal(t, map[string]float64{"high": 1.5}, m.Pricing.ReasoningEffortMultipliers)
-	m.Pricing.ReasoningEffortMultipliers["high"] = 9
-	require.Equal(t, 1.5, g.ModelPricing[0].ReasoningEffortMultipliers["high"])
+	// 上游此处还断言了 model plaza 的 plazaPricingFromSchedule；本 fork 已移除 model plaza，
+	// 对应断言与 TestPlazaUsesGroupReasoningEffortMultipliers 一并不接入。
 }
 
 func TestReasoningEffortBillingNoResolverPreservesCatalogPolicies(t *testing.T) {
