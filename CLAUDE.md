@@ -159,7 +159,10 @@ The features below are locally maintained customizations of this fork. During up
   from both pipes at once, decoded per line in the console code page when it
   is not UTF-8, and process trees killed on timeout (`tools/src/capture.rs`,
   also used by `tools/src/powershell.rs`), and the environment block in
-  `core/src/system_prompt.rs` stating the real shell and today's date.
+  `core/src/system_prompt.rs` stating the real shell and today's date, and a sub-agent
+  started without `max_turns` left uncapped rather than stopped at ten tool
+  rounds (`query/src/agent_tool.rs`; the main session's cap is lifted in the
+  bridge's `build_query_config`, no engine change).
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
