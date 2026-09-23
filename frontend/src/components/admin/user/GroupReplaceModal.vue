@@ -80,6 +80,7 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
+import { extractApiErrorMessage } from '@/utils/apiError'
 import type { AdminUser, AdminGroup } from '@/types'
 import { isApprovalQueued } from '@/utils/approval'
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -123,14 +124,14 @@ const handleReplace = async () => {
     appStore.showSuccess(t('admin.users.replaceGroupSuccess', { count: result.migrated_keys }))
     emit('success')
     emit('close')
-  } catch (error: any) {
+  } catch (error) {
     if (isApprovalQueued(error)) {
       // 运维管理员：已排队等待管理员审批（全局提示已弹出）
       emit('close')
       return
     }
+    appStore.showError(extractApiErrorMessage(error, t('common.error')))
     console.error('Failed to replace group:', error)
-    appStore.showError(error?.message || t('common.error'))
   } finally {
     submitting.value = false
   }
