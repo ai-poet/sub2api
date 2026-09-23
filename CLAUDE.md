@@ -153,7 +153,9 @@ The features below are locally maintained customizations of this fork. During up
   `{}` but now logs, in `api/src/provider_types.rs` and
   `query/src/runner/tools.rs`), and on Windows the Bash tool run through Git
   Bash rather than `cmd /C` (`core/src/shell.rs` finds it; `tools/src/pty_bash.rs`
-  uses it and keeps the working directory with `pwd -W`), with output read
+  uses it and keeps the working directory with `pwd -W`), or through PowerShell
+  when Git Bash is missing (same wrapper, `-EncodedCommand`, and a PowerShell
+  read-only check for plan mode in `core/src/ps_classifier.rs`), with output read
   from both pipes at once, decoded per line in the console code page when it
   is not UTF-8, and process trees killed on timeout (`tools/src/capture.rs`,
   also used by `tools/src/powershell.rs`), and the environment block in
