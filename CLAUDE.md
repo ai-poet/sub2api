@@ -151,7 +151,13 @@ The features below are locally maintained customizations of this fork. During up
   form alone dropped the arguments and ran the tool with none, which is
   indistinguishable from a call that takes none; a parse failure still yields
   `{}` but now logs, in `api/src/provider_types.rs` and
-  `query/src/runner/tools.rs`).
+  `query/src/runner/tools.rs`), and on Windows the Bash tool run through Git
+  Bash rather than `cmd /C` (`core/src/shell.rs` finds it; `tools/src/pty_bash.rs`
+  uses it and keeps the working directory with `pwd -W`), with output read
+  from both pipes at once, decoded per line in the console code page when it
+  is not UTF-8, and process trees killed on timeout (`tools/src/capture.rs`,
+  also used by `tools/src/powershell.rs`), and the environment block in
+  `core/src/system_prompt.rs` stating the real shell and today's date.
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
