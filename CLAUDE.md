@@ -162,10 +162,11 @@ The features below are locally maintained customizations of this fork. During up
   `core/src/system_prompt.rs` stating the real shell and today's date, and a sub-agent
   started without `max_turns` left uncapped rather than stopped at ten tool
   rounds (`query/src/agent_tool.rs`; the main session's cap is lifted in the
-  bridge's `build_query_config`, no engine change), and DeepSeek's thinking
-  mode mapped from the effort level on any OpenAI-compatible route
-  (`query/src/runner/provider_options.rs` — upstream nested it where it never
-  ran).
+  bridge's `build_query_config`, no engine change), and the effort level
+  mapped onto DeepSeek's and GLM's thinking switch and Kimi K3's
+  `reasoning_effort` on any OpenAI-compatible route
+  (`query/src/runner/provider_options.rs` — upstream nested the DeepSeek
+  mapping where it never ran).
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
