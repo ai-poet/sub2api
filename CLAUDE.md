@@ -170,7 +170,10 @@ The features below are locally maintained customizations of this fork. During up
   the REPL (`client/src/js_repl_image.rs`) so one implementation serves the
   built-in agent and every wired CLI; its key is the gateway's `openai` one
   (falling back to `default`, never `anthropic` — images dispatch on the
-  key's group platform).
+  key's group platform). A helper that is not installed only turns desktop
+  control off for that session (`driver/support.rs::optional_computer_use`,
+  used by every driver); it never fails a session or the message that
+  started it.
 - Adapter, which is ours and where changes belong:
   `client/crates/waku-agent-bridge/` (engine lifecycle, permission bridge,
   history ownership, steering, MCP tool wrapper, background-work snapshots,
@@ -193,7 +196,15 @@ The features below are locally maintained customizations of this fork. During up
   resolution happens. Routing is written by
   `client/crates/sub2api/src/global_config/native.rs` like every other
   provider's. `client/src/app/native_agent.rs` feeds the picker from the
-  gateway catalog.
+  gateway catalog. On the managed gateway each model goes out with the key of
+  the group that serves it: `client/crates/sub2api/src/model_routing.rs` picks
+  it (the CLI slot's group for Claude, GPT and Grok, else an active
+  subscription group, else any group that lists it) and
+  `client/src/app/cloud_subscriptions.rs` refreshes it together with the
+  subscriptions Settings → Cloud Account lists; the per-model keys ride in
+  `gateway_keys.models`. Do not go back to one key per platform — a group
+  serves only the models its accounts map, so a DeepSeek model sent with the
+  Codex group's key comes back "no available channel".
 - Upstream files carry only hook points: the `ProviderKind::Native` variant and
   its `is_builtin()` predicate (`waku-protocol/src/model.rs`), one match arm in
   `waku-core/src/driver/mod.rs`, and the built-in short-circuits in
