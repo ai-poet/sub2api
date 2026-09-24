@@ -255,6 +255,9 @@ func RegisterAuthRoutes(
 		pricing.GET("/public", h.PublicPricing.List)
 	}
 
+	// 官网更新日志（无需认证）：客户端 GitHub Releases 的缓存副本，同样按 IP 兜底限流、永不 401。
+	v1.GET("/changelog", panelRateLimiter.PublicIP(), h.ClientChangelog.List)
+
 	// 需要认证的当前用户信息
 	authenticated := v1.Group("")
 	authenticated.Use(gin.HandlerFunc(jwtAuth))

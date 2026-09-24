@@ -76,9 +76,6 @@ export default {
         "visibility": "Usage over the last 5h / 1d / 7d at a glance"
       }
     },
-    "proofStrip": {
-      "overline": "Platform capabilities"
-    },
     "download": {
       "badge": "Client download",
       "title": "Download the desktop client",
@@ -96,28 +93,6 @@ export default {
         },
         "linux": {
           "sub": ".deb / .rpm / AppImage"
-        }
-      }
-    },
-    "value": {
-      "overline": "Why pick us",
-      "title": "Make running Claude Code and Codex feel effortless",
-      "description": "Not another IDE. Not another API relay. We stitch sign-up, top-up, tool configuration, usage visibility, and failure diagnosis into one smooth path.",
-      "items": {
-        "economics": {
-          "eyebrow": "01 / Fast setup",
-          "title": "One-tap local configuration",
-          "description": "Sign in on the desktop client and it configures Claude Code and Codex for you — no manual JSON edits, and existing settings stay intact."
-        },
-        "reliability": {
-          "eyebrow": "02 / Clear spend",
-          "title": "One balance panel covers both surfaces",
-          "description": "How much each of Claude and Codex used, how much quota is left, current rate-limit status — all on one screen, no more hopping between platforms."
-        },
-        "control": {
-          "eyebrow": "03 / All in one",
-          "title": "SLA-backed service",
-          "description": "Availability, latency, and pricing are managed end to end. When something breaks, the platform auto-fails over or gives clear recovery guidance."
         }
       }
     },
@@ -173,36 +148,19 @@ export default {
       "codex": "Codex",
       "openaiCompatible": "OpenAI-Compatible"
     },
-    "trust": {
-      "overline": "Use with confidence",
-      "title": "See where every dollar goes and why things break",
-      "description": "The most common pain with relay services is opacity: no idea about balance, no idea why a call fails. We surface these facts so you do not have to guess.",
-      "cards": {
-        "gateway": {
-          "title": "Per-route accounting",
-          "description": "Each route is billed independently so one failure does not poison the entire bill."
-        },
-        "resilience": {
-          "title": "Resilient switching",
-          "description": "When one upstream hits limits, jitters, or short-lived failures, the platform absorbs the switching overhead."
-        },
-        "visibility": {
-          "title": "Failures explained",
-          "description": "Clear failure reasons and recovery guidance — no black-box errors."
-        }
-      },
-      "trackers": {
-        "routing": "Sticky sessions",
-        "billing": "Metered billing",
-        "visibility": "Usage detail"
-      }
-    },
     "cta": {
       "eyebrow": "READY TO START",
       "stat": "One gateway · Metered billing · Built for daily development"
     }
   },
   "changelog": {
+    "overline": "Product / Changelog",
+    "headline": "What changed in {siteName}",
+    "back": "Back to home",
+    "loading": "Loading the changelog…",
+    "versions": "{count} releases",
+    "latest": "Latest",
+    "download": "Download the latest",
     "title": "Changelog",
     "subtitle": "Track what's new and what's changed.",
     "emptyTitle": "No updates yet",
@@ -710,28 +668,9 @@ export default {
         "macosUrl": "macOS Install Command",
         "macosUrlPlaceholder": "curl -fsSL https://example.com/install.sh | bash",
         "macosUrlHint": "Enter a terminal install command. Users click to copy it and run it in their terminal. Leave empty to hide the macOS install entry.",
-        "publicHint": "Use a public http(s) link from object storage, a CDN, or a release platform. Custom home page content still fully controls the home page when configured."
-      },
-      "changelog": {
-        "title": "Changelog",
-        "description": "Manage client version changelog entries. Enabled entries will be shown on the /changelog page.",
-        "addEntry": "Add Entry",
-        "version": "Version",
-        "versionPlaceholder": "e.g. 1.0.0",
-        "publishedAt": "Published Date",
-        "titleLabel": "Title",
-        "titlePlaceholder": "Update title",
-        "items": "Items",
-        "itemPlaceholder": "Supports Markdown",
-        "addItem": "Add Item",
-        "enabled": "Enabled",
-        "delete": "Delete",
-        "deleteConfirm": "Are you sure you want to delete this entry?",
-        "emptyHint": "No changelog entries yet. Click \"Add Entry\" to create one.",
-        "preview": "Preview",
-        "edit": "Edit",
-        "moveUp": "Move Up",
-        "moveDown": "Move Down"
+        "publicHint": "Use a public http(s) link from object storage, a CDN, or a release platform. Custom home page content still fully controls the home page when configured.",
+        "changelogRepo": "Changelog source (GitHub repository)",
+        "changelogRepoHint": "The /changelog page syncs this repository's GitHub Releases automatically (drafts and pre-releases are skipped) and refreshes every 15 minutes. Enter owner/repo or the repository URL; leave empty to use {repo}."
       }
     }
   },

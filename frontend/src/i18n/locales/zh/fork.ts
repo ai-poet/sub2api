@@ -76,9 +76,6 @@ export default {
         "visibility": "近 5 小时 / 1 天 / 7 天的用量一目了然"
       }
     },
-    "proofStrip": {
-      "overline": "平台能力"
-    },
     "download": {
       "badge": "客户端下载",
       "title": "下载桌面客户端",
@@ -96,28 +93,6 @@ export default {
         },
         "linux": {
           "sub": ".deb / .rpm / AppImage"
-        }
-      }
-    },
-    "value": {
-      "overline": "为什么选择我们",
-      "title": "让 Claude Code 和 Codex 跑起来这件事，更省心",
-      "description": "不是再做一个 IDE，也不是又一个 API 中转站。把开通账户、充值、配置工具、看用量、查故障这些散落的事，合成一条顺手的路径。",
-      "items": {
-        "economics": {
-          "eyebrow": "01 / 接入快",
-          "title": "一键写好本地配置",
-          "description": "桌面端注册登录后自动帮你配置好 Claude Code 和 Codex，不用你再去复制粘贴 JSON 配置，不会覆盖你已有的设置。"
-        },
-        "reliability": {
-          "eyebrow": "02 / 花费看得见",
-          "title": "一个余额面板看清两路消费",
-          "description": "Claude 和 Codex 各自用了多少、还剩多少额度、当前限速状态如何，都在同一处展示，不用再在多个平台之间切。"
-        },
-        "control": {
-          "eyebrow": "03 / all in one",
-          "title": "使用我们的服务有 SLA 保障",
-          "description": "全线服务可用性、响应速度、定价策略统一管理。出问题时不抓瞎，自动切换到可用线路，或给出明确的恢复建议。"
         }
       }
     },
@@ -173,36 +148,19 @@ export default {
       "codex": "Codex",
       "openaiCompatible": "OpenAI 兼容"
     },
-    "trust": {
-      "overline": "用得放心",
-      "title": "钱花在哪、为什么不能用，都看得见",
-      "description": "中转服务最常见的问题是不透明：余额不知道还剩多少、报错不知道哪里坏。我们把这些信息显式做出来，让你不用猜。",
-      "cards": {
-        "gateway": {
-          "title": "每条线路分开算",
-          "description": "每条线路单独计费，避免一条故障拖垮整体账单。"
-        },
-        "resilience": {
-          "title": "稳定切换",
-          "description": "当单个上游限制、波动或短时异常出现时，平台负责承担切换与缓冲。"
-        },
-        "visibility": {
-          "title": "故障原因看得见",
-          "description": "出错时给出清晰原因和恢复建议，而不是黑盒报错。"
-        }
-      },
-      "trackers": {
-        "routing": "粘性会话",
-        "billing": "按量计费",
-        "visibility": "用量明细"
-      }
-    },
     "cta": {
       "eyebrow": "READY TO START",
       "stat": "统一入口 · 按量付费 · 面向日常开发"
     }
   },
   "changelog": {
+    "overline": "产品 / 更新日志",
+    "headline": "{siteName} 更新了什么",
+    "back": "返回首页",
+    "loading": "正在读取更新日志…",
+    "versions": "共 {count} 个版本",
+    "latest": "最新",
+    "download": "下载最新版",
     "title": "更新日志",
     "subtitle": "追踪最新变化与改进。",
     "emptyTitle": "暂无更新",
@@ -710,28 +668,9 @@ export default {
         "macosUrl": "macOS 安装命令",
         "macosUrlPlaceholder": "curl -fsSL https://example.com/install.sh | bash",
         "macosUrlHint": "填写终端安装命令，用户点击复制后在终端中运行。留空则隐藏 macOS 安装入口。",
-        "publicHint": "请使用对象存储、CDN 或发布平台提供的公开 http(s) 链接。自定义首页内容仍完全由你填写的 HTML 或 URL 控制。"
-      },
-      "changelog": {
-        "title": "更新日志",
-        "description": "管理客户端版本更新日志条目，启用后将在 /changelog 页面展示。",
-        "addEntry": "新增日志",
-        "version": "版本号",
-        "versionPlaceholder": "如 1.0.0",
-        "publishedAt": "发布日期",
-        "titleLabel": "标题",
-        "titlePlaceholder": "本次更新标题",
-        "items": "更新点",
-        "itemPlaceholder": "支持 Markdown 语法",
-        "addItem": "添加更新点",
-        "enabled": "启用",
-        "delete": "删除",
-        "deleteConfirm": "确定删除这条日志吗？",
-        "emptyHint": "暂无日志条目，点击「新增日志」添加。",
-        "preview": "预览",
-        "edit": "编辑",
-        "moveUp": "上移",
-        "moveDown": "下移"
+        "publicHint": "请使用对象存储、CDN 或发布平台提供的公开 http(s) 链接。自定义首页内容仍完全由你填写的 HTML 或 URL 控制。",
+        "changelogRepo": "更新日志来源（GitHub 仓库）",
+        "changelogRepoHint": "官网 /changelog 页自动同步这个仓库的 GitHub Releases（跳过草稿和预发布），每 15 分钟刷新一次。填 owner/repo 或仓库地址，留空使用 {repo}。"
       }
     }
   },

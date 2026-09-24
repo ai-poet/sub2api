@@ -298,7 +298,6 @@ export interface PublicSettings {
   purchase_subscription_open_mode?: string
   client_download_windows_url?: string
   client_download_macos_url?: string
-  client_changelog_entries?: ClientChangelogEntry[]
   /** 注入配置中因体积被延迟的字段名（如超限的 site_logo），需等异步接口补全 */
   deferred_fields?: string[]
 }
@@ -2464,14 +2463,6 @@ export type {
 } from '@/api/admin/users'
 
 // ==================== fork 自有类型 ====================
-
-export interface ClientChangelogEntry {
-  version: string
-  published_at: string
-  title: string
-  items: string[]
-  enabled: boolean
-}
 
 export type GroupStatusValidationMode = 'non_empty' | 'keywords_any' | 'keywords_all'
 

@@ -252,6 +252,21 @@
           {{ t('admin.settings.clientDownloads.macosUrlHint') }}
         </p>
       </div>
+      <div class="md:col-span-2">
+        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          {{ t('admin.settings.clientDownloads.changelogRepo') }}
+        </label>
+        <input
+          v-model="form.client_changelog_github_repo"
+          type="text"
+          class="input font-mono text-sm"
+          :placeholder="DEFAULT_CHANGELOG_REPO"
+          data-testid="client-changelog-repo"
+        />
+        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+          {{ t('admin.settings.clientDownloads.changelogRepoHint', { repo: DEFAULT_CHANGELOG_REPO }) }}
+        </p>
+      </div>
     </div>
 
     <!-- 交流群 -->
@@ -314,11 +329,16 @@ interface ForkSettingsForm {
   purchase_subscription_open_mode: string
   client_download_windows_url: string
   client_download_macos_url: string
+  // 官网更新日志来源的 GitHub 仓库（owner/repo），留空用后端默认仓库
+  client_changelog_github_repo: string
   community_group_url: string
   community_qr_code: string
 }
 
 const props = defineProps<{ form: ForkSettingsForm }>()
+
+// 与后端 service.DefaultClientChangelogGitHubRepo 保持一致
+const DEFAULT_CHANGELOG_REPO = 'ai-poet/agent-client'
 
 const { t } = useI18n()
 const appStore = useAppStore()

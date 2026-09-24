@@ -318,7 +318,8 @@ type SystemSettings struct {
 
 	// 允许终端用户在用量页查看自己的失败请求
 	AllowUserViewErrorRequests bool
-	ClientChangelogEntries     string
+	// 官网更新日志来源的 GitHub 仓库（owner/repo），留空用 DefaultClientChangelogGitHubRepo
+	ClientChangelogGitHubRepo string
 }
 
 type DefaultSubscriptionSetting struct {
@@ -422,8 +423,6 @@ type PublicSettings struct {
 	ReferralEnabled   bool
 	CommunityQRCode   string // 交流群二维码图片 (base64)
 	CommunityGroupURL string // 交流群链接/群号
-	// Client changelog entries (filtered, sorted for public view)
-	ClientChangelogEntries []ClientChangelogEntry
 }
 
 type LoginAgreementDocument struct {
@@ -731,13 +730,4 @@ func DefaultOpenAIFastPolicySettings() *OpenAIFastPolicySettings {
 	return &OpenAIFastPolicySettings{
 		Rules: []OpenAIFastPolicyRule{},
 	}
-}
-
-// ClientChangelogEntry represents a single changelog entry for the client app.
-type ClientChangelogEntry struct {
-	Version     string   `json:"version"`
-	PublishedAt string   `json:"published_at"`
-	Title       string   `json:"title"`
-	Items       []string `json:"items"`
-	Enabled     bool     `json:"enabled"`
 }

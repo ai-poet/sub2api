@@ -1,5 +1,5 @@
 <template>
-  <section class="mx-auto max-w-[1380px]">
+  <section class="mx-auto max-w-[1200px]">
     <div class="rounded-[34px] border border-black/10 bg-white/70 p-6 shadow-[0_20px_70px_rgba(15,15,15,0.05)] backdrop-blur dark:border-white/10 dark:bg-white/5 md:p-8">
       <div class="max-w-[900px]">
         <p class="text-[11px] uppercase tracking-[0.24em] text-gray-500 dark:text-white/42">

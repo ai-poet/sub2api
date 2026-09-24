@@ -327,8 +327,7 @@ export const useAppStore = defineStore('app', () => {
         config.purchase_subscription_open_mode
       ),
       community_qr_code: config.community_qr_code || '',
-      community_group_url: config.community_group_url || '',
-      client_changelog_entries: config.client_changelog_entries ?? []
+      community_group_url: config.community_group_url || ''
     }
 
     if (typeof window !== 'undefined') {

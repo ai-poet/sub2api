@@ -4,7 +4,6 @@
  */
 
 import { apiClient } from "../client";
-import type { ClientChangelogEntry } from '@/types'
 import type {
   CustomEndpoint,
   CustomMenuItem,
@@ -505,7 +504,7 @@ export interface SystemSettings {
   ticket_notify_serverchan_enabled: boolean
   community_qr_code: string
   community_group_url: string
-  client_changelog_entries: ClientChangelogEntry[]
+  client_changelog_github_repo: string
   // SMTP settings
   smtp_host: string;
   smtp_port: number;
@@ -776,7 +775,7 @@ export interface UpdateSettingsRequest {
   group_status_notify_serverchan_sendkey?: string;
   community_qr_code?: string;
   community_group_url?: string;
-  client_changelog_entries?: ClientChangelogEntry[];
+  client_changelog_github_repo?: string;
 
   registration_enabled?: boolean;
   email_verify_enabled?: boolean;

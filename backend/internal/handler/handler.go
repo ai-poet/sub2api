@@ -63,6 +63,7 @@ type Handlers struct {
 	Referral         *ReferralHandler
 	ModelCatalog     *ModelCatalogHandler
 	PublicPricing    *PublicPricingHandler
+	ClientChangelog  *ClientChangelogHandler
 	GroupStatus      *GroupStatusHandler
 	Passkey          *PasskeyHandler
 	AvailableChannel *AvailableChannelHandler

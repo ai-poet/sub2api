@@ -26,15 +26,6 @@ type CustomEndpoint struct {
 	Description string `json:"description"`
 }
 
-// ClientChangelogEntry represents a single changelog entry for the client app.
-type ClientChangelogEntry struct {
-	Version     string   `json:"version"`
-	PublishedAt string   `json:"published_at"`
-	Title       string   `json:"title"`
-	Items       []string `json:"items"`
-	Enabled     bool     `json:"enabled"`
-}
-
 // SystemSettings represents the admin settings API response payload.
 type SystemSettings struct {
 	RegistrationEnabled                 bool                     `json:"registration_enabled"`
@@ -329,8 +320,8 @@ type SystemSettings struct {
 
 	// 允许终端用户在用量页查看自己的失败请求
 	AllowUserViewErrorRequests bool `json:"allow_user_view_error_requests"`
-	// Client changelog entries
-	ClientChangelogEntries []ClientChangelogEntry `json:"client_changelog_entries"`
+	// 官网更新日志来源的 GitHub 仓库（owner/repo），留空用默认仓库
+	ClientChangelogGitHubRepo string `json:"client_changelog_github_repo"`
 }
 
 type DefaultSubscriptionSetting struct {
@@ -417,14 +408,13 @@ type PublicSettings struct {
 	AllowUserViewErrorRequests bool `json:"allow_user_view_error_requests"`
 
 	// fork 自有的公开设置
-	PurchaseSubscriptionOpenMode string                 `json:"purchase_subscription_open_mode"` // iframe or new_window
-	ClientDownloadWindowsURL     string                 `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL       string                 `json:"client_download_macos_url"`
-	GroupStatusEnabled           bool                   `json:"group_status_enabled"`
-	ReferralEnabled              bool                   `json:"referral_enabled"`
-	CommunityQRCode              string                 `json:"community_qr_code"`
-	CommunityGroupURL            string                 `json:"community_group_url"`
-	ClientChangelogEntries       []ClientChangelogEntry `json:"client_changelog_entries"`
+	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"` // iframe or new_window
+	ClientDownloadWindowsURL     string `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       string `json:"client_download_macos_url"`
+	GroupStatusEnabled           bool   `json:"group_status_enabled"`
+	ReferralEnabled              bool   `json:"referral_enabled"`
+	CommunityQRCode              string `json:"community_qr_code"`
+	CommunityGroupURL            string `json:"community_group_url"`
 }
 
 type LoginAgreementDocument struct {
@@ -605,18 +595,4 @@ func ParseCustomEndpoints(raw string) []CustomEndpoint {
 		return []CustomEndpoint{}
 	}
 	return items
-}
-
-// ParseClientChangelogEntries parses a JSON string into a slice of ClientChangelogEntry.
-// Returns empty slice on empty/invalid input.
-func ParseClientChangelogEntries(raw string) []ClientChangelogEntry {
-	raw = strings.TrimSpace(raw)
-	if raw == "" || raw == "[]" {
-		return []ClientChangelogEntry{}
-	}
-	var entries []ClientChangelogEntry
-	if err := json.Unmarshal([]byte(raw), &entries); err != nil {
-		return []ClientChangelogEntry{}
-	}
-	return entries
 }

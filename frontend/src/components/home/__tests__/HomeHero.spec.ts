@@ -3,42 +3,28 @@ import { mount } from '@vue/test-utils'
 import HomeHero from '../HomeHero.vue'
 
 const translations: Record<string, string> = {
-  'home.hero.tags.coding': 'Claude Code',
-  'home.hero.tags.agent': 'Codex',
-  'home.hero.tags.tools': 'Grok · Pi · More',
-  'home.hero.tags.more': 'More',
-  'home.hero.titleLeadPrimary': 'A price-competitive AI relay',
-  'home.hero.titleLeadSecondary': '× Agent desktop client',
-
-  'home.hero.primaryNote': 'Use one key everywhere.',
-  'home.hero.downloadPrimary': 'Download client',
+  'home.landing.hero.releaseBadge': 'v{version} is out',
+  'home.landing.hero.releaseCta': 'See what changed',
+  'home.landing.hero.client.titleLead': 'Every agent.',
+  'home.landing.hero.client.titleAccent': 'One desktop app.',
+  'home.landing.hero.client.subtitle': 'One desktop client for Claude Code, Codex and Grok.',
+  'home.landing.hero.api.titleLead': 'Every top model.',
+  'home.landing.hero.api.titleAccent': 'One API key.',
+  'home.landing.hero.api.subtitle': 'OpenAI- and Anthropic-compatible endpoints.',
+  'home.landing.hero.downloadFor': 'Download for {platform}',
+  'home.landing.hero.copyInstall': 'Copy the {platform} install command',
+  'home.landing.hero.switchPlatform': 'Get the {platform} version',
+  'home.landing.hero.useApi': 'Use the API directly',
+  'home.landing.hero.startApi': 'Start with the API',
+  'home.landing.hero.viewDocs': 'Read the docs',
+  'home.landing.hero.installHint': 'Paste it into a terminal to install',
+  'home.landing.hero.terminal.title': 'Terminal',
+  'home.landing.hero.terminal.claudeComment': '# Claude Code',
+  'home.landing.hero.terminal.openaiComment': '# Codex · OpenAI SDK',
+  'home.landing.hero.terminal.caption': 'Swap the base URL and key.',
   'home.hero.installPrimary': 'Copy install command',
   'home.download.commandCopied': 'Install command copied',
-  'home.hero.connectApi': 'Use the API',
-  'home.hero.startApi': 'Start with the API',
-  'home.goToDashboard': 'Dashboard',
-  'home.viewDocs': 'Docs',
   'home.login': 'Login',
-  'home.clientShowcase.title': 'Relay gateway × agent workbench, deeply unified in one desktop client',
-  'home.clientShowcase.description':
-    'Sign in and you are routed — balance, group rates, and uptime sit right next to your tasks.',
-  'home.clientShowcase.pills.autoRoute': 'Sign in, routed',
-  'home.clientShowcase.pills.groupSwitch': 'One-click group switch (rate · uptime)',
-  'home.clientShowcase.pills.liveBalance': 'Live balance',
-  'home.clientShowcase.pills.cliInstall': 'Missing CLI? One-click install',
-  'home.clientShowcase.pills.aggregate': 'Mainstream AI tools in one place',
-  'home.clientShowcase.advantages.tiny.title': 'An installer of just a dozen MB',
-  'home.clientShowcase.advantages.tiny.body': 'A single native binary — no Electron shell',
-  'home.clientShowcase.advantages.native.title': 'Native-grade smoothness',
-  'home.clientShowcase.advantages.native.body': 'Rust + GPUI rendering — zero lag on scroll and input',
-  'home.clientShowcase.advantages.ready.title': 'Works out of the box',
-  'home.clientShowcase.advantages.ready.body':
-    'Sign in and you are routed; missing Node or a CLI is fixed in one click',
-  'home.clientShowcase.apiOnly.title': 'Just want the raw API?',
-  'home.clientShowcase.apiOnly.body':
-    'Register for a key and call the OpenAI/Anthropic-compatible endpoints directly.',
-  'home.clientShowcase.apiOnly.dashboardCta': 'Get an API key',
-  'home.clientShowcase.apiOnly.docsCta': 'Read the docs',
   'home.clientWorkflow.ariaLabel':
     'CheapRouter desktop client demo: switching routing groups with one click',
   'home.clientWorkflow.working': '工作中 · {seconds} 秒',
@@ -137,7 +123,7 @@ function setPlatform(platform: string, userAgent = '') {
 function mountHero(props: Partial<InstanceType<typeof HomeHero>['$props']> = {}) {
   return mount(HomeHero, {
     props: {
-      siteSubtitle: '',
+      siteName: 'CheapRouter',
       docUrl: '',
       isAuthenticated: false,
       dashboardPath: '/dashboard',
@@ -163,80 +149,114 @@ describe('HomeHero', () => {
     setPlatform('Linux')
   })
 
-  it('shows only the preferred desktop client download in the hero CTA row', () => {
+  const WINDOWS_URL = 'https://downloads.example.com/windows.exe'
+  const MAC_COMMAND = 'curl -fsSL https://example.com/install.sh | bash'
+
+  it('leads with the Windows download and offers macOS beside it', () => {
     setPlatform('Windows')
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL, macosUrl: MAC_COMMAND })
 
-    const wrapper = mountHero({
-      windowsUrl: 'https://downloads.example.com/windows.exe',
-      macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
-    })
+    const download = wrapper.find('[data-test="hero-primary-download"]')
+    expect(download.element.tagName).toBe('A')
+    expect(download.attributes('href')).toBe(WINDOWS_URL)
+    expect(download.attributes('data-platform')).toBe('windows')
+    expect(download.text()).toContain('Download for Windows')
 
-    const downloadLink = wrapper.find('[data-test="hero-primary-download"]')
-    expect(downloadLink.exists()).toBe(true)
-    expect(downloadLink.attributes('href')).toBe('https://downloads.example.com/windows.exe')
-    expect(downloadLink.attributes('data-platform')).toBe('windows')
-    expect(downloadLink.text()).toContain('Download client')
-    const platformDownloads = wrapper.findAll('[data-test="hero-platform-download"]')
-    expect(platformDownloads).toHaveLength(0)
-    expect(wrapper.text()).not.toContain('Download macOS')
+    const switches = wrapper.findAll('[data-test="hero-platform-switch"]')
+    expect(switches).toHaveLength(1)
+    expect(switches[0].attributes('data-platform')).toBe('macos')
+    expect(wrapper.find('[data-test="hero-install-command"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
-    // 配置了客户端下载地址时：标题附带 Agent 桌面客户端副标题
-    expect(wrapper.text()).toContain('Price-competitive AI relay')
-    expect(wrapper.text()).toContain('× Agent desktop client')
+    expect(wrapper.text()).toContain('Every agent.')
+    expect(wrapper.text()).toContain('One desktop app.')
   })
 
-  it('shows install command button when macOS is the preferred platform', () => {
+  it('leads with the install command on macOS', () => {
     setPlatform('macOS')
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL, macosUrl: MAC_COMMAND })
 
-    const wrapper = mountHero({
-      windowsUrl: 'https://downloads.example.com/windows.exe',
-      macosUrl: 'curl -fsSL https://example.com/install.sh | bash',
-    })
-
-    const installButton = wrapper.find('[data-test="hero-primary-download"]')
-    expect(installButton.exists()).toBe(true)
-    expect(installButton.element.tagName).toBe('BUTTON')
-    expect(installButton.attributes('data-platform')).toBe('macos')
-    expect(installButton.text()).toContain('Copy install command')
-    expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
+    const install = wrapper.find('[data-test="hero-primary-download"]')
+    expect(install.element.tagName).toBe('BUTTON')
+    expect(install.attributes('data-platform')).toBe('macos')
+    expect(install.text()).toContain('Copy the macOS install command')
+    expect(wrapper.find('[data-test="hero-install-command"]').text()).toContain(MAC_COMMAND)
+    expect(wrapper.find('[data-test="hero-platform-switch"]').attributes('data-platform')).toBe('windows')
   })
 
-  it('falls back to the API CTA when no client download is configured', () => {
-    const wrapper = mountHero()
+  it('switches platform from the side segment', async () => {
+    setPlatform('Windows')
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL, macosUrl: MAC_COMMAND })
+
+    await wrapper.find('[data-test="hero-platform-switch"]').trigger('click')
+
+    expect(wrapper.find('[data-test="hero-primary-download"]').attributes('data-platform')).toBe('macos')
+    expect(wrapper.find('[data-test="hero-install-command"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="hero-platform-switch"]').attributes('data-platform')).toBe('windows')
+  })
+
+  it('shows no switch when only one platform is configured', () => {
+    setPlatform('macOS')
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL })
+
+    expect(wrapper.find('[data-test="hero-primary-download"]').attributes('data-platform')).toBe('windows')
+    expect(wrapper.find('[data-test="hero-platform-switch"]').exists()).toBe(false)
+  })
+
+  it('links the secondary API path to the dashboard when a client is available', () => {
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL })
+
+    const connect = wrapper.find('[data-test="hero-connect-api"]')
+    expect(connect.attributes('href')).toBe('/dashboard')
+    expect(connect.text()).toContain('Use the API directly')
+    expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="api-terminal"]').exists()).toBe(false)
+  })
+
+  it('turns into an API landing page when no client download is configured', () => {
+    const wrapper = mountHero({ apiBaseUrl: 'https://api.example.com/' })
 
     const fallback = wrapper.find('[data-test="hero-primary-fallback"]')
     expect(fallback.attributes('href')).toBe('/login')
     expect(fallback.text()).toContain('Start with the API')
+    expect(wrapper.find('[data-test="hero-secondary-login"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="hero-primary-download"]').exists()).toBe(false)
-    expect(wrapper.find('[data-test="hero-platform-download"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="hero-connect-api"]').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('Use the API')
-  })
-
-  it('hides client-related info and the API-only card when no client download is configured', () => {
-    const wrapper = mountHero()
-
     expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('Use one key everywhere.')
-    // 无客户端下载地址时：标题只保留中转站主线；CLI 图标条保留展示
-    expect(wrapper.text()).toContain('Price-competitive AI relay')
-    expect(wrapper.text()).not.toContain('× Agent desktop client')
-    expect(wrapper.find('.border-dashed').exists()).toBe(true)
-    // API-only card is hidden too
-    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Every top model.')
+    expect(wrapper.text()).not.toContain('One desktop app.')
+
+    const terminal = wrapper.find('[data-test="api-terminal"]')
+    expect(terminal.text()).toContain('ANTHROPIC_BASE_URL="https://api.example.com"')
+    expect(terminal.text()).toContain('OPENAI_BASE_URL="https://api.example.com/v1"')
   })
 
-  it('sells the gateway + workbench integration in the showcase pills', () => {
-    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
+  it('offers the docs instead of login when a doc url is configured', () => {
+    const wrapper = mountHero({ docUrl: 'https://docs.example.com', isAuthenticated: true })
 
-    expect(wrapper.text()).toContain('Sign in, routed')
-    expect(wrapper.text()).toContain('One-click group switch (rate · uptime)')
-    expect(wrapper.text()).toContain('Live balance')
-    expect(wrapper.text()).toContain('Missing CLI? One-click install')
-    expect(wrapper.text()).toContain('Mainstream AI tools in one place')
-    expect(wrapper.text()).not.toContain('Dark theme')
-    expect(wrapper.text()).not.toContain('Parallel agents')
+    expect(wrapper.find('[data-test="hero-primary-fallback"]').attributes('href')).toBe('/dashboard')
+    expect(wrapper.find('[data-test="hero-secondary-docs"]').attributes('href')).toBe('https://docs.example.com')
+    expect(wrapper.find('[data-test="hero-secondary-login"]').exists()).toBe(false)
+  })
+
+  it('shows the latest client release only when a client is available', () => {
+    const withClient = mountHero({ windowsUrl: WINDOWS_URL, latestVersion: '0.2.1' })
+    const badge = withClient.find('[data-test="hero-release-badge"]')
+    expect(badge.attributes('href')).toBe('/changelog')
+    expect(badge.text()).toContain('v0.2.1 is out')
+
+    expect(mountHero({ windowsUrl: WINDOWS_URL }).find('[data-test="hero-release-badge"]').exists()).toBe(false)
+    expect(mountHero({ latestVersion: '0.2.1' }).find('[data-test="hero-release-badge"]').exists()).toBe(false)
+  })
+
+  it('lists the providers behind the gateway', () => {
+    const wrapper = mountHero()
+
+    const providers = wrapper.find('[data-test="hero-providers"]')
+    expect(providers.findAll('li')).toHaveLength(3)
+    expect(providers.text()).toContain('Claude')
+    expect(providers.text()).toContain('GPT')
+    expect(providers.text()).toContain('Grok')
   })
 
   it('renders the CheapRouter desktop client mockup with transcript, composer and status bar', () => {
@@ -294,54 +314,4 @@ describe('HomeHero', () => {
     expect(wrapper.text()).toContain('已切换到 Codex Sale，对新启动的任务生效')
   })
 
-  it('renders the CLI icons strip below the headline without a Pi card', () => {
-    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
-
-    const text = wrapper.text()
-    expect(text).toContain('Claude Code')
-    expect(text).toContain('Codex')
-    expect(text).toContain('Grok')
-    // dashed "more" pill in the icon strip
-    const morePill = wrapper.find('.border-dashed')
-    expect(morePill.exists()).toBe(true)
-    expect(morePill.text()).toBe('+ More')
-    expect(text).not.toContain('+ Grok · Pi · More')
-  })
-
-  it('renders the advantages strip and the API-only card within the showcase', () => {
-    const wrapper = mountHero({
-      windowsUrl: 'https://downloads.example.com/windows.exe',
-      docUrl: 'https://docs.example.com',
-    })
-
-    const advantages = wrapper.find('[data-test="client-advantages"]')
-    expect(advantages.exists()).toBe(true)
-    expect(advantages.text()).toContain('An installer of just a dozen MB')
-    expect(advantages.text()).toContain('A single native binary — no Electron shell')
-    expect(advantages.text()).toContain('Native-grade smoothness')
-    expect(advantages.text()).toContain('Rust + GPUI rendering — zero lag on scroll and input')
-    expect(advantages.text()).toContain('Works out of the box')
-
-    const apiOnly = wrapper.find('[data-test="api-only-card"]')
-    expect(apiOnly.exists()).toBe(true)
-    expect(apiOnly.text()).toContain('Just want the raw API?')
-    expect(apiOnly.find('[data-test="api-only-dashboard"]').attributes('href')).toBe('/dashboard')
-    const docsLink = apiOnly.find('[data-test="api-only-docs"]')
-    expect(docsLink.attributes('href')).toBe('https://docs.example.com')
-  })
-
-  it('hides the API-only card when no client download is configured', () => {
-    const wrapper = mountHero({ docUrl: 'https://docs.example.com' })
-
-    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('Just want the raw API?')
-  })
-
-  it('hides the API-only docs link when no doc url is configured', () => {
-    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
-
-    expect(wrapper.find('[data-test="api-only-card"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="api-only-docs"]').exists()).toBe(false)
-    expect(wrapper.find('[data-test="api-only-dashboard"]').attributes('href')).toBe('/dashboard')
-  })
 })

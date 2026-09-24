@@ -18,6 +18,124 @@ export default {
     "navModels": "模型",
     "navPricing": "价格",
     "navChangelog": "更新日志",
+    "landing": {
+      "hero": {
+        "releaseBadge": "v{version} 已发布",
+        "releaseCta": "看看更新了什么",
+        "client": {
+          "titleLead": "所有 Agent，",
+          "titleAccent": "一个客户端。",
+          "subtitle": "Claude Code、Codex、Grok 深度合一的桌面客户端：登录即路由，余额、分组倍率和在线率就在任务旁边，价格比官方友好得多。"
+        },
+        "api": {
+          "titleLead": "所有顶级模型，",
+          "titleAccent": "一个 API Key。",
+          "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok。按量计费、余额长期有效，一条线路出问题自动换下一条。"
+        },
+        "downloadFor": "下载 {platform} 版",
+        "copyInstall": "复制 {platform} 安装命令",
+        "switchPlatform": "改用 {platform} 版",
+        "useApi": "直接使用 API",
+        "startApi": "开始接入 API",
+        "viewDocs": "查看接入文档",
+        "installHint": "复制后在终端中粘贴运行",
+        "terminal": {
+          "title": "终端",
+          "claudeComment": "# Claude Code",
+          "openaiComment": "# Codex · OpenAI SDK · 各类兼容客户端",
+          "caption": "只换 Base URL 和 Key，现有工具与代码零改动。"
+        }
+      },
+      "features": {
+        "client": {
+          "titleLead": "Agent 干活需要一套系统，",
+          "titleTail": "而不是一堆配置文件。",
+          "subtitle": "登录一次，Claude Code、Codex、Grok 就都接好了；余额、线路和用量都在同一个窗口里。"
+        },
+        "api": {
+          "titleLead": "一个入口，",
+          "titleTail": "管住所有模型调用。",
+          "subtitle": "Claude、GPT、Grok 都走同一个网关：同一份余额、同一套用量统计、同一处故障诊断。"
+        },
+        "cards": {
+          "autoRoute": {
+            "title": "登录即路由",
+            "body": "网关密钥自动写进每个 CLI 的全局配置，不碰你已有的本地设置"
+          },
+          "groupSwitch": {
+            "title": "分组一键切换",
+            "body": "倍率与在线率摆在台面上，任务进行中也能换到更稳更便宜的线路"
+          },
+          "liveBalance": {
+            "title": "余额实时可见",
+            "body": "Claude、Codex、Grok 各用了多少、还剩多少，一处看清"
+          },
+          "cliInstall": {
+            "title": "缺什么补什么",
+            "body": "缺 Node、缺 CLI 一键安装，装好就能开跑"
+          },
+          "images": {
+            "title": "画图",
+            "body": "一句话出图，或拖入图片直接编辑，作品自动归档到图库"
+          },
+          "native": {
+            "title": "原生级流畅",
+            "body": "Rust + GPUI 渲染，安装包只有十几 MB，没有 Electron 套壳"
+          },
+          "compatible": {
+            "title": "原生协议兼容",
+            "body": "OpenAI Chat / Responses 与 Anthropic Messages 原样可用"
+          },
+          "failover": {
+            "title": "多账号自动切换",
+            "body": "一条线路出问题自动换下一条，请求不中断"
+          },
+          "metered": {
+            "title": "按量计费",
+            "body": "用多少扣多少，没有最低消费，余额长期有效"
+          },
+          "usage": {
+            "title": "用量看得见",
+            "body": "近 5 小时 / 1 天 / 7 天用量与剩余额度一目了然"
+          },
+          "groups": {
+            "title": "分组倍率透明",
+            "body": "每个分组的倍率和在线率都公开，按需挑选线路"
+          },
+          "invoice": {
+            "title": "支持开发票",
+            "body": "充值消费均可开具发票，团队报销省心"
+          }
+        }
+      },
+      "models": {
+        "overline": "多模型 · 一处切换",
+        "titleLead": "不止一个模型。",
+        "titleTail": "每一步都用对的那个。",
+        "clientSubtitle": "Claude Code、Codex、Grok 在同一个客户端里随手切换，项目、文件和上下文都留在原地。",
+        "apiSubtitle": "Claude、GPT、Grok 共用一个 Key 和一份余额，换模型只改一个参数。",
+        "cta": "查看模型价格"
+      },
+      "closing": {
+        "overline": "现在就开始",
+        "clientTitleLead": "下载 {siteName}，",
+        "clientTitleTail": "几分钟跑起第一个任务。",
+        "apiTitleLead": "注册拿 Key，",
+        "apiTitleTail": "几分钟发出第一个请求。",
+        "note": "按量计费 · 余额长期有效 · 支持开发票"
+      },
+      "footer": {
+        "clientTagline": "价格友好的 AI 中转站 × Agent 桌面客户端",
+        "apiTagline": "价格友好的 AI 模型网关",
+        "product": "产品",
+        "support": "支持",
+        "download": "下载客户端",
+        "pricing": "价格",
+        "changelog": "更新日志",
+        "docs": "接入文档",
+        "console": "控制台"
+      }
+    },
     "hero": {
       "badge": "Claude Code / Codex 一键接入",
       "titleLeadPrimary": "具有价格竞争力的 AI 中转站",
@@ -85,43 +203,6 @@ export default {
         "routing": "多账号自动切换，一条线路故障自动换另一条",
         "visibility": "近 5 小时 / 1 天 / 7 天的用量一目了然"
       }
-    },
-    "proofStrip": {
-      "overline": "平台能力"
-    },
-    "clientShowcase": {
-      "badge": "客户端预览",
-      "title": "中转站 × Agent 工作台，深度合一的桌面客户端",
-      "description": "登录即路由——网关密钥自动写进每个 CLI 的全局配置；余额、分组倍率、在线率就在任务旁边，跑着任务随手换到更便宜更稳的线路。",
-      "pills": {
-        "autoRoute": "登录即路由",
-        "groupSwitch": "分组一键切换（倍率·在线率）",
-        "liveBalance": "余额实时可见",
-        "cliInstall": "缺 CLI 一键安装",
-        "aggregate": "主流 AI 工具聚合使用"
-      },
-      "advantages": {
-        "tiny": {
-          "title": "安装包只有十几 MB",
-          "body": "原生二进制，没有 Electron 套壳"
-        },
-        "native": {
-          "title": "原生级流畅",
-          "body": "Rust + GPUI 渲染，滚动和输入零迟滞"
-        },
-        "ready": {
-          "title": "开箱即用",
-          "body": "登录即路由，缺 Node 缺 CLI 一键补齐"
-        }
-      },
-      "apiOnly": {
-        "title": "只想直接接 API？",
-        "body": "注册拿密钥，OpenAI/Anthropic 兼容端点直连，兼容各类三方客户端。",
-        "dashboardCta": "获取 API 密钥",
-        "docsCta": "查看接入文档"
-      },
-      "cta": "注册获取通知",
-      "ctaNote": "注册后可第一时间获取客户端更新"
     },
     "clientWorkflow": {
       "ariaLabel": "{siteName} 桌面客户端演示：任务执行中一键切换分组线路",
@@ -195,28 +276,6 @@ export default {
     },
     "download": {
       "commandCopied": "安装命令已复制，请在终端中运行"
-    },
-    "value": {
-      "overline": "为什么选 {siteName}",
-      "title": "开箱即用的聚合 AI Agent 供应平台",
-      "description": "不是再做一个 IDE，也不是又一个 API 中转站。{siteName} 把 Agent 客户端、模型供应、充值计费、用量与故障诊断合成一个平台 — 下载、登录，直接开始跑任务。",
-      "items": {
-        "economics": {
-          "eyebrow": "01 / 开箱即用",
-          "title": "登录即路由，Agent 一键配齐",
-          "description": "桌面端注册登录后自动配置好 Claude Code、Codex 等 Agent CLI，缺 Node、缺 CLI 一键补齐，不用复制粘贴 JSON 配置，也不会覆盖你已有的本地设置。"
-        },
-        "reliability": {
-          "eyebrow": "02 / 花费看得见",
-          "title": "一个余额面板看清所有 Agent 消费",
-          "description": "Claude、Codex、Grok 各自用了多少、还剩多少额度、当前限速状态如何，都在同一处展示；各分组倍率与在线率摆在台面上，任务进行中也能一键切到更稳更便宜的线路。"
-        },
-        "control": {
-          "eyebrow": "03 / all in one",
-          "title": "使用我们的服务有 SLA 保障",
-          "description": "全线服务可用性、响应速度、定价策略统一管理。出问题时不抓瞎，自动切换到可用线路，或给出明确的恢复建议。"
-        }
-      }
     },
     "comparison": {
       "overline": "换个角度看",
@@ -297,30 +356,6 @@ export default {
       "codex": "Codex",
       "gemini": "Gemini",
       "openaiCompatible": "OpenAI 兼容"
-    },
-    "trust": {
-      "overline": "用得放心",
-      "title": "钱花在哪、为什么不能用，都看得见",
-      "description": "中转服务最常见的问题是不透明：余额不知道还剩多少、报错不知道哪里坏。{siteName} 把这些信息显式做出来，让你不用猜。",
-      "cards": {
-        "gateway": {
-          "title": "每条线路分开算",
-          "description": "Claude Code 和 Codex 各用各的配置，不会互相覆盖；每条线路的消费、近 5 小时 / 1 天 / 7 天用量、剩余额度都独立展示。"
-        },
-        "resilience": {
-          "title": "服务商出问题，提前知道",
-          "description": "每个服务商的可用状态、响应速度、价格都摆在台面上，出问题时不抓瞎，知道该切到另一条线路还是等自动恢复。"
-        },
-        "visibility": {
-          "title": "支持开发票",
-          "description": "充值消费均可开具发票，团队报销、财务合规都省心，可以在充值订单页自行开具。"
-        }
-      },
-      "trackers": {
-        "routing": "按量计费",
-        "billing": "余额长期有效",
-        "visibility": "多账号切换"
-      }
     },
     "footer": {
       "allRightsReserved": "保留所有权利。",

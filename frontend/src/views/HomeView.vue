@@ -14,14 +14,11 @@
   <!-- Default Home Page -->
   <div
     v-else
-    class="home-font-sans relative min-h-screen overflow-hidden bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100"
+    class="home-font-sans relative min-h-screen overflow-x-hidden bg-[#f6f4ef] text-gray-900 dark:bg-[#0b0c0e] dark:text-gray-100"
   >
-    <div class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div class="home-grid-pattern absolute inset-0 opacity-[0.25] dark:opacity-[0.16]"></div>
-    </div>
-
     <HomeHeader
       :site-name="siteName"
+      :site-logo="siteLogo"
       :doc-url="docUrl"
       :is-dark="isDark"
       :is-authenticated="isAuthenticated"
@@ -34,39 +31,45 @@
     <main class="relative z-10">
       <HomeHero
         :site-name="siteName"
-        :site-subtitle="siteSubtitle"
         :doc-url="docUrl"
         :is-authenticated="isAuthenticated"
         :dashboard-path="dashboardPath"
         :windows-url="clientDownloadWindowsUrl"
         :macos-url="clientDownloadMacOSUrl"
+        :api-base-url="apiBaseUrl"
+        :latest-version="latestVersion"
       />
 
-      <HomeReveal class="px-4 pb-8 md:px-6">
-        <HomeProofStrip />
+      <HomeReveal>
+        <HomeFeatureConstellation :mode="homeMode" :site-name="siteName" :site-logo="siteLogo" />
       </HomeReveal>
 
-      <HomeReveal v-if="hasClientDownloads" class="px-4 py-12 md:px-6 md:py-16">
-        <HomeValueSection :site-name="siteName" />
-      </HomeReveal>
+      <HomeModelOrbit :mode="homeMode" :site-name="siteName" :site-logo="siteLogo" />
 
-      <HomeReveal id="pricing" class="px-4 py-8 md:px-6 md:py-12">
+      <HomeReveal id="pricing" class="scroll-mt-20 px-4 pt-20 md:px-6 md:pt-28">
         <HomePricingSection :site-name="siteName" />
       </HomeReveal>
 
-      <HomeReveal class="px-4 pb-8 md:px-6">
+      <HomeReveal class="px-4 py-16 md:px-6 md:py-24">
         <HomeComparisonSection :site-name="siteName" />
       </HomeReveal>
 
-      <HomeReveal class="px-4 py-12 md:px-6 md:py-16">
-        <HomeTrustSection :site-name="siteName" />
-      </HomeReveal>
+      <HomeClosingCta
+        :site-name="siteName"
+        :doc-url="docUrl"
+        :is-authenticated="isAuthenticated"
+        :dashboard-path="dashboardPath"
+        :client-download-options="clientDownloadOptions"
+      />
     </main>
 
     <HomeFooter
       :site-name="siteName"
+      :site-logo="siteLogo"
       :doc-url="docUrl"
       :current-year="currentYear"
+      :has-client-downloads="hasClientDownloads"
+      :console-path="isAuthenticated ? dashboardPath : '/login'"
     />
   </div>
 </template>
@@ -74,15 +77,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
+import HomeClosingCta from '@/components/home/HomeClosingCta.vue'
 import HomeComparisonSection from '@/components/home/HomeComparisonSection.vue'
-import HomePricingSection from '@/components/home/HomePricingSection.vue'
+import HomeFeatureConstellation from '@/components/home/HomeFeatureConstellation.vue'
 import HomeFooter from '@/components/home/HomeFooter.vue'
 import HomeHeader from '@/components/home/HomeHeader.vue'
 import HomeHero from '@/components/home/HomeHero.vue'
-import HomeProofStrip from '@/components/home/HomeProofStrip.vue'
+import HomeModelOrbit from '@/components/home/HomeModelOrbit.vue'
+import HomePricingSection from '@/components/home/HomePricingSection.vue'
 import HomeReveal from '@/components/home/HomeReveal.vue'
-import HomeTrustSection from '@/components/home/HomeTrustSection.vue'
-import HomeValueSection from '@/components/home/HomeValueSection.vue'
+import { useClientChangelog } from '@/composables/useClientChangelog'
+import { detectPreferredClientPlatform, getClientDownloadOptions } from '@/utils/clientDownloads'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
@@ -92,7 +97,8 @@ const siteName = computed(() => {
   const configuredName = appStore.cachedPublicSettings?.site_name?.trim() || appStore.siteName.trim()
   return configuredName && configuredName !== 'Sub2API' ? configuredName : 'CheapRouter'
 })
-const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || '')
+const siteLogo = computed(() => appStore.siteLogo || appStore.cachedPublicSettings?.site_logo || '')
+const apiBaseUrl = computed(() => appStore.cachedPublicSettings?.api_base_url?.trim() || appStore.apiBaseUrl || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
 const clientDownloadWindowsUrl = computed(
@@ -101,8 +107,25 @@ const clientDownloadWindowsUrl = computed(
 const clientDownloadMacOSUrl = computed(
   () => appStore.cachedPublicSettings?.client_download_macos_url?.trim() || ''
 )
-const hasClientDownloads = computed(
-  () => Boolean(clientDownloadWindowsUrl.value) || Boolean(clientDownloadMacOSUrl.value)
+const clientDownloadOptions = computed(() =>
+  getClientDownloadOptions(
+    { windowsUrl: clientDownloadWindowsUrl.value, macosUrl: clientDownloadMacOSUrl.value },
+    detectPreferredClientPlatform(),
+  ),
+)
+const hasClientDownloads = computed(() => clientDownloadOptions.value.length > 0)
+// 有客户端时首页围绕客户端讲，没有时围绕 API 讲
+const homeMode = computed<'client' | 'api'>(() => (hasClientDownloads.value ? 'client' : 'api'))
+
+// 客户端最新版本号来自 GitHub Releases 同步的更新日志，只在有客户端时才去取
+const { latestVersion: changelogLatestVersion, load: loadChangelog } = useClientChangelog()
+const latestVersion = computed(() => (hasClientDownloads.value ? changelogLatestVersion.value : ''))
+watch(
+  hasClientDownloads,
+  (enabled) => {
+    if (enabled) void loadChangelog()
+  },
+  { immediate: true },
 )
 const hasHomeContent = computed(() => homeContent.value.trim().length > 0)
 

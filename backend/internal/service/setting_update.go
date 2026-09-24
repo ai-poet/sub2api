@@ -353,16 +353,11 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	}
 	updates[SettingKeyCommunityQRCode] = settings.CommunityQRCode
 	updates[SettingKeyCommunityGroupURL] = strings.TrimSpace(settings.CommunityGroupURL)
-	// SystemSettings 里存的是原始 JSON 字符串，先解析校验再归一化写回
-	changelogEntries := parseClientChangelogEntries(settings.ClientChangelogEntries)
-	if err := ValidateChangelogEntries(changelogEntries); err != nil {
+	changelogRepo, err := NormalizeGitHubRepo(settings.ClientChangelogGitHubRepo)
+	if err != nil {
 		return nil, err
 	}
-	changelogJSON, err := json.Marshal(changelogEntries)
-	if err != nil {
-		return nil, fmt.Errorf("marshal changelog entries: %w", err)
-	}
-	updates[SettingKeyClientChangelogEntries] = string(changelogJSON)
+	updates[SettingKeyClientChangelogGitHubRepo] = changelogRepo
 	updates[SettingKeySiteLogo] = settings.SiteLogo
 	updates[SettingKeySiteSubtitle] = settings.SiteSubtitle
 	updates[SettingKeyAPIBaseURL] = settings.APIBaseURL

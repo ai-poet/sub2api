@@ -123,15 +123,8 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		RiskControlEnabled: settings.RiskControlEnabled,
 
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
-		ClientChangelogEntries: func() []dto.ClientChangelogEntry {
-			entries := make([]dto.ClientChangelogEntry, len(settings.ClientChangelogEntries))
-			for i, e := range settings.ClientChangelogEntries {
-				entries[i] = dto.ClientChangelogEntry(e)
-			}
-			return entries
-		}(),
-		CommunityQRCode:   settings.CommunityQRCode,
-		CommunityGroupURL: settings.CommunityGroupURL,
+		CommunityQRCode:            settings.CommunityQRCode,
+		CommunityGroupURL:          settings.CommunityGroupURL,
 	})
 }
 

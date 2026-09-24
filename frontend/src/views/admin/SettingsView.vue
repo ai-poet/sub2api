@@ -6261,8 +6261,6 @@
             </div>
           </div>
 
-          <ClientChangelogEditor :entries="form.client_changelog_entries" />
-
           <!-- Site Settings -->
           <div class="card">
             <div
@@ -7853,8 +7851,6 @@ import type {
 } from "@/types";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import ForkSettingsSection from "@/components/admin/settings/ForkSettingsSection.vue";
-import ClientChangelogEditor from "@/components/admin/settings/ClientChangelogEditor.vue";
-import type { ClientChangelogEntry } from "@/types";
 import Icon from "@/components/icons/Icon.vue";
 import Select, { type SelectOption } from "@/components/common/Select.vue";
 import {
@@ -8871,7 +8867,7 @@ const form = reactive<SettingsForm>({
   group_status_notify_serverchan_sendkey_configured: false,
   community_qr_code: "",
   community_group_url: "",
-  client_changelog_entries: [] as ClientChangelogEntry[],
+  client_changelog_github_repo: "",
 });
 
 // 人机验证 UI 状态：单卡片「总开关 + 服务商单选」，落库仍是三个独立
@@ -10566,7 +10562,7 @@ async function saveSettings() {
         form.group_status_notify_serverchan_sendkey || undefined,
       community_qr_code: form.community_qr_code,
       community_group_url: form.community_group_url,
-      client_changelog_entries: form.client_changelog_entries,
+      client_changelog_github_repo: form.client_changelog_github_repo,
     };
 
     // 仅当 openai_fast_policy_settings 已成功从后端加载时才回写，

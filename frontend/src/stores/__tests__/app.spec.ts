@@ -69,7 +69,6 @@ function createPublicSettings(overrides: Partial<PublicSettings> = {}): PublicSe
     purchase_subscription_open_mode: 'iframe',
     community_qr_code: '',
     community_group_url: '',
-    client_changelog_entries: [],
     ...overrides,
   }
 }
@@ -567,7 +566,6 @@ describe('useAppStore', () => {
         referral_enabled: false,
         backend_mode_enabled: false,
         version: '1.0.0',
-        client_changelog_entries: [],
       })
 
       const store = useAppStore()

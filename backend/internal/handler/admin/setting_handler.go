@@ -137,7 +137,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		GroupStatusNotifyServerChanSendKeyConfigured:           settings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
 		CommunityGroupURL:                                      settings.CommunityGroupURL,
-		ClientChangelogEntries:                                 dto.ParseClientChangelogEntries(settings.ClientChangelogEntries),
+		ClientChangelogGitHubRepo:                              settings.ClientChangelogGitHubRepo,
 		RegistrationEnabled:                                    settings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     settings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       settings.RegistrationEmailSuffixWhitelist,

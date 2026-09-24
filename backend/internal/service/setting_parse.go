@@ -68,7 +68,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyGroupStatusNotifyServerChanUID:            "",
 		SettingKeyCommunityQRCode:                           "",
 		SettingKeyCommunityGroupURL:                         "",
-		SettingKeyClientChangelogEntries:                    "[]",
+		SettingKeyClientChangelogGitHubRepo:                 "",
 		SettingKeyEmailVerifyEnabled:                        "false",
 		SettingKeyRegistrationEmailSuffixWhitelist:          "[]",
 		SettingKeyRegistrationEmailDomainQuotaEnabled:       "false",
@@ -378,7 +378,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		TicketNotifyServerChanEnabled:      settings[SettingKeyTicketNotifyServerChanEnabled] == "true",
 		GroupStatusNotifyServerChanUID:     strings.TrimSpace(settings[SettingKeyGroupStatusNotifyServerChanUID]),
 		GroupStatusNotifyServerChanSendKey: strings.TrimSpace(settings[SettingKeyGroupStatusNotifyServerChanSendKey]),
-		ClientChangelogEntries:             settings[SettingKeyClientChangelogEntries],
+		ClientChangelogGitHubRepo:          strings.TrimSpace(settings[SettingKeyClientChangelogGitHubRepo]),
 		CommunityQRCode:                    settings[SettingKeyCommunityQRCode],
 		CommunityGroupURL:                  strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 	}

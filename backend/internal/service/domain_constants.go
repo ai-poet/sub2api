@@ -740,8 +740,8 @@ const (
 	SettingKeyAccountQuotaNotifyEmails  = "account_quota_notify_emails"  // 管理员通知邮箱列表（JSON 数组）
 
 	// Web Search Emulation
-	SettingKeyWebSearchEmulationConfig = "web_search_emulation_config" // JSON 配置
-	SettingKeyClientChangelogEntries   = "client_changelog_entries"
+	SettingKeyWebSearchEmulationConfig  = "web_search_emulation_config"  // JSON 配置
+	SettingKeyClientChangelogGitHubRepo = "client_changelog_github_repo" // 官网更新日志来源的 GitHub 仓库（owner/repo），留空用默认仓库
 )
 
 // SettingKeyDefaultPlatformQuotas —— 系统全局：每用户 × 平台日/周/月 USD 上限（JSON）。

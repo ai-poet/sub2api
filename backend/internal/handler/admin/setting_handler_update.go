@@ -23,20 +23,20 @@ import (
 // UpdateSettingsRequest 更新设置请求
 type UpdateSettingsRequest struct {
 	// fork 自有设置
-	PurchaseSubscriptionOpenMode       *string                         `json:"purchase_subscription_open_mode"`
-	ClientDownloadWindowsURL           *string                         `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL             *string                         `json:"client_download_macos_url"`
-	GroupStatusEnabled                 *bool                           `json:"group_status_enabled"`
-	GroupStatusNotifyServerChanEnabled *bool                           `json:"group_status_notify_serverchan_enabled"`
-	ApprovalNotifyServerChanEnabled    *bool                           `json:"approval_notify_serverchan_enabled"`
-	ApprovalPendingLimitPerUser        *int                            `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
-	ApprovalBatchLimit                 *int                            `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
-	TicketNotifyServerChanEnabled      *bool                           `json:"ticket_notify_serverchan_enabled"`
-	GroupStatusNotifyServerChanUID     *string                         `json:"group_status_notify_serverchan_uid"`
-	GroupStatusNotifyServerChanSendKey *string                         `json:"group_status_notify_serverchan_sendkey"`
-	CommunityQRCode                    *string                         `json:"community_qr_code"`
-	CommunityGroupURL                  *string                         `json:"community_group_url"`
-	ClientChangelogEntries             *[]service.ClientChangelogEntry `json:"client_changelog_entries"`
+	PurchaseSubscriptionOpenMode       *string `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL           *string `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL             *string `json:"client_download_macos_url"`
+	GroupStatusEnabled                 *bool   `json:"group_status_enabled"`
+	GroupStatusNotifyServerChanEnabled *bool   `json:"group_status_notify_serverchan_enabled"`
+	ApprovalNotifyServerChanEnabled    *bool   `json:"approval_notify_serverchan_enabled"`
+	ApprovalPendingLimitPerUser        *int    `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
+	ApprovalBatchLimit                 *int    `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
+	TicketNotifyServerChanEnabled      *bool   `json:"ticket_notify_serverchan_enabled"`
+	GroupStatusNotifyServerChanUID     *string `json:"group_status_notify_serverchan_uid"`
+	GroupStatusNotifyServerChanSendKey *string `json:"group_status_notify_serverchan_sendkey"`
+	CommunityQRCode                    *string `json:"community_qr_code"`
+	CommunityGroupURL                  *string `json:"community_group_url"`
+	ClientChangelogGitHubRepo          *string `json:"client_changelog_github_repo"`
 
 	// 注册设置
 	RegistrationEnabled                 bool                         `json:"registration_enabled"`
@@ -2022,7 +2022,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
 		CommunityGroupURL:                                      settings.CommunityGroupURL,
-		ClientChangelogEntries:                                 dto.ParseClientChangelogEntries(updatedSettings.ClientChangelogEntries),
+		ClientChangelogGitHubRepo:                              updatedSettings.ClientChangelogGitHubRepo,
 		RegistrationEnabled:                                    updatedSettings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     updatedSettings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       updatedSettings.RegistrationEmailSuffixWhitelist,
@@ -2454,15 +2454,16 @@ func applyForkSettingsFromRequest(
 	}
 	settings.CommunityGroupURL = groupURL
 
-	settings.ClientChangelogEntries = previous.ClientChangelogEntries
-	if req.ClientChangelogEntries != nil {
-		encoded, err := json.Marshal(*req.ClientChangelogEntries)
+	changelogRepo := previous.ClientChangelogGitHubRepo
+	if req.ClientChangelogGitHubRepo != nil {
+		normalized, err := service.NormalizeGitHubRepo(*req.ClientChangelogGitHubRepo)
 		if err != nil {
-			response.BadRequest(c, "Invalid client changelog entries")
+			response.BadRequest(c, "Client changelog repository must look like owner/repo")
 			return false
 		}
-		settings.ClientChangelogEntries = string(encoded)
+		changelogRepo = normalized
 	}
+	settings.ClientChangelogGitHubRepo = changelogRepo
 	return true
 }
 

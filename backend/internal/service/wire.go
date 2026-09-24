@@ -961,6 +961,7 @@ var ProviderSet = wire.NewSet(
 	ProvideUserPlatformQuotaUsageFlusher,
 	ProvideBalanceNotifyService,
 	NewModelCatalogService,
+	NewClientChangelogService,
 	NewGroupStatusService,
 	NewGroupStatusNotifyService,
 	ProvideGroupStatusProbeService,

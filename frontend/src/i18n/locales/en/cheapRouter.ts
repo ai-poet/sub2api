@@ -18,6 +18,124 @@ export default {
     "navModels": "Models",
     "navPricing": "Pricing",
     "navChangelog": "Changelog",
+    "landing": {
+      "hero": {
+        "releaseBadge": "v{version} is out",
+        "releaseCta": "See what changed",
+        "client": {
+          "titleLead": "Every agent.",
+          "titleAccent": "One desktop app.",
+          "subtitle": "One desktop client for Claude Code, Codex and Grok: sign in and you are routed, with balance, group rates and uptime right next to your tasks — at far friendlier prices than the official API."
+        },
+        "api": {
+          "titleLead": "Every top model.",
+          "titleAccent": "One API key.",
+          "subtitle": "OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok. Pay as you go, balance never expires, and a failing route hands over to the next one on its own."
+        },
+        "downloadFor": "Download for {platform}",
+        "copyInstall": "Copy the {platform} install command",
+        "switchPlatform": "Get the {platform} version",
+        "useApi": "Use the API directly",
+        "startApi": "Start with the API",
+        "viewDocs": "Read the docs",
+        "installHint": "Paste it into a terminal to install",
+        "terminal": {
+          "title": "Terminal",
+          "claudeComment": "# Claude Code",
+          "openaiComment": "# Codex · OpenAI SDK · any compatible client",
+          "caption": "Swap the base URL and key — your tools and code stay exactly as they are."
+        }
+      },
+      "features": {
+        "client": {
+          "titleLead": "Agents need a system,",
+          "titleTail": "not a pile of config files.",
+          "subtitle": "Sign in once and Claude Code, Codex and Grok are wired up; balance, routes and usage live in the same window."
+        },
+        "api": {
+          "titleLead": "One entry point",
+          "titleTail": "for every model call.",
+          "subtitle": "Claude, GPT and Grok all go through one gateway: one balance, one set of usage numbers, one place to see what broke."
+        },
+        "cards": {
+          "autoRoute": {
+            "title": "Sign in, routed",
+            "body": "Your gateway key is written into every CLI's global config, leaving your local settings alone"
+          },
+          "groupSwitch": {
+            "title": "One-click group switch",
+            "body": "Rates and uptime are on the table, so you can move to a steadier, cheaper route mid-task"
+          },
+          "liveBalance": {
+            "title": "Live balance",
+            "body": "What Claude, Codex and Grok each used and what is left, in one place"
+          },
+          "cliInstall": {
+            "title": "Missing pieces, installed",
+            "body": "No Node or no CLI? One click installs it and you are ready to run"
+          },
+          "images": {
+            "title": "Images",
+            "body": "Describe a picture to draw it, or drop pictures in to edit them — all kept in a gallery"
+          },
+          "native": {
+            "title": "Native-grade smooth",
+            "body": "Rust + GPUI rendering in an installer of a dozen MB — no Electron shell"
+          },
+          "compatible": {
+            "title": "Native protocols",
+            "body": "OpenAI Chat / Responses and Anthropic Messages work as they are"
+          },
+          "failover": {
+            "title": "Automatic failover",
+            "body": "When one route fails the next takes over, without dropping the request"
+          },
+          "metered": {
+            "title": "Pay as you go",
+            "body": "Pay only for what runs, no minimum spend, balance never expires"
+          },
+          "usage": {
+            "title": "Usage you can see",
+            "body": "5-hour, 1-day and 7-day usage and remaining credit at a glance"
+          },
+          "groups": {
+            "title": "Transparent group rates",
+            "body": "Every group's rate and uptime are public, so you pick the route"
+          },
+          "invoice": {
+            "title": "Invoices available",
+            "body": "Invoices for every top-up, so team expenses stay simple"
+          }
+        }
+      },
+      "models": {
+        "overline": "Many models · one switch",
+        "titleLead": "Not one model.",
+        "titleTail": "The right one for every step.",
+        "clientSubtitle": "Switch between Claude Code, Codex and Grok inside one client — your project, files and context stay where they are.",
+        "apiSubtitle": "Claude, GPT and Grok share one key and one balance; changing models means changing one parameter.",
+        "cta": "See model pricing"
+      },
+      "closing": {
+        "overline": "Get started",
+        "clientTitleLead": "Download {siteName},",
+        "clientTitleTail": "run your first task in minutes.",
+        "apiTitleLead": "Sign up for a key,",
+        "apiTitleTail": "send your first request in minutes.",
+        "note": "Pay as you go · Balance never expires · Invoices available"
+      },
+      "footer": {
+        "clientTagline": "A price-friendly AI relay × agent desktop client",
+        "apiTagline": "A price-friendly AI model gateway",
+        "product": "Product",
+        "support": "Support",
+        "download": "Download",
+        "pricing": "Pricing",
+        "changelog": "Changelog",
+        "docs": "Docs",
+        "console": "Dashboard"
+      }
+    },
     "hero": {
       "badge": "One-click Claude Code / Codex",
       "titleLeadPrimary": "A price-competitive AI relay",
@@ -85,43 +203,6 @@ export default {
         "routing": "Multi-account auto-switching — a single key failing does not break the whole route",
         "visibility": "5h / 1d / 7d usage windows visible"
       }
-    },
-    "proofStrip": {
-      "overline": "Platform capabilities"
-    },
-    "clientShowcase": {
-      "badge": "Client preview",
-      "title": "Relay gateway × agent workbench, deeply unified in one desktop client",
-      "description": "Sign in and you are routed — the gateway key is written into every CLI's global config automatically. Balance, group rate multipliers, and uptime sit right next to your tasks, so you can hop to a cheaper, steadier route while a task is still running.",
-      "pills": {
-        "autoRoute": "Sign in, routed",
-        "groupSwitch": "One-click group switch (rate · uptime)",
-        "liveBalance": "Live balance",
-        "cliInstall": "Missing CLI? One-click install",
-        "aggregate": "Mainstream AI tools in one place"
-      },
-      "advantages": {
-        "tiny": {
-          "title": "An installer of just a dozen MB",
-          "body": "A single native binary — no Electron shell"
-        },
-        "native": {
-          "title": "Native-grade smoothness",
-          "body": "Rust + GPUI rendering — zero lag on scroll and input"
-        },
-        "ready": {
-          "title": "Works out of the box",
-          "body": "Sign in and you are routed; missing Node or a CLI is fixed in one click"
-        }
-      },
-      "apiOnly": {
-        "title": "Just want the raw API?",
-        "body": "Register for a key and call the OpenAI/Anthropic-compatible endpoints directly — works with third-party clients of every kind.",
-        "dashboardCta": "Get an API key",
-        "docsCta": "Read the docs"
-      },
-      "cta": "Get client updates",
-      "ctaNote": "Register to get desktop client updates first."
     },
     "clientWorkflow": {
       "ariaLabel": "{siteName} desktop client demo: switching routing groups with one click while a task is running",
@@ -195,28 +276,6 @@ export default {
     },
     "download": {
       "commandCopied": "Install command copied. Paste it in your terminal to run."
-    },
-    "value": {
-      "overline": "Why {siteName}",
-      "title": "An out-of-the-box, aggregated AI agent platform",
-      "description": "Not another IDE, and not just another relay. {siteName} folds the agent client, model supply, top-ups, usage, and failure diagnostics into one platform — download, sign in, and start running tasks.",
-      "items": {
-        "economics": {
-          "eyebrow": "01 / Out of the box",
-          "title": "Sign in and you are routed — agents configured in one click",
-          "description": "After signing up, the desktop client configures Claude Code, Codex, and other agent CLIs for you automatically. Missing Node or a missing CLI is fixed in one click — no copy-pasting JSON configs, and your existing local settings stay untouched."
-        },
-        "reliability": {
-          "eyebrow": "02 / Spend you can see",
-          "title": "One balance panel for every agent",
-          "description": "How much Claude, Codex, and Grok have each used, how much credit is left, and the current speed-limit state — all in one place. Group rate multipliers and uptime are on the table, so you can hop to a steadier, cheaper line even mid-task."
-        },
-        "control": {
-          "eyebrow": "03 / All in one",
-          "title": "SLA-backed service you can rely on",
-          "description": "Service availability, response speed, and pricing strategy are managed uniformly across all lines. When issues occur, you are not left guessing — traffic automatically switches to healthy routes, or you get clear recovery guidance."
-        }
-      }
     },
     "comparison": {
       "overline": "A different angle",
@@ -297,30 +356,6 @@ export default {
       "codex": "Codex",
       "gemini": "Gemini",
       "openaiCompatible": "OpenAI-Compatible"
-    },
-    "trust": {
-      "overline": "Run with confidence",
-      "title": "See where the money goes and why it cannot run",
-      "description": "The biggest pain with relay services is opacity — you do not know how much balance is left, and you do not know what broke. {siteName} makes those two things explicit so you do not have to guess.",
-      "cards": {
-        "gateway": {
-          "title": "Each line billed separately",
-          "description": "Claude Code and Codex use their own settings without overwriting each other. Per-line current spend, recent usage, and remaining credit are tracked separately."
-        },
-        "resilience": {
-          "title": "Provider issues, surfaced early",
-          "description": "Each provider shows availability, response speed, and pricing — so when something breaks you know which line is affected and can switch manually or wait for auto-recovery."
-        },
-        "visibility": {
-          "title": "Invoices available",
-          "description": "Every top-up can be invoiced — easy for team reimbursement and finance compliance, and you can issue one yourself on the top-up orders page."
-        }
-      },
-      "trackers": {
-        "routing": "Pay-as-you-go",
-        "billing": "Balance never expires",
-        "visibility": "Multi-account switching"
-      }
     },
     "footer": {
       "allRightsReserved": "All rights reserved.",

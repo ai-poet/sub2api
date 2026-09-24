@@ -166,7 +166,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyClientDownloadMacOSURL,
 		SettingKeyCommunityQRCode,
 		SettingKeyCommunityGroupURL,
-		SettingKeyClientChangelogEntries,
 		SettingKeyForceEmailOnThirdPartySignup,
 		SettingKeyRegistrationEmailSuffixWhitelist,
 		SettingKeyRegistrationEmailDomainQuotaEnabled,
@@ -365,7 +364,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		ClientDownloadWindowsURL:     strings.TrimSpace(settings[SettingKeyClientDownloadWindowsURL]),
 		ClientDownloadMacOSURL:       strings.TrimSpace(settings[SettingKeyClientDownloadMacOSURL]),
 		GroupStatusEnabled:           settings[SettingKeyGroupStatusEnabled] == "true",
-		ClientChangelogEntries:       filterAndSortPublicChangelogEntries(settings[SettingKeyClientChangelogEntries]),
 		CommunityQRCode:              settings[SettingKeyCommunityQRCode],
 		CommunityGroupURL:            strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 
@@ -618,14 +616,13 @@ type PublicSettingsInjectionPayload struct {
 	BackendModeEnabled                  bool                     `json:"backend_mode_enabled"`
 	Version                             string                   `json:"version"`
 	// fork 自有的公开设置
-	PurchaseSubscriptionOpenMode string                 `json:"purchase_subscription_open_mode"`
-	ClientDownloadWindowsURL     string                 `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL       string                 `json:"client_download_macos_url"`
-	GroupStatusEnabled           bool                   `json:"group_status_enabled"`
-	ReferralEnabled              bool                   `json:"referral_enabled"`
-	CommunityQRCode              string                 `json:"community_qr_code"`
-	CommunityGroupURL            string                 `json:"community_group_url"`
-	ClientChangelogEntries       []ClientChangelogEntry `json:"client_changelog_entries"`
+	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL     string `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL       string `json:"client_download_macos_url"`
+	GroupStatusEnabled           bool   `json:"group_status_enabled"`
+	ReferralEnabled              bool   `json:"referral_enabled"`
+	CommunityQRCode              string `json:"community_qr_code"`
+	CommunityGroupURL            string `json:"community_group_url"`
 	// 服务器全局时区（IANA 名称与当前 UTC 偏移），高峰时段等服务端本地时间窗口的展示标注用
 	ServerTimezone              string  `json:"server_timezone"`
 	ServerUTCOffset             string  `json:"server_utc_offset"`
@@ -734,7 +731,6 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ReferralEnabled:              settings.ReferralEnabled,
 		CommunityQRCode:              settings.CommunityQRCode,
 		CommunityGroupURL:            settings.CommunityGroupURL,
-		ClientChangelogEntries:       settings.ClientChangelogEntries,
 
 		AvailableChannelsEnabled:   settings.AvailableChannelsEnabled,
 		PublicPricingEnabled:       settings.PublicPricingEnabled,

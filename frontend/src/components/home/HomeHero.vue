@@ -1,195 +1,111 @@
 <template>
-  <section class="relative w-full overflow-hidden bg-white px-4 pt-12 md:px-6 md:pt-16 dark:bg-gray-950">
+  <section id="download" class="relative overflow-hidden">
+    <!-- 装饰图形：只在宽屏出现，不参与布局 -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 hidden h-[640px] lg:block">
+      <span class="animate-home-float absolute left-[7%] top-[22%]">
+        <span
+          class="flex h-28 w-28 -rotate-12 items-center justify-center rounded-[30px] bg-primary-400 font-mono text-3xl font-black text-gray-900 shadow-[0_18px_40px_rgba(13,148,136,0.28)]"
+        >&gt;_</span>
+      </span>
+      <span class="animate-home-float absolute right-[7%] top-[14%] [animation-delay:-3s]">
+        <span
+          class="flex h-32 w-32 rotate-[9deg] items-center justify-center rounded-[28px] bg-amber-300 text-5xl font-black text-gray-900 shadow-[0_18px_40px_rgba(217,119,6,0.22)]"
+        >✦</span>
+      </span>
+      <span class="absolute left-[24%] top-[9%] h-5 w-5 rotate-12 bg-sky-300"></span>
+      <span class="absolute right-[27%] top-[6%] h-6 w-6 -rotate-12 bg-orange-500"></span>
+      <span class="absolute left-[15%] top-[62%] h-6 w-6 rotate-45 bg-white shadow-md dark:bg-white/80"></span>
+      <span class="absolute right-[15%] top-[58%] h-5 w-5 rotate-12 bg-primary-600"></span>
+    </div>
 
-    <div class="mx-auto w-full max-w-[1380px] min-w-0">
-
-      <!-- Category tag pills -->
-      <div class="flex flex-wrap gap-2">
-        <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50">{{ t('home.hero.tags.coding') }}</span>
-        <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50">{{ t('home.hero.tags.agent') }}</span>
-        <span class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-white/50">{{ t('home.hero.tags.tools') }}</span>
-      </div>
-
-      <!-- Headline -->
-      <h1 class="mt-6 max-w-full text-[clamp(1.95rem,7.8vw,5rem)] font-black leading-[1.06] tracking-[-0.04em] [overflow-wrap:anywhere] [text-wrap:balance] sm:text-[clamp(2.6rem,6vw,5rem)]">
-        <span class="block text-gray-900 dark:text-white">
-          <span class="block sm:inline">{{ t('home.hero.titleLeadPrimary') }}</span>
-          <span v-if="hasClientDownloads" class="block sm:ml-[0.18em] sm:inline">{{ t('home.hero.titleLeadSecondary') }}</span>
+    <div class="relative mx-auto flex max-w-[1200px] flex-col items-center px-4 pt-12 text-center md:px-6 md:pt-20">
+      <router-link
+        v-if="hasClientDownloads && latestVersion"
+        to="/changelog"
+        data-test="hero-release-badge"
+        class="inline-flex max-w-full items-center gap-2 rounded-full border border-black/10 bg-white/75 py-1 pl-1 pr-3 text-[13px] font-medium text-gray-700 backdrop-blur transition hover:border-black/20 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
+      >
+        <span class="shrink-0 rounded-full bg-gray-900 px-2 py-0.5 text-[11px] font-bold text-white dark:bg-white dark:text-gray-900">
+          {{ t('home.landing.hero.releaseBadge', { version: latestVersion }) }}
         </span>
-        <span v-if="titleAccent" class="block text-primary-600 dark:text-primary-400">{{ titleAccent }}</span>
-        <span v-if="titleTail" class="block text-gray-900 dark:text-white">{{ titleTail }}</span>
+        <span class="truncate">{{ t('home.landing.hero.releaseCta') }}</span>
+        <Icon name="arrowRight" size="xs" class="shrink-0" />
+      </router-link>
+
+      <h1
+        class="mt-6 max-w-full text-[clamp(2.5rem,9vw,5.75rem)] font-black leading-[1.02] tracking-[-0.045em] [overflow-wrap:anywhere] [text-wrap:balance]"
+      >
+        <span class="block text-gray-900 dark:text-white">{{ copy.titleLead }}</span>
+        <span class="block text-primary-600 dark:text-primary-400">{{ copy.titleAccent }}</span>
       </h1>
+      <p class="mt-6 max-w-[42rem] text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-white/65">
+        {{ copy.subtitle }}
+      </p>
 
-      <!-- CLI icons strip -->
-      <div class="mt-5 flex flex-wrap items-center gap-2.5">
-        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          <PlatformIcon platform="anthropic" size="md" />
-          Claude Code
-        </span>
-        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          <PlatformIcon platform="openai" size="md" />
-          Codex
-        </span>
-        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          <PlatformIcon platform="grok" size="md" />
-          Grok
-        </span>
-        <span class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-400 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/40">
-          + {{ t('home.hero.tags.more') }}
-        </span>
-      </div>
+      <ul data-test="hero-providers" class="mt-7 flex items-center justify-center gap-3">
+        <li
+          v-for="provider in providers"
+          :key="provider.platform"
+          :title="provider.label"
+          class="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+        >
+          <PlatformIcon :platform="provider.platform" size="md" />
+          <span class="sr-only">{{ provider.label }}</span>
+        </li>
+      </ul>
 
-      <!-- CTAs -->
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-        <!-- 终端命令类型主按钮 -->
-        <button
-          v-if="primaryClientDownloadOption && primaryClientDownloadOption.type === 'command'"
-          type="button"
-          :data-platform="primaryClientDownloadOption.id"
-          data-test="hero-primary-download"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gray-900 px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 sm:w-auto"
-          @click="handlePrimaryClick"
-        >
-          <span>{{ t('home.hero.installPrimary') }}</span>
-          <Icon name="clipboard" size="sm" />
-        </button>
-        <!-- 下载链接类型主按钮 -->
-        <a
-          v-else-if="primaryClientDownloadOption"
-          :href="primaryClientDownloadOption.url"
-          :data-platform="primaryClientDownloadOption.id"
-          data-test="hero-primary-download"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gray-900 px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 sm:w-auto"
-        >
-          <span>{{ t('home.hero.downloadPrimary') }}</span>
-          <Icon name="download" size="sm" />
-        </a>
+      <!-- 有客户端：下载为主，API 为次 -->
+      <div v-if="hasClientDownloads" class="mt-9 flex w-full flex-col items-center gap-4">
+        <HomeDownloadButton :options="clientDownloadOptions" />
         <router-link
-          v-if="primaryClientDownloadOption"
           :to="dashboardPath"
           data-test="hero-connect-api"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-gray-900 transition hover:-translate-y-[1px] hover:bg-gray-50 active:translate-y-0 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
+          class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline-offset-4 transition hover:text-gray-900 hover:underline dark:text-white/70 dark:hover:text-white"
         >
-          <span>{{ t('home.hero.connectApi') }}</span>
-          <Icon name="arrowRight" size="sm" />
+          {{ t('home.landing.hero.useApi') }}
+          <Icon name="arrowRight" size="xs" />
         </router-link>
+      </div>
+
+      <!-- 没有客户端：接入 API 为主 -->
+      <div v-else class="mt-9 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
         <router-link
-          v-if="!primaryClientDownloadOption"
           :to="primaryTo"
           data-test="hero-primary-fallback"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gray-900 px-8 text-[15px] font-bold text-white transition hover:-translate-y-[1px] hover:bg-black active:translate-y-0 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 sm:w-auto"
+          class="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-gray-900 px-7 text-[15px] font-bold text-white shadow-[0_14px_36px_rgba(15,17,20,0.22)] transition hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
         >
-          <span>{{ t('home.hero.startApi') }}</span>
+          {{ t('home.landing.hero.startApi') }}
           <Icon name="arrowRight" size="sm" />
         </router-link>
-
         <a
-          v-if="!primaryClientDownloadOption && docUrl"
+          v-if="docUrl"
           :href="docUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-gray-900 transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
+          data-test="hero-secondary-docs"
+          class="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-black/15 bg-white/70 px-7 text-[15px] font-semibold text-gray-900 transition hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
         >
-          <span>{{ t('home.viewDocs') }}</span>
+          {{ t('home.landing.hero.viewDocs') }}
           <Icon name="externalLink" size="sm" />
         </a>
         <router-link
-          v-else-if="!primaryClientDownloadOption"
+          v-else-if="!isAuthenticated"
           to="/login"
-          class="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-8 text-[15px] font-semibold text-gray-900 transition hover:-translate-y-[1px] hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 sm:w-auto"
+          data-test="hero-secondary-login"
+          class="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-black/15 bg-white/70 px-7 text-[15px] font-semibold text-gray-900 transition hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
         >
-          <span>{{ t('home.login') }}</span>
-          <Icon name="arrowRight" size="sm" />
+          {{ t('home.login') }}
         </router-link>
       </div>
-
-      <!-- macOS install command preview -->
-      <div
-        v-if="primaryClientDownloadOption && primaryClientDownloadOption.type === 'command'"
-        class="mt-4 flex max-w-2xl items-center gap-2 rounded-2xl border border-black/8 bg-gray-900 p-2 pl-4 font-mono text-sm text-white shadow-sm dark:border-white/10 dark:bg-gray-950"
-        data-test="hero-install-command"
-      >
-        <code class="min-w-0 flex-1 truncate text-white/90">{{ primaryClientDownloadOption.url }}</code>
-        <button
-          type="button"
-          class="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-          @click="handlePrimaryClick"
-        >
-          {{ t('home.hero.installPrimary') }}
-        </button>
-      </div>
-
-      <!-- Note -->
-      <p
-        v-if="hasClientDownloads"
-        class="mt-2 max-w-full text-sm leading-6 text-gray-400 [overflow-wrap:anywhere] dark:text-white/35"
-      >
-        {{ t('home.hero.primaryNote') }}
-      </p>
     </div>
 
-    <!-- ===== Agent Workflow Preview: 直接嵌入首屏（参考 Cursor 布局） ===== -->
-    <div v-if="hasClientDownloads" data-test="client-showcase" class="mx-auto mt-10 max-w-[1380px] pb-12 md:pb-16">
-      <!-- Feature pills -->
-      <div class="mb-5 flex flex-wrap gap-2">
-        <span v-for="pill in pills" :key="pill" class="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-sm text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-          {{ pill }}
-        </span>
+    <!-- 主视觉：有客户端时是客户端界面，否则是接入示例 -->
+    <div class="relative mx-auto mt-14 max-w-[1200px] px-4 md:mt-16 md:px-6">
+      <div v-if="hasClientDownloads" data-test="client-showcase">
+        <HomeAgentWorkflowPreview :site-name="siteName" />
       </div>
-
-      <HomeAgentWorkflowPreview :site-name="siteName" />
-
-      <!-- Client advantages strip -->
-      <div data-test="client-advantages" class="mt-6 grid gap-3 sm:grid-cols-3">
-        <div
-          v-for="card in advantageCards"
-          :key="card.title"
-          class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"
-        >
-          <h3 class="text-[15px] font-semibold text-gray-900 dark:text-white">{{ card.title }}</h3>
-          <p class="mt-1.5 text-sm leading-6 text-gray-500 dark:text-white/55">{{ card.body }}</p>
-        </div>
-      </div>
-
-      <!-- API-only card -->
-      <div
-        data-test="api-only-card"
-        class="mt-6 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5"
-      >
-        <div>
-          <h3 class="text-[15px] font-semibold text-gray-900 dark:text-white">
-            {{ t('home.clientShowcase.apiOnly.title') }}
-          </h3>
-          <p class="mt-1.5 max-w-[38rem] text-sm leading-6 text-gray-500 dark:text-white/55">
-            {{ t('home.clientShowcase.apiOnly.body') }}
-          </p>
-        </div>
-        <div class="flex shrink-0 flex-wrap items-center gap-3">
-          <router-link
-            :to="dashboardPath"
-            data-test="api-only-dashboard"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full bg-gray-900 px-5 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-          >
-            <span>{{ t('home.clientShowcase.apiOnly.dashboardCta') }}</span>
-            <Icon name="arrowRight" size="sm" />
-          </router-link>
-          <a
-            v-if="docUrl"
-            :href="docUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-test="api-only-docs"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 dark:border-white/12 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          >
-            <span>{{ t('home.clientShowcase.apiOnly.docsCta') }}</span>
-            <Icon name="externalLink" size="sm" />
-          </a>
-        </div>
-      </div>
+      <HomeApiTerminal v-else :base-url="baseUrl" />
     </div>
-
   </section>
 </template>
 
@@ -197,9 +113,11 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import HomeAgentWorkflowPreview from '@/components/home/HomeAgentWorkflowPreview.vue'
+import HomeApiTerminal from '@/components/home/HomeApiTerminal.vue'
+import HomeDownloadButton from '@/components/home/HomeDownloadButton.vue'
 import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
-import { useClipboard } from '@/composables/useClipboard'
+import type { GroupPlatform } from '@/types'
 import {
   detectPreferredClientPlatform,
   getClientDownloadOptions,
@@ -207,64 +125,53 @@ import {
 
 const props = withDefaults(defineProps<{
   siteName: string
-  siteSubtitle: string
   docUrl: string
   isAuthenticated: boolean
   dashboardPath: string
   windowsUrl?: string
   macosUrl?: string
+  /** 接入示例里展示的网关地址；留空用当前站点地址 */
+  apiBaseUrl?: string
+  /** 客户端最新版本号（来自更新日志），留空不显示发布徽标 */
+  latestVersion?: string
 }>(), {
   siteName: 'CheapRouter',
+  windowsUrl: '',
+  macosUrl: '',
+  apiBaseUrl: '',
+  latestVersion: '',
 })
 
-const { t, te } = useI18n()
-const { copyToClipboard } = useClipboard()
+const { t } = useI18n()
 
-const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
-// 标题的强调行与尾行是可选文案：语言包未定义时不渲染，用 te() 判断避免缺键时回显 key。
-const HERO_TITLE_ACCENT_KEY = 'home.hero.titleAccent'
-const HERO_TITLE_TAIL_KEY = 'home.hero.titleTail'
-const titleAccent = computed(() => (te(HERO_TITLE_ACCENT_KEY) ? t(HERO_TITLE_ACCENT_KEY) : '').trim())
-const titleTail = computed(() => (te(HERO_TITLE_TAIL_KEY) ? t(HERO_TITLE_TAIL_KEY) : '').trim())
-const preferredClientPlatform = computed(() => detectPreferredClientPlatform())
 const clientDownloadOptions = computed(() =>
   getClientDownloadOptions(
-    {
-      windowsUrl: props.windowsUrl,
-      macosUrl: props.macosUrl,
-    },
-    preferredClientPlatform.value,
+    { windowsUrl: props.windowsUrl, macosUrl: props.macosUrl },
+    detectPreferredClientPlatform(),
   ),
 )
-const primaryClientDownloadOption = computed(() => clientDownloadOptions.value[0] ?? null)
 const hasClientDownloads = computed(() => clientDownloadOptions.value.length > 0)
 
-function handlePrimaryClick() {
-  if (primaryClientDownloadOption.value?.type === 'command') {
-    copyToClipboard(primaryClientDownloadOption.value.url, t('home.download.commandCopied'))
+const primaryTo = computed(() => (props.isAuthenticated ? props.dashboardPath : '/login'))
+const baseUrl = computed(() => {
+  const configured = props.apiBaseUrl.trim()
+  if (configured) return configured
+  return typeof window === 'undefined' ? '' : window.location.origin
+})
+
+const copy = computed(() => {
+  const mode = hasClientDownloads.value ? 'client' : 'api'
+  return {
+    titleLead: t(`home.landing.hero.${mode}.titleLead`),
+    titleAccent: t(`home.landing.hero.${mode}.titleAccent`),
+    subtitle: t(`home.landing.hero.${mode}.subtitle`),
   }
-}
+})
 
-const pills = computed(() => [
-  t('home.clientShowcase.pills.autoRoute'),
-  t('home.clientShowcase.pills.groupSwitch'),
-  t('home.clientShowcase.pills.liveBalance'),
-  t('home.clientShowcase.pills.cliInstall'),
-  t('home.clientShowcase.pills.aggregate'),
-])
-
-const advantageCards = computed(() => [
-  {
-    title: t('home.clientShowcase.advantages.tiny.title'),
-    body: t('home.clientShowcase.advantages.tiny.body'),
-  },
-  {
-    title: t('home.clientShowcase.advantages.native.title'),
-    body: t('home.clientShowcase.advantages.native.body'),
-  },
-  {
-    title: t('home.clientShowcase.advantages.ready.title'),
-    body: t('home.clientShowcase.advantages.ready.body'),
-  },
-])
+// 公开定价目前只有这三家；新增平台时在这里补上图标。
+const providers: Array<{ platform: GroupPlatform; label: string }> = [
+  { platform: 'anthropic', label: 'Claude' },
+  { platform: 'openai', label: 'GPT' },
+  { platform: 'grok', label: 'Grok' },
+]
 </script>
