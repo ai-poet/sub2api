@@ -176,7 +176,14 @@ The features below are locally maintained customizations of this fork. During up
   so Responses and Chat sessions overflowed), the Responses usage no longer
   counting cached tokens twice (`api/src/providers/codex.rs::responses_usage`),
   and the keyword effort / persona read from the last message a person wrote
-  (`query/src/lib.rs::last_written_user_message`).
+  (`query/src/lib.rs::last_written_user_message`), and prompt-cache
+  breakpoints on every Messages request, placed where Claude Code places
+  them — the last tool, the system prompt, the last message and the user
+  message before it (`api/src/prompt_cache.rs`, called from
+  `api/src/providers/anthropic.rs::build_request`; the engine never set one,
+  so a route straight to Anthropic, such as a Claude Max group, re-read the
+  whole conversation at full price on every call while Claude Code was
+  cached on the same route).
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
