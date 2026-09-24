@@ -166,7 +166,17 @@ The features below are locally maintained customizations of this fork. During up
   mapped onto DeepSeek's and GLM's thinking switch and Kimi K3's
   `reasoning_effort` on any OpenAI-compatible route
   (`query/src/runner/provider_options.rs` — upstream nested the DeepSeek
-  mapping where it never ran).
+  mapping where it never ran), the command queue's messages appended after
+  the conversation rather than prepended to it
+  (`query/src/lib.rs::inject_command_queue` — a steering message landed in
+  front of the prompt it steered), compaction on every route through the
+  session's own adapter, gated on the settings' `auto_compact` /
+  `compact_threshold` and reported as `QueryEvent::Compaction`
+  (`query/src/{lib,compact}.rs` — only the Messages route used to compact,
+  so Responses and Chat sessions overflowed), the Responses usage no longer
+  counting cached tokens twice (`api/src/providers/codex.rs::responses_usage`),
+  and the keyword effort / persona read from the last message a person wrote
+  (`query/src/lib.rs::last_written_user_message`).
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
