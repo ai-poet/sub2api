@@ -8,11 +8,10 @@ const translations: Record<string, string> = {
   'home.landing.hero.releaseCta': 'See what changed',
   'home.landing.hero.client.label': 'Agent desktop client',
   'home.landing.hero.api.label': 'A quality-checked AI relay',
-  'home.landing.hero.client.titleLead': 'Smart models, checked nonstop.',
-  'home.landing.hero.client.titleAccent': 'Every agent, one workspace, every API.',
+  'home.landing.hero.tagline': 'Smart models, checked nonstop.',
+  'home.landing.hero.client.title': 'Every agent, one workspace, every API.',
   'home.landing.hero.client.subtitle': 'The built-in agent works out of the box.',
-  'home.landing.hero.api.titleLead': 'Smart models, checked nonstop.',
-  'home.landing.hero.api.titleAccent': 'One API key for all.',
+  'home.landing.hero.api.title': 'One API key for all.',
   'home.landing.hero.api.subtitle': 'GPT routes get Sol and Astra fingerprint checks.',
   'home.landing.hero.downloadFor': 'Download for {platform}',
   'home.landing.hero.copyInstall': 'Copy the {platform} install command',
@@ -222,6 +221,14 @@ describe('HomeHero', () => {
     expect(providers.text()).toContain('Claude')
     expect(providers.text()).toContain('GPT')
     expect(providers.text()).toContain('Grok')
+  })
+
+  it('keeps each title phrase whole and puts the quality line under the title', () => {
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL })
+
+    const phrases = wrapper.find('[data-test="hero-title"]').findAll('span').map((span) => span.text())
+    expect(phrases).toEqual(['Every agent,', 'one workspace,', 'every API.'])
+    expect(wrapper.find('[data-test="hero-tagline"]').text()).toBe('Smart models, checked nonstop.')
   })
 
   it('shows the client window mockup when a client is available', () => {

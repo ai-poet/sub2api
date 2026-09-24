@@ -49,8 +49,8 @@ export default {
       },
       "features": {
         "client": {
-          "titleLead": "线路有人盯，",
-          "titleTail": "Agent 有地方跑。",
+          "titleLead": "Agent 干活需要一套系统，",
+          "titleTail": "而不是一堆配置文件。",
           "subtitle": "中转站这边，线路持续探测、GPT 线路还核对模型身份；客户端这边，内置 Agent、各家 CLI Agent 和 AI 绘图都在同一个窗口里。"
         },
         "api": {

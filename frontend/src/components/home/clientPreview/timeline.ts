@@ -32,6 +32,8 @@ const TYPE_END = 15200
 const IMAGE_SUBMIT = 15400
 const IMAGE_DONE = 16800
 const FADE_OUT = 18200
+/** 下一轮开头先保持透明，等画图页褪掉、对话页就位后再淡入，避免两页叠在一起 */
+const FADE_IN_AT = 400
 /** 开始计时时这一轮已经跑了多少秒，让「工作中」和「已工作」的数字看起来像真的任务 */
 const WORK_SECONDS_OFFSET = 31
 
@@ -84,7 +86,7 @@ export function deriveFrame(tMs: number): PreviewFrame {
     typed: clamp01((t - TYPE_START) / (TYPE_END - TYPE_START)),
     submitted: t >= IMAGE_SUBMIT,
     imageJob: t < IMAGE_SUBMIT ? 'idle' : t < IMAGE_DONE ? 'drawing' : 'done',
-    fading: t >= FADE_OUT,
+    fading: t >= FADE_OUT || t < FADE_IN_AT,
     workSeconds: WORK_SECONDS_OFFSET + Math.floor(Math.min(t, RUN_DONE) / 1000),
     drawSeconds: Math.max(0, Math.floor((Math.min(t, IMAGE_DONE) - IMAGE_SUBMIT) / 1000)),
     charges: (t >= RUN_DONE ? 1 : 0) + (t >= IMAGE_DONE ? 1 : 0),

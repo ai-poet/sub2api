@@ -92,15 +92,16 @@ describe('HomeAgentWorkflowPreview', () => {
     const wrapper = mountPreview()
 
     expect(wrapper.find('[data-test="preview-model-picker"]').classes()).toContain('opacity-0')
-    expect(wrapper.find('[data-test="preview-tool-rows"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="preview-tool-rows"]').findAll('.cw-row-in')).toHaveLength(0)
     expect(wrapper.find('[data-test="preview-balance"]').text()).toContain('$36.52')
+    expect(wrapper.find('[data-test="preview-agent-tooltip"]').text()).toBe('Built-in agent')
   })
 
-  it('shows a still frame with the picker open on the built-in agent when motion is reduced', () => {
+  it('shows the whole working turn with the picker closed when motion is reduced', () => {
     reduceMotion(true)
     const wrapper = mountPreview()
 
-    expect(wrapper.find('[data-test="preview-model-picker"]').classes()).toContain('opacity-100')
-    expect(wrapper.find('[data-test="preview-agent-tooltip"]').text()).toBe('Built-in agent')
+    expect(wrapper.find('[data-test="preview-model-picker"]').classes()).toContain('opacity-0')
+    expect(wrapper.find('[data-test="preview-tool-rows"]').findAll('.cw-row-in')).toHaveLength(6)
   })
 })

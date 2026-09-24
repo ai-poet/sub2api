@@ -7,18 +7,17 @@
           {{ t('home.clientWorkflow.transcript.prompt') }}
         </div>
 
-        <!-- 进行中：工具行逐条出现 -->
+        <!-- 进行中：工具行逐条出现，工作中提示始终跟在最后一行下面 -->
         <div v-if="!frame.runDone" class="mt-4" data-test="preview-tool-rows">
           <div
-            v-for="(row, index) in rows"
+            v-for="(row, index) in shownRows"
             :key="row.key"
-            class="flex h-[26px] items-center gap-2 text-[12.5px] transition-all duration-300 ease-out"
-            :class="index < frame.visibleRows ? 'translate-y-0 opacity-100' : 'translate-y-1.5 opacity-0'"
+            class="cw-row-in flex h-[26px] items-center gap-2 text-[12.5px]"
           >
             <ClientIcon :name="row.icon" class="h-3.5 w-3.5 shrink-0 text-[color:var(--cw-text-tertiary)]" />
             <span
               class="shrink-0 font-medium"
-              :class="row.live && index === frame.visibleRows - 1 ? 'cw-shimmer' : 'text-[color:var(--cw-text-secondary)]'"
+              :class="row.live && index === shownRows.length - 1 ? 'cw-shimmer' : 'text-[color:var(--cw-text-secondary)]'"
             >{{ row.verb }}</span>
             <span v-if="row.target" class="min-w-0 truncate text-[color:var(--cw-text-tertiary)]">{{ row.target }}</span>
             <template v-if="row.stats">
@@ -143,7 +142,7 @@ import ModelPicker from './ModelPicker.vue'
 import type { ClientIconName } from './icons'
 import type { PreviewFrame } from './timeline'
 
-defineProps<{
+const props = defineProps<{
   frame: PreviewFrame
   balance: string
   siteName: string
@@ -182,6 +181,9 @@ const rows = computed<ToolRow[]>(() => [
   { key: 'typecheck', icon: 'terminal', verb: t('home.clientWorkflow.transcript.ran'), target: 'pnpm typecheck' },
   { key: 'test', icon: 'terminal', verb: t('home.clientWorkflow.transcript.running'), target: 'pnpm test', live: true },
 ])
+
+// 只渲染已经出现的行，没出现的行不占位
+const shownRows = computed(() => rows.value.slice(0, props.frame.visibleRows))
 </script>
 
 <style scoped>
@@ -210,8 +212,14 @@ const rows = computed<ToolRow[]>(() => [
   opacity: 0.35;
 }
 
-.cw-settle {
-  animation: settle-in 0.35s ease-out;
+@media (prefers-reduced-motion: no-preference) {
+  .cw-row-in {
+    animation: settle-in 0.3s ease-out;
+  }
+
+  .cw-settle {
+    animation: settle-in 0.35s ease-out;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
