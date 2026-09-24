@@ -23,3 +23,20 @@ export function resolveRequestOrigin(request: NextRequest): string {
 
   return `${request.nextUrl.origin}${basePath}`;
 }
+
+/**
+ * Resolve a root-relative path a provider returned (the Alipay short link
+ * `/pay/{orderId}`) against the public app URL, so it still works once it is
+ * encoded into a QR code or opened by the desktop client. Absolute URLs, app
+ * schemes (`weixin://…`) and protocol-relative values pass through unchanged.
+ */
+export function resolveAbsoluteUrl<T extends string | null | undefined>(value: T, appUrl: string): T | string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+    return value;
+  }
+  try {
+    return new URL(value, appUrl).toString();
+  } catch {
+    return value;
+  }
+}

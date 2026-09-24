@@ -24,15 +24,15 @@ export default {
         "releaseCta": "See what changed",
         "client": {
           "label": "Agent desktop client",
-          "titleLead": "Every agent.",
-          "titleAccent": "One desktop app.",
-          "subtitle": "One desktop client for Claude Code, Codex and Grok: sign in and you are routed, with balance, group rates and uptime right next to your tasks — at far friendlier prices than the official API."
+          "titleLead": "Smart models, checked nonstop.",
+          "titleAccent": "Every agent, one workspace, every API.",
+          "subtitle": "The built-in agent works out of the box — no Node, no CLI to install. Claude Code, Codex, Grok, OpenCode and Pi are wired up the moment you sign in, and Amp, Cursor, Kimi Code and more run in the same window. It draws, too: describe a picture, or drop one in to edit it."
         },
         "api": {
-          "label": "Unified AI API gateway",
-          "titleLead": "Every top model.",
-          "titleAccent": "One API key.",
-          "subtitle": "OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok. Pay as you go, balance never expires, and a failing route hands over to the next one on its own."
+          "label": "A quality-checked AI relay",
+          "titleLead": "Smart models, checked nonstop.",
+          "titleAccent": "One API key for all.",
+          "subtitle": "Every route is probed for availability and first-token latency; GPT routes also get Sol and Astra fingerprint checks on the model's identity, so a mismatch turns red on the spot and our on-call hears about it at once. A failing route hands over to the next, behind OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok."
         },
         "downloadFor": "Download for {platform}",
         "copyInstall": "Copy the {platform} install command",
@@ -50,39 +50,39 @@ export default {
       },
       "features": {
         "client": {
-          "titleLead": "Agents need a system,",
-          "titleTail": "not a pile of config files.",
-          "subtitle": "Sign in once and Claude Code, Codex and Grok are wired up; balance, routes and usage live in the same window."
+          "titleLead": "Someone watches the routes.",
+          "titleTail": "Your agents get a home.",
+          "subtitle": "On the relay side, routes are probed nonstop and GPT routes get their identity checked; on the client side, the built-in agent, every CLI agent and image generation share one window."
         },
         "api": {
-          "titleLead": "One entry point",
-          "titleTail": "for every model call.",
-          "subtitle": "Claude, GPT and Grok all go through one gateway: one balance, one set of usage numbers, one place to see what broke."
+          "titleLead": "Models under inspection,",
+          "titleTail": "one key to reach them.",
+          "subtitle": "Every probe and identity check is on record, and trouble turns red before it pages us; Claude, GPT and Grok share one balance and one set of usage numbers."
+        },
+        "columns": {
+          "quality": "Quality-checked relay",
+          "client": "Agent client"
         },
         "cards": {
-          "autoRoute": {
-            "title": "Sign in, routed",
-            "body": "Your gateway key is written into every CLI's global config, leaving your local settings alone"
+          "quality": {
+            "title": "Model identity checks",
+            "body": "GPT routes are checked on a schedule with Sol and Astra fingerprints; repeated mismatches mark the route as failing"
           },
-          "groupSwitch": {
-            "title": "One-click group switch",
-            "body": "Rates and uptime are on the table, so you can move to a steadier, cheaper route mid-task"
+          "probe": {
+            "title": "Live route probes",
+            "body": "Availability and first-token latency are measured nonstop; trouble turns red and pages on-call right away"
           },
-          "liveBalance": {
-            "title": "Live balance",
-            "body": "What Claude, Codex and Grok each used and what is left, in one place"
+          "builtinAgent": {
+            "title": "Built-in agent",
+            "body": "Ready as soon as the app is — no Node, no CLI — with Claude, GPT, Grok, DeepSeek, Kimi and more a click apart"
           },
-          "cliInstall": {
-            "title": "Missing pieces, installed",
-            "body": "No Node or no CLI? One click installs it and you are ready to run"
+          "allAgents": {
+            "title": "Every agent, one window",
+            "body": "Claude Code, Codex, Grok, OpenCode and Pi are wired up at sign-in; Amp, Cursor, Kimi Code and more run here too"
           },
           "images": {
-            "title": "Images",
-            "body": "Describe a picture to draw it, or drop pictures in to edit them — all kept in a gallery"
-          },
-          "native": {
-            "title": "Native-grade smooth",
-            "body": "Rust + GPUI rendering in an installer of a dozen MB — no Electron shell"
+            "title": "AI images",
+            "body": "Describe a picture or drop one in to edit it, see the price before it draws, and keep everything in a gallery"
           },
           "compatible": {
             "title": "Native protocols",
@@ -96,14 +96,6 @@ export default {
             "title": "Pay as you go",
             "body": "Pay only for what runs, no minimum spend, balance never expires"
           },
-          "usage": {
-            "title": "Usage you can see",
-            "body": "5-hour, 1-day and 7-day usage and remaining credit at a glance"
-          },
-          "groups": {
-            "title": "Transparent group rates",
-            "body": "Every group's rate and uptime are public, so you pick the route"
-          },
           "invoice": {
             "title": "Invoices available",
             "body": "Invoices for every top-up, so team expenses stay simple"
@@ -114,7 +106,7 @@ export default {
         "overline": "Many models · one switch",
         "titleLead": "Not one model.",
         "titleTail": "The right one for every step.",
-        "clientSubtitle": "Switch between Claude Code, Codex and Grok inside one client — your project, files and context stay where they are.",
+        "clientSubtitle": "Switch between the built-in agent, Claude Code, Codex and Grok inside one client — your project, files and context stay where they are.",
         "apiSubtitle": "Claude, GPT and Grok share one key and one balance; changing models means changing one parameter.",
         "cta": "See model pricing"
       },
@@ -124,11 +116,11 @@ export default {
         "clientTitleTail": "run your first task in minutes.",
         "apiTitleLead": "Sign up for a key,",
         "apiTitleTail": "send your first request in minutes.",
-        "note": "Pay as you go · Balance never expires · Invoices available"
+        "note": "Routes checked nonstop · Pay as you go · Balance never expires · Invoices available"
       },
       "footer": {
-        "clientTagline": "A price-friendly AI relay × agent desktop client",
-        "apiTagline": "A price-friendly AI model gateway",
+        "clientTagline": "A quality-checked AI relay × agent desktop client",
+        "apiTagline": "A quality-checked AI model gateway",
         "product": "Product",
         "support": "Support",
         "download": "Download",
@@ -207,74 +199,67 @@ export default {
       }
     },
     "clientWorkflow": {
-      "ariaLabel": "{siteName} desktop client demo: switching routing groups with one click while a task is running",
-      "working": "工作中 · {seconds} 秒",
-      "balanceBefore": "$999990.44",
-      "balanceAfter": "$999990.41",
+      "ariaLabel": "{siteName} desktop client demo: the built-in agent works through a coding task, the model picker switches between agents, and the Images page draws a picture",
       "sidebar": {
-        "newTask": "新建任务",
-        "search": "搜索",
-        "today": "今天",
-        "taskTitle": "在吗",
-        "project": "amadeus-system",
+        "newTask": "New Task",
+        "search": "Search",
+        "images": "Images",
+        "today": "Today",
+        "taskTitle": "Return to the page after login",
+        "working": "Working for {seconds}s",
+        "justNow": "just now",
+        "olderTask": "Add a client download button",
+        "olderTime": "3h",
         "email": "admin{'@'}cheaprouter.cc"
       },
-      "labels": {
-        "read": "读取",
-        "list": "列出",
-        "thinking": "思考",
-        "edit": "编辑"
-      },
-      "groupSummary": "正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改",
-      "rows": {
-        "r1": "main.ts",
-        "r2": "components",
-        "r3": "constants.ts",
-        "r4": "思考用时 1 秒",
-        "r5": "chat.ts",
-        "r6": "auth.ts",
-        "r7": "ChatView.vue",
-        "r8": "user.ts",
-        "r9": "hooks",
-        "r10": "index.vue"
+      "transcript": {
+        "prompt": "After signing in, send people back to the page they came from instead of the home page",
+        "explored": "Explored · 1 search, 2 files",
+        "thought": "Thought for 3s",
+        "edited": "Edited",
+        "running": "Running",
+        "working": "Working for {seconds}s",
+        "workedFor": "Worked for {seconds}s",
+        "reply": "Done: the page you came from is remembered before sign-in and you land back on it afterwards, falling back to the dashboard. All tests pass.",
+        "changedFiles": "Changed {count} files",
+        "review": "Review",
+        "undo": "Undo"
       },
       "composer": {
-        "placeholder": "做什么都可以…",
-        "model": "gpt-5.6-sol",
-        "effort": "高",
-        "access": "完全访问",
-        "build": "构建",
-        "stop": "停止"
+        "placeholder": "Do anything…",
+        "effort": "High",
+        "access": "Full access",
+        "build": "Build"
       },
-      "statusBar": {
-        "project": "amadeus-system",
-        "local": "本地",
-        "branch": "my_feature"
+      "footer": {
+        "project": "amadeus-web",
+        "local": "Local"
       },
-      "menu": {
-        "balance": "余额 {amount}",
-        "topUp": "充值",
-        "claudeGroup": "Claude Code 分组",
-        "claudeValue": "Claude Sale",
-        "codexGroup": "Codex 分组",
-        "codexValueBefore": "Codex",
-        "codexValueAfter": "Codex Sale",
-        "grokGroup": "Grok 分组",
-        "grokValue": "Grok",
-        "modelPlaza": "模型广场",
-        "usage": "使用记录",
-        "logout": "退出登录",
-        "submenu": {
-          "default": "账号默认",
-          "codexName": "Codex",
-          "codexMeta": "×0.29 · 96.2%",
-          "saleName": "Codex Sale",
-          "saleMeta": "×0.19 · 86.4%",
-          "welfareName": "Codex 福利分组",
-          "welfareMeta": "×0.09 · 69.3%"
+      "picker": {
+        "search": "Search models…",
+        "builtinAgent": "Built-in agent"
+      },
+      "image": {
+        "title": "Images",
+        "pictureCount": "{count} pictures",
+        "openFolder": "Open folder",
+        "placeholder": "Describe a picture, or drop and paste images to edit them…",
+        "prompt": "An orange cat coding under neon lights, cyberpunk",
+        "addImages": "Add images",
+        "group": "Group: automatic",
+        "quality": "Quality: high",
+        "count": "1 picture",
+        "mode": "Text to image",
+        "estimate": "About $0.04",
+        "generate": "Draw",
+        "drawing": "Drawing · {time}",
+        "runningTask": "Runs on the gateway — closing the window loses nothing",
+        "gallery": {
+          "sunset": "Sunset over the sea, film look",
+          "mountain": "A starry camp below snowy peaks",
+          "city": "Neon street on a rainy night, cyberpunk"
         }
-      },
-      "toast": "已切换到 Codex Sale，对新启动的任务生效"
+      }
     },
     "download": {
       "commandCopied": "Install command copied. Paste it in your terminal to run."

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getCurrentUserByToken, getGroup } from '@/lib/sub2api/client';
+import { readUserToken } from '@/lib/utils/request-token';
 
 export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: '缺少 token' }, { status: 401 });
   }
@@ -65,6 +66,9 @@ export async function GET(request: NextRequest) {
           limits: groupInfo,
           allowMessagesDispatch: group?.allow_messages_dispatch ?? false,
           defaultMappedModel: group?.default_mapped_model ?? null,
+          // A group the user has not bought is absent from their model catalog;
+          // its scopes are the only hint of what the plan serves.
+          supportedModelScopes: group?.supported_model_scopes ?? [],
         };
       }),
     );

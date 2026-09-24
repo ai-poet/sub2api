@@ -33,7 +33,7 @@
       </router-link>
 
       <h1
-        class="mt-6 max-w-full text-[clamp(2.5rem,9vw,5.75rem)] font-black leading-[1.02] tracking-[-0.045em] [overflow-wrap:anywhere] [text-wrap:balance]"
+        class="mt-6 max-w-full text-[clamp(1.9rem,7vw,4.5rem)] font-black leading-[1.02] tracking-[-0.045em] [overflow-wrap:anywhere] [text-wrap:balance]"
       >
         <span class="block text-gray-900 dark:text-white">{{ copy.titleLead }}</span>
         <span class="block text-primary-600 dark:text-primary-400">{{ copy.titleAccent }}</span>

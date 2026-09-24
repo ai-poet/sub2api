@@ -81,6 +81,16 @@ describe('GET /api/orders/my - canRefundRequest', () => {
     expect(res.status).toBe(401);
   });
 
+  it('accepts the token as an Authorization bearer header', async () => {
+    const res = await GET(
+      new NextRequest('https://pay.example.com/api/orders/my', {
+        headers: { Authorization: 'Bearer header-token' },
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockGetCurrentUserByToken).toHaveBeenCalledWith('header-token');
+  });
+
   it('canRefundRequest = true when orderType=balance + status=COMPLETED + refundEnabled=true', async () => {
     mockOrderFindMany.mockResolvedValue([
       {

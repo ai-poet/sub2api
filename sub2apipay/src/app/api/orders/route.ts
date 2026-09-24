@@ -8,9 +8,11 @@ import { getSystemConfigs } from '@/lib/system-config';
 import { getVisiblePaymentTypes } from '@/lib/payment/visibility';
 import { resolveLocale } from '@/lib/locale';
 import { resolveRequestOrigin } from '@/lib/request-origin';
+import { readUserToken } from '@/lib/utils/request-token';
 
 const createOrderSchema = z.object({
-  token: z.string().min(1),
+  // Optional here: the desktop client sends it as `Authorization: Bearer`.
+  token: z.string().optional(),
   amount: z.number().positive().max(99999999.99),
   payment_type: z.string().min(1),
   src_host: z.string().max(253).optional(),
@@ -42,7 +44,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '参数错误', details: parsed.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const { token, amount, payment_type, src_host, src_url, is_mobile, order_type, plan_id } = parsed.data;
+    const { amount, payment_type, src_host, src_url, is_mobile, order_type, plan_id } = parsed.data;
+    const token = readUserToken(request, parsed.data.token);
+    if (!token) {
+      return NextResponse.json({ error: '无效的 token，请重新登录', code: 'INVALID_TOKEN' }, { status: 401 });
+    }
 
     // 通过 token 解析用户身份
     let userId: number;

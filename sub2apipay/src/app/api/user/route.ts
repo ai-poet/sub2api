@@ -8,6 +8,7 @@ import { resolveLocale } from '@/lib/locale';
 import { getSystemConfig } from '@/lib/system-config';
 import { getVisiblePaymentTypes } from '@/lib/payment/visibility';
 import { listAvailablePromotionsForUser } from '@/lib/promotion/service';
+import { readUserToken } from '@/lib/utils/request-token';
 import type { PublicPromotion } from '@/lib/promotion/calc';
 import {
   DEFAULT_BALANCE_CREDIT_CNY_PER_USD,
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: locale === 'en' ? 'Invalid user ID' : '无效的用户 ID' }, { status: 400 });
   }
 
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json(
       { error: locale === 'en' ? 'Missing token parameter' : '缺少 token 参数' },

@@ -24,15 +24,15 @@ export default {
         "releaseCta": "看看更新了什么",
         "client": {
           "label": "Agent 桌面客户端",
-          "titleLead": "所有 Agent，",
-          "titleAccent": "一个客户端。",
-          "subtitle": "Claude Code、Codex、Grok 深度合一的桌面客户端：登录即路由，余额、分组倍率和在线率就在任务旁边，价格比官方友好得多。"
+          "titleLead": "高智商模型，全程质检。",
+          "titleAccent": "所有 Agent，一个工作区，API 全接入。",
+          "subtitle": "内置 Agent 开箱即用，不装 Node、不装 CLI；Claude Code、Codex、Grok、OpenCode、Pi 登录即自动接好，Amp、Cursor、Kimi Code 等也能在同一个窗口里跑。还能直接 AI 绘图：一句话出图，拖进图片就改。"
         },
         "api": {
-          "label": "统一 AI API 网关",
-          "titleLead": "所有顶级模型，",
-          "titleAccent": "一个 API Key。",
-          "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok。按量计费、余额长期有效，一条线路出问题自动换下一条。"
+          "label": "保质量 AI 中转站",
+          "titleLead": "高智商模型，全程质检。",
+          "titleAccent": "一个 API Key 全接入。",
+          "subtitle": "线路持续探测可用率和首字延迟；GPT 线路另用 Sol 验证、Astra 指纹核对模型身份，对不上当场标红、运维即刻收到告警。线路出问题自动换下一条，OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok。"
         },
         "downloadFor": "下载 {platform} 版",
         "copyInstall": "复制 {platform} 安装命令",
@@ -50,39 +50,39 @@ export default {
       },
       "features": {
         "client": {
-          "titleLead": "Agent 干活需要一套系统，",
-          "titleTail": "而不是一堆配置文件。",
-          "subtitle": "登录一次，Claude Code、Codex、Grok 就都接好了；余额、线路和用量都在同一个窗口里。"
+          "titleLead": "线路有人盯，",
+          "titleTail": "Agent 有地方跑。",
+          "subtitle": "中转站这边，线路持续探测、GPT 线路还核对模型身份；客户端这边，内置 Agent、各家 CLI Agent 和 AI 绘图都在同一个窗口里。"
         },
         "api": {
-          "titleLead": "一个入口，",
-          "titleTail": "管住所有模型调用。",
-          "subtitle": "Claude、GPT、Grok 都走同一个网关：同一份余额、同一套用量统计、同一处故障诊断。"
+          "titleLead": "模型有质检，",
+          "titleTail": "接入只要一个 Key。",
+          "subtitle": "每次探测、每次身份校验都有记录，出问题先标红再告警；Claude、GPT、Grok 共用一份余额和一套用量统计。"
+        },
+        "columns": {
+          "quality": "保质量中转站",
+          "client": "Agent 客户端"
         },
         "cards": {
-          "autoRoute": {
-            "title": "登录即路由",
-            "body": "网关密钥自动写进每个 CLI 的全局配置，不碰你已有的本地设置"
+          "quality": {
+            "title": "模型身份校验",
+            "body": "GPT 线路定时用 Sol 验证、Astra 指纹核对模型身份，连续对不上就判异常"
           },
-          "groupSwitch": {
-            "title": "分组一键切换",
-            "body": "倍率与在线率摆在台面上，任务进行中也能换到更稳更便宜的线路"
+          "probe": {
+            "title": "线路实时探测",
+            "body": "持续检测可用率和首字延迟，异常当场标红，运维即刻收到告警"
           },
-          "liveBalance": {
-            "title": "余额实时可见",
-            "body": "Claude、Codex、Grok 各用了多少、还剩多少，一处看清"
+          "builtinAgent": {
+            "title": "内置 Agent",
+            "body": "装好客户端就能用，不装 Node、不装 CLI，Claude、GPT、Grok、DeepSeek、Kimi 等模型随手切"
           },
-          "cliInstall": {
-            "title": "缺什么补什么",
-            "body": "缺 Node、缺 CLI 一键安装，装好就能开跑"
+          "allAgents": {
+            "title": "所有 Agent 一个窗口",
+            "body": "Claude Code、Codex、Grok、OpenCode、Pi 登录即自动接好，Amp、Cursor、Kimi Code 等也能在这里跑"
           },
           "images": {
-            "title": "画图",
-            "body": "一句话出图，或拖入图片直接编辑，作品自动归档到图库"
-          },
-          "native": {
-            "title": "原生级流畅",
-            "body": "Rust + GPUI 渲染，安装包只有十几 MB，没有 Electron 套壳"
+            "title": "AI 绘图",
+            "body": "一句话出图，或拖入图片直接改，出图前先报价，作品自动归档到图库"
           },
           "compatible": {
             "title": "原生协议兼容",
@@ -96,14 +96,6 @@ export default {
             "title": "按量计费",
             "body": "用多少扣多少，没有最低消费，余额长期有效"
           },
-          "usage": {
-            "title": "用量看得见",
-            "body": "近 5 小时 / 1 天 / 7 天用量与剩余额度一目了然"
-          },
-          "groups": {
-            "title": "分组倍率透明",
-            "body": "每个分组的倍率和在线率都公开，按需挑选线路"
-          },
           "invoice": {
             "title": "支持开发票",
             "body": "充值消费均可开具发票，团队报销省心"
@@ -114,7 +106,7 @@ export default {
         "overline": "多模型 · 一处切换",
         "titleLead": "不止一个模型。",
         "titleTail": "每一步都用对的那个。",
-        "clientSubtitle": "Claude Code、Codex、Grok 在同一个客户端里随手切换，项目、文件和上下文都留在原地。",
+        "clientSubtitle": "内置 Agent、Claude Code、Codex、Grok 在同一个客户端里随手切换，项目、文件和上下文都留在原地。",
         "apiSubtitle": "Claude、GPT、Grok 共用一个 Key 和一份余额，换模型只改一个参数。",
         "cta": "查看模型价格"
       },
@@ -124,11 +116,11 @@ export default {
         "clientTitleTail": "几分钟跑起第一个任务。",
         "apiTitleLead": "注册拿 Key，",
         "apiTitleTail": "几分钟发出第一个请求。",
-        "note": "按量计费 · 余额长期有效 · 支持开发票"
+        "note": "线路持续质检 · 按量计费 · 余额长期有效 · 支持开发票"
       },
       "footer": {
-        "clientTagline": "价格友好的 AI 中转站 × Agent 桌面客户端",
-        "apiTagline": "价格友好的 AI 模型网关",
+        "clientTagline": "保质量的 AI 中转站 × Agent 桌面客户端",
+        "apiTagline": "保质量的 AI 模型网关",
         "product": "产品",
         "support": "支持",
         "download": "下载客户端",
@@ -207,74 +199,67 @@ export default {
       }
     },
     "clientWorkflow": {
-      "ariaLabel": "{siteName} 桌面客户端演示：任务执行中一键切换分组线路",
-      "working": "工作中 · {seconds} 秒",
-      "balanceBefore": "$999990.44",
-      "balanceAfter": "$999990.41",
+      "ariaLabel": "{siteName} 桌面客户端演示：内置 Agent 执行编码任务，在模型选择器里切换各家 Agent，再到画图页生成一张图",
       "sidebar": {
         "newTask": "新建任务",
         "search": "搜索",
+        "images": "画图",
         "today": "今天",
-        "taskTitle": "在吗",
-        "project": "amadeus-system",
+        "taskTitle": "登录后跳回原页面",
+        "working": "工作中 · {seconds} 秒",
+        "justNow": "刚刚",
+        "olderTask": "给首页加客户端下载按钮",
+        "olderTime": "3 小时前",
         "email": "admin{'@'}cheaprouter.cc"
       },
-      "labels": {
-        "read": "读取",
-        "list": "列出",
-        "thinking": "思考",
-        "edit": "编辑"
-      },
-      "groupSummary": "正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改",
-      "rows": {
-        "r1": "main.ts",
-        "r2": "components",
-        "r3": "constants.ts",
-        "r4": "思考用时 1 秒",
-        "r5": "chat.ts",
-        "r6": "auth.ts",
-        "r7": "ChatView.vue",
-        "r8": "user.ts",
-        "r9": "hooks",
-        "r10": "index.vue"
+      "transcript": {
+        "prompt": "登录成功后跳回原来的页面，别总是回首页",
+        "explored": "查阅 · 1 搜索，2 文件",
+        "thought": "思考 · 持续了 3 秒",
+        "edited": "已编辑",
+        "running": "正在执行",
+        "working": "工作中 · {seconds} 秒",
+        "workedFor": "已工作 {seconds} 秒",
+        "reply": "改好了：登录前记下来源页面，登录成功后跳回去，没有来源时仍进控制台。测试全部通过。",
+        "changedFiles": "更改了 {count} 个文件",
+        "review": "审阅",
+        "undo": "撤销"
       },
       "composer": {
         "placeholder": "做什么都可以…",
-        "model": "gpt-5.6-sol",
         "effort": "高",
         "access": "完全访问",
-        "build": "构建",
-        "stop": "停止"
+        "build": "构建"
       },
-      "statusBar": {
-        "project": "amadeus-system",
-        "local": "本地",
-        "branch": "my_feature"
+      "footer": {
+        "project": "amadeus-web",
+        "local": "本地"
       },
-      "menu": {
-        "balance": "余额 {amount}",
-        "topUp": "充值",
-        "claudeGroup": "Claude Code 分组",
-        "claudeValue": "Claude Sale",
-        "codexGroup": "Codex 分组",
-        "codexValueBefore": "Codex",
-        "codexValueAfter": "Codex Sale",
-        "grokGroup": "Grok 分组",
-        "grokValue": "Grok",
-        "modelPlaza": "模型广场",
-        "usage": "使用记录",
-        "logout": "退出登录",
-        "submenu": {
-          "default": "账号默认",
-          "codexName": "Codex",
-          "codexMeta": "×0.29 · 96.2%",
-          "saleName": "Codex Sale",
-          "saleMeta": "×0.19 · 86.4%",
-          "welfareName": "Codex 福利分组",
-          "welfareMeta": "×0.09 · 69.3%"
+      "picker": {
+        "search": "搜索模型…",
+        "builtinAgent": "内置 Agent"
+      },
+      "image": {
+        "title": "画图",
+        "pictureCount": "共 {count} 张",
+        "openFolder": "打开文件夹",
+        "placeholder": "描述你想要的画面，或拖入、粘贴图片来改图…",
+        "prompt": "霓虹灯下敲代码的橘猫，赛博朋克风",
+        "addImages": "添加图片",
+        "group": "分组：自动",
+        "quality": "质量：高",
+        "count": "1 张",
+        "mode": "文生图",
+        "estimate": "预计 $0.04",
+        "generate": "生成",
+        "drawing": "生成中 · {time}",
+        "runningTask": "在网关上排队生成，关窗口也不丢",
+        "gallery": {
+          "sunset": "海边日落，胶片质感",
+          "mountain": "雪山下的星空营地",
+          "city": "雨夜霓虹街道，赛博朋克"
         }
-      },
-      "toast": "已切换到 Codex Sale，对新启动的任务生效"
+      }
     },
     "download": {
       "commandCopied": "安装命令已复制，请在终端中运行"

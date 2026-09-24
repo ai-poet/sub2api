@@ -35,7 +35,7 @@ func RegisterPayRoutes(
 	}
 
 	internal := r.Group("/api/internal/pay")
-	internal.Use(internalPayAuthMiddleware(cfg.JWT.Secret))
+	internal.Use(internalPayAuthMiddleware(cfg.JWT.Secret), internalPayNeutralSessionBinding())
 	{
 		authenticated := internal.Group("/auth")
 		authenticated.Use(gin.HandlerFunc(jwtAuth))
@@ -184,6 +184,23 @@ func internalPayAuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid internal pay token"})
+	}
+}
+
+// internalPayNeutralSessionBinding 让内部支付桥接的请求不参与会话绑定校验。
+//
+// 这些请求由 sub2apipay 在服务端发起（127.0.0.1 + Node UA），带的是用户的 JWT。会话绑定开启时，
+// SessionBindingContext 按这个 IP/UA 算出的指纹与 token 登录时的指纹必然不同，enforceSessionBinding
+// 会据此吊销整个会话族——用户在网页或桌面端打开支付页就被踢下线。桌面端还会把自己的 token 交给
+// 浏览器里的收银台，所以转发真实客户端 IP/UA 也救不了。
+//
+// 这里注入空指纹（Hash() == ""），enforceSessionBinding 对空指纹直接放行。内部令牌已经证明调用方
+// 是 sub2apipay，jwtAuth 仍然校验签名、过期、TokenVersion 与用户状态。必须挂在
+// internalPayAuthMiddleware 之后：没有内部令牌的请求不能拿到这份豁免。
+func internalPayNeutralSessionBinding() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Request = c.Request.WithContext(service.WithSessionBinding(c.Request.Context(), &service.SessionBinding{}))
+		c.Next()
 	}
 }
 

@@ -2,17 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import HomeHero from '../HomeHero.vue'
 
+// 客户端演示（HomeAgentWorkflowPreview）的细节在它自己的 spec 里测，这里只放首屏文案
 const translations: Record<string, string> = {
   'home.landing.hero.releaseBadge': 'v{version} is out',
   'home.landing.hero.releaseCta': 'See what changed',
   'home.landing.hero.client.label': 'Agent desktop client',
-  'home.landing.hero.api.label': 'Unified AI API gateway',
-  'home.landing.hero.client.titleLead': 'Every agent.',
-  'home.landing.hero.client.titleAccent': 'One desktop app.',
-  'home.landing.hero.client.subtitle': 'One desktop client for Claude Code, Codex and Grok.',
-  'home.landing.hero.api.titleLead': 'Every top model.',
-  'home.landing.hero.api.titleAccent': 'One API key.',
-  'home.landing.hero.api.subtitle': 'OpenAI- and Anthropic-compatible endpoints.',
+  'home.landing.hero.api.label': 'A quality-checked AI relay',
+  'home.landing.hero.client.titleLead': 'Smart models, checked nonstop.',
+  'home.landing.hero.client.titleAccent': 'Every agent, one workspace, every API.',
+  'home.landing.hero.client.subtitle': 'The built-in agent works out of the box.',
+  'home.landing.hero.api.titleLead': 'Smart models, checked nonstop.',
+  'home.landing.hero.api.titleAccent': 'One API key for all.',
+  'home.landing.hero.api.subtitle': 'GPT routes get Sol and Astra fingerprint checks.',
   'home.landing.hero.downloadFor': 'Download for {platform}',
   'home.landing.hero.copyInstall': 'Copy the {platform} install command',
   'home.landing.hero.switchPlatform': 'Get the {platform} version',
@@ -27,61 +28,6 @@ const translations: Record<string, string> = {
   'home.hero.installPrimary': 'Copy install command',
   'home.download.commandCopied': 'Install command copied',
   'home.login': 'Login',
-  'home.clientWorkflow.ariaLabel':
-    'CheapRouter desktop client demo: switching routing groups with one click',
-  'home.clientWorkflow.working': '工作中 · {seconds} 秒',
-  'home.clientWorkflow.balanceBefore': '$999990.44',
-  'home.clientWorkflow.balanceAfter': '$999990.41',
-  'home.clientWorkflow.sidebar.newTask': '新建任务',
-  'home.clientWorkflow.sidebar.search': '搜索',
-  'home.clientWorkflow.sidebar.today': '今天',
-  'home.clientWorkflow.sidebar.taskTitle': '在吗',
-  'home.clientWorkflow.sidebar.project': 'amadeus-system',
-  'home.clientWorkflow.sidebar.email': 'admin@cheaprouter.cc',
-  'home.clientWorkflow.labels.read': '读取',
-  'home.clientWorkflow.labels.list': '列出',
-  'home.clientWorkflow.labels.thinking': '思考',
-  'home.clientWorkflow.labels.edit': '编辑',
-  'home.clientWorkflow.groupSummary': '正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改',
-  'home.clientWorkflow.rows.r1': 'main.ts',
-  'home.clientWorkflow.rows.r2': 'components',
-  'home.clientWorkflow.rows.r3': 'constants.ts',
-  'home.clientWorkflow.rows.r4': '思考用时 1 秒',
-  'home.clientWorkflow.rows.r5': 'chat.ts',
-  'home.clientWorkflow.rows.r6': 'auth.ts',
-  'home.clientWorkflow.rows.r7': 'ChatView.vue',
-  'home.clientWorkflow.rows.r8': 'user.ts',
-  'home.clientWorkflow.rows.r9': 'hooks',
-  'home.clientWorkflow.rows.r10': 'index.vue',
-  'home.clientWorkflow.composer.placeholder': '做什么都可以…',
-  'home.clientWorkflow.composer.model': 'gpt-5.6-sol',
-  'home.clientWorkflow.composer.effort': '高',
-  'home.clientWorkflow.composer.access': '完全访问',
-  'home.clientWorkflow.composer.build': '构建',
-  'home.clientWorkflow.composer.stop': '停止',
-  'home.clientWorkflow.statusBar.project': 'amadeus-system',
-  'home.clientWorkflow.statusBar.local': '本地',
-  'home.clientWorkflow.statusBar.branch': 'my_feature',
-  'home.clientWorkflow.menu.balance': '余额 {amount}',
-  'home.clientWorkflow.menu.topUp': '充值',
-  'home.clientWorkflow.menu.claudeGroup': 'Claude Code 分组',
-  'home.clientWorkflow.menu.claudeValue': 'Claude Sale',
-  'home.clientWorkflow.menu.codexGroup': 'Codex 分组',
-  'home.clientWorkflow.menu.codexValueBefore': 'Codex',
-  'home.clientWorkflow.menu.codexValueAfter': 'Codex Sale',
-  'home.clientWorkflow.menu.grokGroup': 'Grok 分组',
-  'home.clientWorkflow.menu.grokValue': 'Grok',
-  'home.clientWorkflow.menu.modelPlaza': '模型广场',
-  'home.clientWorkflow.menu.usage': '使用记录',
-  'home.clientWorkflow.menu.logout': '退出登录',
-  'home.clientWorkflow.menu.submenu.default': '账号默认',
-  'home.clientWorkflow.menu.submenu.codexName': 'Codex',
-  'home.clientWorkflow.menu.submenu.codexMeta': '×0.29 · 96.2%',
-  'home.clientWorkflow.menu.submenu.saleName': 'Codex Sale',
-  'home.clientWorkflow.menu.submenu.saleMeta': '×0.19 · 86.4%',
-  'home.clientWorkflow.menu.submenu.welfareName': 'Codex 福利分组',
-  'home.clientWorkflow.menu.submenu.welfareMeta': '×0.09 · 69.3%',
-  'home.clientWorkflow.toast': '已切换到 Codex Sale，对新启动的任务生效',
 }
 
 vi.mock('vue-i18n', async () => {
@@ -169,8 +115,8 @@ describe('HomeHero', () => {
     expect(switches[0].attributes('data-platform')).toBe('macos')
     expect(wrapper.find('[data-test="hero-install-command"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="hero-primary-fallback"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('Every agent.')
-    expect(wrapper.text()).toContain('One desktop app.')
+    expect(wrapper.text()).toContain('Smart models, checked nonstop.')
+    expect(wrapper.text()).toContain('Every agent, one workspace, every API.')
   })
 
   it('leads with the install command on macOS', () => {
@@ -218,16 +164,16 @@ describe('HomeHero', () => {
     const wrapper = mountHero({ windowsUrl: WINDOWS_URL })
 
     const gateway = wrapper.find('[data-test="hero-description-api"]')
-    expect(gateway.text()).toContain('Unified AI API gateway')
-    expect(gateway.text()).toContain('OpenAI- and Anthropic-compatible endpoints.')
+    expect(gateway.text()).toContain('A quality-checked AI relay')
+    expect(gateway.text()).toContain('GPT routes get Sol and Astra fingerprint checks.')
     const client = wrapper.find('[data-test="hero-description-client"]')
     expect(client.text()).toContain('Agent desktop client')
-    expect(client.text()).toContain('One desktop client for Claude Code, Codex and Grok.')
+    expect(client.text()).toContain('The built-in agent works out of the box.')
 
     const apiOnly = mountHero()
     expect(apiOnly.find('[data-test="hero-descriptions"]').exists()).toBe(false)
-    expect(apiOnly.text()).toContain('OpenAI- and Anthropic-compatible endpoints.')
-    expect(apiOnly.text()).not.toContain('One desktop client for Claude Code, Codex and Grok.')
+    expect(apiOnly.text()).toContain('GPT routes get Sol and Astra fingerprint checks.')
+    expect(apiOnly.text()).not.toContain('The built-in agent works out of the box.')
   })
 
   it('turns into an API landing page when no client download is configured', () => {
@@ -241,8 +187,9 @@ describe('HomeHero', () => {
     expect(wrapper.find('[data-test="hero-connect-api"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('Every top model.')
-    expect(wrapper.text()).not.toContain('One desktop app.')
+    expect(wrapper.text()).toContain('Smart models, checked nonstop.')
+    expect(wrapper.text()).toContain('One API key for all.')
+    expect(wrapper.text()).not.toContain('Every agent, one workspace, every API.')
 
     const terminal = wrapper.find('[data-test="api-terminal"]')
     expect(terminal.text()).toContain('ANTHROPIC_BASE_URL="https://api.example.com"')
@@ -277,59 +224,12 @@ describe('HomeHero', () => {
     expect(providers.text()).toContain('Grok')
   })
 
-  it('renders the CheapRouter desktop client mockup with transcript, composer and status bar', () => {
-    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
+  it('shows the client window mockup when a client is available', () => {
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL })
 
     expect(wrapper.find('[data-test="agent-workflow-preview"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="preview-agent-scene"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="preview-image-studio"]').exists()).toBe(true)
     expect(wrapper.find('img[src="/product.png"]').exists()).toBe(false)
-    // sidebar
-    expect(wrapper.text()).toContain('新建任务')
-    expect(wrapper.text()).toContain('在吗')
-    expect(wrapper.text()).toContain('amadeus-system')
-    expect(wrapper.text()).toContain('admin@cheaprouter.cc')
-    // transcript tool rows
-    expect(wrapper.text()).toContain('读取')
-    expect(wrapper.text()).toContain('main.ts')
-    expect(wrapper.text()).toContain('正在执行：6 次文件读取 · 2 次文件列表 · 1 次思考 · 1 次文件修改')
-    expect(wrapper.text()).toContain('列出')
-    expect(wrapper.text()).toContain('components')
-    expect(wrapper.text()).toContain('思考用时 1 秒')
-    expect(wrapper.text()).toContain('编辑')
-    expect(wrapper.text()).toContain('ChatView.vue')
-    expect(wrapper.text()).toContain('+12')
-    expect(wrapper.text()).toContain('-3')
-    // composer
-    expect(wrapper.text()).toContain('做什么都可以…')
-    expect(wrapper.text()).toContain('gpt-5.6-sol')
-    expect(wrapper.text()).toContain('完全访问')
-    expect(wrapper.text()).toContain('构建')
-    // status bar
-    expect(wrapper.text()).toContain('本地')
-    expect(wrapper.text()).toContain('my_feature')
-    expect(wrapper.text()).toContain('$999990.4')
-    // old mockup is gone
-    expect(wrapper.text()).not.toContain('Daemon connected')
-    expect(wrapper.text()).not.toContain('Opus 4.8 1M')
-    expect(wrapper.text()).not.toContain('homepage-billing')
   })
-
-  it('shows the group-switch account menu with rate multipliers and uptime', () => {
-    const wrapper = mountHero({ windowsUrl: 'https://downloads.example.com/windows.exe' })
-
-    expect(wrapper.find('[data-test="preview-account-menu"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="preview-group-submenu"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('充值')
-    expect(wrapper.text()).toContain('Claude Code 分组')
-    expect(wrapper.text()).toContain('Codex 分组')
-    expect(wrapper.text()).toContain('Grok 分组')
-    expect(wrapper.text()).toContain('账号默认')
-    expect(wrapper.text()).toContain('×0.29 · 96.2%')
-    expect(wrapper.text()).toContain('×0.19 · 86.4%')
-    expect(wrapper.text()).toContain('×0.09 · 69.3%')
-    expect(wrapper.text()).toContain('模型广场')
-    expect(wrapper.text()).toContain('使用记录')
-    expect(wrapper.text()).toContain('退出登录')
-    expect(wrapper.text()).toContain('已切换到 Codex Sale，对新启动的任务生效')
-  })
-
 })

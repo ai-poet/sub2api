@@ -13,16 +13,19 @@
     </div>
 
     <div class="mt-12 grid gap-4 md:mt-16 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:gap-8 lg:gap-14">
-      <ul class="grid gap-4 md:gap-7">
-        <li
-          v-for="(card, index) in leftCards"
-          :key="card.key"
-          class="feature-card feature-card-left"
-          :class="index === 1 ? 'md:-translate-x-8 lg:-translate-x-14' : 'md:translate-x-2'"
-        >
-          <HomeFeatureCardBody :card="card" />
-        </li>
-      </ul>
+      <div data-test="features-left">
+        <p v-if="columns" class="feature-column-label md:text-right">{{ t(columns.left) }}</p>
+        <ul class="grid gap-4 md:gap-7">
+          <li
+            v-for="(card, index) in leftCards"
+            :key="card.key"
+            class="feature-card feature-card-left"
+            :class="index === 1 ? 'md:-translate-x-8 lg:-translate-x-14' : 'md:translate-x-2'"
+          >
+            <HomeFeatureCardBody :card="card" />
+          </li>
+        </ul>
+      </div>
 
       <!-- 中间的站点标志；移动端放在最上面 -->
       <div class="order-first flex justify-center py-4 md:order-none md:py-0">
@@ -37,16 +40,19 @@
         </div>
       </div>
 
-      <ul class="grid gap-4 md:gap-7">
-        <li
-          v-for="(card, index) in rightCards"
-          :key="card.key"
-          class="feature-card feature-card-right"
-          :class="index === 1 ? 'md:translate-x-8 lg:translate-x-14' : 'md:-translate-x-2'"
-        >
-          <HomeFeatureCardBody :card="card" />
-        </li>
-      </ul>
+      <div data-test="features-right">
+        <p v-if="columns" class="feature-column-label">{{ t(columns.right) }}</p>
+        <ul class="grid gap-4 md:gap-7">
+          <li
+            v-for="(card, index) in rightCards"
+            :key="card.key"
+            class="feature-card feature-card-right"
+            :class="index === 1 ? 'md:translate-x-8 lg:translate-x-14' : 'md:-translate-x-2'"
+          >
+            <HomeFeatureCardBody :card="card" />
+          </li>
+        </ul>
+      </div>
     </div>
   </section>
 </template>
@@ -82,30 +88,45 @@ const TONES = [
   'bg-rose-100 text-rose-700 dark:bg-rose-400/15 dark:text-rose-300',
 ]
 
-const CARDS: Record<'client' | 'api', Array<[string, IconName]>> = {
-  client: [
-    ['autoRoute', 'link'],
-    ['groupSwitch', 'swap'],
-    ['liveBalance', 'dollar'],
-    ['cliInstall', 'download'],
-    ['images', 'sparkles'],
-    ['native', 'bolt'],
-  ],
-  api: [
-    ['compatible', 'cpu'],
-    ['failover', 'shield'],
-    ['metered', 'dollar'],
-    ['usage', 'chartBar'],
-    ['groups', 'swap'],
-    ['invoice', 'document'],
-  ],
+// 左列永远是中转站的质量监控；有客户端时右列讲客户端，没有时讲接入和计费。
+const QUALITY_CARDS: Array<[string, IconName]> = [
+  ['quality', 'shield'],
+  ['probe', 'chartBar'],
+  ['failover', 'swap'],
+]
+
+const CARDS: Record<'client' | 'api', { left: Array<[string, IconName]>; right: Array<[string, IconName]> }> = {
+  client: {
+    left: QUALITY_CARDS,
+    right: [
+      ['builtinAgent', 'bolt'],
+      ['allAgents', 'link'],
+      ['images', 'sparkles'],
+    ],
+  },
+  api: {
+    left: QUALITY_CARDS,
+    right: [
+      ['compatible', 'cpu'],
+      ['metered', 'dollar'],
+      ['invoice', 'document'],
+    ],
+  },
 }
 
-const cards = computed<FeatureCard[]>(() =>
-  CARDS[props.mode].map(([key, icon], index) => ({ key, icon, tone: TONES[index % TONES.length] })),
+// 两列讲的是两件事时才加列标签
+const columns = computed(() =>
+  props.mode === 'client'
+    ? { left: 'home.landing.features.columns.quality', right: 'home.landing.features.columns.client' }
+    : null,
 )
-const leftCards = computed(() => cards.value.slice(0, 3))
-const rightCards = computed(() => cards.value.slice(3))
+
+function toCards(defs: Array<[string, IconName]>, offset: number): FeatureCard[] {
+  return defs.map(([key, icon], index) => ({ key, icon, tone: TONES[(offset + index) % TONES.length] }))
+}
+
+const leftCards = computed(() => toCards(CARDS[props.mode].left, 0))
+const rightCards = computed(() => toCards(CARDS[props.mode].right, 3))
 
 const HomeFeatureCardBody = defineComponent({
   props: {
@@ -137,6 +158,10 @@ const HomeFeatureCardBody = defineComponent({
 </script>
 
 <style scoped>
+.feature-column-label {
+  @apply mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-700 md:mb-6 dark:text-primary-300;
+}
+
 .feature-card {
   @apply relative rounded-2xl border border-black/10 bg-white p-5 shadow-[0_10px_30px_rgba(15,17,20,0.06)] transition-transform duration-500 dark:border-white/10 dark:bg-[#16181c];
 }

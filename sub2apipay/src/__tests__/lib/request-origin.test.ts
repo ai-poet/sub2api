@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { NextRequest } from 'next/server';
-import { resolveRequestOrigin } from '@/lib/request-origin';
+import { resolveAbsoluteUrl, resolveRequestOrigin } from '@/lib/request-origin';
 
 function makeRequest(input: {
   url: string;
@@ -45,5 +45,25 @@ describe('request-origin', () => {
     });
 
     expect(resolveRequestOrigin(request)).toBe('https://ai-coding.cyberspirit.io/pay');
+  });
+});
+
+describe('resolveAbsoluteUrl', () => {
+  const appUrl = 'https://gw.example.com/pay';
+
+  it('resolves the root-relative alipay short link against the app origin', () => {
+    expect(resolveAbsoluteUrl('/pay/order_1', appUrl)).toBe('https://gw.example.com/pay/order_1');
+  });
+
+  it('keeps absolute URLs, app schemes and protocol-relative values unchanged', () => {
+    expect(resolveAbsoluteUrl('https://openapi.alipay.com/x?y=1', appUrl)).toBe('https://openapi.alipay.com/x?y=1');
+    expect(resolveAbsoluteUrl('weixin://wxpay/bizpayurl?pr=abc', appUrl)).toBe('weixin://wxpay/bizpayurl?pr=abc');
+    expect(resolveAbsoluteUrl('//cdn.example.com/a', appUrl)).toBe('//cdn.example.com/a');
+  });
+
+  it('passes empty values through', () => {
+    expect(resolveAbsoluteUrl(undefined, appUrl)).toBeUndefined();
+    expect(resolveAbsoluteUrl(null, appUrl)).toBeNull();
+    expect(resolveAbsoluteUrl('', appUrl)).toBe('');
   });
 });

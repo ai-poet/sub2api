@@ -22,6 +22,7 @@ import { deriveOrderState, isRefundStatus } from './status';
 import { pickLocaleText, type Locale } from '@/lib/locale';
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import { buildOrderResultUrl, createOrderStatusAccessToken } from '@/lib/order/status-access';
+import { resolveAbsoluteUrl } from '@/lib/request-origin';
 import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
 import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/lib/payment/load-balancer';
 import { createProviderFromInstance } from '@/lib/payment/provider-factory';
@@ -180,6 +181,71 @@ export async function reconcilePendingOrderPayment(
   }
 }
 
+/** A reused order must stay payable at least this long after it is handed back. */
+const REUSE_MIN_REMAINING_MS = 60_000;
+/** Older pending orders are left to expire rather than handed back. */
+const REUSE_MAX_AGE_MS = 15 * 60_000;
+
+/**
+ * A still-payable pending order for the same plan and payment method, handed
+ * back instead of creating another one.
+ *
+ * The desktop client can time out after the service has already created the
+ * order; the retry would otherwise add a second pending order for the same
+ * plan and soon hit MAX_PENDING_ORDERS. Only desktop (QR) orders qualify: the
+ * order does not record whether it was created for a mobile browser, and a
+ * mobile order carries an H5 link rather than a QR payload. The plan price is
+ * re-checked so a price change never replays a stale amount.
+ */
+async function findReusableSubscriptionOrder(
+  input: CreateOrderInput,
+  planId: string,
+): Promise<Omit<CreateOrderResult, 'userName' | 'userBalance'> | null> {
+  if (input.isMobile) return null;
+  const now = Date.now();
+  const existing = await prisma.order.findFirst({
+    where: {
+      userId: input.userId,
+      orderType: 'subscription',
+      planId,
+      paymentType: input.paymentType,
+      status: ORDER_STATUS.PENDING,
+      qrCode: { not: null },
+      expiresAt: { gt: new Date(now + REUSE_MIN_REMAINING_MS) },
+      createdAt: { gt: new Date(now - REUSE_MAX_AGE_MS) },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!existing || Number(existing.amount) !== Number(input.amount.toFixed(2))) {
+    return null;
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      orderId: existing.id,
+      action: 'ORDER_REUSED',
+      detail: JSON.stringify({ userId: input.userId, planId, paymentType: input.paymentType }),
+      operator: `user:${input.userId}`,
+    },
+  });
+
+  return {
+    orderId: existing.id,
+    amount: Number(existing.amount),
+    payAmount: Number(existing.payAmount ?? existing.amount),
+    feeRate: existing.feeRate ? Number(existing.feeRate) : 0,
+    bonusAmount: 0,
+    promotionName: null,
+    status: ORDER_STATUS.PENDING,
+    paymentType: existing.paymentType as PaymentType,
+    payUrl: existing.payUrl,
+    qrCode: existing.qrCode,
+    clientSecret: null,
+    expiresAt: existing.expiresAt,
+    statusAccessToken: createOrderStatusAccessToken(existing.id, input.userId),
+  };
+}
+
 export async function createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
   const env = getEnv();
   const appUrl = input.appUrl || env.NEXT_PUBLIC_APP_URL || 'http://127.0.0.1:3000';
@@ -273,6 +339,17 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   const user = await getUser(input.userId);
   if (user.status !== 'active') {
     throw new OrderError('USER_INACTIVE', message(locale, '用户账号已被禁用', 'User account is disabled'), 422);
+  }
+
+  if (subscriptionPlan) {
+    const reusable = await findReusableSubscriptionOrder(input, subscriptionPlan.id);
+    if (reusable) {
+      return {
+        ...reusable,
+        userName: user.username,
+        userBalance: user.balance,
+      };
+    }
   }
 
   // ── 取消频率限制：超限后禁止创建新订单 ──
@@ -596,6 +673,10 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       clientIp: input.clientIp,
       isMobile: input.isMobile,
     });
+    // The Alipay short link is root-relative; encoded into a QR code or opened
+    // by the desktop client it has to carry the origin.
+    paymentResult.payUrl = resolveAbsoluteUrl(paymentResult.payUrl, appUrl);
+    paymentResult.qrCode = resolveAbsoluteUrl(paymentResult.qrCode, appUrl);
 
     await prisma.order.update({
       where: { id: order.id },

@@ -1,0 +1,147 @@
+/* 首屏客户端演示的配色，取自客户端 client/src/theme.rs 的亮 / 暗两套主题。
+ * 演示各部分都从这里取色，跟着站点的 .dark 一起切换。 */
+
+.client-window {
+  --cw-canvas: #f6f5f6;
+  --cw-surface: #f6f5f6;
+  --cw-sidebar: #f3f3f3;
+  --cw-sidebar-item: rgba(20, 20, 20, 0.06);
+  --cw-sidebar-border: rgba(20, 20, 20, 0.12);
+  --cw-raised: #ececec;
+  --cw-composer: #ffffff;
+  --cw-inset: #e6e6e6;
+  --cw-overlay: rgba(28, 30, 34, 0.05);
+  --cw-overlay-strong: rgba(28, 30, 34, 0.09);
+  --cw-border: rgba(28, 30, 34, 0.08);
+  --cw-border-strong: rgba(28, 30, 34, 0.15);
+  --cw-text: #242424;
+  --cw-text-secondary: #666666;
+  --cw-text-tertiary: #858585;
+  --cw-text-ghost: #a4a4a4;
+  --cw-accent: #c85f44;
+  --cw-success: #2f8f52;
+  --cw-danger: #c64a42;
+  --cw-gauge: #2563eb;
+  --cw-inverse: #202227;
+  --cw-on-inverse: #f8f8f9;
+  --cw-mark: #34363b;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--cw-text);
+  background: var(--cw-surface);
+}
+
+.dark .client-window {
+  --cw-canvas: #1a1a1a;
+  --cw-surface: #1a1a1a;
+  --cw-sidebar: #181818;
+  --cw-sidebar-item: rgba(240, 240, 240, 0.06);
+  --cw-sidebar-border: #292929;
+  --cw-raised: #232323;
+  --cw-composer: #212121;
+  --cw-inset: #151515;
+  --cw-overlay: rgba(227, 229, 232, 0.05);
+  --cw-overlay-strong: rgba(227, 229, 232, 0.09);
+  --cw-border: rgba(227, 229, 232, 0.07);
+  --cw-border-strong: rgba(227, 229, 232, 0.14);
+  --cw-text: #e2e2e2;
+  --cw-text-secondary: #a3a3a3;
+  --cw-text-tertiary: #7d7d7d;
+  --cw-text-ghost: #575757;
+  --cw-accent: #e2795b;
+  --cw-success: #62c987;
+  --cw-danger: #e2726a;
+  --cw-gauge: #3b82f6;
+  --cw-inverse: #e7e9ec;
+  --cw-on-inverse: #17181c;
+  --cw-mark: #f3f3f3;
+}
+
+/* 客户端里 26px 的图标按钮和按钮条上的小按钮。
+ * 选择器包在 :where() 里，特异性为 0，模板上的 Tailwind 工具类（如 max-sm:hidden）总能覆盖它们。 */
+:where(.client-window .cw-icon-button) {
+  display: inline-flex;
+  height: 26px;
+  width: 26px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--cw-text-tertiary);
+}
+
+:where(.client-window .cw-icon-button.is-round) {
+  border-radius: 9999px;
+}
+
+:where(.client-window .cw-chip) {
+  display: inline-flex;
+  height: 26px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 13px;
+  color: var(--cw-text-secondary);
+  white-space: nowrap;
+}
+
+/* 画图页输入框下的下拉按钮：比按钮条的小按钮多一个下拉箭头 */
+:where(.client-window .cw-menu-chip) {
+  display: inline-flex;
+  height: 26px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  border-radius: 7px;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--cw-text-secondary);
+  white-space: nowrap;
+}
+
+:where(.client-window .cw-menu-chip svg) {
+  color: var(--cw-text-tertiary);
+}
+
+/* 进行中的动词带一道流光，和客户端的 shimmer 一样 */
+:where(.client-window .cw-shimmer) {
+  background: linear-gradient(
+    90deg,
+    var(--cw-text-secondary) 0%,
+    var(--cw-text-secondary) 40%,
+    var(--cw-text) 50%,
+    var(--cw-text-secondary) 60%,
+    var(--cw-text-secondary) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.client-window .cw-shimmer) {
+    animation: cw-shimmer 1.6s linear infinite;
+  }
+
+  :where(.client-window .cw-spin) {
+    animation: cw-spin 1s linear infinite;
+  }
+}
+
+@keyframes cw-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes cw-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

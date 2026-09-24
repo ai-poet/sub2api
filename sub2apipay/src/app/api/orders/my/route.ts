@@ -5,12 +5,13 @@ import { deriveOrderState, isRechargeRetryable } from '@/lib/order/status';
 import { getInvoiceSettings, loadInvoicesForOrders } from '@/lib/invoice/service';
 import { evaluateInvoiceEligibility } from '@/lib/invoice/eligibility';
 import type { InvoiceStatus } from '@/lib/invoice/types';
+import { readUserToken } from '@/lib/utils/request-token';
 
 const VALID_PAGE_SIZES = [20, 50, 100];
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const token = searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: 'token is required' }, { status: 400 });
   }

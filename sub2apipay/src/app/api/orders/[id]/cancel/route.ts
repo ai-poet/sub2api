@@ -3,24 +3,26 @@ import { z } from 'zod';
 import { cancelOrder } from '@/lib/order/service';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
 import { handleApiError } from '@/lib/utils/api';
+import { readUserToken } from '@/lib/utils/request-token';
 
 const cancelSchema = z.object({
-  token: z.string().min(1),
+  token: z.string().optional(),
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const parsed = cancelSchema.safeParse(body);
+    const token = readUserToken(request, parsed.success ? parsed.data.token : null);
 
-    if (!parsed.success) {
+    if (!token) {
       return NextResponse.json({ error: '缺少 token 参数' }, { status: 400 });
     }
 
     let userId: number;
     try {
-      const user = await getCurrentUserByToken(parsed.data.token);
+      const user = await getCurrentUserByToken(token);
       userId = user.id;
     } catch {
       return NextResponse.json({ error: '登录态已失效，无法取消订单' }, { status: 401 });

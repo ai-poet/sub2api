@@ -154,6 +154,16 @@ describe('GET /api/user', () => {
     expect(res.status).toBe(401);
   });
 
+  it('accepts the token as an Authorization bearer header', async () => {
+    const res = await GET(
+      new NextRequest('https://pay.example.com/api/user?user_id=1', {
+        headers: { Authorization: 'Bearer header-token' },
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockGetCurrentUserByToken).toHaveBeenCalledWith('header-token');
+  });
+
   it('returns 401 for invalid token', async () => {
     mockGetCurrentUserByToken.mockRejectedValue(new Error('Failed'));
     const res = await GET(createRequest());
