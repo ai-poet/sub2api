@@ -9,9 +9,9 @@
     <div
       class="client-window relative mx-auto w-full max-w-[1100px] overflow-hidden rounded-xl border border-black/10 text-left shadow-[0_24px_64px_rgba(15,17,20,0.12)] dark:border-white/10 dark:shadow-[0_24px_64px_rgba(0,0,0,0.45)]"
     >
-      <div class="flex h-[520px] items-stretch sm:h-[600px]">
+      <div class="flex h-[520px] items-stretch sm:h-[560px]">
         <!-- ===== 侧栏 ===== -->
-        <aside class="sidebar hidden w-[252px] shrink-0 flex-col sm:flex" data-test="preview-sidebar">
+        <aside class="cw-sidebar hidden w-[252px] shrink-0 flex-col sm:flex" data-test="preview-sidebar">
           <div class="flex h-12 flex-none items-center gap-0.5 px-2">
             <span v-if="isMac" class="ml-1.5 mr-3 flex items-center gap-2" aria-hidden="true">
               <i class="h-3 w-3 rounded-full bg-[#FF5F57]"></i>
@@ -27,7 +27,7 @@
             <span
               v-for="action in sidebarActions"
               :key="action.key"
-              class="sidebar-row"
+              class="cw-nav-row"
               :class="action.active ? 'is-active' : ''"
               :data-test="`preview-sidebar-${action.key}`"
             >
@@ -47,7 +47,7 @@
               </span>
             </div>
 
-            <div class="session" :class="scene === 'agent' ? 'is-active' : ''">
+            <div class="cw-session" :class="scene === 'agent' ? 'is-active' : ''">
               <div class="flex items-center gap-1.5">
                 <span class="min-w-0 flex-1 truncate text-[13.5px] text-[color:var(--cw-text)]">
                   {{ t('home.clientWorkflow.sidebar.taskTitle') }}
@@ -69,7 +69,7 @@
               </div>
             </div>
 
-            <div class="session">
+            <div class="cw-session">
               <div class="truncate text-[13.5px] text-[color:var(--cw-text)]">{{ t('home.clientWorkflow.sidebar.olderTask') }}</div>
               <div class="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-[color:var(--cw-text-tertiary)]">
                 <ClientIcon name="folder" class="h-3 w-3 shrink-0" />
@@ -88,7 +88,7 @@
         </aside>
 
         <!-- ===== 主栏 ===== -->
-        <div class="main flex min-w-0 flex-1 flex-col">
+        <div class="cw-main flex min-w-0 flex-1 flex-col">
           <div class="flex h-12 flex-none items-center gap-0.5 pl-4 pr-2 sm:pl-5">
             <span class="min-w-0 truncate text-[13px] font-medium text-[color:var(--cw-text)]">
               {{ scene === 'image' ? t('home.clientWorkflow.image.title') : t('home.clientWorkflow.sidebar.taskTitle') }}
@@ -206,21 +206,21 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.sidebar {
+.cw-sidebar {
   background: var(--cw-sidebar);
 }
 
-.main {
+.cw-main {
   background: var(--cw-surface);
 }
 
 @media (min-width: 640px) {
-  .main {
+  .cw-main {
     border-left: 1px solid var(--cw-sidebar-border);
   }
 }
 
-.sidebar-row {
+.cw-nav-row {
   display: flex;
   height: 32px;
   align-items: center;
@@ -232,12 +232,12 @@ onBeforeUnmount(() => {
   transition: background-color 0.2s ease;
 }
 
-.sidebar-row.is-active,
-.session.is-active {
+.cw-nav-row.is-active,
+.cw-session.is-active {
   background: var(--cw-sidebar-item);
 }
 
-.session {
+.cw-session {
   border-radius: 7px;
   padding: 7px 8px;
   transition: background-color 0.2s ease;

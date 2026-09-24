@@ -1,4 +1,5 @@
-/* 首屏客户端演示的时间线：18 秒一轮，每一帧的状态都由时间点推出来。
+/* 首屏客户端演示的时间线：19 秒一轮，每一帧的状态都由时间点推出来。
+ * Agent 部分占约 14 秒，画图只占约 4 秒：
  * 1. 内置 Agent 干活：用户消息之后工具行依次出现
  * 2. 打开模型选择器，依次停在 内置 Agent → Claude Code → Codex CLI → 内置 Agent
  * 3. 这一轮做完：工具行收成「已工作 N 秒」，出现回复和改动文件卡，余额扣一次
@@ -9,33 +10,33 @@
 export type PreviewScene = 'agent' | 'image'
 export type ImageJobState = 'idle' | 'drawing' | 'done'
 
-export const CYCLE_MS = 18000
-export const TOOL_ROW_COUNT = 5
+export const CYCLE_MS = 19000
+export const TOOL_ROW_COUNT = 6
 
-const ROW_START = 700
-const ROW_STAGGER = 550
-const PICKER_OPEN = 4200
-const PICKER_CLOSE = 7400
-/** [时间点, 选择器里停留的 Agent 下标]，下标对应 AgentScene 的 AGENTS 顺序 */
+const ROW_START = 800
+const ROW_STAGGER = 900
+const PICKER_OPEN = 6200
+const PICKER_CLOSE = 10000
+/** [时间点, 选择器里停留的 Agent 下标]，下标对应 ModelPicker 的 agents 顺序 */
 const PICKER_STEPS: ReadonlyArray<readonly [number, number]> = [
   [PICKER_OPEN, 0],
-  [5000, 2],
-  [5800, 3],
-  [6600, 0],
+  [7200, 2],
+  [8200, 3],
+  [9200, 0],
 ]
-const RUN_DONE = 7800
-const IMAGE_ROW_ACTIVE = 9200
-const IMAGE_SCENE_AT = 9600
-const TYPE_START = 9900
-const TYPE_END = 11400
-const IMAGE_SUBMIT = 11800
-const IMAGE_DONE = 14200
-const FADE_OUT = 16800
+const RUN_DONE = 10800
+const IMAGE_ROW_ACTIVE = 13600
+const IMAGE_SCENE_AT = 14000
+const TYPE_START = 14200
+const TYPE_END = 15200
+const IMAGE_SUBMIT = 15400
+const IMAGE_DONE = 16800
+const FADE_OUT = 18200
 /** 开始计时时这一轮已经跑了多少秒，让「工作中」和「已工作」的数字看起来像真的任务 */
 const WORK_SECONDS_OFFSET = 31
 
-/** reduced motion 用的静态帧：工具行全部出现，选择器打开并停在内置 Agent */
-export const STATIC_T = 4400
+/** reduced motion 用的静态帧：工具行全部出现、选择器还没打开，对话一眼看全 */
+export const STATIC_T = 5600
 
 export interface PreviewFrame {
   scene: PreviewScene

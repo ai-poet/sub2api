@@ -1,20 +1,20 @@
 <template>
   <!-- 客户端输入框上方的模型选择器：左栏是各家 Agent，右边是当前 Agent 的模型 -->
   <div
-    class="picker absolute bottom-full left-0 z-20 mb-2 flex h-[300px] w-full max-w-[560px] origin-bottom-left overflow-hidden rounded-[13px] shadow-[0_18px_48px_rgba(0,0,0,0.18)] transition-all duration-200 ease-out sm:h-[360px]"
+    class="cw-picker absolute bottom-full left-0 z-20 mb-2 flex h-[300px] w-full max-w-[560px] origin-bottom-left overflow-hidden rounded-[13px] shadow-[0_18px_48px_rgba(0,0,0,0.18)] transition-all duration-200 ease-out sm:h-[360px]"
     :class="open ? 'scale-100 opacity-100' : 'pointer-events-none scale-[0.97] opacity-0'"
     data-test="preview-model-picker"
   >
     <!-- 左栏：收藏 + 各家 Agent，只显示图标 -->
-    <div class="rail relative flex w-[46px] shrink-0 flex-col items-center gap-px overflow-hidden py-1.5">
-      <span class="rail-item text-[color:var(--cw-text-tertiary)]">
+    <div class="cw-rail relative flex w-[46px] shrink-0 flex-col items-center gap-px overflow-hidden py-1.5">
+      <span class="cw-rail-item text-[color:var(--cw-text-tertiary)]">
         <ClientIcon name="star" class="h-4 w-4" />
       </span>
       <span class="my-1 h-px w-6 bg-[color:var(--cw-border-strong)]"></span>
       <span
         v-for="(agent, index) in agents"
         :key="agent.id"
-        class="rail-item"
+        class="cw-rail-item"
         :class="index === activeIndex ? 'is-active' : ''"
         :title="agent.name"
         :style="{ color: agent.color }"
@@ -27,7 +27,7 @@
 
     <!-- 停留的 Agent 名称浮层 -->
     <span
-      class="tooltip pointer-events-none absolute left-[50px] z-10 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-medium transition-all duration-200"
+      class="cw-tooltip pointer-events-none absolute left-[52px] z-10 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-medium shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition-all duration-200"
       :style="{ top: `${tooltipTop}px` }"
       data-test="preview-agent-tooltip"
     >{{ agents[activeIndex].name }}</span>
@@ -144,16 +144,16 @@ const tooltipTop = computed(() => 6 + 30 + 11 + props.activeIndex * 31 + 15)
 </script>
 
 <style scoped>
-.picker {
+.cw-picker {
   border: 1px solid var(--cw-border-strong);
   background: var(--cw-raised);
 }
 
-.rail {
+.cw-rail {
   background: var(--cw-canvas);
 }
 
-.rail-item {
+.cw-rail-item {
   display: flex;
   height: 30px;
   width: 34px;
@@ -164,12 +164,24 @@ const tooltipTop = computed(() => 6 + 30 + 11 + props.activeIndex * 31 + 15)
   transition: background-color 0.2s ease;
 }
 
-.rail-item.is-active {
+.cw-rail-item.is-active {
   background: var(--cw-overlay-strong);
 }
 
-.tooltip {
+.cw-tooltip {
   background: var(--cw-inverse);
   color: var(--cw-on-inverse);
+}
+
+/* 指向左栏图标的小三角 */
+.cw-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
 }
 </style>

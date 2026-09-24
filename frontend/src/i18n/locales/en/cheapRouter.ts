@@ -22,17 +22,16 @@ export default {
       "hero": {
         "releaseBadge": "v{version} is out",
         "releaseCta": "See what changed",
+        "tagline": "Smart models, checked nonstop.",
         "client": {
           "label": "Agent desktop client",
-          "titleLead": "Smart models, checked nonstop.",
-          "titleAccent": "Every agent, one workspace, every API.",
-          "subtitle": "The built-in agent works out of the box — no Node, no CLI to install. Claude Code, Codex, Grok, OpenCode and Pi are wired up the moment you sign in, and Amp, Cursor, Kimi Code and more run in the same window. It draws, too: describe a picture, or drop one in to edit it."
+          "title": "Every agent, one workspace, every API.",
+          "subtitle": "A built-in agent with nothing to install, Claude Code, Codex and more in one window — and it draws, too."
         },
         "api": {
           "label": "A quality-checked AI relay",
-          "titleLead": "Smart models, checked nonstop.",
-          "titleAccent": "One API key for all.",
-          "subtitle": "Every route is probed for availability and first-token latency; GPT routes also get Sol and Astra fingerprint checks on the model's identity, so a mismatch turns red on the spot and our on-call hears about it at once. A failing route hands over to the next, behind OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok."
+          "title": "One API key for all.",
+          "subtitle": "Routes are probed nonstop and GPT routes get Sol and Astra fingerprint checks on the model; anything off turns red and pages us."
         },
         "downloadFor": "Download for {platform}",
         "copyInstall": "Copy the {platform} install command",
@@ -217,6 +216,7 @@ export default {
         "explored": "Explored · 1 search, 2 files",
         "thought": "Thought for 3s",
         "edited": "Edited",
+        "ran": "Ran",
         "running": "Running",
         "working": "Working for {seconds}s",
         "workedFor": "Worked for {seconds}s",

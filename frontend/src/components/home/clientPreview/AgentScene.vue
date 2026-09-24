@@ -3,7 +3,7 @@
     <!-- 对话记录：内容最宽 720，和客户端一样居中 -->
     <div class="min-h-0 flex-1 overflow-hidden px-4 pt-3 sm:px-5">
       <div class="mx-auto flex max-w-[720px] flex-col">
-        <div class="user-bubble ml-auto w-fit max-w-[88%] rounded-xl px-3 py-2 text-[14px] leading-5 sm:max-w-[540px]">
+        <div class="cw-bubble ml-auto w-fit max-w-[88%] rounded-xl px-3 py-2 text-[14px] leading-5 sm:max-w-[540px]">
           {{ t('home.clientWorkflow.transcript.prompt') }}
         </div>
 
@@ -28,13 +28,13 @@
           </div>
 
           <div class="mt-2 flex items-center gap-2 text-[12.5px]">
-            <span class="wave" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="cw-wave" aria-hidden="true"><i></i><i></i><i></i></span>
             <span class="cw-shimmer">{{ t('home.clientWorkflow.transcript.working', { seconds: frame.workSeconds }) }}</span>
           </div>
         </div>
 
         <!-- 这一轮完成：工具行收成一条，下面是回复和改动文件卡 -->
-        <div v-else class="settle mt-4" data-test="preview-turn-done">
+        <div v-else class="cw-settle mt-4" data-test="preview-turn-done">
           <div class="flex items-center gap-3 text-[13.5px] font-medium text-[color:var(--cw-text-tertiary)]">
             <span class="h-px flex-1 bg-[color:var(--cw-border-strong)]"></span>
             <span class="flex items-center gap-1">
@@ -46,17 +46,17 @@
           <p class="mt-3 text-[14px] leading-[21px] text-[color:var(--cw-text)]">
             {{ t('home.clientWorkflow.transcript.reply') }}
           </p>
-          <div class="changes mt-3 flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-[13px]">
+          <div class="cw-changes mt-3 flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-[13px]">
             <ClientIcon name="fileDiff" class="h-3.5 w-3.5 text-[color:var(--cw-text-secondary)]" />
             <span class="text-[color:var(--cw-text)]">{{ t('home.clientWorkflow.transcript.changedFiles', { count: 2 }) }}</span>
             <span class="text-[color:var(--cw-success)]">+18</span>
             <span class="text-[color:var(--cw-danger)]">-5</span>
             <span class="ml-auto flex items-center gap-1.5">
-              <span class="outline-button">
+              <span class="cw-outline-button">
                 <ClientIcon name="fileDiff" class="h-3 w-3" />
                 {{ t('home.clientWorkflow.transcript.review') }}
               </span>
-              <span class="outline-button">
+              <span class="cw-outline-button">
                 <ClientIcon name="rewind" class="h-3 w-3" />
                 {{ t('home.clientWorkflow.transcript.undo') }}
               </span>
@@ -71,7 +71,7 @@
       <div class="relative mx-auto max-w-[720px]">
         <ModelPicker :open="frame.pickerOpen" :active-index="frame.pickerIndex" :site-name="siteName" />
 
-        <div class="composer rounded-[13px] py-2.5">
+        <div class="cw-composer rounded-[13px] py-2.5">
           <div class="min-h-[22px] px-3.5 text-[14px] text-[color:var(--cw-text-ghost)]">
             {{ t('home.clientWorkflow.composer.placeholder') }}
           </div>
@@ -179,46 +179,30 @@ const rows = computed<ToolRow[]>(() => [
     target: 'src/router/index.ts',
     stats: { add: 6, del: 2 },
   },
+  { key: 'typecheck', icon: 'terminal', verb: t('home.clientWorkflow.transcript.ran'), target: 'pnpm typecheck' },
   { key: 'test', icon: 'terminal', verb: t('home.clientWorkflow.transcript.running'), target: 'pnpm test', live: true },
 ])
 </script>
 
 <style scoped>
-.user-bubble {
+.cw-bubble {
   background: var(--cw-raised);
   color: var(--cw-text);
 }
 
-.composer {
-  border: 1px solid var(--cw-border);
-  background: var(--cw-composer);
-}
-
-.changes {
+.cw-changes {
   border: 1px solid var(--cw-border-strong);
   background: var(--cw-overlay);
 }
 
-.outline-button {
-  display: inline-flex;
-  height: 26px;
-  align-items: center;
-  gap: 5px;
-  border-radius: 7px;
-  border: 1px solid var(--cw-border-strong);
-  padding: 0 9px;
-  font-size: 12px;
-  color: var(--cw-text-secondary);
-}
-
-.wave {
+.cw-wave {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   color: var(--cw-text-tertiary);
 }
 
-.wave i {
+.cw-wave i {
   height: 4px;
   width: 4px;
   border-radius: 9999px;
@@ -226,20 +210,20 @@ const rows = computed<ToolRow[]>(() => [
   opacity: 0.35;
 }
 
-.settle {
+.cw-settle {
   animation: settle-in 0.35s ease-out;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .wave i {
+  .cw-wave i {
     animation: wave 1.2s ease-in-out infinite;
   }
 
-  .wave i:nth-child(2) {
+  .cw-wave i:nth-child(2) {
     animation-delay: 0.15s;
   }
 
-  .wave i:nth-child(3) {
+  .cw-wave i:nth-child(3) {
     animation-delay: 0.3s;
   }
 }

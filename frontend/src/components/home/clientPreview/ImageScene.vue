@@ -11,17 +11,17 @@
           <ClientIcon name="wallet" class="h-3 w-3" />
           <span>{{ balance }}</span>
         </span>
-        <span class="outline-button">{{ t('home.clientWorkflow.image.openFolder') }}</span>
+        <span class="cw-outline-button">{{ t('home.clientWorkflow.image.openFolder') }}</span>
       </div>
     </div>
 
     <!-- 图库 -->
     <div class="min-h-0 flex-1 overflow-hidden px-4 sm:px-5">
       <div class="mx-auto flex max-w-[984px] flex-wrap gap-3.5 pt-1">
-        <div v-if="frame.imageJob !== 'idle'" class="card" data-test="preview-image-job">
+        <div v-if="frame.imageJob !== 'idle'" class="cw-card" data-test="preview-image-job">
           <div
             v-if="frame.imageJob === 'drawing'"
-            class="square running relative flex flex-col items-center justify-center gap-2 px-3.5 text-center"
+            class="cw-square cw-running relative flex flex-col items-center justify-center gap-2 px-3.5 text-center"
           >
             <ClientIcon name="loaderCircle" class="cw-spin h-[18px] w-[18px] text-[color:var(--cw-text-secondary)]" />
             <span class="text-[13px] font-medium text-[color:var(--cw-text)]">
@@ -34,16 +34,16 @@
               <ClientIcon name="x" class="h-3.5 w-3.5" />
             </span>
           </div>
-          <div v-else class="square picture art-cat reveal" data-test="preview-image-done">
-            <span class="cat-glow"></span>
-            <span class="cat-head"></span>
-            <span class="cat-laptop"></span>
+          <div v-else class="cw-square cw-picture cw-art-cat cw-reveal" data-test="preview-image-done">
+            <span class="cw-cat-glow"></span>
+            <span class="cw-cat-head"></span>
+            <span class="cw-cat-laptop"></span>
           </div>
           <Caption :prompt="t('home.clientWorkflow.image.prompt')" :meta="NEW_META" />
         </div>
 
-        <div v-for="picture in GALLERY" :key="picture.key" class="card">
-          <div class="square picture" :class="picture.art"></div>
+        <div v-for="picture in GALLERY" :key="picture.key" class="cw-card">
+          <div class="cw-square cw-picture" :class="picture.art"></div>
           <Caption :prompt="t(`home.clientWorkflow.image.gallery.${picture.key}`)" :meta="picture.meta" />
         </div>
       </div>
@@ -51,9 +51,9 @@
 
     <!-- 画图输入框 -->
     <div class="flex-none px-4 pb-4 pt-2 sm:px-5">
-      <div class="composer mx-auto flex max-w-[720px] flex-col gap-2 rounded-[13px] py-2.5">
+      <div class="cw-composer mx-auto flex max-w-[720px] flex-col gap-2 rounded-[13px] py-2.5">
         <div class="min-h-[40px] px-3.5 text-[14px] leading-5">
-          <span v-if="typedPrompt" class="text-[color:var(--cw-text)]">{{ typedPrompt }}<i class="caret"></i></span>
+          <span v-if="typedPrompt" class="text-[color:var(--cw-text)]">{{ typedPrompt }}<i class="cw-caret"></i></span>
           <span v-else class="text-[color:var(--cw-text-ghost)]">{{ t('home.clientWorkflow.image.placeholder') }}</span>
         </div>
         <div class="flex items-center gap-0.5 px-2">
@@ -68,7 +68,7 @@
           <span class="flex-1"></span>
           <span class="px-1.5 text-[11.5px] text-[color:var(--cw-text-tertiary)] max-sm:hidden">{{ t('home.clientWorkflow.image.mode') }}</span>
           <span class="px-1 text-[11.5px] text-[color:var(--cw-text-secondary)]">{{ t('home.clientWorkflow.image.estimate') }}</span>
-          <span class="generate ml-1" :class="typedPrompt ? '' : 'opacity-[0.55]'">{{ t('home.clientWorkflow.image.generate') }}</span>
+          <span class="cw-generate ml-1" :class="typedPrompt ? '' : 'opacity-[0.55]'">{{ t('home.clientWorkflow.image.generate') }}</span>
         </div>
       </div>
     </div>
@@ -90,9 +90,9 @@ const { t } = useI18n()
 
 // 图库里已有的作品；图片用 CSS 画，不引入图片资源
 const GALLERY = [
-  { key: 'sunset', art: 'art-sunset', meta: 'gpt-image-2 · 1536×1024 · $0.06' },
-  { key: 'mountain', art: 'art-mountain', meta: 'gpt-image-2 · 1024×1024 · $0.04' },
-  { key: 'city', art: 'art-city', meta: 'grok-imagine-image · 1024×1024' },
+  { key: 'sunset', art: 'cw-art-sunset', meta: 'gpt-image-2 · 1536×1024 · $0.06' },
+  { key: 'mountain', art: 'cw-art-mountain', meta: 'gpt-image-2 · 1024×1024 · $0.04' },
+  { key: 'city', art: 'cw-art-city', meta: 'grok-imagine-image · 1024×1024' },
 ]
 const NEW_META = 'gpt-image-2 · 1024×1024 · $0.04'
 
@@ -127,51 +127,35 @@ const Caption = defineComponent({
 </script>
 
 <style scoped>
-.card {
+.cw-card {
   width: 140px;
 }
 
 @media (min-width: 640px) {
-  .card {
+  .cw-card {
     width: 168px;
   }
 }
 
-.square {
+.cw-square {
   aspect-ratio: 1 / 1;
   width: 100%;
   overflow: hidden;
   border-radius: 10px;
 }
 
-.running {
+.cw-running {
   border: 1px solid var(--cw-border-strong);
   background: var(--cw-raised);
 }
 
-.picture {
+.cw-picture {
   position: relative;
   border: 1px solid var(--cw-border);
   background-color: var(--cw-inset);
 }
 
-.composer {
-  border: 1px solid var(--cw-border);
-  background: var(--cw-composer);
-}
-
-.outline-button {
-  display: inline-flex;
-  height: 26px;
-  align-items: center;
-  border-radius: 7px;
-  border: 1px solid var(--cw-border-strong);
-  padding: 0 10px;
-  font-size: 11.5px;
-  color: var(--cw-text-secondary);
-}
-
-.generate {
+.cw-generate {
   display: inline-flex;
   height: 26px;
   align-items: center;
@@ -184,7 +168,7 @@ const Caption = defineComponent({
   transition: opacity 0.2s ease;
 }
 
-.caret {
+.cw-caret {
   display: inline-block;
   width: 1px;
   height: 16px;
@@ -195,14 +179,14 @@ const Caption = defineComponent({
 
 /* ===== CSS 画的作品 ===== */
 
-.art-sunset {
+.cw-art-sunset {
   background:
     radial-gradient(circle at 50% 58%, #fff3c4 0 11%, rgba(255, 214, 140, 0.8) 12%, transparent 26%),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 9px) bottom / 100% 40% no-repeat,
     linear-gradient(180deg, #ffb36b 0%, #ff7a7a 45%, #7a4fd6 62%, #2c2a6e 100%);
 }
 
-.art-mountain {
+.cw-art-mountain {
   background:
     radial-gradient(circle at 20% 18%, #fff 0 1px, transparent 2px),
     radial-gradient(circle at 70% 12%, #fff 0 1px, transparent 2px),
@@ -212,7 +196,7 @@ const Caption = defineComponent({
     linear-gradient(180deg, #0b1633 0%, #1d3766 55%, #3d5f8f 100%);
 }
 
-.art-mountain::before {
+.cw-art-mountain::before {
   content: '';
   position: absolute;
   inset: 38% 0 0;
@@ -220,7 +204,7 @@ const Caption = defineComponent({
   clip-path: polygon(0 70%, 22% 30%, 34% 48%, 55% 0, 76% 42%, 88% 26%, 100% 55%, 100% 100%, 0 100%);
 }
 
-.art-mountain::after {
+.cw-art-mountain::after {
   content: '';
   position: absolute;
   bottom: 10%;
@@ -232,14 +216,14 @@ const Caption = defineComponent({
   box-shadow: 0 0 18px #f59e42;
 }
 
-.art-city {
+.cw-art-city {
   background:
     linear-gradient(90deg, transparent 0 8%, #2b1f4a 8% 22%, transparent 22% 30%, #3a2a63 30% 46%, transparent 46% 54%, #22183d 54% 72%, transparent 72% 80%, #33245a 80% 94%, transparent 94%) bottom / 100% 70% no-repeat,
     repeating-linear-gradient(100deg, rgba(160, 200, 255, 0.18) 0 1px, transparent 1px 7px),
     linear-gradient(180deg, #0d0a1f 0%, #3b1450 55%, #e0418f 100%);
 }
 
-.art-city::after {
+.cw-art-city::after {
   content: '';
   position: absolute;
   inset: auto 12% 30% 12%;
@@ -249,14 +233,14 @@ const Caption = defineComponent({
   box-shadow: 0 0 14px #e0418f;
 }
 
-.art-cat {
+.cw-art-cat {
   background:
     radial-gradient(circle at 80% 18%, rgba(34, 211, 238, 0.55), transparent 32%),
     radial-gradient(circle at 18% 22%, rgba(224, 65, 143, 0.55), transparent 36%),
     linear-gradient(180deg, #120d2b 0%, #24124a 60%, #0c0a1c 100%);
 }
 
-.cat-glow {
+.cw-cat-glow {
   position: absolute;
   inset: auto 10% 12% 10%;
   height: 30%;
@@ -264,7 +248,7 @@ const Caption = defineComponent({
   background: radial-gradient(ellipse at center, rgba(34, 211, 238, 0.45), transparent 70%);
 }
 
-.cat-head {
+.cw-cat-head {
   position: absolute;
   left: 30%;
   top: 26%;
@@ -277,7 +261,7 @@ const Caption = defineComponent({
     linear-gradient(180deg, #f8a54b, #e7802c);
 }
 
-.cat-head::before {
+.cw-cat-head::before {
   content: '';
   position: absolute;
   left: 2%;
@@ -288,7 +272,7 @@ const Caption = defineComponent({
   clip-path: polygon(0 100%, 16% 0, 36% 100%, 64% 100%, 84% 0, 100% 100%);
 }
 
-.cat-laptop {
+.cw-cat-laptop {
   position: absolute;
   left: 22%;
   right: 22%;
@@ -299,7 +283,7 @@ const Caption = defineComponent({
   box-shadow: 0 -2px 16px rgba(34, 211, 238, 0.55);
 }
 
-.cat-laptop::after {
+.cw-cat-laptop::after {
   content: '';
   position: absolute;
   left: 18%;
@@ -311,7 +295,7 @@ const Caption = defineComponent({
   opacity: 0.8;
 }
 
-.reveal {
+.cw-reveal {
   animation: reveal 0.6s ease-out;
 }
 

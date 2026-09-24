@@ -22,17 +22,16 @@ export default {
       "hero": {
         "releaseBadge": "v{version} 已发布",
         "releaseCta": "看看更新了什么",
+        "tagline": "高智商模型，全程质检。",
         "client": {
           "label": "Agent 桌面客户端",
-          "titleLead": "高智商模型，全程质检。",
-          "titleAccent": "所有 Agent，一个工作区，API 全接入。",
-          "subtitle": "内置 Agent 开箱即用，不装 Node、不装 CLI；Claude Code、Codex、Grok、OpenCode、Pi 登录即自动接好，Amp、Cursor、Kimi Code 等也能在同一个窗口里跑。还能直接 AI 绘图：一句话出图，拖进图片就改。"
+          "title": "所有 Agent，一个工作区，API 全接入。",
+          "subtitle": "内置 Agent 免装 Node 和 CLI，Claude Code、Codex 等 Agent 都在一个窗口里跑，还能 AI 绘图。"
         },
         "api": {
           "label": "保质量 AI 中转站",
-          "titleLead": "高智商模型，全程质检。",
-          "titleAccent": "一个 API Key 全接入。",
-          "subtitle": "线路持续探测可用率和首字延迟；GPT 线路另用 Sol 验证、Astra 指纹核对模型身份，对不上当场标红、运维即刻收到告警。线路出问题自动换下一条，OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok。"
+          "title": "一个 API Key 全接入。",
+          "subtitle": "线路可用率持续探测，GPT 线路另用 Sol、Astra 指纹核对模型身份，异常即刻标红告警。"
         },
         "downloadFor": "下载 {platform} 版",
         "copyInstall": "复制 {platform} 安装命令",
@@ -217,6 +216,7 @@ export default {
         "explored": "查阅 · 1 搜索，2 文件",
         "thought": "思考 · 持续了 3 秒",
         "edited": "已编辑",
+        "ran": "已执行",
         "running": "正在执行",
         "working": "工作中 · {seconds} 秒",
         "workedFor": "已工作 {seconds} 秒",

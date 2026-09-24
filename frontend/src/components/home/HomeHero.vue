@@ -1,21 +1,11 @@
 <template>
   <section id="download" class="relative overflow-hidden">
-    <!-- 装饰图形：只在宽屏出现，不参与布局 -->
+    <!-- 小块装饰：只在宽屏出现，放在标题上方，不参与布局 -->
     <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 hidden h-[640px] lg:block">
-      <span class="animate-home-float absolute left-[7%] top-[22%]">
-        <span
-          class="flex h-28 w-28 -rotate-12 items-center justify-center rounded-[30px] bg-primary-400 font-mono text-3xl font-black text-gray-900 shadow-[0_18px_40px_rgba(13,148,136,0.28)]"
-        >&gt;_</span>
-      </span>
-      <span class="animate-home-float absolute right-[7%] top-[14%] [animation-delay:-3s]">
-        <span
-          class="flex h-32 w-32 rotate-[9deg] items-center justify-center rounded-[28px] bg-amber-300 text-5xl font-black text-gray-900 shadow-[0_18px_40px_rgba(217,119,6,0.22)]"
-        >✦</span>
-      </span>
       <span class="absolute left-[24%] top-[9%] h-5 w-5 rotate-12 bg-sky-300"></span>
       <span class="absolute right-[27%] top-[6%] h-6 w-6 -rotate-12 bg-orange-500"></span>
-      <span class="absolute left-[15%] top-[62%] h-6 w-6 rotate-45 bg-white shadow-md dark:bg-white/80"></span>
-      <span class="absolute right-[15%] top-[58%] h-5 w-5 rotate-12 bg-primary-600"></span>
+      <span class="absolute left-[13%] top-[4%] h-6 w-6 rotate-45 bg-white shadow-md dark:bg-white/80"></span>
+      <span class="absolute right-[14%] top-[8%] h-5 w-5 rotate-12 bg-primary-600"></span>
     </div>
 
     <div class="relative mx-auto flex max-w-[1200px] flex-col items-center px-4 pt-12 text-center md:px-6 md:pt-20">
@@ -32,12 +22,21 @@
         <Icon name="arrowRight" size="xs" class="shrink-0" />
       </router-link>
 
+      <!-- 标题只在逗号处断行，副标题讲质量，字号小一档 -->
       <h1
-        class="mt-6 max-w-full text-[clamp(1.9rem,7vw,4.5rem)] font-black leading-[1.02] tracking-[-0.045em] [overflow-wrap:anywhere] [text-wrap:balance]"
+        data-test="hero-title"
+        class="mt-6 max-w-full text-[clamp(2rem,5.6vw,4rem)] font-black leading-[1.1] tracking-[-0.04em] text-gray-900 [text-wrap:balance] dark:text-white"
       >
-        <span class="block text-gray-900 dark:text-white">{{ copy.titleLead }}</span>
-        <span class="block text-primary-600 dark:text-primary-400">{{ copy.titleAccent }}</span>
+        <template v-for="(phrase, index) in titlePhrases" :key="index">
+          <span class="inline-block">{{ phrase.text }}</span>{{ phrase.gap }}
+        </template>
       </h1>
+      <p
+        data-test="hero-tagline"
+        class="mt-4 text-[clamp(1.15rem,2.4vw,1.625rem)] font-extrabold tracking-[-0.02em] text-primary-600 dark:text-primary-400"
+      >
+        {{ t('home.landing.hero.tagline') }}
+      </p>
       <!-- 有客户端时网关和客户端两段描述并列，没有时只讲网关 -->
       <div
         v-if="hasClientDownloads"
@@ -63,65 +62,81 @@
         {{ copy.subtitle }}
       </p>
 
-      <ul data-test="hero-providers" class="mt-7 flex items-center justify-center gap-3">
-        <li
-          v-for="provider in providers"
-          :key="provider.platform"
-          :title="provider.label"
-          class="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-        >
-          <PlatformIcon :platform="provider.platform" size="md" />
-          <span class="sr-only">{{ provider.label }}</span>
-        </li>
-      </ul>
+      <!-- 厂商图标和下载按钮这一段内容很窄，两块大装饰挂在它两侧，任何宽度都压不到文字 -->
+      <div class="relative mt-7 flex w-full flex-col items-center">
+        <div aria-hidden="true" class="pointer-events-none absolute inset-0 hidden lg:block">
+          <span class="animate-home-float absolute left-[3%] top-0">
+            <span
+              class="flex h-28 w-28 -rotate-12 items-center justify-center rounded-[30px] bg-primary-400 font-mono text-3xl font-black text-gray-900 shadow-[0_18px_40px_rgba(13,148,136,0.28)]"
+            >&gt;_</span>
+          </span>
+          <span class="animate-home-float absolute right-[3%] top-[4%] [animation-delay:-3s]">
+            <span
+              class="flex h-32 w-32 rotate-[9deg] items-center justify-center rounded-[28px] bg-amber-300 text-5xl font-black text-gray-900 shadow-[0_18px_40px_rgba(217,119,6,0.22)]"
+            >✦</span>
+          </span>
+        </div>
 
-      <!-- 有客户端：下载为主，API 为次 -->
-      <div v-if="hasClientDownloads" class="mt-9 flex w-full flex-col items-center gap-4">
-        <HomeDownloadButton :options="clientDownloadOptions" />
-        <router-link
-          :to="dashboardPath"
-          data-test="hero-connect-api"
-          class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline-offset-4 transition hover:text-gray-900 hover:underline dark:text-white/70 dark:hover:text-white"
-        >
-          {{ t('home.landing.hero.useApi') }}
-          <Icon name="arrowRight" size="xs" />
-        </router-link>
-      </div>
+        <ul data-test="hero-providers" class="relative flex items-center justify-center gap-3">
+          <li
+            v-for="provider in providers"
+            :key="provider.platform"
+            :title="provider.label"
+            class="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+          >
+            <PlatformIcon :platform="provider.platform" size="md" />
+            <span class="sr-only">{{ provider.label }}</span>
+          </li>
+        </ul>
 
-      <!-- 没有客户端：接入 API 为主 -->
-      <div v-else class="mt-9 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
-        <router-link
-          :to="primaryTo"
-          data-test="hero-primary-fallback"
-          class="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-gray-900 px-7 text-[15px] font-bold text-white shadow-[0_14px_36px_rgba(15,17,20,0.22)] transition hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
-        >
-          {{ t('home.landing.hero.startApi') }}
-          <Icon name="arrowRight" size="sm" />
-        </router-link>
-        <a
-          v-if="docUrl"
-          :href="docUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-test="hero-secondary-docs"
-          class="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-black/15 bg-white/70 px-7 text-[15px] font-semibold text-gray-900 transition hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-        >
-          {{ t('home.landing.hero.viewDocs') }}
-          <Icon name="externalLink" size="sm" />
-        </a>
-        <router-link
-          v-else-if="!isAuthenticated"
-          to="/login"
-          data-test="hero-secondary-login"
-          class="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-black/15 bg-white/70 px-7 text-[15px] font-semibold text-gray-900 transition hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-        >
-          {{ t('home.login') }}
-        </router-link>
+        <!-- 有客户端：下载为主，API 为次 -->
+        <div v-if="hasClientDownloads" class="relative mt-9 flex w-full flex-col items-center gap-4">
+          <HomeDownloadButton :options="clientDownloadOptions" />
+          <router-link
+            :to="dashboardPath"
+            data-test="hero-connect-api"
+            class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline-offset-4 transition hover:text-gray-900 hover:underline dark:text-white/70 dark:hover:text-white"
+          >
+            {{ t('home.landing.hero.useApi') }}
+            <Icon name="arrowRight" size="xs" />
+          </router-link>
+        </div>
+
+        <!-- 没有客户端：接入 API 为主 -->
+        <div v-else class="relative mt-9 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
+          <router-link
+            :to="primaryTo"
+            data-test="hero-primary-fallback"
+            class="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-gray-900 px-7 text-[15px] font-bold text-white shadow-[0_14px_36px_rgba(15,17,20,0.22)] transition hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+          >
+            {{ t('home.landing.hero.startApi') }}
+            <Icon name="arrowRight" size="sm" />
+          </router-link>
+          <a
+            v-if="docUrl"
+            :href="docUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-test="hero-secondary-docs"
+            class="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-black/15 bg-white/70 px-7 text-[15px] font-semibold text-gray-900 transition hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+          >
+            {{ t('home.landing.hero.viewDocs') }}
+            <Icon name="externalLink" size="sm" />
+          </a>
+          <router-link
+            v-else-if="!isAuthenticated"
+            to="/login"
+            data-test="hero-secondary-login"
+            class="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-black/15 bg-white/70 px-7 text-[15px] font-semibold text-gray-900 transition hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+          >
+            {{ t('home.login') }}
+          </router-link>
+        </div>
       </div>
     </div>
 
     <!-- 主视觉：有客户端时是客户端界面，否则是接入示例 -->
-    <div class="relative mx-auto mt-14 max-w-[1200px] px-4 md:mt-16 md:px-6">
+    <div class="relative mx-auto mt-14 max-w-[1200px] px-4 pb-10 md:mt-16 md:px-6 md:pb-16">
       <div v-if="hasClientDownloads" data-test="client-showcase">
         <HomeAgentWorkflowPreview :site-name="siteName" />
       </div>
@@ -183,10 +198,19 @@ const baseUrl = computed(() => {
 const copy = computed(() => {
   const mode = hasClientDownloads.value ? 'client' : 'api'
   return {
-    titleLead: t(`home.landing.hero.${mode}.titleLead`),
-    titleAccent: t(`home.landing.hero.${mode}.titleAccent`),
+    title: t(`home.landing.hero.${mode}.title`),
     subtitle: t(`home.landing.hero.${mode}.subtitle`),
   }
+})
+
+// 标题按逗号切成几段，每段不拆开换行，避免「工作区」被折成「工 / 作区」。
+// 英文段之间补回空格，中文段之间放零宽空格作为断行点。
+const titlePhrases = computed(() => {
+  const parts = copy.value.title.match(/[^，,]+[，,]?\s*/g) ?? [copy.value.title]
+  return parts.map((part, index) => ({
+    text: part.trimEnd(),
+    gap: index === parts.length - 1 ? '' : /\s$/.test(part) ? ' ' : '​',
+  }))
 })
 
 const descriptions = computed(() =>
