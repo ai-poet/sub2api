@@ -5,6 +5,8 @@ import HomeHero from '../HomeHero.vue'
 const translations: Record<string, string> = {
   'home.landing.hero.releaseBadge': 'v{version} is out',
   'home.landing.hero.releaseCta': 'See what changed',
+  'home.landing.hero.client.label': 'Agent desktop client',
+  'home.landing.hero.api.label': 'Unified AI API gateway',
   'home.landing.hero.client.titleLead': 'Every agent.',
   'home.landing.hero.client.titleAccent': 'One desktop app.',
   'home.landing.hero.client.subtitle': 'One desktop client for Claude Code, Codex and Grok.',
@@ -210,6 +212,22 @@ describe('HomeHero', () => {
     expect(connect.text()).toContain('Use the API directly')
     expect(wrapper.find('[data-test="client-showcase"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="api-terminal"]').exists()).toBe(false)
+  })
+
+  it('keeps the gateway description beside the client one when a client is available', () => {
+    const wrapper = mountHero({ windowsUrl: WINDOWS_URL })
+
+    const gateway = wrapper.find('[data-test="hero-description-api"]')
+    expect(gateway.text()).toContain('Unified AI API gateway')
+    expect(gateway.text()).toContain('OpenAI- and Anthropic-compatible endpoints.')
+    const client = wrapper.find('[data-test="hero-description-client"]')
+    expect(client.text()).toContain('Agent desktop client')
+    expect(client.text()).toContain('One desktop client for Claude Code, Codex and Grok.')
+
+    const apiOnly = mountHero()
+    expect(apiOnly.find('[data-test="hero-descriptions"]').exists()).toBe(false)
+    expect(apiOnly.text()).toContain('OpenAI- and Anthropic-compatible endpoints.')
+    expect(apiOnly.text()).not.toContain('One desktop client for Claude Code, Codex and Grok.')
   })
 
   it('turns into an API landing page when no client download is configured', () => {

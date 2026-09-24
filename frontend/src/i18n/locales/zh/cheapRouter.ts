@@ -23,11 +23,13 @@ export default {
         "releaseBadge": "v{version} 已发布",
         "releaseCta": "看看更新了什么",
         "client": {
+          "label": "Agent 桌面客户端",
           "titleLead": "所有 Agent，",
           "titleAccent": "一个客户端。",
           "subtitle": "Claude Code、Codex、Grok 深度合一的桌面客户端：登录即路由，余额、分组倍率和在线率就在任务旁边，价格比官方友好得多。"
         },
         "api": {
+          "label": "统一 AI API 网关",
           "titleLead": "所有顶级模型，",
           "titleAccent": "一个 API Key。",
           "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok。按量计费、余额长期有效，一条线路出问题自动换下一条。"

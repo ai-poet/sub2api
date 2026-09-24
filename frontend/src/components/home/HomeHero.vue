@@ -38,7 +38,28 @@
         <span class="block text-gray-900 dark:text-white">{{ copy.titleLead }}</span>
         <span class="block text-primary-600 dark:text-primary-400">{{ copy.titleAccent }}</span>
       </h1>
-      <p class="mt-6 max-w-[42rem] text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-white/65">
+      <!-- 有客户端时网关和客户端两段描述并列，没有时只讲网关 -->
+      <div
+        v-if="hasClientDownloads"
+        data-test="hero-descriptions"
+        class="mt-7 grid w-full max-w-[56rem] gap-6 md:grid-cols-2 md:gap-0 md:divide-x md:divide-black/10 md:text-left dark:md:divide-white/10"
+      >
+        <div
+          v-for="item in descriptions"
+          :key="item.key"
+          :data-test="`hero-description-${item.key}`"
+          class="md:px-8"
+        >
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold"
+            :class="item.key === 'client'
+              ? 'bg-primary-100 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300'
+              : 'bg-gray-900/[0.06] text-gray-800 dark:bg-white/10 dark:text-white/80'"
+          >{{ item.label }}</span>
+          <p class="mt-3 text-[15px] leading-7 text-gray-600 md:text-base dark:text-white/65">{{ item.body }}</p>
+        </div>
+      </div>
+      <p v-else class="mt-6 max-w-[42rem] text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-white/65">
         {{ copy.subtitle }}
       </p>
 
@@ -167,6 +188,14 @@ const copy = computed(() => {
     subtitle: t(`home.landing.hero.${mode}.subtitle`),
   }
 })
+
+const descriptions = computed(() =>
+  (['api', 'client'] as const).map((key) => ({
+    key,
+    label: t(`home.landing.hero.${key}.label`),
+    body: t(`home.landing.hero.${key}.subtitle`),
+  })),
+)
 
 // 公开定价目前只有这三家；新增平台时在这里补上图标。
 const providers: Array<{ platform: GroupPlatform; label: string }> = [

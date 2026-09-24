@@ -23,11 +23,13 @@ export default {
         "releaseBadge": "v{version} is out",
         "releaseCta": "See what changed",
         "client": {
+          "label": "Agent desktop client",
           "titleLead": "Every agent.",
           "titleAccent": "One desktop app.",
           "subtitle": "One desktop client for Claude Code, Codex and Grok: sign in and you are routed, with balance, group rates and uptime right next to your tasks — at far friendlier prices than the official API."
         },
         "api": {
+          "label": "Unified AI API gateway",
           "titleLead": "Every top model.",
           "titleAccent": "One API key.",
           "subtitle": "OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok. Pay as you go, balance never expires, and a failing route hands over to the next one on its own."
