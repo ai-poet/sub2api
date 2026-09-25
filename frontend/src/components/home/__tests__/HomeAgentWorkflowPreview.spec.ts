@@ -94,7 +94,6 @@ describe('HomeAgentWorkflowPreview', () => {
     expect(wrapper.find('[data-test="preview-model-picker"]').classes()).toContain('opacity-0')
     expect(wrapper.find('[data-test="preview-tool-rows"]').findAll('.cw-row-in')).toHaveLength(0)
     expect(wrapper.find('[data-test="preview-balance"]').text()).toContain('$36.52')
-    expect(wrapper.find('[data-test="preview-agent-tooltip"]').text()).toBe('Built-in agent')
   })
 
   it('shows the whole working turn with the picker closed when motion is reduced', () => {

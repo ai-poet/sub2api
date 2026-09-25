@@ -31,7 +31,7 @@ export default {
         "api": {
           "label": "保质量 AI 中转站",
           "title": "一个 API Key 全接入。",
-          "subtitle": "线路可用率持续探测，GPT 线路另用 Sol、Astra 指纹核对模型身份，异常即刻标红告警。"
+          "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok。按量计费、余额长期有效，一条线路出问题自动换下一条。指纹核对模型身份，异常即刻标红告警。"
         },
         "downloadFor": "下载 {platform} 版",
         "copyInstall": "复制 {platform} 安装命令",

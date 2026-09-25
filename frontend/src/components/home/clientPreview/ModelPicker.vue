@@ -68,13 +68,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 停留的 Agent 名称：放在选择器左外侧，不压住模型列表；窄屏左侧没空间就不显示 -->
-    <span
-      class="cw-tooltip pointer-events-none absolute right-full z-10 mr-2.5 hidden -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-medium shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition-all duration-200 xl:block"
-      :style="{ top: `${tooltipTop}px` }"
-      data-test="preview-agent-tooltip"
-    >{{ agents[activeIndex].name }}</span>
   </div>
 </template>
 
@@ -140,9 +133,6 @@ const MODELS: Record<string, { vendor: GroupPlatform; models: string[] }> = {
 
 const activeAgent = computed(() => agents.value[props.activeIndex] ?? agents.value[0])
 const activeModels = computed(() => MODELS[activeAgent.value.id] ?? MODELS.builtin)
-
-// 左栏：上内边距 6 + 收藏 30 + 分隔 9（含两侧 1px 间距共 11），之后每项 30 + 1 间距；取图标中线
-const tooltipTop = computed(() => 6 + 30 + 11 + props.activeIndex * 31 + 15)
 </script>
 
 <style scoped>
@@ -168,22 +158,5 @@ const tooltipTop = computed(() => 6 + 30 + 11 + props.activeIndex * 31 + 15)
 
 .cw-rail-item.is-active {
   background: var(--cw-overlay-strong);
-}
-
-.cw-tooltip {
-  background: var(--cw-inverse);
-  color: var(--cw-on-inverse);
-}
-
-/* 指向左栏图标的小三角 */
-.cw-tooltip::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -4px;
-  width: 8px;
-  height: 8px;
-  background: inherit;
-  transform: translateY(-50%) rotate(45deg);
 }
 </style>
