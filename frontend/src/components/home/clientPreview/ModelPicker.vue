@@ -1,78 +1,80 @@
 <template>
   <!-- 客户端输入框上方的模型选择器：左栏是各家 Agent，右边是当前 Agent 的模型 -->
   <div
-    class="cw-picker absolute bottom-full left-0 z-20 mb-2 flex h-[300px] w-full max-w-[560px] origin-bottom-left overflow-hidden rounded-[13px] shadow-[0_18px_48px_rgba(0,0,0,0.18)] transition-all duration-200 ease-out sm:h-[360px]"
+    class="absolute bottom-full left-0 z-20 mb-2 h-[300px] w-full max-w-[560px] origin-bottom-left transition-all duration-200 ease-out sm:h-[360px]"
     :class="open ? 'scale-100 opacity-100' : 'pointer-events-none scale-[0.97] opacity-0'"
     data-test="preview-model-picker"
   >
-    <!-- 左栏：收藏 + 各家 Agent，只显示图标 -->
-    <div class="cw-rail relative flex w-[46px] shrink-0 flex-col items-center gap-px overflow-hidden py-1.5">
-      <span class="cw-rail-item text-[color:var(--cw-text-tertiary)]">
-        <ClientIcon name="star" class="h-4 w-4" />
-      </span>
-      <span class="my-1 h-px w-6 bg-[color:var(--cw-border-strong)]"></span>
-      <span
-        v-for="(agent, index) in agents"
-        :key="agent.id"
-        class="cw-rail-item"
-        :class="index === activeIndex ? 'is-active' : ''"
-        :title="agent.name"
-        :style="{ color: agent.color }"
-        data-test="preview-agent-rail-item"
-      >
-        <ClientIcon v-if="agent.icon" :name="agent.icon" class="h-4 w-4" />
-        <PlatformIcon v-else-if="agent.platform" :platform="agent.platform" size="md" />
-      </span>
+    <div class="cw-picker flex h-full overflow-hidden rounded-[13px] shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
+      <!-- 左栏：收藏 + 各家 Agent，只显示图标 -->
+      <div class="cw-rail relative flex w-[46px] shrink-0 flex-col items-center gap-px overflow-hidden py-1.5">
+        <span class="cw-rail-item text-[color:var(--cw-text-tertiary)]">
+          <ClientIcon name="star" class="h-4 w-4" />
+        </span>
+        <span class="my-1 h-px w-6 bg-[color:var(--cw-border-strong)]"></span>
+        <span
+          v-for="(agent, index) in agents"
+          :key="agent.id"
+          class="cw-rail-item"
+          :class="index === activeIndex ? 'is-active' : ''"
+          :title="agent.name"
+          :style="{ color: agent.color }"
+          data-test="preview-agent-rail-item"
+        >
+          <ClientIcon v-if="agent.icon" :name="agent.icon" class="h-4 w-4" />
+          <PlatformIcon v-else-if="agent.platform" :platform="agent.platform" size="md" />
+        </span>
+      </div>
+
+      <div class="flex min-w-0 flex-1 flex-col bg-[color:var(--cw-surface)]">
+        <div class="m-2 flex h-[34px] items-center gap-2 rounded-[9px] border border-[color:var(--cw-border)] px-2.5 text-[13px] text-[color:var(--cw-text-ghost)]">
+          <ClientIcon name="search" class="h-3.5 w-3.5" />
+          <span>{{ t('home.clientWorkflow.picker.search') }}</span>
+        </div>
+
+        <div class="flex min-h-0 flex-1 gap-1 px-1.5 pb-1.5">
+          <!-- 只有内置 Agent 有厂商列 -->
+          <ul v-if="activeAgent.id === 'builtin'" class="hidden w-[124px] shrink-0 flex-col gap-px sm:flex">
+            <li
+              v-for="vendor in VENDORS"
+              :key="vendor.name"
+              class="flex h-8 items-center gap-2 rounded-[7px] px-2 text-[12.5px]"
+              :class="vendor.selected
+                ? 'bg-[color:var(--cw-overlay-strong)] text-[color:var(--cw-text)]'
+                : 'text-[color:var(--cw-text-secondary)]'"
+            >
+              <PlatformIcon :platform="vendor.platform" size="sm" />
+              <span class="truncate">{{ vendor.name }}</span>
+            </li>
+          </ul>
+
+          <ul class="flex min-w-0 flex-1 flex-col gap-px">
+            <li
+              v-for="(model, index) in activeModels.models"
+              :key="model"
+              class="flex h-[52px] items-center gap-2 rounded-[9px] px-3"
+              :class="activeAgent.id === 'builtin' && index === 0 ? 'bg-[color:var(--cw-overlay-strong)]' : ''"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-[13px] font-semibold text-[color:var(--cw-text)]">{{ model }}</div>
+                <div class="mt-0.5 flex items-center gap-1 truncate text-[12px] text-[color:var(--cw-text-tertiary)]">
+                  <PlatformIcon :platform="activeModels.vendor" size="xs" />
+                  <span class="truncate">{{ siteName }} · {{ activeModels.vendor }}</span>
+                </div>
+              </div>
+              <ClientIcon name="star" class="h-3.5 w-3.5 shrink-0 text-[color:var(--cw-text-ghost)]" />
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
-    <!-- 停留的 Agent 名称浮层 -->
+    <!-- 停留的 Agent 名称：放在选择器左外侧，不压住模型列表；窄屏左侧没空间就不显示 -->
     <span
-      class="cw-tooltip pointer-events-none absolute left-[52px] z-10 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-medium shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition-all duration-200"
+      class="cw-tooltip pointer-events-none absolute right-full z-10 mr-2.5 hidden -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-medium shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition-all duration-200 xl:block"
       :style="{ top: `${tooltipTop}px` }"
       data-test="preview-agent-tooltip"
     >{{ agents[activeIndex].name }}</span>
-
-    <div class="flex min-w-0 flex-1 flex-col bg-[color:var(--cw-surface)]">
-      <div class="m-2 flex h-[34px] items-center gap-2 rounded-[9px] border border-[color:var(--cw-border)] px-2.5 text-[13px] text-[color:var(--cw-text-ghost)]">
-        <ClientIcon name="search" class="h-3.5 w-3.5" />
-        <span>{{ t('home.clientWorkflow.picker.search') }}</span>
-      </div>
-
-      <div class="flex min-h-0 flex-1 gap-1 px-1.5 pb-1.5">
-        <!-- 只有内置 Agent 有厂商列 -->
-        <ul v-if="activeAgent.id === 'builtin'" class="hidden w-[124px] shrink-0 flex-col gap-px sm:flex">
-          <li
-            v-for="vendor in VENDORS"
-            :key="vendor.name"
-            class="flex h-8 items-center gap-2 rounded-[7px] px-2 text-[12.5px]"
-            :class="vendor.selected
-              ? 'bg-[color:var(--cw-overlay-strong)] text-[color:var(--cw-text)]'
-              : 'text-[color:var(--cw-text-secondary)]'"
-          >
-            <PlatformIcon :platform="vendor.platform" size="sm" />
-            <span class="truncate">{{ vendor.name }}</span>
-          </li>
-        </ul>
-
-        <ul class="flex min-w-0 flex-1 flex-col gap-px">
-          <li
-            v-for="(model, index) in activeModels.models"
-            :key="model"
-            class="flex h-[52px] items-center gap-2 rounded-[9px] px-3"
-            :class="activeAgent.id === 'builtin' && index === 0 ? 'bg-[color:var(--cw-overlay-strong)]' : ''"
-          >
-            <div class="min-w-0 flex-1">
-              <div class="truncate text-[13px] font-semibold text-[color:var(--cw-text)]">{{ model }}</div>
-              <div class="mt-0.5 flex items-center gap-1 truncate text-[12px] text-[color:var(--cw-text-tertiary)]">
-                <PlatformIcon :platform="activeModels.vendor" size="xs" />
-                <span class="truncate">{{ siteName }} · {{ activeModels.vendor }}</span>
-              </div>
-            </div>
-            <ClientIcon name="star" class="h-3.5 w-3.5 shrink-0 text-[color:var(--cw-text-ghost)]" />
-          </li>
-        </ul>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -178,7 +180,7 @@ const tooltipTop = computed(() => 6 + 30 + 11 + props.activeIndex * 31 + 15)
   content: '';
   position: absolute;
   top: 50%;
-  left: -4px;
+  right: -4px;
   width: 8px;
   height: 8px;
   background: inherit;

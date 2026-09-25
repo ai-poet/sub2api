@@ -51,7 +51,7 @@ export default {
         "client": {
           "titleLead": "Agent 干活需要一套系统，",
           "titleTail": "而不是一堆配置文件。",
-          "subtitle": "中转站这边，线路持续探测、GPT 线路还核对模型身份；客户端这边，内置 Agent、各家 CLI Agent 和 AI 绘图都在同一个窗口里。"
+          "subtitle": "登录一次，Claude Code、Codex、Grok 就都接好了；余额、线路和用量都在同一个窗口里。"
         },
         "api": {
           "titleLead": "模型有质检，",

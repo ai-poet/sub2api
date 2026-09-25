@@ -51,7 +51,7 @@ export default {
         "client": {
           "titleLead": "Agents need a system,",
           "titleTail": "not a pile of config files.",
-          "subtitle": "On the relay side, routes are probed nonstop and GPT routes get their identity checked; on the client side, the built-in agent, every CLI agent and image generation share one window."
+          "subtitle": "Sign in once and Claude Code, Codex and Grok are wired up; balance, routes and usage live in the same window."
         },
         "api": {
           "titleLead": "Models under inspection,",
