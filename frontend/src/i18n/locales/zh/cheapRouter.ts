@@ -31,7 +31,7 @@ export default {
         "api": {
           "label": "保质量 AI 中转站",
           "title": "一个 API Key 全接入。",
-          "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok，以及 DeepSeek、GLM、Kimi 等国产模型。按量计费、余额长期有效，一条线路出问题自动换下一条。指纹核对模型身份，异常即刻标红告警。"
+          "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok，以及 DeepSeek、GLM、Kimi 等国产模型。指纹核对模型身份，异常即刻标红告警。"
         },
         "downloadFor": "下载 {platform} 版",
         "copyInstall": "复制 {platform} 安装命令",

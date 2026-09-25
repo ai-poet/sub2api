@@ -8,7 +8,7 @@
       <span class="absolute right-[14%] top-[8%] h-5 w-5 rotate-12 bg-primary-600"></span>
     </div>
 
-    <div class="relative mx-auto flex max-w-[1200px] flex-col items-center px-4 pt-12 text-center md:px-6 md:pt-20">
+    <div class="relative mx-auto flex max-w-[1200px] flex-col items-center px-4 pt-8 text-center md:px-6 md:pt-10">
       <router-link
         v-if="hasClientDownloads && latestVersion"
         to="/changelog"
@@ -25,7 +25,7 @@
       <!-- 标题只在逗号处断行，副标题讲质量，字号小一档 -->
       <h1
         data-test="hero-title"
-        class="mt-6 max-w-full text-[clamp(2rem,5.6vw,4rem)] font-black leading-[1.1] tracking-[-0.04em] text-gray-900 [text-wrap:balance] dark:text-white"
+        class="mt-4 max-w-full text-[clamp(2rem,5.6vw,4rem)] font-black leading-[1.1] tracking-[-0.04em] text-gray-900 [text-wrap:balance] dark:text-white"
       >
         <template v-for="(phrase, index) in titlePhrases" :key="index">
           <span class="inline-block">{{ phrase.text }}</span>{{ phrase.gap }}
@@ -33,7 +33,7 @@
       </h1>
       <p
         data-test="hero-tagline"
-        class="mt-4 text-[clamp(1.15rem,2.4vw,1.625rem)] font-extrabold tracking-[-0.02em] text-primary-600 dark:text-primary-400"
+        class="mt-3 text-[clamp(1.15rem,2.4vw,1.625rem)] font-extrabold tracking-[-0.02em] text-primary-600 dark:text-primary-400"
       >
         {{ t('home.landing.hero.tagline') }}
       </p>
@@ -41,7 +41,7 @@
       <div
         v-if="hasClientDownloads"
         data-test="hero-descriptions"
-        class="mt-7 grid w-full max-w-[56rem] gap-6 md:grid-cols-2 md:gap-0 md:divide-x md:divide-black/10 md:text-left dark:md:divide-white/10"
+        class="mt-5 grid w-full max-w-[56rem] gap-5 md:grid-cols-2 md:gap-0 md:divide-x md:divide-black/10 md:text-left dark:md:divide-white/10"
       >
         <div
           v-for="item in descriptions"
@@ -55,15 +55,15 @@
               ? 'bg-primary-100 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300'
               : 'bg-gray-900/[0.06] text-gray-800 dark:bg-white/10 dark:text-white/80'"
           >{{ item.label }}</span>
-          <p class="mt-3 text-[15px] leading-7 text-gray-600 md:text-base dark:text-white/65">{{ item.body }}</p>
+          <p class="mt-2 text-[15px] leading-6 text-gray-600 dark:text-white/65">{{ item.body }}</p>
         </div>
       </div>
-      <p v-else class="mt-6 max-w-[42rem] text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-white/65">
+      <p v-else class="mt-5 max-w-[42rem] text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-white/65">
         {{ copy.subtitle }}
       </p>
 
-      <!-- 厂商图标和下载按钮这一段内容很窄，两块大装饰挂在它两侧，任何宽度都压不到文字 -->
-      <div class="relative mt-7 flex w-full flex-col items-center">
+      <!-- 按钮和模型图标这一段内容很窄，两块大装饰挂在它两侧，任何宽度都压不到文字 -->
+      <div class="relative mt-6 flex w-full flex-col items-center">
         <div aria-hidden="true" class="pointer-events-none absolute inset-0 hidden lg:block">
           <span class="animate-home-float absolute left-[3%] top-0">
             <span
@@ -77,33 +77,13 @@
           </span>
         </div>
 
-        <ul data-test="hero-providers" class="relative flex items-center justify-center gap-3">
-          <li
-            v-for="provider in providers"
-            :key="provider.platform"
-            :title="provider.label"
-            class="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
-          >
-            <PlatformIcon :platform="provider.platform" size="md" />
-            <span class="sr-only">{{ provider.label }}</span>
-          </li>
-        </ul>
-
-        <!-- 有客户端：下载为主，API 为次 -->
-        <div v-if="hasClientDownloads" class="relative mt-9 flex w-full flex-col items-center gap-4">
+        <!-- 有客户端：下载为主 -->
+        <div v-if="hasClientDownloads" class="relative flex w-full flex-col items-center">
           <HomeDownloadButton :options="clientDownloadOptions" />
-          <router-link
-            :to="dashboardPath"
-            data-test="hero-connect-api"
-            class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline-offset-4 transition hover:text-gray-900 hover:underline dark:text-white/70 dark:hover:text-white"
-          >
-            {{ t('home.landing.hero.useApi') }}
-            <Icon name="arrowRight" size="xs" />
-          </router-link>
         </div>
 
         <!-- 没有客户端：接入 API 为主 -->
-        <div v-else class="relative mt-9 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
+        <div v-else class="relative flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
           <router-link
             :to="primaryTo"
             data-test="hero-primary-fallback"
@@ -132,11 +112,35 @@
             {{ t('home.login') }}
           </router-link>
         </div>
+
+        <!-- 已接入的模型和「直接使用 API」并成一行，放在按钮下面，省出一整行高度 -->
+        <div class="relative mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <ul data-test="hero-providers" class="flex items-center justify-center gap-2">
+            <li
+              v-for="provider in providers"
+              :key="provider.platform"
+              :title="provider.label"
+              class="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-gray-900 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+            >
+              <PlatformIcon :platform="provider.platform" size="md" />
+              <span class="sr-only">{{ provider.label }}</span>
+            </li>
+          </ul>
+          <router-link
+            v-if="hasClientDownloads"
+            :to="dashboardPath"
+            data-test="hero-connect-api"
+            class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline-offset-4 transition hover:text-gray-900 hover:underline dark:text-white/70 dark:hover:text-white"
+          >
+            {{ t('home.landing.hero.useApi') }}
+            <Icon name="arrowRight" size="xs" />
+          </router-link>
+        </div>
       </div>
     </div>
 
     <!-- 主视觉：有客户端时是客户端界面，否则是接入示例 -->
-    <div class="relative mx-auto mt-14 max-w-[1200px] px-4 pb-10 md:mt-16 md:px-6 md:pb-16">
+    <div class="relative mx-auto mt-10 max-w-[1200px] px-4 pb-10 md:mt-12 md:px-6 md:pb-16">
       <div v-if="hasClientDownloads" data-test="client-showcase">
         <HomeAgentWorkflowPreview :site-name="siteName" />
       </div>

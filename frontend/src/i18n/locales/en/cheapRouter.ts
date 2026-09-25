@@ -31,7 +31,7 @@ export default {
         "api": {
           "label": "A quality-checked AI relay",
           "title": "One API key for all.",
-          "subtitle": "OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok, plus DeepSeek, GLM, Kimi and other Chinese models. Pay as you go, balance never expires, and a failing route hands over to the next one on its own. Fingerprint checks confirm the model's identity, and anything off turns red and pages us at once."
+          "subtitle": "OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok, plus DeepSeek, GLM, Kimi and other Chinese models. Fingerprint checks confirm the model's identity, and anything off turns red and pages us at once."
         },
         "downloadFor": "Download for {platform}",
         "copyInstall": "Copy the {platform} install command",
