@@ -217,10 +217,13 @@ describe('HomeHero', () => {
     const wrapper = mountHero()
 
     const providers = wrapper.find('[data-test="hero-providers"]')
-    expect(providers.findAll('li')).toHaveLength(3)
+    expect(providers.findAll('li')).toHaveLength(6)
     expect(providers.text()).toContain('Claude')
     expect(providers.text()).toContain('GPT')
     expect(providers.text()).toContain('Grok')
+    expect(providers.text()).toContain('DeepSeek')
+    expect(providers.text()).toContain('GLM')
+    expect(providers.text()).toContain('Kimi')
   })
 
   it('keeps each title phrase whole and puts the quality line under the title', () => {

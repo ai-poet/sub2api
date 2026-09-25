@@ -221,10 +221,13 @@ const descriptions = computed(() =>
   })),
 )
 
-// 公开定价目前只有这三家；新增平台时在这里补上图标。
+// 网关已接入的主要模型；新增平台时在这里补上图标。
 const providers: Array<{ platform: GroupPlatform; label: string }> = [
   { platform: 'anthropic', label: 'Claude' },
   { platform: 'openai', label: 'GPT' },
   { platform: 'grok', label: 'Grok' },
+  { platform: 'deepseek', label: 'DeepSeek' },
+  { platform: 'zhipu', label: 'GLM' },
+  { platform: 'kimi', label: 'Kimi' },
 ]
 </script>

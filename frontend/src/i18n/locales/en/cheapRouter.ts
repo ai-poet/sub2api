@@ -31,7 +31,7 @@ export default {
         "api": {
           "label": "A quality-checked AI relay",
           "title": "One API key for all.",
-          "subtitle": "OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok. Pay as you go, balance never expires, and a failing route hands over to the next one on its own. Fingerprint checks confirm the model's identity, and anything off turns red and pages us at once."
+          "subtitle": "OpenAI- and Anthropic-compatible endpoints for Claude, GPT and Grok, plus DeepSeek, GLM, Kimi and other Chinese models. Pay as you go, balance never expires, and a failing route hands over to the next one on its own. Fingerprint checks confirm the model's identity, and anything off turns red and pages us at once."
         },
         "downloadFor": "Download for {platform}",
         "copyInstall": "Copy the {platform} install command",
@@ -56,7 +56,7 @@ export default {
         "api": {
           "titleLead": "Models under inspection,",
           "titleTail": "one key to reach them.",
-          "subtitle": "Every probe and identity check is on record, and trouble turns red before it pages us; Claude, GPT and Grok share one balance and one set of usage numbers."
+          "subtitle": "Every probe and identity check is on record, and trouble turns red before it pages us; Claude, GPT, Grok and Chinese models such as DeepSeek, GLM and Kimi share one balance and one set of usage numbers."
         },
         "columns": {
           "quality": "Quality-checked relay",
@@ -73,7 +73,7 @@ export default {
           },
           "builtinAgent": {
             "title": "Built-in agent",
-            "body": "Ready as soon as the app is — no Node, no CLI — with Claude, GPT, Grok, DeepSeek, Kimi and more a click apart"
+            "body": "Ready as soon as the app is — no Node, no CLI — with Claude, GPT, Grok, DeepSeek, GLM, Kimi and more a click apart"
           },
           "allAgents": {
             "title": "Every agent, one window",
@@ -106,7 +106,7 @@ export default {
         "titleLead": "Not one model.",
         "titleTail": "The right one for every step.",
         "clientSubtitle": "Switch between the built-in agent, Claude Code, Codex and Grok inside one client — your project, files and context stay where they are.",
-        "apiSubtitle": "Claude, GPT and Grok share one key and one balance; changing models means changing one parameter.",
+        "apiSubtitle": "Claude, GPT, Grok and Chinese models such as DeepSeek, GLM and Kimi share one key and one balance; changing models means changing one parameter.",
         "cta": "See model pricing"
       },
       "closing": {

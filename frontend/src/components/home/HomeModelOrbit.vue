@@ -44,12 +44,20 @@
               <span class="whitespace-nowrap text-xs font-semibold text-white/70">{{ node.label }}</span>
             </div>
           </div>
-          <span
-            v-for="dot in dots"
-            :key="dot.left + dot.top"
-            class="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-400/80"
-            :style="{ left: dot.left, top: dot.top }"
-          ></span>
+          <!-- 内圈：国产模型 -->
+          <div
+            v-for="node in innerNodes"
+            :key="node.platform"
+            class="absolute -translate-x-1/2 -translate-y-1/2"
+            :style="{ left: node.left, top: node.top }"
+          >
+            <div class="orbit-counter-spin flex flex-col items-center gap-1.5">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+                <PlatformIcon :platform="node.platform" size="md" />
+              </span>
+              <span class="whitespace-nowrap text-[11px] font-semibold text-white/60">{{ node.label }}</span>
+            </div>
+          </div>
         </div>
 
         <div class="absolute inset-[35%] flex items-center justify-center">
@@ -100,7 +108,8 @@ const nodes = computed(() => {
   return labels.map(([platform, label], index) => ({ platform, label, ...onCircle(index * 120, 50) }))
 })
 
-const dots = [60, 180, 300].map((angle) => onCircle(angle, 28))
+const INNER_MODELS: Array<[GroupPlatform, string]> = [['deepseek', 'DeepSeek'], ['zhipu', 'GLM'], ['kimi', 'Kimi']]
+const innerNodes = INNER_MODELS.map(([platform, label], index) => ({ platform, label, ...onCircle(60 + index * 120, 28) }))
 </script>
 
 <style scoped>

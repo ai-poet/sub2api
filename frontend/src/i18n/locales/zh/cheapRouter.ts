@@ -31,7 +31,7 @@ export default {
         "api": {
           "label": "保质量 AI 中转站",
           "title": "一个 API Key 全接入。",
-          "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok。按量计费、余额长期有效，一条线路出问题自动换下一条。指纹核对模型身份，异常即刻标红告警。"
+          "subtitle": "OpenAI / Anthropic 兼容接口直连 Claude、GPT、Grok，以及 DeepSeek、GLM、Kimi 等国产模型。按量计费、余额长期有效，一条线路出问题自动换下一条。指纹核对模型身份，异常即刻标红告警。"
         },
         "downloadFor": "下载 {platform} 版",
         "copyInstall": "复制 {platform} 安装命令",
@@ -56,7 +56,7 @@ export default {
         "api": {
           "titleLead": "模型有质检，",
           "titleTail": "接入只要一个 Key。",
-          "subtitle": "每次探测、每次身份校验都有记录，出问题先标红再告警；Claude、GPT、Grok 共用一份余额和一套用量统计。"
+          "subtitle": "每次探测、每次身份校验都有记录，出问题先标红再告警；Claude、GPT、Grok 和 DeepSeek、GLM、Kimi 等国产模型共用一份余额和一套用量统计。"
         },
         "columns": {
           "quality": "保质量中转站",
@@ -73,7 +73,7 @@ export default {
           },
           "builtinAgent": {
             "title": "内置 Agent",
-            "body": "装好客户端就能用，不装 Node、不装 CLI，Claude、GPT、Grok、DeepSeek、Kimi 等模型随手切"
+            "body": "装好客户端就能用，不装 Node、不装 CLI，Claude、GPT、Grok、DeepSeek、GLM、Kimi 等模型随手切"
           },
           "allAgents": {
             "title": "所有 Agent 一个窗口",
@@ -106,7 +106,7 @@ export default {
         "titleLead": "不止一个模型。",
         "titleTail": "每一步都用对的那个。",
         "clientSubtitle": "内置 Agent、Claude Code、Codex、Grok 在同一个客户端里随手切换，项目、文件和上下文都留在原地。",
-        "apiSubtitle": "Claude、GPT、Grok 共用一个 Key 和一份余额，换模型只改一个参数。",
+        "apiSubtitle": "Claude、GPT、Grok 和 DeepSeek、GLM、Kimi 等国产模型共用一个 Key 和一份余额，换模型只改一个参数。",
         "cta": "查看模型价格"
       },
       "closing": {
