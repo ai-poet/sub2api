@@ -19,11 +19,6 @@ export interface CcSwitchImportDeeplinkInput {
   apiKey: string
   usageScript: string
 }
-//baseurl拼装v1，由于用量查询出bug，现已废弃
-function withV1Endpoint(baseUrl: string): string {
-  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '')
-  return normalizedBaseUrl.endsWith('/v1') ? normalizedBaseUrl : `${normalizedBaseUrl}/v1`
-}
 
 export function resolveCcSwitchImportConfig(
   platform: GroupPlatform | undefined | null,

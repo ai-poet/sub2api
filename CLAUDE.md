@@ -129,9 +129,10 @@ The features below are locally maintained customizations of this fork. During up
   surfacing as a turn that finished with nothing to say), and
   `attribution_text` naming the product instead of claiming to be Anthropic's
   official CLI (`core/src/system_prompt.rs`, brand from
-  `SUB2API_BRAND_NAME`), the Grok family admitted to the reasoning-model list
-  so its effort picker reaches the request at all
-  (`query/src/runner/provider_options.rs`), and truncation on character
+  `SUB2API_BRAND_NAME`), the Grok family and every GPT generation from 5 on
+  admitted to the reasoning-model list so their effort picker reaches the
+  request at all (`query/src/runner/provider_options.rs` — `gpt-6-*` fell
+  through a `gpt-5` prefix and went out with no effort), and truncation on character
   rather than byte boundaries in `tools/src/{pty_bash,powershell,web_fetch}.rs`
   (the byte slices panicked on any long non-ASCII output), plan mode widened
   from "reads only" to also allow the tools planning itself needs and any
@@ -189,7 +190,27 @@ The features below are locally maintained customizations of this fork. During up
   thinking plus `output_config.effort`, the way Claude Code sends it, instead
   of a thinking budget (`api/src/claude_effort.rs`, a `CreateMessageRequest`
   `output_config` field, `query/src/lib.rs` — Opus 5.5 rejects a budget, and
-  gateways read the effort from that field; older models keep the budget).
+  gateways read the effort from that field; older models keep the budget),
+  and the reasoning made visible on every route: adaptive thinking sent with
+  `display: "summarized"` as Claude Code sends it (a `display` field on
+  `ThinkingConfig` in `api/src/lib.rs`, `ThinkingConfig::summarized`,
+  `claude_effort.rs` — these families default to `"omitted"`, whose thinking
+  blocks stream empty), the Responses stream reading
+  `response.reasoning_summary_text.delta` (`api/src/providers/codex.rs` — the
+  summary it asked for fell into `_ => {}`) with plain thinking text no longer
+  replayed as a `reasoning` input item (`api/src/providers/copilot.rs` — an
+  item with no id the API cannot place), the Chat Completions stream reading
+  `reasoning_content` / `reasoning` (`api/src/providers/openai.rs`), and an
+  unsigned thinking block — a Chat model's reasoning kept for the transcript —
+  left out of an Anthropic request (`ApiMessage::from` in `api/src/lib.rs`),
+  and image blocks sent to every model instead of being swapped for
+  "[Image not supported by this model]" wherever the registry or adapter
+  claims no vision (`query/src/lib.rs` — the Responses adapter claims it for
+  every model, so GPT never saw a picture; a model without vision now answers
+  with its API's error). The pictures themselves come from the bridge
+  (`waku-agent-bridge/src/images.rs`): the engine never read the `@path`
+  mentions the composer appends per attachment, so the bridge sends each
+  mentioned PNG / JPEG / GIF / WebP as an image block ahead of the text.
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
@@ -228,11 +249,26 @@ The features below are locally maintained customizations of this fork. During up
   provider's. `client/src/app/native_agent.rs` feeds the picker from the
   gateway catalog. On the managed gateway each model goes out with the key of
   the group that serves it: `client/crates/sub2api/src/model_routing.rs` picks
-  it (the CLI slot's group for Claude, GPT and Grok, else an active
-  subscription group, else any group that lists it) and
-  `client/src/app/cloud_subscriptions.rs` refreshes it together with the
-  subscriptions Settings → Cloud Account lists; the per-model keys ride in
-  `gateway_keys.models`. Do not go back to one key per platform — a group
+  it (the CLI slot's group for Claude, GPT and Grok; the Chinese models'
+  own slot for DeepSeek, GLM, Kimi, MiniMax and Qwen, falling back to
+  pay-as-you-go while a subscription picked there is spent; else a
+  subscription group with room left, else a pay-as-you-go group, else a spent
+  subscription) and `client/src/app/cloud_subscriptions.rs` refreshes it
+  together with the subscriptions Settings → Cloud Account lists; the
+  per-model keys ride in `gateway_keys.models`. A Chinese model with no keyed
+  route yet is looked up on its own before its turn goes out
+  (`sub2api::route_one_model`, `native_route_need` / `ensure_native_model_route`
+  in `cloud_subscriptions.rs`) — otherwise the first turn after sign-in rides
+  the general key to the wrong group. The Chinese models' groups are
+  `openai` groups on the live gateway, so the group picker files groups by
+  lane, not platform (`model_routing::group_lane`, `DOMESTIC_LANE`,
+  `Credentials::domestic_group_id`, `pending_group_bindings` in
+  `client/src/app/cloud_groups.rs`, which also moves a Codex or general slot
+  off such a group); never offer them under Codex again — a Codex slot on
+  one breaks every GPT request. 0.2.3's second "pay as you go" picker row
+  (`<platform>+payg::<model>`) is gone; `migrate_legacy_pay_as_you_go`
+  rewrites saved ids on launch and the bridge's `split_model` still strips
+  the mark. Do not go back to one key per platform — a group
   serves only the models its accounts map, so a DeepSeek model sent with the
   Codex group's key comes back "no available channel".
 - Upstream files carry only hook points: the `ProviderKind::Native` variant and
