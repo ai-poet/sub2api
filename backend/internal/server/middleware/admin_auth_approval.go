@@ -177,17 +177,18 @@ func recordOperatorApprovalAudit(
 		action = service.AuditActionAdminApprovalRefused
 	}
 	entry := &service.AuditLog{
-		ActorUserID: &uid,
-		ActorEmail:  user.Email,
-		ActorRole:   user.Role,
-		AuthMethod:  service.AuditAuthMethodJWT,
-		Action:      action,
-		Method:      c.Request.Method,
-		Path:        path,
-		ClientIP:    SecurityClientIP(c),
-		UserAgent:   normalizePersistentText(c.Request.UserAgent(), maxPersistentUserAgentBytes),
-		RequestBody: service.RedactAuditBody(rawBody, c.GetHeader("Content-Type")),
-		StatusCode:  status,
+		ActorUserID:      &uid,
+		ActorEmail:       user.Email,
+		ActorRole:        user.Role,
+		AuthMethod:       consoleAuditAuthMethod(c),
+		CredentialMasked: MaskedRequestCredential(c),
+		Action:           action,
+		Method:           c.Request.Method,
+		Path:             path,
+		ClientIP:         SecurityClientIP(c),
+		UserAgent:        normalizePersistentText(c.Request.UserAgent(), maxPersistentUserAgentBytes),
+		RequestBody:      service.RedactAuditBody(rawBody, c.GetHeader("Content-Type")),
+		StatusCode:       status,
 	}
 	if requestID, ok := c.Request.Context().Value(ctxkey.RequestID).(string); ok {
 		entry.RequestID = requestID
@@ -203,6 +204,7 @@ func recordOperatorApprovalAudit(
 	if q := service.RedactAuditQuery(c.Request.URL.RawQuery); q != "" {
 		extra["query"] = q
 	}
+	extra = withPersonalTokenAuditExtra(c, extra)
 	if len(extra) > 0 {
 		entry.Extra = extra
 	}

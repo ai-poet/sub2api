@@ -300,3 +300,43 @@ func TestModelCatalogService_GetCatalog_ImageModelWithExplicitTokenCardStaysToke
 	require.Empty(t, item.PricingDetails.MediaTiers)
 	require.NotNil(t, item.EffectivePricingUSD.InputPerMTokUSD)
 }
+
+// 分组价卡的档位价优先于分组 image_price_* 列（calculateImageCost 同序）；
+// 价卡没覆盖的档位再回落到分组列。
+func TestModelCatalogService_GetCatalog_ImageTiersPreferGroupModelPricingCard(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{{
+			ID: 10, Name: "Image", Platform: PlatformAnthropic, Status: StatusActive,
+			RateMultiplier:   0.5,
+			SubscriptionType: SubscriptionTypeStandard,
+			ImagePrice1K:     testPtrFloat64(0.10),
+			ImagePrice2K:     testPtrFloat64(0.20),
+			ImagePrice4K:     testPtrFloat64(0.40),
+			ModelPricing: []ChannelModelPricing{{
+				Models:      []string{"img-model"},
+				BillingMode: BillingModeImage,
+				Intervals: []PricingInterval{
+					{TierLabel: "2K", PerRequestPrice: testPtrFloat64(0.05)},
+				},
+			}},
+		}},
+		map[int64][]string{10: {"img-model"}},
+		nil,
+		map[string]*LiteLLMModelPricing{"img-model": {OutputCostPerImage: 0.2}},
+		nil,
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	item := result.Items[0]
+
+	require.Equal(t, string(BillingModeImage), item.BillingMode)
+	for tier, unit := range map[string]float64{"1K": 0.10, "2K": 0.05, "4K": 0.40} {
+		entry := findMediaTier(t, item.PricingDetails.MediaTiers, tier)
+		require.NotNil(t, entry.EffectiveUSD, "tier %s", tier)
+		require.InDelta(t, unit*0.5, *entry.EffectiveUSD, 1e-12, "tier %s", tier)
+	}
+	require.NotNil(t, item.EffectivePricingUSD.PerImageUSD)
+	require.InDelta(t, 0.05*0.5, *item.EffectivePricingUSD.PerImageUSD, 1e-12)
+}

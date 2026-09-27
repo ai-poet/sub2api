@@ -35,6 +35,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/identityadoptiondecision"
 	"github.com/Wei-Shaw/sub2api/ent/pendingauthsession"
+	"github.com/Wei-Shaw/sub2api/ent/personaltoken"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
@@ -136,6 +137,7 @@ func checkColumn(t, c string) error {
 			idempotencyrecord.Table:        idempotencyrecord.ValidColumn,
 			identityadoptiondecision.Table: identityadoptiondecision.ValidColumn,
 			pendingauthsession.Table:       pendingauthsession.ValidColumn,
+			personaltoken.Table:            personaltoken.ValidColumn,
 			promocode.Table:                promocode.ValidColumn,
 			promocodeusage.Table:           promocodeusage.ValidColumn,
 			proxy.Table:                    proxy.ValidColumn,

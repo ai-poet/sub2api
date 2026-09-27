@@ -44,6 +44,7 @@ type AdminHandlers struct {
 	Approval              *admin.ApprovalHandler
 	Ticket                *admin.TicketHandler
 	TicketAttachment      *admin.TicketAttachmentHandler
+	PersonalToken         *admin.PersonalTokenHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -72,6 +73,7 @@ type Handlers struct {
 	PayBridge        *PayBridgeHandler
 	Ticket           *TicketHandler
 	TicketAttachment *TicketAttachmentHandler
+	PersonalToken    *PersonalTokenHandler
 }
 
 // BuildInfo contains build-time information

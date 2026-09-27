@@ -509,6 +509,12 @@ func TestAdminApprovalService_ApproveGuards(t *testing.T) {
 	_, _, err = svc.Approve(context.Background(), created.ID, apiKeyActor)
 	require.ErrorIs(t, err, ErrApprovalApproverInvalid, "admin API key 会话不能审批")
 
+	// fork：运维个人令牌是机器凭证，即使声称 admin 角色也不能审批
+	tokenActor := adminActor
+	tokenActor.AuthMethod = AuditAuthMethodPersonalToken
+	_, _, err = svc.Approve(context.Background(), created.ID, tokenActor)
+	require.ErrorIs(t, err, ErrApprovalApproverInvalid, "个人令牌不能审批")
+
 	operatorActor := ApprovalActor{UserID: 2, Role: RoleOperator, AuthMethod: AuditAuthMethodJWT}
 	_, _, err = svc.Approve(context.Background(), created.ID, operatorActor)
 	require.ErrorIs(t, err, ErrApprovalApproverInvalid)

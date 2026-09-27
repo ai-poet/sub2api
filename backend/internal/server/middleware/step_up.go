@@ -95,6 +95,14 @@ func EnforceStepUpAlways(
 }
 
 func enforceStepUp(c *gin.Context, grantChecker stepUpGrantChecker, userReader stepUpUserReader, settings stepUpSettingReader) bool {
+	// fork：运维个人令牌是机器凭证、没有会话 ID（StepUpSessionKey 会退化成用户级键，可能借用
+	// 同一用户网页会话的授权）。step-up 保护的都是敏感操作，令牌无论开关状态一律拒绝。
+	if c.GetString("auth_method") == service.AuditAuthMethodPersonalToken {
+		AbortWithError(c, 403, "STEP_UP_PERSONAL_TOKEN_FORBIDDEN",
+			"Personal token cannot access this endpoint; a two-factor verified browser session is required")
+		return false
+	}
+
 	// 功能开关关闭时直接放行（含 admin API key），恢复门控引入前的行为。
 	// settings 为 nil 时保持门控（fail-closed）：正常装配不会出现 nil。
 	if settings != nil && !settings.IsStepUpEnabled(c.Request.Context()) {

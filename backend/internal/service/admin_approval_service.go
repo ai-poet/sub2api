@@ -544,7 +544,8 @@ func (s *AdminApprovalService) Approve(ctx context.Context, id int64, approver A
 }
 
 func (s *AdminApprovalService) verifyApprover(ctx context.Context, approver ApprovalActor) error {
-	if approver.UserID <= 0 || approver.AuthMethod == AuditAuthMethodAdminAPIKey {
+	// 机器凭证（全局 Admin API Key / 运维个人令牌）不能做审批决策，必须是真人管理员会话
+	if approver.UserID <= 0 || approver.AuthMethod == AuditAuthMethodAdminAPIKey || approver.AuthMethod == AuditAuthMethodPersonalToken {
 		return ErrApprovalApproverInvalid
 	}
 	if s.users != nil {

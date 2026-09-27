@@ -38,6 +38,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/identityadoptiondecision"
 	"github.com/Wei-Shaw/sub2api/ent/pendingauthsession"
+	"github.com/Wei-Shaw/sub2api/ent/personaltoken"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
@@ -111,6 +112,8 @@ type Client struct {
 	IdentityAdoptionDecision *IdentityAdoptionDecisionClient
 	// PendingAuthSession is the client for interacting with the PendingAuthSession builders.
 	PendingAuthSession *PendingAuthSessionClient
+	// PersonalToken is the client for interacting with the PersonalToken builders.
+	PersonalToken *PersonalTokenClient
 	// PromoCode is the client for interacting with the PromoCode builders.
 	PromoCode *PromoCodeClient
 	// PromoCodeUsage is the client for interacting with the PromoCodeUsage builders.
@@ -181,6 +184,7 @@ func (c *Client) init() {
 	c.IdempotencyRecord = NewIdempotencyRecordClient(c.config)
 	c.IdentityAdoptionDecision = NewIdentityAdoptionDecisionClient(c.config)
 	c.PendingAuthSession = NewPendingAuthSessionClient(c.config)
+	c.PersonalToken = NewPersonalTokenClient(c.config)
 	c.PromoCode = NewPromoCodeClient(c.config)
 	c.PromoCodeUsage = NewPromoCodeUsageClient(c.config)
 	c.Proxy = NewProxyClient(c.config)
@@ -314,6 +318,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		IdempotencyRecord:        NewIdempotencyRecordClient(cfg),
 		IdentityAdoptionDecision: NewIdentityAdoptionDecisionClient(cfg),
 		PendingAuthSession:       NewPendingAuthSessionClient(cfg),
+		PersonalToken:            NewPersonalTokenClient(cfg),
 		PromoCode:                NewPromoCodeClient(cfg),
 		PromoCodeUsage:           NewPromoCodeUsageClient(cfg),
 		Proxy:                    NewProxyClient(cfg),
@@ -374,6 +379,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		IdempotencyRecord:        NewIdempotencyRecordClient(cfg),
 		IdentityAdoptionDecision: NewIdentityAdoptionDecisionClient(cfg),
 		PendingAuthSession:       NewPendingAuthSessionClient(cfg),
+		PersonalToken:            NewPersonalTokenClient(cfg),
 		PromoCode:                NewPromoCodeClient(cfg),
 		PromoCodeUsage:           NewPromoCodeUsageClient(cfg),
 		Proxy:                    NewProxyClient(cfg),
@@ -427,7 +433,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
 		c.GroupStatusConfig, c.GroupStatusEvent, c.GroupStatusJuiceRecord,
 		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord,
-		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PromoCode,
+		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SupportTicket, c.SupportTicketMessage, c.TLSFingerprintProfile,
 		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
@@ -448,7 +454,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
 		c.GroupStatusConfig, c.GroupStatusEvent, c.GroupStatusJuiceRecord,
 		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord,
-		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PromoCode,
+		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SupportTicket, c.SupportTicketMessage, c.TLSFingerprintProfile,
 		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
@@ -508,6 +514,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.IdentityAdoptionDecision.mutate(ctx, m)
 	case *PendingAuthSessionMutation:
 		return c.PendingAuthSession.mutate(ctx, m)
+	case *PersonalTokenMutation:
+		return c.PersonalToken.mutate(ctx, m)
 	case *PromoCodeMutation:
 		return c.PromoCode.mutate(ctx, m)
 	case *PromoCodeUsageMutation:
@@ -4063,6 +4071,139 @@ func (c *PendingAuthSessionClient) mutate(ctx context.Context, m *PendingAuthSes
 	}
 }
 
+// PersonalTokenClient is a client for the PersonalToken schema.
+type PersonalTokenClient struct {
+	config
+}
+
+// NewPersonalTokenClient returns a client for the PersonalToken from the given config.
+func NewPersonalTokenClient(c config) *PersonalTokenClient {
+	return &PersonalTokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `personaltoken.Hooks(f(g(h())))`.
+func (c *PersonalTokenClient) Use(hooks ...Hook) {
+	c.hooks.PersonalToken = append(c.hooks.PersonalToken, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `personaltoken.Intercept(f(g(h())))`.
+func (c *PersonalTokenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PersonalToken = append(c.inters.PersonalToken, interceptors...)
+}
+
+// Create returns a builder for creating a PersonalToken entity.
+func (c *PersonalTokenClient) Create() *PersonalTokenCreate {
+	mutation := newPersonalTokenMutation(c.config, OpCreate)
+	return &PersonalTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PersonalToken entities.
+func (c *PersonalTokenClient) CreateBulk(builders ...*PersonalTokenCreate) *PersonalTokenCreateBulk {
+	return &PersonalTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PersonalTokenClient) MapCreateBulk(slice any, setFunc func(*PersonalTokenCreate, int)) *PersonalTokenCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PersonalTokenCreateBulk{err: fmt.Errorf("calling to PersonalTokenClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PersonalTokenCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PersonalTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PersonalToken.
+func (c *PersonalTokenClient) Update() *PersonalTokenUpdate {
+	mutation := newPersonalTokenMutation(c.config, OpUpdate)
+	return &PersonalTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PersonalTokenClient) UpdateOne(_m *PersonalToken) *PersonalTokenUpdateOne {
+	mutation := newPersonalTokenMutation(c.config, OpUpdateOne, withPersonalToken(_m))
+	return &PersonalTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PersonalTokenClient) UpdateOneID(id int64) *PersonalTokenUpdateOne {
+	mutation := newPersonalTokenMutation(c.config, OpUpdateOne, withPersonalTokenID(id))
+	return &PersonalTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PersonalToken.
+func (c *PersonalTokenClient) Delete() *PersonalTokenDelete {
+	mutation := newPersonalTokenMutation(c.config, OpDelete)
+	return &PersonalTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PersonalTokenClient) DeleteOne(_m *PersonalToken) *PersonalTokenDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PersonalTokenClient) DeleteOneID(id int64) *PersonalTokenDeleteOne {
+	builder := c.Delete().Where(personaltoken.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PersonalTokenDeleteOne{builder}
+}
+
+// Query returns a query builder for PersonalToken.
+func (c *PersonalTokenClient) Query() *PersonalTokenQuery {
+	return &PersonalTokenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePersonalToken},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PersonalToken entity by its id.
+func (c *PersonalTokenClient) Get(ctx context.Context, id int64) (*PersonalToken, error) {
+	return c.Query().Where(personaltoken.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PersonalTokenClient) GetX(ctx context.Context, id int64) *PersonalToken {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PersonalTokenClient) Hooks() []Hook {
+	return c.hooks.PersonalToken
+}
+
+// Interceptors returns the client interceptors.
+func (c *PersonalTokenClient) Interceptors() []Interceptor {
+	return c.inters.PersonalToken
+}
+
+func (c *PersonalTokenClient) mutate(ctx context.Context, m *PersonalTokenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PersonalTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PersonalTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PersonalTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PersonalTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PersonalToken mutation op: %q", m.Op())
+	}
+}
+
 // PromoCodeClient is a client for the PromoCode schema.
 type PromoCodeClient struct {
 	config
@@ -7066,11 +7207,11 @@ type (
 		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
 		Group, GroupStatusAstraCheckRun, GroupStatusConfig, GroupStatusEvent,
 		GroupStatusJuiceRecord, GroupStatusRecord, GroupStatusState, IdempotencyRecord,
-		IdentityAdoptionDecision, PendingAuthSession, PromoCode, PromoCodeUsage, Proxy,
-		RedeemCode, SecuritySecret, Setting, SupportTicket, SupportTicketMessage,
-		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota, UserReferral,
-		UserSubscription []ent.Hook
+		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
+		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
+		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserPlatformQuota, UserReferral, UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, AdminApprovalRequest, Announcement,
@@ -7078,11 +7219,11 @@ type (
 		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
 		Group, GroupStatusAstraCheckRun, GroupStatusConfig, GroupStatusEvent,
 		GroupStatusJuiceRecord, GroupStatusRecord, GroupStatusState, IdempotencyRecord,
-		IdentityAdoptionDecision, PendingAuthSession, PromoCode, PromoCodeUsage, Proxy,
-		RedeemCode, SecuritySecret, Setting, SupportTicket, SupportTicketMessage,
-		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota, UserReferral,
-		UserSubscription []ent.Interceptor
+		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
+		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
+		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserPlatformQuota, UserReferral, UserSubscription []ent.Interceptor
 	}
 )
 

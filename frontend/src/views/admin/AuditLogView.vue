@@ -485,7 +485,9 @@ const methodOptions = computed(() => [
 const authMethodOptions = computed(() => [
   { value: '', label: t('admin.audit.filters.all') },
   { value: 'jwt', label: 'JWT' },
-  { value: 'admin_api_key', label: 'Admin API Key' }
+  { value: 'admin_api_key', label: 'Admin API Key' },
+  // fork：运维管理员个人令牌（Authorization: Bearer pat-...）
+  { value: 'personal_token', label: t('admin.audit.filters.personalToken') }
 ])
 
 const resultOptions = computed(() => [

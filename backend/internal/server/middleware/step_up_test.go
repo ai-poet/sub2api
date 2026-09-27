@@ -164,3 +164,19 @@ func TestEnforceStepUpTypedNilSettingServiceFailsClosed(t *testing.T) {
 	require.False(t, ok)
 	require.Equal(t, http.StatusUnauthorized, rec.Code)
 }
+
+// 运维个人令牌是机器凭证：无论 step-up 开关开关、无论有没有授权，一律拒绝（fork 本地）。
+func TestEnforceStepUpRejectsPersonalTokenRegardlessOfSwitch(t *testing.T) {
+	for _, settings := range []stubStepUpSettingReader{{enabled: true}, {enabled: false}} {
+		c, rec := newStepUpTestContext(t)
+		c.Set("auth_method", service.AuditAuthMethodPersonalToken)
+		c.Set(string(ContextKeyUser), AuthSubject{UserID: 2})
+
+		ok := enforceStepUp(c, stubStepUpGrantChecker{granted: true}, stubStepUpUserReader{user: &service.User{ID: 2, TotpEnabled: true}}, settings)
+
+		require.False(t, ok, "switch enabled=%v", settings.enabled)
+		require.True(t, c.IsAborted())
+		require.Equal(t, http.StatusForbidden, rec.Code)
+		require.Contains(t, rec.Body.String(), "STEP_UP_PERSONAL_TOKEN_FORBIDDEN")
+	}
+}

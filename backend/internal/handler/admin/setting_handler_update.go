@@ -32,6 +32,7 @@ type UpdateSettingsRequest struct {
 	ApprovalPendingLimitPerUser        *int    `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
 	ApprovalBatchLimit                 *int    `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
 	TicketNotifyServerChanEnabled      *bool   `json:"ticket_notify_serverchan_enabled"`
+	PersonalTokenEnabled               *bool   `json:"personal_token_enabled"`
 	GroupStatusNotifyServerChanUID     *string `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKey *string `json:"group_status_notify_serverchan_sendkey"`
 	CommunityQRCode                    *string `json:"community_qr_code"`
@@ -2018,6 +2019,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		ApprovalPendingLimitPerUser:                            updatedSettings.ApprovalPendingLimitPerUser,
 		ApprovalBatchLimit:                                     updatedSettings.ApprovalBatchLimit,
 		TicketNotifyServerChanEnabled:                          settings.TicketNotifyServerChanEnabled,
+		PersonalTokenEnabled:                                   settings.PersonalTokenEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
@@ -2421,6 +2423,11 @@ func applyForkSettingsFromRequest(
 	settings.TicketNotifyServerChanEnabled = previous.TicketNotifyServerChanEnabled
 	if req.TicketNotifyServerChanEnabled != nil {
 		settings.TicketNotifyServerChanEnabled = *req.TicketNotifyServerChanEnabled
+	}
+	// 运维管理员个人令牌总开关：关闭后所有令牌立即不可用（不删除）
+	settings.PersonalTokenEnabled = previous.PersonalTokenEnabled
+	if req.PersonalTokenEnabled != nil {
+		settings.PersonalTokenEnabled = *req.PersonalTokenEnabled
 	}
 	settings.GroupStatusNotifyServerChanUID = previous.GroupStatusNotifyServerChanUID
 	if req.GroupStatusNotifyServerChanUID != nil {

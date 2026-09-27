@@ -22,6 +22,9 @@ const (
 	AuditAuthMethodPasskey     = "passkey"
 	// AuditAuthMethodApprovalReplay 运维审批通过后由审批服务以管理员身份内部重放的请求。
 	AuditAuthMethodApprovalReplay = "approval_replay"
+	// AuditAuthMethodPersonalToken 运维管理员个人令牌（fork 本地，Authorization: Bearer pat-...）。
+	// 机器凭证：没有会话 ID，不能通过 step-up，也不能做审批决策。
+	AuditAuthMethodPersonalToken = "personal_token"
 
 	// auditRequestBodyMaxBytes 请求体脱敏后入库的最大长度（字节），超出截断。
 	auditRequestBodyMaxBytes = 16 * 1024
@@ -52,6 +55,10 @@ const (
 	AuditActionAdminTicketReply  = "admin.tickets.reply"
 	AuditActionAdminTicketClose  = "admin.tickets.close"
 	AuditActionAdminTicketReopen = "admin.tickets.reopen"
+	// 运维个人令牌（fork 本地）：本人生成 / 吊销、管理员吊销。
+	AuditActionPersonalTokenGenerate    = "user.personal_token.generate"
+	AuditActionPersonalTokenRevoke      = "user.personal_token.revoke"
+	AuditActionAdminPersonalTokenRevoke = "admin.personal_tokens.revoke"
 )
 
 // AuditLog 一条管理面操作审计记录。

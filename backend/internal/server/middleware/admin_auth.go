@@ -18,7 +18,7 @@ func NewAdminAuthMiddleware(
 	settingService *service.SettingService,
 	auditService *service.AuditLogService,
 ) AdminAuthMiddleware {
-	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService, nil))
+	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService, nil, nil))
 }
 
 // NewAdminAuthMiddlewareWithApprovalGate 创建带运维审批门的管理员认证中间件（生产 wire 使用）。
@@ -29,19 +29,34 @@ func NewAdminAuthMiddlewareWithApprovalGate(
 	auditService *service.AuditLogService,
 	gate service.AdminApprovalGate,
 ) AdminAuthMiddleware {
-	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService, gate))
+	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService, gate, nil))
+}
+
+// NewConsoleAdminAuthMiddleware 生产 wire 使用的完整版本：带运维审批门，并接受运维个人令牌（fork 本地）。
+// tokens 为 nil 时 pat- 开头的 Bearer 一律 401（fail-closed）。
+func NewConsoleAdminAuthMiddleware(
+	authService *service.AuthService,
+	userService *service.UserService,
+	settingService *service.SettingService,
+	auditService *service.AuditLogService,
+	gate service.AdminApprovalGate,
+	tokens PersonalTokenAuthenticator,
+) AdminAuthMiddleware {
+	return AdminAuthMiddleware(adminAuth(authService, userService, settingService, auditService, gate, tokens))
 }
 
 // adminAuth 管理员认证中间件实现
-// 支持两种认证方式（通过不同的 header 区分）：
+// 支持三种认证方式（通过不同的 header 区分）：
 // 1. Admin API Key: x-api-key: <admin-api-key>
 // 2. JWT Token: Authorization: Bearer <jwt-token> (需要管理员角色)
+// 3. 运维个人令牌（fork 本地）: Authorization: Bearer pat-<64hex>，认证后与 operator 的 JWT 会话共用同一个角色门
 func adminAuth(
 	authService *service.AuthService,
 	userService *service.UserService,
 	settingService *service.SettingService,
 	auditService *service.AuditLogService,
 	gate service.AdminApprovalGate,
+	tokens PersonalTokenAuthenticator,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 审批通过后的内部重放：request context 带 ApprovalReplay 标记（只能由 Go 代码设置），
@@ -86,6 +101,15 @@ func adminAuth(
 				token := strings.TrimSpace(parts[1])
 				if token == "" {
 					AbortWithError(c, 401, "UNAUTHORIZED", "Authorization required")
+					return
+				}
+				// fork：pat- 前缀的一定不是 JWT（JWT 以 "eyJ" 开头），走个人令牌入口；
+				// 该入口只负责认证，授权与 JWT 共用 authorizeConsoleUser。
+				if strings.HasPrefix(token, service.PersonalTokenPrefix) {
+					if !validatePersonalTokenForAdmin(c, token, tokens, auditService, gate) {
+						return
+					}
+					c.Next()
 					return
 				}
 				if !validateJWTForAdmin(c, token, authService, userService, settingService, auditService, gate) {
@@ -224,34 +248,8 @@ func validateJWTForAdmin(
 		return false
 	}
 
-	// 检查控制台权限：admin 全权放行；operator 按 console_scope.go 的表决定出口（默认拒绝）：
-	//   - 读白名单 / 显式写条目 → 放行；
-	//   - 永不允许的动作（删除用户）→ 403，不入队；
-	//   - 用户 / 订阅管理的写操作 → 交给审批门入队并返回 202，绝不到达 handler；
-	//   - 其它 → 403。
-	// 其它角色一律 403。operator 被拒绝 / 入队的请求在此直接写审计——审计中间件挂在本中间件之后，
-	// 不会记录认证层的响应。admin API key 分支不经过这里，合成的始终是真 admin。
-	if !user.IsAdmin() {
-		if !user.IsOperator() {
-			AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
-			return false
-		}
-		method, fullPath := c.Request.Method, c.FullPath()
-		switch {
-		case OperatorScopeAllows(method, fullPath):
-			// 放行
-		case OperatorActionRefused(method, fullPath):
-			recordOperatorApprovalAudit(c, auditService, user, nil, nil, 403, "OPERATOR_ACTION_FORBIDDEN")
-			AbortWithError(c, 403, "OPERATOR_ACTION_FORBIDDEN", "This action requires the administrator")
-			return false
-		case OperatorApprovalRequired(method, fullPath):
-			captureOperatorApproval(c, gate, auditService, user)
-			return false
-		default:
-			recordOperatorScopeDenied(c, auditService, user)
-			AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
-			return false
-		}
+	if !authorizeConsoleUser(c, user, service.AuditAuthMethodJWT, gate, auditService) {
+		return false
 	}
 
 	c.Set(string(ContextKeyUser), AuthSubject{
@@ -264,4 +262,48 @@ func validateJWTForAdmin(
 	c.Set("auth_method", "jwt")
 
 	return true
+}
+
+// authorizeConsoleUser 控制台角色门：JWT 会话与运维个人令牌共用的唯一出口（fork 本地）。
+// admin 全权放行；operator 按 console_scope.go 的表决定出口（默认拒绝）：
+//   - 读白名单 / 显式写条目 → 放行；
+//   - 永不允许的动作（删除用户）→ 403，不入队；
+//   - 用户 / 订阅管理的写操作 → 交给审批门入队并返回 202，绝不到达 handler；
+//   - 其它 → 403。
+//
+// 其它角色一律 403。operator 被拒绝 / 入队的请求在此直接写审计——审计中间件挂在本中间件之后，
+// 不会记录认证层的响应。admin API key 分支不经过这里，合成的始终是真 admin。
+// 返回 false 表示请求已被中断。
+func authorizeConsoleUser(
+	c *gin.Context,
+	user *service.User,
+	authMethod string,
+	gate service.AdminApprovalGate,
+	auditService *service.AuditLogService,
+) bool {
+	// 先写入认证方式：拒绝 / 入队分支在这里直接落审计，需要知道这次用的是哪种凭证
+	c.Set("auth_method", authMethod)
+	if user.IsAdmin() {
+		return true
+	}
+	if !user.IsOperator() {
+		AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
+		return false
+	}
+	method, fullPath := c.Request.Method, c.FullPath()
+	switch {
+	case OperatorScopeAllows(method, fullPath):
+		return true
+	case OperatorActionRefused(method, fullPath):
+		recordOperatorApprovalAudit(c, auditService, user, nil, nil, 403, "OPERATOR_ACTION_FORBIDDEN")
+		AbortWithError(c, 403, "OPERATOR_ACTION_FORBIDDEN", "This action requires the administrator")
+		return false
+	case OperatorApprovalRequired(method, fullPath):
+		captureOperatorApproval(c, gate, auditService, user)
+		return false
+	default:
+		recordOperatorScopeDenied(c, auditService, user)
+		AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
+		return false
+	}
 }

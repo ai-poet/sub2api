@@ -131,6 +131,8 @@ var operatorForbiddenPrefixes = []string{
 	"/api/v1/admin/data-management",
 	"/api/v1/admin/audit-logs",
 	"/api/v1/admin/redeem-codes",
+	// fork：运维个人令牌的管理员视图（查看 / 吊销任何人的令牌）只允许 admin
+	"/api/v1/admin/personal-tokens",
 }
 
 // operatorApprovalAllowedPrefixes 审批范围只能落在用户 / 订阅管理与用户 API Key 上。

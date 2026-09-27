@@ -8862,6 +8862,7 @@ const form = reactive<SettingsForm>({
   approval_pending_limit_per_user: 20,
   approval_batch_limit: 50,
   ticket_notify_serverchan_enabled: false,
+  personal_token_enabled: false,
   group_status_notify_serverchan_uid: "",
   group_status_notify_serverchan_sendkey: "",
   group_status_notify_serverchan_sendkey_configured: false,
@@ -10556,6 +10557,7 @@ async function saveSettings() {
       approval_batch_limit: Number(form.approval_batch_limit),
       ticket_notify_serverchan_enabled:
         form.ticket_notify_serverchan_enabled,
+      personal_token_enabled: form.personal_token_enabled,
       group_status_notify_serverchan_uid:
         form.group_status_notify_serverchan_uid,
       group_status_notify_serverchan_sendkey:

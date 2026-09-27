@@ -38,6 +38,12 @@ func RegisterUserRoutes(
 			user.GET("/api-keys/:id/usage/daily", panelRateLimiter.Heavy(), h.Usage.GetMyAPIKeyDailyUsage)
 			user.GET("/platform-quotas", h.User.GetMyPlatformQuotas)
 
+			// 运维管理员个人令牌的自助管理（fork 本地）。本组只挂 jwtAuth，只认 JWT：
+			// 个人令牌本身调不到这里，所以令牌不能生成、覆盖或吊销令牌。
+			user.GET("/personal-token", h.PersonalToken.GetStatus)
+			user.POST("/personal-token", panelRateLimiter.Heavy(), h.PersonalToken.Generate)
+			user.DELETE("/personal-token", h.PersonalToken.Revoke)
+
 			// TOTP 双因素认证
 			totp := user.Group("/totp")
 			{

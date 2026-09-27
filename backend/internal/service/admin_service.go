@@ -710,6 +710,8 @@ type adminServiceImpl struct {
 	compositeResolver    *CompositeRouteResolver
 	// 分组平台变更后用来失效渠道缓存；可为 nil（缓存会在 TTL 到期后自然重建）
 	channelCacheInvalidator ChannelCacheInvalidator
+	// fork：角色离开 operator 时吊销个人令牌（SetPersonalTokenRevoker 注入，可为 nil）
+	personalTokenRevoker PersonalTokenRevoker
 }
 
 // ChannelCacheInvalidator 失效渠道缓存。

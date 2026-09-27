@@ -502,6 +502,8 @@ export interface SystemSettings {
   approval_batch_limit: number
   // 工单（新工单 / 用户回复）→ Server酱³ 推送（fork 自有，复用同一 UID / SendKey）
   ticket_notify_serverchan_enabled: boolean
+  // 运维管理员个人令牌总开关（fork 自有，默认关闭）
+  personal_token_enabled: boolean
   community_qr_code: string
   community_group_url: string
   client_changelog_github_repo: string
@@ -771,6 +773,7 @@ export interface UpdateSettingsRequest {
   approval_pending_limit_per_user?: number;
   approval_batch_limit?: number;
   ticket_notify_serverchan_enabled?: boolean;
+  personal_token_enabled?: boolean;
   group_status_notify_serverchan_uid?: string;
   group_status_notify_serverchan_sendkey?: string;
   community_qr_code?: string;

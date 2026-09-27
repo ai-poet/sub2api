@@ -346,6 +346,7 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyApprovalPendingLimitPerUser] = strconv.Itoa(settings.ApprovalPendingLimitPerUser)
 	updates[SettingKeyApprovalBatchLimit] = strconv.Itoa(settings.ApprovalBatchLimit)
 	updates[SettingKeyTicketNotifyServerChanEnabled] = strconv.FormatBool(settings.TicketNotifyServerChanEnabled)
+	updates[SettingKeyPersonalTokenEnabled] = strconv.FormatBool(settings.PersonalTokenEnabled)
 	updates[SettingKeyGroupStatusNotifyServerChanUID] = strings.TrimSpace(settings.GroupStatusNotifyServerChanUID)
 	// SendKey 留空表示保留已保存的密钥
 	if settings.GroupStatusNotifyServerChanSendKey != "" {

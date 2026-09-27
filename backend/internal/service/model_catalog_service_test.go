@@ -326,6 +326,204 @@ func TestModelCatalogService_GetCatalog_SupportsPerRequestAndImageModes(t *testi
 	require.InDelta(t, 0.04, *result.Items[1].EffectivePricingUSD.PerRequestUSD, 1e-12)
 }
 
+// findCatalogItem 按分组取出目录条目，找不到直接让用例失败。
+func findCatalogItem(t *testing.T, items []ModelCatalogItem, groupID int64) ModelCatalogItem {
+	t.Helper()
+	for _, item := range items {
+		if item.BestGroup.ID == groupID {
+			return item
+		}
+	}
+	require.FailNowf(t, "catalog item not found", "group=%d", groupID)
+	return ModelCatalogItem{}
+}
+
+// 分组逐模型定价卡（Group.ModelPricing）是扣费解析链的第一优先级，模型广场必须同源：
+// 按量付费分组、订阅分组都显示「分组价 × 倍率」，没配价卡的分组才回落到默认价。
+func TestModelCatalogService_GetCatalog_UsesGroupModelPricingCards(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{
+			{
+				ID: 10, Name: "PayAsYouGo", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 0.5, SubscriptionType: SubscriptionTypeStandard,
+				ModelPricing: []ChannelModelPricing{{
+					Models:      []string{"claude-sonnet-4"},
+					BillingMode: BillingModeToken,
+					InputPrice:  testPtrFloat64(1e-6),
+					OutputPrice: testPtrFloat64(2e-6),
+				}},
+			},
+			{
+				ID: 20, Name: "Subscription", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeSubscription,
+				ModelPricing: []ChannelModelPricing{{
+					Models:      []string{"claude-*"},
+					BillingMode: BillingModeToken,
+					InputPrice:  testPtrFloat64(0.8e-6),
+					OutputPrice: testPtrFloat64(4e-6),
+				}},
+			},
+			{
+				ID: 30, Name: "Default", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+			},
+		},
+		map[int64][]string{
+			10: {"claude-sonnet-4"},
+			20: {"claude-sonnet-4"},
+			30: {"claude-sonnet-4"},
+		},
+		nil,
+		map[string]*LiteLLMModelPricing{
+			"claude-sonnet-4": {
+				InputCostPerToken:           3e-6,
+				OutputCostPerToken:          15e-6,
+				CacheCreationInputTokenCost: 3.75e-6,
+				CacheReadInputTokenCost:     0.3e-6,
+			},
+		},
+		nil,
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 3)
+
+	payg := findCatalogItem(t, result.Items, 10)
+	require.InDelta(t, 0.5, *payg.EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+	require.InDelta(t, 1.0, *payg.EffectivePricingUSD.OutputPerMTokUSD, 1e-9)
+	// 价卡没配的缓存价沿用默认价，同样乘分组倍率。
+	require.InDelta(t, 1.875, *payg.EffectivePricingUSD.CacheWritePerMTokUSD, 1e-9)
+	require.InDelta(t, 0.15, *payg.EffectivePricingUSD.CacheReadPerMTokUSD, 1e-9)
+	// 官方参考价不受分组价卡影响。
+	require.InDelta(t, 3.0, *payg.OfficialPricing.InputPerMTokUSD, 1e-9)
+
+	sub := findCatalogItem(t, result.Items, 20)
+	require.InDelta(t, 0.8, *sub.EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+	require.InDelta(t, 4.0, *sub.EffectivePricingUSD.OutputPerMTokUSD, 1e-9)
+
+	fallback := findCatalogItem(t, result.Items, 30)
+	require.InDelta(t, 3.0, *fallback.EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+	require.InDelta(t, 15.0, *fallback.EffectivePricingUSD.OutputPerMTokUSD, 1e-9)
+
+	// 同伴分组的价格来自各自条目，也要反映分组价卡。
+	peerInputs := map[int64]float64{}
+	for _, other := range fallback.OtherGroups {
+		peerInputs[other.Group.ID] = *other.EffectivePricingUSD.InputPerMTokUSD
+	}
+	require.InDelta(t, 0.5, peerInputs[10], 1e-9)
+	require.InDelta(t, 0.8, peerInputs[20], 1e-9)
+}
+
+// 解析链是 分组价卡 → 渠道价卡 → 默认价：同一模型同时有两张卡时，分组价卡赢。
+func TestModelCatalogService_GetCatalog_GroupModelPricingBeatsChannelPricing(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{
+			{
+				ID: 10, Name: "GroupCard", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+				ModelPricing: []ChannelModelPricing{{
+					Models:      []string{"claude-sonnet-4"},
+					BillingMode: BillingModeToken,
+					InputPrice:  testPtrFloat64(1e-6),
+				}},
+			},
+			{
+				ID: 20, Name: "ChannelOnly", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+			},
+		},
+		map[int64][]string{
+			10: {"claude-sonnet-4"},
+			20: {"claude-sonnet-4"},
+		},
+		nil,
+		map[string]*LiteLLMModelPricing{
+			"claude-sonnet-4": {InputCostPerToken: 3e-6, OutputCostPerToken: 15e-6},
+		},
+		[]ChannelModelPricing{{
+			Platform:    PlatformAnthropic,
+			Models:      []string{"claude-sonnet-4"},
+			BillingMode: BillingModeToken,
+			InputPrice:  testPtrFloat64(2e-6),
+		}},
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 2)
+
+	require.InDelta(t, 1.0, *findCatalogItem(t, result.Items, 10).EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+	require.InDelta(t, 2.0, *findCatalogItem(t, result.Items, 20).EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+}
+
+// 用户专属倍率照样叠加在分组价卡上，与扣费侧 ResolveUserGroupRateMultiplier 同口径。
+func TestModelCatalogService_GetCatalog_UserOverrideRateAppliesToGroupModelPricing(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{{
+			ID: 10, Name: "GroupCard", Platform: PlatformAnthropic, Status: StatusActive,
+			RateMultiplier: 1.4, SubscriptionType: SubscriptionTypeStandard,
+			ModelPricing: []ChannelModelPricing{{
+				Models:      []string{"claude-sonnet-4"},
+				BillingMode: BillingModeToken,
+				InputPrice:  testPtrFloat64(1e-6),
+			}},
+		}},
+		map[int64][]string{10: {"claude-sonnet-4"}},
+		map[int64]float64{10: 0.6},
+		map[string]*LiteLLMModelPricing{
+			"claude-sonnet-4": {InputCostPerToken: 3e-6, OutputCostPerToken: 15e-6},
+		},
+		nil,
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	require.Equal(t, "user_override", result.Items[0].BestGroup.RateSource)
+	require.InDelta(t, 0.6, *result.Items[0].EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+}
+
+// 分组关闭长上下文阶梯后扣费只取最低档，模型广场也不能再挂长上下文徽章。
+func TestModelCatalogService_GetCatalog_LongContextBadgeFollowsGroupSwitch(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{
+			{
+				ID: 10, Name: "LongOn", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+				LongContextPricingEnabled: true,
+			},
+			{
+				ID: 20, Name: "LongOff", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+				LongContextPricingEnabled: false,
+			},
+		},
+		map[int64][]string{
+			10: {"claude-sonnet-4"},
+			20: {"claude-sonnet-4"},
+		},
+		nil,
+		map[string]*LiteLLMModelPricing{
+			"claude-sonnet-4": {
+				InputCostPerToken:               3e-6,
+				OutputCostPerToken:              15e-6,
+				LongContextInputTokenThreshold:  200000,
+				LongContextInputCostMultiplier:  2,
+				LongContextOutputCostMultiplier: 1.5,
+			},
+		},
+		nil,
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 2)
+
+	require.True(t, findCatalogItem(t, result.Items, 10).PricingDetails.HasLongContextMultiplier)
+	require.False(t, findCatalogItem(t, result.Items, 20).PricingDetails.HasLongContextMultiplier)
+}
+
 // 上下文窗口：客户端用量计的分母。来源不知道时必须整个缺省，
 // 不能退化成 0 —— 客户端靠字段缺失来决定不显示百分比。
 func TestCatalogContextWindow_OmittedWhenUnknown(t *testing.T) {

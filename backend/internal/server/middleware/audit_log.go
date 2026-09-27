@@ -62,6 +62,8 @@ var auditExtraAllowedKeys = map[string]struct{}{
 	"approval_id": {}, "approval_requester_id": {}, "approval_status": {},
 	// fork：工单（工单 id / 状态 / 发起人）
 	"ticket_id": {}, "ticket_status": {}, "ticket_user_id": {},
+	// fork：运维个人令牌（令牌 ID，不含任何凭证内容）
+	"personal_token_id": {},
 }
 
 // SetAuditExtra adds allowlisted, scalar details to the current audit entry.
@@ -122,6 +124,8 @@ var auditSensitiveReads = map[string]string{
 	"GET /api/v1/admin/groups/:id/api-keys":       "admin.groups.api_keys.read",
 	"GET /api/v1/admin/backups/s3-config":         "admin.backups.s3_config.read",
 	"GET /api/v1/admin/data-management/s3/config": "admin.data_management.s3_config.read",
+	// fork：管理员查看全部运维个人令牌（只含提示串）
+	"GET /api/v1/admin/personal-tokens": "admin.personal_tokens.read",
 }
 
 // auditActionOverrides 变更类请求的动作名精确映射（未命中时自动推导）。
@@ -155,6 +159,10 @@ var auditActionOverrides = map[string]string{
 	"POST /api/v1/admin/tickets/:id/messages": service.AuditActionAdminTicketReply,
 	"POST /api/v1/admin/tickets/:id/close":    service.AuditActionAdminTicketClose,
 	"POST /api/v1/admin/tickets/:id/reopen":   service.AuditActionAdminTicketReopen,
+	// fork：运维个人令牌的生成 / 吊销
+	"POST /api/v1/user/personal-token":              service.AuditActionPersonalTokenGenerate,
+	"DELETE /api/v1/user/personal-token":            service.AuditActionPersonalTokenRevoke,
+	"DELETE /api/v1/admin/personal-tokens/:user_id": service.AuditActionAdminPersonalTokenRevoke,
 }
 
 // auditBodyOmittedRoutes 请求体几乎整体由凭证构成的路由（如整块粘贴 auth JSON 的导入接口）。

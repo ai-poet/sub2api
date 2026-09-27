@@ -176,7 +176,9 @@ type SystemSettings struct {
 	ApprovalPendingLimitPerUser int
 	ApprovalBatchLimit          int
 	// 工单（新工单 / 用户回复）→ Server酱³ 推送（fork 自有，复用同一 UID / SendKey）
-	TicketNotifyServerChanEnabled                bool
+	TicketNotifyServerChanEnabled bool
+	// 运维管理员个人令牌总开关（fork 自有，默认关闭）
+	PersonalTokenEnabled                         bool
 	GroupStatusNotifyServerChanUID               string
 	GroupStatusNotifyServerChanSendKey           string
 	GroupStatusNotifyServerChanSendKeyConfigured bool

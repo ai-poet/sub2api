@@ -487,25 +487,22 @@
 
         <fieldset v-if="!showEditModal" data-tour="key-form-provider">
           <legend class="input-label">{{ t('keys.providerLabel') }}</legend>
-          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div v-if="createProviderOptions.length" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <label
               v-for="provider in createProviderOptions"
               :key="provider.value"
-              class="relative min-w-0"
-              :class="provider.count === 0 ? 'cursor-not-allowed' : 'cursor-pointer'"
+              class="relative min-w-0 cursor-pointer"
             >
               <input
                 type="radio"
                 name="key-provider"
                 :value="provider.value"
                 :checked="createProvider === provider.value"
-                :disabled="provider.count === 0"
                 class="peer sr-only"
                 @change="selectCreateProvider(provider.value)"
               />
               <span
-                class="flex h-full flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-3 text-center transition-colors peer-checked:border-primary-500 peer-checked:bg-primary-50/60 peer-checked:ring-1 peer-checked:ring-primary-500 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-500 peer-disabled:opacity-40 dark:border-dark-600 dark:bg-dark-800 dark:peer-checked:border-primary-500 dark:peer-checked:bg-primary-500/10"
-                :class="provider.count > 0 && 'hover:border-primary-300 dark:hover:border-primary-700'"
+                class="flex h-full flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-3 text-center transition-colors hover:border-primary-300 peer-checked:border-primary-500 peer-checked:bg-primary-50/60 peer-checked:ring-1 peer-checked:ring-primary-500 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-500 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-primary-700 dark:peer-checked:border-primary-500 dark:peer-checked:bg-primary-500/10"
               >
                 <span class="flex h-8 items-center justify-center gap-1.5" aria-hidden="true">
                   <span
@@ -1526,11 +1523,11 @@ const groupOptions = computed(() =>
 )
 
 const createProvider = ref<KeyGroupProvider>('anthropic')
-const createProviderOptions = computed(() => KEY_GROUP_PROVIDERS.map((value) => ({
-  value,
-  label: t(`keys.providers.${value}`),
-  count: groups.value.filter((group) => getKeyGroupProvider(group.platform) === value).length
-})))
+// Only providers that have at least one group are offered.
+const createProviderOptions = computed(() => KEY_GROUP_PROVIDERS
+  .filter((value) => groups.value.some((group) => getKeyGroupProvider(group.platform) === value))
+  .map((value) => ({ value, label: t(`keys.providers.${value}`) }))
+)
 
 const formGroupOptions = computed(() => showEditModal.value
   ? groupOptions.value
@@ -1546,8 +1543,8 @@ const selectCreateProvider = (provider: KeyGroupProvider) => {
 // Also handles groups arriving after the create dialog has already opened.
 watch([showCreateModal, createProviderOptions], ([isOpen, providers], [wasOpen]) => {
   if (!isOpen) return
-  if (!wasOpen || !providers.some((provider) => provider.value === createProvider.value && provider.count > 0)) {
-    selectCreateProvider(providers.find((provider) => provider.count > 0)?.value ?? 'anthropic')
+  if (!wasOpen || !providers.some((provider) => provider.value === createProvider.value)) {
+    selectCreateProvider(providers[0]?.value ?? 'anthropic')
   }
   if (!formGroupOptions.value.some((group) => group.value === formData.value.group_id)) {
     formData.value.group_id = null

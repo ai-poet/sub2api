@@ -37,6 +37,7 @@ func RegisterAdminRoutes(
 		registerConsoleRoutes(admin, h)
 		registerApprovalRoutes(admin, h)
 		registerTicketRoutes(admin, h)
+		registerPersonalTokenRoutes(admin, h)
 
 		// 仪表盘
 		registerDashboardRoutes(admin, h)
@@ -210,6 +211,18 @@ func registerTicketRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		tickets.POST("/:id/messages", h.Admin.Ticket.Reply)
 		tickets.POST("/:id/close", h.Admin.Ticket.Close)
 		tickets.POST("/:id/reopen", h.Admin.Ticket.Reopen)
+	}
+}
+
+// registerPersonalTokenRoutes 运维管理员个人令牌的管理员视图（fork 本地）：查看全部、吊销任意一个。
+// 只允许 admin：不在 operator 白名单里（默认拒绝），再叠一层 AdminOnly；
+// routes/console_scope_coverage_test.go 的 operatorForbiddenPrefixes 钉死运维永远管不了别人的令牌。
+func registerPersonalTokenRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	tokens := admin.Group("/personal-tokens")
+	tokens.Use(middleware.AdminOnly())
+	{
+		tokens.GET("", h.Admin.PersonalToken.List)
+		tokens.DELETE("/:user_id", h.Admin.PersonalToken.Revoke)
 	}
 }
 

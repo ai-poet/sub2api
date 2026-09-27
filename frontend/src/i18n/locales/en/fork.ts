@@ -567,6 +567,11 @@ export default {
         "ignoreInvalidApiKeyErrorsHint": "When enabled, invalid or missing API key errors (INVALID_API_KEY, API_KEY_REQUIRED) will not be written to the error log."
       }
     },
+    "audit": {
+      "filters": {
+        "personalToken": "Personal token"
+      }
+    },
     "referral": {
       "title": "Referral Settings",
       "description": "Configure referral reward system parameters",
@@ -644,6 +649,32 @@ export default {
         "ticketNotify": {
           "enabled": "Ticket push",
           "enabledHint": "Push a message with a link to the ticket whenever a user opens a ticket or adds a reply (uses the UID / SendKey above); staff replies are not pushed."
+        },
+        "personalToken": {
+          "title": "Operator personal tokens",
+          "description": "When enabled, operators can generate a personal token on their profile page so scripts can call the admin API with an Authorization: Bearer header. A token has exactly the same access as the operator's browser session (same allowlist; user and subscription writes still go through approval), cannot pass two-factor step-up and cannot approve requests. Turning this off disables every token immediately without deleting them; turning it back on restores them.",
+          "listTitle": "Issued tokens",
+          "refresh": "Refresh",
+          "empty": "No operator has generated a token yet",
+          "loadFailed": "Failed to load tokens",
+          "createdAt": "Created {date}",
+          "expiresAt": "Expires {date}",
+          "neverExpires": "Never expires",
+          "lastUsed": "Last used {date} ({ip})",
+          "neverUsed": "Never used",
+          "revoke": "Revoke",
+          "revokeTitle": "Revoke personal token",
+          "revokeConfirm": "Scripts using the token of {email} will stop working immediately and a new token must be generated. Revoke it?",
+          "revoked": "Token revoked",
+          "revokeFailed": "Failed to revoke token",
+          "states": {
+            "active": "Active",
+            "expired": "Expired",
+            "revoked": "Invalid (password or email changed)",
+            "not_eligible": "Invalid (no longer an operator)",
+            "user_inactive": "Invalid (account disabled)",
+            "user_missing": "Invalid (account missing)"
+          }
         },
         "communityQRCodePlaceholder": "Paste the QR image base64 or URL",
         "communityQRCode": "Community Group QR Code",
@@ -766,6 +797,45 @@ export default {
     "newAnnouncement": "New Announcement"
   },
   "operator": {
+    "personalToken": {
+      "title": "Personal token",
+      "description": "Lets scripts call the admin API for automation: send Authorization: Bearer followed by the token. It has exactly the same access as your browser session.",
+      "generate": "Generate token",
+      "regenerate": "Regenerate",
+      "revoke": "Revoke",
+      "featureDisabled": "The administrator has not enabled personal tokens yet. Existing tokens also stop working while the feature is off.",
+      "empty": "No personal token yet",
+      "showOnceWarning": "Copy the token now and store it safely. It is shown only once and cannot be viewed again after you leave or reload this page.",
+      "copy": "Copy",
+      "copied": "Token copied",
+      "usageHint": "Example:",
+      "done": "I have saved it",
+      "expired": "Expired",
+      "createdAt": "Created {date}",
+      "expiresAt": "Expires {date}",
+      "neverExpires": "Never expires",
+      "lastUsed": "Last used {date} ({ip})",
+      "neverUsed": "Never used",
+      "generateTitle": "Generate personal token",
+      "regenerateTitle": "Regenerate personal token",
+      "regenerateWarning": "The old token stops working immediately; scripts using it must be updated.",
+      "expiry": "Expiration",
+      "days": "{days} days",
+      "confirmGenerate": "Generate",
+      "generated": "Token generated",
+      "generateFailed": "Failed to generate token",
+      "loadFailed": "Failed to load personal token",
+      "revokeTitle": "Revoke personal token",
+      "revokeConfirm": "Scripts using this token will stop working immediately. Revoke it?",
+      "revoked": "Token revoked",
+      "revokeFailed": "Failed to revoke token",
+      "notes": {
+        "scope": "It can only reach the endpoints you can reach in the browser; anything else returns 403.",
+        "approval": "User and subscription management writes still go to the approval queue (202) and run only after the administrator approves them.",
+        "invalidation": "Changing your password or email, revocation by the administrator, a role change, or the administrator turning the feature off invalidates the token immediately.",
+        "noSensitive": "The token cannot perform actions that require two-factor verification, and cannot generate or revoke tokens itself."
+      }
+    },
     "readOnlyNotice": "Read-only mode: operators can view ops monitoring and usage logs but cannot change settings, handle alerts or clean up data.",
     "roleHint": "Operator: troubleshooting role with access to ops monitoring and usage logs; user and subscription management changes only execute after admin approval, and upstream accounts or groups cannot be managed.",
     "singleAdminHint": "Only one admin account is allowed; use the operator or user role for everyone else.",

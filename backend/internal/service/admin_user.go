@@ -325,6 +325,8 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	if user.Role != oldRole {
 		logger.LegacyPrintf("service.admin", "audit: user role changed actor_admin_id=%d target_user_id=%d old_role=%s new_role=%s",
 			input.ActorAdminID, user.ID, oldRole, user.Role)
+		// fork：角色离开 operator 时吊销其个人令牌，防止再次提升后旧令牌"复活"
+		s.revokePersonalTokenOnRoleChange(ctx, user.ID, oldRole, user.Role)
 	}
 
 	// 同步用户专属分组倍率

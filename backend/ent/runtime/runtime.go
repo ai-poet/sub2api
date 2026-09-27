@@ -28,6 +28,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/identityadoptiondecision"
 	"github.com/Wei-Shaw/sub2api/ent/pendingauthsession"
+	"github.com/Wei-Shaw/sub2api/ent/personaltoken"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
@@ -1563,6 +1564,32 @@ func init() {
 	pendingauthsessionDescCompletionCodeHash := pendingauthsessionFields[12].Descriptor()
 	// pendingauthsession.DefaultCompletionCodeHash holds the default value on creation for the completion_code_hash field.
 	pendingauthsession.DefaultCompletionCodeHash = pendingauthsessionDescCompletionCodeHash.Default.(string)
+	personaltokenFields := schema.PersonalToken{}.Fields()
+	_ = personaltokenFields
+	// personaltokenDescTokenHash is the schema descriptor for token_hash field.
+	personaltokenDescTokenHash := personaltokenFields[1].Descriptor()
+	// personaltoken.TokenHashValidator is a validator for the "token_hash" field. It is called by the builders before save.
+	personaltoken.TokenHashValidator = personaltokenDescTokenHash.Validators[0].(func(string) error)
+	// personaltokenDescTokenHint is the schema descriptor for token_hint field.
+	personaltokenDescTokenHint := personaltokenFields[2].Descriptor()
+	// personaltoken.TokenHintValidator is a validator for the "token_hint" field. It is called by the builders before save.
+	personaltoken.TokenHintValidator = personaltokenDescTokenHint.Validators[0].(func(string) error)
+	// personaltokenDescLastUsedIP is the schema descriptor for last_used_ip field.
+	personaltokenDescLastUsedIP := personaltokenFields[6].Descriptor()
+	// personaltoken.DefaultLastUsedIP holds the default value on creation for the last_used_ip field.
+	personaltoken.DefaultLastUsedIP = personaltokenDescLastUsedIP.Default.(string)
+	// personaltoken.LastUsedIPValidator is a validator for the "last_used_ip" field. It is called by the builders before save.
+	personaltoken.LastUsedIPValidator = personaltokenDescLastUsedIP.Validators[0].(func(string) error)
+	// personaltokenDescCreatedIP is the schema descriptor for created_ip field.
+	personaltokenDescCreatedIP := personaltokenFields[7].Descriptor()
+	// personaltoken.DefaultCreatedIP holds the default value on creation for the created_ip field.
+	personaltoken.DefaultCreatedIP = personaltokenDescCreatedIP.Default.(string)
+	// personaltoken.CreatedIPValidator is a validator for the "created_ip" field. It is called by the builders before save.
+	personaltoken.CreatedIPValidator = personaltokenDescCreatedIP.Validators[0].(func(string) error)
+	// personaltokenDescCreatedAt is the schema descriptor for created_at field.
+	personaltokenDescCreatedAt := personaltokenFields[8].Descriptor()
+	// personaltoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	personaltoken.DefaultCreatedAt = personaltokenDescCreatedAt.Default.(func() time.Time)
 	promocodeFields := schema.PromoCode{}.Fields()
 	_ = promocodeFields
 	// promocodeDescCode is the schema descriptor for code field.

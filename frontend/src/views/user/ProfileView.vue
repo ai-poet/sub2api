@@ -45,6 +45,8 @@
 
       <ProfileTotpCard />
       <ProfilePasskeyCard :enabled="passkeyEnabled" />
+      <!-- fork：运维管理员个人令牌（脚本调用管理 API），只对运维显示 -->
+      <ProfilePersonalTokenCard v-if="authStore.isOperator" />
     </div>
   </AppLayout>
 </template>
@@ -59,6 +61,7 @@ import ProfileInfoCard from '@/components/user/profile/ProfileInfoCard.vue'
 import ProfilePasswordForm from '@/components/user/profile/ProfilePasswordForm.vue'
 import ProfileTotpCard from '@/components/user/profile/ProfileTotpCard.vue'
 import ProfilePasskeyCard from '@/components/user/profile/ProfilePasskeyCard.vue'
+import ProfilePersonalTokenCard from '@/components/user/profile/ProfilePersonalTokenCard.vue'
 import { isWeChatWebOAuthEnabled } from '@/api/auth'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'

@@ -165,6 +165,22 @@
       </div>
     </div>
 
+    <!-- 运维管理员个人令牌：总开关 + 已签发令牌列表（查看 / 吊销） -->
+    <div class="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+      <div class="flex items-center justify-between">
+        <div>
+          <label class="font-medium text-gray-900 dark:text-white">
+            {{ t('admin.settings.site.personalToken.title') }}
+          </label>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ t('admin.settings.site.personalToken.description') }}
+          </p>
+        </div>
+        <Toggle v-model="form.personal_token_enabled" data-test="personal-token-enabled" />
+      </div>
+      <PersonalTokensPanel />
+    </div>
+
     <!-- 购买订阅（sub2apipay 集成） -->
     <div class="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-600">
       <div class="flex items-center justify-between">
@@ -304,6 +320,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import Toggle from '@/components/common/Toggle.vue'
+import PersonalTokensPanel from '@/components/admin/settings/PersonalTokensPanel.vue'
 import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores'
 import { extractApiErrorMessage } from '@/utils/apiError'
@@ -324,6 +341,8 @@ interface ForkSettingsForm {
   approval_batch_limit: number
   // 工单（新工单 / 用户回复）→ Server酱³ 推送（复用同一 UID / SendKey）
   ticket_notify_serverchan_enabled: boolean
+  // 运维管理员个人令牌总开关（关闭后所有令牌立即不可用，不删除）
+  personal_token_enabled: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
   purchase_subscription_open_mode: string

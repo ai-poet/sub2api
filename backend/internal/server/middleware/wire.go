@@ -29,13 +29,14 @@ var ProviderSet = wire.NewSet(
 	NewStepUpAuthMiddleware,
 )
 
-// ProvideAdminAuthMiddleware 生产环境的管理员认证中间件：带运维写操作审批门（fork 本地）。
+// ProvideAdminAuthMiddleware 生产环境的管理员认证中间件：带运维写操作审批门，并接受运维个人令牌（fork 本地）。
 func ProvideAdminAuthMiddleware(
 	authService *service.AuthService,
 	userService *service.UserService,
 	settingService *service.SettingService,
 	auditService *service.AuditLogService,
 	gate service.AdminApprovalGate,
+	personalTokens *service.PersonalTokenService,
 ) AdminAuthMiddleware {
-	return NewAdminAuthMiddlewareWithApprovalGate(authService, userService, settingService, auditService, gate)
+	return NewConsoleAdminAuthMiddleware(authService, userService, settingService, auditService, gate, PersonalTokenAuthenticatorOrNil(personalTokens))
 }

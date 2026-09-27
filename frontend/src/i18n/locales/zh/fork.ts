@@ -567,6 +567,11 @@ export default {
         "ignoreInvalidApiKeyErrorsHint": "启用后，无效或缺失 API Key 的错误（INVALID_API_KEY、API_KEY_REQUIRED）将不会写入错误日志。"
       }
     },
+    "audit": {
+      "filters": {
+        "personalToken": "运维个人令牌"
+      }
+    },
     "referral": {
       "title": "推荐设置",
       "description": "配置推荐奖励系统参数",
@@ -644,6 +649,32 @@ export default {
         "ticketNotify": {
           "enabled": "工单推送",
           "enabledHint": "用户提交新工单或追加回复时，推送一条带工单页链接的消息（沿用上方 UID / SendKey）；客服自己的回复不推送。"
+        },
+        "personalToken": {
+          "title": "运维个人令牌",
+          "description": "开启后运维管理员可在个人资料页生成一个个人令牌，供脚本在请求头带 Authorization: Bearer 调用管理 API 做自动化。令牌的权限与运维网页登录完全一致（同一白名单，用户与订阅的写操作同样进审批），不能用于二次验证操作、不能审批；关闭后所有令牌立即失效但不删除，重新打开即恢复。",
+          "listTitle": "已签发的令牌",
+          "refresh": "刷新",
+          "empty": "还没有运维生成过令牌",
+          "loadFailed": "加载令牌列表失败",
+          "createdAt": "创建于 {date}",
+          "expiresAt": "{date} 过期",
+          "neverExpires": "永不过期",
+          "lastUsed": "最后使用 {date}（{ip}）",
+          "neverUsed": "从未使用",
+          "revoke": "吊销",
+          "revokeTitle": "吊销个人令牌",
+          "revokeConfirm": "吊销后 {email} 的脚本将立即无法调用管理 API，需要对方重新生成。确定吊销？",
+          "revoked": "令牌已吊销",
+          "revokeFailed": "吊销失败",
+          "states": {
+            "active": "有效",
+            "expired": "已过期",
+            "revoked": "已失效（改过密码或邮箱）",
+            "not_eligible": "已失效（不再是运维管理员）",
+            "user_inactive": "已失效（账号已禁用）",
+            "user_missing": "已失效（账号不存在）"
+          }
         },
         "communityQRCodePlaceholder": "粘贴二维码图片的 base64 或 URL",
         "communityQRCode": "交流群二维码",
@@ -766,6 +797,45 @@ export default {
     "newAnnouncement": "新公告"
   },
   "operator": {
+    "personalToken": {
+      "title": "个人令牌",
+      "description": "用于脚本调用后端管理 API 做自动化：请求头带上 Authorization: Bearer 加令牌，权限与你在网页上登录完全一致。",
+      "generate": "生成令牌",
+      "regenerate": "重新生成",
+      "revoke": "吊销",
+      "featureDisabled": "管理员尚未开启个人令牌功能，暂时无法生成；功能关闭期间已有令牌也不可用。",
+      "empty": "还没有个人令牌",
+      "showOnceWarning": "请立即复制并妥善保存令牌，它只会显示这一次，离开或刷新页面后无法再查看。",
+      "copy": "复制",
+      "copied": "令牌已复制",
+      "usageHint": "调用示例：",
+      "done": "我已保存",
+      "expired": "已过期",
+      "createdAt": "创建于 {date}",
+      "expiresAt": "{date} 过期",
+      "neverExpires": "永不过期",
+      "lastUsed": "最后使用 {date}（{ip}）",
+      "neverUsed": "从未使用",
+      "generateTitle": "生成个人令牌",
+      "regenerateTitle": "重新生成个人令牌",
+      "regenerateWarning": "重新生成后旧令牌立即失效，使用旧令牌的脚本需要更新。",
+      "expiry": "有效期",
+      "days": "{days} 天",
+      "confirmGenerate": "生成",
+      "generated": "令牌已生成",
+      "generateFailed": "生成令牌失败",
+      "loadFailed": "加载个人令牌失败",
+      "revokeTitle": "吊销个人令牌",
+      "revokeConfirm": "吊销后使用该令牌的脚本将立即无法调用管理 API。确定吊销？",
+      "revoked": "令牌已吊销",
+      "revokeFailed": "吊销失败",
+      "notes": {
+        "scope": "只能访问你在网页上能访问的接口，越权请求返回 403。",
+        "approval": "用户与订阅管理的写操作仍会进入审批队列（返回 202），由管理员通过后才执行。",
+        "invalidation": "修改密码或邮箱、被管理员吊销、角色变更或管理员关闭该功能后，令牌立即失效。",
+        "noSensitive": "令牌不能用于需要二次验证的敏感操作，也不能生成或吊销令牌本身。"
+      }
+    },
     "readOnlyNotice": "只读模式：运维管理员只能查看运维监控与调用日志，无法修改设置、处理告警或清理数据。",
     "roleHint": "运维管理员：排障角色，可查看运维监控与调用日志；用户管理与订阅管理的修改需经管理员审批后才会执行，不能管理上游账号与分组。",
     "singleAdminHint": "系统只允许一个管理员，其余账号请使用运维管理员或普通用户。",

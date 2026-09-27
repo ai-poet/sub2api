@@ -1282,6 +1282,25 @@ var (
 			},
 		},
 	}
+	// PersonalTokensColumns holds the columns for the "personal_tokens" table.
+	PersonalTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "user_id", Type: field.TypeInt64, Unique: true},
+		{Name: "token_hash", Type: field.TypeString, Unique: true, Size: 64},
+		{Name: "token_hint", Type: field.TypeString, Size: 32},
+		{Name: "user_token_version", Type: field.TypeInt64},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "last_used_ip", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "created_ip", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// PersonalTokensTable holds the schema information for the "personal_tokens" table.
+	PersonalTokensTable = &schema.Table{
+		Name:       "personal_tokens",
+		Columns:    PersonalTokensColumns,
+		PrimaryKey: []*schema.Column{PersonalTokensColumns[0]},
+	}
 	// PromoCodesColumns holds the columns for the "promo_codes" table.
 	PromoCodesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -2149,6 +2168,7 @@ var (
 		IdempotencyRecordsTable,
 		IdentityAdoptionDecisionsTable,
 		PendingAuthSessionsTable,
+		PersonalTokensTable,
 		PromoCodesTable,
 		PromoCodeUsagesTable,
 		ProxiesTable,
@@ -2253,6 +2273,9 @@ func init() {
 	PendingAuthSessionsTable.ForeignKeys[0].RefTable = UsersTable
 	PendingAuthSessionsTable.Annotation = &entsql.Annotation{
 		Table: "pending_auth_sessions",
+	}
+	PersonalTokensTable.Annotation = &entsql.Annotation{
+		Table: "personal_tokens",
 	}
 	PromoCodesTable.Annotation = &entsql.Annotation{
 		Table: "promo_codes",

@@ -75,6 +75,9 @@ type IdentityAdoptionDecision func(*sql.Selector)
 // PendingAuthSession is the predicate function for pendingauthsession builders.
 type PendingAuthSession func(*sql.Selector)
 
+// PersonalToken is the predicate function for personaltoken builders.
+type PersonalToken func(*sql.Selector)
+
 // PromoCode is the predicate function for promocode builders.
 type PromoCode func(*sql.Selector)
 

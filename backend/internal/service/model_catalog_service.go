@@ -287,9 +287,12 @@ func (s *ModelCatalogService) buildEntry(
 	rateMultiplier, rateSource := resolveCatalogRate(group, userRates)
 
 	officialPricing, officialBase, officialSource := s.buildOfficialPricing(model, group)
+	// 必须带上 Group：分组逐模型定价卡（Group.ModelPricing）排在解析链最前，扣费侧
+	// 同样传入 Group。只传 GroupID 会跳过分组价卡、落到渠道价/默认价，展示价与账单不一致。
 	resolved := s.resolver.Resolve(ctx, PricingInput{
 		Model:   model,
 		GroupID: &group.ID,
+		Group:   &group,
 	})
 	if resolved == nil {
 		return modelCatalogEntry{}, false
@@ -556,7 +559,9 @@ func (s *ModelCatalogService) buildCatalogPricingDetails(
 
 	if officialBase != nil {
 		details.LongContextInputThreshold = officialBase.LongContextInputThreshold
-		details.HasLongContextMultiplier = officialBase.LongContextInputThreshold > 0 &&
+		// 分组关闭长上下文阶梯时扣费只取最低档，徽章也不能再显示。
+		details.HasLongContextMultiplier = (resolved == nil || resolved.longContextPricingEnabled) &&
+			officialBase.LongContextInputThreshold > 0 &&
 			(officialBase.LongContextInputMultiplier > 1 || officialBase.LongContextOutputMultiplier > 1)
 	}
 

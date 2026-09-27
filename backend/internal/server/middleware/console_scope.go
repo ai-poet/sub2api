@@ -287,22 +287,25 @@ func recordOperatorScopeDenied(c *gin.Context, auditService *service.AuditLogSer
 		path = c.Request.URL.Path
 	}
 	entry := &service.AuditLog{
-		ActorUserID: &uid,
-		ActorEmail:  user.Email,
-		ActorRole:   user.Role,
-		AuthMethod:  service.AuditAuthMethodJWT,
-		Action:      service.AuditActionAdminScopeDenied,
-		Method:      c.Request.Method,
-		Path:        path,
-		ClientIP:    SecurityClientIP(c),
-		UserAgent:   normalizePersistentText(c.Request.UserAgent(), maxPersistentUserAgentBytes),
-		StatusCode:  http.StatusForbidden,
+		ActorUserID:      &uid,
+		ActorEmail:       user.Email,
+		ActorRole:        user.Role,
+		AuthMethod:       consoleAuditAuthMethod(c),
+		CredentialMasked: MaskedRequestCredential(c),
+		Action:           service.AuditActionAdminScopeDenied,
+		Method:           c.Request.Method,
+		Path:             path,
+		ClientIP:         SecurityClientIP(c),
+		UserAgent:        normalizePersistentText(c.Request.UserAgent(), maxPersistentUserAgentBytes),
+		StatusCode:       http.StatusForbidden,
 	}
 	if requestID, ok := c.Request.Context().Value(ctxkey.RequestID).(string); ok {
 		entry.RequestID = requestID
 	}
+	var extra map[string]any
 	if q := service.RedactAuditQuery(c.Request.URL.RawQuery); q != "" {
-		entry.Extra = map[string]any{"query": q}
+		extra = map[string]any{"query": q}
 	}
+	entry.Extra = withPersonalTokenAuditExtra(c, extra)
 	auditService.Record(entry)
 }

@@ -79,3 +79,19 @@ func ProvideTicketService(repo SupportTicketRepository, notifier *TicketNotifySe
 	}
 	return svc
 }
+
+// ProvidePersonalTokenService 构造运维管理员个人令牌服务（fork 本地）。
+// 同时把自己作为吊销器挂到 AdminService 上：角色离开 operator 时吊销其令牌。
+// 用类型断言 + setter，保持上游 NewAdminService 签名不变。
+func ProvidePersonalTokenService(
+	repo PersonalTokenRepository,
+	userService *UserService,
+	settingService *SettingService,
+	adminService AdminService,
+) *PersonalTokenService {
+	svc := NewPersonalTokenService(repo, userService, settingService)
+	if setter, ok := adminService.(interface{ SetPersonalTokenRevoker(PersonalTokenRevoker) }); ok {
+		setter.SetPersonalTokenRevoker(svc)
+	}
+	return svc
+}

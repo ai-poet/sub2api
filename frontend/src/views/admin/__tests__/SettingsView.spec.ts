@@ -559,6 +559,8 @@ function mountView() {
         ProxySelector: true,
         ImageUpload: ImageUploadStub,
         BackupSettings: true,
+        // fork：运维个人令牌列表自己拉接口，这里不关心
+        PersonalTokensPanel: true,
       },
     },
   });
