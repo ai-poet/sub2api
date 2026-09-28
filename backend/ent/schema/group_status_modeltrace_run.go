@@ -12,6 +12,8 @@ import (
 )
 
 // GroupStatusModelTraceRun ModelTrace 指纹验证（数字分布指纹）的每次运行记录，本 fork 自有功能。
+//
+// Deprecated: dormant since 243 —— ModelTrace 已并入 meow 指纹验证，表保留给旧镜像，等清理迁移一起删除。
 type GroupStatusModelTraceRun struct {
 	ent.Schema
 }

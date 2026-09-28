@@ -14,7 +14,7 @@ import (
 
 // 分组运行状态的 OpenAI Responses 探测通道（本 fork 自有功能）。
 //
-// Astra 指纹与 ModelTrace 指纹共用：这里只处理账号模型映射、API-Key 与 Codex OAuth 的地址与头部，
+// meow 指纹验证使用：这里只处理账号模型映射、API-Key 与 Codex OAuth 的地址与头部，
 // 请求体与流解析由调用方提供；与存活探测是两条独立的路径。
 
 // openAIProbeUsage 是 Responses 流 response.completed 里的用量摘要。

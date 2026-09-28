@@ -21,7 +21,7 @@ type APIKeyAuthMiddleware gin.HandlerFunc
 
 // ProviderSet 中间件层的依赖注入
 var ProviderSet = wire.NewSet(
-	NewJWTAuthMiddleware,
+	ProvideJWTAuthMiddleware,
 	NewOptionalJWTAuthMiddleware,
 	ProvideAdminAuthMiddleware,
 	NewAPIKeyAuthMiddleware,
@@ -39,4 +39,16 @@ func ProvideAdminAuthMiddleware(
 	personalTokens *service.PersonalTokenService,
 ) AdminAuthMiddleware {
 	return NewConsoleAdminAuthMiddleware(authService, userService, settingService, auditService, gate, PersonalTokenAuthenticatorOrNil(personalTokens))
+}
+
+// ProvideJWTAuthMiddleware 生产环境的用户侧 JWT 认证中间件：同时接受运维个人令牌（fork 本地），
+// 账号安全写操作除外（见 personal_token_user_scope.go）。
+func ProvideJWTAuthMiddleware(
+	authService *service.AuthService,
+	userService *service.UserService,
+	settingService *service.SettingService,
+	auditService *service.AuditLogService,
+	personalTokens *service.PersonalTokenService,
+) JWTAuthMiddleware {
+	return NewJWTAuthMiddlewareWithPersonalTokens(authService, userService, settingService, auditService, PersonalTokenAuthenticatorOrNil(personalTokens))
 }

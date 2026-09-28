@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Astra 指纹验证的实时进度（本 fork 自有功能）。
+// meow 指纹验证的实时进度（本 fork 自有功能）。
 //
 // 一轮验证要发几十个请求、持续几十秒到几分钟，管理端轮询时需要看到「跑到哪了、每个请求答了什么」。
 // 进度只存在内存里（按分组），运行结束即清除；逐请求样本随运行记录落库供事后回看。
@@ -40,22 +40,26 @@ type AstraCheckSampleRecord struct {
 	At        time.Time `json:"at"`
 }
 
-// AstraCheckProgress 是某分组当前这一轮验证的进度快照。
+// AstraCheckProgress 是某分组当前这一轮验证的进度快照；一次运行依次检测多个模型时，
+// ModelIndex / ModelCount 表示正在检测第几个（从 1 开始）。
 type AstraCheckProgress struct {
-	Round     int                      `json:"round"`
-	Phase     string                   `json:"phase"`
-	AccountID *int64                   `json:"account_id"`
-	Planned   int                      `json:"planned"`
-	Completed int                      `json:"completed"`
-	Valid     int                      `json:"valid"`
-	Invalid   int                      `json:"invalid"`
-	Failed    int                      `json:"failed"`
-	Requests  int                      `json:"requests"`
-	InFlight  int                      `json:"in_flight"`
-	StartedAt time.Time                `json:"started_at"`
-	UpdatedAt time.Time                `json:"updated_at"`
-	ElapsedMS int64                    `json:"elapsed_ms"`
-	Samples   []AstraCheckSampleRecord `json:"samples"`
+	ExpectedModel string                   `json:"expected_model"`
+	ModelIndex    int                      `json:"model_index"`
+	ModelCount    int                      `json:"model_count"`
+	Round         int                      `json:"round"`
+	Phase         string                   `json:"phase"`
+	AccountID     *int64                   `json:"account_id"`
+	Planned       int                      `json:"planned"`
+	Completed     int                      `json:"completed"`
+	Valid         int                      `json:"valid"`
+	Invalid       int                      `json:"invalid"`
+	Failed        int                      `json:"failed"`
+	Requests      int                      `json:"requests"`
+	InFlight      int                      `json:"in_flight"`
+	StartedAt     time.Time                `json:"started_at"`
+	UpdatedAt     time.Time                `json:"updated_at"`
+	ElapsedMS     int64                    `json:"elapsed_ms"`
+	Samples       []AstraCheckSampleRecord `json:"samples"`
 }
 
 type astraProgressTracker struct {
@@ -64,14 +68,17 @@ type astraProgressTracker struct {
 	samples  []AstraCheckSampleRecord
 }
 
-func newAstraProgressTracker(round int) *astraProgressTracker {
+func newAstraProgressTracker(round int, expectedModel string, index, count int) *astraProgressTracker {
 	now := time.Now()
 	return &astraProgressTracker{
 		progress: AstraCheckProgress{
-			Round:     round,
-			Phase:     AstraCheckPhaseSelectingAccount,
-			StartedAt: now,
-			UpdatedAt: now,
+			ExpectedModel: expectedModel,
+			ModelIndex:    index,
+			ModelCount:    count,
+			Round:         round,
+			Phase:         AstraCheckPhaseSelectingAccount,
+			StartedAt:     now,
+			UpdatedAt:     now,
 		},
 	}
 }
@@ -225,8 +232,8 @@ func truncateAstraAnswer(text string) string {
 
 // ---------- 探测服务上的进度存取 ----------
 
-func (s *GroupStatusProbeService) beginAstraProgress(groupID int64, round int) *astraProgressTracker {
-	tracker := newAstraProgressTracker(round)
+func (s *GroupStatusProbeService) beginAstraProgress(groupID int64, round int, expectedModel string, index, count int) *astraProgressTracker {
+	tracker := newAstraProgressTracker(round, expectedModel, index, count)
 	if s != nil {
 		s.astraProgress.Store(groupID, tracker)
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckrun"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckstate"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
@@ -513,6 +514,33 @@ func (f TraverseGroupStatusAstraCheckRun) Traverse(ctx context.Context, q ent.Qu
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusAstraCheckRunQuery", q)
+}
+
+// The GroupStatusAstraCheckStateFunc type is an adapter to allow the use of ordinary function as a Querier.
+type GroupStatusAstraCheckStateFunc func(context.Context, *ent.GroupStatusAstraCheckStateQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f GroupStatusAstraCheckStateFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.GroupStatusAstraCheckStateQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusAstraCheckStateQuery", q)
+}
+
+// The TraverseGroupStatusAstraCheckState type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseGroupStatusAstraCheckState func(context.Context, *ent.GroupStatusAstraCheckStateQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseGroupStatusAstraCheckState) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseGroupStatusAstraCheckState) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.GroupStatusAstraCheckStateQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusAstraCheckStateQuery", q)
 }
 
 // The GroupStatusConfigFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1304,6 +1332,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.GroupQuery, predicate.Group, group.OrderOption]{typ: ent.TypeGroup, tq: q}, nil
 	case *ent.GroupStatusAstraCheckRunQuery:
 		return &query[*ent.GroupStatusAstraCheckRunQuery, predicate.GroupStatusAstraCheckRun, groupstatusastracheckrun.OrderOption]{typ: ent.TypeGroupStatusAstraCheckRun, tq: q}, nil
+	case *ent.GroupStatusAstraCheckStateQuery:
+		return &query[*ent.GroupStatusAstraCheckStateQuery, predicate.GroupStatusAstraCheckState, groupstatusastracheckstate.OrderOption]{typ: ent.TypeGroupStatusAstraCheckState, tq: q}, nil
 	case *ent.GroupStatusConfigQuery:
 		return &query[*ent.GroupStatusConfigQuery, predicate.GroupStatusConfig, groupstatusconfig.OrderOption]{typ: ent.TypeGroupStatusConfig, tq: q}, nil
 	case *ent.GroupStatusEventQuery:

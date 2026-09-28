@@ -12,10 +12,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 )
 
-// Astra 指纹验证的执行（本 fork 自有功能）。
+// meow 指纹验证的执行（本 fork 自有功能）。
 //
-// 一次运行 = 选一个 OpenAI 账号 → 按档位跑一批固定短答题 → 归一化计数 → 本地判定 → 落库 →
-// 稳定结论切换时推送。与存活探测、Sol Juice 互不影响。
+// 一次运行依次检测分组配置的每个预期模型：选一个与平台一致的账号 → 按该模型所在基准包的档位跑一批固定短答题 →
+// 归一化计数 → 本地判定 → 落库 → 该模型的稳定结论切换时推送。与存活探测互不影响。
 
 const groupStatusAstraCheckLogComponent = "service.group_status_astra_check"
 
@@ -27,17 +27,24 @@ type astraSample struct {
 	HTTPCode        *int
 	LatencyMS       int64
 	Usage           openAIProbeUsage
-	Completed       bool // 拿到 2xx 且流正常结束
-	TransportFailed bool // 最后一次尝试仍是传输/HTTP 错误
+	Completed       bool // 拿到 2xx 响应（答案可能无效）
+	TransportFailed bool // 最后一次尝试仍是传输 / 非 2xx 错误
 	ErrDetail       string
 	Attempts        int
 }
 
-func (s *GroupStatusProbeService) astraBenchmark() (*AstraBenchmark, *AstraBenchmarkMeta, error) {
-	if s != nil && s.astraBenchmarks != nil {
-		return s.astraBenchmarks.Active()
+// astraResponse 是一次请求的结果（两种通道统一成同一形状）；Invalid 非空表示答案不参与判定的原因。
+type astraResponse struct {
+	Text    string
+	Usage   openAIProbeUsage
+	Invalid string
+}
+
+func (s *GroupStatusProbeService) astraBenchmarks() (*AstraBenchmarkRegistry, error) {
+	if s != nil && s.astraBenchmarkSource != nil {
+		return s.astraBenchmarkSource.Registry()
 	}
-	return LoadEmbeddedAstraBenchmark()
+	return LoadEmbeddedAstraBenchmarks()
 }
 
 // SetAstraBenchmarkProvider 替换基准来源（测试用）。
@@ -45,7 +52,7 @@ func (s *GroupStatusProbeService) SetAstraBenchmarkProvider(p astraBenchmarkProv
 	if s == nil {
 		return
 	}
-	s.astraBenchmarks = p
+	s.astraBenchmarkSource = p
 }
 
 func (s *GroupStatusProbeService) astraCheckConcurrency() int {
@@ -55,7 +62,7 @@ func (s *GroupStatusProbeService) astraCheckConcurrency() int {
 	return groupStatusAstraCheckDefaultConcurrency
 }
 
-// IsAstraCheckRunning 报告该分组是否有正在进行的 Astra 指纹验证。
+// IsAstraCheckRunning 报告该分组是否有正在进行的指纹验证。
 func (s *GroupStatusProbeService) IsAstraCheckRunning(groupID int64) bool {
 	if s == nil {
 		return false
@@ -73,35 +80,56 @@ func (s *GroupStatusProbeService) clearAstraCheckRunning(groupID int64) {
 	s.astraRunning.Delete(groupID)
 }
 
-// StartAstraCheckAsync 在后台启动一次验证（管理端「立即验证」用）；同一分组运行中则报错。
-func (s *GroupStatusProbeService) StartAstraCheckAsync(groupID int64) error {
+// StartAstraCheckAsync 在后台启动一次验证（管理端「立即检测」用）：expectedModel 为空时检测分组配置的全部模型，
+// 否则只检测该模型。分组、平台与模型在这里同步校验，错误直接返回；同一分组运行中则报错。
+func (s *GroupStatusProbeService) StartAstraCheckAsync(groupID int64, expectedModel string) error {
 	if s == nil {
 		return errors.New("group status probe service is not configured")
 	}
 	if s.IsAstraCheckRunning(groupID) {
 		return ErrGroupStatusAstraCheckRunning
 	}
+	loadCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	group, cfg, err := s.ensureProbeTarget(loadCtx, groupID)
+	cancel()
+	if err != nil {
+		return err
+	}
+	if !astraCheckSupportsPlatform(group.Platform) {
+		return ErrGroupStatusAstraCheckUnsupported
+	}
+	models, err := astraCheckModelsToRun(group, cfg, expectedModel)
+	if err != nil {
+		return err
+	}
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), groupStatusAstraCheckRunBudget)
+		ctx, cancel := context.WithTimeout(context.Background(), astraCheckRunBudget(len(models)))
 		defer cancel()
-		if _, err := s.ProbeAstraCheckGroupNow(ctx, groupID); err != nil {
+		if _, err := s.probeAstraCheck(ctx, group, cfg, models); err != nil {
 			logger.LegacyPrintf(groupStatusAstraCheckLogComponent, "[AstraCheck] group=%d manual run failed: %v", groupID, err)
 		}
 	}()
 	return nil
 }
 
-// ProbeAstraCheckGroupNow 立即验证；不要求分组已开启 astra_check_enabled。
-func (s *GroupStatusProbeService) ProbeAstraCheckGroupNow(ctx context.Context, groupID int64) (*GroupStatusAstraCheckExecution, error) {
+// ProbeAstraCheckGroupNow 立即验证（同步）；expectedModel 为空时检测全部配置的模型。不要求分组已开启 astra_check_enabled。
+func (s *GroupStatusProbeService) ProbeAstraCheckGroupNow(ctx context.Context, groupID int64, expectedModel string) ([]*GroupStatusAstraCheckExecution, error) {
 	group, cfg, err := s.ensureProbeTarget(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
-	return s.probeAstraCheck(ctx, group, cfg)
+	if !astraCheckSupportsPlatform(group.Platform) {
+		return nil, ErrGroupStatusAstraCheckUnsupported
+	}
+	models, err := astraCheckModelsToRun(group, cfg, expectedModel)
+	if err != nil {
+		return nil, err
+	}
+	return s.probeAstraCheck(ctx, group, cfg, models)
 }
 
-// ProbeAstraCheckWithConfig 供定时 runner 调用。
-func (s *GroupStatusProbeService) ProbeAstraCheckWithConfig(ctx context.Context, cfg *GroupStatusConfig) (*GroupStatusAstraCheckExecution, error) {
+// ProbeAstraCheckWithConfig 供定时 runner 调用：只检测距上次检测已满间隔（或从未检测过）的模型。
+func (s *GroupStatusProbeService) ProbeAstraCheckWithConfig(ctx context.Context, cfg *GroupStatusConfig) ([]*GroupStatusAstraCheckExecution, error) {
 	if cfg == nil {
 		return nil, ErrGroupStatusInvalidConfig
 	}
@@ -109,22 +137,92 @@ func (s *GroupStatusProbeService) ProbeAstraCheckWithConfig(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return s.probeAstraCheck(ctx, group, cfg)
+	if !astraCheckSupportsPlatform(group.Platform) {
+		return nil, ErrGroupStatusAstraCheckUnsupported
+	}
+	models, err := astraCheckModelsToRun(group, cfg, "")
+	if err != nil {
+		return nil, err
+	}
+	due, err := s.dueAstraCheckModels(ctx, group.ID, cfg, models, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	if len(due) == 0 {
+		return nil, nil
+	}
+	return s.probeAstraCheck(ctx, group, cfg, due)
 }
 
-func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Group, cfg *GroupStatusConfig) (*GroupStatusAstraCheckExecution, error) {
+// astraCheckModelsToRun 返回本次要检测的模型：配置为空时回落到本平台默认目标；指定了模型时它必须在配置里。
+func astraCheckModelsToRun(group *Group, cfg *GroupStatusConfig, expectedModel string) ([]AstraCheckModelConfig, error) {
+	models := normalizeAstraCheckModels(cfg.AstraCheckModels)
+	if len(models) == 0 && group != nil {
+		models = astraCheckDefaultModels(group.Platform)
+	}
+	expectedModel = strings.TrimSpace(expectedModel)
+	if expectedModel == "" {
+		return models, nil
+	}
+	for _, m := range models {
+		if m.ExpectedModel == expectedModel {
+			return []AstraCheckModelConfig{m}, nil
+		}
+	}
+	return nil, ErrGroupStatusAstraCheckTargetInvalid
+}
+
+// dueAstraCheckModels 过滤出到期的模型：没有状态、没检测过，或距上次检测已满间隔。
+func (s *GroupStatusProbeService) dueAstraCheckModels(ctx context.Context, groupID int64, cfg *GroupStatusConfig, models []AstraCheckModelConfig, now time.Time) ([]AstraCheckModelConfig, error) {
+	states, err := s.repo.ListAstraCheckStates(ctx, []int64{groupID})
+	if err != nil {
+		return nil, err
+	}
+	checkedAt := make(map[string]time.Time, len(states))
+	for _, state := range states {
+		if state.GroupID == groupID && state.CheckedAt != nil {
+			checkedAt[state.ExpectedModel] = *state.CheckedAt
+		}
+	}
+	interval := time.Duration(cfg.AstraCheckIntervalSeconds) * time.Second
+	if interval <= 0 {
+		interval = groupStatusAstraCheckDefaultIntervalSecond * time.Second
+	}
+	due := make([]AstraCheckModelConfig, 0, len(models))
+	for _, m := range models {
+		last, ok := checkedAt[m.ExpectedModel]
+		if !ok || !now.Before(last.Add(interval)) {
+			due = append(due, m)
+		}
+	}
+	return due, nil
+}
+
+// astraCheckRunBudget 是一次手动运行的总预算：每个模型一份，最多一小时。
+func astraCheckRunBudget(models int) time.Duration {
+	if models < 1 {
+		models = 1
+	}
+	budget := time.Duration(models) * groupStatusAstraCheckRunBudget
+	if budget > time.Hour {
+		budget = time.Hour
+	}
+	return budget
+}
+
+// probeAstraCheck 依次检测给定的每个模型；每个模型各自落库、各自判定、各自推送。
+func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Group, cfg *GroupStatusConfig, models []AstraCheckModelConfig) ([]*GroupStatusAstraCheckExecution, error) {
 	if group == nil || cfg == nil {
 		return nil, ErrGroupStatusInvalidConfig
 	}
-	if group.Platform != PlatformOpenAI {
+	if !astraCheckSupportsPlatform(group.Platform) {
 		return nil, ErrGroupStatusAstraCheckUnsupported
 	}
 	if err := ValidateGroupStatusConfig(cfg); err != nil {
 		return nil, err
 	}
-	bench, meta, err := s.astraBenchmark()
-	if err != nil {
-		return nil, err
+	if len(models) == 0 {
+		return nil, nil
 	}
 	if !s.markAstraCheckRunning(group.ID) {
 		return nil, ErrGroupStatusAstraCheckRunning
@@ -132,23 +230,48 @@ func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Gr
 	defer s.clearAstraCheckRunning(group.ID)
 	defer s.clearAstraProgress(group.ID)
 
-	progress := s.beginAstraProgress(group.ID, 1)
-	account, result := s.executeAstraCheckRun(ctx, group, cfg, bench, meta, progress)
-	logAstraCheckRun(group, 1, account, result)
+	registry, regErr := s.astraBenchmarks()
+	executions := make([]*GroupStatusAstraCheckExecution, 0, len(models))
+	for i, model := range models {
+		if ctx.Err() != nil {
+			break
+		}
+		execution, err := s.probeAstraCheckModel(ctx, group, cfg, model, i+1, len(models), registry, regErr)
+		if err != nil {
+			return executions, err
+		}
+		executions = append(executions, execution)
+	}
+	return executions, nil
+}
+
+// probeAstraCheckModel 检测一个模型；首次出现「强指向其他模型」时在同一账号上立即复测一轮确认：
+// 问的是「这个上游是不是冒充的」，换号复测会让 N 个账号里只有 1 个假的分组永远凑不满连续两次。
+func (s *GroupStatusProbeService) probeAstraCheckModel(
+	ctx context.Context,
+	group *Group,
+	cfg *GroupStatusConfig,
+	model AstraCheckModelConfig,
+	index, count int,
+	registry *AstraBenchmarkRegistry,
+	regErr error,
+) (*GroupStatusAstraCheckExecution, error) {
+	progress := s.beginAstraProgress(group.ID, 1, model.ExpectedModel, index, count)
+	account, result := s.executeAstraCheckRun(ctx, group, cfg, model, registry, regErr, progress, 1, nil)
+	logAstraCheckRun(group, account, result)
 	execution, err := s.saveAstraCheckExecution(ctx, group, cfg, account, result)
 	if err != nil {
 		return nil, err
 	}
 
-	// 首次出现「强指向其他模型」时立即复测一轮确认，不等下一个间隔。
 	if execution.State != nil &&
 		result.Verdict == AstraCheckVerdictMismatch &&
-		execution.State.AstraCheckConsecutiveMismatch == 1 &&
-		execution.State.AstraCheckStableStatus != AstraCheckStatusMismatch &&
+		execution.State.ConsecutiveMismatch == 1 &&
+		execution.State.StableStatus != AstraCheckStatusMismatch &&
 		ctx.Err() == nil {
-		confirmProgress := s.beginAstraProgress(group.ID, 2)
-		confirmAccount, confirmResult := s.executeAstraCheckRun(ctx, group, cfg, bench, meta, confirmProgress)
-		logAstraCheckRun(group, 2, confirmAccount, confirmResult)
+		confirmProgress := s.beginAstraProgress(group.ID, 2, model.ExpectedModel, index, count)
+		confirmAccount, confirmResult := s.executeAstraCheckRun(ctx, group, cfg, model, registry, regErr, confirmProgress, 2, account)
+		logAstraCheckRun(group, confirmAccount, confirmResult)
 		confirmed, err := s.saveAstraCheckExecution(ctx, group, cfg, confirmAccount, confirmResult)
 		if err != nil {
 			return nil, err
@@ -160,7 +283,7 @@ func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Gr
 }
 
 // logAstraCheckRun 每轮结束记一行摘要，方便在服务端日志里定位慢、失败和判定。
-func logAstraCheckRun(group *Group, round int, account *Account, result *GroupStatusAstraCheckResult) {
+func logAstraCheckRun(group *Group, account *Account, result *GroupStatusAstraCheckResult) {
 	if group == nil || result == nil {
 		return
 	}
@@ -173,37 +296,72 @@ func logAstraCheckRun(group *Group, round int, account *Account, result *GroupSt
 		latency = *result.LatencyMS
 	}
 	logger.LegacyPrintf(groupStatusAstraCheckLogComponent,
-		"[AstraCheck] group=%d round=%d verdict=%s winner=%q valid=%d/%d completed=%d/%d samples=%d account=%d latency=%dms reasons=%s detail=%q",
-		group.ID, round, result.Verdict, result.Winner, result.ValidSamples, result.PlannedSamples,
-		result.RequestsCompleted, result.RequestsPlanned, len(result.Samples), accountID, latency,
-		strings.Join(result.Reasons, ","), result.ErrorDetail)
+		"[AstraCheck] group=%d model=%s round=%d verdict=%s winner=%q strongest=%q valid=%d/%d completed=%d/%d account=%d latency=%dms reasons=%s detail=%q",
+		group.ID, result.ExpectedModel, result.Round, result.Verdict, result.Winner, result.Strongest, result.ValidSamples, result.PlannedSamples,
+		result.RequestsCompleted, result.RequestsPlanned, accountID, latency, strings.Join(result.Reasons, ","), result.ErrorDetail)
 }
 
-// executeAstraCheckRun 选账号、跑整批、判定；永远返回一个结果，不返回 error。
-func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, group *Group, cfg *GroupStatusConfig, bench *AstraBenchmark, meta *AstraBenchmarkMeta, progress *astraProgressTracker) (*Account, *GroupStatusAstraCheckResult) {
-	startedAt := time.Now()
-	requestModel := strings.TrimSpace(cfg.AstraCheckRequestModel)
-	if requestModel == "" {
-		requestModel = groupStatusAstraCheckDefaultRequestModel
+// astraAccountCompatible 报告账号能否承载本平台的指纹请求。
+func astraAccountCompatible(group *Group, account *Account) bool {
+	if group == nil || account == nil {
+		return false
 	}
+	if !account.IsOAuth() && account.Type != AccountTypeAPIKey {
+		return false
+	}
+	switch group.Platform {
+	case PlatformOpenAI:
+		return account.Platform == PlatformOpenAI
+	case PlatformAnthropic:
+		return account.Platform == PlatformAnthropic && !account.IsBedrock()
+	default:
+		return false
+	}
+}
+
+// executeAstraCheckRun 为一个预期模型选账号、跑整批、判定；永远返回一个结果，不返回 error。
+// pinned 非空时先用该账号（复测确认），不可用再回到正常调度。
+func (s *GroupStatusProbeService) executeAstraCheckRun(
+	ctx context.Context,
+	group *Group,
+	cfg *GroupStatusConfig,
+	model AstraCheckModelConfig,
+	registry *AstraBenchmarkRegistry,
+	regErr error,
+	progress *astraProgressTracker,
+	round int,
+	pinned *Account,
+) (*Account, *GroupStatusAstraCheckResult) {
+	startedAt := time.Now()
+	target, targetKnown := astraCheckTarget(model.ExpectedModel)
+	requestModel := model.requestModelFor(target)
 	tier := strings.TrimSpace(cfg.AstraCheckTier)
 	if tier == "" {
 		tier = groupStatusAstraCheckDefaultTier
 	}
 	result := &GroupStatusAstraCheckResult{
-		GroupID:      group.ID,
-		ConfigID:     cfg.ID,
-		RequestModel: requestModel,
-		Tier:         tier,
-		Verdict:      AstraCheckVerdictInsufficient,
-		StartedAt:    startedAt,
+		GroupID:       group.ID,
+		ConfigID:      cfg.ID,
+		Platform:      group.Platform,
+		ExpectedModel: model.ExpectedModel,
+		Round:         round,
+		RequestModel:  requestModel,
+		Tier:          tier,
+		Verdict:       AstraCheckVerdictInsufficient,
+		StartedAt:     startedAt,
 	}
-	if meta != nil {
-		result.BenchmarkPackageID = meta.PackageID
-		result.BenchmarkVersion = meta.Version
-		result.BenchmarkSHA256 = meta.BodySHA256
+	var bench *AstraBenchmark
+	if registry != nil && targetKnown {
+		bench = registry.Package(target.PackageID)
 	}
-	finish := func(account *Account, samples []astraSample, extraDetail string) (*Account, *GroupStatusAstraCheckResult) {
+	if bench != nil {
+		result.BenchmarkPackageID = bench.PackageID
+		result.BenchmarkVersion = bench.Version
+		result.BenchmarkSHA256 = bench.BodySHA256
+		result.ScoringVersion = bench.ScoringVersion
+	}
+
+	finish := func(account *Account, samples []astraSample, extraDetail string, reasons ...string) (*Account, *GroupStatusAstraCheckResult) {
 		progress.setPhase(AstraCheckPhaseScoring)
 		result.FinishedAt = time.Now()
 		result.Samples = progress.allSamples()
@@ -240,29 +398,49 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 		if !anyCompleted && lastHTTPCode != nil {
 			result.HTTPCode = lastHTTPCode
 		}
+		result.CostUSD = s.estimateAstraCheckCostUSD(target, requestModel, result.InputTokens, result.OutputTokens)
+		detail := mergeProbeErrorDetails(extraDetail, lastTransportDetail)
+		if len(reasons) > 0 {
+			result.Reasons = reasons
+			result.ErrorDetail = truncateProbeText(redactProbeUpstreamAddresses(detail))
+			return account, result
+		}
 		list := make([]AstraCellObservation, 0, len(observations))
 		for _, cell := range bench.Cells {
 			if obs, ok := observations[cell.ID]; ok {
 				list = append(list, *obs)
 			}
 		}
-		score, err := ScoreAstraCheck(bench, tier, list)
+		score, err := ScoreAstraCheck(bench, tier, model.ExpectedModel, list)
 		if err != nil {
 			result.Verdict = AstraCheckVerdictInsufficient
-			result.Reasons = []string{"scoring_failed"}
-			extraDetail = mergeProbeErrorDetails(extraDetail, err.Error())
+			result.Reasons = []string{AstraCheckReasonScoringFailed}
+			detail = mergeProbeErrorDetails(detail, err.Error())
 		} else {
 			result.Verdict = score.Verdict
 			result.Winner = score.Winner
+			result.Strongest = score.Strongest
 			result.Matches = score.Matches
 			result.Cells = score.Cells
 			result.Reasons = score.Reasons
 			result.ValidSamples = score.ValidSamples
 			result.PlannedSamples = score.PlannedSamples
 		}
-		detail := mergeProbeErrorDetails(extraDetail, lastTransportDetail)
 		result.ErrorDetail = truncateProbeText(redactProbeUpstreamAddresses(detail))
 		return account, result
+	}
+
+	switch {
+	case !targetKnown || !astraCheckTargetAllowed(group.Platform, model.ExpectedModel):
+		return finish(nil, nil, "expected model "+model.ExpectedModel+" is not a target for "+group.Platform+" groups", AstraCheckReasonTargetNotAllowed)
+	case regErr != nil || registry == nil:
+		detail := "benchmark unavailable"
+		if regErr != nil {
+			detail = regErr.Error()
+		}
+		return finish(nil, nil, detail, AstraCheckReasonBenchmarkInvalid)
+	case bench == nil || !bench.HasModel(model.ExpectedModel):
+		return finish(nil, nil, "benchmark "+target.PackageID+" does not contain "+model.ExpectedModel, AstraCheckReasonTargetNotInBenchmark)
 	}
 
 	jobs, err := PlanAstraJobs(bench, tier)
@@ -271,18 +449,19 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 		if err != nil {
 			detail = err.Error()
 		}
-		return finish(nil, nil, detail)
+		return finish(nil, nil, detail, AstraCheckReasonScoringFailed)
 	}
 	result.RequestsPlanned = len(jobs)
 	progress.setPlanned(len(jobs))
 
-	// 让调度器按 Astra 请求模型过滤账号，其余配置照抄
+	// 让调度器按请求模型过滤账号（模型支持 / 模型级限流），其余配置照抄
 	probeCfg := *cfg
 	probeCfg.ProbeModel = requestModel
 
 	// 账号锁定：同步跑第一个任务，拿到 2xx 后整批固定在该账号
 	excludedIDs := make(map[int64]struct{})
 	maxAttempts := s.maxProbeAttempts(group)
+	tryPinned := pinned != nil && astraAccountCompatible(group, pinned)
 	var (
 		account            *Account
 		firstSample        *astraSample
@@ -290,17 +469,23 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 		failedSamples      []astraSample // 换号前失败的首个任务，保留以便汇总 HTTP 码与 token
 	)
 	for attemptNo := 0; attemptNo < maxAttempts; attemptNo++ {
-		attempt, selectErr := s.selectProbeAttempt(ctx, group, &probeCfg, excludedIDs)
-		if selectErr != nil {
-			return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "no schedulable account: "+selectErr.Error()))
-		}
-		if attempt == nil || attempt.Account == nil {
-			return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "no schedulable account available"))
-		}
-		candidate := attempt.Account
-		if candidate.Platform != PlatformOpenAI || attempt.WaitPlan != nil {
-			excludedIDs[candidate.ID] = struct{}{}
-			continue
+		var candidate *Account
+		if tryPinned {
+			tryPinned = false
+			candidate = pinned
+		} else {
+			attempt, selectErr := s.selectProbeAttempt(ctx, group, &probeCfg, excludedIDs)
+			if selectErr != nil {
+				return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "no schedulable account: "+selectErr.Error()), AstraCheckReasonNoAccount)
+			}
+			if attempt == nil || attempt.Account == nil {
+				return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "no schedulable account available"), AstraCheckReasonNoAccount)
+			}
+			candidate = attempt.Account
+			if _, excluded := excludedIDs[candidate.ID]; excluded || !astraAccountCompatible(group, candidate) || attempt.WaitPlan != nil {
+				excludedIDs[candidate.ID] = struct{}{}
+				continue
+			}
 		}
 		progress.setAccount(candidate.ID)
 		sample := s.runAstraJob(ctx, candidate, requestModel, bench, jobs[0], progress)
@@ -322,11 +507,12 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(ctx context.Context, grou
 		break
 	}
 	if account == nil {
-		return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "failover_exhausted"))
+		return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "failover_exhausted"), AstraCheckReasonNoAccount)
 	}
 	progress.setPhase(AstraCheckPhaseRunning)
 
-	samples := make([]astraSample, 0, len(jobs))
+	samples := make([]astraSample, 0, len(jobs)+len(failedSamples))
+	samples = append(samples, failedSamples...)
 	samples = append(samples, *firstSample)
 	if len(jobs) > 1 {
 		rest := jobs[1:]
@@ -391,28 +577,44 @@ func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Acco
 		timeoutCtx, cancel := context.WithTimeout(ctx, groupStatusAstraCheckRequestTimeout)
 		progress.requestStarted()
 		started := time.Now()
-		text, usage, httpCode, err := s.astraCheckRequest(timeoutCtx, account, requestModel, cell)
+		resp, httpCode, err := s.astraCheckRequest(timeoutCtx, account, requestModel, cell)
 		cancel()
 		sample.LatencyMS = time.Since(started).Milliseconds()
-		sample.Usage.InputTokens += usage.InputTokens
-		sample.Usage.OutputTokens += usage.OutputTokens
-		sample.Usage.ReasoningTokens += usage.ReasoningTokens
+		sample.Usage.InputTokens += resp.Usage.InputTokens
+		sample.Usage.OutputTokens += resp.Usage.OutputTokens
+		sample.Usage.ReasoningTokens += resp.Usage.ReasoningTokens
 		sample.HTTPCode = httpCode
 
-		if err != nil || (httpCode != nil && (*httpCode < 200 || *httpCode >= 300)) {
+		non2xx := httpCode != nil && (*httpCode < 200 || *httpCode >= 300)
+		switch {
+		case httpCode == nil || non2xx:
 			sample.TransportFailed = true
 			sample.Completed = false
+			switch {
+			case err != nil:
+				sample.ErrDetail = sanitizeProbeErrorDetail(err)
+			case httpCode != nil:
+				sample.ErrDetail = fmt.Sprintf("unexpected http status: %d", *httpCode)
+			default:
+				sample.ErrDetail = "no response"
+			}
+		case err != nil || resp.Invalid != "":
+			// 拿到 2xx 但流报错、被截断或拒答：这次回答不投票，按无效答案重试
+			sample.TransportFailed = false
+			sample.Completed = true
+			sample.Category = AstraCheckInvalidOutput
+			sample.Answer = truncateProbeText(resp.Text)
 			if err != nil {
 				sample.ErrDetail = sanitizeProbeErrorDetail(err)
 			} else {
-				sample.ErrDetail = fmt.Sprintf("unexpected http status: %d", *httpCode)
+				sample.ErrDetail = resp.Invalid
 			}
-		} else {
+		default:
 			sample.TransportFailed = false
 			sample.Completed = true
 			sample.ErrDetail = ""
-			sample.Answer = truncateProbeText(text)
-			sample.Category = NormalizeAstraAnswer(cell.Normalizer, text)
+			sample.Answer = truncateProbeText(resp.Text)
+			sample.Category = NormalizeAstraAnswer(cell.Normalizer, resp.Text)
 		}
 		valid := sample.Completed && sample.Category != AstraCheckInvalidOutput
 		final := valid || attempt == groupStatusAstraCheckMaxAttempts
@@ -423,7 +625,7 @@ func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Acco
 		if attempt == groupStatusAstraCheckMaxAttempts {
 			break
 		}
-		// 无效答案只是模型没按格式答，短暂等一下即可；传输 / HTTP 错误多半是上游限流，退避长一些
+		// 无效答案只是这次没答好，短暂等一下即可；传输 / HTTP 错误多半是上游限流，退避长一些
 		backoff := time.Duration(attempt) * 500 * time.Millisecond
 		if sample.TransportFailed {
 			backoff = time.Duration(attempt) * time.Second
@@ -447,16 +649,50 @@ func (s *GroupStatusProbeService) astraSleepFor(ctx context.Context, d time.Dura
 	return serverChanSleep(ctx, d)
 }
 
-// astraCheckRequest 复用 Sol Juice 的鉴权 / 地址 / 模型映射逻辑，只换请求体。
-func (s *GroupStatusProbeService) astraCheckRequest(ctx context.Context, account *Account, requestModel string, cell *AstraBenchmarkCell) (string, openAIProbeUsage, *int, error) {
-	return s.openAIResponsesProbeRequest(ctx, account, requestModel, func(modelID string, isOAuth bool) map[string]any {
+// astraCheckRequest 按账号平台发一道题：OpenAI 走 Responses，Anthropic 走 Messages。
+func (s *GroupStatusProbeService) astraCheckRequest(ctx context.Context, account *Account, requestModel string, cell *AstraBenchmarkCell) (astraResponse, *int, error) {
+	if account != nil && account.Platform == PlatformAnthropic {
+		req, err := s.buildAnthropicMessagesProbeRequest(ctx, account, requestModel, anthropicProbeHeadersClaudeCode, func(modelID string, isOAuth bool) (map[string]any, error) {
+			return createAnthropicAstraCheckPayload(modelID, cell, isOAuth)
+		})
+		if err != nil {
+			return astraResponse{}, nil, err
+		}
+		res, code, err := s.executeAnthropicStreamingProbe(req, account, parseAnthropicMessagesStream)
+		resp := astraResponse{
+			Text: res.Text,
+			Usage: openAIProbeUsage{
+				InputTokens:  res.Usage.InputTokens + res.Usage.CacheCreationInputTokens + res.Usage.CacheReadInputTokens,
+				OutputTokens: res.Usage.OutputTokens,
+			},
+		}
+		switch {
+		case res.StopReason == "max_tokens":
+			resp.Invalid = "truncated at max_tokens"
+		case res.StopReason == "refusal":
+			resp.Invalid = "refused"
+		case !res.Completed:
+			resp.Invalid = "stream ended without message_stop"
+		}
+		return resp, code, err
+	}
+
+	var completed bool
+	text, usage, code, err := s.openAIResponsesProbeRequest(ctx, account, requestModel, func(modelID string, isOAuth bool) map[string]any {
 		return createOpenAIAstraCheckPayload(modelID, cell, isOAuth)
 	}, func(body io.Reader) (string, openAIProbeUsage, error) {
-		return parseOpenAIResponsesStream(body, false)
+		t, u, c, e := parseOpenAIResponsesStreamDetailed(body, true)
+		completed = c
+		return t, u, e
 	})
+	resp := astraResponse{Text: text, Usage: usage}
+	if !completed {
+		resp.Invalid = "stream ended without response.completed"
+	}
+	return resp, code, err
 }
 
-// createOpenAIAstraCheckPayload 按基准包的请求契约生成请求体：system 句点 + 题面、low 档、128 token 上限。
+// createOpenAIAstraCheckPayload 按基准包的请求契约生成 Responses 请求体：system 句点 + 题面、档位 effort、输出上限。
 // Codex OAuth 后端要求 instructions 非空，把 system 文本放进 instructions 并带 encrypted_content。
 func createOpenAIAstraCheckPayload(modelID string, cell *AstraBenchmarkCell, isOAuth bool) map[string]any {
 	system := cell.System
@@ -503,6 +739,74 @@ func createOpenAIAstraCheckPayload(modelID string, cell *AstraBenchmarkCell, isO
 	return payload
 }
 
+// createAnthropicAstraCheckPayload 按基准包的 claude-code 契约生成 Messages 请求体：system 句点、题面、
+// 输出上限、adaptive thinking 与 output_config.effort。OAuth 凭证只允许 Claude Code 客户端使用，
+// 所以在句点前加一行 Claude Code 身份并带 metadata.user_id；API-Key 账号只发句点。
+func createAnthropicAstraCheckPayload(modelID string, cell *AstraBenchmarkCell, isOAuth bool) (map[string]any, error) {
+	system := cell.System
+	if strings.TrimSpace(system) == "" {
+		system = "."
+	}
+	maxOutput := cell.MaxOutputTokens
+	if maxOutput <= 0 {
+		maxOutput = 128
+	}
+	payload := map[string]any{
+		"model": modelID,
+		"messages": []map[string]any{
+			{
+				"role": "user",
+				"content": []map[string]any{
+					{"type": "text", "text": cell.Prompt},
+				},
+			},
+		},
+		"max_tokens": maxOutput,
+		"stream":     true,
+		"system":     system,
+	}
+	if cell.Profile == "claude-code" {
+		effort := cell.Effort
+		if effort == "" {
+			effort = "low"
+		}
+		payload["thinking"] = map[string]any{"type": "adaptive"}
+		payload["output_config"] = map[string]any{"effort": effort}
+	}
+	if isOAuth {
+		sessionID, err := generateSessionString()
+		if err != nil {
+			return nil, err
+		}
+		payload["system"] = []map[string]any{
+			{"type": "text", "text": claudeCodeSystemPrompt},
+			{"type": "text", "text": system},
+		}
+		payload["metadata"] = map[string]string{"user_id": sessionID}
+	}
+	return payload, nil
+}
+
+// estimateAstraCheckCostUSD 按网关计价估算一次运行的费用（目标的默认请求模型优先，其次实际请求模型）；无价格时为 0。
+func (s *GroupStatusProbeService) estimateAstraCheckCostUSD(target AstraCheckTarget, requestModel string, inputTokens, outputTokens int64) float64 {
+	if s == nil || s.gatewaySvc == nil || s.gatewaySvc.billingService == nil {
+		return 0
+	}
+	if inputTokens <= 0 && outputTokens <= 0 {
+		return 0
+	}
+	tokens := UsageTokens{InputTokens: int(inputTokens), OutputTokens: int(outputTokens)}
+	for _, model := range []string{target.DefaultRequestModel, requestModel} {
+		if strings.TrimSpace(model) == "" {
+			continue
+		}
+		if cost, err := s.gatewaySvc.billingService.CalculateCost(model, tokens, 1); err == nil && cost != nil {
+			return cost.TotalCost
+		}
+	}
+	return 0
+}
+
 func (s *GroupStatusProbeService) saveAstraCheckExecution(ctx context.Context, group *Group, cfg *GroupStatusConfig, account *Account, result *GroupStatusAstraCheckResult) (*GroupStatusAstraCheckExecution, error) {
 	if result == nil {
 		result = &GroupStatusAstraCheckResult{
@@ -515,6 +819,9 @@ func (s *GroupStatusProbeService) saveAstraCheckExecution(ctx context.Context, g
 	}
 	result.GroupID = group.ID
 	result.ConfigID = cfg.ID
+	if result.Platform == "" {
+		result.Platform = group.Platform
+	}
 	if result.FinishedAt.IsZero() {
 		result.FinishedAt = time.Now()
 	}

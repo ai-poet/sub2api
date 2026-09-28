@@ -341,6 +341,18 @@ func (_u *GroupStatusConfigUpdate) SetNillableAstraCheckRequestModel(v *string) 
 	return _u
 }
 
+// SetAstraCheckModels sets the "astra_check_models" field.
+func (_u *GroupStatusConfigUpdate) SetAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigUpdate {
+	_u.mutation.SetAstraCheckModels(v)
+	return _u
+}
+
+// AppendAstraCheckModels appends value to the "astra_check_models" field.
+func (_u *GroupStatusConfigUpdate) AppendAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigUpdate {
+	_u.mutation.AppendAstraCheckModels(v)
+	return _u
+}
+
 // SetAstraCheckTier sets the "astra_check_tier" field.
 func (_u *GroupStatusConfigUpdate) SetAstraCheckTier(v string) *GroupStatusConfigUpdate {
 	_u.mutation.SetAstraCheckTier(v)
@@ -508,6 +520,14 @@ func (_u *GroupStatusConfigUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.AstraCheckRequestModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckRequestModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckModels(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckModels, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedAstraCheckModels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, groupstatusconfig.FieldAstraCheckModels, value)
+		})
 	}
 	if value, ok := _u.mutation.AstraCheckTier(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckTier, field.TypeString, value)
@@ -850,6 +870,18 @@ func (_u *GroupStatusConfigUpdateOne) SetNillableAstraCheckRequestModel(v *strin
 	return _u
 }
 
+// SetAstraCheckModels sets the "astra_check_models" field.
+func (_u *GroupStatusConfigUpdateOne) SetAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetAstraCheckModels(v)
+	return _u
+}
+
+// AppendAstraCheckModels appends value to the "astra_check_models" field.
+func (_u *GroupStatusConfigUpdateOne) AppendAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigUpdateOne {
+	_u.mutation.AppendAstraCheckModels(v)
+	return _u
+}
+
 // SetAstraCheckTier sets the "astra_check_tier" field.
 func (_u *GroupStatusConfigUpdateOne) SetAstraCheckTier(v string) *GroupStatusConfigUpdateOne {
 	_u.mutation.SetAstraCheckTier(v)
@@ -1047,6 +1079,14 @@ func (_u *GroupStatusConfigUpdateOne) sqlSave(ctx context.Context) (_node *Group
 	}
 	if value, ok := _u.mutation.AstraCheckRequestModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckRequestModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AstraCheckModels(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckModels, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedAstraCheckModels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, groupstatusconfig.FieldAstraCheckModels, value)
+		})
 	}
 	if value, ok := _u.mutation.AstraCheckTier(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckTier, field.TypeString, value)

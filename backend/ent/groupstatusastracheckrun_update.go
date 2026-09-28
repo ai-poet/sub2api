@@ -71,6 +71,69 @@ func (_u *GroupStatusAstraCheckRunUpdate) AddConfigID(v int64) *GroupStatusAstra
 	return _u
 }
 
+// SetPlatform sets the "platform" field.
+func (_u *GroupStatusAstraCheckRunUpdate) SetPlatform(v string) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.SetPlatform(v)
+	return _u
+}
+
+// SetNillablePlatform sets the "platform" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdate) SetNillablePlatform(v *string) *GroupStatusAstraCheckRunUpdate {
+	if v != nil {
+		_u.SetPlatform(*v)
+	}
+	return _u
+}
+
+// SetExpectedModel sets the "expected_model" field.
+func (_u *GroupStatusAstraCheckRunUpdate) SetExpectedModel(v string) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.SetExpectedModel(v)
+	return _u
+}
+
+// SetNillableExpectedModel sets the "expected_model" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdate) SetNillableExpectedModel(v *string) *GroupStatusAstraCheckRunUpdate {
+	if v != nil {
+		_u.SetExpectedModel(*v)
+	}
+	return _u
+}
+
+// SetRound sets the "round" field.
+func (_u *GroupStatusAstraCheckRunUpdate) SetRound(v int) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.ResetRound()
+	_u.mutation.SetRound(v)
+	return _u
+}
+
+// SetNillableRound sets the "round" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdate) SetNillableRound(v *int) *GroupStatusAstraCheckRunUpdate {
+	if v != nil {
+		_u.SetRound(*v)
+	}
+	return _u
+}
+
+// AddRound adds value to the "round" field.
+func (_u *GroupStatusAstraCheckRunUpdate) AddRound(v int) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.AddRound(v)
+	return _u
+}
+
+// SetScoringVersion sets the "scoring_version" field.
+func (_u *GroupStatusAstraCheckRunUpdate) SetScoringVersion(v string) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.SetScoringVersion(v)
+	return _u
+}
+
+// SetNillableScoringVersion sets the "scoring_version" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdate) SetNillableScoringVersion(v *string) *GroupStatusAstraCheckRunUpdate {
+	if v != nil {
+		_u.SetScoringVersion(*v)
+	}
+	return _u
+}
+
 // SetBenchmarkPackageID sets the "benchmark_package_id" field.
 func (_u *GroupStatusAstraCheckRunUpdate) SetBenchmarkPackageID(v string) *GroupStatusAstraCheckRunUpdate {
 	_u.mutation.SetBenchmarkPackageID(v)
@@ -370,6 +433,27 @@ func (_u *GroupStatusAstraCheckRunUpdate) AddReasoningTokens(v int64) *GroupStat
 	return _u
 }
 
+// SetCostUsd sets the "cost_usd" field.
+func (_u *GroupStatusAstraCheckRunUpdate) SetCostUsd(v float64) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.ResetCostUsd()
+	_u.mutation.SetCostUsd(v)
+	return _u
+}
+
+// SetNillableCostUsd sets the "cost_usd" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdate) SetNillableCostUsd(v *float64) *GroupStatusAstraCheckRunUpdate {
+	if v != nil {
+		_u.SetCostUsd(*v)
+	}
+	return _u
+}
+
+// AddCostUsd adds value to the "cost_usd" field.
+func (_u *GroupStatusAstraCheckRunUpdate) AddCostUsd(v float64) *GroupStatusAstraCheckRunUpdate {
+	_u.mutation.AddCostUsd(v)
+	return _u
+}
+
 // SetLatencyMs sets the "latency_ms" field.
 func (_u *GroupStatusAstraCheckRunUpdate) SetLatencyMs(v int64) *GroupStatusAstraCheckRunUpdate {
 	_u.mutation.ResetLatencyMs()
@@ -525,6 +609,21 @@ func (_u *GroupStatusAstraCheckRunUpdate) sqlSave(ctx context.Context) (_node in
 	if value, ok := _u.mutation.AddedConfigID(); ok {
 		_spec.AddField(groupstatusastracheckrun.FieldConfigID, field.TypeInt64, value)
 	}
+	if value, ok := _u.mutation.Platform(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldPlatform, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ExpectedModel(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldExpectedModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Round(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldRound, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedRound(); ok {
+		_spec.AddField(groupstatusastracheckrun.FieldRound, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.ScoringVersion(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldScoringVersion, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.BenchmarkPackageID(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldBenchmarkPackageID, field.TypeString, value)
 	}
@@ -623,6 +722,12 @@ func (_u *GroupStatusAstraCheckRunUpdate) sqlSave(ctx context.Context) (_node in
 	if value, ok := _u.mutation.AddedReasoningTokens(); ok {
 		_spec.AddField(groupstatusastracheckrun.FieldReasoningTokens, field.TypeInt64, value)
 	}
+	if value, ok := _u.mutation.CostUsd(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldCostUsd, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedCostUsd(); ok {
+		_spec.AddField(groupstatusastracheckrun.FieldCostUsd, field.TypeFloat64, value)
+	}
 	if value, ok := _u.mutation.LatencyMs(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldLatencyMs, field.TypeInt64, value)
 	}
@@ -712,6 +817,69 @@ func (_u *GroupStatusAstraCheckRunUpdateOne) SetNillableConfigID(v *int64) *Grou
 // AddConfigID adds value to the "config_id" field.
 func (_u *GroupStatusAstraCheckRunUpdateOne) AddConfigID(v int64) *GroupStatusAstraCheckRunUpdateOne {
 	_u.mutation.AddConfigID(v)
+	return _u
+}
+
+// SetPlatform sets the "platform" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetPlatform(v string) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.SetPlatform(v)
+	return _u
+}
+
+// SetNillablePlatform sets the "platform" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetNillablePlatform(v *string) *GroupStatusAstraCheckRunUpdateOne {
+	if v != nil {
+		_u.SetPlatform(*v)
+	}
+	return _u
+}
+
+// SetExpectedModel sets the "expected_model" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetExpectedModel(v string) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.SetExpectedModel(v)
+	return _u
+}
+
+// SetNillableExpectedModel sets the "expected_model" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetNillableExpectedModel(v *string) *GroupStatusAstraCheckRunUpdateOne {
+	if v != nil {
+		_u.SetExpectedModel(*v)
+	}
+	return _u
+}
+
+// SetRound sets the "round" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetRound(v int) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.ResetRound()
+	_u.mutation.SetRound(v)
+	return _u
+}
+
+// SetNillableRound sets the "round" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetNillableRound(v *int) *GroupStatusAstraCheckRunUpdateOne {
+	if v != nil {
+		_u.SetRound(*v)
+	}
+	return _u
+}
+
+// AddRound adds value to the "round" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) AddRound(v int) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.AddRound(v)
+	return _u
+}
+
+// SetScoringVersion sets the "scoring_version" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetScoringVersion(v string) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.SetScoringVersion(v)
+	return _u
+}
+
+// SetNillableScoringVersion sets the "scoring_version" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetNillableScoringVersion(v *string) *GroupStatusAstraCheckRunUpdateOne {
+	if v != nil {
+		_u.SetScoringVersion(*v)
+	}
 	return _u
 }
 
@@ -1014,6 +1182,27 @@ func (_u *GroupStatusAstraCheckRunUpdateOne) AddReasoningTokens(v int64) *GroupS
 	return _u
 }
 
+// SetCostUsd sets the "cost_usd" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetCostUsd(v float64) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.ResetCostUsd()
+	_u.mutation.SetCostUsd(v)
+	return _u
+}
+
+// SetNillableCostUsd sets the "cost_usd" field if the given value is not nil.
+func (_u *GroupStatusAstraCheckRunUpdateOne) SetNillableCostUsd(v *float64) *GroupStatusAstraCheckRunUpdateOne {
+	if v != nil {
+		_u.SetCostUsd(*v)
+	}
+	return _u
+}
+
+// AddCostUsd adds value to the "cost_usd" field.
+func (_u *GroupStatusAstraCheckRunUpdateOne) AddCostUsd(v float64) *GroupStatusAstraCheckRunUpdateOne {
+	_u.mutation.AddCostUsd(v)
+	return _u
+}
+
 // SetLatencyMs sets the "latency_ms" field.
 func (_u *GroupStatusAstraCheckRunUpdateOne) SetLatencyMs(v int64) *GroupStatusAstraCheckRunUpdateOne {
 	_u.mutation.ResetLatencyMs()
@@ -1199,6 +1388,21 @@ func (_u *GroupStatusAstraCheckRunUpdateOne) sqlSave(ctx context.Context) (_node
 	if value, ok := _u.mutation.AddedConfigID(); ok {
 		_spec.AddField(groupstatusastracheckrun.FieldConfigID, field.TypeInt64, value)
 	}
+	if value, ok := _u.mutation.Platform(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldPlatform, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ExpectedModel(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldExpectedModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Round(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldRound, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedRound(); ok {
+		_spec.AddField(groupstatusastracheckrun.FieldRound, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.ScoringVersion(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldScoringVersion, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.BenchmarkPackageID(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldBenchmarkPackageID, field.TypeString, value)
 	}
@@ -1296,6 +1500,12 @@ func (_u *GroupStatusAstraCheckRunUpdateOne) sqlSave(ctx context.Context) (_node
 	}
 	if value, ok := _u.mutation.AddedReasoningTokens(); ok {
 		_spec.AddField(groupstatusastracheckrun.FieldReasoningTokens, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.CostUsd(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldCostUsd, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedCostUsd(); ok {
+		_spec.AddField(groupstatusastracheckrun.FieldCostUsd, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.LatencyMs(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldLatencyMs, field.TypeInt64, value)

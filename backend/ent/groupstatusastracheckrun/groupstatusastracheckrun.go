@@ -17,6 +17,14 @@ const (
 	FieldGroupID = "group_id"
 	// FieldConfigID holds the string denoting the config_id field in the database.
 	FieldConfigID = "config_id"
+	// FieldPlatform holds the string denoting the platform field in the database.
+	FieldPlatform = "platform"
+	// FieldExpectedModel holds the string denoting the expected_model field in the database.
+	FieldExpectedModel = "expected_model"
+	// FieldRound holds the string denoting the round field in the database.
+	FieldRound = "round"
+	// FieldScoringVersion holds the string denoting the scoring_version field in the database.
+	FieldScoringVersion = "scoring_version"
 	// FieldBenchmarkPackageID holds the string denoting the benchmark_package_id field in the database.
 	FieldBenchmarkPackageID = "benchmark_package_id"
 	// FieldBenchmarkVersion holds the string denoting the benchmark_version field in the database.
@@ -53,6 +61,8 @@ const (
 	FieldOutputTokens = "output_tokens"
 	// FieldReasoningTokens holds the string denoting the reasoning_tokens field in the database.
 	FieldReasoningTokens = "reasoning_tokens"
+	// FieldCostUsd holds the string denoting the cost_usd field in the database.
+	FieldCostUsd = "cost_usd"
 	// FieldLatencyMs holds the string denoting the latency_ms field in the database.
 	FieldLatencyMs = "latency_ms"
 	// FieldHTTPCode holds the string denoting the http_code field in the database.
@@ -74,6 +84,10 @@ var Columns = []string{
 	FieldID,
 	FieldGroupID,
 	FieldConfigID,
+	FieldPlatform,
+	FieldExpectedModel,
+	FieldRound,
+	FieldScoringVersion,
 	FieldBenchmarkPackageID,
 	FieldBenchmarkVersion,
 	FieldBenchmarkSha256,
@@ -92,6 +106,7 @@ var Columns = []string{
 	FieldInputTokens,
 	FieldOutputTokens,
 	FieldReasoningTokens,
+	FieldCostUsd,
 	FieldLatencyMs,
 	FieldHTTPCode,
 	FieldErrorDetail,
@@ -111,6 +126,14 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultPlatform holds the default value on creation for the "platform" field.
+	DefaultPlatform string
+	// DefaultExpectedModel holds the default value on creation for the "expected_model" field.
+	DefaultExpectedModel string
+	// DefaultRound holds the default value on creation for the "round" field.
+	DefaultRound int
+	// DefaultScoringVersion holds the default value on creation for the "scoring_version" field.
+	DefaultScoringVersion string
 	// DefaultBenchmarkPackageID holds the default value on creation for the "benchmark_package_id" field.
 	DefaultBenchmarkPackageID string
 	// DefaultBenchmarkVersion holds the default value on creation for the "benchmark_version" field.
@@ -143,6 +166,8 @@ var (
 	DefaultOutputTokens int64
 	// DefaultReasoningTokens holds the default value on creation for the "reasoning_tokens" field.
 	DefaultReasoningTokens int64
+	// DefaultCostUsd holds the default value on creation for the "cost_usd" field.
+	DefaultCostUsd float64
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 )
@@ -163,6 +188,26 @@ func ByGroupID(opts ...sql.OrderTermOption) OrderOption {
 // ByConfigID orders the results by the config_id field.
 func ByConfigID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldConfigID, opts...).ToFunc()
+}
+
+// ByPlatform orders the results by the platform field.
+func ByPlatform(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPlatform, opts...).ToFunc()
+}
+
+// ByExpectedModel orders the results by the expected_model field.
+func ByExpectedModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpectedModel, opts...).ToFunc()
+}
+
+// ByRound orders the results by the round field.
+func ByRound(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRound, opts...).ToFunc()
+}
+
+// ByScoringVersion orders the results by the scoring_version field.
+func ByScoringVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldScoringVersion, opts...).ToFunc()
 }
 
 // ByBenchmarkPackageID orders the results by the benchmark_package_id field.
@@ -233,6 +278,11 @@ func ByOutputTokens(opts ...sql.OrderTermOption) OrderOption {
 // ByReasoningTokens orders the results by the reasoning_tokens field.
 func ByReasoningTokens(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReasoningTokens, opts...).ToFunc()
+}
+
+// ByCostUsd orders the results by the cost_usd field.
+func ByCostUsd(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCostUsd, opts...).ToFunc()
 }
 
 // ByLatencyMs orders the results by the latency_ms field.

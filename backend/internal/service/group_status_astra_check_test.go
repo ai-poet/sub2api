@@ -1,86 +1,102 @@
 package service
 
 import (
+	"encoding/json"
+	"math"
 	"testing"
 	"time"
 
+	astrabenchmark "github.com/Wei-Shaw/sub2api/resources/astra-benchmark"
 	"github.com/stretchr/testify/require"
 )
 
-// astraSyntheticPackage 是测试用的最小基准包：2 个模型 × 2 道题，分布与阈值手工可算。
-//
-// 低档每题 2 次：
-//   - 全 Astra 式答案（japan / 3）  → astra 得分 -0.276、sol -2.905 → astra 匹配度 ≈ 0.933 > 0.9
-//   - 全 Sol 式答案（brazil / 4）   → sol 匹配度 ≈ 0.955 > 0.9
-//   - 混合（japan / 4）            → astra ≈ 0.752，无人越线
-const astraSyntheticPackage = `{
-  "mode": "gpt",
-  "id": "synthetic-astra",
-  "version": "test-1",
-  "content_sha256": "deadbeef",
-  "engine": {"scoring_version": "meow-fingerprint-v2"},
-  "models": [
-    {"id": "gpt-6-astra", "name": "GPT-6 Astra", "request_model": "gpt-6-astra"},
-    {"id": "gpt-5.6-sol", "name": "GPT-5.6 Sol", "request_model": "gpt-5.6-sol"}
-  ],
-  "probes": [
-    {
-      "id": "country",
-      "family_id": "country_en",
-      "normalizer": {"id": "exact_trimmed_casefold", "parameters": {"max_length": 64}},
-      "cells": [
-        {"id": "country_low", "system": ".", "prompt": "Name a random country. Reply with only the name.", "effort": "low", "parameters": {"max_output_tokens": 128}}
-      ]
-    },
-    {
-      "id": "count_r",
-      "family_id": "count_r",
-      "normalizer": {"id": "b80_exact_3", "parameters": {}},
-      "cells": [
-        {"id": "strawberry_low", "system": ".", "prompt": "How many r are in strawberry? Reply with a number only.", "effort": "low", "parameters": {"max_output_tokens": 128}}
-      ]
-    }
-  ],
-  "tiers": {
-    "low": {"counts": {"country_low": 2, "strawberry_low": 2}, "thresholds": {"gpt-6-astra": 0.9, "gpt-5.6-sol": 0.9}},
-    "medium": {"counts": 4, "thresholds": {"gpt-6-astra": 0.9, "gpt-5.6-sol": 0.9}},
-    "high": {"counts": 6, "thresholds": {"gpt-6-astra": 0.9, "gpt-5.6-sol": 0.9}}
-  },
-  "fitted": {
-    "models": ["gpt-6-astra", "gpt-5.6-sol"],
-    "cells": {
-      "country_low": {
-        "categories": ["japan", "brazil", "__OTHER__"],
-        "model_distributions": {
-          "gpt-6-astra": {"japan": 0.8, "brazil": 0.1, "__OTHER__": 0.1},
-          "gpt-5.6-sol": {"japan": 0.1, "brazil": 0.8, "__OTHER__": 0.1}
-        },
-        "weight": 1.0,
-        "family_id": "country_en",
-        "reference_ready": true
-      },
-      "strawberry_low": {
-        "categories": ["exact_3", "other_integer"],
-        "model_distributions": {
-          "gpt-6-astra": {"exact_3": 0.9, "other_integer": 0.1},
-          "gpt-5.6-sol": {"exact_3": 0.3, "other_integer": 0.7}
-        },
-        "weight": 0.5,
-        "family_id": "count_r",
-        "reference_ready": true
-      }
-    }
-  },
-  "calibration": {"tiers": {"low": {"status": "target_met"}, "medium": {"status": "target_met"}, "high": {"status": "target_met"}}}
-}`
+// ---------- 合成 v3 基准包 ----------
 
-func loadSyntheticAstraBenchmark(t *testing.T) (*AstraBenchmark, *AstraBenchmarkMeta) {
+// syntheticAstraPackage 生成一个小而确定的 v3 包：两道题，每个真实候选 / 参考源各偏好一个答案。
+// 包 id 与目标列表里的真实包 id 一致，方便探测测试通过注册表按目标找到它。
+func syntheticAstraPackage(t *testing.T, packageID, mode string, models []string, profile string) *AstraBenchmark {
 	t.Helper()
-	bench, meta, err := ParseAstraBenchmark([]byte(astraSyntheticPackage))
+	sources := append(append([]string{}, models...), "ref/other")
+	letters := []string{"a", "b", "c", "d", "e"}
+	numbers := []string{"1", "2", "3", "4", "5"}
+	alphaFor := func(categories []string, preferred string) []float64 {
+		out := make([]float64, len(categories))
+		for i, category := range categories {
+			out[i] = 0.2
+			if category == preferred {
+				out[i] = 20.2
+			}
+		}
+		return out
+	}
+	cell := func(id string, answers []string) (map[string]any, map[string]any) {
+		categories := append(append([]string{}, answers[:len(sources)]...), astraBenchmarkUnseenCategory)
+		alpha := map[string]any{}
+		for i, source := range sources {
+			alpha[source] = alphaFor(categories, answers[i])
+		}
+		probe := map[string]any{
+			"id":         id,
+			"normalizer": map[string]any{"id": "exact_trimmed_casefold", "parameters": map[string]any{"max_length": 4096}},
+			"cells": []any{map[string]any{
+				"id": id, "system": ".", "prompt": "prompt " + id, "history": []any{}, "effort": "low",
+				"profile": profile, "parameters": map[string]any{"max_output_tokens": 128},
+			}},
+		}
+		return probe, map[string]any{"categories": categories, "alpha": alpha}
+	}
+	probe1, fitted1 := cell("c1", letters)
+	probe2, fitted2 := cell("c2", numbers)
+
+	modelEntries := []any{}
+	fittedModels := []any{}
+	thresholds := map[string]any{}
+	for _, model := range models {
+		modelEntries = append(modelEntries, map[string]any{"id": model, "name": model, "request_model": "vendor/" + model})
+		fittedModels = append(fittedModels, model)
+		thresholds[model] = 0.5
+	}
+	modelEntries = append(modelEntries, map[string]any{"id": AstraCheckOtherModel, "name": "other", "request_model": "reference-only:other", "reference_only": true})
+	fittedModels = append(fittedModels, AstraCheckOtherModel)
+	thresholds[AstraCheckOtherModel] = 0.5
+
+	tier := func(n int) map[string]any {
+		return map[string]any{"counts": map[string]any{"c1": n, "c2": n}, "thresholds": thresholds}
+	}
+	pkg := map[string]any{
+		"mode": mode, "id": packageID, "version": "test-1", "schema_version": 1,
+		"engine": map[string]any{"scoring_version": astraBenchmarkScoringVersion, "completion_ratio": 0.6, "prior_mass": 1},
+		"models": modelEntries,
+		"probes": []any{probe1, probe2},
+		"tiers":  map[string]any{"low": tier(2), "medium": tier(3), "high": tier(4)},
+		"fitted": map[string]any{
+			"scoring_version": astraBenchmarkScoringVersion, "prior_mass": 1, "models": fittedModels,
+			"sources": sources, "reference_sources": []any{"ref/other"}, "aggregation": astraBenchmarkAggregation,
+			"cells": map[string]any{"c1": fitted1, "c2": fitted2},
+		},
+		"calibration": map[string]any{"status": "calibrated", "tiers": map[string]any{
+			"low":    map[string]any{"result": map[string]any{"status": "target_met"}},
+			"medium": map[string]any{"result": map[string]any{"status": "target_met"}},
+			"high":   map[string]any{"result": map[string]any{"status": "target_met"}},
+		}},
+	}
+	raw, err := json.Marshal(pkg)
 	require.NoError(t, err)
-	require.NotNil(t, bench)
-	require.NotNil(t, meta)
-	return bench, meta
+	bench, _, err := ParseAstraBenchmark(raw)
+	require.NoError(t, err)
+	return bench
+}
+
+func syntheticGPTPackage(t *testing.T) *AstraBenchmark {
+	return syntheticAstraPackage(t, "meow-gpt-other-cap98-efficient", astraBenchmarkModeGPT, []string{"gpt-6-astra", "gpt-6-sol"}, "standard")
+}
+
+func observe(cells map[string]map[string]int) []AstraCellObservation {
+	out := []AstraCellObservation{}
+	for cellID, counts := range cells {
+		out = append(out, AstraCellObservation{CellID: cellID, Counts: counts})
+	}
+	return out
 }
 
 func astraMatchByModel(t *testing.T, matches []AstraCheckModelMatch, model string) AstraCheckModelMatch {
@@ -90,419 +106,405 @@ func astraMatchByModel(t *testing.T, matches []AstraCheckModelMatch, model strin
 			return match
 		}
 	}
-	t.Fatalf("model %s not found in matches %+v", model, matches)
+	t.Fatalf("model %s not found in matches", model)
 	return AstraCheckModelMatch{}
 }
 
-// ---------- 归一器 ----------
-
-func TestNormalizeAstraAnswer(t *testing.T) {
-	cases := []struct {
-		name string
-		norm AstraNormalizer
-		raw  string
-		want string
-	}{
-		{"casefold trims and lowers", AstraNormalizer{ID: "exact_trimmed_casefold"}, "  Japan \n", "japan"},
-		{"empty is invalid", AstraNormalizer{ID: "exact_trimmed_casefold"}, "   ", AstraCheckInvalidOutput},
-		{"default normalizer casefolds", AstraNormalizer{}, "BRAZIL", "brazil"},
-		{"exact_trimmed keeps case", AstraNormalizer{ID: "exact_trimmed"}, " Tokyo ", "Tokyo"},
-		{"whitespace collapse", AstraNormalizer{ID: "whitespace_collapse"}, "a   b\n c", "a b c"},
-		{"integer canonical", AstraNormalizer{ID: "integer"}, " +007 ", "7"},
-		{"integer rejects text", AstraNormalizer{ID: "integer"}, "three", AstraCheckInvalidOutput},
-		{"b80 exact 3", AstraNormalizer{ID: "b80_exact_3"}, "3", "exact_3"},
-		{"b80 other integer", AstraNormalizer{ID: "b80_exact_3"}, "2", "other_integer"},
-		{"b80 non integer invalid", AstraNormalizer{ID: "b80_exact_3"}, "3 r's", AstraCheckInvalidOutput},
-		{"behavior label strips punctuation", AstraNormalizer{ID: "behavior_label"}, "\"Blue Jay.\"", "blue jay"},
-		{"behavior label rejects digits", AstraNormalizer{ID: "behavior_label"}, "jay 42", AstraCheckInvalidOutput},
-		{"fixed enum maps value", AstraNormalizer{ID: "fixed_enum", Values: map[string]string{"Yes": "yes", "No": "no"}}, "YES", "yes"},
-		{"fixed enum unknown is other", AstraNormalizer{ID: "fixed_enum", Values: map[string]string{"Yes": "yes"}}, "maybe", AstraCheckOtherCategory},
-		{"too long is invalid", AstraNormalizer{ID: "exact_trimmed_casefold", MaxLength: 4}, "japan", AstraCheckInvalidOutput},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.want, NormalizeAstraAnswer(tc.norm, tc.raw))
-		})
-	}
+func mustParseTimeForTest(t *testing.T, value string) time.Time {
+	t.Helper()
+	parsed, err := time.Parse(time.RFC3339, value)
+	require.NoError(t, err)
+	return parsed
 }
 
-// ---------- 任务规划 ----------
+// ---------- 归一化与规划 ----------
 
-func TestPlanAstraJobs_RoundRobin(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
+func TestNormalizeAstraAnswer(t *testing.T) {
+	casefold := AstraNormalizer{ID: "exact_trimmed_casefold", MaxLength: 8}
+	require.Equal(t, "hello", NormalizeAstraAnswer(casefold, "  Hello \n"))
+	require.Equal(t, "五筒", NormalizeAstraAnswer(casefold, "五筒"))
+	require.Equal(t, AstraCheckInvalidOutput, NormalizeAstraAnswer(casefold, "   "))
+	require.Equal(t, AstraCheckInvalidOutput, NormalizeAstraAnswer(casefold, "123456789"))
+	require.Equal(t, "Hello", NormalizeAstraAnswer(AstraNormalizer{ID: "exact_trimmed"}, " Hello "))
+}
 
+func TestPlanAstraJobs_RoundRobinFollowsTierCounts(t *testing.T) {
+	reg, err := LoadEmbeddedAstraBenchmarks()
+	require.NoError(t, err)
+	bench := reg.Package("meow-claude-other-cap98-efficient")
 	jobs, err := PlanAstraJobs(bench, AstraCheckTierLow)
 	require.NoError(t, err)
-	require.Equal(t, []AstraJob{
-		{CellID: "country_low", Index: 0},
-		{CellID: "strawberry_low", Index: 0},
-		{CellID: "country_low", Index: 1},
-		{CellID: "strawberry_low", Index: 1},
-	}, jobs)
-
-	medium, err := PlanAstraJobs(bench, AstraCheckTierMedium)
-	require.NoError(t, err)
-	require.Len(t, medium, 8)
+	require.Len(t, jobs, 48)
+	perCell := map[string]int{}
+	for _, job := range jobs {
+		perCell[job.CellID]++
+	}
+	require.Equal(t, bench.Tiers[AstraCheckTierLow].Counts, perCell)
+	// 前几个任务按题目顺序轮转
+	require.Equal(t, bench.Cells[0].ID, jobs[0].CellID)
+	require.Equal(t, bench.Cells[1].ID, jobs[1].CellID)
 
 	_, err = PlanAstraJobs(bench, "ultra")
 	require.Error(t, err)
 }
 
-// ---------- 判定 ----------
+// ---------- v3 判定 ----------
 
-func TestScoreAstraCheck_MatchOnAstraLikeAnswers(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
+func TestAstraDirichletLogEvidence(t *testing.T) {
+	// α=[1,1]，观测一次第 0 类：lgamma(2) − lgamma(3) + lgamma(2) − lgamma(1) = −ln 2
+	require.InDelta(t, -math.Ln2, astraDirichletLogEvidence([]float64{1, 1}, []int{1, 0}), 1e-12)
+	require.Equal(t, 0.0, astraDirichletLogEvidence([]float64{1, 1}, []int{0, 0}))
+	// 与逐步预测概率之积一致：先 a（1/2），再 a（2/3）
+	require.InDelta(t, math.Log(0.5*2.0/3.0), astraDirichletLogEvidence([]float64{1, 1}, []int{2, 0}), 1e-12)
+}
 
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"japan": 2}},
-		{CellID: "strawberry_low", Counts: map[string]int{"exact_3": 2}},
-	})
+func TestScoreAstraCheck_MatchWhenExpectedModelWins(t *testing.T) {
+	bench := syntheticGPTPackage(t)
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-astra", observe(map[string]map[string]int{
+		"c1": {"a": 2},
+		"c2": {"1": 2},
+	}))
 	require.NoError(t, err)
 	require.Equal(t, AstraCheckVerdictMatch, score.Verdict)
 	require.Equal(t, "gpt-6-astra", score.Winner)
+	require.Equal(t, "gpt-6-astra", score.Strongest)
 	require.Empty(t, score.Reasons)
 	require.Equal(t, 4, score.ValidSamples)
 	require.Equal(t, 4, score.PlannedSamples)
-	require.Len(t, score.Matches, 2)
-
 	astra := astraMatchByModel(t, score.Matches, "gpt-6-astra")
 	require.True(t, astra.Passed)
-	require.InDelta(t, 0.933, astra.Match, 0.005)
-	require.InDelta(t, 0.9, astra.Threshold, 1e-9)
-	require.Equal(t, "GPT-6 Astra", astra.Name)
-
-	sol := astraMatchByModel(t, score.Matches, "gpt-5.6-sol")
+	require.Greater(t, astra.Match, 0.5)
+	sol := astraMatchByModel(t, score.Matches, "gpt-6-sol")
 	require.False(t, sol.Passed)
-	require.InDelta(t, 0.067, sol.Match, 0.005)
-
-	require.Len(t, score.Cells, 2)
-	require.Equal(t, "country_en", score.Cells[0].FamilyID)
-	require.Equal(t, 2, score.Cells[0].Minimum)
-	require.Equal(t, 1.0, score.Cells[0].Weight)
+	require.Less(t, sol.Match, 0.5)
+	require.Equal(t, "GPT-6 Astra", astra.Name)
 }
 
-func TestScoreAstraCheck_MismatchPointsToSol(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
-
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"brazil": 2}},
-		{CellID: "strawberry_low", Counts: map[string]int{"other_integer": 2}},
-	})
+func TestScoreAstraCheck_MismatchPointsToAnotherCandidate(t *testing.T) {
+	bench := syntheticGPTPackage(t)
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-astra", observe(map[string]map[string]int{
+		"c1": {"b": 2},
+		"c2": {"2": 2},
+	}))
 	require.NoError(t, err)
 	require.Equal(t, AstraCheckVerdictMismatch, score.Verdict)
-	require.Equal(t, "gpt-5.6-sol", score.Winner)
-	require.Empty(t, score.Reasons)
-	require.InDelta(t, 0.955, astraMatchByModel(t, score.Matches, "gpt-5.6-sol").Match, 0.005)
+	require.Equal(t, "gpt-6-sol", score.Winner)
 }
 
-// 样本齐全但无人越线：Astra 未达自身阈值，按「软 mismatch」处理，winner 记最接近的非 Astra 模型。
-func TestScoreAstraCheck_AstraBelowThresholdIsSoftMismatch(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
-
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"japan": 2}},
-		{CellID: "strawberry_low", Counts: map[string]int{"other_integer": 2}},
-	})
+func TestScoreAstraCheck_OtherUsesNearestReferenceSource(t *testing.T) {
+	bench := syntheticGPTPackage(t)
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-sol", observe(map[string]map[string]int{
+		"c1": {"c": 2},
+		"c2": {"3": 2},
+	}))
 	require.NoError(t, err)
 	require.Equal(t, AstraCheckVerdictMismatch, score.Verdict)
-	require.Equal(t, "gpt-5.6-sol", score.Winner)
-	require.Equal(t, []string{AstraCheckReasonBelowThreshold}, score.Reasons)
-	require.InDelta(t, 0.752, astraMatchByModel(t, score.Matches, "gpt-6-astra").Match, 0.005)
-	for _, match := range score.Matches {
-		require.False(t, match.Passed)
+	require.Equal(t, AstraCheckOtherModel, score.Winner)
+	require.Equal(t, "ref/other", score.NearestReference)
+	require.Equal(t, "其他模型", astraMatchByModel(t, score.Matches, AstraCheckOtherModel).Name)
+}
+
+func TestScoreAstraCheck_UnknownAnswersFallIntoUnseenAndInvalidDoNotVote(t *testing.T) {
+	bench := syntheticGPTPackage(t)
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-astra", observe(map[string]map[string]int{
+		"c1": {"zzz": 1, "a": 1, AstraCheckInvalidOutput: 3},
+		"c2": {"1": 2},
+	}))
+	require.NoError(t, err)
+	require.Equal(t, 4, score.ValidSamples)
+	var c1 AstraCheckCellSummary
+	for _, cell := range score.Cells {
+		if cell.CellID == "c1" {
+			c1 = cell
+		}
 	}
-	require.True(t, astraCheckIsSoftMismatch(score.Reasons))
-	require.False(t, astraCheckIsSoftMismatch([]string{"samples_incomplete"}))
+	require.Equal(t, 2, c1.Valid)
+	require.Equal(t, 3, c1.Invalid)
+	require.Equal(t, 1, c1.Categories[astraBenchmarkUnseenCategory])
+	require.Equal(t, 3, c1.Categories[AstraCheckInvalidOutput])
 }
 
-func TestScoreAstraCheck_IncompleteSamplesBlocksVerdict(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
-
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"japan": 1, AstraCheckInvalidOutput: 1}},
-		{CellID: "strawberry_low", Counts: map[string]int{"exact_3": 2}},
-	})
+func TestScoreAstraCheck_IncompleteSamplesBlockStrongDirection(t *testing.T) {
+	bench := syntheticGPTPackage(t)
+	// c2 一个有效答案都没有：每题至少 ceil(0.6×2)=2 条
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-astra", observe(map[string]map[string]int{
+		"c1": {"a": 2},
+		"c2": {AstraCheckInvalidOutput: 2},
+	}))
 	require.NoError(t, err)
 	require.Equal(t, AstraCheckVerdictInsufficient, score.Verdict)
-	require.Equal(t, []string{"samples_incomplete"}, score.Reasons)
-	require.Equal(t, 3, score.ValidSamples)
-	require.Equal(t, 1, score.Cells[0].Invalid)
-	// 匹配度仍然填满，供 UI 画条
-	require.Len(t, score.Matches, 2)
-	require.Greater(t, astraMatchByModel(t, score.Matches, "gpt-6-astra").Match, 0.9)
-	require.False(t, astraMatchByModel(t, score.Matches, "gpt-6-astra").Passed)
+	require.Empty(t, score.Winner)
+	require.Contains(t, score.Reasons, AstraCheckReasonSamplesIncomplete)
+	require.Equal(t, "gpt-6-astra", score.Strongest)
 }
 
-func TestScoreAstraCheck_ExceedPlanAndMissingCell(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
-
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"japan": 3}},
-	})
+func TestScoreAstraCheck_TieIsNoStrongDirection(t *testing.T) {
+	bench := syntheticGPTPackage(t)
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-astra", observe(map[string]map[string]int{
+		"c1": {"a": 1, "b": 1},
+		"c2": {"1": 1, "2": 1},
+	}))
 	require.NoError(t, err)
 	require.Equal(t, AstraCheckVerdictInsufficient, score.Verdict)
-	require.Equal(t, []string{"samples_exceed_plan", "samples_incomplete"}, score.Reasons)
-	require.Equal(t, 0, score.Cells[1].Valid)
+	require.Contains(t, score.Reasons, AstraCheckReasonNoStrongDirection)
 }
 
-func TestScoreAstraCheck_UnknownCategoryFoldsIntoOther(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
-
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"france": 2}},
-		{CellID: "strawberry_low", Counts: map[string]int{"exact_3": 2}},
-	})
+func TestScoreAstraCheck_NoValidSamples(t *testing.T) {
+	bench := syntheticGPTPackage(t)
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-astra", nil)
 	require.NoError(t, err)
-	require.Equal(t, map[string]int{AstraCheckOtherCategory: 2}, score.Cells[0].Categories)
-	// __OTHER__ 两模型同概率，只剩 strawberry 题区分：astra ln0.9 vs sol ln0.3，×0.5 权重 → 差 0.549，
-	// astra 匹配度 ≈ 0.634 达不到 0.9 → 软 mismatch
-	require.Equal(t, AstraCheckVerdictMismatch, score.Verdict)
-	require.Equal(t, "gpt-5.6-sol", score.Winner)
-	require.Equal(t, []string{AstraCheckReasonBelowThreshold}, score.Reasons)
-	require.InDelta(t, 0.634, astraMatchByModel(t, score.Matches, "gpt-6-astra").Match, 0.005)
+	require.Equal(t, AstraCheckVerdictInsufficient, score.Verdict)
+	require.Contains(t, score.Reasons, AstraCheckReasonNoValidSamples)
+	require.Contains(t, score.Reasons, AstraCheckReasonSamplesIncomplete)
 }
 
-func TestScoreAstraCheck_UncalibratedAndMissingBaseline(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
+func TestScoreAstraCheck_UncalibratedTierNeverPasses(t *testing.T) {
+	bench := syntheticGPTPackage(t)
 	tier := bench.Tiers[AstraCheckTierLow]
 	tier.Calibrated = false
 	bench.Tiers[AstraCheckTierLow] = tier
-	fitted := bench.Fitted["strawberry_low"]
-	fitted.ReferenceReady = false
-	bench.Fitted["strawberry_low"] = fitted
-
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"japan": 2}},
-		{CellID: "strawberry_low", Counts: map[string]int{"exact_3": 2}},
-	})
+	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, "gpt-6-astra", observe(map[string]map[string]int{
+		"c1": {"a": 2},
+		"c2": {"1": 2},
+	}))
 	require.NoError(t, err)
 	require.Equal(t, AstraCheckVerdictInsufficient, score.Verdict)
-	require.Equal(t, []string{"baseline_cell_missing", "uncalibrated"}, score.Reasons)
-	require.Len(t, score.Cells, 1)
+	require.Contains(t, score.Reasons, AstraCheckReasonUncalibrated)
 }
 
-func TestScoreAstraCheck_NoWeightedFamily(t *testing.T) {
-	bench, _ := loadSyntheticAstraBenchmark(t)
-	for id, fitted := range bench.Fitted {
-		fitted.Weight = 0
-		bench.Fitted[id] = fitted
-	}
-
-	score, err := ScoreAstraCheck(bench, AstraCheckTierLow, []AstraCellObservation{
-		{CellID: "country_low", Counts: map[string]int{"japan": 2}},
-		{CellID: "strawberry_low", Counts: map[string]int{"exact_3": 2}},
-	})
+// developmentObservations 取基准包里某个来源的开发集计数作为「这次运行的回答」（样本内检查）。
+func developmentObservations(t *testing.T, file, model string) []AstraCellObservation {
+	t.Helper()
+	raw, err := astrabenchmark.FS.ReadFile(file)
 	require.NoError(t, err)
-	require.Equal(t, AstraCheckVerdictInsufficient, score.Verdict)
-	require.Equal(t, []string{"no_weighted_family"}, score.Reasons)
-	for _, match := range score.Matches {
-		require.InDelta(t, 0.5, match.Match, 1e-9)
+	var pkg struct {
+		Observations map[string]map[string]struct {
+			Development struct {
+				Counts map[string]int `json:"counts"`
+			} `json:"development"`
+		} `json:"observations"`
+	}
+	require.NoError(t, json.Unmarshal(raw, &pkg))
+	out := []AstraCellObservation{}
+	for cellID, byModel := range pkg.Observations {
+		counts := map[string]int{}
+		for answer, n := range byModel[model].Development.Counts {
+			counts[NormalizeAstraAnswer(AstraNormalizer{ID: "exact_trimmed_casefold", MaxLength: 4096}, answer)] += n
+		}
+		out = append(out, AstraCellObservation{CellID: cellID, Counts: counts})
+	}
+	return out
+}
+
+func TestScoreAstraCheck_RealPackagesIdentifyTheirOwnDevelopmentAnswers(t *testing.T) {
+	reg, err := LoadEmbeddedAstraBenchmarks()
+	require.NoError(t, err)
+	files := map[string]string{}
+	for _, file := range astrabenchmark.Files {
+		raw, err := astrabenchmark.FS.ReadFile(file)
+		require.NoError(t, err)
+		var head struct {
+			ID string `json:"id"`
+		}
+		require.NoError(t, json.Unmarshal(raw, &head))
+		files[head.ID] = file
+	}
+	for _, target := range astraCheckTargets {
+		t.Run(target.ID, func(t *testing.T) {
+			bench := reg.Package(target.PackageID)
+			obs := developmentObservations(t, files[target.PackageID], target.ID)
+			for _, tier := range astraCheckTiers {
+				score, err := ScoreAstraCheck(bench, tier, target.ID, obs)
+				require.NoError(t, err)
+				require.Equal(t, AstraCheckVerdictMatch, score.Verdict, "tier %s reasons %v strongest %s", tier, score.Reasons, score.Strongest)
+			}
+			// 用另一个候选的回答核对这个目标：绝不能判成一致；证据最高的是那个候选，
+			// 越过它自己的强指向线时判不符（没越线就是 insufficient——强指向线按真实档位校准，不保证每个候选都越线）
+			for _, other := range bench.ModelIDs {
+				if other == target.ID || other == AstraCheckOtherModel {
+					continue
+				}
+				for _, tier := range astraCheckTiers {
+					score, err := ScoreAstraCheck(bench, tier, target.ID, developmentObservations(t, files[target.PackageID], other))
+					require.NoError(t, err)
+					require.NotEqual(t, AstraCheckVerdictMatch, score.Verdict, "answers of %s, tier %s", other, tier)
+					require.Equal(t, other, score.Strongest, "answers of %s, tier %s", other, tier)
+					if score.Verdict == AstraCheckVerdictMismatch {
+						require.Equal(t, other, score.Winner)
+					}
+				}
+			}
+		})
 	}
 }
 
 // ---------- 状态机 ----------
 
-func astraResultWithVerdict(verdict, winner string) *GroupStatusAstraCheckResult {
-	latency := int64(1500)
+func astraResult(verdict, expected, winner string) *GroupStatusAstraCheckResult {
 	return &GroupStatusAstraCheckResult{
 		GroupID:          30,
 		ConfigID:         101,
-		BenchmarkVersion: "test-1",
+		ExpectedModel:    expected,
 		Verdict:          verdict,
 		Winner:           winner,
-		Matches: []AstraCheckModelMatch{
-			{Model: "gpt-6-astra", Match: 0.1, Threshold: 0.9},
-			{Model: "gpt-5.6-sol", Match: 0.9, Threshold: 0.9},
-		},
-		ValidSamples:   4,
-		PlannedSamples: 4,
-		LatencyMS:      &latency,
-		StartedAt:      time.Now().Add(-2 * time.Second),
-		FinishedAt:     time.Now(),
+		Strongest:        winner,
+		Matches:          []AstraCheckModelMatch{{Model: winner, Match: 0.9, Threshold: 0.5, Passed: winner != ""}},
+		ValidSamples:     30,
+		PlannedSamples:   32,
+		BenchmarkVersion: "4.5.4-test",
+		CostUSD:          0.01,
+		FinishedAt:       time.Now(),
 	}
 }
 
 func TestComputeAstraCheckTransition_TruthTable(t *testing.T) {
-	sol := "gpt-5.6-sol"
-	cases := []struct {
-		name          string
-		prev          *GroupStatusState
-		verdict       string
-		winner        string
-		wantStable    string
-		wantConsec    int
-		wantEventType string
-		wantSubStatus string
-	}{
-		{"fresh match → pass, no event", nil, AstraCheckVerdictMatch, "gpt-6-astra", AstraCheckStatusPass, 0, "", ""},
-		{"fresh mismatch → count 1, no event", nil, AstraCheckVerdictMismatch, sol, "", 1, "", ""},
-		{"second mismatch → stable mismatch + event", &GroupStatusState{AstraCheckConsecutiveMismatch: 1}, AstraCheckVerdictMismatch, sol, AstraCheckStatusMismatch, 2, GroupStatusEventAstraMismatch, "winner_gpt-5.6-sol"},
-		{"already mismatch → count grows, no event", &GroupStatusState{AstraCheckStableStatus: AstraCheckStatusMismatch, AstraCheckConsecutiveMismatch: 2}, AstraCheckVerdictMismatch, sol, AstraCheckStatusMismatch, 3, "", ""},
-		{"mismatch → match recovers with event", &GroupStatusState{AstraCheckStableStatus: AstraCheckStatusMismatch, AstraCheckConsecutiveMismatch: 2}, AstraCheckVerdictMatch, "gpt-6-astra", AstraCheckStatusPass, 0, GroupStatusEventAstraRecovered, "winner_gpt-6-astra"},
-		{"pass → insufficient keeps pass", &GroupStatusState{AstraCheckStableStatus: AstraCheckStatusPass}, AstraCheckVerdictInsufficient, "", AstraCheckStatusPass, 0, "", ""},
-		{"count 1 → insufficient keeps count", &GroupStatusState{AstraCheckConsecutiveMismatch: 1}, AstraCheckVerdictInsufficient, "", "", 1, "", ""},
-		{"pass → single mismatch keeps pass", &GroupStatusState{AstraCheckStableStatus: AstraCheckStatusPass}, AstraCheckVerdictMismatch, sol, AstraCheckStatusPass, 1, "", ""},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := astraResultWithVerdict(tc.verdict, tc.winner)
-			next, event := ComputeAstraCheckTransition(tc.prev, result, 77)
-			require.Equal(t, tc.wantStable, next.AstraCheckStableStatus)
-			require.Equal(t, tc.wantConsec, next.AstraCheckConsecutiveMismatch)
-			require.Equal(t, tc.verdict, next.AstraCheckVerdict)
-			require.Equal(t, tc.winner, next.AstraCheckWinner)
-			require.NotNil(t, next.AstraCheckCheckedAt)
-			require.NotNil(t, next.AstraCheckLastRunID)
-			require.Equal(t, int64(77), *next.AstraCheckLastRunID)
-			require.Len(t, next.AstraCheckMatches, 2)
-			require.Contains(t, next.AstraCheckDetail, "valid 4/4")
-			require.Contains(t, next.AstraCheckDetail, "benchmark test-1")
-			if tc.wantEventType == "" {
-				require.Nil(t, event)
-				return
-			}
-			require.NotNil(t, event)
-			require.Equal(t, tc.wantEventType, event.EventType)
-			require.Equal(t, tc.wantSubStatus, event.SubStatus)
-			require.Equal(t, int64(30), event.GroupID)
-			require.Equal(t, int64(101), event.ConfigID)
-			require.Equal(t, next.AstraCheckStableStatus, event.ToStatus)
-		})
-	}
+	sol := "gpt-6-sol"
+	next, event := ComputeAstraCheckTransition(nil, astraResult(AstraCheckVerdictMatch, sol, sol), 7)
+	require.Nil(t, event)
+	require.Equal(t, AstraCheckStatusPass, next.StableStatus)
+	require.Equal(t, sol, next.ExpectedModel)
+	require.Equal(t, int64(7), *next.LastRunID)
+	require.Equal(t, 0.01, next.LastCostUSD)
+	require.Equal(t, "4.5.4-test", next.BenchmarkVersion)
+
+	next, event = ComputeAstraCheckTransition(next, astraResult(AstraCheckVerdictMismatch, sol, "gpt-6-astra"), 8)
+	require.Nil(t, event)
+	require.Equal(t, 1, next.ConsecutiveMismatch)
+
+	next, event = ComputeAstraCheckTransition(next, astraResult(AstraCheckVerdictInsufficient, sol, ""), 9)
+	require.Nil(t, event)
+	require.Equal(t, 1, next.ConsecutiveMismatch)
+	require.Equal(t, AstraCheckStatusPass, next.StableStatus)
+
+	next, event = ComputeAstraCheckTransition(next, astraResult(AstraCheckVerdictMismatch, sol, "gpt-6-astra"), 10)
+	require.NotNil(t, event)
+	require.Equal(t, GroupStatusEventAstraMismatch, event.EventType)
+	require.Equal(t, "gpt-6-sol:winner_gpt-6-astra", event.SubStatus)
+	require.Contains(t, event.ErrorDetail, "expected GPT-6 Sol")
+	require.Equal(t, AstraCheckStatusMismatch, next.StableStatus)
+
+	next, event = ComputeAstraCheckTransition(next, astraResult(AstraCheckVerdictMismatch, sol, "gpt-6-astra"), 11)
+	require.Nil(t, event)
+	require.Equal(t, 3, next.ConsecutiveMismatch)
+
+	next, event = ComputeAstraCheckTransition(next, astraResult(AstraCheckVerdictMatch, sol, sol), 12)
+	require.NotNil(t, event)
+	require.Equal(t, GroupStatusEventAstraRecovered, event.EventType)
+	require.Equal(t, 0, next.ConsecutiveMismatch)
 }
 
-func TestComputeAstraCheckTransition_DoesNotTouchOtherProbes(t *testing.T) {
-	checkedAt := time.Now().Add(-time.Hour)
-	prev := &GroupStatusState{
-		GroupID:                       30,
-		ConfigID:                      101,
-		LatestStatus:                  GroupRuntimeStatusDown,
-		StableStatus:                  GroupRuntimeStatusDown,
-		ConsecutiveDown:               3,
-		ModelTraceVerdict:             ModelTraceVerdictMismatch,
-		ModelTraceStableStatus:        ModelTraceStatusMismatch,
-		ModelTraceTopModel:            "gpt-5.6-terra",
-		ModelTraceCheckedAt:           &checkedAt,
-		ModelTraceConsecutiveMismatch: 2,
-	}
+func TestAstraCheckEventModels(t *testing.T) {
+	event := &GroupStatusEvent{SubStatus: astraCheckEventSubStatus("claude-opus-5.5", AstraCheckOtherModel)}
+	expected, winner := astraCheckEventModels(event)
+	require.Equal(t, "claude-opus-5.5", expected)
+	require.Equal(t, AstraCheckOtherModel, winner)
+	require.Equal(t, "Claude Opus 5.5", astraExpectedFromEvent(event))
+	require.Equal(t, "其他模型", astraWinnerFromEvent(event))
 
-	next, _ := ComputeAstraCheckTransition(prev, astraResultWithVerdict(AstraCheckVerdictMatch, "gpt-6-astra"), 1)
-	require.Equal(t, GroupRuntimeStatusDown, next.LatestStatus)
-	require.Equal(t, GroupRuntimeStatusDown, next.StableStatus)
-	require.Equal(t, 3, next.ConsecutiveDown)
-	require.Equal(t, ModelTraceStatusMismatch, next.ModelTraceStableStatus)
-	require.Equal(t, "gpt-5.6-terra", next.ModelTraceTopModel)
-	require.Equal(t, 2, next.ModelTraceConsecutiveMismatch)
-	require.Same(t, &checkedAt, next.ModelTraceCheckedAt)
-	require.Equal(t, AstraCheckStatusPass, next.AstraCheckStableStatus)
-	// 原状态不被原地修改
-	require.Equal(t, "", prev.AstraCheckStableStatus)
+	unknown := &GroupStatusEvent{SubStatus: astraCheckEventSubStatus("gpt-6-sol", "")}
+	require.Equal(t, "?", astraWinnerFromEvent(unknown))
+	require.Equal(t, "?", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_gpt-6-astra"}))
+	require.Equal(t, "?", astraExpectedFromEvent(nil))
 }
 
-// ---------- 成本与配置 ----------
-
-func TestEstimateAstraCheckCostUSD(t *testing.T) {
-	require.Equal(t, 0.0, EstimateAstraCheckCostUSD(0, 0))
-	require.InDelta(t, 0.0002, EstimateAstraCheckCostUSD(20, 0), 1e-12)
-	require.InDelta(t, 0.005, EstimateAstraCheckCostUSD(0, 100), 1e-12)
-	// 低档 20 请求，约 1200 输入 + 400 输出（含推理）→ 0.012 + 0.02
-	require.InDelta(t, 0.032, EstimateAstraCheckCostUSD(1200, 400), 1e-12)
-}
+// ---------- 配置 ----------
 
 func astraBoolPtr(v bool) *bool { return &v }
 
-func TestNormalizeGroupStatusConfig_AstraCheckRules(t *testing.T) {
-	openAI := &Group{ID: 30, Platform: PlatformOpenAI}
+func TestNormalizeGroupStatusConfig_AstraCheckModels(t *testing.T) {
 	base := func() *GroupStatusConfigUpsertInput {
 		return &GroupStatusConfigUpsertInput{
 			Enabled:        true,
-			ProbeModel:     "gpt-6-astra",
-			ProbePrompt:    "Please reply ONLINE.",
+			ProbeModel:     "gpt-6-sol",
+			ProbePrompt:    "ping",
 			ValidationMode: GroupStatusValidationNonEmpty,
 		}
 	}
+	openAI := &Group{ID: 7, Platform: PlatformOpenAI}
+	anthropic := &Group{ID: 8, Platform: PlatformAnthropic}
+	gemini := &Group{ID: 9, Platform: PlatformGemini}
 
-	t.Run("defaults", func(t *testing.T) {
-		cfg, err := NormalizeGroupStatusConfig(openAI, base())
-		require.NoError(t, err)
-		require.False(t, cfg.AstraCheckEnabled)
-		require.Equal(t, "gpt-6-astra", cfg.AstraCheckRequestModel)
-		require.Equal(t, AstraCheckTierLow, cfg.AstraCheckTier)
-		require.Equal(t, 3600, cfg.AstraCheckIntervalSeconds)
-	})
+	cfg, err := NormalizeGroupStatusConfig(openAI, base())
+	require.NoError(t, err)
+	require.False(t, cfg.AstraCheckEnabled)
+	require.Equal(t, []AstraCheckModelConfig{{ExpectedModel: "gpt-5.6-sol"}}, cfg.AstraCheckModels)
+	require.Equal(t, AstraCheckTierLow, cfg.AstraCheckTier)
+	require.Equal(t, 3600, cfg.AstraCheckIntervalSeconds)
 
-	t.Run("enabled with custom values", func(t *testing.T) {
-		input := base()
-		input.AstraCheckEnabled = astraBoolPtr(true)
-		input.AstraCheckRequestModel = " gpt-6-astra-alias "
-		input.AstraCheckTier = "Medium"
-		input.AstraCheckIntervalSeconds = 1800
-		cfg, err := NormalizeGroupStatusConfig(openAI, input)
-		require.NoError(t, err)
-		require.True(t, cfg.AstraCheckEnabled)
-		require.Equal(t, "gpt-6-astra-alias", cfg.AstraCheckRequestModel)
-		require.Equal(t, AstraCheckTierMedium, cfg.AstraCheckTier)
-		require.Equal(t, 1800, cfg.AstraCheckIntervalSeconds)
-		// ModelTrace 默认不受影响
-		require.False(t, cfg.ModelTraceEnabled)
-		require.Equal(t, "gpt-5.6-sol", cfg.ModelTraceExpectedModel)
-	})
+	cfg, err = NormalizeGroupStatusConfig(anthropic, base())
+	require.NoError(t, err)
+	require.Equal(t, []AstraCheckModelConfig{{ExpectedModel: "claude-opus-5.5"}}, cfg.AstraCheckModels)
 
-	t.Run("rejected on non-openai group", func(t *testing.T) {
-		input := base()
-		input.AstraCheckEnabled = astraBoolPtr(true)
-		_, err := NormalizeGroupStatusConfig(&Group{ID: 31, Platform: PlatformAnthropic}, input)
-		require.ErrorIs(t, err, ErrGroupStatusInvalidConfig)
-		require.ErrorContains(t, err, "astra_check")
-	})
+	on := base()
+	on.AstraCheckEnabled = astraBoolPtr(true)
+	on.AstraCheckModels = []AstraCheckModelConfig{
+		{ExpectedModel: " gpt-6-sol "},
+		{ExpectedModel: "gpt-6-astra", RequestModel: " astra-alias "},
+		{ExpectedModel: "gpt-6-sol"},
+		{ExpectedModel: ""},
+	}
+	on.AstraCheckTier = "Medium"
+	on.AstraCheckIntervalSeconds = 1800
+	cfg, err = NormalizeGroupStatusConfig(openAI, on)
+	require.NoError(t, err)
+	require.True(t, cfg.AstraCheckEnabled)
+	require.Equal(t, []AstraCheckModelConfig{{ExpectedModel: "gpt-6-sol"}, {ExpectedModel: "gpt-6-astra", RequestModel: "astra-alias"}}, cfg.AstraCheckModels)
+	require.Equal(t, AstraCheckTierMedium, cfg.AstraCheckTier)
+	require.Equal(t, 1800, cfg.AstraCheckIntervalSeconds)
 
-	t.Run("rejects unknown tier", func(t *testing.T) {
-		input := base()
-		input.AstraCheckTier = "ultra"
-		_, err := NormalizeGroupStatusConfig(openAI, input)
-		require.ErrorIs(t, err, ErrGroupStatusInvalidConfig)
-		require.ErrorContains(t, err, "astra_check_tier")
-	})
+	claudeOn := base()
+	claudeOn.AstraCheckEnabled = astraBoolPtr(true)
+	claudeOn.AstraCheckModels = []AstraCheckModelConfig{{ExpectedModel: "claude-opus-5.5"}, {ExpectedModel: "claude-fable-5.1"}}
+	cfg, err = NormalizeGroupStatusConfig(anthropic, claudeOn)
+	require.NoError(t, err)
+	require.Len(t, cfg.AstraCheckModels, 2)
 
-	t.Run("rejects interval below minimum", func(t *testing.T) {
-		input := base()
-		input.AstraCheckIntervalSeconds = 600
-		_, err := NormalizeGroupStatusConfig(openAI, input)
-		require.ErrorIs(t, err, ErrGroupStatusInvalidConfig)
-		require.ErrorContains(t, err, "astra_check_interval_seconds")
-	})
+	// Claude 目标不能配给 GPT 分组
+	_, err = NormalizeGroupStatusConfig(openAI, claudeOn)
+	require.ErrorIs(t, err, ErrGroupStatusAstraCheckTargetInvalid)
+
+	// 开启时模型列表不能为空
+	empty := base()
+	empty.AstraCheckEnabled = astraBoolPtr(true)
+	empty.AstraCheckModels = []AstraCheckModelConfig{}
+	_, err = NormalizeGroupStatusConfig(openAI, empty)
+	require.ErrorIs(t, err, ErrGroupStatusInvalidConfig)
+
+	geminiOn := base()
+	geminiOn.AstraCheckEnabled = astraBoolPtr(true)
+	_, err = NormalizeGroupStatusConfig(gemini, geminiOn)
+	require.ErrorIs(t, err, ErrGroupStatusInvalidConfig)
+
+	badTier := base()
+	badTier.AstraCheckTier = "ultra"
+	_, err = NormalizeGroupStatusConfig(openAI, badTier)
+	require.ErrorIs(t, err, ErrGroupStatusInvalidConfig)
+
+	tooFast := base()
+	tooFast.AstraCheckIntervalSeconds = 600
+	_, err = NormalizeGroupStatusConfig(openAI, tooFast)
+	require.ErrorIs(t, err, ErrGroupStatusInvalidConfig)
 }
 
-func TestAstraWinnerFromEvent(t *testing.T) {
-	require.Equal(t, "?", astraWinnerFromEvent(nil))
-	require.Equal(t, "?", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_unknown"}))
-	require.Equal(t, "?", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "juice_32"}))
-	require.Equal(t, "Sol", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_gpt-5.6-sol"}))
-	require.Equal(t, "Luna", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "closest_gpt-5.6-luna"}))
-	require.Equal(t, "Astra", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_gpt-6-astra"}))
-	require.Equal(t, "gpt-7-x", astraWinnerFromEvent(&GroupStatusEvent{SubStatus: "winner_gpt-7-x"}))
+func TestAstraCheckModelsToRun(t *testing.T) {
+	group := &Group{ID: 1, Platform: PlatformOpenAI}
+	cfg := &GroupStatusConfig{AstraCheckModels: []AstraCheckModelConfig{{ExpectedModel: "gpt-6-sol"}, {ExpectedModel: "gpt-6-astra"}}}
+	models, err := astraCheckModelsToRun(group, cfg, "")
+	require.NoError(t, err)
+	require.Len(t, models, 2)
 
-	require.Equal(t, "强指向 Sol", astraEventPointerText(&GroupStatusEvent{SubStatus: "winner_gpt-5.6-sol"}))
-	require.Equal(t, "最接近 Luna，Astra 未达自身阈值", astraEventPointerText(&GroupStatusEvent{SubStatus: "closest_gpt-5.6-luna"}))
-}
+	models, err = astraCheckModelsToRun(group, cfg, "gpt-6-astra")
+	require.NoError(t, err)
+	require.Equal(t, []AstraCheckModelConfig{{ExpectedModel: "gpt-6-astra"}}, models)
 
-// 软 mismatch 与强指向走同一状态机：两次连续才变红，事件 sub_status 用 closest_ 前缀区分。
-func TestComputeAstraCheckTransition_SoftMismatchUsesClosestPrefix(t *testing.T) {
-	result := astraResultWithVerdict(AstraCheckVerdictMismatch, "gpt-5.6-luna")
-	result.Reasons = []string{AstraCheckReasonBelowThreshold}
+	_, err = astraCheckModelsToRun(group, cfg, "gpt-5.6-sol")
+	require.ErrorIs(t, err, ErrGroupStatusAstraCheckTargetInvalid)
 
-	next, event := ComputeAstraCheckTransition(&GroupStatusState{AstraCheckStableStatus: AstraCheckStatusPass}, result, 1)
-	require.Nil(t, event)
-	require.Equal(t, AstraCheckStatusPass, next.AstraCheckStableStatus)
-	require.Equal(t, 1, next.AstraCheckConsecutiveMismatch)
-	require.Equal(t, AstraCheckVerdictMismatch, next.AstraCheckVerdict)
-	require.Equal(t, "gpt-5.6-luna", next.AstraCheckWinner)
-	require.Equal(t, []string{AstraCheckReasonBelowThreshold}, next.AstraCheckReasons)
+	models, err = astraCheckModelsToRun(group, &GroupStatusConfig{}, "")
+	require.NoError(t, err)
+	require.Equal(t, []AstraCheckModelConfig{{ExpectedModel: "gpt-5.6-sol"}}, models)
 
-	next, event = ComputeAstraCheckTransition(next, result, 2)
-	require.NotNil(t, event)
-	require.Equal(t, GroupStatusEventAstraMismatch, event.EventType)
-	require.Equal(t, "closest_gpt-5.6-luna", event.SubStatus)
-	require.Equal(t, AstraCheckStatusMismatch, next.AstraCheckStableStatus)
-	require.Contains(t, event.ErrorDetail, AstraCheckReasonBelowThreshold)
+	target, _ := astraCheckTarget("claude-opus-5.5")
+	require.Equal(t, "claude-opus-5-5", AstraCheckModelConfig{ExpectedModel: "claude-opus-5.5"}.requestModelFor(target))
+	require.Equal(t, "opus-alias", AstraCheckModelConfig{ExpectedModel: "claude-opus-5.5", RequestModel: "opus-alias"}.requestModelFor(target))
 }

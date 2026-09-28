@@ -4,185 +4,155 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	astrabenchmark "github.com/Wei-Shaw/sub2api/resources/astra-benchmark"
+	"github.com/stretchr/testify/require"
 )
 
-// mutateAstraPackage 在合成包上做一处改动后重新编码，用于校验失败用例。
-func mutateAstraPackage(t *testing.T, mutate func(pkg map[string]any)) []byte {
-	t.Helper()
-	var pkg map[string]any
-	require.NoError(t, json.Unmarshal([]byte(astraSyntheticPackage), &pkg))
-	mutate(pkg)
-	raw, err := json.Marshal(pkg)
+func TestLoadEmbeddedAstraBenchmarks_AllPackagesParse(t *testing.T) {
+	reg, err := LoadEmbeddedAstraBenchmarks()
 	require.NoError(t, err)
-	return raw
-}
+	require.Len(t, reg.Packages, len(astrabenchmark.Files))
 
-func TestParseAstraBenchmark_SyntheticPackage(t *testing.T) {
-	bench, meta := loadSyntheticAstraBenchmark(t)
+	gpt6 := reg.Package("meow-gpt-other-cap98-efficient")
+	require.NotNil(t, gpt6)
+	require.Equal(t, "4.5.4-predictive.20260924.2", gpt6.Version)
+	require.Equal(t, []string{"gpt-6-astra", "gpt-6-sol", "gpt-5.6-terra", "gpt-6-luna", AstraCheckOtherModel}, gpt6.ModelIDs)
+	require.Equal(t, 32, gpt6.TierRequests(AstraCheckTierLow))
+	require.Equal(t, 64, gpt6.TierRequests(AstraCheckTierMedium))
+	require.Equal(t, 128, gpt6.TierRequests(AstraCheckTierHigh))
+	require.Equal(t, "98f8d12c83100352addf44db15d8b57aa183338a4fb5f83ba30ffdbc06d78612", gpt6.BodySHA256)
 
-	require.Equal(t, "synthetic-astra", bench.PackageID)
-	require.Equal(t, "test-1", bench.Version)
-	require.Equal(t, "deadbeef", bench.ContentSHA256)
-	require.Len(t, bench.BodySHA256, 64)
-	require.Equal(t, []string{"gpt-6-astra", "gpt-5.6-sol"}, bench.ModelIDs)
-	require.Len(t, bench.Cells, 2)
-	require.Equal(t, "country_low", bench.Cells[0].ID)
-	require.Equal(t, "country_en", bench.Cells[0].FamilyID)
-	require.Equal(t, "exact_trimmed_casefold", bench.Cells[0].Normalizer.ID)
-	require.Equal(t, 64, bench.Cells[0].Normalizer.MaxLength)
-	require.Equal(t, "low", bench.Cells[0].Effort)
-	require.Equal(t, 128, bench.Cells[0].MaxOutputTokens)
-	require.Equal(t, "b80_exact_3", bench.Cells[1].Normalizer.ID)
-	require.Same(t, &bench.Cells[1], bench.CellIndex["strawberry_low"])
+	gpt56 := reg.Package("meow-gpt-other-cap98")
+	require.NotNil(t, gpt56)
+	require.True(t, gpt56.HasModel("gpt-5.6-sol"))
+	require.Equal(t, 36, gpt56.TierRequests(AstraCheckTierLow))
 
-	require.Equal(t, 4, bench.Tiers[AstraCheckTierLow].TotalRequests)
-	require.Equal(t, 8, bench.Tiers[AstraCheckTierMedium].TotalRequests)
-	require.Equal(t, 12, bench.Tiers[AstraCheckTierHigh].TotalRequests)
-	require.True(t, bench.Tiers[AstraCheckTierLow].Calibrated)
-	require.InDelta(t, 0.9, bench.Tiers[AstraCheckTierLow].Thresholds["gpt-5.6-sol"], 1e-9)
-	require.Equal(t, 4, bench.TierRequests(AstraCheckTierLow))
-
-	require.Equal(t, "GPT-5.6 Sol", bench.modelName("gpt-5.6-sol"))
-	require.Equal(t, "GPT-6 Astra", meta.Models[0].Name)
-	require.Equal(t, []AstraBenchmarkTierMeta{
-		{Tier: "low", Requests: 4, Calibrated: true},
-		{Tier: "medium", Requests: 8, Calibrated: true},
-		{Tier: "high", Requests: 12, Calibrated: true},
-	}, meta.Tiers)
-}
-
-func TestParseAstraBenchmark_ValidationFailures(t *testing.T) {
-	cases := []struct {
-		name    string
-		mutate  func(pkg map[string]any)
-		wantErr string
-	}{
-		{"wrong mode", func(pkg map[string]any) { pkg["mode"] = "claude" }, "mode must be"},
-		{"wrong scoring version", func(pkg map[string]any) {
-			pkg["engine"] = map[string]any{"scoring_version": "meow-fingerprint-v1"}
-		}, "scoring_version"},
-		{"missing astra model", func(pkg map[string]any) {
-			pkg["models"] = []any{map[string]any{"id": "gpt-5.6-sol", "name": "Sol"}}
-		}, "does not contain gpt-6-astra"},
-		{"cell without fitted distribution", func(pkg map[string]any) {
-			cells := pkg["fitted"].(map[string]any)["cells"].(map[string]any)
-			delete(cells, "strawberry_low")
-		}, "has no fitted distribution"},
-		{"fitted cell lacks a model", func(pkg map[string]any) {
-			cell := pkg["fitted"].(map[string]any)["cells"].(map[string]any)["country_low"].(map[string]any)
-			delete(cell["model_distributions"].(map[string]any), "gpt-5.6-sol")
-		}, "lacks distribution for gpt-5.6-sol"},
-		{"all weights zero", func(pkg map[string]any) {
-			cells := pkg["fitted"].(map[string]any)["cells"].(map[string]any)
-			for _, raw := range cells {
-				raw.(map[string]any)["weight"] = 0
-			}
-		}, "positive weight"},
-		{"tier missing", func(pkg map[string]any) { delete(pkg["tiers"].(map[string]any), "high") }, "tier high is missing"},
-		{"tier plans zero", func(pkg map[string]any) {
-			pkg["tiers"].(map[string]any)["low"].(map[string]any)["counts"] = 0
-		}, "plans zero requests"},
-		{"no probes", func(pkg map[string]any) { pkg["probes"] = []any{} }, "no cells"},
-		{"empty package", nil, "empty package"},
+	claude := reg.Package("meow-claude-other-cap98-efficient")
+	require.NotNil(t, claude)
+	require.Equal(t, astraBenchmarkModeClaude, claude.Mode)
+	require.True(t, claude.HasModel("claude-opus-5.5"))
+	require.True(t, claude.HasModel("claude-fable-5.1"))
+	require.Equal(t, 48, claude.TierRequests(AstraCheckTierLow))
+	for _, cell := range claude.Cells {
+		require.Equal(t, "claude-code", cell.Profile)
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			var raw []byte
-			if tc.mutate != nil {
-				raw = mutateAstraPackage(t, tc.mutate)
+
+	for _, pkg := range reg.Packages {
+		require.Equal(t, astraBenchmarkScoringVersion, pkg.ScoringVersion)
+		require.InDelta(t, 0.6, pkg.CompletionRatio, 1e-12)
+		require.NotEmpty(t, pkg.ReferenceSources)
+		for _, tier := range astraCheckTiers {
+			require.True(t, pkg.Tiers[tier].Calibrated, "%s %s", pkg.PackageID, tier)
+		}
+	}
+	require.Len(t, reg.Metas(), len(astrabenchmark.Files))
+}
+
+func TestAstraCheckTargets_AreInTheirBenchmarkPackages(t *testing.T) {
+	reg, err := LoadEmbeddedAstraBenchmarks()
+	require.NoError(t, err)
+	for _, target := range astraCheckTargets {
+		pkg := reg.Package(target.PackageID)
+		require.NotNil(t, pkg, "target %s points at a missing package %s", target.ID, target.PackageID)
+		require.True(t, pkg.HasModel(target.ID), "package %s does not contain target %s", target.PackageID, target.ID)
+		require.NotEmpty(t, target.DefaultRequestModel)
+	}
+	ids := func(platform string) []string {
+		var out []string
+		for _, target := range AstraCheckTargetsForPlatform(platform) {
+			out = append(out, target.ID)
+		}
+		return out
+	}
+	require.Equal(t, []string{"gpt-5.6-sol", "gpt-6-sol", "gpt-6-astra"}, ids(PlatformOpenAI))
+	require.Equal(t, []string{"claude-opus-5.5", "claude-fable-5.1"}, ids(PlatformAnthropic))
+	require.Empty(t, ids(PlatformGemini))
+	require.True(t, astraCheckTargetAllowed(PlatformAnthropic, "claude-opus-5.5"))
+	require.False(t, astraCheckTargetAllowed(PlatformOpenAI, "claude-opus-5.5"))
+}
+
+func mutateEmbeddedAstraPackage(t *testing.T, mutate func(pkg map[string]any)) []byte {
+	t.Helper()
+	raw, err := astrabenchmark.FS.ReadFile(astrabenchmark.Files[0])
+	require.NoError(t, err)
+	var pkg map[string]any
+	require.NoError(t, json.Unmarshal(raw, &pkg))
+	mutate(pkg)
+	out, err := json.Marshal(pkg)
+	require.NoError(t, err)
+	return out
+}
+
+func TestParseAstraBenchmark_RejectsBrokenPackages(t *testing.T) {
+	fitted := func(pkg map[string]any) map[string]any { return pkg["fitted"].(map[string]any) }
+	firstCell := func(pkg map[string]any) map[string]any {
+		for _, cell := range fitted(pkg)["cells"].(map[string]any) {
+			return cell.(map[string]any)
+		}
+		return nil
+	}
+	cases := map[string]func(pkg map[string]any){
+		"scoring version": func(pkg map[string]any) { pkg["engine"].(map[string]any)["scoring_version"] = "meow-fingerprint-v2" },
+		"mode":            func(pkg map[string]any) { pkg["mode"] = "chat" },
+		"aggregation":     func(pkg map[string]any) { fitted(pkg)["aggregation"] = "mixture" },
+		"model order": func(pkg map[string]any) {
+			models := fitted(pkg)["models"].([]any)
+			models[0], models[1] = models[1], models[0]
+		},
+		"missing alpha": func(pkg map[string]any) {
+			delete(firstCell(pkg)["alpha"].(map[string]any), "gpt-6-sol")
+		},
+		"unseen category": func(pkg map[string]any) {
+			cell := firstCell(pkg)
+			categories := cell["categories"].([]any)
+			for i, category := range categories {
+				if category == astraBenchmarkUnseenCategory {
+					categories[i] = "zzz"
+				}
 			}
-			_, _, err := ParseAstraBenchmark(raw)
+		},
+		"non-positive alpha": func(pkg map[string]any) {
+			alpha := firstCell(pkg)["alpha"].(map[string]any)["gpt-6-astra"].([]any)
+			alpha[0] = 0.0
+		},
+		"missing threshold": func(pkg map[string]any) {
+			delete(pkg["tiers"].(map[string]any)["low"].(map[string]any)["thresholds"].(map[string]any), "gpt-6-sol")
+		},
+		"completion ratio": func(pkg map[string]any) { pkg["engine"].(map[string]any)["completion_ratio"] = 0.0 },
+		"reference sources": func(pkg map[string]any) {
+			fitted(pkg)["reference_sources"] = []any{}
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			_, _, err := ParseAstraBenchmark(mutateEmbeddedAstraPackage(t, mutate))
 			require.Error(t, err)
-			require.ErrorContains(t, err, tc.wantErr)
 		})
 	}
 }
 
-func TestParseAstraBenchmark_MissingThresholdMarksTierUncalibrated(t *testing.T) {
-	raw := mutateAstraPackage(t, func(pkg map[string]any) {
-		low := pkg["tiers"].(map[string]any)["low"].(map[string]any)
-		low["thresholds"] = map[string]any{"gpt-6-astra": 0.9}
-	})
-	bench, meta, err := ParseAstraBenchmark(raw)
-	require.NoError(t, err)
-	require.False(t, bench.Tiers[AstraCheckTierLow].Calibrated)
-	require.True(t, bench.Tiers[AstraCheckTierMedium].Calibrated)
-	require.False(t, meta.Tiers[0].Calibrated)
-}
-
-func TestParseAstraBenchmark_CalibrationStatusNotMet(t *testing.T) {
-	raw := mutateAstraPackage(t, func(pkg map[string]any) {
-		pkg["calibration"] = map[string]any{"tiers": map[string]any{"low": map[string]any{"status": "pending"}}}
-	})
-	bench, _, err := ParseAstraBenchmark(raw)
-	require.NoError(t, err)
-	require.False(t, bench.Tiers[AstraCheckTierLow].Calibrated)
-	require.False(t, bench.Tiers[AstraCheckTierMedium].Calibrated)
-}
-
-func TestParseAstraBenchmark_FallbackIDAndVersion(t *testing.T) {
-	raw := mutateAstraPackage(t, func(pkg map[string]any) {
-		delete(pkg, "id")
-		delete(pkg, "version")
-	})
-	bench, _, err := ParseAstraBenchmark(raw)
-	require.NoError(t, err)
-	require.Equal(t, "astra-benchmark-"+bench.BodySHA256[:12], bench.PackageID)
-	require.Equal(t, bench.BodySHA256[:12], bench.Version)
-}
-
-// 内置包冒烟：能解析、四个模型、低/中/高各 20/50/100 请求、三档已校准。
-func TestLoadEmbeddedAstraBenchmark_Smoke(t *testing.T) {
-	require.NotEmpty(t, astrabenchmark.Package)
-
-	bench, meta, err := LoadEmbeddedAstraBenchmark()
-	require.NoError(t, err)
-	require.NotNil(t, bench)
-	require.NotNil(t, meta)
-
-	require.Equal(t, "meow-gpt-baseline", bench.PackageID)
-	require.Equal(t, "4.5.0-rc4", bench.Version)
-	require.Equal(t, astraBenchmarkScoringVersion, bench.ScoringVersion)
-	require.Equal(t, []string{"gpt-6-astra", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"}, bench.ModelIDs)
-	require.Len(t, bench.Cells, 5)
-	for _, cell := range bench.Cells {
-		require.NotEmpty(t, cell.Prompt, cell.ID)
-		require.Equal(t, "low", cell.Effort, cell.ID)
-		require.Equal(t, 128, cell.MaxOutputTokens, cell.ID)
-		fitted, ok := bench.Fitted[cell.ID]
-		require.True(t, ok, cell.ID)
-		require.True(t, fitted.ReferenceReady, cell.ID)
-		require.Greater(t, fitted.Weight, 0.0, cell.ID)
-		for _, model := range bench.ModelIDs {
-			require.NotEmpty(t, fitted.Distributions[model], "%s/%s", cell.ID, model)
-		}
+func TestDecorateAstraCheckSummary_OrdersStatesByConfigWithPlaceholders(t *testing.T) {
+	checkedAt := mustParseTimeForTest(t, "2026-09-28T10:00:00Z")
+	summary := &GroupStatusSummary{
+		GroupID:  7,
+		ConfigID: 3,
+		AstraCheckModels: []AstraCheckModelConfig{
+			{ExpectedModel: "gpt-6-sol"},
+			{ExpectedModel: "gpt-6-astra"},
+		},
+		AstraCheckStates: []GroupStatusAstraCheckState{
+			{GroupID: 7, ExpectedModel: "gpt-6-astra", Verdict: AstraCheckVerdictMatch, CheckedAt: &checkedAt},
+			{GroupID: 7, ExpectedModel: "gpt-5.6-sol", Verdict: AstraCheckVerdictMismatch}, // 已移出配置
+		},
 	}
-
-	require.Equal(t, 20, bench.TierRequests(AstraCheckTierLow))
-	require.Equal(t, 50, bench.TierRequests(AstraCheckTierMedium))
-	require.Equal(t, 100, bench.TierRequests(AstraCheckTierHigh))
-	for _, tier := range astraCheckTiers {
-		require.True(t, bench.Tiers[tier].Calibrated, tier)
-		require.Len(t, bench.Tiers[tier].Thresholds, 4, tier)
-	}
-	require.Equal(t, "4.5.0-rc4", meta.Version)
-	require.Len(t, meta.Models, 4)
-
-	// 二次加载返回同一实例
-	again, _, err := LoadEmbeddedAstraBenchmark()
-	require.NoError(t, err)
-	require.Same(t, bench, again)
-}
-
-func TestDecorateAstraCheckSummary_FillsCostAndBenchmarkMeta(t *testing.T) {
-	summary := &GroupStatusSummary{AstraCheckInputTokens: 1000, AstraCheckOutputTokens: 100}
 	decorateAstraCheckSummary(summary)
-	require.InDelta(t, 0.015, summary.AstraCheckLastCostUSD, 1e-12)
-	require.Equal(t, "4.5.0-rc4", summary.AstraCheckBenchmarkVersion)
-	require.Len(t, summary.AstraCheckBenchmarkModels, 4)
-	require.Len(t, summary.AstraCheckBenchmarkTiers, 3)
-	require.Equal(t, 20, summary.AstraCheckBenchmarkTiers[0].Requests)
+	require.Len(t, summary.AstraCheckStates, 2)
+	require.Equal(t, "gpt-6-sol", summary.AstraCheckStates[0].ExpectedModel)
+	require.Equal(t, "GPT-6 Sol", summary.AstraCheckStates[0].DisplayName)
+	require.Nil(t, summary.AstraCheckStates[0].CheckedAt)
+	require.NotNil(t, summary.AstraCheckStates[0].Matches)
+	require.NotNil(t, summary.AstraCheckStates[0].Reasons)
+	require.Equal(t, "gpt-6-astra", summary.AstraCheckStates[1].ExpectedModel)
+	require.Equal(t, AstraCheckVerdictMatch, summary.AstraCheckStates[1].Verdict)
+	require.Len(t, summary.AstraCheckBenchmarks, len(astrabenchmark.Files))
 }

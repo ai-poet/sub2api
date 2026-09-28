@@ -60,6 +60,8 @@ type GroupStatusConfig struct {
 	AstraCheckEnabled bool `json:"astra_check_enabled,omitempty"`
 	// AstraCheckRequestModel holds the value of the "astra_check_request_model" field.
 	AstraCheckRequestModel string `json:"astra_check_request_model,omitempty"`
+	// AstraCheckModels holds the value of the "astra_check_models" field.
+	AstraCheckModels []map[string]interface{} `json:"astra_check_models,omitempty"`
 	// AstraCheckTier holds the value of the "astra_check_tier" field.
 	AstraCheckTier string `json:"astra_check_tier,omitempty"`
 	// AstraCheckIntervalSeconds holds the value of the "astra_check_interval_seconds" field.
@@ -72,7 +74,7 @@ func (*GroupStatusConfig) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case groupstatusconfig.FieldExpectedKeywords:
+		case groupstatusconfig.FieldExpectedKeywords, groupstatusconfig.FieldAstraCheckModels:
 			values[i] = new([]byte)
 		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled, groupstatusconfig.FieldSolJuiceEnabled, groupstatusconfig.FieldModeltraceEnabled, groupstatusconfig.FieldAstraCheckEnabled:
 			values[i] = new(sql.NullBool)
@@ -231,6 +233,14 @@ func (_m *GroupStatusConfig) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.AstraCheckRequestModel = value.String
 			}
+		case groupstatusconfig.FieldAstraCheckModels:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field astra_check_models", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.AstraCheckModels); err != nil {
+					return fmt.Errorf("unmarshal field astra_check_models: %w", err)
+				}
+			}
 		case groupstatusconfig.FieldAstraCheckTier:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field astra_check_tier", values[i])
@@ -341,6 +351,9 @@ func (_m *GroupStatusConfig) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("astra_check_request_model=")
 	builder.WriteString(_m.AstraCheckRequestModel)
+	builder.WriteString(", ")
+	builder.WriteString("astra_check_models=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckModels))
 	builder.WriteString(", ")
 	builder.WriteString("astra_check_tier=")
 	builder.WriteString(_m.AstraCheckTier)

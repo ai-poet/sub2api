@@ -31,21 +31,13 @@ type GroupStatusProbeService struct {
 	// notifier 在稳定状态切换（down / up）时收到通知；可为空
 	notifier groupStatusTransitionNotifier
 
-	// Astra 指纹验证（meow 基准）：基准来源（nil = 内置包）、并发（0 = 默认 4）、运行中标记、重试退避（测试可替换）
-	astraBenchmarks  astraBenchmarkProvider
-	astraConcurrency int
-	astraRunning     sync.Map
-	astraSleep       func(ctx context.Context, d time.Duration) error
-	astraProgress    sync.Map // groupID → *astraProgressTracker，验证进行中的实时进度
-
-	// ModelTrace 指纹验证：指纹库来源（nil = 内置库）、每账号并发（0 = 默认 3）、运行中标记、实时进度，
-	// 以及重试退避与挑战生成（测试可替换）
-	modelTraceBanks       modelTraceBankProvider
-	modelTraceConcurrency int
-	modelTraceRunning     sync.Map
-	modelTraceProgress    sync.Map // groupID → *modelTraceProgressTracker
-	modelTraceSleep       func(ctx context.Context, d time.Duration) error
-	modelTraceChallenges  func(n int) []ModelTraceChallenge
+	// meow 指纹验证（多模型）：基准来源（nil = 内置包）、每账号并发（0 = 默认 8）、运行中标记、
+	// 重试退避（测试可替换）与进行中的实时进度（groupID → *astraProgressTracker）
+	astraBenchmarkSource astraBenchmarkProvider
+	astraConcurrency     int
+	astraRunning         sync.Map
+	astraSleep           func(ctx context.Context, d time.Duration) error
+	astraProgress        sync.Map
 }
 
 // groupStatusTransitionNotifier 消费探测落库后产生的稳定状态切换事件（如 Server酱³ 推送）。

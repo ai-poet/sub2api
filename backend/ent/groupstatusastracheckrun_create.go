@@ -34,6 +34,62 @@ func (_c *GroupStatusAstraCheckRunCreate) SetConfigID(v int64) *GroupStatusAstra
 	return _c
 }
 
+// SetPlatform sets the "platform" field.
+func (_c *GroupStatusAstraCheckRunCreate) SetPlatform(v string) *GroupStatusAstraCheckRunCreate {
+	_c.mutation.SetPlatform(v)
+	return _c
+}
+
+// SetNillablePlatform sets the "platform" field if the given value is not nil.
+func (_c *GroupStatusAstraCheckRunCreate) SetNillablePlatform(v *string) *GroupStatusAstraCheckRunCreate {
+	if v != nil {
+		_c.SetPlatform(*v)
+	}
+	return _c
+}
+
+// SetExpectedModel sets the "expected_model" field.
+func (_c *GroupStatusAstraCheckRunCreate) SetExpectedModel(v string) *GroupStatusAstraCheckRunCreate {
+	_c.mutation.SetExpectedModel(v)
+	return _c
+}
+
+// SetNillableExpectedModel sets the "expected_model" field if the given value is not nil.
+func (_c *GroupStatusAstraCheckRunCreate) SetNillableExpectedModel(v *string) *GroupStatusAstraCheckRunCreate {
+	if v != nil {
+		_c.SetExpectedModel(*v)
+	}
+	return _c
+}
+
+// SetRound sets the "round" field.
+func (_c *GroupStatusAstraCheckRunCreate) SetRound(v int) *GroupStatusAstraCheckRunCreate {
+	_c.mutation.SetRound(v)
+	return _c
+}
+
+// SetNillableRound sets the "round" field if the given value is not nil.
+func (_c *GroupStatusAstraCheckRunCreate) SetNillableRound(v *int) *GroupStatusAstraCheckRunCreate {
+	if v != nil {
+		_c.SetRound(*v)
+	}
+	return _c
+}
+
+// SetScoringVersion sets the "scoring_version" field.
+func (_c *GroupStatusAstraCheckRunCreate) SetScoringVersion(v string) *GroupStatusAstraCheckRunCreate {
+	_c.mutation.SetScoringVersion(v)
+	return _c
+}
+
+// SetNillableScoringVersion sets the "scoring_version" field if the given value is not nil.
+func (_c *GroupStatusAstraCheckRunCreate) SetNillableScoringVersion(v *string) *GroupStatusAstraCheckRunCreate {
+	if v != nil {
+		_c.SetScoringVersion(*v)
+	}
+	return _c
+}
+
 // SetBenchmarkPackageID sets the "benchmark_package_id" field.
 func (_c *GroupStatusAstraCheckRunCreate) SetBenchmarkPackageID(v string) *GroupStatusAstraCheckRunCreate {
 	_c.mutation.SetBenchmarkPackageID(v)
@@ -246,6 +302,20 @@ func (_c *GroupStatusAstraCheckRunCreate) SetNillableReasoningTokens(v *int64) *
 	return _c
 }
 
+// SetCostUsd sets the "cost_usd" field.
+func (_c *GroupStatusAstraCheckRunCreate) SetCostUsd(v float64) *GroupStatusAstraCheckRunCreate {
+	_c.mutation.SetCostUsd(v)
+	return _c
+}
+
+// SetNillableCostUsd sets the "cost_usd" field if the given value is not nil.
+func (_c *GroupStatusAstraCheckRunCreate) SetNillableCostUsd(v *float64) *GroupStatusAstraCheckRunCreate {
+	if v != nil {
+		_c.SetCostUsd(*v)
+	}
+	return _c
+}
+
 // SetLatencyMs sets the "latency_ms" field.
 func (_c *GroupStatusAstraCheckRunCreate) SetLatencyMs(v int64) *GroupStatusAstraCheckRunCreate {
 	_c.mutation.SetLatencyMs(v)
@@ -349,6 +419,22 @@ func (_c *GroupStatusAstraCheckRunCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *GroupStatusAstraCheckRunCreate) defaults() {
+	if _, ok := _c.mutation.Platform(); !ok {
+		v := groupstatusastracheckrun.DefaultPlatform
+		_c.mutation.SetPlatform(v)
+	}
+	if _, ok := _c.mutation.ExpectedModel(); !ok {
+		v := groupstatusastracheckrun.DefaultExpectedModel
+		_c.mutation.SetExpectedModel(v)
+	}
+	if _, ok := _c.mutation.Round(); !ok {
+		v := groupstatusastracheckrun.DefaultRound
+		_c.mutation.SetRound(v)
+	}
+	if _, ok := _c.mutation.ScoringVersion(); !ok {
+		v := groupstatusastracheckrun.DefaultScoringVersion
+		_c.mutation.SetScoringVersion(v)
+	}
 	if _, ok := _c.mutation.BenchmarkPackageID(); !ok {
 		v := groupstatusastracheckrun.DefaultBenchmarkPackageID
 		_c.mutation.SetBenchmarkPackageID(v)
@@ -413,6 +499,10 @@ func (_c *GroupStatusAstraCheckRunCreate) defaults() {
 		v := groupstatusastracheckrun.DefaultReasoningTokens
 		_c.mutation.SetReasoningTokens(v)
 	}
+	if _, ok := _c.mutation.CostUsd(); !ok {
+		v := groupstatusastracheckrun.DefaultCostUsd
+		_c.mutation.SetCostUsd(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := groupstatusastracheckrun.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -426,6 +516,18 @@ func (_c *GroupStatusAstraCheckRunCreate) check() error {
 	}
 	if _, ok := _c.mutation.ConfigID(); !ok {
 		return &ValidationError{Name: "config_id", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.config_id"`)}
+	}
+	if _, ok := _c.mutation.Platform(); !ok {
+		return &ValidationError{Name: "platform", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.platform"`)}
+	}
+	if _, ok := _c.mutation.ExpectedModel(); !ok {
+		return &ValidationError{Name: "expected_model", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.expected_model"`)}
+	}
+	if _, ok := _c.mutation.Round(); !ok {
+		return &ValidationError{Name: "round", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.round"`)}
+	}
+	if _, ok := _c.mutation.ScoringVersion(); !ok {
+		return &ValidationError{Name: "scoring_version", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.scoring_version"`)}
 	}
 	if _, ok := _c.mutation.BenchmarkPackageID(); !ok {
 		return &ValidationError{Name: "benchmark_package_id", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.benchmark_package_id"`)}
@@ -478,6 +580,9 @@ func (_c *GroupStatusAstraCheckRunCreate) check() error {
 	if _, ok := _c.mutation.ReasoningTokens(); !ok {
 		return &ValidationError{Name: "reasoning_tokens", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.reasoning_tokens"`)}
 	}
+	if _, ok := _c.mutation.CostUsd(); !ok {
+		return &ValidationError{Name: "cost_usd", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.cost_usd"`)}
+	}
 	if _, ok := _c.mutation.StartedAt(); !ok {
 		return &ValidationError{Name: "started_at", err: errors.New(`ent: missing required field "GroupStatusAstraCheckRun.started_at"`)}
 	}
@@ -521,6 +626,22 @@ func (_c *GroupStatusAstraCheckRunCreate) createSpec() (*GroupStatusAstraCheckRu
 	if value, ok := _c.mutation.ConfigID(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldConfigID, field.TypeInt64, value)
 		_node.ConfigID = value
+	}
+	if value, ok := _c.mutation.Platform(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldPlatform, field.TypeString, value)
+		_node.Platform = value
+	}
+	if value, ok := _c.mutation.ExpectedModel(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldExpectedModel, field.TypeString, value)
+		_node.ExpectedModel = value
+	}
+	if value, ok := _c.mutation.Round(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldRound, field.TypeInt, value)
+		_node.Round = value
+	}
+	if value, ok := _c.mutation.ScoringVersion(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldScoringVersion, field.TypeString, value)
+		_node.ScoringVersion = value
 	}
 	if value, ok := _c.mutation.BenchmarkPackageID(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldBenchmarkPackageID, field.TypeString, value)
@@ -593,6 +714,10 @@ func (_c *GroupStatusAstraCheckRunCreate) createSpec() (*GroupStatusAstraCheckRu
 	if value, ok := _c.mutation.ReasoningTokens(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldReasoningTokens, field.TypeInt64, value)
 		_node.ReasoningTokens = value
+	}
+	if value, ok := _c.mutation.CostUsd(); ok {
+		_spec.SetField(groupstatusastracheckrun.FieldCostUsd, field.TypeFloat64, value)
+		_node.CostUsd = value
 	}
 	if value, ok := _c.mutation.LatencyMs(); ok {
 		_spec.SetField(groupstatusastracheckrun.FieldLatencyMs, field.TypeInt64, value)
@@ -703,6 +828,60 @@ func (u *GroupStatusAstraCheckRunUpsert) UpdateConfigID() *GroupStatusAstraCheck
 // AddConfigID adds v to the "config_id" field.
 func (u *GroupStatusAstraCheckRunUpsert) AddConfigID(v int64) *GroupStatusAstraCheckRunUpsert {
 	u.Add(groupstatusastracheckrun.FieldConfigID, v)
+	return u
+}
+
+// SetPlatform sets the "platform" field.
+func (u *GroupStatusAstraCheckRunUpsert) SetPlatform(v string) *GroupStatusAstraCheckRunUpsert {
+	u.Set(groupstatusastracheckrun.FieldPlatform, v)
+	return u
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsert) UpdatePlatform() *GroupStatusAstraCheckRunUpsert {
+	u.SetExcluded(groupstatusastracheckrun.FieldPlatform)
+	return u
+}
+
+// SetExpectedModel sets the "expected_model" field.
+func (u *GroupStatusAstraCheckRunUpsert) SetExpectedModel(v string) *GroupStatusAstraCheckRunUpsert {
+	u.Set(groupstatusastracheckrun.FieldExpectedModel, v)
+	return u
+}
+
+// UpdateExpectedModel sets the "expected_model" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsert) UpdateExpectedModel() *GroupStatusAstraCheckRunUpsert {
+	u.SetExcluded(groupstatusastracheckrun.FieldExpectedModel)
+	return u
+}
+
+// SetRound sets the "round" field.
+func (u *GroupStatusAstraCheckRunUpsert) SetRound(v int) *GroupStatusAstraCheckRunUpsert {
+	u.Set(groupstatusastracheckrun.FieldRound, v)
+	return u
+}
+
+// UpdateRound sets the "round" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsert) UpdateRound() *GroupStatusAstraCheckRunUpsert {
+	u.SetExcluded(groupstatusastracheckrun.FieldRound)
+	return u
+}
+
+// AddRound adds v to the "round" field.
+func (u *GroupStatusAstraCheckRunUpsert) AddRound(v int) *GroupStatusAstraCheckRunUpsert {
+	u.Add(groupstatusastracheckrun.FieldRound, v)
+	return u
+}
+
+// SetScoringVersion sets the "scoring_version" field.
+func (u *GroupStatusAstraCheckRunUpsert) SetScoringVersion(v string) *GroupStatusAstraCheckRunUpsert {
+	u.Set(groupstatusastracheckrun.FieldScoringVersion, v)
+	return u
+}
+
+// UpdateScoringVersion sets the "scoring_version" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsert) UpdateScoringVersion() *GroupStatusAstraCheckRunUpsert {
+	u.SetExcluded(groupstatusastracheckrun.FieldScoringVersion)
 	return u
 }
 
@@ -970,6 +1149,24 @@ func (u *GroupStatusAstraCheckRunUpsert) AddReasoningTokens(v int64) *GroupStatu
 	return u
 }
 
+// SetCostUsd sets the "cost_usd" field.
+func (u *GroupStatusAstraCheckRunUpsert) SetCostUsd(v float64) *GroupStatusAstraCheckRunUpsert {
+	u.Set(groupstatusastracheckrun.FieldCostUsd, v)
+	return u
+}
+
+// UpdateCostUsd sets the "cost_usd" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsert) UpdateCostUsd() *GroupStatusAstraCheckRunUpsert {
+	u.SetExcluded(groupstatusastracheckrun.FieldCostUsd)
+	return u
+}
+
+// AddCostUsd adds v to the "cost_usd" field.
+func (u *GroupStatusAstraCheckRunUpsert) AddCostUsd(v float64) *GroupStatusAstraCheckRunUpsert {
+	u.Add(groupstatusastracheckrun.FieldCostUsd, v)
+	return u
+}
+
 // SetLatencyMs sets the "latency_ms" field.
 func (u *GroupStatusAstraCheckRunUpsert) SetLatencyMs(v int64) *GroupStatusAstraCheckRunUpsert {
 	u.Set(groupstatusastracheckrun.FieldLatencyMs, v)
@@ -1144,6 +1341,69 @@ func (u *GroupStatusAstraCheckRunUpsertOne) AddConfigID(v int64) *GroupStatusAst
 func (u *GroupStatusAstraCheckRunUpsertOne) UpdateConfigID() *GroupStatusAstraCheckRunUpsertOne {
 	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
 		s.UpdateConfigID()
+	})
+}
+
+// SetPlatform sets the "platform" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) SetPlatform(v string) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetPlatform(v)
+	})
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertOne) UpdatePlatform() *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdatePlatform()
+	})
+}
+
+// SetExpectedModel sets the "expected_model" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) SetExpectedModel(v string) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetExpectedModel(v)
+	})
+}
+
+// UpdateExpectedModel sets the "expected_model" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertOne) UpdateExpectedModel() *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateExpectedModel()
+	})
+}
+
+// SetRound sets the "round" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) SetRound(v int) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetRound(v)
+	})
+}
+
+// AddRound adds v to the "round" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) AddRound(v int) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.AddRound(v)
+	})
+}
+
+// UpdateRound sets the "round" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertOne) UpdateRound() *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateRound()
+	})
+}
+
+// SetScoringVersion sets the "scoring_version" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) SetScoringVersion(v string) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetScoringVersion(v)
+	})
+}
+
+// UpdateScoringVersion sets the "scoring_version" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertOne) UpdateScoringVersion() *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateScoringVersion()
 	})
 }
 
@@ -1452,6 +1712,27 @@ func (u *GroupStatusAstraCheckRunUpsertOne) AddReasoningTokens(v int64) *GroupSt
 func (u *GroupStatusAstraCheckRunUpsertOne) UpdateReasoningTokens() *GroupStatusAstraCheckRunUpsertOne {
 	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
 		s.UpdateReasoningTokens()
+	})
+}
+
+// SetCostUsd sets the "cost_usd" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) SetCostUsd(v float64) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetCostUsd(v)
+	})
+}
+
+// AddCostUsd adds v to the "cost_usd" field.
+func (u *GroupStatusAstraCheckRunUpsertOne) AddCostUsd(v float64) *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.AddCostUsd(v)
+	})
+}
+
+// UpdateCostUsd sets the "cost_usd" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertOne) UpdateCostUsd() *GroupStatusAstraCheckRunUpsertOne {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateCostUsd()
 	})
 }
 
@@ -1813,6 +2094,69 @@ func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateConfigID() *GroupStatusAstraC
 	})
 }
 
+// SetPlatform sets the "platform" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) SetPlatform(v string) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetPlatform(v)
+	})
+}
+
+// UpdatePlatform sets the "platform" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertBulk) UpdatePlatform() *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdatePlatform()
+	})
+}
+
+// SetExpectedModel sets the "expected_model" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) SetExpectedModel(v string) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetExpectedModel(v)
+	})
+}
+
+// UpdateExpectedModel sets the "expected_model" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateExpectedModel() *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateExpectedModel()
+	})
+}
+
+// SetRound sets the "round" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) SetRound(v int) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetRound(v)
+	})
+}
+
+// AddRound adds v to the "round" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) AddRound(v int) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.AddRound(v)
+	})
+}
+
+// UpdateRound sets the "round" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateRound() *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateRound()
+	})
+}
+
+// SetScoringVersion sets the "scoring_version" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) SetScoringVersion(v string) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetScoringVersion(v)
+	})
+}
+
+// UpdateScoringVersion sets the "scoring_version" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateScoringVersion() *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateScoringVersion()
+	})
+}
+
 // SetBenchmarkPackageID sets the "benchmark_package_id" field.
 func (u *GroupStatusAstraCheckRunUpsertBulk) SetBenchmarkPackageID(v string) *GroupStatusAstraCheckRunUpsertBulk {
 	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
@@ -2118,6 +2462,27 @@ func (u *GroupStatusAstraCheckRunUpsertBulk) AddReasoningTokens(v int64) *GroupS
 func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateReasoningTokens() *GroupStatusAstraCheckRunUpsertBulk {
 	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
 		s.UpdateReasoningTokens()
+	})
+}
+
+// SetCostUsd sets the "cost_usd" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) SetCostUsd(v float64) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.SetCostUsd(v)
+	})
+}
+
+// AddCostUsd adds v to the "cost_usd" field.
+func (u *GroupStatusAstraCheckRunUpsertBulk) AddCostUsd(v float64) *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.AddCostUsd(v)
+	})
+}
+
+// UpdateCostUsd sets the "cost_usd" field to the value that was provided on create.
+func (u *GroupStatusAstraCheckRunUpsertBulk) UpdateCostUsd() *GroupStatusAstraCheckRunUpsertBulk {
+	return u.Update(func(s *GroupStatusAstraCheckRunUpsert) {
+		s.UpdateCostUsd()
 	})
 }
 

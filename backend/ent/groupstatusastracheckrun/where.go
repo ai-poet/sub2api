@@ -64,6 +64,26 @@ func ConfigID(v int64) predicate.GroupStatusAstraCheckRun {
 	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldConfigID, v))
 }
 
+// Platform applies equality check predicate on the "platform" field. It's identical to PlatformEQ.
+func Platform(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldPlatform, v))
+}
+
+// ExpectedModel applies equality check predicate on the "expected_model" field. It's identical to ExpectedModelEQ.
+func ExpectedModel(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldExpectedModel, v))
+}
+
+// Round applies equality check predicate on the "round" field. It's identical to RoundEQ.
+func Round(v int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldRound, v))
+}
+
+// ScoringVersion applies equality check predicate on the "scoring_version" field. It's identical to ScoringVersionEQ.
+func ScoringVersion(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldScoringVersion, v))
+}
+
 // BenchmarkPackageID applies equality check predicate on the "benchmark_package_id" field. It's identical to BenchmarkPackageIDEQ.
 func BenchmarkPackageID(v string) predicate.GroupStatusAstraCheckRun {
 	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldBenchmarkPackageID, v))
@@ -132,6 +152,11 @@ func OutputTokens(v int64) predicate.GroupStatusAstraCheckRun {
 // ReasoningTokens applies equality check predicate on the "reasoning_tokens" field. It's identical to ReasoningTokensEQ.
 func ReasoningTokens(v int64) predicate.GroupStatusAstraCheckRun {
 	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldReasoningTokens, v))
+}
+
+// CostUsd applies equality check predicate on the "cost_usd" field. It's identical to CostUsdEQ.
+func CostUsd(v float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldCostUsd, v))
 }
 
 // LatencyMs applies equality check predicate on the "latency_ms" field. It's identical to LatencyMsEQ.
@@ -242,6 +267,241 @@ func ConfigIDLT(v int64) predicate.GroupStatusAstraCheckRun {
 // ConfigIDLTE applies the LTE predicate on the "config_id" field.
 func ConfigIDLTE(v int64) predicate.GroupStatusAstraCheckRun {
 	return predicate.GroupStatusAstraCheckRun(sql.FieldLTE(FieldConfigID, v))
+}
+
+// PlatformEQ applies the EQ predicate on the "platform" field.
+func PlatformEQ(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldPlatform, v))
+}
+
+// PlatformNEQ applies the NEQ predicate on the "platform" field.
+func PlatformNEQ(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNEQ(FieldPlatform, v))
+}
+
+// PlatformIn applies the In predicate on the "platform" field.
+func PlatformIn(vs ...string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldIn(FieldPlatform, vs...))
+}
+
+// PlatformNotIn applies the NotIn predicate on the "platform" field.
+func PlatformNotIn(vs ...string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNotIn(FieldPlatform, vs...))
+}
+
+// PlatformGT applies the GT predicate on the "platform" field.
+func PlatformGT(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGT(FieldPlatform, v))
+}
+
+// PlatformGTE applies the GTE predicate on the "platform" field.
+func PlatformGTE(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGTE(FieldPlatform, v))
+}
+
+// PlatformLT applies the LT predicate on the "platform" field.
+func PlatformLT(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLT(FieldPlatform, v))
+}
+
+// PlatformLTE applies the LTE predicate on the "platform" field.
+func PlatformLTE(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLTE(FieldPlatform, v))
+}
+
+// PlatformContains applies the Contains predicate on the "platform" field.
+func PlatformContains(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldContains(FieldPlatform, v))
+}
+
+// PlatformHasPrefix applies the HasPrefix predicate on the "platform" field.
+func PlatformHasPrefix(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldHasPrefix(FieldPlatform, v))
+}
+
+// PlatformHasSuffix applies the HasSuffix predicate on the "platform" field.
+func PlatformHasSuffix(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldHasSuffix(FieldPlatform, v))
+}
+
+// PlatformEqualFold applies the EqualFold predicate on the "platform" field.
+func PlatformEqualFold(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEqualFold(FieldPlatform, v))
+}
+
+// PlatformContainsFold applies the ContainsFold predicate on the "platform" field.
+func PlatformContainsFold(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldContainsFold(FieldPlatform, v))
+}
+
+// ExpectedModelEQ applies the EQ predicate on the "expected_model" field.
+func ExpectedModelEQ(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldExpectedModel, v))
+}
+
+// ExpectedModelNEQ applies the NEQ predicate on the "expected_model" field.
+func ExpectedModelNEQ(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNEQ(FieldExpectedModel, v))
+}
+
+// ExpectedModelIn applies the In predicate on the "expected_model" field.
+func ExpectedModelIn(vs ...string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldIn(FieldExpectedModel, vs...))
+}
+
+// ExpectedModelNotIn applies the NotIn predicate on the "expected_model" field.
+func ExpectedModelNotIn(vs ...string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNotIn(FieldExpectedModel, vs...))
+}
+
+// ExpectedModelGT applies the GT predicate on the "expected_model" field.
+func ExpectedModelGT(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGT(FieldExpectedModel, v))
+}
+
+// ExpectedModelGTE applies the GTE predicate on the "expected_model" field.
+func ExpectedModelGTE(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGTE(FieldExpectedModel, v))
+}
+
+// ExpectedModelLT applies the LT predicate on the "expected_model" field.
+func ExpectedModelLT(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLT(FieldExpectedModel, v))
+}
+
+// ExpectedModelLTE applies the LTE predicate on the "expected_model" field.
+func ExpectedModelLTE(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLTE(FieldExpectedModel, v))
+}
+
+// ExpectedModelContains applies the Contains predicate on the "expected_model" field.
+func ExpectedModelContains(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldContains(FieldExpectedModel, v))
+}
+
+// ExpectedModelHasPrefix applies the HasPrefix predicate on the "expected_model" field.
+func ExpectedModelHasPrefix(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldHasPrefix(FieldExpectedModel, v))
+}
+
+// ExpectedModelHasSuffix applies the HasSuffix predicate on the "expected_model" field.
+func ExpectedModelHasSuffix(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldHasSuffix(FieldExpectedModel, v))
+}
+
+// ExpectedModelEqualFold applies the EqualFold predicate on the "expected_model" field.
+func ExpectedModelEqualFold(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEqualFold(FieldExpectedModel, v))
+}
+
+// ExpectedModelContainsFold applies the ContainsFold predicate on the "expected_model" field.
+func ExpectedModelContainsFold(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldContainsFold(FieldExpectedModel, v))
+}
+
+// RoundEQ applies the EQ predicate on the "round" field.
+func RoundEQ(v int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldRound, v))
+}
+
+// RoundNEQ applies the NEQ predicate on the "round" field.
+func RoundNEQ(v int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNEQ(FieldRound, v))
+}
+
+// RoundIn applies the In predicate on the "round" field.
+func RoundIn(vs ...int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldIn(FieldRound, vs...))
+}
+
+// RoundNotIn applies the NotIn predicate on the "round" field.
+func RoundNotIn(vs ...int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNotIn(FieldRound, vs...))
+}
+
+// RoundGT applies the GT predicate on the "round" field.
+func RoundGT(v int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGT(FieldRound, v))
+}
+
+// RoundGTE applies the GTE predicate on the "round" field.
+func RoundGTE(v int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGTE(FieldRound, v))
+}
+
+// RoundLT applies the LT predicate on the "round" field.
+func RoundLT(v int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLT(FieldRound, v))
+}
+
+// RoundLTE applies the LTE predicate on the "round" field.
+func RoundLTE(v int) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLTE(FieldRound, v))
+}
+
+// ScoringVersionEQ applies the EQ predicate on the "scoring_version" field.
+func ScoringVersionEQ(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldScoringVersion, v))
+}
+
+// ScoringVersionNEQ applies the NEQ predicate on the "scoring_version" field.
+func ScoringVersionNEQ(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNEQ(FieldScoringVersion, v))
+}
+
+// ScoringVersionIn applies the In predicate on the "scoring_version" field.
+func ScoringVersionIn(vs ...string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldIn(FieldScoringVersion, vs...))
+}
+
+// ScoringVersionNotIn applies the NotIn predicate on the "scoring_version" field.
+func ScoringVersionNotIn(vs ...string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNotIn(FieldScoringVersion, vs...))
+}
+
+// ScoringVersionGT applies the GT predicate on the "scoring_version" field.
+func ScoringVersionGT(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGT(FieldScoringVersion, v))
+}
+
+// ScoringVersionGTE applies the GTE predicate on the "scoring_version" field.
+func ScoringVersionGTE(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGTE(FieldScoringVersion, v))
+}
+
+// ScoringVersionLT applies the LT predicate on the "scoring_version" field.
+func ScoringVersionLT(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLT(FieldScoringVersion, v))
+}
+
+// ScoringVersionLTE applies the LTE predicate on the "scoring_version" field.
+func ScoringVersionLTE(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLTE(FieldScoringVersion, v))
+}
+
+// ScoringVersionContains applies the Contains predicate on the "scoring_version" field.
+func ScoringVersionContains(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldContains(FieldScoringVersion, v))
+}
+
+// ScoringVersionHasPrefix applies the HasPrefix predicate on the "scoring_version" field.
+func ScoringVersionHasPrefix(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldHasPrefix(FieldScoringVersion, v))
+}
+
+// ScoringVersionHasSuffix applies the HasSuffix predicate on the "scoring_version" field.
+func ScoringVersionHasSuffix(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldHasSuffix(FieldScoringVersion, v))
+}
+
+// ScoringVersionEqualFold applies the EqualFold predicate on the "scoring_version" field.
+func ScoringVersionEqualFold(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEqualFold(FieldScoringVersion, v))
+}
+
+// ScoringVersionContainsFold applies the ContainsFold predicate on the "scoring_version" field.
+func ScoringVersionContainsFold(v string) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldContainsFold(FieldScoringVersion, v))
 }
 
 // BenchmarkPackageIDEQ applies the EQ predicate on the "benchmark_package_id" field.
@@ -987,6 +1247,46 @@ func ReasoningTokensLT(v int64) predicate.GroupStatusAstraCheckRun {
 // ReasoningTokensLTE applies the LTE predicate on the "reasoning_tokens" field.
 func ReasoningTokensLTE(v int64) predicate.GroupStatusAstraCheckRun {
 	return predicate.GroupStatusAstraCheckRun(sql.FieldLTE(FieldReasoningTokens, v))
+}
+
+// CostUsdEQ applies the EQ predicate on the "cost_usd" field.
+func CostUsdEQ(v float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldEQ(FieldCostUsd, v))
+}
+
+// CostUsdNEQ applies the NEQ predicate on the "cost_usd" field.
+func CostUsdNEQ(v float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNEQ(FieldCostUsd, v))
+}
+
+// CostUsdIn applies the In predicate on the "cost_usd" field.
+func CostUsdIn(vs ...float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldIn(FieldCostUsd, vs...))
+}
+
+// CostUsdNotIn applies the NotIn predicate on the "cost_usd" field.
+func CostUsdNotIn(vs ...float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldNotIn(FieldCostUsd, vs...))
+}
+
+// CostUsdGT applies the GT predicate on the "cost_usd" field.
+func CostUsdGT(v float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGT(FieldCostUsd, v))
+}
+
+// CostUsdGTE applies the GTE predicate on the "cost_usd" field.
+func CostUsdGTE(v float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldGTE(FieldCostUsd, v))
+}
+
+// CostUsdLT applies the LT predicate on the "cost_usd" field.
+func CostUsdLT(v float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLT(FieldCostUsd, v))
+}
+
+// CostUsdLTE applies the LTE predicate on the "cost_usd" field.
+func CostUsdLTE(v float64) predicate.GroupStatusAstraCheckRun {
+	return predicate.GroupStatusAstraCheckRun(sql.FieldLTE(FieldCostUsd, v))
 }
 
 // LatencyMsEQ applies the EQ predicate on the "latency_ms" field.

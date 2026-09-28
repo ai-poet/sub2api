@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/schema/index"
 )
 
-// GroupStatusAstraCheckRun Astra 指纹验证（meow 基准）的每次运行记录，本 fork 自有功能。
+// GroupStatusAstraCheckRun meow 指纹验证（历史名 Astra）的每次运行记录，一次运行对应一个预期模型，本 fork 自有功能。
 type GroupStatusAstraCheckRun struct {
 	ent.Schema
 }
@@ -26,6 +26,10 @@ func (GroupStatusAstraCheckRun) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("group_id"),
 		field.Int64("config_id"),
+		field.String("platform").Default(""),
+		field.String("expected_model").Default(""),
+		field.Int("round").Default(1),
+		field.String("scoring_version").Default(""),
 		field.String("benchmark_package_id").Default(""),
 		field.String("benchmark_version").Default(""),
 		field.String("benchmark_sha256").Default(""),
@@ -52,6 +56,7 @@ func (GroupStatusAstraCheckRun) Fields() []ent.Field {
 		field.Int64("input_tokens").Default(0),
 		field.Int64("output_tokens").Default(0),
 		field.Int64("reasoning_tokens").Default(0),
+		field.Float("cost_usd").Default(0),
 		field.Int64("latency_ms").Optional().Nillable(),
 		field.Int("http_code").Optional().Nillable(),
 		field.String("error_detail").
@@ -72,5 +77,6 @@ func (GroupStatusAstraCheckRun) Fields() []ent.Field {
 func (GroupStatusAstraCheckRun) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("group_id", "finished_at"),
+		index.Fields("group_id", "expected_model", "finished_at"),
 	}
 }

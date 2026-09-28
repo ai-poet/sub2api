@@ -3,20 +3,19 @@ package service
 import (
 	"fmt"
 	"math"
-	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
 
-// Astra 指纹验证（meow 基准，行为指纹），本 fork 自有功能。
+// meow 指纹验证（行为指纹，多模型），本 fork 自有功能；历史名称为 Astra 指纹验证，表与代码沿用 astra_check。
 //
-// 与 Sol Juice 并列的第三条探针：每次向分组的一个 OpenAI 账号发一批固定短答题，
-// 把答案分布与基准包里 Astra / Sol / Terra / Luna 的分布比较，唯一越过阈值的模型
-// 才算强指向。判定逻辑按 meow 技术报告的公式自行实现，不引用其代码。
+// 每个分组可以同时检测多个预期模型：对每个模型，向分组里一个与平台一致的账号发一批固定短答题，
+// 把答案计数交给该模型所在的 v3 基准包判定——每个候选的证据是各题 Dirichlet-multinomial 边际似然之和，
+// other 取整轮最接近的单一外部参考源；显示分数是「每条有效答案相对最强对手的对数优势」的 sigmoid，
+// 只有唯一最高者严格越过自身强指向线、且样本满足资格时才算强指向。公式按 meow 技术报告自行实现，不引用其代码。
 
 const (
 	GroupStatusEventAstraMismatch  = "astra_mismatch"
@@ -30,40 +29,60 @@ const (
 	AstraCheckStatusMismatch = "mismatch"
 
 	AstraCheckInvalidOutput = "__INVALID_OUTPUT__"
-	AstraCheckOtherCategory = "__OTHER__"
 
-	// AstraCheckReasonBelowThreshold：样本齐全但 Astra 未达自身阈值（单边反证，按 mismatch 计数）
-	AstraCheckReasonBelowThreshold = "astra_below_threshold"
+	AstraCheckReasonSamplesIncomplete     = "samples_incomplete"
+	AstraCheckReasonNoValidSamples        = "no_valid_samples"
+	AstraCheckReasonNoStrongDirection     = "no_strong_direction"
+	AstraCheckReasonUncalibrated          = "uncalibrated"
+	AstraCheckReasonTargetNotAllowed      = "target_not_allowed"
+	AstraCheckReasonTargetNotInBenchmark  = "target_not_in_benchmark"
+	AstraCheckReasonBenchmarkInvalid      = "benchmark_invalid"
+	AstraCheckReasonNoAccount             = "no_account"
+	AstraCheckReasonScoringFailed         = "scoring_failed"
+	astraCheckEventSubStatusWinnerPrefix  = ":winner_"
+	astraCheckEventSubStatusUnknownWinner = "unknown"
 
-	groupStatusAstraCheckDefaultRequestModel   = "gpt-6-astra"
 	groupStatusAstraCheckDefaultTier           = AstraCheckTierLow
 	groupStatusAstraCheckDefaultIntervalSecond = 3600
 	groupStatusAstraCheckMinIntervalSeconds    = 900
 	groupStatusAstraCheckDefaultConcurrency    = 8
 	groupStatusAstraCheckRequestTimeout        = 120 * time.Second
 	groupStatusAstraCheckMaxAttempts           = 3
-	groupStatusAstraCheckSampleRatio           = 0.6
 	groupStatusAstraCheckMismatchThreshold     = 2
 	groupStatusAstraCheckRunBudget             = 20 * time.Minute
-
-	// gpt-6-astra 官方价（USD/token），与 billing_service.go 兜底价一致；output 已含 reasoning。
-	astraCheckInputPricePerToken  = 10e-6
-	astraCheckOutputPricePerToken = 50e-6
+	groupStatusAstraCheckMaxModels             = 8
 )
 
 var (
-	ErrGroupStatusAstraCheckUnsupported = infraerrors.BadRequest("GROUP_STATUS_ASTRA_CHECK_UNSUPPORTED", "Astra fingerprint check is only available for OpenAI groups")
-	ErrGroupStatusAstraCheckRunning     = infraerrors.Conflict("GROUP_STATUS_ASTRA_CHECK_RUNNING", "Astra fingerprint check is already running for this group")
-
-	astraBehaviorLabelPattern = regexp.MustCompile(`^[a-z][a-z .'-]*$`)
-	astraIntegerPattern       = regexp.MustCompile(`^[+-]?\d+$`)
+	ErrGroupStatusAstraCheckUnsupported   = infraerrors.BadRequest("GROUP_STATUS_ASTRA_CHECK_UNSUPPORTED", "meow fingerprint check is only available for OpenAI and Anthropic groups")
+	ErrGroupStatusAstraCheckRunning       = infraerrors.Conflict("GROUP_STATUS_ASTRA_CHECK_RUNNING", "meow fingerprint check is already running for this group")
+	ErrGroupStatusAstraCheckTargetInvalid = infraerrors.BadRequest("GROUP_STATUS_ASTRA_CHECK_TARGET_INVALID", "unsupported expected model for this group")
 )
 
-// AstraCheckModelMatch 是某个候选模型在一次运行里的得分。
+// AstraCheckModelConfig 是分组要检测的一个预期模型；RequestModel 为空表示用目标的默认请求模型名。
+type AstraCheckModelConfig struct {
+	ExpectedModel string `json:"expected_model"`
+	RequestModel  string `json:"request_model"`
+}
+
+// requestModelFor 返回实际发往上游的模型名。
+func (m AstraCheckModelConfig) requestModelFor(target AstraCheckTarget) string {
+	if model := strings.TrimSpace(m.RequestModel); model != "" {
+		return model
+	}
+	if target.DefaultRequestModel != "" {
+		return target.DefaultRequestModel
+	}
+	return m.ExpectedModel
+}
+
+// AstraCheckModelMatch 是某个候选在一次运行里的得分。
 type AstraCheckModelMatch struct {
-	Model     string  `json:"model"`
-	Name      string  `json:"name"`
-	Score     float64 `json:"score"`
+	Model string `json:"model"`
+	Name  string `json:"name"`
+	// Score 是该候选的对数证据（other 取最接近参考源的证据）
+	Score float64 `json:"score"`
+	// Match 是每条有效答案相对最强对手对数优势的 sigmoid，不是身份概率
 	Match     float64 `json:"match"`
 	Threshold float64 `json:"threshold"`
 	Passed    bool    `json:"passed"`
@@ -72,32 +91,32 @@ type AstraCheckModelMatch struct {
 // AstraCheckCellSummary 是某道题在一次运行里的样本情况。
 type AstraCheckCellSummary struct {
 	CellID     string         `json:"cell_id"`
-	FamilyID   string         `json:"family_id"`
 	Planned    int            `json:"planned"`
 	Total      int            `json:"total"`
 	Valid      int            `json:"valid"`
 	Invalid    int            `json:"invalid"`
 	Minimum    int            `json:"minimum"`
-	Weight     float64        `json:"weight"`
 	Categories map[string]int `json:"categories"`
 }
 
 // AstraCheckScore 是一次运行的判定结果。
 type AstraCheckScore struct {
-	Verdict        string                  `json:"verdict"`
-	Winner         string                  `json:"winner"`
-	Matches        []AstraCheckModelMatch  `json:"matches"`
-	Reasons        []string                `json:"reasons"`
-	Cells          []AstraCheckCellSummary `json:"cells"`
-	ValidSamples   int                     `json:"valid_samples"`
-	PlannedSamples int                     `json:"planned_samples"`
+	Verdict string `json:"verdict"`
+	// Winner 是强指向的候选（只有强指向时才有）；Strongest 是证据最高的候选（不论是否越线）
+	Winner           string                  `json:"winner"`
+	Strongest        string                  `json:"strongest"`
+	NearestReference string                  `json:"nearest_reference"`
+	Matches          []AstraCheckModelMatch  `json:"matches"`
+	Reasons          []string                `json:"reasons"`
+	Cells            []AstraCheckCellSummary `json:"cells"`
+	ValidSamples     int                     `json:"valid_samples"`
+	PlannedSamples   int                     `json:"planned_samples"`
 }
 
 // AstraCellObservation 是某道题的原始归一化计数（含无效输出）。
 type AstraCellObservation struct {
-	CellID  string
-	Planned int
-	Counts  map[string]int
+	CellID string
+	Counts map[string]int
 }
 
 // AstraJob 是一次运行里的一个请求任务。
@@ -106,18 +125,23 @@ type AstraJob struct {
 	Index  int
 }
 
-// GroupStatusAstraCheckResult 是落库前的一次运行结果。
+// GroupStatusAstraCheckResult 是落库前的一次运行结果（一个预期模型）。
 type GroupStatusAstraCheckResult struct {
 	GroupID            int64
 	ConfigID           int64
+	Platform           string
+	ExpectedModel      string
+	Round              int
 	BenchmarkPackageID string
 	BenchmarkVersion   string
 	BenchmarkSHA256    string
+	ScoringVersion     string
 	RequestModel       string
 	Tier               string
 	AccountID          *int64
 	Verdict            string
 	Winner             string
+	Strongest          string
 	Matches            []AstraCheckModelMatch
 	Cells              []AstraCheckCellSummary
 	Reasons            []string
@@ -129,6 +153,7 @@ type GroupStatusAstraCheckResult struct {
 	InputTokens        int64
 	OutputTokens       int64
 	ReasoningTokens    int64
+	CostUSD            float64
 	LatencyMS          *int64
 	HTTPCode           *int
 	ErrorDetail        string
@@ -141,9 +166,13 @@ type GroupStatusAstraCheckRun struct {
 	ID                 int64                    `json:"id"`
 	GroupID            int64                    `json:"group_id"`
 	ConfigID           int64                    `json:"config_id"`
+	Platform           string                   `json:"platform"`
+	ExpectedModel      string                   `json:"expected_model"`
+	Round              int                      `json:"round"`
 	BenchmarkPackageID string                   `json:"benchmark_package_id"`
 	BenchmarkVersion   string                   `json:"benchmark_version"`
 	BenchmarkSHA256    string                   `json:"benchmark_sha256"`
+	ScoringVersion     string                   `json:"scoring_version"`
 	RequestModel       string                   `json:"request_model"`
 	Tier               string                   `json:"tier"`
 	AccountID          *int64                   `json:"account_id"`
@@ -159,6 +188,7 @@ type GroupStatusAstraCheckRun struct {
 	InputTokens        int64                    `json:"input_tokens"`
 	OutputTokens       int64                    `json:"output_tokens"`
 	ReasoningTokens    int64                    `json:"reasoning_tokens"`
+	CostUSD            float64                  `json:"cost_usd"`
 	LatencyMS          *int64                   `json:"latency_ms"`
 	HTTPCode           *int                     `json:"http_code"`
 	ErrorDetail        string                   `json:"error_detail"`
@@ -167,92 +197,113 @@ type GroupStatusAstraCheckRun struct {
 	CreatedAt          time.Time                `json:"created_at"`
 }
 
+// GroupStatusAstraCheckState 是某个（分组, 预期模型）的最近结果与稳定结论。
+type GroupStatusAstraCheckState struct {
+	ID                  int64                  `json:"id"`
+	GroupID             int64                  `json:"group_id"`
+	ConfigID            int64                  `json:"config_id"`
+	ExpectedModel       string                 `json:"expected_model"`
+	DisplayName         string                 `json:"display_name"`
+	Verdict             string                 `json:"verdict"`
+	StableStatus        string                 `json:"stable_status"`
+	Winner              string                 `json:"winner"`
+	Matches             []AstraCheckModelMatch `json:"matches"`
+	Reasons             []string               `json:"reasons"`
+	Detail              string                 `json:"detail"`
+	CheckedAt           *time.Time             `json:"checked_at"`
+	ConsecutiveMismatch int                    `json:"consecutive_mismatch"`
+	ValidSamples        int                    `json:"valid_samples"`
+	PlannedSamples      int                    `json:"planned_samples"`
+	InputTokens         int64                  `json:"input_tokens"`
+	OutputTokens        int64                  `json:"output_tokens"`
+	ReasoningTokens     int64                  `json:"reasoning_tokens"`
+	LastCostUSD         float64                `json:"last_cost_usd"`
+	LastRunID           *int64                 `json:"last_run_id"`
+	BenchmarkPackageID  string                 `json:"benchmark_package_id"`
+	BenchmarkVersion    string                 `json:"benchmark_version"`
+	CreatedAt           time.Time              `json:"created_at"`
+	UpdatedAt           time.Time              `json:"updated_at"`
+}
+
 type GroupStatusAstraCheckExecution struct {
 	Group   *Group                       `json:"group,omitempty"`
 	Config  *GroupStatusConfig           `json:"config,omitempty"`
 	Account *Account                     `json:"account,omitempty"`
 	Result  *GroupStatusAstraCheckResult `json:"result,omitempty"`
 	Run     *GroupStatusAstraCheckRun    `json:"run,omitempty"`
-	State   *GroupStatusState            `json:"state,omitempty"`
+	State   *GroupStatusAstraCheckState  `json:"state,omitempty"`
 	Event   *GroupStatusEvent            `json:"event,omitempty"`
-	// Confirmed 表示本次是首次 mismatch 后的立即复测
+	// Confirmed 表示本次是首次 mismatch 后在同一账号上的立即复测
 	Confirmed bool `json:"confirmed"`
 }
 
-// NormalizeAstraAnswer 按基准包指定的归一器把模型回复整理成类别；不合规则返回 __INVALID_OUTPUT__。
+// ---------- 模型列表 ----------
+
+// astraCheckDefaultModels 是某平台分组的默认检测列表（第一个目标）；不支持的平台为空。
+func astraCheckDefaultModels(platform string) []AstraCheckModelConfig {
+	if targets := AstraCheckTargetsForPlatform(platform); len(targets) > 0 {
+		return []AstraCheckModelConfig{{ExpectedModel: targets[0].ID}}
+	}
+	return []AstraCheckModelConfig{}
+}
+
+// normalizeAstraCheckModels 去空白、去掉空的预期模型并按预期模型去重（保留首次出现的顺序与请求模型）。
+func normalizeAstraCheckModels(models []AstraCheckModelConfig) []AstraCheckModelConfig {
+	out := make([]AstraCheckModelConfig, 0, len(models))
+	seen := make(map[string]struct{}, len(models))
+	for _, m := range models {
+		expected := strings.TrimSpace(m.ExpectedModel)
+		if expected == "" {
+			continue
+		}
+		if _, dup := seen[expected]; dup {
+			continue
+		}
+		seen[expected] = struct{}{}
+		out = append(out, AstraCheckModelConfig{ExpectedModel: expected, RequestModel: strings.TrimSpace(m.RequestModel)})
+	}
+	return out
+}
+
+// astraCheckExpectedModels 返回配置里的预期模型 id 列表。
+func astraCheckExpectedModels(models []AstraCheckModelConfig) []string {
+	out := make([]string, 0, len(models))
+	for _, m := range models {
+		out = append(out, m.ExpectedModel)
+	}
+	return out
+}
+
+// ---------- 归一化与任务规划 ----------
+
+// NormalizeAstraAnswer 按基准包的归一器整理回复：去首尾空白（casefold 版再转小写）。
+// 空回复或超过长度上限的回复不参与判定（记为无效）；不合规的措辞仍是一次观测，由计分时归入「未见」类别。
 func NormalizeAstraAnswer(n AstraNormalizer, raw string) string {
 	text := strings.TrimSpace(raw)
 	if text == "" {
 		return AstraCheckInvalidOutput
 	}
+	if n.ID != "exact_trimmed" {
+		text = strings.ToLower(text)
+	}
 	maxLength := n.MaxLength
 	if maxLength <= 0 {
-		maxLength = 128
+		maxLength = 4096
 	}
-	switch n.ID {
-	case "exact_trimmed":
-		// 只去首尾空白
-	case "exact_trimmed_casefold", "":
-		text = strings.ToLower(text)
-	case "whitespace_collapse":
-		text = strings.Join(strings.Fields(text), " ")
-	case "integer", "b80_exact_3":
-		if utf8Len(text) > 128 || !astraIntegerPattern.MatchString(text) {
-			return AstraCheckInvalidOutput
-		}
-		value, err := strconv.ParseInt(text, 10, 64)
-		if err != nil {
-			return AstraCheckInvalidOutput
-		}
-		text = strconv.FormatInt(value, 10)
-		if n.ID == "b80_exact_3" {
-			if text == "3" {
-				text = "exact_3"
-			} else {
-				text = "other_integer"
-			}
-		}
-	case "behavior_label":
-		text = strings.Trim(text, "`\"'.,:;!?()[]{} ")
-		text = strings.ToLower(text)
-		text = strings.Join(strings.Fields(text), " ")
-		if !astraBehaviorLabelPattern.MatchString(text) {
-			return AstraCheckInvalidOutput
-		}
-	case "fixed_enum":
-		key := strings.ToLower(text)
-		mapped := ""
-		for candidate, value := range n.Values {
-			if strings.ToLower(strings.TrimSpace(candidate)) == key {
-				mapped = value
-				break
-			}
-		}
-		if mapped == "" {
-			return AstraCheckOtherCategory
-		}
-		text = mapped
-	default:
-		text = strings.ToLower(text)
-	}
-	if text == "" || utf8Len(text) > maxLength {
+	if len([]rune(text)) > maxLength {
 		return AstraCheckInvalidOutput
 	}
 	return text
 }
 
-func utf8Len(s string) int {
-	return len([]rune(s))
-}
-
 // PlanAstraJobs 按档位生成请求任务，题目轮转派发（cell1, cell2, …, cell1, …）。
 func PlanAstraJobs(bench *AstraBenchmark, tier string) ([]AstraJob, error) {
 	if bench == nil {
-		return nil, fmt.Errorf("astra benchmark is nil")
+		return nil, fmt.Errorf("meow benchmark is nil")
 	}
 	tierCfg, ok := bench.Tiers[tier]
 	if !ok {
-		return nil, fmt.Errorf("unsupported astra tier %q", tier)
+		return nil, fmt.Errorf("unsupported tier %q", tier)
 	}
 	maxCount := 0
 	for _, cell := range bench.Cells {
@@ -271,283 +322,236 @@ func PlanAstraJobs(bench *AstraBenchmark, tier string) ([]AstraJob, error) {
 	return jobs, nil
 }
 
-// ScoreAstraCheck 用基准包对一次运行的计数做判定（纯函数）。
-func ScoreAstraCheck(bench *AstraBenchmark, tier string, observations []AstraCellObservation) (*AstraCheckScore, error) {
+// ---------- v3 判定 ----------
+
+// astraDirichletLogEvidence 是一题的 Dirichlet-multinomial 对数边际似然（公共多项式系数在来源之间抵消，省略）：
+// lgamma(Σa) − lgamma(Σa+Σn) + Σ_k [lgamma(a_k+n_k) − lgamma(a_k)]。
+func astraDirichletLogEvidence(alpha []float64, counts []int) float64 {
+	sumAlpha, sumCounts := 0.0, 0
+	for i, a := range alpha {
+		sumAlpha += a
+		sumCounts += counts[i]
+	}
+	if sumCounts == 0 {
+		return 0
+	}
+	lgamma := func(x float64) float64 {
+		v, _ := math.Lgamma(x)
+		return v
+	}
+	value := lgamma(sumAlpha) - lgamma(sumAlpha+float64(sumCounts))
+	for i, a := range alpha {
+		if counts[i] > 0 {
+			value += lgamma(a+float64(counts[i])) - lgamma(a)
+		}
+	}
+	return value
+}
+
+func astraSigmoid(x float64) float64 {
+	if x >= 0 {
+		return 1 / (1 + math.Exp(-x))
+	}
+	e := math.Exp(x)
+	return e / (1 + e)
+}
+
+// ScoreAstraCheck 用基准包对一次运行的计数做判定（纯函数）：expected 是本次要核对的预期模型。
+func ScoreAstraCheck(bench *AstraBenchmark, tier, expected string, observations []AstraCellObservation) (*AstraCheckScore, error) {
 	if bench == nil {
-		return nil, fmt.Errorf("astra benchmark is nil")
+		return nil, fmt.Errorf("meow benchmark is nil")
 	}
 	tierCfg, ok := bench.Tiers[tier]
 	if !ok {
-		return nil, fmt.Errorf("unsupported astra tier %q", tier)
+		return nil, fmt.Errorf("unsupported tier %q", tier)
 	}
-	models := bench.ModelIDs
 	reasons := make(map[string]struct{})
 	if !tierCfg.Calibrated {
-		reasons["uncalibrated"] = struct{}{}
+		reasons[AstraCheckReasonUncalibrated] = struct{}{}
 	}
-
-	observed := make(map[string]AstraCellObservation, len(observations))
+	observed := make(map[string]map[string]int, len(observations))
 	for _, obs := range observations {
-		observed[obs.CellID] = obs
+		observed[obs.CellID] = obs.Counts
 	}
 
-	type cellLikelihood struct {
-		family string
-		weight float64
-		values map[string]float64
-	}
-	var likelihoods []cellLikelihood
+	sourceEvidence := make(map[string]float64)
 	score := &AstraCheckScore{}
 	for _, cell := range bench.Cells {
 		planned := tierCfg.Counts[cell.ID]
 		if planned == 0 {
 			continue
 		}
-		fitted, ok := bench.Fitted[cell.ID]
-		if !ok || !fitted.ReferenceReady {
-			reasons["baseline_cell_missing"] = struct{}{}
-			continue
-		}
-		allowed := make(map[string]struct{}, len(fitted.Categories))
-		for _, category := range fitted.Categories {
-			allowed[category] = struct{}{}
-		}
-		counts := make(map[string]int)
-		if obs, ok := observed[cell.ID]; ok {
-			for category, count := range obs.Counts {
-				if count <= 0 {
-					continue
-				}
-				if _, ok := allowed[category]; ok || category == AstraCheckInvalidOutput {
-					counts[category] += count
-				} else {
-					counts[AstraCheckOtherCategory] += count
-				}
+		fitted := bench.Fitted[cell.ID]
+		vector := make([]int, len(fitted.Categories))
+		categories := make(map[string]int)
+		invalid, valid := 0, 0
+		for answer, count := range observed[cell.ID] {
+			if count <= 0 {
+				continue
 			}
+			if answer == AstraCheckInvalidOutput {
+				invalid += count
+				categories[AstraCheckInvalidOutput] += count
+				continue
+			}
+			idx, known := fitted.CategoryIndex[answer]
+			if !known {
+				idx = fitted.UnseenIndex
+			}
+			vector[idx] += count
+			categories[fitted.Categories[idx]] += count
+			valid += count
 		}
-		total := 0
-		for _, count := range counts {
-			total += count
-		}
-		invalid := counts[AstraCheckInvalidOutput]
-		valid := total - invalid
-		minimum := int(math.Ceil(float64(planned) * groupStatusAstraCheckSampleRatio))
+		minimum := int(math.Ceil(float64(planned) * bench.CompletionRatio))
 		if valid < minimum {
-			reasons["samples_incomplete"] = struct{}{}
-		}
-		if total > planned {
-			reasons["samples_exceed_plan"] = struct{}{}
+			reasons[AstraCheckReasonSamplesIncomplete] = struct{}{}
 		}
 		score.Cells = append(score.Cells, AstraCheckCellSummary{
 			CellID:     cell.ID,
-			FamilyID:   fitted.FamilyID,
 			Planned:    planned,
-			Total:      total,
+			Total:      valid + invalid,
 			Valid:      valid,
 			Invalid:    invalid,
 			Minimum:    minimum,
-			Weight:     fitted.Weight,
-			Categories: counts,
+			Categories: categories,
 		})
 		score.ValidSamples += valid
 		score.PlannedSamples += planned
 		if valid == 0 {
 			continue
 		}
-		values := make(map[string]float64, len(models))
-		for _, model := range models {
-			dist := fitted.Distributions[model]
-			sum := 0.0
-			for category, count := range counts {
-				if category == AstraCheckInvalidOutput || count == 0 {
-					continue
-				}
-				p := dist[category]
-				if p <= 0 {
-					p = 1e-12
-				}
-				sum += float64(count) * math.Log(p)
-			}
-			values[model] = sum / float64(valid)
+		for source, alpha := range fitted.Alpha {
+			sourceEvidence[source] += astraDirichletLogEvidence(alpha, vector)
 		}
-		if fitted.Weight > 0 {
-			likelihoods = append(likelihoods, cellLikelihood{family: fitted.FamilyID, weight: fitted.Weight, values: values})
-		}
+	}
+	if score.ValidSamples < int(math.Ceil(float64(score.PlannedSamples)*bench.CompletionRatio)) {
+		reasons[AstraCheckReasonSamplesIncomplete] = struct{}{}
 	}
 
-	// 题族聚合：F(f,m) = max(w) × Σ w·L / Σ w；score(m) = Σ_f F
-	families := make(map[string][]cellLikelihood)
-	for _, item := range likelihoods {
-		families[item.family] = append(families[item.family], item)
-	}
-	scores := make(map[string]float64, len(models))
-	if len(families) == 0 {
-		reasons["no_weighted_family"] = struct{}{}
-	}
-	familyIDs := make([]string, 0, len(families))
-	for family := range families {
-		familyIDs = append(familyIDs, family)
-	}
-	sort.Strings(familyIDs)
-	for _, family := range familyIDs {
-		entries := families[family]
-		weightSum, weightMax := 0.0, 0.0
-		for _, entry := range entries {
-			weightSum += entry.weight
-			if entry.weight > weightMax {
-				weightMax = entry.weight
+	// 候选证据：真实候选用自己的来源；other 取整轮最接近的单一参考源（不是逐题混合）
+	evidence := make(map[string]float64, len(bench.ModelIDs))
+	for _, model := range bench.Models {
+		if !model.ReferenceOnly {
+			evidence[model.ID] = sourceEvidence[model.ID]
+			continue
+		}
+		best := math.Inf(-1)
+		for _, source := range bench.ReferenceSources {
+			if v := sourceEvidence[source]; v > best {
+				best = v
+				score.NearestReference = source
 			}
 		}
-		for _, model := range models {
-			acc := 0.0
-			for _, entry := range entries {
-				acc += entry.weight * entry.values[model]
+		evidence[model.ID] = best
+	}
+
+	strongest, unique := "", false
+	best, second := math.Inf(-1), math.Inf(-1)
+	for _, model := range bench.ModelIDs {
+		v := evidence[model]
+		switch {
+		case v > best:
+			second = best
+			best = v
+			strongest = model
+		case v > second:
+			second = v
+		}
+	}
+	unique = best-second > 1e-9
+	score.Strongest = strongest
+	eligible := len(reasons) == 0 && score.ValidSamples > 0
+
+	for _, model := range bench.ModelIDs {
+		rival := math.Inf(-1)
+		for _, other := range bench.ModelIDs {
+			if other != model && evidence[other] > rival {
+				rival = evidence[other]
 			}
-			scores[model] += weightMax * acc / weightSum
 		}
-	}
-
-	// softmax（减最大值保证数值稳定）
-	maxScore := math.Inf(-1)
-	for _, model := range models {
-		if scores[model] > maxScore {
-			maxScore = scores[model]
-		}
-	}
-	if math.IsInf(maxScore, -1) {
-		maxScore = 0
-	}
-	expSum := 0.0
-	exps := make(map[string]float64, len(models))
-	for _, model := range models {
-		exps[model] = math.Exp(scores[model] - maxScore)
-		expSum += exps[model]
-	}
-	reasonList := make([]string, 0, len(reasons))
-	for reason := range reasons {
-		reasonList = append(reasonList, reason)
-	}
-	sort.Strings(reasonList)
-
-	var winners []string
-	for _, model := range models {
-		match := 0.0
-		if expSum > 0 {
-			match = exps[model] / expSum
+		match := 0.5
+		if score.ValidSamples > 0 {
+			match = astraSigmoid((evidence[model] - rival) / float64(score.ValidSamples))
 		}
 		threshold := tierCfg.Thresholds[model]
-		passed := len(reasonList) == 0 && match > threshold
+		passed := eligible && unique && model == strongest && match > threshold
 		if passed {
-			winners = append(winners, model)
+			score.Winner = model
 		}
 		score.Matches = append(score.Matches, AstraCheckModelMatch{
 			Model:     model,
-			Name:      bench.modelName(model),
-			Score:     scores[model],
+			Name:      AstraModelLabel(model),
+			Score:     evidence[model],
 			Match:     match,
 			Threshold: threshold,
 			Passed:    passed,
 		})
 	}
-	dataComplete := len(reasonList) == 0
+
 	switch {
-	case len(winners) == 1 && winners[0] == astraCheckClaimedModel:
+	case score.ValidSamples == 0:
+		reasons[AstraCheckReasonNoValidSamples] = struct{}{}
+		score.Verdict = AstraCheckVerdictInsufficient
+	case score.Winner == "":
+		if eligible {
+			reasons[AstraCheckReasonNoStrongDirection] = struct{}{}
+		}
+		score.Verdict = AstraCheckVerdictInsufficient
+	case score.Winner == expected:
 		score.Verdict = AstraCheckVerdictMatch
-		score.Winner = winners[0]
-	case len(winners) == 1:
-		score.Verdict = AstraCheckVerdictMismatch
-		score.Winner = winners[0]
-	case dataComplete && len(winners) == 0:
-		// 样本齐全却没有模型越线，意味着 Astra 自己也没达到阈值。我们问的是「是不是纯 Astra」这个单边问题：
-		// 阈值是按真 Astra 几乎必然越线校准的，落到阈值下本身就是校准过的反证（低档漏判率约 0.1%），
-		// 所以按 mismatch 计数（仍要连续 2 次 + 立即复测才变红）。winner 记最接近的非 Astra 模型，
-		// 文案上与「强指向」区分为「最接近」。
-		reasonList = append(reasonList, AstraCheckReasonBelowThreshold)
-		score.Verdict = AstraCheckVerdictMismatch
-		score.Winner = astraClosestOtherModel(score.Matches)
-	case dataComplete:
-		reasonList = append(reasonList, "multiple_thresholds")
-		score.Verdict = AstraCheckVerdictInsufficient
 	default:
-		score.Verdict = AstraCheckVerdictInsufficient
+		score.Verdict = AstraCheckVerdictMismatch
 	}
-	score.Reasons = reasonList
+	score.Reasons = make([]string, 0, len(reasons))
+	for reason := range reasons {
+		score.Reasons = append(score.Reasons, reason)
+	}
+	sort.Strings(score.Reasons)
 	return score, nil
 }
 
-// astraClosestOtherModel 返回匹配度最高的非 Astra 候选；没有则返回空串。
-func astraClosestOtherModel(matches []AstraCheckModelMatch) string {
-	best := ""
-	bestMatch := -1.0
-	for _, match := range matches {
-		if match.Model == astraCheckClaimedModel {
-			continue
-		}
-		if match.Match > bestMatch {
-			bestMatch = match.Match
-			best = match.Model
-		}
-	}
-	return best
-}
+// ---------- 状态机 ----------
 
-// astraCheckIsSoftMismatch 报告一次 mismatch 是否只是「Astra 未达自身阈值」而非别的模型强指向。
-func astraCheckIsSoftMismatch(reasons []string) bool {
-	for _, reason := range reasons {
-		if reason == AstraCheckReasonBelowThreshold {
-			return true
-		}
-	}
-	return false
-}
-
-// ComputeAstraCheckTransition 是纯函数：把一次运行并进状态，稳定结论切换时产出事件。
+// ComputeAstraCheckTransition 是纯函数：把某个预期模型的一次运行并进它自己的状态，稳定结论切换时产出事件。
 //
 //   - match：清零计数，稳定置 pass；原为 mismatch 则发 astra_recovered
 //   - mismatch：计数 +1；原来不是 mismatch 且计数达到阈值（2）时置 mismatch 并发 astra_mismatch
 //   - insufficient：只更新最近一次结果，不动稳定结论与计数
-//
-// 存活探测与 Sol Juice 的字段在这里不会被改动。
-func ComputeAstraCheckTransition(prev *GroupStatusState, result *GroupStatusAstraCheckResult, runID int64) (*GroupStatusState, *GroupStatusEvent) {
-	next := &GroupStatusState{}
+func ComputeAstraCheckTransition(prev *GroupStatusAstraCheckState, result *GroupStatusAstraCheckResult, runID int64) (*GroupStatusAstraCheckState, *GroupStatusEvent) {
+	next := &GroupStatusAstraCheckState{}
 	if prev != nil {
 		*next = *prev
 	}
 	next.GroupID = result.GroupID
-	if next.ConfigID == 0 {
-		next.ConfigID = result.ConfigID
-	}
+	next.ConfigID = result.ConfigID
+	next.ExpectedModel = result.ExpectedModel
 
 	observedAt := result.FinishedAt
 	if observedAt.IsZero() {
 		observedAt = time.Now()
 	}
-	next.AstraCheckVerdict = result.Verdict
-	next.AstraCheckWinner = result.Winner
-	next.AstraCheckMatches = append([]AstraCheckModelMatch(nil), result.Matches...)
-	next.AstraCheckReasons = append([]string(nil), result.Reasons...)
-	next.AstraCheckDetail = astraCheckDetailText(result)
-	next.AstraCheckCheckedAt = &observedAt
-	next.AstraCheckValidSamples = result.ValidSamples
-	next.AstraCheckPlannedSamples = result.PlannedSamples
-	next.AstraCheckInputTokens = result.InputTokens
-	next.AstraCheckOutputTokens = result.OutputTokens
-	next.AstraCheckReasoningTokens = result.ReasoningTokens
+	detail := astraCheckDetailText(result)
+	next.Verdict = result.Verdict
+	next.Winner = result.Winner
+	next.Matches = append([]AstraCheckModelMatch(nil), result.Matches...)
+	next.Reasons = append([]string(nil), result.Reasons...)
+	next.Detail = detail
+	next.CheckedAt = &observedAt
+	next.ValidSamples = result.ValidSamples
+	next.PlannedSamples = result.PlannedSamples
+	next.InputTokens = result.InputTokens
+	next.OutputTokens = result.OutputTokens
+	next.ReasoningTokens = result.ReasoningTokens
+	next.LastCostUSD = result.CostUSD
+	next.BenchmarkPackageID = result.BenchmarkPackageID
+	next.BenchmarkVersion = result.BenchmarkVersion
 	if runID > 0 {
 		id := runID
-		next.AstraCheckLastRunID = &id
+		next.LastRunID = &id
 	}
 
-	prevStable := strings.TrimSpace(next.AstraCheckStableStatus)
+	prevStable := strings.TrimSpace(next.StableStatus)
 	newEvent := func(eventType, from, to string) *GroupStatusEvent {
-		subStatus := "winner_unknown"
-		if result.Winner != "" {
-			if astraCheckIsSoftMismatch(result.Reasons) {
-				subStatus = "closest_" + result.Winner
-			} else {
-				subStatus = "winner_" + result.Winner
-			}
-		}
 		return &GroupStatusEvent{
 			GroupID:     result.GroupID,
 			ConfigID:    result.ConfigID,
@@ -556,27 +560,27 @@ func ComputeAstraCheckTransition(prev *GroupStatusState, result *GroupStatusAstr
 			ToStatus:    to,
 			LatencyMS:   result.LatencyMS,
 			HTTPCode:    result.HTTPCode,
-			SubStatus:   subStatus,
-			ErrorDetail: astraCheckDetailText(result),
+			SubStatus:   astraCheckEventSubStatus(result.ExpectedModel, result.Winner),
+			ErrorDetail: detail,
 			ObservedAt:  observedAt,
 		}
 	}
 
 	switch result.Verdict {
 	case AstraCheckVerdictMatch:
-		next.AstraCheckConsecutiveMismatch = 0
-		next.AstraCheckStableStatus = AstraCheckStatusPass
+		next.ConsecutiveMismatch = 0
+		next.StableStatus = AstraCheckStatusPass
 		if prevStable == AstraCheckStatusMismatch {
 			return next, newEvent(GroupStatusEventAstraRecovered, prevStable, AstraCheckStatusPass)
 		}
 		return next, nil
 	case AstraCheckVerdictMismatch:
-		next.AstraCheckConsecutiveMismatch++
+		next.ConsecutiveMismatch++
 		if prevStable == AstraCheckStatusMismatch {
 			return next, nil
 		}
-		if next.AstraCheckConsecutiveMismatch >= groupStatusAstraCheckMismatchThreshold {
-			next.AstraCheckStableStatus = AstraCheckStatusMismatch
+		if next.ConsecutiveMismatch >= groupStatusAstraCheckMismatchThreshold {
+			next.StableStatus = AstraCheckStatusMismatch
 			return next, newEvent(GroupStatusEventAstraMismatch, prevStable, AstraCheckStatusMismatch)
 		}
 		return next, nil
@@ -585,14 +589,20 @@ func ComputeAstraCheckTransition(prev *GroupStatusState, result *GroupStatusAstr
 	}
 }
 
-// astraCheckDetailText 生成一行可读摘要：各模型匹配度/阈值、样本数、基准版本、错误。
+// astraCheckDetailText 生成一行可读摘要；state 会公开给用户，所以不含账号 id 与答案原文。
 func astraCheckDetailText(result *GroupStatusAstraCheckResult) string {
 	if result == nil {
 		return ""
 	}
-	parts := make([]string, 0, len(result.Matches)+3)
-	for _, match := range result.Matches {
-		parts = append(parts, fmt.Sprintf("%s %.3f/%.3f", astraModelShortName(match.Model), match.Match, match.Threshold))
+	parts := make([]string, 0, 6)
+	parts = append(parts, "expected "+AstraModelLabel(result.ExpectedModel))
+	if result.Strongest != "" {
+		for _, match := range result.Matches {
+			if match.Model == result.Strongest {
+				parts = append(parts, fmt.Sprintf("strongest %s %.1f%%/%.1f%%", AstraModelLabel(match.Model), match.Match*100, match.Threshold*100))
+				break
+			}
+		}
 	}
 	parts = append(parts, fmt.Sprintf("valid %d/%d", result.ValidSamples, result.PlannedSamples))
 	if result.BenchmarkVersion != "" {
@@ -607,94 +617,99 @@ func astraCheckDetailText(result *GroupStatusAstraCheckResult) string {
 	return truncateProbeText(strings.Join(parts, " · "))
 }
 
-// EstimateAstraCheckCostUSD 按 gpt-6-astra 标准价估算一次运行的费用。
-func EstimateAstraCheckCostUSD(inputTokens, outputTokens int64) float64 {
-	if inputTokens <= 0 && outputTokens <= 0 {
-		return 0
-	}
-	cost := 0.0
-	if inputTokens > 0 {
-		cost += float64(inputTokens) * astraCheckInputPricePerToken
-	}
-	if outputTokens > 0 {
-		cost += float64(outputTokens) * astraCheckOutputPricePerToken
-	}
-	return cost
-}
-
-// decorateAstraCheckSummary 填充派生字段：成本估算与内置基准元数据（不落库）。
+// decorateAstraCheckSummary 填充派生字段（不落库）：按配置顺序整理各预期模型的状态——只保留仍在配置里的模型，
+// 还没检测过的给一个空占位，前端据此为每个模型画一个徽章；另附内置基准包元数据。
 func decorateAstraCheckSummary(summary *GroupStatusSummary) {
 	if summary == nil {
 		return
 	}
-	summary.AstraCheckLastCostUSD = EstimateAstraCheckCostUSD(summary.AstraCheckInputTokens, summary.AstraCheckOutputTokens)
-	// 没有状态行时这些切片是 nil，会序列化成 null；前端直接读 .length，必须给空数组
-	if summary.AstraCheckMatches == nil {
-		summary.AstraCheckMatches = []AstraCheckModelMatch{}
+	if summary.AstraCheckModels == nil {
+		summary.AstraCheckModels = []AstraCheckModelConfig{}
 	}
-	if summary.AstraCheckReasons == nil {
-		summary.AstraCheckReasons = []string{}
+	byModel := make(map[string]GroupStatusAstraCheckState, len(summary.AstraCheckStates))
+	for _, state := range summary.AstraCheckStates {
+		byModel[state.ExpectedModel] = state
 	}
-	summary.AstraCheckBenchmarkModels = []AstraBenchmarkModel{}
-	summary.AstraCheckBenchmarkTiers = []AstraBenchmarkTierMeta{}
-	if _, meta, err := LoadEmbeddedAstraBenchmark(); err == nil && meta != nil {
-		summary.AstraCheckBenchmarkVersion = meta.Version
-		summary.AstraCheckBenchmarkModels = append([]AstraBenchmarkModel(nil), meta.Models...)
-		summary.AstraCheckBenchmarkTiers = append([]AstraBenchmarkTierMeta(nil), meta.Tiers...)
+	states := make([]GroupStatusAstraCheckState, 0, len(summary.AstraCheckModels))
+	for _, m := range summary.AstraCheckModels {
+		state, ok := byModel[m.ExpectedModel]
+		if !ok {
+			state = GroupStatusAstraCheckState{GroupID: summary.GroupID, ConfigID: summary.ConfigID, ExpectedModel: m.ExpectedModel}
+		}
+		state.DisplayName = AstraModelLabel(m.ExpectedModel)
+		// 前端直接读 .length，切片必须是 []
+		if state.Matches == nil {
+			state.Matches = []AstraCheckModelMatch{}
+		}
+		if state.Reasons == nil {
+			state.Reasons = []string{}
+		}
+		states = append(states, state)
 	}
-}
-
-// astraModelShortName 把候选模型 id 缩成可读短名。
-func astraModelShortName(model string) string {
-	switch strings.TrimSpace(model) {
-	case "gpt-6-astra", "gpt-6":
-		return "Astra"
-	case "gpt-5.6-sol":
-		return "Sol"
-	case "gpt-5.6-terra":
-		return "Terra"
-	case "gpt-5.6-luna":
-		return "Luna"
-	case "":
-		return "?"
-	default:
-		return strings.TrimSpace(model)
+	summary.AstraCheckStates = states
+	summary.AstraCheckBenchmarks = []AstraBenchmarkMeta{}
+	if reg, err := LoadEmbeddedAstraBenchmarks(); err == nil {
+		summary.AstraCheckBenchmarks = reg.Metas()
 	}
 }
 
-// astraWinnerFromEvent 从事件 sub_status（winner_<model>）里取出强指向模型的短名。
-func astraWinnerFromEvent(event *GroupStatusEvent) string {
+// ---------- 事件 ----------
+
+// astraCheckEventSubStatus 把预期模型与强指向的候选编进事件 sub_status：<expected>:winner_<winner>。
+func astraCheckEventSubStatus(expected, winner string) string {
+	if strings.TrimSpace(winner) == "" {
+		winner = astraCheckEventSubStatusUnknownWinner
+	}
+	return expected + astraCheckEventSubStatusWinnerPrefix + winner
+}
+
+// astraCheckEventModels 从事件 sub_status 里取出预期模型与强指向的候选（缺失时为空串）。
+func astraCheckEventModels(event *GroupStatusEvent) (expected, winner string) {
 	if event == nil {
-		return "?"
+		return "", ""
 	}
 	subStatus := strings.TrimSpace(event.SubStatus)
-	winner := strings.TrimPrefix(strings.TrimPrefix(subStatus, "winner_"), "closest_")
-	if winner == "" || winner == "unknown" || winner == subStatus {
+	idx := strings.LastIndex(subStatus, astraCheckEventSubStatusWinnerPrefix)
+	if idx < 0 {
+		return "", ""
+	}
+	expected, winner = subStatus[:idx], subStatus[idx+len(astraCheckEventSubStatusWinnerPrefix):]
+	if winner == astraCheckEventSubStatusUnknownWinner {
+		winner = ""
+	}
+	return expected, winner
+}
+
+// astraWinnerFromEvent 取出事件里强指向候选的可读名。
+func astraWinnerFromEvent(event *GroupStatusEvent) string {
+	_, winner := astraCheckEventModels(event)
+	if winner == "" {
 		return "?"
 	}
-	return astraModelShortName(winner)
+	return AstraModelLabel(winner)
 }
 
-// astraEventPointerText 生成推送标题里的括注：强指向某模型，或只是 Astra 未达自身阈值时最接近某模型。
-func astraEventPointerText(event *GroupStatusEvent) string {
-	if event != nil && strings.HasPrefix(strings.TrimSpace(event.SubStatus), "closest_") {
-		return "最接近 " + astraWinnerFromEvent(event) + "，Astra 未达自身阈值"
+// astraExpectedFromEvent 取出事件对应的预期模型的可读名。
+func astraExpectedFromEvent(event *GroupStatusEvent) string {
+	expected, _ := astraCheckEventModels(event)
+	if expected == "" {
+		return "?"
 	}
-	return "强指向 " + astraWinnerFromEvent(event)
+	return AstraModelLabel(expected)
 }
 
-// isAstraCheckEvent 报告事件是否来自 Astra 指纹验证。
+// isAstraCheckEvent 报告事件是否来自 meow 指纹验证。
 func isAstraCheckEvent(eventType string) bool {
 	return eventType == GroupStatusEventAstraMismatch || eventType == GroupStatusEventAstraRecovered
 }
 
-// astraCheckStatusLabel 是 Astra 事件里 from/to 的中文标签。
+// astraCheckStatusLabel 是指纹事件里 from/to 的中文标签。
 func astraCheckStatusLabel(status string) string {
 	switch strings.TrimSpace(status) {
 	case AstraCheckStatusPass:
-		return "Astra 指纹正常"
+		return "指纹一致"
 	case AstraCheckStatusMismatch:
-		return "Astra 指纹不符"
+		return "指纹不符"
 	default:
 		return "未知"
 	}

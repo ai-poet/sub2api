@@ -893,6 +893,10 @@ var (
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "group_id", Type: field.TypeInt64},
 		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "platform", Type: field.TypeString, Default: ""},
+		{Name: "expected_model", Type: field.TypeString, Default: ""},
+		{Name: "round", Type: field.TypeInt, Default: 1},
+		{Name: "scoring_version", Type: field.TypeString, Default: ""},
 		{Name: "benchmark_package_id", Type: field.TypeString, Default: ""},
 		{Name: "benchmark_version", Type: field.TypeString, Default: ""},
 		{Name: "benchmark_sha256", Type: field.TypeString, Default: ""},
@@ -911,6 +915,7 @@ var (
 		{Name: "input_tokens", Type: field.TypeInt64, Default: 0},
 		{Name: "output_tokens", Type: field.TypeInt64, Default: 0},
 		{Name: "reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "cost_usd", Type: field.TypeFloat64, Default: 0},
 		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
 		{Name: "http_code", Type: field.TypeInt, Nullable: true},
 		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
@@ -927,7 +932,51 @@ var (
 			{
 				Name:    "groupstatusastracheckrun_group_id_finished_at",
 				Unique:  false,
-				Columns: []*schema.Column{GroupStatusAstraCheckRunsColumns[1], GroupStatusAstraCheckRunsColumns[25]},
+				Columns: []*schema.Column{GroupStatusAstraCheckRunsColumns[1], GroupStatusAstraCheckRunsColumns[30]},
+			},
+			{
+				Name:    "groupstatusastracheckrun_group_id_expected_model_finished_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusAstraCheckRunsColumns[1], GroupStatusAstraCheckRunsColumns[4], GroupStatusAstraCheckRunsColumns[30]},
+			},
+		},
+	}
+	// GroupStatusAstraCheckStatesColumns holds the columns for the "group_status_astra_check_states" table.
+	GroupStatusAstraCheckStatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "group_id", Type: field.TypeInt64},
+		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "expected_model", Type: field.TypeString},
+		{Name: "verdict", Type: field.TypeString, Default: ""},
+		{Name: "stable_status", Type: field.TypeString, Default: ""},
+		{Name: "winner_model", Type: field.TypeString, Default: ""},
+		{Name: "matches", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "reasons", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "checked_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "consecutive_mismatch", Type: field.TypeInt, Default: 0},
+		{Name: "valid_samples", Type: field.TypeInt, Default: 0},
+		{Name: "planned_samples", Type: field.TypeInt, Default: 0},
+		{Name: "input_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "output_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "last_cost_usd", Type: field.TypeFloat64, Default: 0},
+		{Name: "last_run_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "benchmark_package_id", Type: field.TypeString, Default: ""},
+		{Name: "benchmark_version", Type: field.TypeString, Default: ""},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// GroupStatusAstraCheckStatesTable holds the schema information for the "group_status_astra_check_states" table.
+	GroupStatusAstraCheckStatesTable = &schema.Table{
+		Name:       "group_status_astra_check_states",
+		Columns:    GroupStatusAstraCheckStatesColumns,
+		PrimaryKey: []*schema.Column{GroupStatusAstraCheckStatesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusastracheckstate_group_id_expected_model",
+				Unique:  true,
+				Columns: []*schema.Column{GroupStatusAstraCheckStatesColumns[1], GroupStatusAstraCheckStatesColumns[3]},
 			},
 		},
 	}
@@ -955,6 +1004,7 @@ var (
 		{Name: "modeltrace_interval_seconds", Type: field.TypeInt, Default: 3600},
 		{Name: "astra_check_enabled", Type: field.TypeBool, Default: false},
 		{Name: "astra_check_request_model", Type: field.TypeString, Default: "gpt-6-astra"},
+		{Name: "astra_check_models", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "astra_check_tier", Type: field.TypeString, Default: "low"},
 		{Name: "astra_check_interval_seconds", Type: field.TypeInt, Default: 3600},
 	}
@@ -2232,6 +2282,7 @@ var (
 		ErrorPassthroughRulesTable,
 		GroupsTable,
 		GroupStatusAstraCheckRunsTable,
+		GroupStatusAstraCheckStatesTable,
 		GroupStatusConfigsTable,
 		GroupStatusEventsTable,
 		GroupStatusJuiceRecordsTable,
@@ -2319,6 +2370,9 @@ func init() {
 	}
 	GroupStatusAstraCheckRunsTable.Annotation = &entsql.Annotation{
 		Table: "group_status_astra_check_runs",
+	}
+	GroupStatusAstraCheckStatesTable.Annotation = &entsql.Annotation{
+		Table: "group_status_astra_check_states",
 	}
 	GroupStatusConfigsTable.Annotation = &entsql.Annotation{
 		Table: "group_status_configs",

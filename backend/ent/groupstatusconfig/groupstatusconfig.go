@@ -55,6 +55,8 @@ const (
 	FieldAstraCheckEnabled = "astra_check_enabled"
 	// FieldAstraCheckRequestModel holds the string denoting the astra_check_request_model field in the database.
 	FieldAstraCheckRequestModel = "astra_check_request_model"
+	// FieldAstraCheckModels holds the string denoting the astra_check_models field in the database.
+	FieldAstraCheckModels = "astra_check_models"
 	// FieldAstraCheckTier holds the string denoting the astra_check_tier field in the database.
 	FieldAstraCheckTier = "astra_check_tier"
 	// FieldAstraCheckIntervalSeconds holds the string denoting the astra_check_interval_seconds field in the database.
@@ -87,6 +89,7 @@ var Columns = []string{
 	FieldModeltraceIntervalSeconds,
 	FieldAstraCheckEnabled,
 	FieldAstraCheckRequestModel,
+	FieldAstraCheckModels,
 	FieldAstraCheckTier,
 	FieldAstraCheckIntervalSeconds,
 }
@@ -144,6 +147,8 @@ var (
 	DefaultAstraCheckEnabled bool
 	// DefaultAstraCheckRequestModel holds the default value on creation for the "astra_check_request_model" field.
 	DefaultAstraCheckRequestModel string
+	// DefaultAstraCheckModels holds the default value on creation for the "astra_check_models" field.
+	DefaultAstraCheckModels []map[string]interface{}
 	// DefaultAstraCheckTier holds the default value on creation for the "astra_check_tier" field.
 	DefaultAstraCheckTier string
 	// DefaultAstraCheckIntervalSeconds holds the default value on creation for the "astra_check_interval_seconds" field.

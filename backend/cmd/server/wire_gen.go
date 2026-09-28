@@ -341,7 +341,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	idempotencyCleanupService := service.ProvideIdempotencyCleanupService(idempotencyRepository, configConfig)
 	openAIQuotaAutoResetService := service.ProvideOpenAIQuotaAutoResetService(accountRepository, openAIQuotaService, rateLimitService, idempotencyCoordinator, auditLogService, settingService, leaderLockCache)
 	handlers := handler.ProvideHandlers(authHandler, userHandler, apiKeyHandler, usageHandler, redeemHandler, subscriptionHandler, announcementHandler, adminHandlers, gatewayHandler, openAIGatewayHandler, handlerSettingHandler, totpHandler, handlerReferralHandler, modelCatalogHandler, publicPricingHandler, clientChangelogHandler, groupStatusHandler, passkeyHandler, availableChannelHandler, asyncImageHandler, batchImageHandler, payBridgeHandler, handlerTicketHandler, handlerTicketAttachmentHandler, handlerPersonalTokenHandler, desktopLoginHandler, idempotencyCoordinator, idempotencyCleanupService, openAIQuotaAutoResetService)
-	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(authService, userService, settingService, auditLogService)
+	jwtAuthMiddleware := middleware.ProvideJWTAuthMiddleware(authService, userService, settingService, auditLogService, personalTokenService)
 	optionalJWTAuthMiddleware := middleware.NewOptionalJWTAuthMiddleware(authService, userService, settingService, auditLogService)
 	adminAuthMiddleware := middleware.ProvideAdminAuthMiddleware(authService, userService, settingService, auditLogService, adminApprovalService, personalTokenService)
 	apiKeyAuthMiddleware := middleware.NewAPIKeyAuthMiddleware(apiKeyService, subscriptionService, configConfig)

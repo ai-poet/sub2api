@@ -111,3 +111,53 @@ func withPersonalTokenAuditExtra(c *gin.Context, extra map[string]any) map[strin
 	extra[contextKeyPersonalTokenID] = id
 	return extra
 }
+
+// validatePersonalTokenForUser 用户侧（jwtAuth）接口的个人令牌入口。返回 false 表示请求已被中断。
+//
+// 用户侧接口只作用于持有人自己的账号，令牌在这里默认可用；账号安全写操作（改密码、2FA、Passkey、
+// 登录方式绑定、令牌自身、会话签发）由 PersonalTokenUserRouteAllows 挡下并留审计。
+// 与管理侧一样只认 operator，且不设会话 ID。
+func validatePersonalTokenForUser(
+	c *gin.Context,
+	raw string,
+	tokens PersonalTokenAuthenticator,
+	activityToucher userActivityToucher,
+	auditService *service.AuditLogService,
+) bool {
+	if tokens == nil {
+		AbortWithError(c, http.StatusUnauthorized, "INVALID_TOKEN", "Invalid token")
+		return false
+	}
+	user, token, err := tokens.Authenticate(c.Request.Context(), raw, SecurityClientIP(c))
+	if err != nil {
+		abortPersonalTokenError(c, err)
+		return false
+	}
+	if user == nil || token == nil || !user.IsActive() || !user.IsOperator() || !service.IsPersonalTokenEligibleRole(user.Role) {
+		AbortWithError(c, http.StatusUnauthorized, "PERSONAL_TOKEN_NOT_ELIGIBLE", "Only operators can use personal tokens")
+		return false
+	}
+
+	c.Set("auth_method", service.AuditAuthMethodPersonalToken)
+	c.Set(contextKeyPersonalTokenID, token.ID)
+	if !PersonalTokenUserRouteAllows(c.Request.Method, c.FullPath()) {
+		// 审计中间件挂在认证之后看不到这里的响应，直接落库（同 operator 管理侧的拒绝）
+		recordOperatorScopeDenied(c, auditService, user)
+		AbortWithError(c, http.StatusForbidden, "PERSONAL_TOKEN_ROUTE_FORBIDDEN",
+			"Personal token cannot perform account security actions; sign in with a browser session")
+		return false
+	}
+
+	c.Set(string(ContextKeyUser), AuthSubject{
+		UserID:      user.ID,
+		Concurrency: user.Concurrency,
+	})
+	c.Set(string(ContextKeyUserRole), user.Role)
+	c.Set(ContextKeyAuthEmail, user.Email)
+	// 刻意不设 ContextKeySessionID：令牌不是会话。
+	SetAuditExtra(c, map[string]any{contextKeyPersonalTokenID: token.ID})
+	if activityToucher != nil {
+		activityToucher.TouchLastActiveForUser(c.Request.Context(), user)
+	}
+	return true
+}

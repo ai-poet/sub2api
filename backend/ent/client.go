@@ -30,6 +30,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckrun"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckstate"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
@@ -97,6 +98,8 @@ type Client struct {
 	Group *GroupClient
 	// GroupStatusAstraCheckRun is the client for interacting with the GroupStatusAstraCheckRun builders.
 	GroupStatusAstraCheckRun *GroupStatusAstraCheckRunClient
+	// GroupStatusAstraCheckState is the client for interacting with the GroupStatusAstraCheckState builders.
+	GroupStatusAstraCheckState *GroupStatusAstraCheckStateClient
 	// GroupStatusConfig is the client for interacting with the GroupStatusConfig builders.
 	GroupStatusConfig *GroupStatusConfigClient
 	// GroupStatusEvent is the client for interacting with the GroupStatusEvent builders.
@@ -179,6 +182,7 @@ func (c *Client) init() {
 	c.ErrorPassthroughRule = NewErrorPassthroughRuleClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.GroupStatusAstraCheckRun = NewGroupStatusAstraCheckRunClient(c.config)
+	c.GroupStatusAstraCheckState = NewGroupStatusAstraCheckStateClient(c.config)
 	c.GroupStatusConfig = NewGroupStatusConfigClient(c.config)
 	c.GroupStatusEvent = NewGroupStatusEventClient(c.config)
 	c.GroupStatusJuiceRecord = NewGroupStatusJuiceRecordClient(c.config)
@@ -297,51 +301,52 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		APIKey:                   NewAPIKeyClient(cfg),
-		Account:                  NewAccountClient(cfg),
-		AccountGroup:             NewAccountGroupClient(cfg),
-		AdminApprovalRequest:     NewAdminApprovalRequestClient(cfg),
-		Announcement:             NewAnnouncementClient(cfg),
-		AnnouncementRead:         NewAnnouncementReadClient(cfg),
-		AuthIdentity:             NewAuthIdentityClient(cfg),
-		AuthIdentityChannel:      NewAuthIdentityChannelClient(cfg),
-		BatchImageEvent:          NewBatchImageEventClient(cfg),
-		BatchImageItem:           NewBatchImageItemClient(cfg),
-		BatchImageJob:            NewBatchImageJobClient(cfg),
-		CompositeModelRoute:      NewCompositeModelRouteClient(cfg),
-		ErrorPassthroughRule:     NewErrorPassthroughRuleClient(cfg),
-		Group:                    NewGroupClient(cfg),
-		GroupStatusAstraCheckRun: NewGroupStatusAstraCheckRunClient(cfg),
-		GroupStatusConfig:        NewGroupStatusConfigClient(cfg),
-		GroupStatusEvent:         NewGroupStatusEventClient(cfg),
-		GroupStatusJuiceRecord:   NewGroupStatusJuiceRecordClient(cfg),
-		GroupStatusModelTraceRun: NewGroupStatusModelTraceRunClient(cfg),
-		GroupStatusRecord:        NewGroupStatusRecordClient(cfg),
-		GroupStatusState:         NewGroupStatusStateClient(cfg),
-		IdempotencyRecord:        NewIdempotencyRecordClient(cfg),
-		IdentityAdoptionDecision: NewIdentityAdoptionDecisionClient(cfg),
-		PendingAuthSession:       NewPendingAuthSessionClient(cfg),
-		PersonalToken:            NewPersonalTokenClient(cfg),
-		PromoCode:                NewPromoCodeClient(cfg),
-		PromoCodeUsage:           NewPromoCodeUsageClient(cfg),
-		Proxy:                    NewProxyClient(cfg),
-		RedeemCode:               NewRedeemCodeClient(cfg),
-		SecuritySecret:           NewSecuritySecretClient(cfg),
-		Setting:                  NewSettingClient(cfg),
-		SupportTicket:            NewSupportTicketClient(cfg),
-		SupportTicketMessage:     NewSupportTicketMessageClient(cfg),
-		TLSFingerprintProfile:    NewTLSFingerprintProfileClient(cfg),
-		UsageCleanupTask:         NewUsageCleanupTaskClient(cfg),
-		UsageLog:                 NewUsageLogClient(cfg),
-		User:                     NewUserClient(cfg),
-		UserAllowedGroup:         NewUserAllowedGroupClient(cfg),
-		UserAttributeDefinition:  NewUserAttributeDefinitionClient(cfg),
-		UserAttributeValue:       NewUserAttributeValueClient(cfg),
-		UserPlatformQuota:        NewUserPlatformQuotaClient(cfg),
-		UserReferral:             NewUserReferralClient(cfg),
-		UserSubscription:         NewUserSubscriptionClient(cfg),
+		ctx:                        ctx,
+		config:                     cfg,
+		APIKey:                     NewAPIKeyClient(cfg),
+		Account:                    NewAccountClient(cfg),
+		AccountGroup:               NewAccountGroupClient(cfg),
+		AdminApprovalRequest:       NewAdminApprovalRequestClient(cfg),
+		Announcement:               NewAnnouncementClient(cfg),
+		AnnouncementRead:           NewAnnouncementReadClient(cfg),
+		AuthIdentity:               NewAuthIdentityClient(cfg),
+		AuthIdentityChannel:        NewAuthIdentityChannelClient(cfg),
+		BatchImageEvent:            NewBatchImageEventClient(cfg),
+		BatchImageItem:             NewBatchImageItemClient(cfg),
+		BatchImageJob:              NewBatchImageJobClient(cfg),
+		CompositeModelRoute:        NewCompositeModelRouteClient(cfg),
+		ErrorPassthroughRule:       NewErrorPassthroughRuleClient(cfg),
+		Group:                      NewGroupClient(cfg),
+		GroupStatusAstraCheckRun:   NewGroupStatusAstraCheckRunClient(cfg),
+		GroupStatusAstraCheckState: NewGroupStatusAstraCheckStateClient(cfg),
+		GroupStatusConfig:          NewGroupStatusConfigClient(cfg),
+		GroupStatusEvent:           NewGroupStatusEventClient(cfg),
+		GroupStatusJuiceRecord:     NewGroupStatusJuiceRecordClient(cfg),
+		GroupStatusModelTraceRun:   NewGroupStatusModelTraceRunClient(cfg),
+		GroupStatusRecord:          NewGroupStatusRecordClient(cfg),
+		GroupStatusState:           NewGroupStatusStateClient(cfg),
+		IdempotencyRecord:          NewIdempotencyRecordClient(cfg),
+		IdentityAdoptionDecision:   NewIdentityAdoptionDecisionClient(cfg),
+		PendingAuthSession:         NewPendingAuthSessionClient(cfg),
+		PersonalToken:              NewPersonalTokenClient(cfg),
+		PromoCode:                  NewPromoCodeClient(cfg),
+		PromoCodeUsage:             NewPromoCodeUsageClient(cfg),
+		Proxy:                      NewProxyClient(cfg),
+		RedeemCode:                 NewRedeemCodeClient(cfg),
+		SecuritySecret:             NewSecuritySecretClient(cfg),
+		Setting:                    NewSettingClient(cfg),
+		SupportTicket:              NewSupportTicketClient(cfg),
+		SupportTicketMessage:       NewSupportTicketMessageClient(cfg),
+		TLSFingerprintProfile:      NewTLSFingerprintProfileClient(cfg),
+		UsageCleanupTask:           NewUsageCleanupTaskClient(cfg),
+		UsageLog:                   NewUsageLogClient(cfg),
+		User:                       NewUserClient(cfg),
+		UserAllowedGroup:           NewUserAllowedGroupClient(cfg),
+		UserAttributeDefinition:    NewUserAttributeDefinitionClient(cfg),
+		UserAttributeValue:         NewUserAttributeValueClient(cfg),
+		UserPlatformQuota:          NewUserPlatformQuotaClient(cfg),
+		UserReferral:               NewUserReferralClient(cfg),
+		UserSubscription:           NewUserSubscriptionClient(cfg),
 	}, nil
 }
 
@@ -359,51 +364,52 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		APIKey:                   NewAPIKeyClient(cfg),
-		Account:                  NewAccountClient(cfg),
-		AccountGroup:             NewAccountGroupClient(cfg),
-		AdminApprovalRequest:     NewAdminApprovalRequestClient(cfg),
-		Announcement:             NewAnnouncementClient(cfg),
-		AnnouncementRead:         NewAnnouncementReadClient(cfg),
-		AuthIdentity:             NewAuthIdentityClient(cfg),
-		AuthIdentityChannel:      NewAuthIdentityChannelClient(cfg),
-		BatchImageEvent:          NewBatchImageEventClient(cfg),
-		BatchImageItem:           NewBatchImageItemClient(cfg),
-		BatchImageJob:            NewBatchImageJobClient(cfg),
-		CompositeModelRoute:      NewCompositeModelRouteClient(cfg),
-		ErrorPassthroughRule:     NewErrorPassthroughRuleClient(cfg),
-		Group:                    NewGroupClient(cfg),
-		GroupStatusAstraCheckRun: NewGroupStatusAstraCheckRunClient(cfg),
-		GroupStatusConfig:        NewGroupStatusConfigClient(cfg),
-		GroupStatusEvent:         NewGroupStatusEventClient(cfg),
-		GroupStatusJuiceRecord:   NewGroupStatusJuiceRecordClient(cfg),
-		GroupStatusModelTraceRun: NewGroupStatusModelTraceRunClient(cfg),
-		GroupStatusRecord:        NewGroupStatusRecordClient(cfg),
-		GroupStatusState:         NewGroupStatusStateClient(cfg),
-		IdempotencyRecord:        NewIdempotencyRecordClient(cfg),
-		IdentityAdoptionDecision: NewIdentityAdoptionDecisionClient(cfg),
-		PendingAuthSession:       NewPendingAuthSessionClient(cfg),
-		PersonalToken:            NewPersonalTokenClient(cfg),
-		PromoCode:                NewPromoCodeClient(cfg),
-		PromoCodeUsage:           NewPromoCodeUsageClient(cfg),
-		Proxy:                    NewProxyClient(cfg),
-		RedeemCode:               NewRedeemCodeClient(cfg),
-		SecuritySecret:           NewSecuritySecretClient(cfg),
-		Setting:                  NewSettingClient(cfg),
-		SupportTicket:            NewSupportTicketClient(cfg),
-		SupportTicketMessage:     NewSupportTicketMessageClient(cfg),
-		TLSFingerprintProfile:    NewTLSFingerprintProfileClient(cfg),
-		UsageCleanupTask:         NewUsageCleanupTaskClient(cfg),
-		UsageLog:                 NewUsageLogClient(cfg),
-		User:                     NewUserClient(cfg),
-		UserAllowedGroup:         NewUserAllowedGroupClient(cfg),
-		UserAttributeDefinition:  NewUserAttributeDefinitionClient(cfg),
-		UserAttributeValue:       NewUserAttributeValueClient(cfg),
-		UserPlatformQuota:        NewUserPlatformQuotaClient(cfg),
-		UserReferral:             NewUserReferralClient(cfg),
-		UserSubscription:         NewUserSubscriptionClient(cfg),
+		ctx:                        ctx,
+		config:                     cfg,
+		APIKey:                     NewAPIKeyClient(cfg),
+		Account:                    NewAccountClient(cfg),
+		AccountGroup:               NewAccountGroupClient(cfg),
+		AdminApprovalRequest:       NewAdminApprovalRequestClient(cfg),
+		Announcement:               NewAnnouncementClient(cfg),
+		AnnouncementRead:           NewAnnouncementReadClient(cfg),
+		AuthIdentity:               NewAuthIdentityClient(cfg),
+		AuthIdentityChannel:        NewAuthIdentityChannelClient(cfg),
+		BatchImageEvent:            NewBatchImageEventClient(cfg),
+		BatchImageItem:             NewBatchImageItemClient(cfg),
+		BatchImageJob:              NewBatchImageJobClient(cfg),
+		CompositeModelRoute:        NewCompositeModelRouteClient(cfg),
+		ErrorPassthroughRule:       NewErrorPassthroughRuleClient(cfg),
+		Group:                      NewGroupClient(cfg),
+		GroupStatusAstraCheckRun:   NewGroupStatusAstraCheckRunClient(cfg),
+		GroupStatusAstraCheckState: NewGroupStatusAstraCheckStateClient(cfg),
+		GroupStatusConfig:          NewGroupStatusConfigClient(cfg),
+		GroupStatusEvent:           NewGroupStatusEventClient(cfg),
+		GroupStatusJuiceRecord:     NewGroupStatusJuiceRecordClient(cfg),
+		GroupStatusModelTraceRun:   NewGroupStatusModelTraceRunClient(cfg),
+		GroupStatusRecord:          NewGroupStatusRecordClient(cfg),
+		GroupStatusState:           NewGroupStatusStateClient(cfg),
+		IdempotencyRecord:          NewIdempotencyRecordClient(cfg),
+		IdentityAdoptionDecision:   NewIdentityAdoptionDecisionClient(cfg),
+		PendingAuthSession:         NewPendingAuthSessionClient(cfg),
+		PersonalToken:              NewPersonalTokenClient(cfg),
+		PromoCode:                  NewPromoCodeClient(cfg),
+		PromoCodeUsage:             NewPromoCodeUsageClient(cfg),
+		Proxy:                      NewProxyClient(cfg),
+		RedeemCode:                 NewRedeemCodeClient(cfg),
+		SecuritySecret:             NewSecuritySecretClient(cfg),
+		Setting:                    NewSettingClient(cfg),
+		SupportTicket:              NewSupportTicketClient(cfg),
+		SupportTicketMessage:       NewSupportTicketMessageClient(cfg),
+		TLSFingerprintProfile:      NewTLSFingerprintProfileClient(cfg),
+		UsageCleanupTask:           NewUsageCleanupTaskClient(cfg),
+		UsageLog:                   NewUsageLogClient(cfg),
+		User:                       NewUserClient(cfg),
+		UserAllowedGroup:           NewUserAllowedGroupClient(cfg),
+		UserAttributeDefinition:    NewUserAttributeDefinitionClient(cfg),
+		UserAttributeValue:         NewUserAttributeValueClient(cfg),
+		UserPlatformQuota:          NewUserPlatformQuotaClient(cfg),
+		UserReferral:               NewUserReferralClient(cfg),
+		UserSubscription:           NewUserSubscriptionClient(cfg),
 	}, nil
 }
 
@@ -437,14 +443,14 @@ func (c *Client) Use(hooks ...Hook) {
 		c.AnnouncementRead, c.AuthIdentity, c.AuthIdentityChannel, c.BatchImageEvent,
 		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute,
 		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
-		c.GroupStatusConfig, c.GroupStatusEvent, c.GroupStatusJuiceRecord,
-		c.GroupStatusModelTraceRun, c.GroupStatusRecord, c.GroupStatusState,
-		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PendingAuthSession,
-		c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode,
-		c.SecuritySecret, c.Setting, c.SupportTicket, c.SupportTicketMessage,
-		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
-		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
+		c.GroupStatusAstraCheckState, c.GroupStatusConfig, c.GroupStatusEvent,
+		c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun, c.GroupStatusRecord,
+		c.GroupStatusState, c.IdempotencyRecord, c.IdentityAdoptionDecision,
+		c.PendingAuthSession, c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy,
+		c.RedeemCode, c.SecuritySecret, c.Setting, c.SupportTicket,
+		c.SupportTicketMessage, c.TLSFingerprintProfile, c.UsageCleanupTask,
+		c.UsageLog, c.User, c.UserAllowedGroup, c.UserAttributeDefinition,
+		c.UserAttributeValue, c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -458,14 +464,14 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.AnnouncementRead, c.AuthIdentity, c.AuthIdentityChannel, c.BatchImageEvent,
 		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute,
 		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
-		c.GroupStatusConfig, c.GroupStatusEvent, c.GroupStatusJuiceRecord,
-		c.GroupStatusModelTraceRun, c.GroupStatusRecord, c.GroupStatusState,
-		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PendingAuthSession,
-		c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode,
-		c.SecuritySecret, c.Setting, c.SupportTicket, c.SupportTicketMessage,
-		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
-		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
+		c.GroupStatusAstraCheckState, c.GroupStatusConfig, c.GroupStatusEvent,
+		c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun, c.GroupStatusRecord,
+		c.GroupStatusState, c.IdempotencyRecord, c.IdentityAdoptionDecision,
+		c.PendingAuthSession, c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy,
+		c.RedeemCode, c.SecuritySecret, c.Setting, c.SupportTicket,
+		c.SupportTicketMessage, c.TLSFingerprintProfile, c.UsageCleanupTask,
+		c.UsageLog, c.User, c.UserAllowedGroup, c.UserAttributeDefinition,
+		c.UserAttributeValue, c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -504,6 +510,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Group.mutate(ctx, m)
 	case *GroupStatusAstraCheckRunMutation:
 		return c.GroupStatusAstraCheckRun.mutate(ctx, m)
+	case *GroupStatusAstraCheckStateMutation:
+		return c.GroupStatusAstraCheckState.mutate(ctx, m)
 	case *GroupStatusConfigMutation:
 		return c.GroupStatusConfig.mutate(ctx, m)
 	case *GroupStatusEventMutation:
@@ -2948,6 +2956,139 @@ func (c *GroupStatusAstraCheckRunClient) mutate(ctx context.Context, m *GroupSta
 		return (&GroupStatusAstraCheckRunDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown GroupStatusAstraCheckRun mutation op: %q", m.Op())
+	}
+}
+
+// GroupStatusAstraCheckStateClient is a client for the GroupStatusAstraCheckState schema.
+type GroupStatusAstraCheckStateClient struct {
+	config
+}
+
+// NewGroupStatusAstraCheckStateClient returns a client for the GroupStatusAstraCheckState from the given config.
+func NewGroupStatusAstraCheckStateClient(c config) *GroupStatusAstraCheckStateClient {
+	return &GroupStatusAstraCheckStateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupstatusastracheckstate.Hooks(f(g(h())))`.
+func (c *GroupStatusAstraCheckStateClient) Use(hooks ...Hook) {
+	c.hooks.GroupStatusAstraCheckState = append(c.hooks.GroupStatusAstraCheckState, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupstatusastracheckstate.Intercept(f(g(h())))`.
+func (c *GroupStatusAstraCheckStateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupStatusAstraCheckState = append(c.inters.GroupStatusAstraCheckState, interceptors...)
+}
+
+// Create returns a builder for creating a GroupStatusAstraCheckState entity.
+func (c *GroupStatusAstraCheckStateClient) Create() *GroupStatusAstraCheckStateCreate {
+	mutation := newGroupStatusAstraCheckStateMutation(c.config, OpCreate)
+	return &GroupStatusAstraCheckStateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupStatusAstraCheckState entities.
+func (c *GroupStatusAstraCheckStateClient) CreateBulk(builders ...*GroupStatusAstraCheckStateCreate) *GroupStatusAstraCheckStateCreateBulk {
+	return &GroupStatusAstraCheckStateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupStatusAstraCheckStateClient) MapCreateBulk(slice any, setFunc func(*GroupStatusAstraCheckStateCreate, int)) *GroupStatusAstraCheckStateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupStatusAstraCheckStateCreateBulk{err: fmt.Errorf("calling to GroupStatusAstraCheckStateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupStatusAstraCheckStateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupStatusAstraCheckStateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupStatusAstraCheckState.
+func (c *GroupStatusAstraCheckStateClient) Update() *GroupStatusAstraCheckStateUpdate {
+	mutation := newGroupStatusAstraCheckStateMutation(c.config, OpUpdate)
+	return &GroupStatusAstraCheckStateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupStatusAstraCheckStateClient) UpdateOne(_m *GroupStatusAstraCheckState) *GroupStatusAstraCheckStateUpdateOne {
+	mutation := newGroupStatusAstraCheckStateMutation(c.config, OpUpdateOne, withGroupStatusAstraCheckState(_m))
+	return &GroupStatusAstraCheckStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupStatusAstraCheckStateClient) UpdateOneID(id int64) *GroupStatusAstraCheckStateUpdateOne {
+	mutation := newGroupStatusAstraCheckStateMutation(c.config, OpUpdateOne, withGroupStatusAstraCheckStateID(id))
+	return &GroupStatusAstraCheckStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupStatusAstraCheckState.
+func (c *GroupStatusAstraCheckStateClient) Delete() *GroupStatusAstraCheckStateDelete {
+	mutation := newGroupStatusAstraCheckStateMutation(c.config, OpDelete)
+	return &GroupStatusAstraCheckStateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupStatusAstraCheckStateClient) DeleteOne(_m *GroupStatusAstraCheckState) *GroupStatusAstraCheckStateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupStatusAstraCheckStateClient) DeleteOneID(id int64) *GroupStatusAstraCheckStateDeleteOne {
+	builder := c.Delete().Where(groupstatusastracheckstate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupStatusAstraCheckStateDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupStatusAstraCheckState.
+func (c *GroupStatusAstraCheckStateClient) Query() *GroupStatusAstraCheckStateQuery {
+	return &GroupStatusAstraCheckStateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupStatusAstraCheckState},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupStatusAstraCheckState entity by its id.
+func (c *GroupStatusAstraCheckStateClient) Get(ctx context.Context, id int64) (*GroupStatusAstraCheckState, error) {
+	return c.Query().Where(groupstatusastracheckstate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupStatusAstraCheckStateClient) GetX(ctx context.Context, id int64) *GroupStatusAstraCheckState {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GroupStatusAstraCheckStateClient) Hooks() []Hook {
+	return c.hooks.GroupStatusAstraCheckState
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupStatusAstraCheckStateClient) Interceptors() []Interceptor {
+	return c.inters.GroupStatusAstraCheckState
+}
+
+func (c *GroupStatusAstraCheckStateClient) mutate(ctx context.Context, m *GroupStatusAstraCheckStateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupStatusAstraCheckStateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupStatusAstraCheckStateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupStatusAstraCheckStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupStatusAstraCheckStateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupStatusAstraCheckState mutation op: %q", m.Op())
 	}
 }
 
@@ -7346,27 +7487,27 @@ type (
 		APIKey, Account, AccountGroup, AdminApprovalRequest, Announcement,
 		AnnouncementRead, AuthIdentity, AuthIdentityChannel, BatchImageEvent,
 		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
-		Group, GroupStatusAstraCheckRun, GroupStatusConfig, GroupStatusEvent,
-		GroupStatusJuiceRecord, GroupStatusModelTraceRun, GroupStatusRecord,
-		GroupStatusState, IdempotencyRecord, IdentityAdoptionDecision,
-		PendingAuthSession, PersonalToken, PromoCode, PromoCodeUsage, Proxy,
-		RedeemCode, SecuritySecret, Setting, SupportTicket, SupportTicketMessage,
-		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota, UserReferral,
-		UserSubscription []ent.Hook
+		Group, GroupStatusAstraCheckRun, GroupStatusAstraCheckState, GroupStatusConfig,
+		GroupStatusEvent, GroupStatusJuiceRecord, GroupStatusModelTraceRun,
+		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
+		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
+		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
+		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserPlatformQuota, UserReferral, UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, AdminApprovalRequest, Announcement,
 		AnnouncementRead, AuthIdentity, AuthIdentityChannel, BatchImageEvent,
 		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
-		Group, GroupStatusAstraCheckRun, GroupStatusConfig, GroupStatusEvent,
-		GroupStatusJuiceRecord, GroupStatusModelTraceRun, GroupStatusRecord,
-		GroupStatusState, IdempotencyRecord, IdentityAdoptionDecision,
-		PendingAuthSession, PersonalToken, PromoCode, PromoCodeUsage, Proxy,
-		RedeemCode, SecuritySecret, Setting, SupportTicket, SupportTicketMessage,
-		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota, UserReferral,
-		UserSubscription []ent.Interceptor
+		Group, GroupStatusAstraCheckRun, GroupStatusAstraCheckState, GroupStatusConfig,
+		GroupStatusEvent, GroupStatusJuiceRecord, GroupStatusModelTraceRun,
+		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
+		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
+		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
+		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserPlatformQuota, UserReferral, UserSubscription []ent.Interceptor
 	}
 )
 

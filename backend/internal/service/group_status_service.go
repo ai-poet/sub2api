@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -12,13 +11,11 @@ type GroupStatusAdminView struct {
 	Group   *Group             `json:"group"`
 	Config  *GroupStatusConfig `json:"config"`
 	Summary GroupStatusSummary `json:"summary"`
-	// Astra 指纹验证：正在进行的实时进度（handler 从探测服务内存里填）与最近一次运行的完整记录（含逐请求样本）
-	AstraCheckProgress *AstraCheckProgress       `json:"astra_check_progress,omitempty"`
-	AstraCheckLastRun  *GroupStatusAstraCheckRun `json:"astra_check_last_run,omitempty"`
-	// ModelTrace 指纹验证：本平台可选的预期模型、正在进行的实时进度与最近一次运行的完整记录（含逐条诊断）
-	ModelTraceTargets  []ModelTraceTarget        `json:"modeltrace_targets"`
-	ModelTraceProgress *ModelTraceProgress       `json:"modeltrace_progress,omitempty"`
-	ModelTraceLastRun  *GroupStatusModelTraceRun `json:"modeltrace_last_run,omitempty"`
+	// meow 指纹验证：本平台可选的预期模型、正在进行的实时进度，
+	// 以及每个已配置模型最近一次运行的完整记录（含逐请求样本，按配置顺序）
+	AstraCheckTargets  []AstraCheckTarget         `json:"astra_check_targets"`
+	AstraCheckProgress *AstraCheckProgress        `json:"astra_check_progress,omitempty"`
+	AstraCheckLastRuns []GroupStatusAstraCheckRun `json:"astra_check_last_runs"`
 }
 
 type GroupStatusService struct {
@@ -64,42 +61,33 @@ func (s *GroupStatusService) GetAdminView(ctx context.Context, groupID int64) (*
 		summary.GroupID = groupID
 		summary.Enabled = cfg.Enabled
 		summary.ProbeModel = cfg.ProbeModel
-		summary.ModelTraceEnabled = cfg.ModelTraceEnabled
-		summary.ModelTraceExpectedModel = cfg.ModelTraceExpectedModel
-		summary.ModelTraceRequestModel = cfg.ModelTraceRequestModel
-		summary.ModelTraceIntervalSeconds = cfg.ModelTraceIntervalSeconds
 		summary.AstraCheckEnabled = cfg.AstraCheckEnabled
-		summary.AstraCheckRequestModel = cfg.AstraCheckRequestModel
+		summary.AstraCheckModels = cfg.AstraCheckModels
 		summary.AstraCheckTier = cfg.AstraCheckTier
 		summary.AstraCheckIntervalSeconds = cfg.AstraCheckIntervalSeconds
 	}
-	decorateModelTraceSummary(&summary)
 	decorateAstraCheckSummary(&summary)
 
 	view := &GroupStatusAdminView{
 		Group:             group,
 		Config:            cfg,
 		Summary:           summary,
-		ModelTraceTargets: ModelTraceTargetsForPlatform(group.Platform),
+		AstraCheckTargets:  AstraCheckTargetsForPlatform(group.Platform),
+		AstraCheckLastRuns: []GroupStatusAstraCheckRun{},
 	}
-	if modelTraceSupportsPlatform(group.Platform) {
-		runs, err := s.repo.ListRecentModelTraceRuns(ctx, groupID, 1)
+	if astraCheckSupportsPlatform(group.Platform) {
+		runs, err := s.repo.ListLatestAstraCheckRuns(ctx, groupID)
 		if err != nil {
 			return nil, err
 		}
-		if len(runs) > 0 {
-			run := runs[0]
-			view.ModelTraceLastRun = &run
+		byModel := make(map[string]GroupStatusAstraCheckRun, len(runs))
+		for _, run := range runs {
+			byModel[run.ExpectedModel] = run
 		}
-	}
-	if group.Platform == PlatformOpenAI {
-		runs, err := s.repo.ListRecentAstraCheckRuns(ctx, groupID, 1)
-		if err != nil {
-			return nil, err
-		}
-		if len(runs) > 0 {
-			run := runs[0]
-			view.AstraCheckLastRun = &run
+		for _, m := range summary.AstraCheckModels {
+			if run, ok := byModel[m.ExpectedModel]; ok {
+				view.AstraCheckLastRuns = append(view.AstraCheckLastRuns, run)
+			}
 		}
 	}
 	return view, nil
@@ -111,33 +99,20 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 		return nil, err
 	}
 
-	// notify_enabled / modeltrace_* / astra_check_* 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认值
-	if input != nil && (input.NotifyEnabled == nil || input.ModelTraceEnabled == nil || input.AstraCheckEnabled == nil) {
+	// notify_enabled / astra_check_* 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认值
+	if input != nil && (input.NotifyEnabled == nil || input.AstraCheckEnabled == nil) {
 		if prev, err := s.repo.GetConfig(ctx, groupID); err == nil && prev != nil {
 			merged := *input
 			if merged.NotifyEnabled == nil {
 				notifyEnabled := prev.NotifyEnabled
 				merged.NotifyEnabled = &notifyEnabled
 			}
-			if merged.ModelTraceEnabled == nil {
-				modelTraceEnabled := prev.ModelTraceEnabled
-				merged.ModelTraceEnabled = &modelTraceEnabled
-				merged.ModelTraceExpectedModel = prev.ModelTraceExpectedModel
-				merged.ModelTraceRequestModel = prev.ModelTraceRequestModel
-				merged.ModelTraceIntervalSeconds = prev.ModelTraceIntervalSeconds
-			}
 			if merged.AstraCheckEnabled == nil {
 				astraEnabled := prev.AstraCheckEnabled
 				merged.AstraCheckEnabled = &astraEnabled
-				if strings.TrimSpace(merged.AstraCheckRequestModel) == "" {
-					merged.AstraCheckRequestModel = prev.AstraCheckRequestModel
-				}
-				if strings.TrimSpace(merged.AstraCheckTier) == "" {
-					merged.AstraCheckTier = prev.AstraCheckTier
-				}
-				if merged.AstraCheckIntervalSeconds <= 0 {
-					merged.AstraCheckIntervalSeconds = prev.AstraCheckIntervalSeconds
-				}
+				merged.AstraCheckModels = prev.AstraCheckModels
+				merged.AstraCheckTier = prev.AstraCheckTier
+				merged.AstraCheckIntervalSeconds = prev.AstraCheckIntervalSeconds
 			}
 			input = &merged
 		}
@@ -151,6 +126,10 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 
 	saved, err := s.repo.UpsertConfig(ctx, cfg)
 	if err != nil {
+		return nil, err
+	}
+	// 从检测列表里移除的模型，连同它的稳定结论一起清掉；以后再加回来时从头判定，不会带着旧的「不符」
+	if err := s.repo.DeleteAstraCheckStatesExcept(ctx, groupID, astraCheckExpectedModels(saved.AstraCheckModels)); err != nil {
 		return nil, err
 	}
 
@@ -168,7 +147,6 @@ func (s *GroupStatusService) ListAdminSummaries(ctx context.Context) ([]GroupSta
 		return nil, err
 	}
 	for i := range summaries {
-		decorateModelTraceSummary(&summaries[i])
 		decorateAstraCheckSummary(&summaries[i])
 	}
 	return summaries, nil
@@ -230,7 +208,6 @@ func (s *GroupStatusService) ListUserStatuses(ctx context.Context, userID int64)
 			continue
 		}
 		summary := summaryMap[groupID]
-		decorateModelTraceSummary(&summary)
 		decorateAstraCheckSummary(&summary)
 		items = append(items, GroupStatusListItem{
 			Group:          group,

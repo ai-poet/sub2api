@@ -20,9 +20,7 @@ type GroupStatusRunnerService struct {
 	stopCh    chan struct{}
 	wg        sync.WaitGroup
 
-	// modelTraceRunning 防止一批慢的 ModelTrace 长输出请求与下一次 tick 重叠
-	modelTraceRunning atomic.Bool
-	// astraRunning 同理，Astra 指纹一次要跑几十个请求
+	// astraRunning 防止一批指纹验证与下一次 tick 重叠：每个分组可能要依次检测多个模型、每个几十个请求
 	astraRunning atomic.Bool
 }
 
@@ -70,7 +68,6 @@ func (s *GroupStatusRunnerService) loop() {
 	defer cleanupTicker.Stop()
 
 	s.runOnce()
-	s.startModelTraceBatch()
 	s.startAstraCheckBatch()
 
 	for {
@@ -79,8 +76,7 @@ func (s *GroupStatusRunnerService) loop() {
 			return
 		case <-ticker.C:
 			s.runOnce()
-			// ModelTrace / Astra 探测都可能很慢，放到独立 goroutine 里，不拖慢存活探测
-			s.startModelTraceBatch()
+			// 指纹验证可能很慢，放到独立 goroutine 里，不拖慢存活探测
 			s.startAstraCheckBatch()
 		case <-cleanupTicker.C:
 			s.cleanupOldRecords()
@@ -104,18 +100,6 @@ func (s *GroupStatusRunnerService) runOnce() {
 	}
 }
 
-func (s *GroupStatusRunnerService) startModelTraceBatch() {
-	if !s.modelTraceRunning.CompareAndSwap(false, true) {
-		return
-	}
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
-		defer s.modelTraceRunning.Store(false)
-		s.runModelTraceOnce()
-	}()
-}
-
 // batchContext 给后台批次一个有上限的 ctx，并在 Stop() 时尽快取消。
 func (s *GroupStatusRunnerService) batchContext(budget time.Duration) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), budget)
@@ -127,25 +111,6 @@ func (s *GroupStatusRunnerService) batchContext(budget time.Duration) (context.C
 		}
 	}()
 	return ctx, cancel
-}
-
-func (s *GroupStatusRunnerService) runModelTraceOnce() {
-	ctx, cancel := s.batchContext(25 * time.Minute)
-	defer cancel()
-
-	configs, err := s.repo.ListDueModelTraceConfigs(ctx, time.Now(), 3)
-	if err != nil {
-		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] list due modeltrace configs failed: %v", err)
-		return
-	}
-	for _, cfg := range configs {
-		if ctx.Err() != nil {
-			return
-		}
-		if _, err := s.probeSvc.ProbeModelTraceWithConfig(ctx, cfg); err != nil {
-			logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] modeltrace probe group=%d failed: %v", cfg.GroupID, err)
-		}
-	}
 }
 
 func (s *GroupStatusRunnerService) startAstraCheckBatch() {
@@ -161,7 +126,7 @@ func (s *GroupStatusRunnerService) startAstraCheckBatch() {
 }
 
 func (s *GroupStatusRunnerService) runAstraCheckOnce() {
-	ctx, cancel := s.batchContext(25 * time.Minute)
+	ctx, cancel := s.batchContext(45 * time.Minute)
 	defer cancel()
 
 	configs, err := s.repo.ListDueAstraCheckConfigs(ctx, time.Now(), 3)
@@ -193,12 +158,6 @@ func (s *GroupStatusRunnerService) cleanupOldRecords() {
 		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] cleaned %d old records", deleted)
 	}
 
-	deletedModelTrace, err := s.repo.DeleteModelTraceRunsOlderThan(ctx, before)
-	if err != nil {
-		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] modeltrace cleanup failed: %v", err)
-	} else if deletedModelTrace > 0 {
-		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] cleaned %d old modeltrace runs", deletedModelTrace)
-	}
 
 	deletedAstra, err := s.repo.DeleteAstraCheckRunsOlderThan(ctx, before)
 	if err != nil {

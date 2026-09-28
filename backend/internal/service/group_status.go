@@ -49,19 +49,14 @@ type GroupStatusConfig struct {
 	TimeoutSeconds   int      `json:"timeout_seconds"`
 	SlowLatencyMS    int64    `json:"slow_latency_ms"`
 	NotifyEnabled    bool     `json:"notify_enabled"`
-	// ModelTrace 指纹验证（数字分布指纹），OpenAI / Anthropic 分组可开启；
-	// RequestModel 为空表示用预期模型 id 发请求
-	ModelTraceEnabled         bool   `json:"modeltrace_enabled"`
-	ModelTraceExpectedModel   string `json:"modeltrace_expected_model"`
-	ModelTraceRequestModel    string `json:"modeltrace_request_model"`
-	ModelTraceIntervalSeconds int    `json:"modeltrace_interval_seconds"`
-	// Astra 指纹验证（meow 基准），与 ModelTrace 并列、字段独立；仅 OpenAI 分组
-	AstraCheckEnabled         bool      `json:"astra_check_enabled"`
-	AstraCheckRequestModel    string    `json:"astra_check_request_model"`
-	AstraCheckTier            string    `json:"astra_check_tier"`
-	AstraCheckIntervalSeconds int       `json:"astra_check_interval_seconds"`
-	CreatedAt                 time.Time `json:"created_at"`
-	UpdatedAt                 time.Time `json:"updated_at"`
+	// meow 指纹验证（历史名 Astra 指纹验证），OpenAI / Anthropic 分组；一个分组可同时检测多个预期模型，
+	// 各自独立判定，共用档位与间隔
+	AstraCheckEnabled         bool                    `json:"astra_check_enabled"`
+	AstraCheckModels          []AstraCheckModelConfig `json:"astra_check_models"`
+	AstraCheckTier            string                  `json:"astra_check_tier"`
+	AstraCheckIntervalSeconds int                     `json:"astra_check_interval_seconds"`
+	CreatedAt                 time.Time               `json:"created_at"`
+	UpdatedAt                 time.Time               `json:"updated_at"`
 }
 
 type GroupStatusRecord struct {
@@ -94,41 +89,8 @@ type GroupStatusState struct {
 	ObservedAt         *time.Time `json:"observed_at"`
 	ConsecutiveDown    int        `json:"consecutive_down"`
 	ConsecutiveNonDown int        `json:"consecutive_non_down"`
-	// ModelTrace 指纹验证的最近结果与稳定结论；RunExpectedModel 是稳定结论对应的预期模型
-	ModelTraceVerdict             string                `json:"modeltrace_verdict"`
-	ModelTraceStableStatus        string                `json:"modeltrace_stable_status"`
-	ModelTraceRunExpectedModel    string                `json:"modeltrace_run_expected_model"`
-	ModelTraceTopModel            string                `json:"modeltrace_top_model"`
-	ModelTraceTopProbability      float64               `json:"modeltrace_top_probability"`
-	ModelTraceExpectedProbability *float64              `json:"modeltrace_expected_probability"`
-	ModelTraceRanking             []ModelTraceRankEntry `json:"modeltrace_ranking"`
-	ModelTraceReasons             []string              `json:"modeltrace_reasons"`
-	ModelTraceDetail              string                `json:"modeltrace_detail"`
-	ModelTraceCheckedAt           *time.Time            `json:"modeltrace_checked_at"`
-	ModelTraceConsecutiveMismatch int                   `json:"modeltrace_consecutive_mismatch"`
-	ModelTraceValidOutputs        int                   `json:"modeltrace_valid_outputs"`
-	ModelTraceInputTokens         int64                 `json:"modeltrace_input_tokens"`
-	ModelTraceOutputTokens        int64                 `json:"modeltrace_output_tokens"`
-	ModelTraceReasoningTokens     int64                 `json:"modeltrace_reasoning_tokens"`
-	ModelTraceLastCostUSD         float64               `json:"modeltrace_last_cost_usd"`
-	ModelTraceLastRunID           *int64                `json:"modeltrace_last_run_id"`
-	// Astra 指纹验证的最近结果与稳定结论
-	AstraCheckVerdict             string                 `json:"astra_check_verdict"`
-	AstraCheckStableStatus        string                 `json:"astra_check_stable_status"`
-	AstraCheckWinner              string                 `json:"astra_check_winner"`
-	AstraCheckMatches             []AstraCheckModelMatch `json:"astra_check_matches"`
-	AstraCheckReasons             []string               `json:"astra_check_reasons"`
-	AstraCheckDetail              string                 `json:"astra_check_detail"`
-	AstraCheckCheckedAt           *time.Time             `json:"astra_check_checked_at"`
-	AstraCheckConsecutiveMismatch int                    `json:"astra_check_consecutive_mismatch"`
-	AstraCheckValidSamples        int                    `json:"astra_check_valid_samples"`
-	AstraCheckPlannedSamples      int                    `json:"astra_check_planned_samples"`
-	AstraCheckInputTokens         int64                  `json:"astra_check_input_tokens"`
-	AstraCheckOutputTokens        int64                  `json:"astra_check_output_tokens"`
-	AstraCheckReasoningTokens     int64                  `json:"astra_check_reasoning_tokens"`
-	AstraCheckLastRunID           *int64                 `json:"astra_check_last_run_id"`
-	CreatedAt                     time.Time              `json:"created_at"`
-	UpdatedAt                     time.Time              `json:"updated_at"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 }
 
 type GroupStatusEvent struct {
@@ -162,53 +124,15 @@ type GroupStatusSummary struct {
 	ObservedAt         *time.Time `json:"observed_at"`
 	ConsecutiveDown    int        `json:"consecutive_down"`
 	ConsecutiveNonDown int        `json:"consecutive_non_down"`
-	// ModelTrace 指纹验证：配置 + 最近结果；Running / Bank* 为派生字段，不落库
-	ModelTraceEnabled             bool                  `json:"modeltrace_enabled"`
-	ModelTraceExpectedModel       string                `json:"modeltrace_expected_model"`
-	ModelTraceRequestModel        string                `json:"modeltrace_request_model"`
-	ModelTraceIntervalSeconds     int                   `json:"modeltrace_interval_seconds"`
-	ModelTraceVerdict             string                `json:"modeltrace_verdict"`
-	ModelTraceStableStatus        string                `json:"modeltrace_stable_status"`
-	ModelTraceRunExpectedModel    string                `json:"modeltrace_run_expected_model"`
-	ModelTraceTopModel            string                `json:"modeltrace_top_model"`
-	ModelTraceTopProbability      float64               `json:"modeltrace_top_probability"`
-	ModelTraceExpectedProbability *float64              `json:"modeltrace_expected_probability"`
-	ModelTraceRanking             []ModelTraceRankEntry `json:"modeltrace_ranking"`
-	ModelTraceReasons             []string              `json:"modeltrace_reasons"`
-	ModelTraceDetail              string                `json:"modeltrace_detail"`
-	ModelTraceCheckedAt           *time.Time            `json:"modeltrace_checked_at"`
-	ModelTraceConsecutiveMismatch int                   `json:"modeltrace_consecutive_mismatch"`
-	ModelTraceValidOutputs        int                   `json:"modeltrace_valid_outputs"`
-	ModelTraceInputTokens         int64                 `json:"modeltrace_input_tokens"`
-	ModelTraceOutputTokens        int64                 `json:"modeltrace_output_tokens"`
-	ModelTraceReasoningTokens     int64                 `json:"modeltrace_reasoning_tokens"`
-	ModelTraceLastCostUSD         float64               `json:"modeltrace_last_cost_usd"`
-	ModelTraceRunning             bool                  `json:"modeltrace_running"`
-	ModelTraceBankSHA256          string                `json:"modeltrace_bank_sha256"`
-	ModelTraceBankBuiltAt         string                `json:"modeltrace_bank_built_at"`
-	// Astra 指纹验证：配置 + 最近结果；LastCostUSD / Running / Benchmark* 为派生字段，不落库
-	AstraCheckEnabled             bool                     `json:"astra_check_enabled"`
-	AstraCheckRequestModel        string                   `json:"astra_check_request_model"`
-	AstraCheckTier                string                   `json:"astra_check_tier"`
-	AstraCheckIntervalSeconds     int                      `json:"astra_check_interval_seconds"`
-	AstraCheckVerdict             string                   `json:"astra_check_verdict"`
-	AstraCheckStableStatus        string                   `json:"astra_check_stable_status"`
-	AstraCheckWinner              string                   `json:"astra_check_winner"`
-	AstraCheckMatches             []AstraCheckModelMatch   `json:"astra_check_matches"`
-	AstraCheckReasons             []string                 `json:"astra_check_reasons"`
-	AstraCheckDetail              string                   `json:"astra_check_detail"`
-	AstraCheckCheckedAt           *time.Time               `json:"astra_check_checked_at"`
-	AstraCheckConsecutiveMismatch int                      `json:"astra_check_consecutive_mismatch"`
-	AstraCheckValidSamples        int                      `json:"astra_check_valid_samples"`
-	AstraCheckPlannedSamples      int                      `json:"astra_check_planned_samples"`
-	AstraCheckInputTokens         int64                    `json:"astra_check_input_tokens"`
-	AstraCheckOutputTokens        int64                    `json:"astra_check_output_tokens"`
-	AstraCheckReasoningTokens     int64                    `json:"astra_check_reasoning_tokens"`
-	AstraCheckLastCostUSD         float64                  `json:"astra_check_last_cost_usd"`
-	AstraCheckRunning             bool                     `json:"astra_check_running"`
-	AstraCheckBenchmarkVersion    string                   `json:"astra_check_benchmark_version"`
-	AstraCheckBenchmarkModels     []AstraBenchmarkModel    `json:"astra_check_benchmark_models"`
-	AstraCheckBenchmarkTiers      []AstraBenchmarkTierMeta `json:"astra_check_benchmark_tiers"`
+	// meow 指纹验证：配置 + 各预期模型的最近结果（按配置顺序，未检测过的模型也有占位）；
+	// Running / Benchmarks 为派生字段，不落库
+	AstraCheckEnabled         bool                         `json:"astra_check_enabled"`
+	AstraCheckModels          []AstraCheckModelConfig      `json:"astra_check_models"`
+	AstraCheckTier            string                       `json:"astra_check_tier"`
+	AstraCheckIntervalSeconds int                          `json:"astra_check_interval_seconds"`
+	AstraCheckStates          []GroupStatusAstraCheckState `json:"astra_check_states"`
+	AstraCheckRunning         bool                         `json:"astra_check_running"`
+	AstraCheckBenchmarks      []AstraBenchmarkMeta         `json:"astra_check_benchmarks"`
 }
 
 type GroupStatusHistoryBucket struct {
@@ -241,15 +165,12 @@ type GroupStatusRepository interface {
 	ListEvents(ctx context.Context, groupID int64, limit int) ([]GroupStatusEvent, error)
 	CalculateAvailability(ctx context.Context, groupIDs []int64, since time.Time) (map[int64]float64, error)
 	DeleteRecordsOlderThan(ctx context.Context, before time.Time) (int64, error)
-	// ModelTrace 指纹验证（数字分布指纹）
-	ListDueModelTraceConfigs(ctx context.Context, now time.Time, limit int) ([]*GroupStatusConfig, error)
-	SaveModelTraceRun(ctx context.Context, result *GroupStatusModelTraceResult) (*GroupStatusModelTraceRun, *GroupStatusState, *GroupStatusEvent, error)
-	ListRecentModelTraceRuns(ctx context.Context, groupID int64, limit int) ([]GroupStatusModelTraceRun, error)
-	DeleteModelTraceRunsOlderThan(ctx context.Context, before time.Time) (int64, error)
-	// Astra 指纹验证（meow 基准）
+	// meow 指纹验证；状态按（分组, 预期模型）各一行
 	ListDueAstraCheckConfigs(ctx context.Context, now time.Time, limit int) ([]*GroupStatusConfig, error)
-	SaveAstraCheckRun(ctx context.Context, result *GroupStatusAstraCheckResult) (*GroupStatusAstraCheckRun, *GroupStatusState, *GroupStatusEvent, error)
-	ListRecentAstraCheckRuns(ctx context.Context, groupID int64, limit int) ([]GroupStatusAstraCheckRun, error)
+	ListAstraCheckStates(ctx context.Context, groupIDs []int64) ([]GroupStatusAstraCheckState, error)
+	DeleteAstraCheckStatesExcept(ctx context.Context, groupID int64, keepModels []string) error
+	SaveAstraCheckRun(ctx context.Context, result *GroupStatusAstraCheckResult) (*GroupStatusAstraCheckRun, *GroupStatusAstraCheckState, *GroupStatusEvent, error)
+	ListLatestAstraCheckRuns(ctx context.Context, groupID int64) ([]GroupStatusAstraCheckRun, error)
 	DeleteAstraCheckRunsOlderThan(ctx context.Context, before time.Time) (int64, error)
 }
 
@@ -287,14 +208,10 @@ type GroupStatusConfigUpsertInput struct {
 	SlowLatencyMS    int64
 	// NotifyEnabled 为 nil 表示请求未携带，保留已保存的值
 	NotifyEnabled *bool
-	// ModelTraceEnabled 为 nil 表示请求未携带，保留已保存的四项 ModelTrace 配置
-	ModelTraceEnabled         *bool
-	ModelTraceExpectedModel   string
-	ModelTraceRequestModel    string
-	ModelTraceIntervalSeconds int
-	// AstraCheckEnabled 为 nil 表示请求未携带，保留已保存的四项 Astra 配置
+	// AstraCheckEnabled 为 nil 表示请求未携带，保留已保存的模型列表、档位与间隔；
+	// AstraCheckModels 为 nil 表示沿用默认（本平台的第一个目标）
 	AstraCheckEnabled         *bool
-	AstraCheckRequestModel    string
+	AstraCheckModels          []AstraCheckModelConfig
 	AstraCheckTier            string
 	AstraCheckIntervalSeconds int
 }
@@ -305,10 +222,10 @@ type AvailableGroupReader interface {
 
 func DefaultGroupStatusConfig(group *Group) *GroupStatusConfig {
 	model := defaultProbeModelByPlatform("")
-	modelTraceExpected := ""
+	astraModels := []AstraCheckModelConfig{}
 	if group != nil {
 		model = defaultProbeModelByPlatform(group.Platform)
-		modelTraceExpected = modelTraceDefaultExpected(group.Platform)
+		astraModels = astraCheckDefaultModels(group.Platform)
 	}
 	return &GroupStatusConfig{
 		GroupID: func() int64 {
@@ -326,12 +243,8 @@ func DefaultGroupStatusConfig(group *Group) *GroupStatusConfig {
 		TimeoutSeconds:            groupStatusDefaultTimeoutSeconds,
 		SlowLatencyMS:             groupStatusDefaultSlowLatencyMS,
 		NotifyEnabled:             true,
-		ModelTraceEnabled:         false,
-		ModelTraceExpectedModel:   modelTraceExpected,
-		ModelTraceRequestModel:    "",
-		ModelTraceIntervalSeconds: groupStatusModelTraceDefaultIntervalSeconds,
 		AstraCheckEnabled:         false,
-		AstraCheckRequestModel:    groupStatusAstraCheckDefaultRequestModel,
+		AstraCheckModels:          astraModels,
 		AstraCheckTier:            groupStatusAstraCheckDefaultTier,
 		AstraCheckIntervalSeconds: groupStatusAstraCheckDefaultIntervalSecond,
 	}
@@ -386,27 +299,11 @@ func NormalizeGroupStatusConfig(group *Group, input *GroupStatusConfigUpsertInpu
 	if input.NotifyEnabled != nil {
 		cfg.NotifyEnabled = *input.NotifyEnabled
 	}
-	if input.ModelTraceEnabled != nil {
-		cfg.ModelTraceEnabled = *input.ModelTraceEnabled
-	}
-	if model := strings.TrimSpace(input.ModelTraceExpectedModel); model != "" {
-		cfg.ModelTraceExpectedModel = model
-	}
-	cfg.ModelTraceRequestModel = strings.TrimSpace(input.ModelTraceRequestModel)
-	if input.ModelTraceIntervalSeconds > 0 {
-		cfg.ModelTraceIntervalSeconds = input.ModelTraceIntervalSeconds
-	}
-	if cfg.ModelTraceEnabled && (group == nil || !modelTraceSupportsPlatform(group.Platform)) {
-		return nil, fmt.Errorf("%w: modeltrace is only available for openai and anthropic groups", ErrGroupStatusInvalidConfig)
-	}
-	if group != nil && modelTraceSupportsPlatform(group.Platform) && !modelTraceTargetAllowed(group.Platform, cfg.ModelTraceExpectedModel) {
-		return nil, ErrGroupStatusModelTraceTargetInvalid
-	}
 	if input.AstraCheckEnabled != nil {
 		cfg.AstraCheckEnabled = *input.AstraCheckEnabled
 	}
-	if model := strings.TrimSpace(input.AstraCheckRequestModel); model != "" {
-		cfg.AstraCheckRequestModel = model
+	if input.AstraCheckModels != nil {
+		cfg.AstraCheckModels = input.AstraCheckModels
 	}
 	if tier := strings.TrimSpace(strings.ToLower(input.AstraCheckTier)); tier != "" {
 		cfg.AstraCheckTier = tier
@@ -414,8 +311,22 @@ func NormalizeGroupStatusConfig(group *Group, input *GroupStatusConfigUpsertInpu
 	if input.AstraCheckIntervalSeconds > 0 {
 		cfg.AstraCheckIntervalSeconds = input.AstraCheckIntervalSeconds
 	}
-	if cfg.AstraCheckEnabled && (group == nil || group.Platform != PlatformOpenAI) {
-		return nil, fmt.Errorf("%w: astra_check is only available for openai groups", ErrGroupStatusInvalidConfig)
+	if cfg.AstraCheckEnabled && (group == nil || !astraCheckSupportsPlatform(group.Platform)) {
+		return nil, fmt.Errorf("%w: astra_check is only available for openai and anthropic groups", ErrGroupStatusInvalidConfig)
+	}
+	cfg.AstraCheckModels = normalizeAstraCheckModels(cfg.AstraCheckModels)
+	if group != nil && astraCheckSupportsPlatform(group.Platform) {
+		for _, m := range cfg.AstraCheckModels {
+			if !astraCheckTargetAllowed(group.Platform, m.ExpectedModel) {
+				return nil, ErrGroupStatusAstraCheckTargetInvalid
+			}
+		}
+		if len(cfg.AstraCheckModels) == 0 {
+			if cfg.AstraCheckEnabled {
+				return nil, fmt.Errorf("%w: astra_check needs at least one model", ErrGroupStatusInvalidConfig)
+			}
+			cfg.AstraCheckModels = astraCheckDefaultModels(group.Platform)
+		}
 	}
 	if err := ValidateGroupStatusConfig(cfg); err != nil {
 		return nil, err
@@ -453,20 +364,14 @@ func ValidateGroupStatusConfig(cfg *GroupStatusConfig) error {
 	if cfg.SlowLatencyMS <= 0 {
 		cfg.SlowLatencyMS = groupStatusDefaultSlowLatencyMS
 	}
-	cfg.ModelTraceExpectedModel = strings.TrimSpace(cfg.ModelTraceExpectedModel)
-	cfg.ModelTraceRequestModel = strings.TrimSpace(cfg.ModelTraceRequestModel)
-	if cfg.ModelTraceExpectedModel != "" && !modelTraceKnownTarget(cfg.ModelTraceExpectedModel) {
-		return ErrGroupStatusModelTraceTargetInvalid
+	cfg.AstraCheckModels = normalizeAstraCheckModels(cfg.AstraCheckModels)
+	if len(cfg.AstraCheckModels) > groupStatusAstraCheckMaxModels {
+		return fmt.Errorf("%w: astra_check_models allows at most %d models", ErrGroupStatusInvalidConfig, groupStatusAstraCheckMaxModels)
 	}
-	if cfg.ModelTraceIntervalSeconds <= 0 {
-		cfg.ModelTraceIntervalSeconds = groupStatusModelTraceDefaultIntervalSeconds
-	}
-	if cfg.ModelTraceIntervalSeconds < groupStatusModelTraceMinIntervalSeconds {
-		return fmt.Errorf("%w: modeltrace_interval_seconds must be >= %d", ErrGroupStatusInvalidConfig, groupStatusModelTraceMinIntervalSeconds)
-	}
-	cfg.AstraCheckRequestModel = strings.TrimSpace(cfg.AstraCheckRequestModel)
-	if cfg.AstraCheckRequestModel == "" {
-		cfg.AstraCheckRequestModel = groupStatusAstraCheckDefaultRequestModel
+	for _, m := range cfg.AstraCheckModels {
+		if _, ok := astraCheckTarget(m.ExpectedModel); !ok {
+			return ErrGroupStatusAstraCheckTargetInvalid
+		}
 	}
 	cfg.AstraCheckTier = strings.TrimSpace(strings.ToLower(cfg.AstraCheckTier))
 	switch cfg.AstraCheckTier {

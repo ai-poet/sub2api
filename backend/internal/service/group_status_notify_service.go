@@ -317,14 +317,10 @@ func buildGroupStatusNotifyMessage(siteName string, group *Group, event *GroupSt
 		title = fmt.Sprintf("[%s] 分组「%s」状态变红", siteName, groupName)
 	case GroupStatusEventUp:
 		title = fmt.Sprintf("[%s] 分组「%s」已恢复", siteName, groupName)
-	case GroupStatusEventModelTraceMismatch:
-		title = fmt.Sprintf("[%s] 分组「%s」ModelTrace 指纹不符（强指向 %s）", siteName, groupName, modelTraceTopFromEvent(event))
-	case GroupStatusEventModelTraceRecovered:
-		title = fmt.Sprintf("[%s] 分组「%s」ModelTrace 指纹验证已恢复", siteName, groupName)
 	case GroupStatusEventAstraMismatch:
-		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹疑似非 Astra（%s）", siteName, groupName, astraEventPointerText(event))
+		title = fmt.Sprintf("[%s] 分组「%s」指纹不符：%s（强指向 %s）", siteName, groupName, astraExpectedFromEvent(event), astraWinnerFromEvent(event))
 	case GroupStatusEventAstraRecovered:
-		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹验证已恢复", siteName, groupName)
+		title = fmt.Sprintf("[%s] 分组「%s」指纹验证已恢复：%s", siteName, groupName, astraExpectedFromEvent(event))
 	default:
 		title = fmt.Sprintf("[%s] 分组「%s」状态变化", siteName, groupName)
 	}
@@ -382,17 +378,13 @@ func groupStatusEventStatusLabel(event *GroupStatusEvent, status string) string 
 	if event != nil && isAstraCheckEvent(event.EventType) {
 		return astraCheckStatusLabel(status)
 	}
-	if event != nil && isModelTraceEvent(event.EventType) {
-		return modelTraceStatusLabel(status)
-	}
 	return groupStatusStatusLabel(status)
 }
 
 // isGroupStatusNotifyEvent 报告事件类型是否需要推送提醒。
 func isGroupStatusNotifyEvent(eventType string) bool {
 	switch eventType {
-	case GroupStatusEventDown, GroupStatusEventUp, GroupStatusEventModelTraceMismatch, GroupStatusEventModelTraceRecovered,
-		GroupStatusEventAstraMismatch, GroupStatusEventAstraRecovered:
+	case GroupStatusEventDown, GroupStatusEventUp, GroupStatusEventAstraMismatch, GroupStatusEventAstraRecovered:
 		return true
 	default:
 		return false

@@ -51,6 +51,9 @@ type Group func(*sql.Selector)
 // GroupStatusAstraCheckRun is the predicate function for groupstatusastracheckrun builders.
 type GroupStatusAstraCheckRun func(*sql.Selector)
 
+// GroupStatusAstraCheckState is the predicate function for groupstatusastracheckstate builders.
+type GroupStatusAstraCheckState func(*sql.Selector)
+
 // GroupStatusConfig is the predicate function for groupstatusconfig builders.
 type GroupStatusConfig func(*sql.Selector)
 

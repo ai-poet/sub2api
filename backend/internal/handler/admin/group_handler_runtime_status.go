@@ -26,25 +26,18 @@ type UpdateRuntimeStatusRequest struct {
 	SlowLatencyMS    int64    `json:"slow_latency_ms"`
 	// 为 nil 时保留已保存的值（省略 = 保持现值）
 	NotifyEnabled *bool `json:"notify_enabled"`
-	// ModelTrace 指纹验证，OpenAI / Anthropic 分组；ModelTraceEnabled 为 nil 时保留已保存的四项
-	ModelTraceEnabled         *bool  `json:"modeltrace_enabled"`
-	ModelTraceExpectedModel   string `json:"modeltrace_expected_model"`
-	ModelTraceRequestModel    string `json:"modeltrace_request_model"`
-	ModelTraceIntervalSeconds int    `json:"modeltrace_interval_seconds"`
-	// Astra 指纹验证（meow 基准），仅 OpenAI 分组；AstraCheckEnabled 为 nil 时保留已保存的四项
-	AstraCheckEnabled         *bool  `json:"astra_check_enabled"`
-	AstraCheckRequestModel    string `json:"astra_check_request_model"`
-	AstraCheckTier            string `json:"astra_check_tier"`
-	AstraCheckIntervalSeconds int    `json:"astra_check_interval_seconds"`
+	// meow 指纹验证，OpenAI / Anthropic 分组，可同时检测多个模型；AstraCheckEnabled 为 nil 时保留已保存的模型列表、档位与间隔
+	AstraCheckEnabled         *bool                           `json:"astra_check_enabled"`
+	AstraCheckModels          []service.AstraCheckModelConfig `json:"astra_check_models"`
+	AstraCheckTier            string                          `json:"astra_check_tier"`
+	AstraCheckIntervalSeconds int                             `json:"astra_check_interval_seconds"`
 }
 
-// withAstraCheckRunning 把 Astra 与 ModelTrace「验证进行中」的内存标记与实时进度补进管理视图。
+// withAstraCheckRunning 把指纹验证「进行中」的内存标记与实时进度补进管理视图。
 func (h *GroupHandler) withAstraCheckRunning(view *service.GroupStatusAdminView, groupID int64) *service.GroupStatusAdminView {
 	if view != nil && h.groupStatusProbeSvc != nil {
 		view.Summary.AstraCheckRunning = h.groupStatusProbeSvc.IsAstraCheckRunning(groupID)
 		view.AstraCheckProgress = h.groupStatusProbeSvc.AstraCheckProgress(groupID)
-		view.Summary.ModelTraceRunning = h.groupStatusProbeSvc.IsModelTraceRunning(groupID)
-		view.ModelTraceProgress = h.groupStatusProbeSvc.ModelTraceProgress(groupID)
 	}
 	return view
 }
@@ -88,12 +81,8 @@ func (h *GroupHandler) UpdateRuntimeStatus(c *gin.Context) {
 		TimeoutSeconds:            req.TimeoutSeconds,
 		SlowLatencyMS:             req.SlowLatencyMS,
 		NotifyEnabled:             req.NotifyEnabled,
-		ModelTraceEnabled:         req.ModelTraceEnabled,
-		ModelTraceExpectedModel:   req.ModelTraceExpectedModel,
-		ModelTraceRequestModel:    req.ModelTraceRequestModel,
-		ModelTraceIntervalSeconds: req.ModelTraceIntervalSeconds,
 		AstraCheckEnabled:         req.AstraCheckEnabled,
-		AstraCheckRequestModel:    req.AstraCheckRequestModel,
+		AstraCheckModels:          req.AstraCheckModels,
 		AstraCheckTier:            req.AstraCheckTier,
 		AstraCheckIntervalSeconds: req.AstraCheckIntervalSeconds,
 	})
@@ -124,32 +113,14 @@ func (h *GroupHandler) ProbeRuntimeStatus(c *gin.Context) {
 	response.Success(c, h.withAstraCheckRunning(view, groupID))
 }
 
-// ProbeRuntimeStatusModelTrace starts a ModelTrace fingerprint check in the background for an
-// OpenAI or Anthropic group. A run sends several long-output requests and can take minutes, so the
-// response only reports that it started; poll GET runtime-status.
-// POST /api/v1/admin/groups/:id/runtime-status/modeltrace/probe
-func (h *GroupHandler) ProbeRuntimeStatusModelTrace(c *gin.Context) {
-	groupID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.BadRequest(c, "Invalid group ID")
-		return
-	}
-	if err := h.groupStatusProbeSvc.StartModelTraceAsync(groupID); err != nil && !errors.Is(err, service.ErrGroupStatusModelTraceRunning) {
-		response.ErrorFrom(c, err)
-		return
-	}
-	view, err := h.groupStatusService.GetAdminView(c.Request.Context(), groupID)
-	if err != nil {
-		response.ErrorFrom(c, err)
-		return
-	}
-	view = h.withAstraCheckRunning(view, groupID)
-	view.Summary.ModelTraceRunning = true
-	response.Success(c, view)
+// ProbeAstraCheckRequest 选择本次检测的模型；ExpectedModel 为空表示检测分组配置的全部模型。
+type ProbeAstraCheckRequest struct {
+	ExpectedModel string `json:"expected_model"`
 }
 
-// ProbeRuntimeStatusAstraCheck starts an Astra fingerprint check in the background for an OpenAI group.
-// The run takes a minute or more, so the response only reports that it started; poll GET runtime-status.
+// ProbeRuntimeStatusAstraCheck starts a meow fingerprint check in the background for an OpenAI or
+// Anthropic group, for every configured model or only the one in the optional body. Each model sends
+// dozens of short requests, so the response only reports that it started; poll GET runtime-status.
 // POST /api/v1/admin/groups/:id/runtime-status/astra-check/probe
 func (h *GroupHandler) ProbeRuntimeStatusAstraCheck(c *gin.Context) {
 	groupID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -157,7 +128,14 @@ func (h *GroupHandler) ProbeRuntimeStatusAstraCheck(c *gin.Context) {
 		response.BadRequest(c, "Invalid group ID")
 		return
 	}
-	if err := h.groupStatusProbeSvc.StartAstraCheckAsync(groupID); err != nil && !errors.Is(err, service.ErrGroupStatusAstraCheckRunning) {
+	var req ProbeAstraCheckRequest
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			response.BadRequest(c, "Invalid request: "+err.Error())
+			return
+		}
+	}
+	if err := h.groupStatusProbeSvc.StartAstraCheckAsync(groupID, req.ExpectedModel); err != nil && !errors.Is(err, service.ErrGroupStatusAstraCheckRunning) {
 		response.ErrorFrom(c, err)
 		return
 	}

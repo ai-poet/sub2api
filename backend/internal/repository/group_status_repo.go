@@ -13,57 +13,35 @@ import (
 )
 
 // 列清单抽成常量，避免 SELECT / RETURNING / scan 三处漂移。
+//
+// 以下列从各自的迁移起休眠（保留给旧镜像，SKIP_SETUP 与回滚要求新 schema 兼容旧镜像），这里不再读写：
+// 235 的 sol_juice_*、242 的 modeltrace_*、243 起的 astra_check_request_model 与 group_status_states.astra_check_*。
 const (
 	groupStatusConfigColumns = `id, group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
 		interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled,
-		modeltrace_enabled, modeltrace_expected_model, modeltrace_request_model, modeltrace_interval_seconds,
-		astra_check_enabled, astra_check_request_model, astra_check_tier, astra_check_interval_seconds,
+		astra_check_enabled, astra_check_models, astra_check_tier, astra_check_interval_seconds,
 		created_at, updated_at`
 
-	// 235 的 sol_juice_* 列从 242 起休眠（保留给旧镜像），这里不再读写
 	groupStatusStateColumns = `id, group_id, config_id, latest_status, stable_status, response_excerpt, latency_ms, http_code,
-		sub_status, error_detail, observed_at, consecutive_down, consecutive_non_down,
-		modeltrace_verdict, modeltrace_stable_status, modeltrace_run_expected_model, modeltrace_top_model,
-		modeltrace_top_probability, modeltrace_expected_probability, modeltrace_ranking, modeltrace_reasons,
-		modeltrace_detail, modeltrace_checked_at, modeltrace_consecutive_mismatch, modeltrace_valid_outputs,
-		modeltrace_input_tokens, modeltrace_output_tokens, modeltrace_reasoning_tokens, modeltrace_last_cost_usd,
-		modeltrace_last_run_id,
-		astra_check_verdict, astra_check_stable_status, astra_check_winner, astra_check_matches, astra_check_reasons,
-		astra_check_detail, astra_check_checked_at, astra_check_consecutive_mismatch, astra_check_valid_samples,
-		astra_check_planned_samples, astra_check_input_tokens, astra_check_output_tokens, astra_check_reasoning_tokens,
-		astra_check_last_run_id, total_latency_ms,
+		sub_status, error_detail, observed_at, consecutive_down, consecutive_non_down, total_latency_ms,
 		created_at, updated_at`
 
-	groupStatusAstraRunColumns = `id, group_id, config_id, benchmark_package_id, benchmark_version, benchmark_sha256,
-		request_model, tier, account_id, verdict, winner_model, matches, cells, reasons, samples,
-		requests_planned, requests_completed, valid_samples, input_tokens, output_tokens, reasoning_tokens,
+	groupStatusAstraRunColumns = `id, group_id, config_id, platform, expected_model, round, benchmark_package_id, benchmark_version,
+		benchmark_sha256, scoring_version, request_model, tier, account_id, verdict, winner_model, matches, cells, reasons, samples,
+		requests_planned, requests_completed, valid_samples, input_tokens, output_tokens, reasoning_tokens, cost_usd,
 		latency_ms, http_code, error_detail, started_at, finished_at, created_at`
+
+	groupStatusAstraStateColumns = `id, group_id, config_id, expected_model, verdict, stable_status, winner_model, matches, reasons,
+		detail, checked_at, consecutive_mismatch, valid_samples, planned_samples, input_tokens, output_tokens, reasoning_tokens,
+		last_cost_usd, last_run_id, benchmark_package_id, benchmark_version, created_at, updated_at`
 
 	groupStatusSummarySelect = `SELECT c.group_id, c.id, c.enabled, c.probe_model,
 		       COALESCE(s.latest_status, ''), COALESCE(s.stable_status, ''), COALESCE(s.response_excerpt, ''),
 		       s.latency_ms, s.http_code, s.total_latency_ms, COALESCE(s.sub_status, ''), COALESCE(s.error_detail, ''),
 		       s.observed_at, COALESCE(s.consecutive_down, 0), COALESCE(s.consecutive_non_down, 0),
-		       c.modeltrace_enabled, c.modeltrace_expected_model, c.modeltrace_request_model, c.modeltrace_interval_seconds,
-		       COALESCE(s.modeltrace_verdict, ''), COALESCE(s.modeltrace_stable_status, ''), COALESCE(s.modeltrace_run_expected_model, ''),
-		       COALESCE(s.modeltrace_top_model, ''), COALESCE(s.modeltrace_top_probability, 0), s.modeltrace_expected_probability,
-		       COALESCE(s.modeltrace_ranking, '[]'::jsonb), COALESCE(s.modeltrace_reasons, '[]'::jsonb), COALESCE(s.modeltrace_detail, ''),
-		       s.modeltrace_checked_at, COALESCE(s.modeltrace_consecutive_mismatch, 0), COALESCE(s.modeltrace_valid_outputs, 0),
-		       COALESCE(s.modeltrace_input_tokens, 0), COALESCE(s.modeltrace_output_tokens, 0), COALESCE(s.modeltrace_reasoning_tokens, 0),
-		       COALESCE(s.modeltrace_last_cost_usd, 0),
-		       c.astra_check_enabled, c.astra_check_request_model, c.astra_check_tier, c.astra_check_interval_seconds,
-		       COALESCE(s.astra_check_verdict, ''), COALESCE(s.astra_check_stable_status, ''), COALESCE(s.astra_check_winner, ''),
-		       COALESCE(s.astra_check_matches, '[]'::jsonb), COALESCE(s.astra_check_reasons, '[]'::jsonb), COALESCE(s.astra_check_detail, ''),
-		       s.astra_check_checked_at, COALESCE(s.astra_check_consecutive_mismatch, 0), COALESCE(s.astra_check_valid_samples, 0),
-		       COALESCE(s.astra_check_planned_samples, 0), COALESCE(s.astra_check_input_tokens, 0), COALESCE(s.astra_check_output_tokens, 0),
-		       COALESCE(s.astra_check_reasoning_tokens, 0), s.astra_check_last_run_id
+		       c.astra_check_enabled, c.astra_check_models, c.astra_check_tier, c.astra_check_interval_seconds
 		FROM group_status_configs c
 		LEFT JOIN group_status_states s ON s.group_id = c.group_id`
-
-	groupStatusModelTraceRunColumns = `id, group_id, config_id, platform, bank_sha256, bank_built_at, expected_model, request_model,
-		account_id, account_type, round, verdict, outcome, top_model, top_probability, expected_probability,
-		calibration_queries, beta, ranking, family_probabilities, reasons, outputs,
-		attempts_planned, attempts_made, valid_outputs, input_tokens, output_tokens, reasoning_tokens, cost_usd,
-		latency_ms, http_code, error_detail, started_at, finished_at, created_at`
 )
 
 // aliasColumns 给列清单里的每一列加表别名前缀。
@@ -104,11 +82,10 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 		INSERT INTO group_status_configs (
 			group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
 			interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled,
-			modeltrace_enabled, modeltrace_expected_model, modeltrace_request_model, modeltrace_interval_seconds,
-			astra_check_enabled, astra_check_request_model, astra_check_tier, astra_check_interval_seconds,
+			astra_check_enabled, astra_check_models, astra_check_tier, astra_check_interval_seconds,
 			created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12::jsonb, $13, $14, NOW(), NOW())
 		ON CONFLICT (group_id) DO UPDATE SET
 			enabled = EXCLUDED.enabled,
 			probe_model = EXCLUDED.probe_model,
@@ -119,21 +96,16 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 			timeout_seconds = EXCLUDED.timeout_seconds,
 			slow_latency_ms = EXCLUDED.slow_latency_ms,
 			notify_enabled = EXCLUDED.notify_enabled,
-			modeltrace_enabled = EXCLUDED.modeltrace_enabled,
-			modeltrace_expected_model = EXCLUDED.modeltrace_expected_model,
-			modeltrace_request_model = EXCLUDED.modeltrace_request_model,
-			modeltrace_interval_seconds = EXCLUDED.modeltrace_interval_seconds,
 			astra_check_enabled = EXCLUDED.astra_check_enabled,
-			astra_check_request_model = EXCLUDED.astra_check_request_model,
+			astra_check_models = EXCLUDED.astra_check_models,
 			astra_check_tier = EXCLUDED.astra_check_tier,
 			astra_check_interval_seconds = EXCLUDED.astra_check_interval_seconds,
 			updated_at = NOW()
 		RETURNING `+groupStatusConfigColumns+`
 	`, config.GroupID, config.Enabled, config.ProbeModel, config.ProbePrompt, config.ValidationMode,
 		mustJSON(config.ExpectedKeywords), config.IntervalSeconds, config.TimeoutSeconds, config.SlowLatencyMS,
-		config.NotifyEnabled, config.ModelTraceEnabled, config.ModelTraceExpectedModel, config.ModelTraceRequestModel,
-		config.ModelTraceIntervalSeconds,
-		config.AstraCheckEnabled, config.AstraCheckRequestModel, config.AstraCheckTier, config.AstraCheckIntervalSeconds)
+		config.NotifyEnabled, config.AstraCheckEnabled, mustJSONArray(config.AstraCheckModels), config.AstraCheckTier,
+		config.AstraCheckIntervalSeconds)
 	return scanGroupStatusConfig(row)
 }
 
@@ -153,43 +125,6 @@ func (r *groupStatusRepository) ListDueConfigs(ctx context.Context, now time.Tim
 		ORDER BY COALESCE(s.observed_at, to_timestamp(0)) ASC, c.group_id ASC
 		LIMIT $2
 	`, now, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	var out []*service.GroupStatusConfig
-	for rows.Next() {
-		cfg, err := scanGroupStatusConfig(rows)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, cfg)
-	}
-	return out, rows.Err()
-}
-
-// ListDueModelTraceConfigs 列出到期的 ModelTrace 指纹验证配置：分组仍是 OpenAI / Anthropic 平台、
-// 两个开关都开、且距上次验证超过间隔。
-func (r *groupStatusRepository) ListDueModelTraceConfigs(ctx context.Context, now time.Time, limit int) ([]*service.GroupStatusConfig, error) {
-	if limit <= 0 {
-		limit = 3
-	}
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT `+aliasColumns("c", groupStatusConfigColumns)+`
-		FROM group_status_configs c
-		JOIN groups g ON g.id = c.group_id
-		LEFT JOIN group_status_states s ON s.group_id = c.group_id
-		WHERE c.enabled = TRUE
-		  AND c.modeltrace_enabled = TRUE
-		  AND g.platform = ANY($3)
-		  AND (
-		        s.modeltrace_checked_at IS NULL
-		        OR s.modeltrace_checked_at <= ($1::timestamptz - (c.modeltrace_interval_seconds * INTERVAL '1 second'))
-		      )
-		ORDER BY COALESCE(s.modeltrace_checked_at, to_timestamp(0)) ASC, c.group_id ASC
-		LIMIT $2
-	`, now, limit, pq.Array([]string{service.PlatformOpenAI, service.PlatformAnthropic}))
 	if err != nil {
 		return nil, err
 	}
@@ -233,8 +168,12 @@ func (r *groupStatusRepository) ListSummaries(ctx context.Context, groupIDs []in
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
-	return scanGroupStatusSummaries(rows)
+	summaries, err := scanGroupStatusSummaries(rows)
+	_ = rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	return r.attachAstraCheckStates(ctx, summaries)
 }
 
 func (r *groupStatusRepository) ListAllSummaries(ctx context.Context) ([]service.GroupStatusSummary, error) {
@@ -244,8 +183,35 @@ func (r *groupStatusRepository) ListAllSummaries(ctx context.Context) ([]service
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
-	return scanGroupStatusSummaries(rows)
+	summaries, err := scanGroupStatusSummaries(rows)
+	_ = rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	return r.attachAstraCheckStates(ctx, summaries)
+}
+
+// attachAstraCheckStates 把每个分组各预期模型的指纹状态挂到 summary 上（排序与占位由 service 负责）。
+func (r *groupStatusRepository) attachAstraCheckStates(ctx context.Context, summaries []service.GroupStatusSummary) ([]service.GroupStatusSummary, error) {
+	if len(summaries) == 0 {
+		return summaries, nil
+	}
+	groupIDs := make([]int64, 0, len(summaries))
+	for _, summary := range summaries {
+		groupIDs = append(groupIDs, summary.GroupID)
+	}
+	states, err := r.ListAstraCheckStates(ctx, groupIDs)
+	if err != nil {
+		return nil, err
+	}
+	byGroup := make(map[int64][]service.GroupStatusAstraCheckState, len(summaries))
+	for _, state := range states {
+		byGroup[state.GroupID] = append(byGroup[state.GroupID], state)
+	}
+	for i := range summaries {
+		summaries[i].AstraCheckStates = byGroup[summaries[i].GroupID]
+	}
+	return summaries, nil
 }
 
 func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *service.GroupStatusProbeResult) (*service.GroupStatusState, *service.GroupStatusEvent, error) {
@@ -276,7 +242,7 @@ func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *ser
 
 	next, event := service.ComputeGroupStatusTransition(prev, result)
 
-	// 只写存活探测自己的列；modeltrace_* / astra_check_* 由各自的保存方法维护，这里不能覆盖
+	// 只写存活探测自己的列（指纹验证的状态在 group_status_astra_check_states 表里）
 	row := tx.QueryRowContext(ctx, `
 		INSERT INTO group_status_states (
 			group_id, config_id, latest_status, stable_status, response_excerpt, latency_ms, http_code,
@@ -318,205 +284,6 @@ func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *ser
 	}
 	tx = nil
 	return savedState, event, nil
-}
-
-// SaveModelTraceRun 落一条运行记录、只更新 group_status_states 的 modeltrace_* 列，稳定结论切换时写事件。
-func (r *groupStatusRepository) SaveModelTraceRun(ctx context.Context, result *service.GroupStatusModelTraceResult) (*service.GroupStatusModelTraceRun, *service.GroupStatusState, *service.GroupStatusEvent, error) {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	defer func() {
-		if tx != nil {
-			_ = tx.Rollback()
-		}
-	}()
-
-	round := result.Round
-	if round <= 0 {
-		round = 1
-	}
-	row := tx.QueryRowContext(ctx, `
-		INSERT INTO group_status_modeltrace_runs (
-			group_id, config_id, platform, bank_sha256, bank_built_at, expected_model, request_model,
-			account_id, account_type, round, verdict, outcome, top_model, top_probability, expected_probability,
-			calibration_queries, beta, ranking, family_probabilities, reasons, outputs,
-			attempts_planned, attempts_made, valid_outputs, input_tokens, output_tokens, reasoning_tokens, cost_usd,
-			latency_ms, http_code, error_detail, started_at, finished_at, created_at
-		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
-		        $18::jsonb, $19::jsonb, $20::jsonb, $21::jsonb,
-		        $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, NOW())
-		RETURNING `+groupStatusModelTraceRunColumns+`
-	`, result.GroupID, result.ConfigID, result.Platform, result.BankSHA256, result.BankBuiltAt, result.ExpectedModel,
-		result.RequestModel, result.AccountID, result.AccountType, round, result.Verdict, result.Outcome, result.TopModel,
-		result.TopProbability, result.ExpectedProbability, result.CalibrationQueries, result.Beta,
-		mustJSONArray(result.Ranking), mustJSONArray(result.FamilyProbabilities), mustJSONArray(result.Reasons), mustJSONArray(result.Outputs),
-		result.AttemptsPlanned, result.AttemptsMade, result.ValidOutputs, result.InputTokens, result.OutputTokens,
-		result.ReasoningTokens, result.CostUSD, result.LatencyMS, result.HTTPCode, nullIfEmpty(result.ErrorDetail),
-		result.StartedAt, result.FinishedAt)
-	run, err := scanGroupStatusModelTraceRun(row)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	prev, err := r.getStateForUpdate(ctx, tx, result.GroupID)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	next, event := service.ComputeModelTraceTransition(prev, result, run.ID)
-
-	row = tx.QueryRowContext(ctx, `
-		INSERT INTO group_status_states (
-			group_id, config_id, modeltrace_verdict, modeltrace_stable_status, modeltrace_run_expected_model,
-			modeltrace_top_model, modeltrace_top_probability, modeltrace_expected_probability, modeltrace_ranking,
-			modeltrace_reasons, modeltrace_detail, modeltrace_checked_at, modeltrace_consecutive_mismatch,
-			modeltrace_valid_outputs, modeltrace_input_tokens, modeltrace_output_tokens, modeltrace_reasoning_tokens,
-			modeltrace_last_cost_usd, modeltrace_last_run_id, created_at, updated_at
-		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
-		ON CONFLICT (group_id) DO UPDATE SET
-			modeltrace_verdict = EXCLUDED.modeltrace_verdict,
-			modeltrace_stable_status = EXCLUDED.modeltrace_stable_status,
-			modeltrace_run_expected_model = EXCLUDED.modeltrace_run_expected_model,
-			modeltrace_top_model = EXCLUDED.modeltrace_top_model,
-			modeltrace_top_probability = EXCLUDED.modeltrace_top_probability,
-			modeltrace_expected_probability = EXCLUDED.modeltrace_expected_probability,
-			modeltrace_ranking = EXCLUDED.modeltrace_ranking,
-			modeltrace_reasons = EXCLUDED.modeltrace_reasons,
-			modeltrace_detail = EXCLUDED.modeltrace_detail,
-			modeltrace_checked_at = EXCLUDED.modeltrace_checked_at,
-			modeltrace_consecutive_mismatch = EXCLUDED.modeltrace_consecutive_mismatch,
-			modeltrace_valid_outputs = EXCLUDED.modeltrace_valid_outputs,
-			modeltrace_input_tokens = EXCLUDED.modeltrace_input_tokens,
-			modeltrace_output_tokens = EXCLUDED.modeltrace_output_tokens,
-			modeltrace_reasoning_tokens = EXCLUDED.modeltrace_reasoning_tokens,
-			modeltrace_last_cost_usd = EXCLUDED.modeltrace_last_cost_usd,
-			modeltrace_last_run_id = EXCLUDED.modeltrace_last_run_id,
-			updated_at = NOW()
-		RETURNING `+groupStatusStateColumns+`
-	`, next.GroupID, next.ConfigID, next.ModelTraceVerdict, next.ModelTraceStableStatus, next.ModelTraceRunExpectedModel,
-		next.ModelTraceTopModel, next.ModelTraceTopProbability, next.ModelTraceExpectedProbability,
-		mustJSONArray(next.ModelTraceRanking), mustJSONArray(next.ModelTraceReasons), nullIfEmpty(next.ModelTraceDetail),
-		next.ModelTraceCheckedAt, next.ModelTraceConsecutiveMismatch, next.ModelTraceValidOutputs,
-		next.ModelTraceInputTokens, next.ModelTraceOutputTokens, next.ModelTraceReasoningTokens,
-		next.ModelTraceLastCostUSD, next.ModelTraceLastRunID)
-	savedState, err := scanGroupStatusState(row)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	if event != nil {
-		event, err = insertGroupStatusEvent(ctx, tx, event)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, nil, nil, err
-	}
-	tx = nil
-	return run, savedState, event, nil
-}
-
-func (r *groupStatusRepository) ListRecentModelTraceRuns(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusModelTraceRun, error) {
-	if limit <= 0 {
-		limit = 20
-	}
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT `+groupStatusModelTraceRunColumns+`
-		FROM group_status_modeltrace_runs
-		WHERE group_id = $1
-		ORDER BY finished_at DESC, id DESC
-		LIMIT $2
-	`, groupID, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	out := make([]service.GroupStatusModelTraceRun, 0)
-	for rows.Next() {
-		run, err := scanGroupStatusModelTraceRun(rows)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, *run)
-	}
-	return out, rows.Err()
-}
-
-func (r *groupStatusRepository) DeleteModelTraceRunsOlderThan(ctx context.Context, before time.Time) (int64, error) {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM group_status_modeltrace_runs WHERE finished_at < $1`, before)
-	if err != nil {
-		return 0, err
-	}
-	return res.RowsAffected()
-}
-
-func scanGroupStatusModelTraceRun(row scannable) (*service.GroupStatusModelTraceRun, error) {
-	run := &service.GroupStatusModelTraceRun{}
-	var accountID sql.NullInt64
-	var expectedProbability sql.NullFloat64
-	var rankingRaw, familiesRaw, reasonsRaw, outputsRaw []byte
-	var latency sql.NullInt64
-	var httpCode sql.NullInt64
-	var errorDetail sql.NullString
-	if err := row.Scan(
-		&run.ID, &run.GroupID, &run.ConfigID, &run.Platform, &run.BankSHA256, &run.BankBuiltAt, &run.ExpectedModel,
-		&run.RequestModel, &accountID, &run.AccountType, &run.Round, &run.Verdict, &run.Outcome, &run.TopModel,
-		&run.TopProbability, &expectedProbability, &run.CalibrationQueries, &run.Beta,
-		&rankingRaw, &familiesRaw, &reasonsRaw, &outputsRaw,
-		&run.AttemptsPlanned, &run.AttemptsMade, &run.ValidOutputs, &run.InputTokens, &run.OutputTokens,
-		&run.ReasoningTokens, &run.CostUSD, &latency, &httpCode, &errorDetail, &run.StartedAt, &run.FinishedAt, &run.CreatedAt,
-	); err != nil {
-		return nil, err
-	}
-	if accountID.Valid {
-		v := accountID.Int64
-		run.AccountID = &v
-	}
-	if expectedProbability.Valid {
-		v := expectedProbability.Float64
-		run.ExpectedProbability = &v
-	}
-	run.Ranking = decodeModelTraceRanking(rankingRaw)
-	if len(familiesRaw) > 0 {
-		_ = json.Unmarshal(familiesRaw, &run.FamilyProbabilities)
-	}
-	if run.FamilyProbabilities == nil {
-		run.FamilyProbabilities = []service.ModelTraceFamilyProbability{}
-	}
-	run.Reasons = decodeJSONStrings(reasonsRaw)
-	if len(outputsRaw) > 0 {
-		_ = json.Unmarshal(outputsRaw, &run.Outputs)
-	}
-	if run.Outputs == nil {
-		run.Outputs = []service.ModelTraceOutputRecord{}
-	}
-	if latency.Valid {
-		v := latency.Int64
-		run.LatencyMS = &v
-	}
-	if httpCode.Valid {
-		v := int(httpCode.Int64)
-		run.HTTPCode = &v
-	}
-	run.ErrorDetail = errorDetail.String
-	return run, nil
-}
-
-func decodeModelTraceRanking(raw []byte) []service.ModelTraceRankEntry {
-	out := []service.ModelTraceRankEntry{}
-	if len(raw) > 0 {
-		_ = json.Unmarshal(raw, &out)
-	}
-	if out == nil {
-		out = []service.ModelTraceRankEntry{}
-	}
-	return out
 }
 
 func insertGroupStatusEvent(ctx context.Context, tx *sql.Tx, event *service.GroupStatusEvent) (*service.GroupStatusEvent, error) {
@@ -645,7 +412,8 @@ func (r *groupStatusRepository) DeleteRecordsOlderThan(ctx context.Context, befo
 	return res.RowsAffected()
 }
 
-// ListDueAstraCheckConfigs 列出到期的 Astra 指纹验证配置：分组仍是 OpenAI 平台、两个开关都开、且距上次验证超过间隔。
+// ListDueAstraCheckConfigs 列出到期的指纹验证配置：分组仍是 OpenAI / Anthropic 平台、两个开关都开，
+// 且配置的模型里至少有一个距上次检测超过间隔（或从未检测过）。具体跑哪些模型由 service 按状态再筛一遍。
 func (r *groupStatusRepository) ListDueAstraCheckConfigs(ctx context.Context, now time.Time, limit int) ([]*service.GroupStatusConfig, error) {
 	if limit <= 0 {
 		limit = 3
@@ -654,17 +422,32 @@ func (r *groupStatusRepository) ListDueAstraCheckConfigs(ctx context.Context, no
 		SELECT `+aliasColumns("c", groupStatusConfigColumns)+`
 		FROM group_status_configs c
 		JOIN groups g ON g.id = c.group_id
-		LEFT JOIN group_status_states s ON s.group_id = c.group_id
 		WHERE c.enabled = TRUE
 		  AND c.astra_check_enabled = TRUE
-		  AND g.platform = $3
+		  AND g.platform = ANY($3)
 		  AND (
-		        s.astra_check_checked_at IS NULL
-		        OR s.astra_check_checked_at <= ($1::timestamptz - (c.astra_check_interval_seconds * INTERVAL '1 second'))
+		        (
+		          jsonb_array_length(c.astra_check_models) = 0
+		          AND NOT EXISTS (
+		              SELECT 1 FROM group_status_astra_check_states st
+		              WHERE st.group_id = c.group_id
+		                AND st.checked_at > ($1::timestamptz - (c.astra_check_interval_seconds * INTERVAL '1 second'))
+		          )
+		        )
+		        OR EXISTS (
+		            SELECT 1
+		            FROM jsonb_array_elements(c.astra_check_models) m
+		            LEFT JOIN group_status_astra_check_states st
+		              ON st.group_id = c.group_id AND st.expected_model = m->>'expected_model'
+		            WHERE st.checked_at IS NULL
+		               OR st.checked_at <= ($1::timestamptz - (c.astra_check_interval_seconds * INTERVAL '1 second'))
+		        )
 		      )
-		ORDER BY COALESCE(s.astra_check_checked_at, to_timestamp(0)) ASC, c.group_id ASC
+		ORDER BY (
+		    SELECT MIN(st.checked_at) FROM group_status_astra_check_states st WHERE st.group_id = c.group_id
+		) ASC NULLS FIRST, c.group_id ASC
 		LIMIT $2
-	`, now, limit, service.PlatformOpenAI)
+	`, now, limit, pq.Array([]string{service.PlatformOpenAI, service.PlatformAnthropic}))
 	if err != nil {
 		return nil, err
 	}
@@ -681,8 +464,8 @@ func (r *groupStatusRepository) ListDueAstraCheckConfigs(ctx context.Context, no
 	return out, rows.Err()
 }
 
-// SaveAstraCheckRun 落一条运行记录、只更新 group_status_states 的 astra_check_* 列，稳定结论切换时写事件。
-func (r *groupStatusRepository) SaveAstraCheckRun(ctx context.Context, result *service.GroupStatusAstraCheckResult) (*service.GroupStatusAstraCheckRun, *service.GroupStatusState, *service.GroupStatusEvent, error) {
+// SaveAstraCheckRun 落一条运行记录、只更新该（分组, 预期模型）的指纹状态，稳定结论切换时写事件。
+func (r *groupStatusRepository) SaveAstraCheckRun(ctx context.Context, result *service.GroupStatusAstraCheckResult) (*service.GroupStatusAstraCheckRun, *service.GroupStatusAstraCheckState, *service.GroupStatusEvent, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, nil, nil, err
@@ -693,27 +476,35 @@ func (r *groupStatusRepository) SaveAstraCheckRun(ctx context.Context, result *s
 		}
 	}()
 
+	round := result.Round
+	if round <= 0 {
+		round = 1
+	}
 	row := tx.QueryRowContext(ctx, `
 		INSERT INTO group_status_astra_check_runs (
-			group_id, config_id, benchmark_package_id, benchmark_version, benchmark_sha256,
-			request_model, tier, account_id, verdict, winner_model, matches, cells, reasons, samples,
-			requests_planned, requests_completed, valid_samples, input_tokens, output_tokens, reasoning_tokens,
-			latency_ms, http_code, error_detail, started_at, finished_at, created_at
+			group_id, config_id, platform, expected_model, round, benchmark_package_id, benchmark_version,
+			benchmark_sha256, scoring_version, request_model, tier, account_id, verdict, winner_model,
+			matches, cells, reasons, samples, requests_planned, requests_completed, valid_samples,
+			input_tokens, output_tokens, reasoning_tokens, cost_usd, latency_ms, http_code, error_detail,
+			started_at, finished_at, created_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13::jsonb, $14::jsonb,
-		        $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, NOW())
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+		        $15::jsonb, $16::jsonb, $17::jsonb, $18::jsonb, $19, $20, $21,
+		        $22, $23, $24, $25, $26, $27, $28, $29, $30, NOW())
 		RETURNING `+groupStatusAstraRunColumns+`
-	`, result.GroupID, result.ConfigID, result.BenchmarkPackageID, result.BenchmarkVersion, result.BenchmarkSHA256,
-		result.RequestModel, result.Tier, result.AccountID, result.Verdict, result.Winner,
+	`, result.GroupID, result.ConfigID, result.Platform, result.ExpectedModel, round, result.BenchmarkPackageID,
+		result.BenchmarkVersion, result.BenchmarkSHA256, result.ScoringVersion, result.RequestModel, result.Tier,
+		result.AccountID, result.Verdict, result.Winner,
 		mustJSONArray(result.Matches), mustJSONArray(result.Cells), mustJSONArray(result.Reasons), mustJSONArray(result.Samples),
-		result.RequestsPlanned, result.RequestsCompleted, result.ValidSamples, result.InputTokens, result.OutputTokens,
-		result.ReasoningTokens, result.LatencyMS, result.HTTPCode, nullIfEmpty(result.ErrorDetail), result.StartedAt, result.FinishedAt)
+		result.RequestsPlanned, result.RequestsCompleted, result.ValidSamples,
+		result.InputTokens, result.OutputTokens, result.ReasoningTokens, result.CostUSD, result.LatencyMS, result.HTTPCode,
+		nullIfEmpty(result.ErrorDetail), result.StartedAt, result.FinishedAt)
 	run, err := scanGroupStatusAstraCheckRun(row)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	prev, err := r.getStateForUpdate(ctx, tx, result.GroupID)
+	prev, err := r.getAstraCheckStateForUpdate(ctx, tx, result.GroupID, result.ExpectedModel)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -721,36 +512,39 @@ func (r *groupStatusRepository) SaveAstraCheckRun(ctx context.Context, result *s
 	next, event := service.ComputeAstraCheckTransition(prev, result, run.ID)
 
 	row = tx.QueryRowContext(ctx, `
-		INSERT INTO group_status_states (
-			group_id, config_id, astra_check_verdict, astra_check_stable_status, astra_check_winner,
-			astra_check_matches, astra_check_reasons, astra_check_detail, astra_check_checked_at,
-			astra_check_consecutive_mismatch, astra_check_valid_samples, astra_check_planned_samples,
-			astra_check_input_tokens, astra_check_output_tokens, astra_check_reasoning_tokens, astra_check_last_run_id,
+		INSERT INTO group_status_astra_check_states (
+			group_id, config_id, expected_model, verdict, stable_status, winner_model, matches, reasons,
+			detail, checked_at, consecutive_mismatch, valid_samples, planned_samples, input_tokens,
+			output_tokens, reasoning_tokens, last_cost_usd, last_run_id, benchmark_package_id, benchmark_version,
 			created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
-		ON CONFLICT (group_id) DO UPDATE SET
-			astra_check_verdict = EXCLUDED.astra_check_verdict,
-			astra_check_stable_status = EXCLUDED.astra_check_stable_status,
-			astra_check_winner = EXCLUDED.astra_check_winner,
-			astra_check_matches = EXCLUDED.astra_check_matches,
-			astra_check_reasons = EXCLUDED.astra_check_reasons,
-			astra_check_detail = EXCLUDED.astra_check_detail,
-			astra_check_checked_at = EXCLUDED.astra_check_checked_at,
-			astra_check_consecutive_mismatch = EXCLUDED.astra_check_consecutive_mismatch,
-			astra_check_valid_samples = EXCLUDED.astra_check_valid_samples,
-			astra_check_planned_samples = EXCLUDED.astra_check_planned_samples,
-			astra_check_input_tokens = EXCLUDED.astra_check_input_tokens,
-			astra_check_output_tokens = EXCLUDED.astra_check_output_tokens,
-			astra_check_reasoning_tokens = EXCLUDED.astra_check_reasoning_tokens,
-			astra_check_last_run_id = EXCLUDED.astra_check_last_run_id,
+		VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())
+		ON CONFLICT (group_id, expected_model) DO UPDATE SET
+			config_id = EXCLUDED.config_id,
+			verdict = EXCLUDED.verdict,
+			stable_status = EXCLUDED.stable_status,
+			winner_model = EXCLUDED.winner_model,
+			matches = EXCLUDED.matches,
+			reasons = EXCLUDED.reasons,
+			detail = EXCLUDED.detail,
+			checked_at = EXCLUDED.checked_at,
+			consecutive_mismatch = EXCLUDED.consecutive_mismatch,
+			valid_samples = EXCLUDED.valid_samples,
+			planned_samples = EXCLUDED.planned_samples,
+			input_tokens = EXCLUDED.input_tokens,
+			output_tokens = EXCLUDED.output_tokens,
+			reasoning_tokens = EXCLUDED.reasoning_tokens,
+			last_cost_usd = EXCLUDED.last_cost_usd,
+			last_run_id = EXCLUDED.last_run_id,
+			benchmark_package_id = EXCLUDED.benchmark_package_id,
+			benchmark_version = EXCLUDED.benchmark_version,
 			updated_at = NOW()
-		RETURNING `+groupStatusStateColumns+`
-	`, next.GroupID, next.ConfigID, next.AstraCheckVerdict, next.AstraCheckStableStatus, next.AstraCheckWinner,
-		mustJSONArray(next.AstraCheckMatches), mustJSONArray(next.AstraCheckReasons), nullIfEmpty(next.AstraCheckDetail),
-		next.AstraCheckCheckedAt, next.AstraCheckConsecutiveMismatch, next.AstraCheckValidSamples, next.AstraCheckPlannedSamples,
-		next.AstraCheckInputTokens, next.AstraCheckOutputTokens, next.AstraCheckReasoningTokens, next.AstraCheckLastRunID)
-	savedState, err := scanGroupStatusState(row)
+		RETURNING `+groupStatusAstraStateColumns+`
+	`, next.GroupID, next.ConfigID, next.ExpectedModel, next.Verdict, next.StableStatus, next.Winner,
+		mustJSONArray(next.Matches), mustJSONArray(next.Reasons), nullIfEmpty(next.Detail), next.CheckedAt,
+		next.ConsecutiveMismatch, next.ValidSamples, next.PlannedSamples, next.InputTokens, next.OutputTokens,
+		next.ReasoningTokens, next.LastCostUSD, next.LastRunID, next.BenchmarkPackageID, next.BenchmarkVersion)
+	savedState, err := scanGroupStatusAstraCheckState(row)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -769,17 +563,14 @@ func (r *groupStatusRepository) SaveAstraCheckRun(ctx context.Context, result *s
 	return run, savedState, event, nil
 }
 
-func (r *groupStatusRepository) ListRecentAstraCheckRuns(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusAstraCheckRun, error) {
-	if limit <= 0 {
-		limit = 20
-	}
+// ListLatestAstraCheckRuns 返回分组每个预期模型最近一次运行的完整记录。
+func (r *groupStatusRepository) ListLatestAstraCheckRuns(ctx context.Context, groupID int64) ([]service.GroupStatusAstraCheckRun, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT `+groupStatusAstraRunColumns+`
+		SELECT DISTINCT ON (expected_model) `+groupStatusAstraRunColumns+`
 		FROM group_status_astra_check_runs
 		WHERE group_id = $1
-		ORDER BY finished_at DESC
-		LIMIT $2
-	`, groupID, limit)
+		ORDER BY expected_model, finished_at DESC, id DESC
+	`, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -804,6 +595,62 @@ func (r *groupStatusRepository) DeleteAstraCheckRunsOlderThan(ctx context.Contex
 	return res.RowsAffected()
 }
 
+// ListAstraCheckStates 返回这些分组全部预期模型的指纹状态。
+func (r *groupStatusRepository) ListAstraCheckStates(ctx context.Context, groupIDs []int64) ([]service.GroupStatusAstraCheckState, error) {
+	if len(groupIDs) == 0 {
+		return []service.GroupStatusAstraCheckState{}, nil
+	}
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT `+groupStatusAstraStateColumns+`
+		FROM group_status_astra_check_states
+		WHERE group_id = ANY($1)
+		ORDER BY group_id ASC, expected_model ASC
+	`, pq.Array(groupIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := make([]service.GroupStatusAstraCheckState, 0)
+	for rows.Next() {
+		state, err := scanGroupStatusAstraCheckState(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, *state)
+	}
+	return out, rows.Err()
+}
+
+// DeleteAstraCheckStatesExcept 删掉分组里已不在检测列表中的模型状态。
+func (r *groupStatusRepository) DeleteAstraCheckStatesExcept(ctx context.Context, groupID int64, keepModels []string) error {
+	if keepModels == nil {
+		keepModels = []string{}
+	}
+	_, err := r.db.ExecContext(ctx, `
+		DELETE FROM group_status_astra_check_states
+		WHERE group_id = $1 AND NOT (expected_model = ANY($2))
+	`, groupID, pq.Array(keepModels))
+	return err
+}
+
+func (r *groupStatusRepository) getAstraCheckStateForUpdate(ctx context.Context, tx *sql.Tx, groupID int64, expectedModel string) (*service.GroupStatusAstraCheckState, error) {
+	row := tx.QueryRowContext(ctx, `
+		SELECT `+groupStatusAstraStateColumns+`
+		FROM group_status_astra_check_states
+		WHERE group_id = $1 AND expected_model = $2
+		FOR UPDATE
+	`, groupID, expectedModel)
+	state, err := scanGroupStatusAstraCheckState(row)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return state, nil
+}
+
 func scanGroupStatusAstraCheckRun(row scannable) (*service.GroupStatusAstraCheckRun, error) {
 	run := &service.GroupStatusAstraCheckRun{}
 	var accountID sql.NullInt64
@@ -812,10 +659,11 @@ func scanGroupStatusAstraCheckRun(row scannable) (*service.GroupStatusAstraCheck
 	var httpCode sql.NullInt64
 	var errorDetail sql.NullString
 	if err := row.Scan(
-		&run.ID, &run.GroupID, &run.ConfigID, &run.BenchmarkPackageID, &run.BenchmarkVersion, &run.BenchmarkSHA256,
-		&run.RequestModel, &run.Tier, &accountID, &run.Verdict, &run.Winner, &matchesRaw, &cellsRaw, &reasonsRaw, &samplesRaw,
-		&run.RequestsPlanned, &run.RequestsCompleted, &run.ValidSamples, &run.InputTokens, &run.OutputTokens, &run.ReasoningTokens,
-		&latency, &httpCode, &errorDetail, &run.StartedAt, &run.FinishedAt, &run.CreatedAt,
+		&run.ID, &run.GroupID, &run.ConfigID, &run.Platform, &run.ExpectedModel, &run.Round, &run.BenchmarkPackageID,
+		&run.BenchmarkVersion, &run.BenchmarkSHA256, &run.ScoringVersion, &run.RequestModel, &run.Tier, &accountID,
+		&run.Verdict, &run.Winner, &matchesRaw, &cellsRaw, &reasonsRaw, &samplesRaw,
+		&run.RequestsPlanned, &run.RequestsCompleted, &run.ValidSamples, &run.InputTokens, &run.OutputTokens,
+		&run.ReasoningTokens, &run.CostUSD, &latency, &httpCode, &errorDetail, &run.StartedAt, &run.FinishedAt, &run.CreatedAt,
 	); err != nil {
 		return nil, err
 	}
@@ -847,6 +695,34 @@ func scanGroupStatusAstraCheckRun(row scannable) (*service.GroupStatusAstraCheck
 	}
 	run.ErrorDetail = errorDetail.String
 	return run, nil
+}
+
+func scanGroupStatusAstraCheckState(row scannable) (*service.GroupStatusAstraCheckState, error) {
+	state := &service.GroupStatusAstraCheckState{}
+	var matchesRaw, reasonsRaw []byte
+	var detail sql.NullString
+	var checkedAt sql.NullTime
+	var lastRunID sql.NullInt64
+	if err := row.Scan(
+		&state.ID, &state.GroupID, &state.ConfigID, &state.ExpectedModel, &state.Verdict, &state.StableStatus,
+		&state.Winner, &matchesRaw, &reasonsRaw, &detail, &checkedAt, &state.ConsecutiveMismatch,
+		&state.ValidSamples, &state.PlannedSamples, &state.InputTokens, &state.OutputTokens, &state.ReasoningTokens,
+		&state.LastCostUSD, &lastRunID, &state.BenchmarkPackageID, &state.BenchmarkVersion, &state.CreatedAt, &state.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	state.Matches = decodeAstraMatches(matchesRaw)
+	state.Reasons = decodeJSONStrings(reasonsRaw)
+	state.Detail = detail.String
+	if checkedAt.Valid {
+		v := checkedAt.Time
+		state.CheckedAt = &v
+	}
+	if lastRunID.Valid {
+		v := lastRunID.Int64
+		state.LastRunID = &v
+	}
+	return state, nil
 }
 
 func decodeAstraMatches(raw []byte) []service.AstraCheckModelMatch {
@@ -898,13 +774,12 @@ func (r *groupStatusRepository) getStateForUpdate(ctx context.Context, tx *sql.T
 }
 
 func scanGroupStatusConfig(row scannable) (*service.GroupStatusConfig, error) {
-	var keywordsRaw []byte
+	var keywordsRaw, astraModelsRaw []byte
 	cfg := &service.GroupStatusConfig{}
 	if err := row.Scan(
 		&cfg.ID, &cfg.GroupID, &cfg.Enabled, &cfg.ProbeModel, &cfg.ProbePrompt, &cfg.ValidationMode, &keywordsRaw,
 		&cfg.IntervalSeconds, &cfg.TimeoutSeconds, &cfg.SlowLatencyMS, &cfg.NotifyEnabled,
-		&cfg.ModelTraceEnabled, &cfg.ModelTraceExpectedModel, &cfg.ModelTraceRequestModel, &cfg.ModelTraceIntervalSeconds,
-		&cfg.AstraCheckEnabled, &cfg.AstraCheckRequestModel, &cfg.AstraCheckTier, &cfg.AstraCheckIntervalSeconds,
+		&cfg.AstraCheckEnabled, &astraModelsRaw, &cfg.AstraCheckTier, &cfg.AstraCheckIntervalSeconds,
 		&cfg.CreatedAt, &cfg.UpdatedAt,
 	); err != nil {
 		return nil, err
@@ -917,7 +792,19 @@ func scanGroupStatusConfig(row scannable) (*service.GroupStatusConfig, error) {
 	if cfg.ExpectedKeywords == nil {
 		cfg.ExpectedKeywords = []string{}
 	}
+	cfg.AstraCheckModels = decodeAstraCheckModels(astraModelsRaw)
 	return cfg, nil
+}
+
+func decodeAstraCheckModels(raw []byte) []service.AstraCheckModelConfig {
+	out := []service.AstraCheckModelConfig{}
+	if len(raw) > 0 {
+		_ = json.Unmarshal(raw, &out)
+	}
+	if out == nil {
+		out = []service.AstraCheckModelConfig{}
+	}
+	return out
 }
 
 func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
@@ -928,29 +815,11 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 	var subStatus sql.NullString
 	var errorDetail sql.NullString
 	var observedAt sql.NullTime
-	var modelTraceExpectedProbability sql.NullFloat64
-	var modelTraceRankingRaw, modelTraceReasonsRaw []byte
-	var modelTraceDetail sql.NullString
-	var modelTraceCheckedAt sql.NullTime
-	var modelTraceLastRunID sql.NullInt64
-	var astraMatchesRaw, astraReasonsRaw []byte
-	var astraDetail sql.NullString
-	var astraCheckedAt sql.NullTime
-	var astraLastRunID sql.NullInt64
 	var totalLatency sql.NullInt64
 	if err := row.Scan(
 		&state.ID, &state.GroupID, &state.ConfigID, &state.LatestStatus, &state.StableStatus, &responseExcerpt,
 		&latency, &httpCode, &subStatus, &errorDetail, &observedAt, &state.ConsecutiveDown,
-		&state.ConsecutiveNonDown,
-		&state.ModelTraceVerdict, &state.ModelTraceStableStatus, &state.ModelTraceRunExpectedModel, &state.ModelTraceTopModel,
-		&state.ModelTraceTopProbability, &modelTraceExpectedProbability, &modelTraceRankingRaw, &modelTraceReasonsRaw,
-		&modelTraceDetail, &modelTraceCheckedAt, &state.ModelTraceConsecutiveMismatch, &state.ModelTraceValidOutputs,
-		&state.ModelTraceInputTokens, &state.ModelTraceOutputTokens, &state.ModelTraceReasoningTokens, &state.ModelTraceLastCostUSD,
-		&modelTraceLastRunID,
-		&state.AstraCheckVerdict, &state.AstraCheckStableStatus, &state.AstraCheckWinner, &astraMatchesRaw, &astraReasonsRaw,
-		&astraDetail, &astraCheckedAt, &state.AstraCheckConsecutiveMismatch, &state.AstraCheckValidSamples,
-		&state.AstraCheckPlannedSamples, &state.AstraCheckInputTokens, &state.AstraCheckOutputTokens, &state.AstraCheckReasoningTokens,
-		&astraLastRunID, &totalLatency,
+		&state.ConsecutiveNonDown, &totalLatency,
 		&state.CreatedAt, &state.UpdatedAt,
 	); err != nil {
 		return nil, err
@@ -958,17 +827,6 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 	if totalLatency.Valid {
 		v := totalLatency.Int64
 		state.TotalLatencyMS = &v
-	}
-	state.AstraCheckMatches = decodeAstraMatches(astraMatchesRaw)
-	state.AstraCheckReasons = decodeJSONStrings(astraReasonsRaw)
-	state.AstraCheckDetail = astraDetail.String
-	if astraCheckedAt.Valid {
-		v := astraCheckedAt.Time
-		state.AstraCheckCheckedAt = &v
-	}
-	if astraLastRunID.Valid {
-		v := astraLastRunID.Int64
-		state.AstraCheckLastRunID = &v
 	}
 	state.ResponseExcerpt = responseExcerpt.String
 	if latency.Valid {
@@ -984,21 +842,6 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 	if observedAt.Valid {
 		v := observedAt.Time
 		state.ObservedAt = &v
-	}
-	if modelTraceExpectedProbability.Valid {
-		v := modelTraceExpectedProbability.Float64
-		state.ModelTraceExpectedProbability = &v
-	}
-	state.ModelTraceRanking = decodeModelTraceRanking(modelTraceRankingRaw)
-	state.ModelTraceReasons = decodeJSONStrings(modelTraceReasonsRaw)
-	state.ModelTraceDetail = modelTraceDetail.String
-	if modelTraceCheckedAt.Valid {
-		v := modelTraceCheckedAt.Time
-		state.ModelTraceCheckedAt = &v
-	}
-	if modelTraceLastRunID.Valid {
-		v := modelTraceLastRunID.Int64
-		state.ModelTraceLastRunID = &v
 	}
 	return state, nil
 }
@@ -1077,30 +920,13 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 	var latency sql.NullInt64
 	var httpCode sql.NullInt64
 	var observedAt sql.NullTime
-	var modelTraceExpectedProbability sql.NullFloat64
-	var modelTraceRankingRaw, modelTraceReasonsRaw []byte
-	var modelTraceCheckedAt sql.NullTime
-	var astraMatchesRaw, astraReasonsRaw []byte
-	var astraCheckedAt sql.NullTime
-	var astraLastRunID sql.NullInt64
 	var totalLatency sql.NullInt64
+	var astraModelsRaw []byte
 	if err := row.Scan(
 		&item.GroupID, &item.ConfigID, &item.Enabled, &item.ProbeModel,
 		&item.LatestStatus, &item.StableStatus, &item.ResponseExcerpt, &latency, &httpCode, &totalLatency,
 		&item.SubStatus, &item.ErrorDetail, &observedAt, &item.ConsecutiveDown, &item.ConsecutiveNonDown,
-		&item.ModelTraceEnabled, &item.ModelTraceExpectedModel, &item.ModelTraceRequestModel, &item.ModelTraceIntervalSeconds,
-		&item.ModelTraceVerdict, &item.ModelTraceStableStatus, &item.ModelTraceRunExpectedModel,
-		&item.ModelTraceTopModel, &item.ModelTraceTopProbability, &modelTraceExpectedProbability,
-		&modelTraceRankingRaw, &modelTraceReasonsRaw, &item.ModelTraceDetail,
-		&modelTraceCheckedAt, &item.ModelTraceConsecutiveMismatch, &item.ModelTraceValidOutputs,
-		&item.ModelTraceInputTokens, &item.ModelTraceOutputTokens, &item.ModelTraceReasoningTokens,
-		&item.ModelTraceLastCostUSD,
-		&item.AstraCheckEnabled, &item.AstraCheckRequestModel, &item.AstraCheckTier, &item.AstraCheckIntervalSeconds,
-		&item.AstraCheckVerdict, &item.AstraCheckStableStatus, &item.AstraCheckWinner,
-		&astraMatchesRaw, &astraReasonsRaw, &item.AstraCheckDetail,
-		&astraCheckedAt, &item.AstraCheckConsecutiveMismatch, &item.AstraCheckValidSamples,
-		&item.AstraCheckPlannedSamples, &item.AstraCheckInputTokens, &item.AstraCheckOutputTokens,
-		&item.AstraCheckReasoningTokens, &astraLastRunID,
+		&item.AstraCheckEnabled, &astraModelsRaw, &item.AstraCheckTier, &item.AstraCheckIntervalSeconds,
 	); err != nil {
 		return nil, err
 	}
@@ -1108,13 +934,7 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 		v := totalLatency.Int64
 		item.TotalLatencyMS = &v
 	}
-	item.AstraCheckMatches = decodeAstraMatches(astraMatchesRaw)
-	item.AstraCheckReasons = decodeJSONStrings(astraReasonsRaw)
-	if astraCheckedAt.Valid {
-		v := astraCheckedAt.Time
-		item.AstraCheckCheckedAt = &v
-	}
-	_ = astraLastRunID
+	item.AstraCheckModels = decodeAstraCheckModels(astraModelsRaw)
 	if latency.Valid {
 		v := latency.Int64
 		item.LatencyMS = &v
@@ -1126,16 +946,6 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 	if observedAt.Valid {
 		v := observedAt.Time
 		item.ObservedAt = &v
-	}
-	if modelTraceExpectedProbability.Valid {
-		v := modelTraceExpectedProbability.Float64
-		item.ModelTraceExpectedProbability = &v
-	}
-	item.ModelTraceRanking = decodeModelTraceRanking(modelTraceRankingRaw)
-	item.ModelTraceReasons = decodeJSONStrings(modelTraceReasonsRaw)
-	if modelTraceCheckedAt.Valid {
-		v := modelTraceCheckedAt.Time
-		item.ModelTraceCheckedAt = &v
 	}
 	return item, nil
 }

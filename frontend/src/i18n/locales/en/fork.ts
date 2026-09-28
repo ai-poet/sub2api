@@ -731,7 +731,7 @@ export default {
         },
         "personalToken": {
           "title": "Operator personal tokens",
-          "description": "When enabled, operators can generate a personal token on their profile page so scripts can call the admin API with an Authorization: Bearer header. A token has exactly the same access as the operator's browser session (same allowlist; user and subscription writes still go through approval), cannot pass two-factor step-up and cannot approve requests. Turning this off disables every token immediately without deleting them; turning it back on restores them.",
+          "description": "When enabled, operators can generate a personal token on their profile page so scripts can call the API with an Authorization: Bearer header. On admin endpoints a token has exactly the same access as the operator's browser session (same allowlist; user and subscription writes still go through approval). User endpoints act on the operator's own account, except account security actions (password, 2FA, passkeys, login bindings, the token itself). A token cannot pass two-factor step-up and cannot approve requests. Turning this off disables every token immediately without deleting them; turning it back on restores them.",
           "listTitle": "Issued tokens",
           "refresh": "Refresh",
           "empty": "No operator has generated a token yet",
@@ -878,7 +878,7 @@ export default {
   "operator": {
     "personalToken": {
       "title": "Personal token",
-      "description": "Lets scripts call the admin API for automation: send Authorization: Bearer followed by the token. It has exactly the same access as your browser session.",
+      "description": "Lets scripts call the API for automation (both admin and user endpoints): send Authorization: Bearer followed by the token. It has the same access as your browser session.",
       "generate": "Generate token",
       "regenerate": "Regenerate",
       "revoke": "Revoke",
@@ -909,10 +909,10 @@ export default {
       "revoked": "Token revoked",
       "revokeFailed": "Failed to revoke token",
       "notes": {
-        "scope": "It can only reach the endpoints you can reach in the browser; anything else returns 403.",
+        "scope": "It works on the admin and user endpoints you can use in the browser (e.g. /auth/me, group status, API keys); anything beyond your access returns 403.",
         "approval": "User and subscription management writes still go to the approval queue (202) and run only after the administrator approves them.",
         "invalidation": "Changing your password or email, revocation by the administrator, a role change, or the administrator turning the feature off invalidates the token immediately.",
-        "noSensitive": "The token cannot perform actions that require two-factor verification, and cannot generate or revoke tokens itself."
+        "noSensitive": "So that a leaked token cannot take over the account, it cannot perform account security actions: changing the password, 2FA, passkeys, login bindings, generating or revoking tokens, or issuing login sessions. It also cannot perform actions that require two-factor verification."
       }
     },
     "readOnlyNotice": "Read-only mode: operators can view ops monitoring and usage logs but cannot change settings, handle alerts or clean up data.",

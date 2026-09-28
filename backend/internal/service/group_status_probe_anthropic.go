@@ -17,7 +17,7 @@ import (
 // 分组运行状态的 Anthropic Messages 探测通道（本 fork 自有功能）。
 //
 // 地址与鉴权与存活探测 probeAnthropic 一致；头部按 headerMode 选择：存活探测保持最小头部，
-// ModelTrace 指纹与账号测试一样带上 Claude Code 客户端头部（OAuth 凭证必须有 oauth beta）。
+// meow 指纹验证与账号测试一样带上 Claude Code 客户端头部（OAuth 凭证必须有 oauth beta）。
 
 type anthropicProbeHeaderMode int
 

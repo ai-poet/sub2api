@@ -300,6 +300,12 @@ func (_c *GroupStatusConfigCreate) SetNillableAstraCheckRequestModel(v *string) 
 	return _c
 }
 
+// SetAstraCheckModels sets the "astra_check_models" field.
+func (_c *GroupStatusConfigCreate) SetAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigCreate {
+	_c.mutation.SetAstraCheckModels(v)
+	return _c
+}
+
 // SetAstraCheckTier sets the "astra_check_tier" field.
 func (_c *GroupStatusConfigCreate) SetAstraCheckTier(v string) *GroupStatusConfigCreate {
 	_c.mutation.SetAstraCheckTier(v)
@@ -443,6 +449,10 @@ func (_c *GroupStatusConfigCreate) defaults() {
 		v := groupstatusconfig.DefaultAstraCheckRequestModel
 		_c.mutation.SetAstraCheckRequestModel(v)
 	}
+	if _, ok := _c.mutation.AstraCheckModels(); !ok {
+		v := groupstatusconfig.DefaultAstraCheckModels
+		_c.mutation.SetAstraCheckModels(v)
+	}
 	if _, ok := _c.mutation.AstraCheckTier(); !ok {
 		v := groupstatusconfig.DefaultAstraCheckTier
 		_c.mutation.SetAstraCheckTier(v)
@@ -517,6 +527,9 @@ func (_c *GroupStatusConfigCreate) check() error {
 	}
 	if _, ok := _c.mutation.AstraCheckRequestModel(); !ok {
 		return &ValidationError{Name: "astra_check_request_model", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_request_model"`)}
+	}
+	if _, ok := _c.mutation.AstraCheckModels(); !ok {
+		return &ValidationError{Name: "astra_check_models", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_models"`)}
 	}
 	if _, ok := _c.mutation.AstraCheckTier(); !ok {
 		return &ValidationError{Name: "astra_check_tier", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_tier"`)}
@@ -634,6 +647,10 @@ func (_c *GroupStatusConfigCreate) createSpec() (*GroupStatusConfig, *sqlgraph.C
 	if value, ok := _c.mutation.AstraCheckRequestModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckRequestModel, field.TypeString, value)
 		_node.AstraCheckRequestModel = value
+	}
+	if value, ok := _c.mutation.AstraCheckModels(); ok {
+		_spec.SetField(groupstatusconfig.FieldAstraCheckModels, field.TypeJSON, value)
+		_node.AstraCheckModels = value
 	}
 	if value, ok := _c.mutation.AstraCheckTier(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckTier, field.TypeString, value)
@@ -968,6 +985,18 @@ func (u *GroupStatusConfigUpsert) SetAstraCheckRequestModel(v string) *GroupStat
 // UpdateAstraCheckRequestModel sets the "astra_check_request_model" field to the value that was provided on create.
 func (u *GroupStatusConfigUpsert) UpdateAstraCheckRequestModel() *GroupStatusConfigUpsert {
 	u.SetExcluded(groupstatusconfig.FieldAstraCheckRequestModel)
+	return u
+}
+
+// SetAstraCheckModels sets the "astra_check_models" field.
+func (u *GroupStatusConfigUpsert) SetAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldAstraCheckModels, v)
+	return u
+}
+
+// UpdateAstraCheckModels sets the "astra_check_models" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateAstraCheckModels() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldAstraCheckModels)
 	return u
 }
 
@@ -1365,6 +1394,20 @@ func (u *GroupStatusConfigUpsertOne) SetAstraCheckRequestModel(v string) *GroupS
 func (u *GroupStatusConfigUpsertOne) UpdateAstraCheckRequestModel() *GroupStatusConfigUpsertOne {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateAstraCheckRequestModel()
+	})
+}
+
+// SetAstraCheckModels sets the "astra_check_models" field.
+func (u *GroupStatusConfigUpsertOne) SetAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckModels(v)
+	})
+}
+
+// UpdateAstraCheckModels sets the "astra_check_models" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateAstraCheckModels() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckModels()
 	})
 }
 
@@ -1933,6 +1976,20 @@ func (u *GroupStatusConfigUpsertBulk) SetAstraCheckRequestModel(v string) *Group
 func (u *GroupStatusConfigUpsertBulk) UpdateAstraCheckRequestModel() *GroupStatusConfigUpsertBulk {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateAstraCheckRequestModel()
+	})
+}
+
+// SetAstraCheckModels sets the "astra_check_models" field.
+func (u *GroupStatusConfigUpsertBulk) SetAstraCheckModels(v []map[string]interface{}) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetAstraCheckModels(v)
+	})
+}
+
+// UpdateAstraCheckModels sets the "astra_check_models" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateAstraCheckModels() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateAstraCheckModels()
 	})
 }
 

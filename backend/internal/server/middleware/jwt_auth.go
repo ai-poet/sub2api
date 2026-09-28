@@ -20,6 +20,18 @@ func NewJWTAuthMiddleware(
 	return JWTAuthMiddleware(jwtAuth(authService, userService, userService, settingService, auditService))
 }
 
+// NewJWTAuthMiddlewareWithPersonalTokens 生产 wire 使用：用户侧接口同时接受运维个人令牌（fork 本地）。
+// 令牌只能调用 PersonalTokenUserRouteAllows 放行的路由（账号安全写操作除外）；tokens 为 nil 时一律 401。
+func NewJWTAuthMiddlewareWithPersonalTokens(
+	authService *service.AuthService,
+	userService *service.UserService,
+	settingService *service.SettingService,
+	auditService *service.AuditLogService,
+	tokens PersonalTokenAuthenticator,
+) JWTAuthMiddleware {
+	return JWTAuthMiddleware(jwtAuthWithPersonalTokens(authService, userService, userService, settingService, auditService, tokens))
+}
+
 type jwtUserReader interface {
 	GetByID(ctx context.Context, id int64) (*service.User, error)
 }
@@ -35,6 +47,18 @@ func jwtAuth(
 	activityToucher userActivityToucher,
 	settingService *service.SettingService,
 	auditService *service.AuditLogService,
+) gin.HandlerFunc {
+	return jwtAuthWithPersonalTokens(authService, userService, activityToucher, settingService, auditService, nil)
+}
+
+// jwtAuthWithPersonalTokens JWT 认证；tokens 非空时 pat- 开头的 Bearer 走运维个人令牌入口（fork 本地）。
+func jwtAuthWithPersonalTokens(
+	authService *service.AuthService,
+	userService jwtUserReader,
+	activityToucher userActivityToucher,
+	settingService *service.SettingService,
+	auditService *service.AuditLogService,
+	tokens PersonalTokenAuthenticator,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 从Authorization header中提取token
@@ -54,6 +78,15 @@ func jwtAuth(
 		tokenString := strings.TrimSpace(parts[1])
 		if tokenString == "" {
 			AbortWithError(c, 401, "EMPTY_TOKEN", "Token cannot be empty")
+			return
+		}
+
+		// fork：pat- 前缀的一定不是 JWT（JWT 以 "eyJ" 开头），走运维个人令牌入口
+		if strings.HasPrefix(tokenString, service.PersonalTokenPrefix) {
+			if !validatePersonalTokenForUser(c, tokenString, tokens, activityToucher, auditService) {
+				return
+			}
+			c.Next()
 			return
 		}
 

@@ -22,6 +22,14 @@ type GroupStatusAstraCheckRun struct {
 	GroupID int64 `json:"group_id,omitempty"`
 	// ConfigID holds the value of the "config_id" field.
 	ConfigID int64 `json:"config_id,omitempty"`
+	// Platform holds the value of the "platform" field.
+	Platform string `json:"platform,omitempty"`
+	// ExpectedModel holds the value of the "expected_model" field.
+	ExpectedModel string `json:"expected_model,omitempty"`
+	// Round holds the value of the "round" field.
+	Round int `json:"round,omitempty"`
+	// ScoringVersion holds the value of the "scoring_version" field.
+	ScoringVersion string `json:"scoring_version,omitempty"`
 	// BenchmarkPackageID holds the value of the "benchmark_package_id" field.
 	BenchmarkPackageID string `json:"benchmark_package_id,omitempty"`
 	// BenchmarkVersion holds the value of the "benchmark_version" field.
@@ -58,6 +66,8 @@ type GroupStatusAstraCheckRun struct {
 	OutputTokens int64 `json:"output_tokens,omitempty"`
 	// ReasoningTokens holds the value of the "reasoning_tokens" field.
 	ReasoningTokens int64 `json:"reasoning_tokens,omitempty"`
+	// CostUsd holds the value of the "cost_usd" field.
+	CostUsd float64 `json:"cost_usd,omitempty"`
 	// LatencyMs holds the value of the "latency_ms" field.
 	LatencyMs *int64 `json:"latency_ms,omitempty"`
 	// HTTPCode holds the value of the "http_code" field.
@@ -80,9 +90,11 @@ func (*GroupStatusAstraCheckRun) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case groupstatusastracheckrun.FieldMatches, groupstatusastracheckrun.FieldCells, groupstatusastracheckrun.FieldReasons, groupstatusastracheckrun.FieldSamples:
 			values[i] = new([]byte)
-		case groupstatusastracheckrun.FieldID, groupstatusastracheckrun.FieldGroupID, groupstatusastracheckrun.FieldConfigID, groupstatusastracheckrun.FieldAccountID, groupstatusastracheckrun.FieldRequestsPlanned, groupstatusastracheckrun.FieldRequestsCompleted, groupstatusastracheckrun.FieldValidSamples, groupstatusastracheckrun.FieldInputTokens, groupstatusastracheckrun.FieldOutputTokens, groupstatusastracheckrun.FieldReasoningTokens, groupstatusastracheckrun.FieldLatencyMs, groupstatusastracheckrun.FieldHTTPCode:
+		case groupstatusastracheckrun.FieldCostUsd:
+			values[i] = new(sql.NullFloat64)
+		case groupstatusastracheckrun.FieldID, groupstatusastracheckrun.FieldGroupID, groupstatusastracheckrun.FieldConfigID, groupstatusastracheckrun.FieldRound, groupstatusastracheckrun.FieldAccountID, groupstatusastracheckrun.FieldRequestsPlanned, groupstatusastracheckrun.FieldRequestsCompleted, groupstatusastracheckrun.FieldValidSamples, groupstatusastracheckrun.FieldInputTokens, groupstatusastracheckrun.FieldOutputTokens, groupstatusastracheckrun.FieldReasoningTokens, groupstatusastracheckrun.FieldLatencyMs, groupstatusastracheckrun.FieldHTTPCode:
 			values[i] = new(sql.NullInt64)
-		case groupstatusastracheckrun.FieldBenchmarkPackageID, groupstatusastracheckrun.FieldBenchmarkVersion, groupstatusastracheckrun.FieldBenchmarkSha256, groupstatusastracheckrun.FieldRequestModel, groupstatusastracheckrun.FieldTier, groupstatusastracheckrun.FieldVerdict, groupstatusastracheckrun.FieldWinnerModel, groupstatusastracheckrun.FieldErrorDetail:
+		case groupstatusastracheckrun.FieldPlatform, groupstatusastracheckrun.FieldExpectedModel, groupstatusastracheckrun.FieldScoringVersion, groupstatusastracheckrun.FieldBenchmarkPackageID, groupstatusastracheckrun.FieldBenchmarkVersion, groupstatusastracheckrun.FieldBenchmarkSha256, groupstatusastracheckrun.FieldRequestModel, groupstatusastracheckrun.FieldTier, groupstatusastracheckrun.FieldVerdict, groupstatusastracheckrun.FieldWinnerModel, groupstatusastracheckrun.FieldErrorDetail:
 			values[i] = new(sql.NullString)
 		case groupstatusastracheckrun.FieldStartedAt, groupstatusastracheckrun.FieldFinishedAt, groupstatusastracheckrun.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -118,6 +130,30 @@ func (_m *GroupStatusAstraCheckRun) assignValues(columns []string, values []any)
 				return fmt.Errorf("unexpected type %T for field config_id", values[i])
 			} else if value.Valid {
 				_m.ConfigID = value.Int64
+			}
+		case groupstatusastracheckrun.FieldPlatform:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field platform", values[i])
+			} else if value.Valid {
+				_m.Platform = value.String
+			}
+		case groupstatusastracheckrun.FieldExpectedModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field expected_model", values[i])
+			} else if value.Valid {
+				_m.ExpectedModel = value.String
+			}
+		case groupstatusastracheckrun.FieldRound:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field round", values[i])
+			} else if value.Valid {
+				_m.Round = int(value.Int64)
+			}
+		case groupstatusastracheckrun.FieldScoringVersion:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field scoring_version", values[i])
+			} else if value.Valid {
+				_m.ScoringVersion = value.String
 			}
 		case groupstatusastracheckrun.FieldBenchmarkPackageID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -236,6 +272,12 @@ func (_m *GroupStatusAstraCheckRun) assignValues(columns []string, values []any)
 			} else if value.Valid {
 				_m.ReasoningTokens = value.Int64
 			}
+		case groupstatusastracheckrun.FieldCostUsd:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field cost_usd", values[i])
+			} else if value.Valid {
+				_m.CostUsd = value.Float64
+			}
 		case groupstatusastracheckrun.FieldLatencyMs:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field latency_ms", values[i])
@@ -317,6 +359,18 @@ func (_m *GroupStatusAstraCheckRun) String() string {
 	builder.WriteString("config_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ConfigID))
 	builder.WriteString(", ")
+	builder.WriteString("platform=")
+	builder.WriteString(_m.Platform)
+	builder.WriteString(", ")
+	builder.WriteString("expected_model=")
+	builder.WriteString(_m.ExpectedModel)
+	builder.WriteString(", ")
+	builder.WriteString("round=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Round))
+	builder.WriteString(", ")
+	builder.WriteString("scoring_version=")
+	builder.WriteString(_m.ScoringVersion)
+	builder.WriteString(", ")
 	builder.WriteString("benchmark_package_id=")
 	builder.WriteString(_m.BenchmarkPackageID)
 	builder.WriteString(", ")
@@ -372,6 +426,9 @@ func (_m *GroupStatusAstraCheckRun) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("reasoning_tokens=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ReasoningTokens))
+	builder.WriteString(", ")
+	builder.WriteString("cost_usd=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CostUsd))
 	builder.WriteString(", ")
 	if v := _m.LatencyMs; v != nil {
 		builder.WriteString("latency_ms=")
