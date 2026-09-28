@@ -2469,144 +2469,40 @@ export type GroupStatusValidationMode = 'non_empty' | 'keywords_any' | 'keywords
 export type GroupStatusEventType =
   | 'up'
   | 'down'
-  | 'modeltrace_mismatch'
-  | 'modeltrace_recovered'
-  // 已下线的纯 Sol 验证（Juice）留下的历史事件
-  | 'sol_juice_mismatch'
-  | 'sol_juice_recovered'
   | 'astra_mismatch'
   | 'astra_recovered'
+  // 已下线的纯 Sol 验证（Juice）与 ModelTrace 留下的历史事件
+  | 'sol_juice_mismatch'
+  | 'sol_juice_recovered'
+  | 'modeltrace_mismatch'
+  | 'modeltrace_recovered'
 
-// ModelTrace 指纹验证（数字分布指纹）
-export type ModelTraceVerdict = '' | 'match' | 'mismatch' | 'inconclusive'
-export type ModelTraceStableStatus = '' | 'pass' | 'mismatch'
-export type ModelTracePhase = 'selecting_account' | 'running' | 'scoring'
-export type ModelTraceAttemptOutcome = 'accepted' | 'rejected' | 'failed'
-
-export interface ModelTraceTarget {
-  id: string
-  display_name: string
-}
-
-export interface ModelTraceRankEntry {
-  model: string
-  display_name: string
-  family: string
-  family_name: string
-  probability: number
-  conditional_probability: number
-  score: number
-}
-
-export interface ModelTraceFamilyProbability {
-  family: string
-  display_name: string
-  probability: number
-}
-
-// 一条挑战的诊断记录（只在管理端的运行记录里）
-export interface ModelTraceOutputRecord {
-  seq: number
-  challenge_id: string
-  prompt: string
-  expected_count: number
-  minimum_numbers: number
-  parsed_numbers: number
-  accepted: boolean
-  rejection?: string
-  stop_reason?: string
-  thinking_present: boolean
-  http_code?: number | null
-  attempts: number
-  latency_ms: number
-  input_tokens: number
-  output_tokens: number
-  reasoning_tokens: number
-  error?: string
-  excerpt?: string
-  numbers?: number[]
-  top_model?: string
-  top_probability?: number
-}
-
-export interface ModelTraceAttemptProgress {
-  seq: number
-  expected_count: number
-  parsed_numbers: number
-  minimum_numbers: number
-  outcome: ModelTraceAttemptOutcome
-  rejection?: string
-  stop_reason?: string
-  http_code: number | null
-  latency_ms: number
-  at: string
-}
-
-export interface ModelTraceProgress {
-  round: number
-  phase: ModelTracePhase
-  account_id: number | null
-  planned: number
-  target: number
-  used: number
-  accepted: number
-  rejected: number
-  failed: number
-  requests: number
-  in_flight: number
-  started_at: string
-  updated_at: string
-  elapsed_ms: number
-  attempts: ModelTraceAttemptProgress[]
-}
-
-export interface ModelTraceLastRun {
-  id: number
-  group_id: number
-  config_id: number
-  platform: string
-  bank_sha256: string
-  bank_built_at: string
-  expected_model: string
-  request_model: string
-  account_id: number | null
-  account_type: string
-  round: number
-  verdict: ModelTraceVerdict
-  outcome: string
-  top_model: string
-  top_probability: number
-  expected_probability: number | null
-  calibration_queries: number
-  beta: number
-  ranking: ModelTraceRankEntry[]
-  family_probabilities: ModelTraceFamilyProbability[]
-  reasons: string[]
-  outputs: ModelTraceOutputRecord[]
-  attempts_planned: number
-  attempts_made: number
-  valid_outputs: number
-  input_tokens: number
-  output_tokens: number
-  reasoning_tokens: number
-  cost_usd: number
-  latency_ms: number | null
-  http_code: number | null
-  error_detail: string
-  started_at: string
-  finished_at: string
-  created_at: string
-}
-
-// Astra 指纹验证（meow 基准，行为指纹）
+// meow 指纹验证（v3 基准，行为指纹，多模型）；历史名 Astra 指纹验证，字段沿用 astra_check_*
 export type AstraCheckVerdict = '' | 'match' | 'mismatch' | 'insufficient'
 export type AstraCheckStableStatus = '' | 'pass' | 'mismatch'
 export type AstraCheckTier = 'low' | 'medium' | 'high'
 
+// 分组要检测的一个预期模型；request_model 为空表示用目标的默认请求模型名
+export interface AstraCheckModelConfig {
+  expected_model: string
+  request_model: string
+}
+
+// 某平台可选的预期模型，以及判定它所用的基准包
+export interface AstraCheckTarget {
+  id: string
+  display_name: string
+  platform: string
+  default_request_model: string
+  package_id: string
+}
+
 export interface AstraCheckModelMatch {
   model: string
   name: string
+  // 对数证据（other 取最接近参考源的证据）
   score: number
+  // 每条有效答案相对最强对手对数优势的 sigmoid，不是身份概率
   match: number
   threshold: number
   passed: boolean
@@ -2616,12 +2512,23 @@ export interface AstraBenchmarkModel {
   id: string
   name: string
   request_model: string
+  reference_only?: boolean
 }
 
 export interface AstraBenchmarkTierMeta {
   tier: AstraCheckTier
   requests: number
   calibrated: boolean
+}
+
+export interface AstraBenchmarkMeta {
+  package_id: string
+  version: string
+  mode: 'gpt' | 'claude' | string
+  content_sha256: string
+  body_sha256: string
+  models: AstraBenchmarkModel[]
+  tiers: AstraBenchmarkTierMeta[]
 }
 
 export type AstraCheckPhase = 'selecting_account' | 'running' | 'scoring'
@@ -2642,7 +2549,11 @@ export interface AstraCheckSampleRecord {
   at: string
 }
 
+// 一次运行依次检测多个模型：expected_model / model_index / model_count 表示正在检测第几个（从 1 开始）
 export interface AstraCheckProgress {
+  expected_model: string
+  model_index: number
+  model_count: number
   round: number
   phase: AstraCheckPhase
   account_id: number | null
@@ -2661,23 +2572,51 @@ export interface AstraCheckProgress {
 
 export interface AstraCheckCellSummary {
   cell_id: string
-  family_id: string
   planned: number
   total: number
   valid: number
   invalid: number
   minimum: number
-  weight: number
   categories: Record<string, number>
+}
+
+// 某个（分组, 预期模型）的最近结果与稳定结论；summary 按配置顺序给出，未检测过的模型也有占位
+export interface AstraCheckState {
+  id: number
+  group_id: number
+  config_id: number
+  expected_model: string
+  display_name: string
+  verdict: AstraCheckVerdict
+  stable_status: AstraCheckStableStatus
+  winner: string
+  matches: AstraCheckModelMatch[]
+  reasons: string[]
+  detail: string
+  checked_at: string | null
+  consecutive_mismatch: number
+  valid_samples: number
+  planned_samples: number
+  input_tokens: number
+  output_tokens: number
+  reasoning_tokens: number
+  last_cost_usd: number
+  last_run_id: number | null
+  benchmark_package_id: string
+  benchmark_version: string
 }
 
 export interface AstraCheckLastRun {
   id: number
   group_id: number
   config_id: number
+  platform: string
+  expected_model: string
+  round: number
   benchmark_package_id: string
   benchmark_version: string
   benchmark_sha256: string
+  scoring_version: string
   request_model: string
   tier: AstraCheckTier
   account_id: number | null
@@ -2693,6 +2632,7 @@ export interface AstraCheckLastRun {
   input_tokens: number
   output_tokens: number
   reasoning_tokens: number
+  cost_usd: number
   latency_ms: number | null
   http_code: number | null
   error_detail: string
@@ -2713,12 +2653,8 @@ export interface GroupStatusConfig {
   timeout_seconds: number
   slow_latency_ms: number
   notify_enabled: boolean
-  modeltrace_enabled: boolean
-  modeltrace_expected_model: string
-  modeltrace_request_model: string
-  modeltrace_interval_seconds: number
   astra_check_enabled: boolean
-  astra_check_request_model: string
+  astra_check_models: AstraCheckModelConfig[]
   astra_check_tier: AstraCheckTier
   astra_check_interval_seconds: number
   created_at: string
@@ -2742,62 +2678,23 @@ export interface GroupStatusSummary {
   observed_at: string | null
   consecutive_down: number
   consecutive_non_down: number
-  modeltrace_enabled: boolean
-  modeltrace_expected_model: string
-  modeltrace_request_model: string
-  modeltrace_interval_seconds: number
-  modeltrace_verdict: ModelTraceVerdict
-  modeltrace_stable_status: ModelTraceStableStatus
-  modeltrace_run_expected_model: string
-  modeltrace_top_model: string
-  modeltrace_top_probability: number
-  modeltrace_expected_probability: number | null
-  modeltrace_ranking: ModelTraceRankEntry[]
-  modeltrace_reasons: string[]
-  modeltrace_detail: string
-  modeltrace_checked_at: string | null
-  modeltrace_consecutive_mismatch: number
-  modeltrace_valid_outputs: number
-  modeltrace_input_tokens: number
-  modeltrace_output_tokens: number
-  modeltrace_reasoning_tokens: number
-  modeltrace_last_cost_usd: number
-  modeltrace_running: boolean
-  modeltrace_bank_sha256: string
-  modeltrace_bank_built_at: string
   astra_check_enabled: boolean
-  astra_check_request_model: string
+  astra_check_models: AstraCheckModelConfig[]
   astra_check_tier: AstraCheckTier
   astra_check_interval_seconds: number
-  astra_check_verdict: AstraCheckVerdict
-  astra_check_stable_status: AstraCheckStableStatus
-  astra_check_winner: string
-  astra_check_matches: AstraCheckModelMatch[]
-  astra_check_reasons: string[]
-  astra_check_detail: string
-  astra_check_checked_at: string | null
-  astra_check_consecutive_mismatch: number
-  astra_check_valid_samples: number
-  astra_check_planned_samples: number
-  astra_check_input_tokens: number
-  astra_check_output_tokens: number
-  astra_check_reasoning_tokens: number
-  astra_check_last_cost_usd: number
+  astra_check_states: AstraCheckState[]
   astra_check_running: boolean
-  astra_check_benchmark_version: string
-  astra_check_benchmark_models: AstraBenchmarkModel[]
-  astra_check_benchmark_tiers: AstraBenchmarkTierMeta[]
+  astra_check_benchmarks: AstraBenchmarkMeta[]
 }
 
 export interface GroupStatusAdminView {
   group: Group
   config: GroupStatusConfig
   summary: GroupStatusSummary
+  astra_check_targets?: AstraCheckTarget[] | null
   astra_check_progress?: AstraCheckProgress | null
-  astra_check_last_run?: AstraCheckLastRun | null
-  modeltrace_targets?: ModelTraceTarget[] | null
-  modeltrace_progress?: ModelTraceProgress | null
-  modeltrace_last_run?: ModelTraceLastRun | null
+  // 每个已配置模型最近一次运行的完整记录（含逐请求样本），按配置顺序
+  astra_check_last_runs?: AstraCheckLastRun[] | null
 }
 
 export interface GroupStatusHistoryBucket {

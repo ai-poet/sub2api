@@ -14,7 +14,7 @@ import type {
   CreateGroupRequest,
   UpdateGroupRequest,
   PaginatedResponse
-, GroupStatusAdminView, GroupStatusSummary } from '@/types'
+, GroupStatusAdminView, GroupStatusSummary, AstraCheckModelConfig } from '@/types'
 
 export interface LiveCapability {
   supported: boolean
@@ -502,7 +502,6 @@ export const groupsAPI = {
   getRuntimeStatus,
   updateRuntimeStatus,
   probeRuntimeStatus,
-  probeRuntimeStatusModelTrace,
   probeRuntimeStatusAstraCheck,
   getRuntimeStatusSummary
 }
@@ -524,12 +523,8 @@ export async function updateRuntimeStatus(
     timeout_seconds: number
     slow_latency_ms: number
     notify_enabled: boolean
-    modeltrace_enabled?: boolean
-    modeltrace_expected_model?: string
-    modeltrace_request_model?: string
-    modeltrace_interval_seconds?: number
     astra_check_enabled?: boolean
-    astra_check_request_model?: string
+    astra_check_models?: AstraCheckModelConfig[]
     astra_check_tier?: 'low' | 'medium' | 'high'
     astra_check_interval_seconds?: number
   }
@@ -541,18 +536,12 @@ export async function updateRuntimeStatus(
   return data
 }
 
-// 后台启动一次 Astra 指纹验证（20+ 个请求，超出前端 30s 超时），返回时 summary.astra_check_running 为 true，需轮询
-export async function probeRuntimeStatusAstraCheck(id: number): Promise<GroupStatusAdminView> {
+// 后台启动一次 meow 指纹验证（每个模型 30+ 个请求，超出前端 30s 超时），返回时 summary.astra_check_running 为 true，需轮询。
+// expectedModel 为空时检测分组配置的全部模型，否则只检测该模型（必须在配置里）。
+export async function probeRuntimeStatusAstraCheck(id: number, expectedModel?: string): Promise<GroupStatusAdminView> {
   const { data } = await apiClient.post<GroupStatusAdminView>(
-    `/admin/groups/${id}/runtime-status/astra-check/probe`
-  )
-  return data
-}
-
-// 后台启动一次 ModelTrace 指纹验证（3–6 条长输出请求，可能持续数分钟），返回时 summary.modeltrace_running 为 true，需轮询
-export async function probeRuntimeStatusModelTrace(id: number): Promise<GroupStatusAdminView> {
-  const { data } = await apiClient.post<GroupStatusAdminView>(
-    `/admin/groups/${id}/runtime-status/modeltrace/probe`
+    `/admin/groups/${id}/runtime-status/astra-check/probe`,
+    expectedModel ? { expected_model: expectedModel } : {}
   )
   return data
 }

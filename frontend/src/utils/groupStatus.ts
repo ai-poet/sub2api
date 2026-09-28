@@ -117,144 +117,12 @@ export function shortenRuntimeExcerpt(text?: string | null, maxLength: number = 
   return `${trimmed.slice(0, maxLength).trimEnd()}...`
 }
 
-// ==================== ModelTrace 指纹验证（数字分布指纹） ====================
-
-export type NormalizedModelTraceStatus = 'pass' | 'mismatch' | 'suspect' | 'inconclusive' | 'pending' | 'unknown'
-
-// 稳定 mismatch（连续 2 次确认）优先显示红色；否则看最近一次结果：match → 一致，
-// 单次 mismatch → 疑似（等复测），inconclusive → 未能判定。刚换了预期模型、还没按新预期跑过时显示待检测。
-export function normalizeModelTraceStatus(
-  stable?: string | null,
-  verdict?: string | null,
-  runExpectedModel?: string | null,
-  expectedModel?: string | null
-): NormalizedModelTraceStatus {
-  const ran = (runExpectedModel || '').trim()
-  const expected = (expectedModel || '').trim()
-  if (ran && expected && ran !== expected) {
-    return 'pending'
-  }
-  if (stable === 'mismatch') {
-    return 'mismatch'
-  }
-  switch (verdict) {
-    case 'match':
-      return 'pass'
-    case 'mismatch':
-      return 'suspect'
-    case 'inconclusive':
-      return 'inconclusive'
-    default:
-      return stable === 'pass' ? 'pass' : 'unknown'
-  }
-}
-
-export function getModelTraceBadgeClass(status?: string | null): string {
-  switch (status) {
-    case 'pass':
-      return 'badge-success'
-    case 'mismatch':
-      return 'badge-danger'
-    case 'suspect':
-    case 'inconclusive':
-      return 'badge-warning'
-    default:
-      return 'badge-gray'
-  }
-}
-
-export function isModelTraceEvent(eventType?: string | null): boolean {
-  return eventType === 'modeltrace_mismatch' || eventType === 'modeltrace_recovered'
-}
-
-// 已下线的纯 Sol 验证（Juice）留下的历史事件
-export function isLegacySolJuiceEvent(eventType?: string | null): boolean {
-  return eventType === 'sol_juice_mismatch' || eventType === 'sol_juice_recovered'
-}
-
-const MODEL_TRACE_MODEL_LABELS: Record<string, string> = {
-  'gpt-5.4': 'GPT-5.4',
-  'gpt-5.5': 'GPT-5.5',
-  'gpt-5.6-sol': 'GPT-5.6 Sol',
-  'gpt-5.6-terra': 'GPT-5.6 Terra',
-  'gpt-5.6-luna': 'GPT-5.6 Luna',
-  'gpt-6-astra': 'GPT-6 Astra',
-  'gpt-6-sol': 'GPT-6 Sol',
-  'gpt-6-luna': 'GPT-6 Luna',
-  'claude-haiku-4-5-20251001': 'Claude Haiku 4.5',
-  'claude-sonnet-4-6': 'Claude Sonnet 4.6',
-  'claude-sonnet-5': 'Claude Sonnet 5',
-  'claude-opus-4-6': 'Claude Opus 4.6',
-  'claude-opus-4-7': 'Claude Opus 4.7',
-  'claude-opus-4-8': 'Claude Opus 4.8',
-  'claude-opus-5': 'Claude Opus 5',
-  'claude-opus-5-5': 'Claude Opus 5.5'
-}
-
-// 指纹库模型 id → 可读名；未知 id 原样返回
-export function modelTraceModelLabel(model?: string | null): string {
-  const id = (model || '').trim()
-  if (!id) {
-    return '?'
-  }
-  return MODEL_TRACE_MODEL_LABELS[id] || id
-}
-
-export function getGroupRuntimeEventBadgeClass(eventType?: string | null): string {
-  switch (eventType) {
-    case 'down':
-    case 'modeltrace_mismatch':
-    case 'sol_juice_mismatch':
-    case 'astra_mismatch':
-      return 'badge-danger'
-    case 'up':
-    case 'modeltrace_recovered':
-    case 'sol_juice_recovered':
-    case 'astra_recovered':
-      return 'badge-success'
-    default:
-      return 'badge-gray'
-  }
-}
-
-export function formatUsd(value?: number | null, digits: number = 4): string {
-  if (value === null || value === undefined || !Number.isFinite(value)) {
-    return '-'
-  }
-  return `$${value.toFixed(digits)}`
-}
-
-// 按当前间隔把最近一次成本折算成每月（30 天）估算；没有样本时返回 null
-export function estimateMonthlyProbeCostUsd(
-  lastCostUsd?: number | null,
-  intervalSeconds?: number | null
-): number | null {
-  if (
-    lastCostUsd === null ||
-    lastCostUsd === undefined ||
-    !Number.isFinite(lastCostUsd) ||
-    lastCostUsd <= 0 ||
-    !intervalSeconds ||
-    intervalSeconds <= 0
-  ) {
-    return null
-  }
-  return lastCostUsd * ((30 * 86400) / intervalSeconds)
-}
-
-// ==================== Astra 指纹验证（meow 基准，行为指纹） ====================
+// ==================== meow 指纹验证（v3 基准，行为指纹，多模型） ====================
 
 export type NormalizedAstraCheckStatus = 'pass' | 'mismatch' | 'suspect' | 'insufficient' | 'unknown'
 
-// 样本齐全但 Astra 未达自身阈值：后端按 mismatch 计数，文案区分为「最接近 X」而不是「强指向 X」
-export const ASTRA_BELOW_THRESHOLD_REASON = 'astra_below_threshold'
-
-export function isAstraSoftMismatch(reasons?: string[] | null): boolean {
-  return Array.isArray(reasons) && reasons.includes(ASTRA_BELOW_THRESHOLD_REASON)
-}
-
 // 稳定 mismatch（连续 2 次确认）优先显示红色；否则显示最近一次结果：
-// match → 正常，单次 mismatch → 疑似（等复测），insufficient → 证据不足。旧的绿色不会盖住新结果。
+// match → 一致，单次 mismatch → 疑似（等复测），insufficient → 证据不足。旧的绿色不会盖住新结果。
 export function normalizeAstraCheckStatus(
   stable?: string | null,
   verdict?: string | null
@@ -288,34 +156,116 @@ export function getAstraCheckBadgeClass(status?: string | null): string {
   }
 }
 
-// mismatch 文案分三种：强指向某模型 / 只是 Astra 未达阈值（最接近某模型）/ 最近一次没有 winner
-export function astraMismatchTextKey(winner?: string | null, reasons?: string[] | null): 'mismatch' | 'mismatchSoft' | 'mismatchNoWinner' {
-  if (!(winner || '').trim()) {
-    return 'mismatchNoWinner'
-  }
-  return isAstraSoftMismatch(reasons) ? 'mismatchSoft' : 'mismatch'
-}
-
 export function isAstraCheckEvent(eventType?: string | null): boolean {
   return eventType === 'astra_mismatch' || eventType === 'astra_recovered'
 }
 
-export function astraModelShortName(model?: string | null): string {
-  switch ((model || '').trim()) {
-    case 'gpt-6-astra':
-    case 'gpt-6':
-      return 'Astra'
-    case 'gpt-5.6-sol':
-      return 'Sol'
-    case 'gpt-5.6-terra':
-      return 'Terra'
-    case 'gpt-5.6-luna':
-      return 'Luna'
-    case '':
-      return '?'
+// 已下线的纯 Sol 验证（Juice）与 ModelTrace 留下的历史事件
+export function isLegacyFingerprintEvent(eventType?: string | null): boolean {
+  switch (eventType) {
+    case 'sol_juice_mismatch':
+    case 'sol_juice_recovered':
+    case 'modeltrace_mismatch':
+    case 'modeltrace_recovered':
+      return true
     default:
-      return (model || '').trim()
+      return false
   }
+}
+
+// 与后端 astraModelLabels 一致；另收 ModelTrace 时代的 id，供历史事件显示
+const ASTRA_MODEL_LABELS: Record<string, string> = {
+  'gpt-6-astra': 'GPT-6 Astra',
+  'gpt-6-sol': 'GPT-6 Sol',
+  'gpt-6-luna': 'GPT-6 Luna',
+  'gpt-5.6-sol': 'GPT-5.6 Sol',
+  'gpt-5.6-terra': 'GPT-5.6 Terra',
+  'gpt-5.6-luna': 'GPT-5.6 Luna',
+  'claude-opus-5.5': 'Claude Opus 5.5',
+  'claude-opus-5-5': 'Claude Opus 5.5',
+  'claude-fable-5.1': 'Claude Fable 5.1',
+  'claude-sonnet-5': 'Claude Sonnet 5',
+  'claude-haiku-4.5': 'Claude Haiku 4.5',
+  other_known_external: 'other'
+}
+
+// 候选 id → 可读名；未知 id 原样返回。other_known_external 返回 'other'，由调用方换成本地化文案
+export function astraModelLabel(model?: string | null): string {
+  const id = (model || '').trim()
+  if (!id) {
+    return '?'
+  }
+  return ASTRA_MODEL_LABELS[id] || id
+}
+
+export const ASTRA_OTHER_MODEL = 'other_known_external'
+
+export interface AstraEventModels {
+  expected: string
+  winner: string
+}
+
+// 事件 sub_status 形如 <expected>:winner_<winner>（winner 缺失时为 unknown）；
+// 单模型时代的旧事件只有 winner_<winner>，预期模型固定是 GPT-6 Astra。
+export function parseAstraEventSubStatus(subStatus?: string | null): AstraEventModels {
+  const raw = (subStatus || '').trim()
+  const marker = ':winner_'
+  const idx = raw.lastIndexOf(marker)
+  let expected = ''
+  let winner = ''
+  if (idx >= 0) {
+    expected = raw.slice(0, idx)
+    winner = raw.slice(idx + marker.length)
+  } else if (raw.startsWith('winner_')) {
+    expected = 'gpt-6-astra'
+    winner = raw.slice('winner_'.length)
+  }
+  if (winner === 'unknown') {
+    winner = ''
+  }
+  return { expected, winner }
+}
+
+export function getGroupRuntimeEventBadgeClass(eventType?: string | null): string {
+  switch (eventType) {
+    case 'down':
+    case 'astra_mismatch':
+    case 'modeltrace_mismatch':
+    case 'sol_juice_mismatch':
+      return 'badge-danger'
+    case 'up':
+    case 'astra_recovered':
+    case 'modeltrace_recovered':
+    case 'sol_juice_recovered':
+      return 'badge-success'
+    default:
+      return 'badge-gray'
+  }
+}
+
+export function formatUsd(value?: number | null, digits: number = 4): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return '-'
+  }
+  return `$${value.toFixed(digits)}`
+}
+
+// 按当前间隔把最近一次成本折算成每月（30 天）估算；没有样本时返回 null
+export function estimateMonthlyProbeCostUsd(
+  lastCostUsd?: number | null,
+  intervalSeconds?: number | null
+): number | null {
+  if (
+    lastCostUsd === null ||
+    lastCostUsd === undefined ||
+    !Number.isFinite(lastCostUsd) ||
+    lastCostUsd <= 0 ||
+    !intervalSeconds ||
+    intervalSeconds <= 0
+  ) {
+    return null
+  }
+  return lastCostUsd * ((30 * 86400) / intervalSeconds)
 }
 
 export function formatMatchPercent(value?: number | null): string {

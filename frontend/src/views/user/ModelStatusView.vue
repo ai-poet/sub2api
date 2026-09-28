@@ -116,20 +116,16 @@
                       <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(item))]">
                         {{ getSummaryStatusText(item.summary) }}
                       </span>
-                      <span
-                        v-if="item.summary.modeltrace_enabled"
-                        :class="['badge', getModelTraceBadgeClass(getModelTraceStatus(item.summary))]"
-                        :title="item.summary.modeltrace_checked_at ? formatDateTime(item.summary.modeltrace_checked_at) : ''"
-                      >
-                        {{ getModelTraceText(item.summary) }}
-                      </span>
-                      <span
-                        v-if="item.summary.astra_check_enabled"
-                        :class="['badge', getAstraCheckBadgeClass(getAstraCheckStatus(item.summary))]"
-                        :title="item.summary.astra_check_checked_at ? formatDateTime(item.summary.astra_check_checked_at) : ''"
-                      >
-                        {{ getAstraCheckText(item.summary) }}
-                      </span>
+                      <template v-if="item.summary.astra_check_enabled">
+                        <span
+                          v-for="state in item.summary.astra_check_states ?? []"
+                          :key="state.expected_model"
+                          :class="['badge', getAstraCheckBadgeClass(getAstraStateStatus(state))]"
+                          :title="state.checked_at ? formatDateTime(state.checked_at) : ''"
+                        >
+                          {{ getAstraStateText(state) }}
+                        </span>
+                      </template>
                     </div>
 
                     <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
@@ -249,20 +245,16 @@
             <span :class="['badge', getGroupRuntimeStatusBadgeClass(getItemStatus(selectedItem))]">
               {{ getSummaryStatusText(selectedItem.summary) }}
             </span>
-            <span
-              v-if="selectedItem.summary.modeltrace_enabled"
-              :class="['badge', getModelTraceBadgeClass(getModelTraceStatus(selectedItem.summary))]"
-              :title="selectedItem.summary.modeltrace_checked_at ? formatDateTime(selectedItem.summary.modeltrace_checked_at) : ''"
-            >
-              {{ getModelTraceText(selectedItem.summary) }}
-            </span>
-            <span
-              v-if="selectedItem.summary.astra_check_enabled"
-              :class="['badge', getAstraCheckBadgeClass(getAstraCheckStatus(selectedItem.summary))]"
-              :title="selectedItem.summary.astra_check_checked_at ? formatDateTime(selectedItem.summary.astra_check_checked_at) : ''"
-            >
-              {{ getAstraCheckText(selectedItem.summary) }}
-            </span>
+            <template v-if="selectedItem.summary.astra_check_enabled">
+              <span
+                v-for="state in selectedItem.summary.astra_check_states ?? []"
+                :key="state.expected_model"
+                :class="['badge', getAstraCheckBadgeClass(getAstraStateStatus(state))]"
+                :title="state.checked_at ? formatDateTime(state.checked_at) : ''"
+              >
+                {{ getAstraStateText(state) }}
+              </span>
+            </template>
           </div>
         </div>
 
@@ -397,6 +389,9 @@
                       <span :class="['badge', getGroupRuntimeEventBadgeClass(event.event_type)]">
                         {{ t(`modelStatus.eventTypes.${event.event_type}`) }}
                       </span>
+                      <span v-if="getAstraEventText(event)" class="text-xs font-medium text-gray-700 dark:text-gray-200">
+                        {{ getAstraEventText(event) }}
+                      </span>
                       <span class="text-xs text-gray-500 dark:text-gray-400">
                         {{ formatRelativeTime(event.observed_at) }}
                       </span>
@@ -460,6 +455,7 @@ import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAppStore } from '@/stores'
 import type {
+  AstraCheckState,
   GroupStatusEvent,
   GroupStatusHistoryBucket,
   GroupStatusListItem,
@@ -467,8 +463,8 @@ import type {
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
-  astraMismatchTextKey,
-  astraModelShortName,
+  ASTRA_OTHER_MODEL,
+  astraModelLabel,
   formatGroupRuntimeAvailability,
   formatGroupRuntimeLatency,
   getAstraCheckBadgeClass,
@@ -476,18 +472,15 @@ import {
   getGroupRuntimeStatusBadgeClass,
   getGroupRuntimeStatusBarClass,
   getGroupRuntimeStatusSurfaceClass,
-  getModelTraceBadgeClass,
   isAstraCheckEvent,
-  isLegacySolJuiceEvent,
-  isModelTraceEvent,
-  modelTraceModelLabel,
+  isLegacyFingerprintEvent,
   normalizeAstraCheckStatus,
   normalizeGroupRuntimeStatus,
-  normalizeModelTraceStatus,
+  parseAstraEventSubStatus,
   sanitizeRuntimeErrorDetail,
   shortenRuntimeExcerpt,
 } from '@/utils/groupStatus'
-import type { NormalizedAstraCheckStatus, NormalizedModelTraceStatus } from '@/utils/groupStatus'
+import type { NormalizedAstraCheckStatus } from '@/utils/groupStatus'
 
 const POLL_INTERVAL_MS = 30_000
 const HEARTBEAT_RECORD_COUNT = 24
@@ -635,64 +628,61 @@ function getRowHeartbeatCells(item: GroupStatusListItem): RowHeartbeatCell[] {
   )
 }
 
-function getModelTraceStatus(summary: GroupStatusListItem['summary']): NormalizedModelTraceStatus {
-  return normalizeModelTraceStatus(
-    summary.modeltrace_stable_status,
-    summary.modeltrace_verdict,
-    summary.modeltrace_run_expected_model,
-    summary.modeltrace_expected_model
-  )
+function astraModelName(model?: string | null): string {
+  if ((model || '').trim() === ASTRA_OTHER_MODEL) {
+    return t('modelStatus.astraCheck.otherModel')
+  }
+  return astraModelLabel(model)
 }
 
-// 公开徽章：一致 / 疑似 / 不符时带上预期模型或强指向的模型名，其余一律显示待检测
-function getModelTraceText(summary: GroupStatusListItem['summary']): string {
-  const status = getModelTraceStatus(summary)
-  const params = {
-    expected: modelTraceModelLabel(summary.modeltrace_run_expected_model || summary.modeltrace_expected_model),
-    top: modelTraceModelLabel(summary.modeltrace_top_model)
-  }
+function getAstraStateStatus(state: AstraCheckState): NormalizedAstraCheckStatus {
+  return normalizeAstraCheckStatus(state.stable_status, state.verdict)
+}
+
+// 公开徽章：每个检测的预期模型一个，带模型名；不符时带上强指向的模型，没检测过的显示待验证
+function getAstraStateText(state: AstraCheckState): string {
+  const model = state.display_name || astraModelName(state.expected_model)
+  const status = getAstraStateStatus(state)
   switch (status) {
+    case 'mismatch':
+      return state.winner
+        ? t('modelStatus.astraCheck.badge.mismatch', { model, winner: astraModelName(state.winner) })
+        : t('modelStatus.astraCheck.badge.mismatchNoWinner', { model })
     case 'pass':
     case 'suspect':
-    case 'mismatch':
-      return t(`modelStatus.modelTrace.${status}`, params)
+    case 'insufficient':
+      return t(`modelStatus.astraCheck.badge.${status}`, { model })
     default:
-      return t('modelStatus.modelTrace.pending', params)
+      return t('modelStatus.astraCheck.badge.pending', { model })
   }
 }
 
-function getAstraCheckStatus(summary: GroupStatusListItem['summary']): NormalizedAstraCheckStatus {
-  return normalizeAstraCheckStatus(summary.astra_check_stable_status, summary.astra_check_verdict)
+// 指纹事件标题旁带上是哪个预期模型（不符时附强指向的模型）；旧事件的 sub_status 没有预期模型时不显示
+function getAstraEventText(event: GroupStatusEvent): string {
+  if (!isAstraCheckEvent(event.event_type)) {
+    return ''
+  }
+  const { expected, winner } = parseAstraEventSubStatus(event.sub_status)
+  if (!expected) {
+    return ''
+  }
+  const model = astraModelName(expected)
+  if (event.event_type === 'astra_mismatch' && winner) {
+    return t('modelStatus.astraCheck.eventMismatch', { model, winner: astraModelName(winner) })
+  }
+  return model
 }
 
-function getAstraCheckText(summary: GroupStatusListItem['summary']): string {
-  const status = getAstraCheckStatus(summary)
-  if (status === 'mismatch') {
-    const key = astraMismatchTextKey(summary.astra_check_winner, summary.astra_check_reasons)
-    return t(`modelStatus.astraCheck.${key}`, { winner: astraModelShortName(summary.astra_check_winner) })
-  }
-  if (status === 'unknown') {
-    return t('modelStatus.astraCheck.pending')
-  }
-  return t(`modelStatus.astraCheck.${status}`)
-}
-
+// 指纹事件（含已下线的 Juice / ModelTrace 历史事件）的 from/to 都是 pass / mismatch，共用一组标签
 function getEventStatusBadgeClass(event: { event_type: string }, status: string): string {
-  if (isModelTraceEvent(event.event_type) || isLegacySolJuiceEvent(event.event_type)) {
-    return getModelTraceBadgeClass(normalizeModelTraceStatus(status, ''))
-  }
-  if (isAstraCheckEvent(event.event_type)) {
-    return getAstraCheckBadgeClass(status)
+  if (isAstraCheckEvent(event.event_type) || isLegacyFingerprintEvent(event.event_type)) {
+    return getAstraCheckBadgeClass(normalizeAstraCheckStatus(status, ''))
   }
   return getGroupRuntimeStatusBadgeClass(status || 'unknown')
 }
 
 function getEventStatusLabel(event: { event_type: string }, status: string): string {
-  // 旧 Juice 事件的 pass / mismatch 与 ModelTrace 同义，沿用同一组标签
-  if (isModelTraceEvent(event.event_type) || isLegacySolJuiceEvent(event.event_type)) {
-    return t(`modelStatus.modelTrace.statuses.${normalizeModelTraceStatus(status, '')}`)
-  }
-  if (isAstraCheckEvent(event.event_type)) {
+  if (isAstraCheckEvent(event.event_type) || isLegacyFingerprintEvent(event.event_type)) {
     return t(`modelStatus.astraCheck.statuses.${normalizeAstraCheckStatus(status, '')}`)
   }
   return t(`modelStatus.statuses.${normalizeGroupRuntimeStatus(status)}`)

@@ -216,40 +216,29 @@ export default {
     "eventTypes": {
       "up": "恢复",
       "down": "中断",
-      "modeltrace_mismatch": "ModelTrace 指纹不符",
-      "modeltrace_recovered": "ModelTrace 指纹恢复",
+      "astra_mismatch": "指纹不符",
+      "astra_recovered": "指纹恢复",
+      "modeltrace_mismatch": "指纹不符（旧 ModelTrace 探测）",
+      "modeltrace_recovered": "指纹恢复（旧 ModelTrace 探测）",
       "sol_juice_mismatch": "疑似非 Sol（旧 Juice 探测）",
-      "sol_juice_recovered": "Sol 验证恢复（旧 Juice 探测）",
-      "astra_mismatch": "Astra 指纹异常",
-      "astra_recovered": "Astra 指纹恢复"
+      "sol_juice_recovered": "Sol 验证恢复（旧 Juice 探测）"
     },
-    "modelTrace": {
-      "pass": "指纹一致（{expected}）",
-      "suspect": "指纹疑似不符（待复测）",
-      "mismatch": "指纹不符（强指向 {top}）",
-      "pending": "指纹待检测",
+    "astraCheck": {
+      "badge": {
+        "pass": "{model} 指纹一致",
+        "mismatch": "{model} 指纹不符（强指向 {winner}）",
+        "mismatchNoWinner": "{model} 指纹不符",
+        "suspect": "{model} 指纹疑似不符（待复测）",
+        "insufficient": "{model} 指纹证据不足",
+        "pending": "{model} 指纹待验证"
+      },
+      "eventMismatch": "{model}：强指向 {winner}",
+      "otherModel": "其他模型",
       "statuses": {
         "pass": "指纹一致",
         "mismatch": "指纹不符",
         "suspect": "指纹疑似不符",
-        "inconclusive": "指纹未能判定",
-        "pending": "指纹待检测",
-        "unknown": "未知"
-      }
-    },
-    "astraCheck": {
-      "pass": "Astra 指纹 正常",
-      "mismatch": "Astra 指纹 异常（强指向 {winner}）",
-      "mismatchSoft": "Astra 指纹 异常（非 Astra，最接近 {winner}）",
-      "mismatchNoWinner": "Astra 指纹 异常（非 Astra）",
-      "suspect": "Astra 指纹 疑似异常（待复测）",
-      "insufficient": "Astra 指纹 证据不足",
-      "pending": "Astra 指纹 待验证",
-      "statuses": {
-        "pass": "Astra 指纹正常",
-        "mismatch": "Astra 指纹不符",
-        "suspect": "Astra 指纹疑似异常",
-        "insufficient": "Astra 指纹证据不足",
+        "insufficient": "指纹证据不足",
         "unknown": "未知"
       }
     }
@@ -420,89 +409,14 @@ export default {
         "footerHint": "“立即探测”会先保存当前配置，再立即执行一次探测。",
         "notifyEnabled": "变红 / 恢复时推送提醒",
         "notifyEnabledHint": "仅当站点设置中已启用 Server酱³ 推送时生效；关闭后本分组的状态变化不再推送。",
-        "modelTrace": {
-          "title": "ModelTrace 指纹验证",
-          "hint": "向本分组的一个账号发 3 条（不够时补到最多 6 条）「凭第一反应逐项输出 292–332 个 1 到 355 的整数」的挑战，用 ModelTrace 统一指纹库对 16 个 GPT / Claude 模型做闭集归因。第一候选是预期模型且概率 ≥ 50% 判为一致；第一候选是其他模型、概率 ≥ 80% 且预期模型 ≤ 15% 判为不符。连续 2 次不符（首次会在同一账号立即复测）才判定并推送，不影响在线率。每次约输出 3–6 千 token。",
-          "bank": "指纹库",
-          "expectedModel": "预期模型",
-          "requestModel": "请求模型名（留空 = 预期模型）",
-          "intervalSeconds": "验证间隔（秒，最小 900）",
-          "latestResult": "最近一次验证",
-          "latestResultEmpty": "尚未验证。保存后等待调度，或点击“立即检测”。",
-          "verdict": "结论",
-          "topCandidate": "第一候选",
-          "expectedProbability": "预期 {model}：{probability}",
-          "checkedAt": "验证时间",
-          "validOutputs": "有效回答 {valid}/3",
-          "tokens": "Token（输入 / 输出）",
-          "lastCost": "本次成本",
-          "monthlyEstimate": "按当前间隔折算每月",
-          "ranking": "归因概率（前 5 名，含预期模型）",
-          "detail": "说明",
-          "disclaimer": "结果是指纹库内候选之间的闭集归因，仅供参考：库外模型也会被归到最相似的已收录模型，「不符」表示强烈像另一个已收录模型，不等于确证。",
-          "probeNow": "立即检测",
-          "running": "检测中...",
-          "probeStarted": "已开始 ModelTrace 检测，完成后自动刷新",
-          "probeSucceeded": "ModelTrace 检测已完成",
-          "probeFailed": "ModelTrace 检测失败",
-          "progress": {
-            "title": "第 {round} 轮进行中",
-            "phases": {
-              "selecting_account": "选择账号",
-              "running": "发送挑战",
-              "scoring": "评分"
-            },
-            "account": "账号",
-            "accepted": "有效",
-            "used": "已用挑战",
-            "rejected": "无效",
-            "failed": "失败",
-            "inFlight": "进行中"
-          },
-          "outcomes": {
-            "accepted": "有效",
-            "rejected": "无效",
-            "failed": "失败"
-          },
-          "rejections": {
-            "too_few_numbers": "数字不足",
-            "max_tokens": "达到 max_tokens 被截断",
-            "refusal": "模型拒答",
-            "stream_incomplete": "流未正常结束",
-            "stream_error": "流中报错"
-          },
-          "outputTable": {
-            "title": "最近一次运行的挑战明细（{count} 条）",
-            "runMeta": "有效 {valid}，已用 {made}/{planned}，耗时 {latency}",
-            "numbers": "数字 / 要求",
-            "result": "结果",
-            "singleTop": "单条第一候选",
-            "excerpt": "回答摘要",
-            "latency": "耗时"
-          },
-          "reasons": {
-            "unknown_expected_model": "预期模型不在指纹库中",
-            "no_valid_outputs": "没有有效回答",
-            "insufficient_outputs": "有效回答不足 2 条",
-            "ambiguous": "归因不够明确",
-            "target_not_allowed": "预期模型不适用于本分组平台",
-            "bank_invalid": "指纹库不可用",
-            "no_account": "没有可用账号"
-          },
-          "statuses": {
-            "pass": "指纹一致（{expected}）",
-            "mismatch": "指纹不符（强指向 {top}）",
-            "suspect": "疑似不符（强指向 {top}，待复测）",
-            "inconclusive": "未能判定",
-            "pending": "已更换预期模型，待检测",
-            "unknown": "待检测"
-          }
-        },
         "astraCheck": {
-          "title": "Astra 指纹验证（meow 基准）",
-          "hint": "向分组的一个 OpenAI 账号发一批固定短答题（reasoning=low），把答案分布与内置基准里 Astra / Sol / Terra / Luna 的分布比较，唯一越过阈值的模型才算强指向。连续 2 次强指向其他模型（首次会立即复测）才判定并推送，不影响在线率。低档每次 20 个请求，约 $0.01–0.05。",
-          "benchmark": "基准",
+          "title": "meow 指纹验证",
+          "hint": "向本分组一个与平台一致的账号发一批固定短答题，把答案分布交给内置的 meow v3 基准判定：每个候选按各题累计证据，只有证据唯一最高、且越过自身强指向线的候选才算强指向。可同时检测多个预期模型，每个模型各自判定、各自推送；连续 2 次强指向其他模型（首次会在同一账号立即复测）才判定不符，不影响在线率。低档每个模型 32–48 个请求。",
+          "benchmark": "基准包",
+          "models": "检测模型",
+          "modelsHint": "勾选要核对的预期模型；右侧是发往上游的请求模型名，留空用默认名。",
           "requestModel": "请求模型名",
+          "noModelSelected": "开启指纹验证时至少要勾选一个模型",
           "tier": "档位",
           "tiers": {
             "low": "低档",
@@ -510,24 +424,28 @@ export default {
             "high": "高档"
           },
           "intervalSeconds": "验证间隔（秒，最小 900）",
-          "latestResult": "最近一次验证",
-          "latestResultEmpty": "尚未验证。保存后等待调度，或点击“立即验证”。",
-          "verdict": "结论",
+          "latestResult": "各模型最近一次验证",
+          "latestResultEmpty": "还没有要检测的模型。勾选模型并保存后等待调度，或点击“全部检测”。",
+          "notChecked": "尚未检测。保存后等待调度，或点击“检测此模型”。",
           "samples": "有效样本 / 计划",
           "checkedAt": "验证时间",
           "tokens": "Token（输入 / 输出）",
           "lastCost": "最近一次成本",
           "monthlyEstimate": "按当前间隔折算每月",
-          "matches": "各候选模型匹配度",
-          "threshold": "阈值",
+          "monthlyTotal": "全部模型按当前间隔折算每月",
+          "matches": "各候选匹配度",
+          "threshold": "强指向线",
           "detail": "说明",
-          "probeNow": "立即验证",
+          "otherModel": "其他模型",
+          "disclaimer": "判定是基准包内候选之间的比较，仅供参考：包外模型会被归入「其他模型」或最接近的候选；匹配度是每条答案相对最强对手的平均优势，不是身份概率。",
+          "probeAll": "全部检测",
+          "probeModel": "检测此模型",
           "running": "验证中...",
-          "probeStarted": "Astra 指纹验证已在后台开始",
-          "probeSucceeded": "Astra 指纹验证已完成",
-          "probeFailed": "Astra 指纹验证失败",
+          "probeStarted": "meow 指纹验证已在后台开始",
+          "probeSucceeded": "meow 指纹验证已完成",
+          "probeFailed": "meow 指纹验证失败",
           "progress": {
-            "title": "第 {round} 轮验证进行中",
+            "title": "正在检测 {model}（{index}/{count}）· 第 {round} 轮",
             "phases": {
               "selecting_account": "选择账号并发首个请求",
               "running": "并发发送请求",
@@ -541,7 +459,7 @@ export default {
             "inFlight": "在途"
           },
           "sampleTable": {
-            "title": "逐请求样本（{count} 条）",
+            "title": "最近一次运行的逐请求样本（{count} 条）",
             "runMeta": "完成 {completed}/{planned}，耗时 {latency}",
             "seq": "#",
             "cell": "题目",
@@ -551,23 +469,23 @@ export default {
             "latency": "延迟"
           },
           "statuses": {
-            "pass": "Astra 指纹正常",
-            "mismatch": "Astra 指纹异常（强指向 {winner}）",
-            "mismatchSoft": "Astra 指纹异常（非 Astra，最接近 {winner}）",
-            "mismatchNoWinner": "Astra 指纹异常（非 Astra）",
-            "suspect": "Astra 指纹疑似异常（待复测确认）",
-            "insufficient": "Astra 指纹证据不足",
+            "pass": "指纹一致",
+            "mismatch": "指纹不符（强指向 {winner}）",
+            "mismatchNoWinner": "指纹不符",
+            "suspect": "疑似不符（强指向 {winner}，待复测确认）",
+            "suspectNoWinner": "疑似不符（待复测确认）",
+            "insufficient": "证据不足",
             "unknown": "待验证"
           },
           "reasons": {
-            "astra_below_threshold": "Astra 未达自身阈值（非 Astra 特征）",
             "samples_incomplete": "有效样本不足",
-            "samples_exceed_plan": "样本数超出计划",
-            "baseline_cell_missing": "基准缺少该题",
-            "no_weighted_family": "没有可用权重的题族",
+            "no_valid_samples": "没有有效样本",
+            "no_strong_direction": "没有候选形成强指向",
             "uncalibrated": "该档位未校准",
-            "no_threshold": "没有模型越过阈值",
-            "multiple_thresholds": "多个模型越过阈值",
+            "target_not_allowed": "预期模型不适用于本分组平台",
+            "target_not_in_benchmark": "基准包里没有该模型",
+            "benchmark_invalid": "基准包不可用",
+            "no_account": "没有可用账号",
             "scoring_failed": "判定计算失败",
             "empty_result": "空结果"
           }
