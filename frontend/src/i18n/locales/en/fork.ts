@@ -411,8 +411,13 @@ export default {
         "notifyEnabledHint": "Only effective when Server酱³ push is enabled in site settings; turn off to silence this group.",
         "astraCheck": {
           "title": "meow fingerprint check",
-          "hint": "Sends a batch of fixed short-answer prompts to one account of this group that matches its platform and scores the answer distribution against the bundled meow v3 benchmark: every candidate accumulates evidence per prompt, and only a candidate whose evidence is uniquely highest and clears its own strong-direction line counts as a strong match. Several expected models can be checked at once; each is judged and pushed on its own. Two consecutive strong matches on another model (the first triggers an immediate re-run on the same account) flip the verdict; availability is not affected. The default medium tier (recommended by meow) sends 64–96 requests per model; the low tier halves that but lets models with spread-out answers such as Sol drift more easily.",
+          "hint": "Sends a batch of fixed short-answer prompts to one account of this group that matches its platform and scores the answer distribution against the bundled meow v3 benchmark: every candidate accumulates evidence per prompt, and only a candidate whose evidence is uniquely highest and clears its own strong-direction line counts as a strong match. Several expected models can be checked at once; each is judged and pushed on its own. Two consecutive strong matches on another model (the first triggers an immediate re-run on the same account) flip the verdict; availability is not affected. GPT-5.6 Sol uses the Juice reading instead (one request at reasoning=high, Sol should answer 40) and ignores the tier. The default medium tier (recommended by meow) sends 64–96 requests per model; the low tier halves that but lets models with spread-out answers such as Sol drift more easily.",
           "benchmark": "Benchmark",
+          "methods": {
+            "meow": "meow benchmark",
+            "sol_juice": "Juice reading"
+          },
+          "juiceHint": "Reads Juice at high reasoning · Sol should answer 40 (Terra 32 / Luna 48)",
           "models": "Models to check",
           "modelsHint": "Tick the expected models to verify; the field on the right is the model name sent upstream (empty = default).",
           "requestModel": "Request model",
@@ -486,6 +491,7 @@ export default {
             "target_not_in_benchmark": "The benchmark does not contain this model",
             "benchmark_invalid": "Benchmark unavailable",
             "no_account": "No available account",
+            "juice_inconclusive": "Juice reading inconclusive",
             "scoring_failed": "Scoring failed",
             "empty_result": "Empty result"
           }

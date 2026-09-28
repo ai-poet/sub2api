@@ -25,13 +25,13 @@ vi.mock('vue-i18n', async (importOriginal) => {
 enableAutoUnmount(afterEach)
 
 const gptTargets = [
-  { id: 'gpt-5.6-sol', display_name: 'GPT-5.6 Sol', platform: 'openai', default_request_model: 'gpt-5.6-sol', package_id: 'meow-gpt-other-cap98' },
-  { id: 'gpt-6-sol', display_name: 'GPT-6 Sol', platform: 'openai', default_request_model: 'gpt-6-sol', package_id: 'meow-gpt-other-cap98-efficient' },
-  { id: 'gpt-6-astra', display_name: 'GPT-6 Astra', platform: 'openai', default_request_model: 'gpt-6-astra', package_id: 'meow-gpt-other-cap98-efficient' }
+  { id: 'gpt-5.6-sol', display_name: 'GPT-5.6 Sol', platform: 'openai', default_request_model: 'gpt-5.6-sol', method: 'sol_juice' as const, package_id: '' },
+  { id: 'gpt-6-sol', display_name: 'GPT-6 Sol', platform: 'openai', default_request_model: 'gpt-6-sol', method: 'meow' as const, package_id: 'meow-gpt-other-cap98-efficient' },
+  { id: 'gpt-6-astra', display_name: 'GPT-6 Astra', platform: 'openai', default_request_model: 'gpt-6-astra', method: 'meow' as const, package_id: 'meow-gpt-other-cap98-efficient' }
 ]
 const claudeTargets = [
-  { id: 'claude-opus-5.5', display_name: 'Claude Opus 5.5', platform: 'anthropic', default_request_model: 'claude-opus-5-5', package_id: 'meow-claude-other-cap98-efficient' },
-  { id: 'claude-fable-5.1', display_name: 'Claude Fable 5.1', platform: 'anthropic', default_request_model: 'claude-fable-5-1', package_id: 'meow-claude-other-cap98-efficient' }
+  { id: 'claude-opus-5.5', display_name: 'Claude Opus 5.5', platform: 'anthropic', default_request_model: 'claude-opus-5-5', method: 'meow' as const, package_id: 'meow-claude-other-cap98-efficient' },
+  { id: 'claude-fable-5.1', display_name: 'Claude Fable 5.1', platform: 'anthropic', default_request_model: 'claude-fable-5-1', method: 'meow' as const, package_id: 'meow-claude-other-cap98-efficient' }
 ]
 
 function state(expected: string, display: string, extra: Partial<AstraCheckState> = {}): AstraCheckState {
@@ -232,6 +232,9 @@ describe('GroupRuntimeStatusDialog meow fingerprint card', () => {
     expect((wrapper.find('[data-astra-request-model="gpt-6-astra"]').element as HTMLInputElement).value).toBe('astra-alias')
     expect(wrapper.find('[data-astra-request-model="gpt-5.6-sol"]').attributes('disabled')).toBeDefined()
     expect(wrapper.find('[data-astra-model="claude-opus-5.5"]').exists()).toBe(false)
+
+    // GPT-5.6 Sol 走 Juice 读数，选择行上标出
+    expect(wrapper.find('[data-astra-model="gpt-5.6-sol"]').element.parentElement?.textContent).toContain('admin.groups.runtimeStatus.astraCheck.methods.sol_juice')
 
     // 只列本平台用到的基准包
     const text = wrapper.text()

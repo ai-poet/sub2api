@@ -181,6 +181,8 @@ const ASTRA_MODEL_LABELS: Record<string, string> = {
   'gpt-5.6-sol': 'GPT-5.6 Sol',
   'gpt-5.6-terra': 'GPT-5.6 Terra',
   'gpt-5.6-luna': 'GPT-5.6 Luna',
+  'gpt-5.5': 'GPT-5.5 / GPT-5.4',
+  'gpt-5.4-mini': 'GPT-5.4 mini',
   'claude-opus-5.5': 'Claude Opus 5.5',
   'claude-opus-5-5': 'Claude Opus 5.5',
   'claude-fable-5.1': 'Claude Fable 5.1',

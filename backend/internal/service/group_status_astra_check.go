@@ -201,11 +201,11 @@ type GroupStatusAstraCheckRun struct {
 
 // GroupStatusAstraCheckState 是某个（分组, 预期模型）的最近结果与稳定结论。
 type GroupStatusAstraCheckState struct {
-	ID                  int64                  `json:"id"`
-	GroupID             int64                  `json:"group_id"`
-	ConfigID            int64                  `json:"config_id"`
-	ExpectedModel       string                 `json:"expected_model"`
-	DisplayName         string                 `json:"display_name"`
+	ID            int64  `json:"id"`
+	GroupID       int64  `json:"group_id"`
+	ConfigID      int64  `json:"config_id"`
+	ExpectedModel string `json:"expected_model"`
+	DisplayName   string `json:"display_name"`
 	// Method 是该目标的检测方法（meow / sol_juice），派生字段，不落库
 	Method              string                 `json:"method"`
 	Verdict             string                 `json:"verdict"`

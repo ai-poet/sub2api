@@ -178,6 +178,9 @@
                   :data-astra-model="target.id"
                 />
                 <span>{{ target.display_name }}</span>
+                <span v-if="target.method === 'sol_juice'" class="badge badge-gray">
+                  {{ t('admin.groups.runtimeStatus.astraCheck.methods.sol_juice') }}
+                </span>
               </label>
               <input
                 v-model.trim="astraModelForm(target.id).request_model"
@@ -312,6 +315,9 @@
                 <span class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ state.display_name || astraModelName(state.expected_model) }}
                 </span>
+                <span v-if="state.method === 'sol_juice'" class="badge badge-gray">
+                  {{ t('admin.groups.runtimeStatus.astraCheck.methods.sol_juice') }}
+                </span>
                 <span :class="['badge', getAstraCheckBadgeClass(astraStateStatus(state))]">
                   {{ astraStateText(state) }}
                 </span>
@@ -336,7 +342,10 @@
                   <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                     {{ state.valid_samples }} / {{ state.planned_samples }}
                   </div>
-                  <div v-if="state.benchmark_version" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <div v-if="state.method === 'sol_juice'" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.groups.runtimeStatus.astraCheck.juiceHint') }}
+                  </div>
+                  <div v-else-if="state.benchmark_version" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {{ t('admin.groups.runtimeStatus.astraCheck.benchmark') }} {{ state.benchmark_version }}
                   </div>
                 </div>

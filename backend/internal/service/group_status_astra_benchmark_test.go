@@ -22,10 +22,8 @@ func TestLoadEmbeddedAstraBenchmarks_AllPackagesParse(t *testing.T) {
 	require.Equal(t, 128, gpt6.TierRequests(AstraCheckTierHigh))
 	require.Equal(t, "98f8d12c83100352addf44db15d8b57aa183338a4fb5f83ba30ffdbc06d78612", gpt6.BodySHA256)
 
-	gpt56 := reg.Package("meow-gpt-other-cap98")
-	require.NotNil(t, gpt56)
-	require.True(t, gpt56.HasModel("gpt-5.6-sol"))
-	require.Equal(t, 36, gpt56.TierRequests(AstraCheckTierLow))
+	// GPT-5.6 Sol 改用 Juice 读数，不再内置只为它服务的 4.5.3 包
+	require.Nil(t, reg.Package("meow-gpt-other-cap98"))
 
 	claude := reg.Package("meow-claude-other-cap98-efficient")
 	require.NotNil(t, claude)
@@ -52,6 +50,11 @@ func TestAstraCheckTargets_AreInTheirBenchmarkPackages(t *testing.T) {
 	reg, err := LoadEmbeddedAstraBenchmarks()
 	require.NoError(t, err)
 	for _, target := range astraCheckTargets {
+		if target.Method == AstraCheckMethodSolJuice {
+			require.Empty(t, target.PackageID, "juice target %s must not point at a package", target.ID)
+			continue
+		}
+		require.Equal(t, AstraCheckMethodMeow, target.Method, "target %s", target.ID)
 		pkg := reg.Package(target.PackageID)
 		require.NotNil(t, pkg, "target %s points at a missing package %s", target.ID, target.PackageID)
 		require.True(t, pkg.HasModel(target.ID), "package %s does not contain target %s", target.PackageID, target.ID)
@@ -67,6 +70,9 @@ func TestAstraCheckTargets_AreInTheirBenchmarkPackages(t *testing.T) {
 	require.Equal(t, []string{"gpt-5.6-sol", "gpt-6-sol", "gpt-6-astra"}, ids(PlatformOpenAI))
 	require.Equal(t, []string{"claude-opus-5.5", "claude-fable-5.1"}, ids(PlatformAnthropic))
 	require.Empty(t, ids(PlatformGemini))
+	gpt56, ok := astraCheckTarget("gpt-5.6-sol")
+	require.True(t, ok)
+	require.Equal(t, AstraCheckMethodSolJuice, gpt56.Method)
 	require.True(t, astraCheckTargetAllowed(PlatformAnthropic, "claude-opus-5.5"))
 	require.False(t, astraCheckTargetAllowed(PlatformOpenAI, "claude-opus-5.5"))
 }

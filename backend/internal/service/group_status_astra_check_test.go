@@ -310,6 +310,9 @@ func TestScoreAstraCheck_RealPackagesIdentifyTheirOwnDevelopmentAnswers(t *testi
 		files[head.ID] = file
 	}
 	for _, target := range astraCheckTargets {
+		if target.Method != AstraCheckMethodMeow {
+			continue
+		}
 		t.Run(target.ID, func(t *testing.T) {
 			bench := reg.Package(target.PackageID)
 			obs := developmentObservations(t, files[target.PackageID], target.ID)
