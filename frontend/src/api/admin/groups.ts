@@ -502,7 +502,7 @@ export const groupsAPI = {
   getRuntimeStatus,
   updateRuntimeStatus,
   probeRuntimeStatus,
-  probeRuntimeStatusSolJuice,
+  probeRuntimeStatusModelTrace,
   probeRuntimeStatusAstraCheck,
   getRuntimeStatusSummary
 }
@@ -524,9 +524,10 @@ export async function updateRuntimeStatus(
     timeout_seconds: number
     slow_latency_ms: number
     notify_enabled: boolean
-    sol_juice_enabled?: boolean
-    sol_juice_interval_seconds?: number
-    sol_juice_model?: string
+    modeltrace_enabled?: boolean
+    modeltrace_expected_model?: string
+    modeltrace_request_model?: string
+    modeltrace_interval_seconds?: number
     astra_check_enabled?: boolean
     astra_check_request_model?: string
     astra_check_tier?: 'low' | 'medium' | 'high'
@@ -548,9 +549,10 @@ export async function probeRuntimeStatusAstraCheck(id: number): Promise<GroupSta
   return data
 }
 
-export async function probeRuntimeStatusSolJuice(id: number): Promise<GroupStatusAdminView> {
+// 后台启动一次 ModelTrace 指纹验证（3–6 条长输出请求，可能持续数分钟），返回时 summary.modeltrace_running 为 true，需轮询
+export async function probeRuntimeStatusModelTrace(id: number): Promise<GroupStatusAdminView> {
   const { data } = await apiClient.post<GroupStatusAdminView>(
-    `/admin/groups/${id}/runtime-status/sol-juice/probe`
+    `/admin/groups/${id}/runtime-status/modeltrace/probe`
   )
   return data
 }

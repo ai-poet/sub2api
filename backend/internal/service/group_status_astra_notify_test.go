@@ -59,8 +59,10 @@ func TestBuildGroupStatusNotifyMessage_AstraRecovered(t *testing.T) {
 func TestIsGroupStatusNotifyEvent_IncludesAstraEvents(t *testing.T) {
 	require.True(t, isGroupStatusNotifyEvent(GroupStatusEventAstraMismatch))
 	require.True(t, isGroupStatusNotifyEvent(GroupStatusEventAstraRecovered))
-	// Sol Juice 与存活事件保持不变
-	require.True(t, isGroupStatusNotifyEvent(GroupStatusEventSolJuiceMismatch))
+	// ModelTrace 与存活事件同样推送；已下线的 Sol Juice 事件不再推送
+	require.True(t, isGroupStatusNotifyEvent(GroupStatusEventModelTraceMismatch))
+	require.True(t, isGroupStatusNotifyEvent(GroupStatusEventModelTraceRecovered))
+	require.False(t, isGroupStatusNotifyEvent("sol_juice_mismatch"))
 	require.True(t, isGroupStatusNotifyEvent(GroupStatusEventDown))
 	require.False(t, isGroupStatusNotifyEvent("something_else"))
 }

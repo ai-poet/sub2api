@@ -117,11 +117,11 @@
                         {{ getSummaryStatusText(item.summary) }}
                       </span>
                       <span
-                        v-if="item.summary.sol_juice_enabled"
-                        :class="['badge', getSolJuiceBadgeClass(getSolJuiceStatus(item.summary))]"
-                        :title="item.summary.sol_juice_checked_at ? formatDateTime(item.summary.sol_juice_checked_at) : ''"
+                        v-if="item.summary.modeltrace_enabled"
+                        :class="['badge', getModelTraceBadgeClass(getModelTraceStatus(item.summary))]"
+                        :title="item.summary.modeltrace_checked_at ? formatDateTime(item.summary.modeltrace_checked_at) : ''"
                       >
-                        {{ getSolJuiceText(item.summary) }}
+                        {{ getModelTraceText(item.summary) }}
                       </span>
                       <span
                         v-if="item.summary.astra_check_enabled"
@@ -250,11 +250,11 @@
               {{ getSummaryStatusText(selectedItem.summary) }}
             </span>
             <span
-              v-if="selectedItem.summary.sol_juice_enabled"
-              :class="['badge', getSolJuiceBadgeClass(getSolJuiceStatus(selectedItem.summary))]"
-              :title="selectedItem.summary.sol_juice_checked_at ? formatDateTime(selectedItem.summary.sol_juice_checked_at) : ''"
+              v-if="selectedItem.summary.modeltrace_enabled"
+              :class="['badge', getModelTraceBadgeClass(getModelTraceStatus(selectedItem.summary))]"
+              :title="selectedItem.summary.modeltrace_checked_at ? formatDateTime(selectedItem.summary.modeltrace_checked_at) : ''"
             >
-              {{ getSolJuiceText(selectedItem.summary) }}
+              {{ getModelTraceText(selectedItem.summary) }}
             </span>
             <span
               v-if="selectedItem.summary.astra_check_enabled"
@@ -476,16 +476,18 @@ import {
   getGroupRuntimeStatusBadgeClass,
   getGroupRuntimeStatusBarClass,
   getGroupRuntimeStatusSurfaceClass,
-  getSolJuiceBadgeClass,
+  getModelTraceBadgeClass,
   isAstraCheckEvent,
-  isSolJuiceEvent,
+  isLegacySolJuiceEvent,
+  isModelTraceEvent,
+  modelTraceModelLabel,
   normalizeAstraCheckStatus,
   normalizeGroupRuntimeStatus,
-  normalizeSolJuiceStatus,
+  normalizeModelTraceStatus,
   sanitizeRuntimeErrorDetail,
   shortenRuntimeExcerpt,
 } from '@/utils/groupStatus'
-import type { NormalizedAstraCheckStatus, NormalizedSolJuiceStatus } from '@/utils/groupStatus'
+import type { NormalizedAstraCheckStatus, NormalizedModelTraceStatus } from '@/utils/groupStatus'
 
 const POLL_INTERVAL_MS = 30_000
 const HEARTBEAT_RECORD_COUNT = 24
@@ -633,19 +635,30 @@ function getRowHeartbeatCells(item: GroupStatusListItem): RowHeartbeatCell[] {
   )
 }
 
-function getSolJuiceStatus(summary: GroupStatusListItem['summary']): NormalizedSolJuiceStatus {
-  return normalizeSolJuiceStatus(summary.sol_juice_stable_status || summary.sol_juice_status)
+function getModelTraceStatus(summary: GroupStatusListItem['summary']): NormalizedModelTraceStatus {
+  return normalizeModelTraceStatus(
+    summary.modeltrace_stable_status,
+    summary.modeltrace_verdict,
+    summary.modeltrace_run_expected_model,
+    summary.modeltrace_expected_model
+  )
 }
 
-function getSolJuiceText(summary: GroupStatusListItem['summary']): string {
-  const status = getSolJuiceStatus(summary)
-  if (status === 'pass') {
-    return t('modelStatus.solJuice.pass')
+// 公开徽章：一致 / 疑似 / 不符时带上预期模型或强指向的模型名，其余一律显示待检测
+function getModelTraceText(summary: GroupStatusListItem['summary']): string {
+  const status = getModelTraceStatus(summary)
+  const params = {
+    expected: modelTraceModelLabel(summary.modeltrace_run_expected_model || summary.modeltrace_expected_model),
+    top: modelTraceModelLabel(summary.modeltrace_top_model)
   }
-  if (status === 'mismatch') {
-    return t('modelStatus.solJuice.mismatch')
+  switch (status) {
+    case 'pass':
+    case 'suspect':
+    case 'mismatch':
+      return t(`modelStatus.modelTrace.${status}`, params)
+    default:
+      return t('modelStatus.modelTrace.pending', params)
   }
-  return t('modelStatus.solJuice.pending')
 }
 
 function getAstraCheckStatus(summary: GroupStatusListItem['summary']): NormalizedAstraCheckStatus {
@@ -665,8 +678,8 @@ function getAstraCheckText(summary: GroupStatusListItem['summary']): string {
 }
 
 function getEventStatusBadgeClass(event: { event_type: string }, status: string): string {
-  if (isSolJuiceEvent(event.event_type)) {
-    return getSolJuiceBadgeClass(status)
+  if (isModelTraceEvent(event.event_type) || isLegacySolJuiceEvent(event.event_type)) {
+    return getModelTraceBadgeClass(normalizeModelTraceStatus(status, ''))
   }
   if (isAstraCheckEvent(event.event_type)) {
     return getAstraCheckBadgeClass(status)
@@ -675,8 +688,9 @@ function getEventStatusBadgeClass(event: { event_type: string }, status: string)
 }
 
 function getEventStatusLabel(event: { event_type: string }, status: string): string {
-  if (isSolJuiceEvent(event.event_type)) {
-    return t(`modelStatus.solJuice.statuses.${normalizeSolJuiceStatus(status)}`)
+  // 旧 Juice 事件的 pass / mismatch 与 ModelTrace 同义，沿用同一组标签
+  if (isModelTraceEvent(event.event_type) || isLegacySolJuiceEvent(event.event_type)) {
+    return t(`modelStatus.modelTrace.statuses.${normalizeModelTraceStatus(status, '')}`)
   }
   if (isAstraCheckEvent(event.event_type)) {
     return t(`modelStatus.astraCheck.statuses.${normalizeAstraCheckStatus(status, '')}`)

@@ -374,26 +374,26 @@ func TestComputeAstraCheckTransition_TruthTable(t *testing.T) {
 func TestComputeAstraCheckTransition_DoesNotTouchOtherProbes(t *testing.T) {
 	checkedAt := time.Now().Add(-time.Hour)
 	prev := &GroupStatusState{
-		GroupID:                     30,
-		ConfigID:                    101,
-		LatestStatus:                GroupRuntimeStatusDown,
-		StableStatus:                GroupRuntimeStatusDown,
-		ConsecutiveDown:             3,
-		SolJuiceStatus:              SolJuiceStatusMismatch,
-		SolJuiceStableStatus:        SolJuiceStatusMismatch,
-		SolJuiceValue:               "32",
-		SolJuiceCheckedAt:           &checkedAt,
-		SolJuiceConsecutiveMismatch: 2,
+		GroupID:                       30,
+		ConfigID:                      101,
+		LatestStatus:                  GroupRuntimeStatusDown,
+		StableStatus:                  GroupRuntimeStatusDown,
+		ConsecutiveDown:               3,
+		ModelTraceVerdict:             ModelTraceVerdictMismatch,
+		ModelTraceStableStatus:        ModelTraceStatusMismatch,
+		ModelTraceTopModel:            "gpt-5.6-terra",
+		ModelTraceCheckedAt:           &checkedAt,
+		ModelTraceConsecutiveMismatch: 2,
 	}
 
 	next, _ := ComputeAstraCheckTransition(prev, astraResultWithVerdict(AstraCheckVerdictMatch, "gpt-6-astra"), 1)
 	require.Equal(t, GroupRuntimeStatusDown, next.LatestStatus)
 	require.Equal(t, GroupRuntimeStatusDown, next.StableStatus)
 	require.Equal(t, 3, next.ConsecutiveDown)
-	require.Equal(t, SolJuiceStatusMismatch, next.SolJuiceStableStatus)
-	require.Equal(t, "32", next.SolJuiceValue)
-	require.Equal(t, 2, next.SolJuiceConsecutiveMismatch)
-	require.Same(t, &checkedAt, next.SolJuiceCheckedAt)
+	require.Equal(t, ModelTraceStatusMismatch, next.ModelTraceStableStatus)
+	require.Equal(t, "gpt-5.6-terra", next.ModelTraceTopModel)
+	require.Equal(t, 2, next.ModelTraceConsecutiveMismatch)
+	require.Same(t, &checkedAt, next.ModelTraceCheckedAt)
 	require.Equal(t, AstraCheckStatusPass, next.AstraCheckStableStatus)
 	// 原状态不被原地修改
 	require.Equal(t, "", prev.AstraCheckStableStatus)
@@ -443,9 +443,9 @@ func TestNormalizeGroupStatusConfig_AstraCheckRules(t *testing.T) {
 		require.Equal(t, "gpt-6-astra-alias", cfg.AstraCheckRequestModel)
 		require.Equal(t, AstraCheckTierMedium, cfg.AstraCheckTier)
 		require.Equal(t, 1800, cfg.AstraCheckIntervalSeconds)
-		// Sol Juice 默认不受影响
-		require.False(t, cfg.SolJuiceEnabled)
-		require.Equal(t, "gpt-5.6-sol", cfg.SolJuiceModel)
+		// ModelTrace 默认不受影响
+		require.False(t, cfg.ModelTraceEnabled)
+		require.Equal(t, "gpt-5.6-sol", cfg.ModelTraceExpectedModel)
 	})
 
 	t.Run("rejected on non-openai group", func(t *testing.T) {

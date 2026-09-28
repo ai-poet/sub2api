@@ -2469,14 +2469,134 @@ export type GroupStatusValidationMode = 'non_empty' | 'keywords_any' | 'keywords
 export type GroupStatusEventType =
   | 'up'
   | 'down'
+  | 'modeltrace_mismatch'
+  | 'modeltrace_recovered'
+  // 已下线的纯 Sol 验证（Juice）留下的历史事件
   | 'sol_juice_mismatch'
   | 'sol_juice_recovered'
   | 'astra_mismatch'
   | 'astra_recovered'
 
-// 纯 Sol 验证（Juice 指纹探测）
-export type SolJuiceStatus = '' | 'pass' | 'mismatch' | 'inconclusive'
-export type SolJuiceStableStatus = '' | 'pass' | 'mismatch'
+// ModelTrace 指纹验证（数字分布指纹）
+export type ModelTraceVerdict = '' | 'match' | 'mismatch' | 'inconclusive'
+export type ModelTraceStableStatus = '' | 'pass' | 'mismatch'
+export type ModelTracePhase = 'selecting_account' | 'running' | 'scoring'
+export type ModelTraceAttemptOutcome = 'accepted' | 'rejected' | 'failed'
+
+export interface ModelTraceTarget {
+  id: string
+  display_name: string
+}
+
+export interface ModelTraceRankEntry {
+  model: string
+  display_name: string
+  family: string
+  family_name: string
+  probability: number
+  conditional_probability: number
+  score: number
+}
+
+export interface ModelTraceFamilyProbability {
+  family: string
+  display_name: string
+  probability: number
+}
+
+// 一条挑战的诊断记录（只在管理端的运行记录里）
+export interface ModelTraceOutputRecord {
+  seq: number
+  challenge_id: string
+  prompt: string
+  expected_count: number
+  minimum_numbers: number
+  parsed_numbers: number
+  accepted: boolean
+  rejection?: string
+  stop_reason?: string
+  thinking_present: boolean
+  http_code?: number | null
+  attempts: number
+  latency_ms: number
+  input_tokens: number
+  output_tokens: number
+  reasoning_tokens: number
+  error?: string
+  excerpt?: string
+  numbers?: number[]
+  top_model?: string
+  top_probability?: number
+}
+
+export interface ModelTraceAttemptProgress {
+  seq: number
+  expected_count: number
+  parsed_numbers: number
+  minimum_numbers: number
+  outcome: ModelTraceAttemptOutcome
+  rejection?: string
+  stop_reason?: string
+  http_code: number | null
+  latency_ms: number
+  at: string
+}
+
+export interface ModelTraceProgress {
+  round: number
+  phase: ModelTracePhase
+  account_id: number | null
+  planned: number
+  target: number
+  used: number
+  accepted: number
+  rejected: number
+  failed: number
+  requests: number
+  in_flight: number
+  started_at: string
+  updated_at: string
+  elapsed_ms: number
+  attempts: ModelTraceAttemptProgress[]
+}
+
+export interface ModelTraceLastRun {
+  id: number
+  group_id: number
+  config_id: number
+  platform: string
+  bank_sha256: string
+  bank_built_at: string
+  expected_model: string
+  request_model: string
+  account_id: number | null
+  account_type: string
+  round: number
+  verdict: ModelTraceVerdict
+  outcome: string
+  top_model: string
+  top_probability: number
+  expected_probability: number | null
+  calibration_queries: number
+  beta: number
+  ranking: ModelTraceRankEntry[]
+  family_probabilities: ModelTraceFamilyProbability[]
+  reasons: string[]
+  outputs: ModelTraceOutputRecord[]
+  attempts_planned: number
+  attempts_made: number
+  valid_outputs: number
+  input_tokens: number
+  output_tokens: number
+  reasoning_tokens: number
+  cost_usd: number
+  latency_ms: number | null
+  http_code: number | null
+  error_detail: string
+  started_at: string
+  finished_at: string
+  created_at: string
+}
 
 // Astra 指纹验证（meow 基准，行为指纹）
 export type AstraCheckVerdict = '' | 'match' | 'mismatch' | 'insufficient'
@@ -2593,9 +2713,10 @@ export interface GroupStatusConfig {
   timeout_seconds: number
   slow_latency_ms: number
   notify_enabled: boolean
-  sol_juice_enabled: boolean
-  sol_juice_interval_seconds: number
-  sol_juice_model: string
+  modeltrace_enabled: boolean
+  modeltrace_expected_model: string
+  modeltrace_request_model: string
+  modeltrace_interval_seconds: number
   astra_check_enabled: boolean
   astra_check_request_model: string
   astra_check_tier: AstraCheckTier
@@ -2621,19 +2742,29 @@ export interface GroupStatusSummary {
   observed_at: string | null
   consecutive_down: number
   consecutive_non_down: number
-  sol_juice_enabled: boolean
-  sol_juice_model: string
-  sol_juice_interval_seconds: number
-  sol_juice_status: SolJuiceStatus
-  sol_juice_stable_status: SolJuiceStableStatus
-  sol_juice_value: string
-  sol_juice_detail: string
-  sol_juice_checked_at: string | null
-  sol_juice_consecutive_mismatch: number
-  sol_juice_input_tokens: number
-  sol_juice_output_tokens: number
-  sol_juice_reasoning_tokens: number
-  sol_juice_last_cost_usd: number
+  modeltrace_enabled: boolean
+  modeltrace_expected_model: string
+  modeltrace_request_model: string
+  modeltrace_interval_seconds: number
+  modeltrace_verdict: ModelTraceVerdict
+  modeltrace_stable_status: ModelTraceStableStatus
+  modeltrace_run_expected_model: string
+  modeltrace_top_model: string
+  modeltrace_top_probability: number
+  modeltrace_expected_probability: number | null
+  modeltrace_ranking: ModelTraceRankEntry[]
+  modeltrace_reasons: string[]
+  modeltrace_detail: string
+  modeltrace_checked_at: string | null
+  modeltrace_consecutive_mismatch: number
+  modeltrace_valid_outputs: number
+  modeltrace_input_tokens: number
+  modeltrace_output_tokens: number
+  modeltrace_reasoning_tokens: number
+  modeltrace_last_cost_usd: number
+  modeltrace_running: boolean
+  modeltrace_bank_sha256: string
+  modeltrace_bank_built_at: string
   astra_check_enabled: boolean
   astra_check_request_model: string
   astra_check_tier: AstraCheckTier
@@ -2664,6 +2795,9 @@ export interface GroupStatusAdminView {
   summary: GroupStatusSummary
   astra_check_progress?: AstraCheckProgress | null
   astra_check_last_run?: AstraCheckLastRun | null
+  modeltrace_targets?: ModelTraceTarget[] | null
+  modeltrace_progress?: ModelTraceProgress | null
+  modeltrace_last_run?: ModelTraceLastRun | null
 }
 
 export interface GroupStatusHistoryBucket {

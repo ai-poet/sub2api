@@ -48,6 +48,14 @@ type GroupStatusConfig struct {
 	SolJuiceIntervalSeconds int `json:"sol_juice_interval_seconds,omitempty"`
 	// SolJuiceModel holds the value of the "sol_juice_model" field.
 	SolJuiceModel string `json:"sol_juice_model,omitempty"`
+	// ModeltraceEnabled holds the value of the "modeltrace_enabled" field.
+	ModeltraceEnabled bool `json:"modeltrace_enabled,omitempty"`
+	// ModeltraceExpectedModel holds the value of the "modeltrace_expected_model" field.
+	ModeltraceExpectedModel string `json:"modeltrace_expected_model,omitempty"`
+	// ModeltraceRequestModel holds the value of the "modeltrace_request_model" field.
+	ModeltraceRequestModel string `json:"modeltrace_request_model,omitempty"`
+	// ModeltraceIntervalSeconds holds the value of the "modeltrace_interval_seconds" field.
+	ModeltraceIntervalSeconds int `json:"modeltrace_interval_seconds,omitempty"`
 	// AstraCheckEnabled holds the value of the "astra_check_enabled" field.
 	AstraCheckEnabled bool `json:"astra_check_enabled,omitempty"`
 	// AstraCheckRequestModel holds the value of the "astra_check_request_model" field.
@@ -66,11 +74,11 @@ func (*GroupStatusConfig) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case groupstatusconfig.FieldExpectedKeywords:
 			values[i] = new([]byte)
-		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled, groupstatusconfig.FieldSolJuiceEnabled, groupstatusconfig.FieldAstraCheckEnabled:
+		case groupstatusconfig.FieldEnabled, groupstatusconfig.FieldNotifyEnabled, groupstatusconfig.FieldSolJuiceEnabled, groupstatusconfig.FieldModeltraceEnabled, groupstatusconfig.FieldAstraCheckEnabled:
 			values[i] = new(sql.NullBool)
-		case groupstatusconfig.FieldID, groupstatusconfig.FieldGroupID, groupstatusconfig.FieldIntervalSeconds, groupstatusconfig.FieldTimeoutSeconds, groupstatusconfig.FieldSlowLatencyMs, groupstatusconfig.FieldSolJuiceIntervalSeconds, groupstatusconfig.FieldAstraCheckIntervalSeconds:
+		case groupstatusconfig.FieldID, groupstatusconfig.FieldGroupID, groupstatusconfig.FieldIntervalSeconds, groupstatusconfig.FieldTimeoutSeconds, groupstatusconfig.FieldSlowLatencyMs, groupstatusconfig.FieldSolJuiceIntervalSeconds, groupstatusconfig.FieldModeltraceIntervalSeconds, groupstatusconfig.FieldAstraCheckIntervalSeconds:
 			values[i] = new(sql.NullInt64)
-		case groupstatusconfig.FieldProbeModel, groupstatusconfig.FieldProbePrompt, groupstatusconfig.FieldValidationMode, groupstatusconfig.FieldSolJuiceModel, groupstatusconfig.FieldAstraCheckRequestModel, groupstatusconfig.FieldAstraCheckTier:
+		case groupstatusconfig.FieldProbeModel, groupstatusconfig.FieldProbePrompt, groupstatusconfig.FieldValidationMode, groupstatusconfig.FieldSolJuiceModel, groupstatusconfig.FieldModeltraceExpectedModel, groupstatusconfig.FieldModeltraceRequestModel, groupstatusconfig.FieldAstraCheckRequestModel, groupstatusconfig.FieldAstraCheckTier:
 			values[i] = new(sql.NullString)
 		case groupstatusconfig.FieldCreatedAt, groupstatusconfig.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -187,6 +195,30 @@ func (_m *GroupStatusConfig) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.SolJuiceModel = value.String
 			}
+		case groupstatusconfig.FieldModeltraceEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_enabled", values[i])
+			} else if value.Valid {
+				_m.ModeltraceEnabled = value.Bool
+			}
+		case groupstatusconfig.FieldModeltraceExpectedModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_expected_model", values[i])
+			} else if value.Valid {
+				_m.ModeltraceExpectedModel = value.String
+			}
+		case groupstatusconfig.FieldModeltraceRequestModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_request_model", values[i])
+			} else if value.Valid {
+				_m.ModeltraceRequestModel = value.String
+			}
+		case groupstatusconfig.FieldModeltraceIntervalSeconds:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_interval_seconds", values[i])
+			} else if value.Valid {
+				_m.ModeltraceIntervalSeconds = int(value.Int64)
+			}
 		case groupstatusconfig.FieldAstraCheckEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field astra_check_enabled", values[i])
@@ -291,6 +323,18 @@ func (_m *GroupStatusConfig) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sol_juice_model=")
 	builder.WriteString(_m.SolJuiceModel)
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_expected_model=")
+	builder.WriteString(_m.ModeltraceExpectedModel)
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_request_model=")
+	builder.WriteString(_m.ModeltraceRequestModel)
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_interval_seconds=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceIntervalSeconds))
 	builder.WriteString(", ")
 	builder.WriteString("astra_check_enabled=")
 	builder.WriteString(fmt.Sprintf("%v", _m.AstraCheckEnabled))

@@ -216,20 +216,25 @@ export default {
     "eventTypes": {
       "up": "Recovered",
       "down": "Outage",
-      "sol_juice_mismatch": "Non-Sol suspected",
-      "sol_juice_recovered": "Sol verified again",
+      "modeltrace_mismatch": "ModelTrace fingerprint mismatch",
+      "modeltrace_recovered": "ModelTrace fingerprint recovered",
+      "sol_juice_mismatch": "Non-Sol suspected (legacy Juice probe)",
+      "sol_juice_recovered": "Sol verified again (legacy Juice probe)",
       "astra_mismatch": "Astra fingerprint failed",
       "astra_recovered": "Astra fingerprint recovered"
     },
-    "solJuice": {
-      "pass": "Sol Juice OK",
-      "mismatch": "Sol Juice failed (not Sol)",
-      "pending": "Sol Juice pending",
+    "modelTrace": {
+      "pass": "Fingerprint matches ({expected})",
+      "suspect": "Fingerprint mismatch suspected (re-checking)",
+      "mismatch": "Fingerprint mismatch (points to {top})",
+      "pending": "Fingerprint pending",
       "statuses": {
-        "pass": "Sol Juice OK",
-        "mismatch": "Sol Juice failed (not Sol)",
-        "inconclusive": "Sol Juice inconclusive",
-        "unknown": "Sol Juice pending"
+        "pass": "Fingerprint matches",
+        "mismatch": "Fingerprint mismatch",
+        "suspect": "Fingerprint mismatch suspected",
+        "inconclusive": "Fingerprint inconclusive",
+        "pending": "Fingerprint pending",
+        "unknown": "Unknown"
       }
     },
     "astraCheck": {
@@ -282,6 +287,29 @@ export default {
       "completeRegistration": "Complete Registration",
       "completing": "Completing registration…",
       "completeRegistrationFailed": "Registration failed. Please check your invitation code and try again."
+    },
+    "desktopBridge": {
+      "pageTitle": "Desktop Sign-in",
+      "title": "Connecting the desktop app",
+      "preparing": "Preparing your session for the desktop app…",
+      "preparingRoutes": "Preparing Claude Code and Codex routes…",
+      "creatingSession": "Creating a session for the app…",
+      "creatingCode": "Creating a sign-in code…",
+      "opening": "Opening the app…",
+      "manualHint": "If the app did not open automatically, continue manually:",
+      "openApp": "Open the app",
+      "failed": "Unable to complete the desktop sign-in.",
+      "failedStatus": "Unable to continue automatically.",
+      "code": {
+        "label": "Sign-in code",
+        "copy": "Copy",
+        "copied": "Copied",
+        "hint": "If the app did not finish signing in automatically, copy this code and paste it into the app's sign-in window (you can also paste the whole link from the address bar).",
+        "expiresIn": "Valid for {time}, single use",
+        "warning": "Only paste this code into the app you just started signing in from. Never send it to anyone — whoever redeems it gets into your account.",
+        "expired": "This code has expired — start signing in again from the app.",
+        "returnToApp": "Return to the app"
+      }
     }
   },
   "integrationGuide": {
@@ -392,31 +420,82 @@ export default {
         "footerHint": "\"Probe now\" saves the current form first and then runs a probe immediately.",
         "notifyEnabled": "Push on down / recovery",
         "notifyEnabledHint": "Only effective when Server酱³ push is enabled in site settings; turn off to silence this group.",
-        "solJuice": {
-          "title": "Pure Sol check (Juice fingerprint)",
-          "hint": "Sends one reasoning=high request to this group's OpenAI accounts and reads the model's internal Juice budget: Sol answers 40, while 32 / 48 mean another model. Two consecutive non-Sol answers (the first triggers an immediate re-check) are required before the verdict flips and a push is sent; availability is not affected. Each request costs about $0.006–0.045 (mostly reasoning tokens), so keep the interval reasonable.",
-          "intervalSeconds": "Check interval (seconds, min 300)",
-          "model": "Request model",
-          "modelPlaceholder": "gpt-5.6-sol",
+        "modelTrace": {
+          "title": "ModelTrace fingerprint check",
+          "hint": "Sends 3 challenges (topped up to at most 6) to one account of this group, each asking for 292–332 first-instinct integers between 1 and 355, and attributes the answers against the ModelTrace unified fingerprint bank of 16 GPT / Claude models. It matches when the top candidate is the expected model at ≥ 50%; it mismatches when another model is on top at ≥ 80% while the expected model is ≤ 15%. Two consecutive mismatches (the first triggers an immediate re-check on the same account) are required before the verdict flips and a push is sent; availability is not affected. Each run outputs roughly 3–6k tokens.",
+          "bank": "Fingerprint bank",
+          "expectedModel": "Expected model",
+          "requestModel": "Request model (blank = expected model)",
+          "intervalSeconds": "Check interval (seconds, min 900)",
           "latestResult": "Latest check",
           "latestResultEmpty": "Not checked yet. Save and wait for the scheduler, or click \"Check now\".",
-          "status": "Verdict",
-          "value": "Juice value",
+          "verdict": "Verdict",
+          "topCandidate": "Top candidate",
+          "expectedProbability": "Expected {model}: {probability}",
           "checkedAt": "Checked at",
+          "validOutputs": "{valid}/3 valid answers",
           "tokens": "Tokens (input / output)",
-          "reasoningTokens": "of which reasoning",
-          "lastCost": "Last request cost",
+          "lastCost": "Run cost",
           "monthlyEstimate": "Monthly estimate at current interval",
+          "ranking": "Attribution (top 5, plus the expected model)",
           "detail": "Details",
+          "disclaimer": "This is a closed-set attribution among the models in the fingerprint bank and is for reference only: a model outside the bank is still attributed to its closest enrolled model, so \"mismatch\" means \"strongly resembles another enrolled model\", not proof.",
           "probeNow": "Check now",
-          "probing": "Checking...",
-          "probeSucceeded": "Sol check completed",
-          "probeFailed": "Sol check failed",
+          "running": "Checking...",
+          "probeStarted": "ModelTrace check started; the result refreshes automatically",
+          "probeSucceeded": "ModelTrace check completed",
+          "probeFailed": "ModelTrace check failed",
+          "progress": {
+            "title": "Round {round} in progress",
+            "phases": {
+              "selecting_account": "Selecting account",
+              "running": "Sending challenges",
+              "scoring": "Scoring"
+            },
+            "account": "Account",
+            "accepted": "Valid",
+            "used": "Challenges used",
+            "rejected": "Invalid",
+            "failed": "Failed",
+            "inFlight": "In flight"
+          },
+          "outcomes": {
+            "accepted": "Valid",
+            "rejected": "Invalid",
+            "failed": "Failed"
+          },
+          "rejections": {
+            "too_few_numbers": "Too few numbers",
+            "max_tokens": "Cut off at max_tokens",
+            "refusal": "Refused",
+            "stream_incomplete": "Stream ended early",
+            "stream_error": "Stream error"
+          },
+          "outputTable": {
+            "title": "Challenges of the latest run ({count})",
+            "runMeta": "{valid} valid, {made}/{planned} used, took {latency}",
+            "numbers": "Numbers / required",
+            "result": "Result",
+            "singleTop": "Top candidate (this answer)",
+            "excerpt": "Answer excerpt",
+            "latency": "Latency"
+          },
+          "reasons": {
+            "unknown_expected_model": "Expected model is not in the fingerprint bank",
+            "no_valid_outputs": "No valid answers",
+            "insufficient_outputs": "Fewer than 2 valid answers",
+            "ambiguous": "Attribution not decisive",
+            "target_not_allowed": "Expected model does not apply to this group platform",
+            "bank_invalid": "Fingerprint bank unavailable",
+            "no_account": "No schedulable account"
+          },
           "statuses": {
-            "pass": "Sol Juice OK",
-            "mismatch": "Sol Juice failed (not Sol)",
-            "inconclusive": "Sol Juice inconclusive",
-            "unknown": "Sol Juice pending"
+            "pass": "Fingerprint matches ({expected})",
+            "mismatch": "Fingerprint mismatch (points to {top})",
+            "suspect": "Mismatch suspected (points to {top}, re-checking)",
+            "inconclusive": "Inconclusive",
+            "pending": "Expected model changed, pending",
+            "unknown": "Pending"
           }
         },
         "astraCheck": {

@@ -51,7 +51,7 @@ func (GroupStatusState) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
 		field.Int("consecutive_down").Default(0),
 		field.Int("consecutive_non_down").Default(0),
-		// 纯 Sol 验证（Juice 指纹探测）的最近结果与稳定结论
+		// Deprecated: dormant since 242 —— 纯 Sol 验证（Juice）的旧列，保留给旧镜像
 		field.String("sol_juice_status").Default(""),
 		field.String("sol_juice_stable_status").Default(""),
 		field.String("sol_juice_value").Default(""),
@@ -67,6 +67,34 @@ func (GroupStatusState) Fields() []ent.Field {
 		field.Int64("sol_juice_input_tokens").Default(0),
 		field.Int64("sol_juice_output_tokens").Default(0),
 		field.Int64("sol_juice_reasoning_tokens").Default(0),
+		// ModelTrace 指纹验证的最近结果与稳定结论；run_expected_model 是稳定结论对应的预期模型
+		field.String("modeltrace_verdict").Default(""),
+		field.String("modeltrace_stable_status").Default(""),
+		field.String("modeltrace_run_expected_model").Default(""),
+		field.String("modeltrace_top_model").Default(""),
+		field.Float("modeltrace_top_probability").Default(0),
+		field.Float("modeltrace_expected_probability").Optional().Nillable(),
+		field.JSON("modeltrace_ranking", []map[string]any{}).
+			Default([]map[string]any{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
+		field.JSON("modeltrace_reasons", []string{}).
+			Default([]string{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
+		field.String("modeltrace_detail").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "text"}),
+		field.Time("modeltrace_checked_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
+		field.Int("modeltrace_consecutive_mismatch").Default(0),
+		field.Int("modeltrace_valid_outputs").Default(0),
+		field.Int64("modeltrace_input_tokens").Default(0),
+		field.Int64("modeltrace_output_tokens").Default(0),
+		field.Int64("modeltrace_reasoning_tokens").Default(0),
+		field.Float("modeltrace_last_cost_usd").Default(0),
+		field.Int64("modeltrace_last_run_id").Optional().Nillable(),
 		// Astra 指纹验证（meow 基准）的最近结果与稳定结论
 		field.String("astra_check_verdict").Default(""),
 		field.String("astra_check_stable_status").Default(""),

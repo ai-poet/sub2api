@@ -54,6 +54,10 @@ func RegisterAuthRoutes(
 		auth.POST("/refresh", rateLimiter.LimitWithOptions("refresh-token", 30, time.Minute, middleware.RateLimitOptions{
 			FailureMode: middleware.RateLimitFailClose,
 		}), h.Auth.RefreshToken)
+		// 客户端登录码兑换（公开）：登录码 + PKCE verifier 换桌面 token 对（Redis 故障时 fail-close）
+		auth.POST("/desktop-session/exchange", rateLimiter.LimitWithOptions("desktop-login-exchange", 20, time.Minute, middleware.RateLimitOptions{
+			FailureMode: middleware.RateLimitFailClose,
+		}), h.DesktopLogin.Exchange)
 		// 登出接口（公开，允许未认证用户调用以撤销Refresh Token）
 		auth.POST("/logout", h.Auth.Logout)
 		// 优惠码验证接口添加速率限制：每分钟最多 10 次（Redis 故障时 fail-close）
@@ -268,6 +272,10 @@ func RegisterAuthRoutes(
 		authenticated.GET("/auth/me", h.Auth.GetCurrentUser)
 		// 桌面端桥接登录：为原生客户端签发独立会话家族的 token 对，避免与浏览器共用 refresh token
 		authenticated.POST("/auth/desktop-session", h.Auth.CreateDesktopSession)
+		// 客户端登录码：访问不到 127.0.0.1 回调时，签发绑定 PKCE challenge 的一次性码（Redis 故障时 fail-close）
+		authenticated.POST("/auth/desktop-session/code", rateLimiter.LimitWithOptions("desktop-login-code", 10, time.Minute, middleware.RateLimitOptions{
+			FailureMode: middleware.RateLimitFailClose,
+		}), h.DesktopLogin.CreateCode)
 		// 撤销所有会话（需要认证）
 		authenticated.POST("/auth/revoke-all-sessions", h.Auth.RevokeAllSessions)
 		authenticated.POST("/auth/oauth/bind-token", h.Auth.PrepareOAuthBindAccessTokenCookie)

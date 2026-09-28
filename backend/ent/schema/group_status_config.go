@@ -44,10 +44,16 @@ func (GroupStatusConfig) Fields() []ent.Field {
 		field.Int64("slow_latency_ms").Default(15000),
 		// 稳定状态变红 / 从红恢复时是否推送提醒（Server酱³）
 		field.Bool("notify_enabled").Default(true),
-		// 纯 Sol 验证（Juice 指纹探测），仅 OpenAI 分组
+		// Deprecated: dormant since 242 —— 纯 Sol 验证（Juice）已由 ModelTrace 指纹验证替换；
+		// 列保留给旧镜像，等清理迁移一起删除
 		field.Bool("sol_juice_enabled").Default(false),
 		field.Int("sol_juice_interval_seconds").Default(900),
 		field.String("sol_juice_model").Default("gpt-5.6-sol"),
+		// ModelTrace 指纹验证（数字分布指纹），OpenAI / Anthropic 分组；request_model 为空表示用预期模型
+		field.Bool("modeltrace_enabled").Default(false),
+		field.String("modeltrace_expected_model").Default(""),
+		field.String("modeltrace_request_model").Default(""),
+		field.Int("modeltrace_interval_seconds").Default(3600),
 		// Astra 指纹验证（meow 基准，行为指纹），仅 OpenAI 分组
 		field.Bool("astra_check_enabled").Default(false),
 		field.String("astra_check_request_model").Default("gpt-6-astra"),

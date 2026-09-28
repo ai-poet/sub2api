@@ -82,7 +82,7 @@ func newAstraCheckProbeFixture(t *testing.T, responses ...*http.Response) (*Grou
 }
 
 func astraSSE(answer string) *http.Response {
-	return groupStatusProbeResponse(200, solJuiceSSEBody(answer, 10))
+	return groupStatusProbeResponse(200, responsesSSEBody(answer, 10))
 }
 
 // 合成包低档任务顺序：country, strawberry, country, strawberry

@@ -100,7 +100,7 @@ func TestExecuteAccountProbe_LatencyIsFirstToken(t *testing.T) {
 	account := groupStatusProbeAccount(1, PlatformOpenAI, group.ID, 1, map[string]any{"gpt-5.6-sol": "gpt-5.6-sol"})
 	account.Credentials["api_key"] = "sk-test"
 	upstream := &groupStatusProbeHTTPUpstream{responses: []*http.Response{
-		groupStatusProbeResponse(200, solJuiceSSEBody("ONLINE", 5)),
+		groupStatusProbeResponse(200, responsesSSEBody("ONLINE", 5)),
 	}}
 	svc := newGroupStatusProbeServiceForTest(group, []Account{account}, nil, upstream, nil)
 	cfg := groupStatusProbeConfig(group.ID, "gpt-5.6-sol")

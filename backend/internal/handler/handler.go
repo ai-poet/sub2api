@@ -74,6 +74,7 @@ type Handlers struct {
 	Ticket           *TicketHandler
 	TicketAttachment *TicketAttachmentHandler
 	PersonalToken    *PersonalTokenHandler
+	DesktopLogin     *DesktopLoginHandler
 }
 
 // BuildInfo contains build-time information

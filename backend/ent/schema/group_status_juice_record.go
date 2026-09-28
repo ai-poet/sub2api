@@ -12,6 +12,8 @@ import (
 )
 
 // GroupStatusJuiceRecord 纯 Sol 验证（Juice 指纹探测）的每次样本，本 fork 自有功能。
+//
+// Deprecated: dormant since 242 —— Juice 探测已由 ModelTrace 指纹验证替换，表保留给旧镜像，等清理迁移一起删除。
 type GroupStatusJuiceRecord struct {
 	ent.Schema
 }

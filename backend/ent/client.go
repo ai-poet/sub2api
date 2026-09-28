@@ -33,6 +33,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusmodeltracerun"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
@@ -102,6 +103,8 @@ type Client struct {
 	GroupStatusEvent *GroupStatusEventClient
 	// GroupStatusJuiceRecord is the client for interacting with the GroupStatusJuiceRecord builders.
 	GroupStatusJuiceRecord *GroupStatusJuiceRecordClient
+	// GroupStatusModelTraceRun is the client for interacting with the GroupStatusModelTraceRun builders.
+	GroupStatusModelTraceRun *GroupStatusModelTraceRunClient
 	// GroupStatusRecord is the client for interacting with the GroupStatusRecord builders.
 	GroupStatusRecord *GroupStatusRecordClient
 	// GroupStatusState is the client for interacting with the GroupStatusState builders.
@@ -179,6 +182,7 @@ func (c *Client) init() {
 	c.GroupStatusConfig = NewGroupStatusConfigClient(c.config)
 	c.GroupStatusEvent = NewGroupStatusEventClient(c.config)
 	c.GroupStatusJuiceRecord = NewGroupStatusJuiceRecordClient(c.config)
+	c.GroupStatusModelTraceRun = NewGroupStatusModelTraceRunClient(c.config)
 	c.GroupStatusRecord = NewGroupStatusRecordClient(c.config)
 	c.GroupStatusState = NewGroupStatusStateClient(c.config)
 	c.IdempotencyRecord = NewIdempotencyRecordClient(c.config)
@@ -313,6 +317,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		GroupStatusConfig:        NewGroupStatusConfigClient(cfg),
 		GroupStatusEvent:         NewGroupStatusEventClient(cfg),
 		GroupStatusJuiceRecord:   NewGroupStatusJuiceRecordClient(cfg),
+		GroupStatusModelTraceRun: NewGroupStatusModelTraceRunClient(cfg),
 		GroupStatusRecord:        NewGroupStatusRecordClient(cfg),
 		GroupStatusState:         NewGroupStatusStateClient(cfg),
 		IdempotencyRecord:        NewIdempotencyRecordClient(cfg),
@@ -374,6 +379,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		GroupStatusConfig:        NewGroupStatusConfigClient(cfg),
 		GroupStatusEvent:         NewGroupStatusEventClient(cfg),
 		GroupStatusJuiceRecord:   NewGroupStatusJuiceRecordClient(cfg),
+		GroupStatusModelTraceRun: NewGroupStatusModelTraceRunClient(cfg),
 		GroupStatusRecord:        NewGroupStatusRecordClient(cfg),
 		GroupStatusState:         NewGroupStatusStateClient(cfg),
 		IdempotencyRecord:        NewIdempotencyRecordClient(cfg),
@@ -432,13 +438,13 @@ func (c *Client) Use(hooks ...Hook) {
 		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute,
 		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
 		c.GroupStatusConfig, c.GroupStatusEvent, c.GroupStatusJuiceRecord,
-		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord,
-		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
-		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
-		c.SupportTicket, c.SupportTicketMessage, c.TLSFingerprintProfile,
-		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
-		c.UserAttributeDefinition, c.UserAttributeValue, c.UserPlatformQuota,
-		c.UserReferral, c.UserSubscription,
+		c.GroupStatusModelTraceRun, c.GroupStatusRecord, c.GroupStatusState,
+		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PendingAuthSession,
+		c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode,
+		c.SecuritySecret, c.Setting, c.SupportTicket, c.SupportTicketMessage,
+		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
+		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -453,13 +459,13 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute,
 		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
 		c.GroupStatusConfig, c.GroupStatusEvent, c.GroupStatusJuiceRecord,
-		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord,
-		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
-		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
-		c.SupportTicket, c.SupportTicketMessage, c.TLSFingerprintProfile,
-		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
-		c.UserAttributeDefinition, c.UserAttributeValue, c.UserPlatformQuota,
-		c.UserReferral, c.UserSubscription,
+		c.GroupStatusModelTraceRun, c.GroupStatusRecord, c.GroupStatusState,
+		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PendingAuthSession,
+		c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode,
+		c.SecuritySecret, c.Setting, c.SupportTicket, c.SupportTicketMessage,
+		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
+		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -504,6 +510,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.GroupStatusEvent.mutate(ctx, m)
 	case *GroupStatusJuiceRecordMutation:
 		return c.GroupStatusJuiceRecord.mutate(ctx, m)
+	case *GroupStatusModelTraceRunMutation:
+		return c.GroupStatusModelTraceRun.mutate(ctx, m)
 	case *GroupStatusRecordMutation:
 		return c.GroupStatusRecord.mutate(ctx, m)
 	case *GroupStatusStateMutation:
@@ -3339,6 +3347,139 @@ func (c *GroupStatusJuiceRecordClient) mutate(ctx context.Context, m *GroupStatu
 		return (&GroupStatusJuiceRecordDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown GroupStatusJuiceRecord mutation op: %q", m.Op())
+	}
+}
+
+// GroupStatusModelTraceRunClient is a client for the GroupStatusModelTraceRun schema.
+type GroupStatusModelTraceRunClient struct {
+	config
+}
+
+// NewGroupStatusModelTraceRunClient returns a client for the GroupStatusModelTraceRun from the given config.
+func NewGroupStatusModelTraceRunClient(c config) *GroupStatusModelTraceRunClient {
+	return &GroupStatusModelTraceRunClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupstatusmodeltracerun.Hooks(f(g(h())))`.
+func (c *GroupStatusModelTraceRunClient) Use(hooks ...Hook) {
+	c.hooks.GroupStatusModelTraceRun = append(c.hooks.GroupStatusModelTraceRun, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupstatusmodeltracerun.Intercept(f(g(h())))`.
+func (c *GroupStatusModelTraceRunClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupStatusModelTraceRun = append(c.inters.GroupStatusModelTraceRun, interceptors...)
+}
+
+// Create returns a builder for creating a GroupStatusModelTraceRun entity.
+func (c *GroupStatusModelTraceRunClient) Create() *GroupStatusModelTraceRunCreate {
+	mutation := newGroupStatusModelTraceRunMutation(c.config, OpCreate)
+	return &GroupStatusModelTraceRunCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupStatusModelTraceRun entities.
+func (c *GroupStatusModelTraceRunClient) CreateBulk(builders ...*GroupStatusModelTraceRunCreate) *GroupStatusModelTraceRunCreateBulk {
+	return &GroupStatusModelTraceRunCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupStatusModelTraceRunClient) MapCreateBulk(slice any, setFunc func(*GroupStatusModelTraceRunCreate, int)) *GroupStatusModelTraceRunCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupStatusModelTraceRunCreateBulk{err: fmt.Errorf("calling to GroupStatusModelTraceRunClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupStatusModelTraceRunCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupStatusModelTraceRunCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupStatusModelTraceRun.
+func (c *GroupStatusModelTraceRunClient) Update() *GroupStatusModelTraceRunUpdate {
+	mutation := newGroupStatusModelTraceRunMutation(c.config, OpUpdate)
+	return &GroupStatusModelTraceRunUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupStatusModelTraceRunClient) UpdateOne(_m *GroupStatusModelTraceRun) *GroupStatusModelTraceRunUpdateOne {
+	mutation := newGroupStatusModelTraceRunMutation(c.config, OpUpdateOne, withGroupStatusModelTraceRun(_m))
+	return &GroupStatusModelTraceRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupStatusModelTraceRunClient) UpdateOneID(id int64) *GroupStatusModelTraceRunUpdateOne {
+	mutation := newGroupStatusModelTraceRunMutation(c.config, OpUpdateOne, withGroupStatusModelTraceRunID(id))
+	return &GroupStatusModelTraceRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupStatusModelTraceRun.
+func (c *GroupStatusModelTraceRunClient) Delete() *GroupStatusModelTraceRunDelete {
+	mutation := newGroupStatusModelTraceRunMutation(c.config, OpDelete)
+	return &GroupStatusModelTraceRunDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupStatusModelTraceRunClient) DeleteOne(_m *GroupStatusModelTraceRun) *GroupStatusModelTraceRunDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupStatusModelTraceRunClient) DeleteOneID(id int64) *GroupStatusModelTraceRunDeleteOne {
+	builder := c.Delete().Where(groupstatusmodeltracerun.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupStatusModelTraceRunDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupStatusModelTraceRun.
+func (c *GroupStatusModelTraceRunClient) Query() *GroupStatusModelTraceRunQuery {
+	return &GroupStatusModelTraceRunQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupStatusModelTraceRun},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupStatusModelTraceRun entity by its id.
+func (c *GroupStatusModelTraceRunClient) Get(ctx context.Context, id int64) (*GroupStatusModelTraceRun, error) {
+	return c.Query().Where(groupstatusmodeltracerun.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupStatusModelTraceRunClient) GetX(ctx context.Context, id int64) *GroupStatusModelTraceRun {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *GroupStatusModelTraceRunClient) Hooks() []Hook {
+	return c.hooks.GroupStatusModelTraceRun
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupStatusModelTraceRunClient) Interceptors() []Interceptor {
+	return c.inters.GroupStatusModelTraceRun
+}
+
+func (c *GroupStatusModelTraceRunClient) mutate(ctx context.Context, m *GroupStatusModelTraceRunMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupStatusModelTraceRunCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupStatusModelTraceRunUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupStatusModelTraceRunUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupStatusModelTraceRunDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupStatusModelTraceRun mutation op: %q", m.Op())
 	}
 }
 
@@ -7206,24 +7347,26 @@ type (
 		AnnouncementRead, AuthIdentity, AuthIdentityChannel, BatchImageEvent,
 		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
 		Group, GroupStatusAstraCheckRun, GroupStatusConfig, GroupStatusEvent,
-		GroupStatusJuiceRecord, GroupStatusRecord, GroupStatusState, IdempotencyRecord,
-		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
-		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
-		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
-		UserPlatformQuota, UserReferral, UserSubscription []ent.Hook
+		GroupStatusJuiceRecord, GroupStatusModelTraceRun, GroupStatusRecord,
+		GroupStatusState, IdempotencyRecord, IdentityAdoptionDecision,
+		PendingAuthSession, PersonalToken, PromoCode, PromoCodeUsage, Proxy,
+		RedeemCode, SecuritySecret, Setting, SupportTicket, SupportTicketMessage,
+		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
+		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota, UserReferral,
+		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, AdminApprovalRequest, Announcement,
 		AnnouncementRead, AuthIdentity, AuthIdentityChannel, BatchImageEvent,
 		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
 		Group, GroupStatusAstraCheckRun, GroupStatusConfig, GroupStatusEvent,
-		GroupStatusJuiceRecord, GroupStatusRecord, GroupStatusState, IdempotencyRecord,
-		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
-		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
-		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
-		UserPlatformQuota, UserReferral, UserSubscription []ent.Interceptor
+		GroupStatusJuiceRecord, GroupStatusModelTraceRun, GroupStatusRecord,
+		GroupStatusState, IdempotencyRecord, IdentityAdoptionDecision,
+		PendingAuthSession, PersonalToken, PromoCode, PromoCodeUsage, Proxy,
+		RedeemCode, SecuritySecret, Setting, SupportTicket, SupportTicketMessage,
+		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
+		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota, UserReferral,
+		UserSubscription []ent.Interceptor
 	}
 )
 

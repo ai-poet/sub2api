@@ -216,6 +216,62 @@ func (_c *GroupStatusConfigCreate) SetNillableSolJuiceModel(v *string) *GroupSta
 	return _c
 }
 
+// SetModeltraceEnabled sets the "modeltrace_enabled" field.
+func (_c *GroupStatusConfigCreate) SetModeltraceEnabled(v bool) *GroupStatusConfigCreate {
+	_c.mutation.SetModeltraceEnabled(v)
+	return _c
+}
+
+// SetNillableModeltraceEnabled sets the "modeltrace_enabled" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableModeltraceEnabled(v *bool) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetModeltraceEnabled(*v)
+	}
+	return _c
+}
+
+// SetModeltraceExpectedModel sets the "modeltrace_expected_model" field.
+func (_c *GroupStatusConfigCreate) SetModeltraceExpectedModel(v string) *GroupStatusConfigCreate {
+	_c.mutation.SetModeltraceExpectedModel(v)
+	return _c
+}
+
+// SetNillableModeltraceExpectedModel sets the "modeltrace_expected_model" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableModeltraceExpectedModel(v *string) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetModeltraceExpectedModel(*v)
+	}
+	return _c
+}
+
+// SetModeltraceRequestModel sets the "modeltrace_request_model" field.
+func (_c *GroupStatusConfigCreate) SetModeltraceRequestModel(v string) *GroupStatusConfigCreate {
+	_c.mutation.SetModeltraceRequestModel(v)
+	return _c
+}
+
+// SetNillableModeltraceRequestModel sets the "modeltrace_request_model" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableModeltraceRequestModel(v *string) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetModeltraceRequestModel(*v)
+	}
+	return _c
+}
+
+// SetModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field.
+func (_c *GroupStatusConfigCreate) SetModeltraceIntervalSeconds(v int) *GroupStatusConfigCreate {
+	_c.mutation.SetModeltraceIntervalSeconds(v)
+	return _c
+}
+
+// SetNillableModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field if the given value is not nil.
+func (_c *GroupStatusConfigCreate) SetNillableModeltraceIntervalSeconds(v *int) *GroupStatusConfigCreate {
+	if v != nil {
+		_c.SetModeltraceIntervalSeconds(*v)
+	}
+	return _c
+}
+
 // SetAstraCheckEnabled sets the "astra_check_enabled" field.
 func (_c *GroupStatusConfigCreate) SetAstraCheckEnabled(v bool) *GroupStatusConfigCreate {
 	_c.mutation.SetAstraCheckEnabled(v)
@@ -363,6 +419,22 @@ func (_c *GroupStatusConfigCreate) defaults() {
 		v := groupstatusconfig.DefaultSolJuiceModel
 		_c.mutation.SetSolJuiceModel(v)
 	}
+	if _, ok := _c.mutation.ModeltraceEnabled(); !ok {
+		v := groupstatusconfig.DefaultModeltraceEnabled
+		_c.mutation.SetModeltraceEnabled(v)
+	}
+	if _, ok := _c.mutation.ModeltraceExpectedModel(); !ok {
+		v := groupstatusconfig.DefaultModeltraceExpectedModel
+		_c.mutation.SetModeltraceExpectedModel(v)
+	}
+	if _, ok := _c.mutation.ModeltraceRequestModel(); !ok {
+		v := groupstatusconfig.DefaultModeltraceRequestModel
+		_c.mutation.SetModeltraceRequestModel(v)
+	}
+	if _, ok := _c.mutation.ModeltraceIntervalSeconds(); !ok {
+		v := groupstatusconfig.DefaultModeltraceIntervalSeconds
+		_c.mutation.SetModeltraceIntervalSeconds(v)
+	}
 	if _, ok := _c.mutation.AstraCheckEnabled(); !ok {
 		v := groupstatusconfig.DefaultAstraCheckEnabled
 		_c.mutation.SetAstraCheckEnabled(v)
@@ -427,6 +499,18 @@ func (_c *GroupStatusConfigCreate) check() error {
 	}
 	if _, ok := _c.mutation.SolJuiceModel(); !ok {
 		return &ValidationError{Name: "sol_juice_model", err: errors.New(`ent: missing required field "GroupStatusConfig.sol_juice_model"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceEnabled(); !ok {
+		return &ValidationError{Name: "modeltrace_enabled", err: errors.New(`ent: missing required field "GroupStatusConfig.modeltrace_enabled"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceExpectedModel(); !ok {
+		return &ValidationError{Name: "modeltrace_expected_model", err: errors.New(`ent: missing required field "GroupStatusConfig.modeltrace_expected_model"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceRequestModel(); !ok {
+		return &ValidationError{Name: "modeltrace_request_model", err: errors.New(`ent: missing required field "GroupStatusConfig.modeltrace_request_model"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceIntervalSeconds(); !ok {
+		return &ValidationError{Name: "modeltrace_interval_seconds", err: errors.New(`ent: missing required field "GroupStatusConfig.modeltrace_interval_seconds"`)}
 	}
 	if _, ok := _c.mutation.AstraCheckEnabled(); !ok {
 		return &ValidationError{Name: "astra_check_enabled", err: errors.New(`ent: missing required field "GroupStatusConfig.astra_check_enabled"`)}
@@ -526,6 +610,22 @@ func (_c *GroupStatusConfigCreate) createSpec() (*GroupStatusConfig, *sqlgraph.C
 	if value, ok := _c.mutation.SolJuiceModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
 		_node.SolJuiceModel = value
+	}
+	if value, ok := _c.mutation.ModeltraceEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceEnabled, field.TypeBool, value)
+		_node.ModeltraceEnabled = value
+	}
+	if value, ok := _c.mutation.ModeltraceExpectedModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceExpectedModel, field.TypeString, value)
+		_node.ModeltraceExpectedModel = value
+	}
+	if value, ok := _c.mutation.ModeltraceRequestModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceRequestModel, field.TypeString, value)
+		_node.ModeltraceRequestModel = value
+	}
+	if value, ok := _c.mutation.ModeltraceIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceIntervalSeconds, field.TypeInt, value)
+		_node.ModeltraceIntervalSeconds = value
 	}
 	if value, ok := _c.mutation.AstraCheckEnabled(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckEnabled, field.TypeBool, value)
@@ -790,6 +890,60 @@ func (u *GroupStatusConfigUpsert) SetSolJuiceModel(v string) *GroupStatusConfigU
 // UpdateSolJuiceModel sets the "sol_juice_model" field to the value that was provided on create.
 func (u *GroupStatusConfigUpsert) UpdateSolJuiceModel() *GroupStatusConfigUpsert {
 	u.SetExcluded(groupstatusconfig.FieldSolJuiceModel)
+	return u
+}
+
+// SetModeltraceEnabled sets the "modeltrace_enabled" field.
+func (u *GroupStatusConfigUpsert) SetModeltraceEnabled(v bool) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldModeltraceEnabled, v)
+	return u
+}
+
+// UpdateModeltraceEnabled sets the "modeltrace_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateModeltraceEnabled() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldModeltraceEnabled)
+	return u
+}
+
+// SetModeltraceExpectedModel sets the "modeltrace_expected_model" field.
+func (u *GroupStatusConfigUpsert) SetModeltraceExpectedModel(v string) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldModeltraceExpectedModel, v)
+	return u
+}
+
+// UpdateModeltraceExpectedModel sets the "modeltrace_expected_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateModeltraceExpectedModel() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldModeltraceExpectedModel)
+	return u
+}
+
+// SetModeltraceRequestModel sets the "modeltrace_request_model" field.
+func (u *GroupStatusConfigUpsert) SetModeltraceRequestModel(v string) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldModeltraceRequestModel, v)
+	return u
+}
+
+// UpdateModeltraceRequestModel sets the "modeltrace_request_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateModeltraceRequestModel() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldModeltraceRequestModel)
+	return u
+}
+
+// SetModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field.
+func (u *GroupStatusConfigUpsert) SetModeltraceIntervalSeconds(v int) *GroupStatusConfigUpsert {
+	u.Set(groupstatusconfig.FieldModeltraceIntervalSeconds, v)
+	return u
+}
+
+// UpdateModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsert) UpdateModeltraceIntervalSeconds() *GroupStatusConfigUpsert {
+	u.SetExcluded(groupstatusconfig.FieldModeltraceIntervalSeconds)
+	return u
+}
+
+// AddModeltraceIntervalSeconds adds v to the "modeltrace_interval_seconds" field.
+func (u *GroupStatusConfigUpsert) AddModeltraceIntervalSeconds(v int) *GroupStatusConfigUpsert {
+	u.Add(groupstatusconfig.FieldModeltraceIntervalSeconds, v)
 	return u
 }
 
@@ -1120,6 +1274,69 @@ func (u *GroupStatusConfigUpsertOne) SetSolJuiceModel(v string) *GroupStatusConf
 func (u *GroupStatusConfigUpsertOne) UpdateSolJuiceModel() *GroupStatusConfigUpsertOne {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateSolJuiceModel()
+	})
+}
+
+// SetModeltraceEnabled sets the "modeltrace_enabled" field.
+func (u *GroupStatusConfigUpsertOne) SetModeltraceEnabled(v bool) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceEnabled(v)
+	})
+}
+
+// UpdateModeltraceEnabled sets the "modeltrace_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateModeltraceEnabled() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceEnabled()
+	})
+}
+
+// SetModeltraceExpectedModel sets the "modeltrace_expected_model" field.
+func (u *GroupStatusConfigUpsertOne) SetModeltraceExpectedModel(v string) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceExpectedModel(v)
+	})
+}
+
+// UpdateModeltraceExpectedModel sets the "modeltrace_expected_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateModeltraceExpectedModel() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceExpectedModel()
+	})
+}
+
+// SetModeltraceRequestModel sets the "modeltrace_request_model" field.
+func (u *GroupStatusConfigUpsertOne) SetModeltraceRequestModel(v string) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceRequestModel(v)
+	})
+}
+
+// UpdateModeltraceRequestModel sets the "modeltrace_request_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateModeltraceRequestModel() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceRequestModel()
+	})
+}
+
+// SetModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field.
+func (u *GroupStatusConfigUpsertOne) SetModeltraceIntervalSeconds(v int) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceIntervalSeconds(v)
+	})
+}
+
+// AddModeltraceIntervalSeconds adds v to the "modeltrace_interval_seconds" field.
+func (u *GroupStatusConfigUpsertOne) AddModeltraceIntervalSeconds(v int) *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.AddModeltraceIntervalSeconds(v)
+	})
+}
+
+// UpdateModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertOne) UpdateModeltraceIntervalSeconds() *GroupStatusConfigUpsertOne {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceIntervalSeconds()
 	})
 }
 
@@ -1625,6 +1842,69 @@ func (u *GroupStatusConfigUpsertBulk) SetSolJuiceModel(v string) *GroupStatusCon
 func (u *GroupStatusConfigUpsertBulk) UpdateSolJuiceModel() *GroupStatusConfigUpsertBulk {
 	return u.Update(func(s *GroupStatusConfigUpsert) {
 		s.UpdateSolJuiceModel()
+	})
+}
+
+// SetModeltraceEnabled sets the "modeltrace_enabled" field.
+func (u *GroupStatusConfigUpsertBulk) SetModeltraceEnabled(v bool) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceEnabled(v)
+	})
+}
+
+// UpdateModeltraceEnabled sets the "modeltrace_enabled" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateModeltraceEnabled() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceEnabled()
+	})
+}
+
+// SetModeltraceExpectedModel sets the "modeltrace_expected_model" field.
+func (u *GroupStatusConfigUpsertBulk) SetModeltraceExpectedModel(v string) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceExpectedModel(v)
+	})
+}
+
+// UpdateModeltraceExpectedModel sets the "modeltrace_expected_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateModeltraceExpectedModel() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceExpectedModel()
+	})
+}
+
+// SetModeltraceRequestModel sets the "modeltrace_request_model" field.
+func (u *GroupStatusConfigUpsertBulk) SetModeltraceRequestModel(v string) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceRequestModel(v)
+	})
+}
+
+// UpdateModeltraceRequestModel sets the "modeltrace_request_model" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateModeltraceRequestModel() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceRequestModel()
+	})
+}
+
+// SetModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field.
+func (u *GroupStatusConfigUpsertBulk) SetModeltraceIntervalSeconds(v int) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.SetModeltraceIntervalSeconds(v)
+	})
+}
+
+// AddModeltraceIntervalSeconds adds v to the "modeltrace_interval_seconds" field.
+func (u *GroupStatusConfigUpsertBulk) AddModeltraceIntervalSeconds(v int) *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.AddModeltraceIntervalSeconds(v)
+	})
+}
+
+// UpdateModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field to the value that was provided on create.
+func (u *GroupStatusConfigUpsertBulk) UpdateModeltraceIntervalSeconds() *GroupStatusConfigUpsertBulk {
+	return u.Update(func(s *GroupStatusConfigUpsert) {
+		s.UpdateModeltraceIntervalSeconds()
 	})
 }
 

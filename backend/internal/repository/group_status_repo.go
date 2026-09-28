@@ -16,14 +16,18 @@ import (
 const (
 	groupStatusConfigColumns = `id, group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
 		interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled,
-		sol_juice_enabled, sol_juice_interval_seconds, sol_juice_model,
+		modeltrace_enabled, modeltrace_expected_model, modeltrace_request_model, modeltrace_interval_seconds,
 		astra_check_enabled, astra_check_request_model, astra_check_tier, astra_check_interval_seconds,
 		created_at, updated_at`
 
+	// 235 的 sol_juice_* 列从 242 起休眠（保留给旧镜像），这里不再读写
 	groupStatusStateColumns = `id, group_id, config_id, latest_status, stable_status, response_excerpt, latency_ms, http_code,
 		sub_status, error_detail, observed_at, consecutive_down, consecutive_non_down,
-		sol_juice_status, sol_juice_stable_status, sol_juice_value, sol_juice_detail, sol_juice_checked_at,
-		sol_juice_consecutive_mismatch, sol_juice_input_tokens, sol_juice_output_tokens, sol_juice_reasoning_tokens,
+		modeltrace_verdict, modeltrace_stable_status, modeltrace_run_expected_model, modeltrace_top_model,
+		modeltrace_top_probability, modeltrace_expected_probability, modeltrace_ranking, modeltrace_reasons,
+		modeltrace_detail, modeltrace_checked_at, modeltrace_consecutive_mismatch, modeltrace_valid_outputs,
+		modeltrace_input_tokens, modeltrace_output_tokens, modeltrace_reasoning_tokens, modeltrace_last_cost_usd,
+		modeltrace_last_run_id,
 		astra_check_verdict, astra_check_stable_status, astra_check_winner, astra_check_matches, astra_check_reasons,
 		astra_check_detail, astra_check_checked_at, astra_check_consecutive_mismatch, astra_check_valid_samples,
 		astra_check_planned_samples, astra_check_input_tokens, astra_check_output_tokens, astra_check_reasoning_tokens,
@@ -39,10 +43,13 @@ const (
 		       COALESCE(s.latest_status, ''), COALESCE(s.stable_status, ''), COALESCE(s.response_excerpt, ''),
 		       s.latency_ms, s.http_code, s.total_latency_ms, COALESCE(s.sub_status, ''), COALESCE(s.error_detail, ''),
 		       s.observed_at, COALESCE(s.consecutive_down, 0), COALESCE(s.consecutive_non_down, 0),
-		       c.sol_juice_enabled, c.sol_juice_model, c.sol_juice_interval_seconds,
-		       COALESCE(s.sol_juice_status, ''), COALESCE(s.sol_juice_stable_status, ''), COALESCE(s.sol_juice_value, ''),
-		       COALESCE(s.sol_juice_detail, ''), s.sol_juice_checked_at, COALESCE(s.sol_juice_consecutive_mismatch, 0),
-		       COALESCE(s.sol_juice_input_tokens, 0), COALESCE(s.sol_juice_output_tokens, 0), COALESCE(s.sol_juice_reasoning_tokens, 0),
+		       c.modeltrace_enabled, c.modeltrace_expected_model, c.modeltrace_request_model, c.modeltrace_interval_seconds,
+		       COALESCE(s.modeltrace_verdict, ''), COALESCE(s.modeltrace_stable_status, ''), COALESCE(s.modeltrace_run_expected_model, ''),
+		       COALESCE(s.modeltrace_top_model, ''), COALESCE(s.modeltrace_top_probability, 0), s.modeltrace_expected_probability,
+		       COALESCE(s.modeltrace_ranking, '[]'::jsonb), COALESCE(s.modeltrace_reasons, '[]'::jsonb), COALESCE(s.modeltrace_detail, ''),
+		       s.modeltrace_checked_at, COALESCE(s.modeltrace_consecutive_mismatch, 0), COALESCE(s.modeltrace_valid_outputs, 0),
+		       COALESCE(s.modeltrace_input_tokens, 0), COALESCE(s.modeltrace_output_tokens, 0), COALESCE(s.modeltrace_reasoning_tokens, 0),
+		       COALESCE(s.modeltrace_last_cost_usd, 0),
 		       c.astra_check_enabled, c.astra_check_request_model, c.astra_check_tier, c.astra_check_interval_seconds,
 		       COALESCE(s.astra_check_verdict, ''), COALESCE(s.astra_check_stable_status, ''), COALESCE(s.astra_check_winner, ''),
 		       COALESCE(s.astra_check_matches, '[]'::jsonb), COALESCE(s.astra_check_reasons, '[]'::jsonb), COALESCE(s.astra_check_detail, ''),
@@ -52,8 +59,11 @@ const (
 		FROM group_status_configs c
 		LEFT JOIN group_status_states s ON s.group_id = c.group_id`
 
-	groupStatusJuiceRecordColumns = `id, group_id, config_id, model, effort, classification, normalized_value, answer_excerpt,
-		http_code, latency_ms, input_tokens, output_tokens, reasoning_tokens, error_detail, observed_at, created_at`
+	groupStatusModelTraceRunColumns = `id, group_id, config_id, platform, bank_sha256, bank_built_at, expected_model, request_model,
+		account_id, account_type, round, verdict, outcome, top_model, top_probability, expected_probability,
+		calibration_queries, beta, ranking, family_probabilities, reasons, outputs,
+		attempts_planned, attempts_made, valid_outputs, input_tokens, output_tokens, reasoning_tokens, cost_usd,
+		latency_ms, http_code, error_detail, started_at, finished_at, created_at`
 )
 
 // aliasColumns 给列清单里的每一列加表别名前缀。
@@ -94,11 +104,11 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 		INSERT INTO group_status_configs (
 			group_id, enabled, probe_model, probe_prompt, validation_mode, expected_keywords,
 			interval_seconds, timeout_seconds, slow_latency_ms, notify_enabled,
-			sol_juice_enabled, sol_juice_interval_seconds, sol_juice_model,
+			modeltrace_enabled, modeltrace_expected_model, modeltrace_request_model, modeltrace_interval_seconds,
 			astra_check_enabled, astra_check_request_model, astra_check_tier, astra_check_interval_seconds,
 			created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
 		ON CONFLICT (group_id) DO UPDATE SET
 			enabled = EXCLUDED.enabled,
 			probe_model = EXCLUDED.probe_model,
@@ -109,9 +119,10 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 			timeout_seconds = EXCLUDED.timeout_seconds,
 			slow_latency_ms = EXCLUDED.slow_latency_ms,
 			notify_enabled = EXCLUDED.notify_enabled,
-			sol_juice_enabled = EXCLUDED.sol_juice_enabled,
-			sol_juice_interval_seconds = EXCLUDED.sol_juice_interval_seconds,
-			sol_juice_model = EXCLUDED.sol_juice_model,
+			modeltrace_enabled = EXCLUDED.modeltrace_enabled,
+			modeltrace_expected_model = EXCLUDED.modeltrace_expected_model,
+			modeltrace_request_model = EXCLUDED.modeltrace_request_model,
+			modeltrace_interval_seconds = EXCLUDED.modeltrace_interval_seconds,
 			astra_check_enabled = EXCLUDED.astra_check_enabled,
 			astra_check_request_model = EXCLUDED.astra_check_request_model,
 			astra_check_tier = EXCLUDED.astra_check_tier,
@@ -120,7 +131,8 @@ func (r *groupStatusRepository) UpsertConfig(ctx context.Context, config *servic
 		RETURNING `+groupStatusConfigColumns+`
 	`, config.GroupID, config.Enabled, config.ProbeModel, config.ProbePrompt, config.ValidationMode,
 		mustJSON(config.ExpectedKeywords), config.IntervalSeconds, config.TimeoutSeconds, config.SlowLatencyMS,
-		config.NotifyEnabled, config.SolJuiceEnabled, config.SolJuiceIntervalSeconds, config.SolJuiceModel,
+		config.NotifyEnabled, config.ModelTraceEnabled, config.ModelTraceExpectedModel, config.ModelTraceRequestModel,
+		config.ModelTraceIntervalSeconds,
 		config.AstraCheckEnabled, config.AstraCheckRequestModel, config.AstraCheckTier, config.AstraCheckIntervalSeconds)
 	return scanGroupStatusConfig(row)
 }
@@ -157,10 +169,11 @@ func (r *groupStatusRepository) ListDueConfigs(ctx context.Context, now time.Tim
 	return out, rows.Err()
 }
 
-// ListDueSolJuiceConfigs 列出到期的纯 Sol 验证配置：分组仍是 OpenAI 平台、两个开关都开、且距上次验证超过间隔。
-func (r *groupStatusRepository) ListDueSolJuiceConfigs(ctx context.Context, now time.Time, limit int) ([]*service.GroupStatusConfig, error) {
+// ListDueModelTraceConfigs 列出到期的 ModelTrace 指纹验证配置：分组仍是 OpenAI / Anthropic 平台、
+// 两个开关都开、且距上次验证超过间隔。
+func (r *groupStatusRepository) ListDueModelTraceConfigs(ctx context.Context, now time.Time, limit int) ([]*service.GroupStatusConfig, error) {
 	if limit <= 0 {
-		limit = 10
+		limit = 3
 	}
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT `+aliasColumns("c", groupStatusConfigColumns)+`
@@ -168,15 +181,15 @@ func (r *groupStatusRepository) ListDueSolJuiceConfigs(ctx context.Context, now 
 		JOIN groups g ON g.id = c.group_id
 		LEFT JOIN group_status_states s ON s.group_id = c.group_id
 		WHERE c.enabled = TRUE
-		  AND c.sol_juice_enabled = TRUE
-		  AND g.platform = $3
+		  AND c.modeltrace_enabled = TRUE
+		  AND g.platform = ANY($3)
 		  AND (
-		        s.sol_juice_checked_at IS NULL
-		        OR s.sol_juice_checked_at <= ($1::timestamptz - (c.sol_juice_interval_seconds * INTERVAL '1 second'))
+		        s.modeltrace_checked_at IS NULL
+		        OR s.modeltrace_checked_at <= ($1::timestamptz - (c.modeltrace_interval_seconds * INTERVAL '1 second'))
 		      )
-		ORDER BY COALESCE(s.sol_juice_checked_at, to_timestamp(0)) ASC, c.group_id ASC
+		ORDER BY COALESCE(s.modeltrace_checked_at, to_timestamp(0)) ASC, c.group_id ASC
 		LIMIT $2
-	`, now, limit, service.PlatformOpenAI)
+	`, now, limit, pq.Array([]string{service.PlatformOpenAI, service.PlatformAnthropic}))
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +276,7 @@ func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *ser
 
 	next, event := service.ComputeGroupStatusTransition(prev, result)
 
-	// 只写存活探测自己的列；sol_juice_* 由 SaveSolJuiceResult 维护，这里不能覆盖
+	// 只写存活探测自己的列；modeltrace_* / astra_check_* 由各自的保存方法维护，这里不能覆盖
 	row := tx.QueryRowContext(ctx, `
 		INSERT INTO group_status_states (
 			group_id, config_id, latest_status, stable_status, response_excerpt, latency_ms, http_code,
@@ -307,11 +320,11 @@ func (r *groupStatusRepository) SaveProbeResult(ctx context.Context, result *ser
 	return savedState, event, nil
 }
 
-// SaveSolJuiceResult 落一条 Juice 样本、只更新 group_status_states 的 sol_juice_* 列，稳定结论切换时写事件。
-func (r *groupStatusRepository) SaveSolJuiceResult(ctx context.Context, result *service.GroupStatusSolJuiceResult) (*service.GroupStatusState, *service.GroupStatusEvent, error) {
+// SaveModelTraceRun 落一条运行记录、只更新 group_status_states 的 modeltrace_* 列，稳定结论切换时写事件。
+func (r *groupStatusRepository) SaveModelTraceRun(ctx context.Context, result *service.GroupStatusModelTraceResult) (*service.GroupStatusModelTraceRun, *service.GroupStatusState, *service.GroupStatusEvent, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer func() {
 		if tx != nil {
@@ -319,64 +332,191 @@ func (r *groupStatusRepository) SaveSolJuiceResult(ctx context.Context, result *
 		}
 	}()
 
-	if _, err := tx.ExecContext(ctx, `
-		INSERT INTO group_status_juice_records (
-			group_id, config_id, model, effort, classification, normalized_value, answer_excerpt,
-			http_code, latency_ms, input_tokens, output_tokens, reasoning_tokens, error_detail, observed_at, created_at
+	round := result.Round
+	if round <= 0 {
+		round = 1
+	}
+	row := tx.QueryRowContext(ctx, `
+		INSERT INTO group_status_modeltrace_runs (
+			group_id, config_id, platform, bank_sha256, bank_built_at, expected_model, request_model,
+			account_id, account_type, round, verdict, outcome, top_model, top_probability, expected_probability,
+			calibration_queries, beta, ranking, family_probabilities, reasons, outputs,
+			attempts_planned, attempts_made, valid_outputs, input_tokens, output_tokens, reasoning_tokens, cost_usd,
+			latency_ms, http_code, error_detail, started_at, finished_at, created_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
-	`, result.GroupID, result.ConfigID, result.Model, result.Effort, result.Classification, result.NormalizedValue,
-		nullIfEmpty(result.AnswerExcerpt), result.HTTPCode, result.LatencyMS, result.InputTokens, result.OutputTokens,
-		result.ReasoningTokens, nullIfEmpty(result.ErrorDetail), result.ObservedAt); err != nil {
-		return nil, nil, err
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+		        $18::jsonb, $19::jsonb, $20::jsonb, $21::jsonb,
+		        $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, NOW())
+		RETURNING `+groupStatusModelTraceRunColumns+`
+	`, result.GroupID, result.ConfigID, result.Platform, result.BankSHA256, result.BankBuiltAt, result.ExpectedModel,
+		result.RequestModel, result.AccountID, result.AccountType, round, result.Verdict, result.Outcome, result.TopModel,
+		result.TopProbability, result.ExpectedProbability, result.CalibrationQueries, result.Beta,
+		mustJSONArray(result.Ranking), mustJSONArray(result.FamilyProbabilities), mustJSONArray(result.Reasons), mustJSONArray(result.Outputs),
+		result.AttemptsPlanned, result.AttemptsMade, result.ValidOutputs, result.InputTokens, result.OutputTokens,
+		result.ReasoningTokens, result.CostUSD, result.LatencyMS, result.HTTPCode, nullIfEmpty(result.ErrorDetail),
+		result.StartedAt, result.FinishedAt)
+	run, err := scanGroupStatusModelTraceRun(row)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	prev, err := r.getStateForUpdate(ctx, tx, result.GroupID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	next, event := service.ComputeSolJuiceTransition(prev, result)
+	next, event := service.ComputeModelTraceTransition(prev, result, run.ID)
 
-	row := tx.QueryRowContext(ctx, `
+	row = tx.QueryRowContext(ctx, `
 		INSERT INTO group_status_states (
-			group_id, config_id, sol_juice_status, sol_juice_stable_status, sol_juice_value, sol_juice_detail,
-			sol_juice_checked_at, sol_juice_consecutive_mismatch, sol_juice_input_tokens, sol_juice_output_tokens,
-			sol_juice_reasoning_tokens, created_at, updated_at
+			group_id, config_id, modeltrace_verdict, modeltrace_stable_status, modeltrace_run_expected_model,
+			modeltrace_top_model, modeltrace_top_probability, modeltrace_expected_probability, modeltrace_ranking,
+			modeltrace_reasons, modeltrace_detail, modeltrace_checked_at, modeltrace_consecutive_mismatch,
+			modeltrace_valid_outputs, modeltrace_input_tokens, modeltrace_output_tokens, modeltrace_reasoning_tokens,
+			modeltrace_last_cost_usd, modeltrace_last_run_id, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
 		ON CONFLICT (group_id) DO UPDATE SET
-			sol_juice_status = EXCLUDED.sol_juice_status,
-			sol_juice_stable_status = EXCLUDED.sol_juice_stable_status,
-			sol_juice_value = EXCLUDED.sol_juice_value,
-			sol_juice_detail = EXCLUDED.sol_juice_detail,
-			sol_juice_checked_at = EXCLUDED.sol_juice_checked_at,
-			sol_juice_consecutive_mismatch = EXCLUDED.sol_juice_consecutive_mismatch,
-			sol_juice_input_tokens = EXCLUDED.sol_juice_input_tokens,
-			sol_juice_output_tokens = EXCLUDED.sol_juice_output_tokens,
-			sol_juice_reasoning_tokens = EXCLUDED.sol_juice_reasoning_tokens,
+			modeltrace_verdict = EXCLUDED.modeltrace_verdict,
+			modeltrace_stable_status = EXCLUDED.modeltrace_stable_status,
+			modeltrace_run_expected_model = EXCLUDED.modeltrace_run_expected_model,
+			modeltrace_top_model = EXCLUDED.modeltrace_top_model,
+			modeltrace_top_probability = EXCLUDED.modeltrace_top_probability,
+			modeltrace_expected_probability = EXCLUDED.modeltrace_expected_probability,
+			modeltrace_ranking = EXCLUDED.modeltrace_ranking,
+			modeltrace_reasons = EXCLUDED.modeltrace_reasons,
+			modeltrace_detail = EXCLUDED.modeltrace_detail,
+			modeltrace_checked_at = EXCLUDED.modeltrace_checked_at,
+			modeltrace_consecutive_mismatch = EXCLUDED.modeltrace_consecutive_mismatch,
+			modeltrace_valid_outputs = EXCLUDED.modeltrace_valid_outputs,
+			modeltrace_input_tokens = EXCLUDED.modeltrace_input_tokens,
+			modeltrace_output_tokens = EXCLUDED.modeltrace_output_tokens,
+			modeltrace_reasoning_tokens = EXCLUDED.modeltrace_reasoning_tokens,
+			modeltrace_last_cost_usd = EXCLUDED.modeltrace_last_cost_usd,
+			modeltrace_last_run_id = EXCLUDED.modeltrace_last_run_id,
 			updated_at = NOW()
 		RETURNING `+groupStatusStateColumns+`
-	`, next.GroupID, next.ConfigID, next.SolJuiceStatus, next.SolJuiceStableStatus, next.SolJuiceValue,
-		nullIfEmpty(next.SolJuiceDetail), next.SolJuiceCheckedAt, next.SolJuiceConsecutiveMismatch,
-		next.SolJuiceInputTokens, next.SolJuiceOutputTokens, next.SolJuiceReasoningTokens)
+	`, next.GroupID, next.ConfigID, next.ModelTraceVerdict, next.ModelTraceStableStatus, next.ModelTraceRunExpectedModel,
+		next.ModelTraceTopModel, next.ModelTraceTopProbability, next.ModelTraceExpectedProbability,
+		mustJSONArray(next.ModelTraceRanking), mustJSONArray(next.ModelTraceReasons), nullIfEmpty(next.ModelTraceDetail),
+		next.ModelTraceCheckedAt, next.ModelTraceConsecutiveMismatch, next.ModelTraceValidOutputs,
+		next.ModelTraceInputTokens, next.ModelTraceOutputTokens, next.ModelTraceReasoningTokens,
+		next.ModelTraceLastCostUSD, next.ModelTraceLastRunID)
 	savedState, err := scanGroupStatusState(row)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	if event != nil {
 		event, err = insertGroupStatusEvent(ctx, tx, event)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	tx = nil
-	return savedState, event, nil
+	return run, savedState, event, nil
+}
+
+func (r *groupStatusRepository) ListRecentModelTraceRuns(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusModelTraceRun, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT `+groupStatusModelTraceRunColumns+`
+		FROM group_status_modeltrace_runs
+		WHERE group_id = $1
+		ORDER BY finished_at DESC, id DESC
+		LIMIT $2
+	`, groupID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := make([]service.GroupStatusModelTraceRun, 0)
+	for rows.Next() {
+		run, err := scanGroupStatusModelTraceRun(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, *run)
+	}
+	return out, rows.Err()
+}
+
+func (r *groupStatusRepository) DeleteModelTraceRunsOlderThan(ctx context.Context, before time.Time) (int64, error) {
+	res, err := r.db.ExecContext(ctx, `DELETE FROM group_status_modeltrace_runs WHERE finished_at < $1`, before)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
+func scanGroupStatusModelTraceRun(row scannable) (*service.GroupStatusModelTraceRun, error) {
+	run := &service.GroupStatusModelTraceRun{}
+	var accountID sql.NullInt64
+	var expectedProbability sql.NullFloat64
+	var rankingRaw, familiesRaw, reasonsRaw, outputsRaw []byte
+	var latency sql.NullInt64
+	var httpCode sql.NullInt64
+	var errorDetail sql.NullString
+	if err := row.Scan(
+		&run.ID, &run.GroupID, &run.ConfigID, &run.Platform, &run.BankSHA256, &run.BankBuiltAt, &run.ExpectedModel,
+		&run.RequestModel, &accountID, &run.AccountType, &run.Round, &run.Verdict, &run.Outcome, &run.TopModel,
+		&run.TopProbability, &expectedProbability, &run.CalibrationQueries, &run.Beta,
+		&rankingRaw, &familiesRaw, &reasonsRaw, &outputsRaw,
+		&run.AttemptsPlanned, &run.AttemptsMade, &run.ValidOutputs, &run.InputTokens, &run.OutputTokens,
+		&run.ReasoningTokens, &run.CostUSD, &latency, &httpCode, &errorDetail, &run.StartedAt, &run.FinishedAt, &run.CreatedAt,
+	); err != nil {
+		return nil, err
+	}
+	if accountID.Valid {
+		v := accountID.Int64
+		run.AccountID = &v
+	}
+	if expectedProbability.Valid {
+		v := expectedProbability.Float64
+		run.ExpectedProbability = &v
+	}
+	run.Ranking = decodeModelTraceRanking(rankingRaw)
+	if len(familiesRaw) > 0 {
+		_ = json.Unmarshal(familiesRaw, &run.FamilyProbabilities)
+	}
+	if run.FamilyProbabilities == nil {
+		run.FamilyProbabilities = []service.ModelTraceFamilyProbability{}
+	}
+	run.Reasons = decodeJSONStrings(reasonsRaw)
+	if len(outputsRaw) > 0 {
+		_ = json.Unmarshal(outputsRaw, &run.Outputs)
+	}
+	if run.Outputs == nil {
+		run.Outputs = []service.ModelTraceOutputRecord{}
+	}
+	if latency.Valid {
+		v := latency.Int64
+		run.LatencyMS = &v
+	}
+	if httpCode.Valid {
+		v := int(httpCode.Int64)
+		run.HTTPCode = &v
+	}
+	run.ErrorDetail = errorDetail.String
+	return run, nil
+}
+
+func decodeModelTraceRanking(raw []byte) []service.ModelTraceRankEntry {
+	out := []service.ModelTraceRankEntry{}
+	if len(raw) > 0 {
+		_ = json.Unmarshal(raw, &out)
+	}
+	if out == nil {
+		out = []service.ModelTraceRankEntry{}
+	}
+	return out
 }
 
 func insertGroupStatusEvent(ctx context.Context, tx *sql.Tx, event *service.GroupStatusEvent) (*service.GroupStatusEvent, error) {
@@ -442,33 +582,6 @@ func (r *groupStatusRepository) ListRecentRecords(ctx context.Context, groupID i
 	return out, rows.Err()
 }
 
-func (r *groupStatusRepository) ListRecentSolJuiceRecords(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusJuiceRecord, error) {
-	if limit <= 0 {
-		limit = 20
-	}
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT `+groupStatusJuiceRecordColumns+`
-		FROM group_status_juice_records
-		WHERE group_id = $1
-		ORDER BY observed_at DESC
-		LIMIT $2
-	`, groupID, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	out := make([]service.GroupStatusJuiceRecord, 0)
-	for rows.Next() {
-		record, err := scanGroupStatusJuiceRecord(rows)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, *record)
-	}
-	return out, rows.Err()
-}
-
 func (r *groupStatusRepository) ListEvents(ctx context.Context, groupID int64, limit int) ([]service.GroupStatusEvent, error) {
 	if limit <= 0 {
 		limit = 20
@@ -526,14 +639,6 @@ func (r *groupStatusRepository) CalculateAvailability(ctx context.Context, group
 
 func (r *groupStatusRepository) DeleteRecordsOlderThan(ctx context.Context, before time.Time) (int64, error) {
 	res, err := r.db.ExecContext(ctx, `DELETE FROM group_status_records WHERE observed_at < $1`, before)
-	if err != nil {
-		return 0, err
-	}
-	return res.RowsAffected()
-}
-
-func (r *groupStatusRepository) DeleteSolJuiceRecordsOlderThan(ctx context.Context, before time.Time) (int64, error) {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM group_status_juice_records WHERE observed_at < $1`, before)
 	if err != nil {
 		return 0, err
 	}
@@ -798,7 +903,7 @@ func scanGroupStatusConfig(row scannable) (*service.GroupStatusConfig, error) {
 	if err := row.Scan(
 		&cfg.ID, &cfg.GroupID, &cfg.Enabled, &cfg.ProbeModel, &cfg.ProbePrompt, &cfg.ValidationMode, &keywordsRaw,
 		&cfg.IntervalSeconds, &cfg.TimeoutSeconds, &cfg.SlowLatencyMS, &cfg.NotifyEnabled,
-		&cfg.SolJuiceEnabled, &cfg.SolJuiceIntervalSeconds, &cfg.SolJuiceModel,
+		&cfg.ModelTraceEnabled, &cfg.ModelTraceExpectedModel, &cfg.ModelTraceRequestModel, &cfg.ModelTraceIntervalSeconds,
 		&cfg.AstraCheckEnabled, &cfg.AstraCheckRequestModel, &cfg.AstraCheckTier, &cfg.AstraCheckIntervalSeconds,
 		&cfg.CreatedAt, &cfg.UpdatedAt,
 	); err != nil {
@@ -823,8 +928,11 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 	var subStatus sql.NullString
 	var errorDetail sql.NullString
 	var observedAt sql.NullTime
-	var solJuiceDetail sql.NullString
-	var solJuiceCheckedAt sql.NullTime
+	var modelTraceExpectedProbability sql.NullFloat64
+	var modelTraceRankingRaw, modelTraceReasonsRaw []byte
+	var modelTraceDetail sql.NullString
+	var modelTraceCheckedAt sql.NullTime
+	var modelTraceLastRunID sql.NullInt64
 	var astraMatchesRaw, astraReasonsRaw []byte
 	var astraDetail sql.NullString
 	var astraCheckedAt sql.NullTime
@@ -834,8 +942,11 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 		&state.ID, &state.GroupID, &state.ConfigID, &state.LatestStatus, &state.StableStatus, &responseExcerpt,
 		&latency, &httpCode, &subStatus, &errorDetail, &observedAt, &state.ConsecutiveDown,
 		&state.ConsecutiveNonDown,
-		&state.SolJuiceStatus, &state.SolJuiceStableStatus, &state.SolJuiceValue, &solJuiceDetail, &solJuiceCheckedAt,
-		&state.SolJuiceConsecutiveMismatch, &state.SolJuiceInputTokens, &state.SolJuiceOutputTokens, &state.SolJuiceReasoningTokens,
+		&state.ModelTraceVerdict, &state.ModelTraceStableStatus, &state.ModelTraceRunExpectedModel, &state.ModelTraceTopModel,
+		&state.ModelTraceTopProbability, &modelTraceExpectedProbability, &modelTraceRankingRaw, &modelTraceReasonsRaw,
+		&modelTraceDetail, &modelTraceCheckedAt, &state.ModelTraceConsecutiveMismatch, &state.ModelTraceValidOutputs,
+		&state.ModelTraceInputTokens, &state.ModelTraceOutputTokens, &state.ModelTraceReasoningTokens, &state.ModelTraceLastCostUSD,
+		&modelTraceLastRunID,
 		&state.AstraCheckVerdict, &state.AstraCheckStableStatus, &state.AstraCheckWinner, &astraMatchesRaw, &astraReasonsRaw,
 		&astraDetail, &astraCheckedAt, &state.AstraCheckConsecutiveMismatch, &state.AstraCheckValidSamples,
 		&state.AstraCheckPlannedSamples, &state.AstraCheckInputTokens, &state.AstraCheckOutputTokens, &state.AstraCheckReasoningTokens,
@@ -874,10 +985,20 @@ func scanGroupStatusState(row scannable) (*service.GroupStatusState, error) {
 		v := observedAt.Time
 		state.ObservedAt = &v
 	}
-	state.SolJuiceDetail = solJuiceDetail.String
-	if solJuiceCheckedAt.Valid {
-		v := solJuiceCheckedAt.Time
-		state.SolJuiceCheckedAt = &v
+	if modelTraceExpectedProbability.Valid {
+		v := modelTraceExpectedProbability.Float64
+		state.ModelTraceExpectedProbability = &v
+	}
+	state.ModelTraceRanking = decodeModelTraceRanking(modelTraceRankingRaw)
+	state.ModelTraceReasons = decodeJSONStrings(modelTraceReasonsRaw)
+	state.ModelTraceDetail = modelTraceDetail.String
+	if modelTraceCheckedAt.Valid {
+		v := modelTraceCheckedAt.Time
+		state.ModelTraceCheckedAt = &v
+	}
+	if modelTraceLastRunID.Valid {
+		v := modelTraceLastRunID.Int64
+		state.ModelTraceLastRunID = &v
 	}
 	return state, nil
 }
@@ -910,32 +1031,6 @@ func scanGroupStatusRecord(row scannable) (*service.GroupStatusRecord, error) {
 		record.HTTPCode = &v
 	}
 	record.SubStatus = subStatus.String
-	record.ErrorDetail = errorDetail.String
-	return record, nil
-}
-
-func scanGroupStatusJuiceRecord(row scannable) (*service.GroupStatusJuiceRecord, error) {
-	record := &service.GroupStatusJuiceRecord{}
-	var answerExcerpt sql.NullString
-	var httpCode sql.NullInt64
-	var latency sql.NullInt64
-	var errorDetail sql.NullString
-	if err := row.Scan(
-		&record.ID, &record.GroupID, &record.ConfigID, &record.Model, &record.Effort, &record.Classification,
-		&record.NormalizedValue, &answerExcerpt, &httpCode, &latency, &record.InputTokens, &record.OutputTokens,
-		&record.ReasoningTokens, &errorDetail, &record.ObservedAt, &record.CreatedAt,
-	); err != nil {
-		return nil, err
-	}
-	record.AnswerExcerpt = answerExcerpt.String
-	if httpCode.Valid {
-		v := int(httpCode.Int64)
-		record.HTTPCode = &v
-	}
-	if latency.Valid {
-		v := latency.Int64
-		record.LatencyMS = &v
-	}
 	record.ErrorDetail = errorDetail.String
 	return record, nil
 }
@@ -982,7 +1077,9 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 	var latency sql.NullInt64
 	var httpCode sql.NullInt64
 	var observedAt sql.NullTime
-	var solJuiceCheckedAt sql.NullTime
+	var modelTraceExpectedProbability sql.NullFloat64
+	var modelTraceRankingRaw, modelTraceReasonsRaw []byte
+	var modelTraceCheckedAt sql.NullTime
 	var astraMatchesRaw, astraReasonsRaw []byte
 	var astraCheckedAt sql.NullTime
 	var astraLastRunID sql.NullInt64
@@ -991,10 +1088,13 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 		&item.GroupID, &item.ConfigID, &item.Enabled, &item.ProbeModel,
 		&item.LatestStatus, &item.StableStatus, &item.ResponseExcerpt, &latency, &httpCode, &totalLatency,
 		&item.SubStatus, &item.ErrorDetail, &observedAt, &item.ConsecutiveDown, &item.ConsecutiveNonDown,
-		&item.SolJuiceEnabled, &item.SolJuiceModel, &item.SolJuiceIntervalSeconds,
-		&item.SolJuiceStatus, &item.SolJuiceStableStatus, &item.SolJuiceValue,
-		&item.SolJuiceDetail, &solJuiceCheckedAt, &item.SolJuiceConsecutiveMismatch,
-		&item.SolJuiceInputTokens, &item.SolJuiceOutputTokens, &item.SolJuiceReasoningTokens,
+		&item.ModelTraceEnabled, &item.ModelTraceExpectedModel, &item.ModelTraceRequestModel, &item.ModelTraceIntervalSeconds,
+		&item.ModelTraceVerdict, &item.ModelTraceStableStatus, &item.ModelTraceRunExpectedModel,
+		&item.ModelTraceTopModel, &item.ModelTraceTopProbability, &modelTraceExpectedProbability,
+		&modelTraceRankingRaw, &modelTraceReasonsRaw, &item.ModelTraceDetail,
+		&modelTraceCheckedAt, &item.ModelTraceConsecutiveMismatch, &item.ModelTraceValidOutputs,
+		&item.ModelTraceInputTokens, &item.ModelTraceOutputTokens, &item.ModelTraceReasoningTokens,
+		&item.ModelTraceLastCostUSD,
 		&item.AstraCheckEnabled, &item.AstraCheckRequestModel, &item.AstraCheckTier, &item.AstraCheckIntervalSeconds,
 		&item.AstraCheckVerdict, &item.AstraCheckStableStatus, &item.AstraCheckWinner,
 		&astraMatchesRaw, &astraReasonsRaw, &item.AstraCheckDetail,
@@ -1027,9 +1127,15 @@ func scanGroupStatusSummary(row scannable) (*service.GroupStatusSummary, error) 
 		v := observedAt.Time
 		item.ObservedAt = &v
 	}
-	if solJuiceCheckedAt.Valid {
-		v := solJuiceCheckedAt.Time
-		item.SolJuiceCheckedAt = &v
+	if modelTraceExpectedProbability.Valid {
+		v := modelTraceExpectedProbability.Float64
+		item.ModelTraceExpectedProbability = &v
+	}
+	item.ModelTraceRanking = decodeModelTraceRanking(modelTraceRankingRaw)
+	item.ModelTraceReasons = decodeJSONStrings(modelTraceReasonsRaw)
+	if modelTraceCheckedAt.Valid {
+		v := modelTraceCheckedAt.Time
+		item.ModelTraceCheckedAt = &v
 	}
 	return item, nil
 }

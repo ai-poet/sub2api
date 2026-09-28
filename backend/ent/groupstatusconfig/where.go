@@ -124,6 +124,26 @@ func SolJuiceModel(v string) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldSolJuiceModel, v))
 }
 
+// ModeltraceEnabled applies equality check predicate on the "modeltrace_enabled" field. It's identical to ModeltraceEnabledEQ.
+func ModeltraceEnabled(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceEnabled, v))
+}
+
+// ModeltraceExpectedModel applies equality check predicate on the "modeltrace_expected_model" field. It's identical to ModeltraceExpectedModelEQ.
+func ModeltraceExpectedModel(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceRequestModel applies equality check predicate on the "modeltrace_request_model" field. It's identical to ModeltraceRequestModelEQ.
+func ModeltraceRequestModel(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceIntervalSeconds applies equality check predicate on the "modeltrace_interval_seconds" field. It's identical to ModeltraceIntervalSecondsEQ.
+func ModeltraceIntervalSeconds(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceIntervalSeconds, v))
+}
+
 // AstraCheckEnabled applies equality check predicate on the "astra_check_enabled" field. It's identical to AstraCheckEnabledEQ.
 func AstraCheckEnabled(v bool) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldEQ(FieldAstraCheckEnabled, v))
@@ -712,6 +732,186 @@ func SolJuiceModelEqualFold(v string) predicate.GroupStatusConfig {
 // SolJuiceModelContainsFold applies the ContainsFold predicate on the "sol_juice_model" field.
 func SolJuiceModelContainsFold(v string) predicate.GroupStatusConfig {
 	return predicate.GroupStatusConfig(sql.FieldContainsFold(FieldSolJuiceModel, v))
+}
+
+// ModeltraceEnabledEQ applies the EQ predicate on the "modeltrace_enabled" field.
+func ModeltraceEnabledEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceEnabled, v))
+}
+
+// ModeltraceEnabledNEQ applies the NEQ predicate on the "modeltrace_enabled" field.
+func ModeltraceEnabledNEQ(v bool) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldModeltraceEnabled, v))
+}
+
+// ModeltraceExpectedModelEQ applies the EQ predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelNEQ applies the NEQ predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelNEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelIn applies the In predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldModeltraceExpectedModel, vs...))
+}
+
+// ModeltraceExpectedModelNotIn applies the NotIn predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelNotIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldModeltraceExpectedModel, vs...))
+}
+
+// ModeltraceExpectedModelGT applies the GT predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelGT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelGTE applies the GTE predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelGTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelLT applies the LT predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelLT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelLTE applies the LTE predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelLTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelContains applies the Contains predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelContains(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContains(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelHasPrefix applies the HasPrefix predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelHasPrefix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasPrefix(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelHasSuffix applies the HasSuffix predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelHasSuffix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasSuffix(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelEqualFold applies the EqualFold predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelEqualFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEqualFold(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceExpectedModelContainsFold applies the ContainsFold predicate on the "modeltrace_expected_model" field.
+func ModeltraceExpectedModelContainsFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContainsFold(FieldModeltraceExpectedModel, v))
+}
+
+// ModeltraceRequestModelEQ applies the EQ predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelNEQ applies the NEQ predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelNEQ(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelIn applies the In predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldModeltraceRequestModel, vs...))
+}
+
+// ModeltraceRequestModelNotIn applies the NotIn predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelNotIn(vs ...string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldModeltraceRequestModel, vs...))
+}
+
+// ModeltraceRequestModelGT applies the GT predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelGT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelGTE applies the GTE predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelGTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelLT applies the LT predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelLT(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelLTE applies the LTE predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelLTE(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelContains applies the Contains predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelContains(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContains(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelHasPrefix applies the HasPrefix predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelHasPrefix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasPrefix(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelHasSuffix applies the HasSuffix predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelHasSuffix(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldHasSuffix(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelEqualFold applies the EqualFold predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelEqualFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEqualFold(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceRequestModelContainsFold applies the ContainsFold predicate on the "modeltrace_request_model" field.
+func ModeltraceRequestModelContainsFold(v string) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldContainsFold(FieldModeltraceRequestModel, v))
+}
+
+// ModeltraceIntervalSecondsEQ applies the EQ predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsEQ(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldEQ(FieldModeltraceIntervalSeconds, v))
+}
+
+// ModeltraceIntervalSecondsNEQ applies the NEQ predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsNEQ(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNEQ(FieldModeltraceIntervalSeconds, v))
+}
+
+// ModeltraceIntervalSecondsIn applies the In predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsIn(vs ...int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldIn(FieldModeltraceIntervalSeconds, vs...))
+}
+
+// ModeltraceIntervalSecondsNotIn applies the NotIn predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsNotIn(vs ...int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldNotIn(FieldModeltraceIntervalSeconds, vs...))
+}
+
+// ModeltraceIntervalSecondsGT applies the GT predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsGT(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGT(FieldModeltraceIntervalSeconds, v))
+}
+
+// ModeltraceIntervalSecondsGTE applies the GTE predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsGTE(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldGTE(FieldModeltraceIntervalSeconds, v))
+}
+
+// ModeltraceIntervalSecondsLT applies the LT predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsLT(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLT(FieldModeltraceIntervalSeconds, v))
+}
+
+// ModeltraceIntervalSecondsLTE applies the LTE predicate on the "modeltrace_interval_seconds" field.
+func ModeltraceIntervalSecondsLTE(v int) predicate.GroupStatusConfig {
+	return predicate.GroupStatusConfig(sql.FieldLTE(FieldModeltraceIntervalSeconds, v))
 }
 
 // AstraCheckEnabledEQ applies the EQ predicate on the "astra_check_enabled" field.

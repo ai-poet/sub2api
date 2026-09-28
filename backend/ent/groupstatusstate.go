@@ -66,6 +66,40 @@ type GroupStatusState struct {
 	SolJuiceOutputTokens int64 `json:"sol_juice_output_tokens,omitempty"`
 	// SolJuiceReasoningTokens holds the value of the "sol_juice_reasoning_tokens" field.
 	SolJuiceReasoningTokens int64 `json:"sol_juice_reasoning_tokens,omitempty"`
+	// ModeltraceVerdict holds the value of the "modeltrace_verdict" field.
+	ModeltraceVerdict string `json:"modeltrace_verdict,omitempty"`
+	// ModeltraceStableStatus holds the value of the "modeltrace_stable_status" field.
+	ModeltraceStableStatus string `json:"modeltrace_stable_status,omitempty"`
+	// ModeltraceRunExpectedModel holds the value of the "modeltrace_run_expected_model" field.
+	ModeltraceRunExpectedModel string `json:"modeltrace_run_expected_model,omitempty"`
+	// ModeltraceTopModel holds the value of the "modeltrace_top_model" field.
+	ModeltraceTopModel string `json:"modeltrace_top_model,omitempty"`
+	// ModeltraceTopProbability holds the value of the "modeltrace_top_probability" field.
+	ModeltraceTopProbability float64 `json:"modeltrace_top_probability,omitempty"`
+	// ModeltraceExpectedProbability holds the value of the "modeltrace_expected_probability" field.
+	ModeltraceExpectedProbability *float64 `json:"modeltrace_expected_probability,omitempty"`
+	// ModeltraceRanking holds the value of the "modeltrace_ranking" field.
+	ModeltraceRanking []map[string]interface{} `json:"modeltrace_ranking,omitempty"`
+	// ModeltraceReasons holds the value of the "modeltrace_reasons" field.
+	ModeltraceReasons []string `json:"modeltrace_reasons,omitempty"`
+	// ModeltraceDetail holds the value of the "modeltrace_detail" field.
+	ModeltraceDetail *string `json:"modeltrace_detail,omitempty"`
+	// ModeltraceCheckedAt holds the value of the "modeltrace_checked_at" field.
+	ModeltraceCheckedAt *time.Time `json:"modeltrace_checked_at,omitempty"`
+	// ModeltraceConsecutiveMismatch holds the value of the "modeltrace_consecutive_mismatch" field.
+	ModeltraceConsecutiveMismatch int `json:"modeltrace_consecutive_mismatch,omitempty"`
+	// ModeltraceValidOutputs holds the value of the "modeltrace_valid_outputs" field.
+	ModeltraceValidOutputs int `json:"modeltrace_valid_outputs,omitempty"`
+	// ModeltraceInputTokens holds the value of the "modeltrace_input_tokens" field.
+	ModeltraceInputTokens int64 `json:"modeltrace_input_tokens,omitempty"`
+	// ModeltraceOutputTokens holds the value of the "modeltrace_output_tokens" field.
+	ModeltraceOutputTokens int64 `json:"modeltrace_output_tokens,omitempty"`
+	// ModeltraceReasoningTokens holds the value of the "modeltrace_reasoning_tokens" field.
+	ModeltraceReasoningTokens int64 `json:"modeltrace_reasoning_tokens,omitempty"`
+	// ModeltraceLastCostUsd holds the value of the "modeltrace_last_cost_usd" field.
+	ModeltraceLastCostUsd float64 `json:"modeltrace_last_cost_usd,omitempty"`
+	// ModeltraceLastRunID holds the value of the "modeltrace_last_run_id" field.
+	ModeltraceLastRunID *int64 `json:"modeltrace_last_run_id,omitempty"`
 	// AstraCheckVerdict holds the value of the "astra_check_verdict" field.
 	AstraCheckVerdict string `json:"astra_check_verdict,omitempty"`
 	// AstraCheckStableStatus holds the value of the "astra_check_stable_status" field.
@@ -102,13 +136,15 @@ func (*GroupStatusState) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case groupstatusstate.FieldAstraCheckMatches, groupstatusstate.FieldAstraCheckReasons:
+		case groupstatusstate.FieldModeltraceRanking, groupstatusstate.FieldModeltraceReasons, groupstatusstate.FieldAstraCheckMatches, groupstatusstate.FieldAstraCheckReasons:
 			values[i] = new([]byte)
-		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldTotalLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown, groupstatusstate.FieldSolJuiceConsecutiveMismatch, groupstatusstate.FieldSolJuiceInputTokens, groupstatusstate.FieldSolJuiceOutputTokens, groupstatusstate.FieldSolJuiceReasoningTokens, groupstatusstate.FieldAstraCheckConsecutiveMismatch, groupstatusstate.FieldAstraCheckValidSamples, groupstatusstate.FieldAstraCheckPlannedSamples, groupstatusstate.FieldAstraCheckInputTokens, groupstatusstate.FieldAstraCheckOutputTokens, groupstatusstate.FieldAstraCheckReasoningTokens, groupstatusstate.FieldAstraCheckLastRunID:
+		case groupstatusstate.FieldModeltraceTopProbability, groupstatusstate.FieldModeltraceExpectedProbability, groupstatusstate.FieldModeltraceLastCostUsd:
+			values[i] = new(sql.NullFloat64)
+		case groupstatusstate.FieldID, groupstatusstate.FieldGroupID, groupstatusstate.FieldConfigID, groupstatusstate.FieldLatencyMs, groupstatusstate.FieldTotalLatencyMs, groupstatusstate.FieldHTTPCode, groupstatusstate.FieldConsecutiveDown, groupstatusstate.FieldConsecutiveNonDown, groupstatusstate.FieldSolJuiceConsecutiveMismatch, groupstatusstate.FieldSolJuiceInputTokens, groupstatusstate.FieldSolJuiceOutputTokens, groupstatusstate.FieldSolJuiceReasoningTokens, groupstatusstate.FieldModeltraceConsecutiveMismatch, groupstatusstate.FieldModeltraceValidOutputs, groupstatusstate.FieldModeltraceInputTokens, groupstatusstate.FieldModeltraceOutputTokens, groupstatusstate.FieldModeltraceReasoningTokens, groupstatusstate.FieldModeltraceLastRunID, groupstatusstate.FieldAstraCheckConsecutiveMismatch, groupstatusstate.FieldAstraCheckValidSamples, groupstatusstate.FieldAstraCheckPlannedSamples, groupstatusstate.FieldAstraCheckInputTokens, groupstatusstate.FieldAstraCheckOutputTokens, groupstatusstate.FieldAstraCheckReasoningTokens, groupstatusstate.FieldAstraCheckLastRunID:
 			values[i] = new(sql.NullInt64)
-		case groupstatusstate.FieldLatestStatus, groupstatusstate.FieldStableStatus, groupstatusstate.FieldResponseExcerpt, groupstatusstate.FieldSubStatus, groupstatusstate.FieldErrorDetail, groupstatusstate.FieldSolJuiceStatus, groupstatusstate.FieldSolJuiceStableStatus, groupstatusstate.FieldSolJuiceValue, groupstatusstate.FieldSolJuiceDetail, groupstatusstate.FieldAstraCheckVerdict, groupstatusstate.FieldAstraCheckStableStatus, groupstatusstate.FieldAstraCheckWinner, groupstatusstate.FieldAstraCheckDetail:
+		case groupstatusstate.FieldLatestStatus, groupstatusstate.FieldStableStatus, groupstatusstate.FieldResponseExcerpt, groupstatusstate.FieldSubStatus, groupstatusstate.FieldErrorDetail, groupstatusstate.FieldSolJuiceStatus, groupstatusstate.FieldSolJuiceStableStatus, groupstatusstate.FieldSolJuiceValue, groupstatusstate.FieldSolJuiceDetail, groupstatusstate.FieldModeltraceVerdict, groupstatusstate.FieldModeltraceStableStatus, groupstatusstate.FieldModeltraceRunExpectedModel, groupstatusstate.FieldModeltraceTopModel, groupstatusstate.FieldModeltraceDetail, groupstatusstate.FieldAstraCheckVerdict, groupstatusstate.FieldAstraCheckStableStatus, groupstatusstate.FieldAstraCheckWinner, groupstatusstate.FieldAstraCheckDetail:
 			values[i] = new(sql.NullString)
-		case groupstatusstate.FieldCreatedAt, groupstatusstate.FieldUpdatedAt, groupstatusstate.FieldObservedAt, groupstatusstate.FieldSolJuiceCheckedAt, groupstatusstate.FieldAstraCheckCheckedAt:
+		case groupstatusstate.FieldCreatedAt, groupstatusstate.FieldUpdatedAt, groupstatusstate.FieldObservedAt, groupstatusstate.FieldSolJuiceCheckedAt, groupstatusstate.FieldModeltraceCheckedAt, groupstatusstate.FieldAstraCheckCheckedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -282,6 +318,116 @@ func (_m *GroupStatusState) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field sol_juice_reasoning_tokens", values[i])
 			} else if value.Valid {
 				_m.SolJuiceReasoningTokens = value.Int64
+			}
+		case groupstatusstate.FieldModeltraceVerdict:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_verdict", values[i])
+			} else if value.Valid {
+				_m.ModeltraceVerdict = value.String
+			}
+		case groupstatusstate.FieldModeltraceStableStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_stable_status", values[i])
+			} else if value.Valid {
+				_m.ModeltraceStableStatus = value.String
+			}
+		case groupstatusstate.FieldModeltraceRunExpectedModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_run_expected_model", values[i])
+			} else if value.Valid {
+				_m.ModeltraceRunExpectedModel = value.String
+			}
+		case groupstatusstate.FieldModeltraceTopModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_top_model", values[i])
+			} else if value.Valid {
+				_m.ModeltraceTopModel = value.String
+			}
+		case groupstatusstate.FieldModeltraceTopProbability:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_top_probability", values[i])
+			} else if value.Valid {
+				_m.ModeltraceTopProbability = value.Float64
+			}
+		case groupstatusstate.FieldModeltraceExpectedProbability:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_expected_probability", values[i])
+			} else if value.Valid {
+				_m.ModeltraceExpectedProbability = new(float64)
+				*_m.ModeltraceExpectedProbability = value.Float64
+			}
+		case groupstatusstate.FieldModeltraceRanking:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_ranking", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.ModeltraceRanking); err != nil {
+					return fmt.Errorf("unmarshal field modeltrace_ranking: %w", err)
+				}
+			}
+		case groupstatusstate.FieldModeltraceReasons:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_reasons", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.ModeltraceReasons); err != nil {
+					return fmt.Errorf("unmarshal field modeltrace_reasons: %w", err)
+				}
+			}
+		case groupstatusstate.FieldModeltraceDetail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_detail", values[i])
+			} else if value.Valid {
+				_m.ModeltraceDetail = new(string)
+				*_m.ModeltraceDetail = value.String
+			}
+		case groupstatusstate.FieldModeltraceCheckedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_checked_at", values[i])
+			} else if value.Valid {
+				_m.ModeltraceCheckedAt = new(time.Time)
+				*_m.ModeltraceCheckedAt = value.Time
+			}
+		case groupstatusstate.FieldModeltraceConsecutiveMismatch:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_consecutive_mismatch", values[i])
+			} else if value.Valid {
+				_m.ModeltraceConsecutiveMismatch = int(value.Int64)
+			}
+		case groupstatusstate.FieldModeltraceValidOutputs:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_valid_outputs", values[i])
+			} else if value.Valid {
+				_m.ModeltraceValidOutputs = int(value.Int64)
+			}
+		case groupstatusstate.FieldModeltraceInputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_input_tokens", values[i])
+			} else if value.Valid {
+				_m.ModeltraceInputTokens = value.Int64
+			}
+		case groupstatusstate.FieldModeltraceOutputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_output_tokens", values[i])
+			} else if value.Valid {
+				_m.ModeltraceOutputTokens = value.Int64
+			}
+		case groupstatusstate.FieldModeltraceReasoningTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_reasoning_tokens", values[i])
+			} else if value.Valid {
+				_m.ModeltraceReasoningTokens = value.Int64
+			}
+		case groupstatusstate.FieldModeltraceLastCostUsd:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_last_cost_usd", values[i])
+			} else if value.Valid {
+				_m.ModeltraceLastCostUsd = value.Float64
+			}
+		case groupstatusstate.FieldModeltraceLastRunID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field modeltrace_last_run_id", values[i])
+			} else if value.Valid {
+				_m.ModeltraceLastRunID = new(int64)
+				*_m.ModeltraceLastRunID = value.Int64
 			}
 		case groupstatusstate.FieldAstraCheckVerdict:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -497,6 +643,65 @@ func (_m *GroupStatusState) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sol_juice_reasoning_tokens=")
 	builder.WriteString(fmt.Sprintf("%v", _m.SolJuiceReasoningTokens))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_verdict=")
+	builder.WriteString(_m.ModeltraceVerdict)
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_stable_status=")
+	builder.WriteString(_m.ModeltraceStableStatus)
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_run_expected_model=")
+	builder.WriteString(_m.ModeltraceRunExpectedModel)
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_top_model=")
+	builder.WriteString(_m.ModeltraceTopModel)
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_top_probability=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceTopProbability))
+	builder.WriteString(", ")
+	if v := _m.ModeltraceExpectedProbability; v != nil {
+		builder.WriteString("modeltrace_expected_probability=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_ranking=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceRanking))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_reasons=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceReasons))
+	builder.WriteString(", ")
+	if v := _m.ModeltraceDetail; v != nil {
+		builder.WriteString("modeltrace_detail=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.ModeltraceCheckedAt; v != nil {
+		builder.WriteString("modeltrace_checked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_consecutive_mismatch=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceConsecutiveMismatch))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_valid_outputs=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceValidOutputs))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_input_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceInputTokens))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_output_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceOutputTokens))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_reasoning_tokens=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceReasoningTokens))
+	builder.WriteString(", ")
+	builder.WriteString("modeltrace_last_cost_usd=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModeltraceLastCostUsd))
+	builder.WriteString(", ")
+	if v := _m.ModeltraceLastRunID; v != nil {
+		builder.WriteString("modeltrace_last_run_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("astra_check_verdict=")
 	builder.WriteString(_m.AstraCheckVerdict)

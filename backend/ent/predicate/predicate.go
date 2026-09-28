@@ -60,6 +60,9 @@ type GroupStatusEvent func(*sql.Selector)
 // GroupStatusJuiceRecord is the predicate function for groupstatusjuicerecord builders.
 type GroupStatusJuiceRecord func(*sql.Selector)
 
+// GroupStatusModelTraceRun is the predicate function for groupstatusmodeltracerun builders.
+type GroupStatusModelTraceRun func(*sql.Selector)
+
 // GroupStatusRecord is the predicate function for groupstatusrecord builders.
 type GroupStatusRecord func(*sql.Selector)
 

@@ -30,6 +30,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusmodeltracerun"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
@@ -85,6 +86,7 @@ const (
 	TypeGroupStatusConfig        = "GroupStatusConfig"
 	TypeGroupStatusEvent         = "GroupStatusEvent"
 	TypeGroupStatusJuiceRecord   = "GroupStatusJuiceRecord"
+	TypeGroupStatusModelTraceRun = "GroupStatusModelTraceRun"
 	TypeGroupStatusRecord        = "GroupStatusRecord"
 	TypeGroupStatusState         = "GroupStatusState"
 	TypeIdempotencyRecord        = "IdempotencyRecord"
@@ -27007,6 +27009,11 @@ type GroupStatusConfigMutation struct {
 	sol_juice_interval_seconds      *int
 	addsol_juice_interval_seconds   *int
 	sol_juice_model                 *string
+	modeltrace_enabled              *bool
+	modeltrace_expected_model       *string
+	modeltrace_request_model        *string
+	modeltrace_interval_seconds     *int
+	addmodeltrace_interval_seconds  *int
 	astra_check_enabled             *bool
 	astra_check_request_model       *string
 	astra_check_tier                *string
@@ -27771,6 +27778,170 @@ func (m *GroupStatusConfigMutation) ResetSolJuiceModel() {
 	m.sol_juice_model = nil
 }
 
+// SetModeltraceEnabled sets the "modeltrace_enabled" field.
+func (m *GroupStatusConfigMutation) SetModeltraceEnabled(b bool) {
+	m.modeltrace_enabled = &b
+}
+
+// ModeltraceEnabled returns the value of the "modeltrace_enabled" field in the mutation.
+func (m *GroupStatusConfigMutation) ModeltraceEnabled() (r bool, exists bool) {
+	v := m.modeltrace_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceEnabled returns the old "modeltrace_enabled" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldModeltraceEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceEnabled: %w", err)
+	}
+	return oldValue.ModeltraceEnabled, nil
+}
+
+// ResetModeltraceEnabled resets all changes to the "modeltrace_enabled" field.
+func (m *GroupStatusConfigMutation) ResetModeltraceEnabled() {
+	m.modeltrace_enabled = nil
+}
+
+// SetModeltraceExpectedModel sets the "modeltrace_expected_model" field.
+func (m *GroupStatusConfigMutation) SetModeltraceExpectedModel(s string) {
+	m.modeltrace_expected_model = &s
+}
+
+// ModeltraceExpectedModel returns the value of the "modeltrace_expected_model" field in the mutation.
+func (m *GroupStatusConfigMutation) ModeltraceExpectedModel() (r string, exists bool) {
+	v := m.modeltrace_expected_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceExpectedModel returns the old "modeltrace_expected_model" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldModeltraceExpectedModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceExpectedModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceExpectedModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceExpectedModel: %w", err)
+	}
+	return oldValue.ModeltraceExpectedModel, nil
+}
+
+// ResetModeltraceExpectedModel resets all changes to the "modeltrace_expected_model" field.
+func (m *GroupStatusConfigMutation) ResetModeltraceExpectedModel() {
+	m.modeltrace_expected_model = nil
+}
+
+// SetModeltraceRequestModel sets the "modeltrace_request_model" field.
+func (m *GroupStatusConfigMutation) SetModeltraceRequestModel(s string) {
+	m.modeltrace_request_model = &s
+}
+
+// ModeltraceRequestModel returns the value of the "modeltrace_request_model" field in the mutation.
+func (m *GroupStatusConfigMutation) ModeltraceRequestModel() (r string, exists bool) {
+	v := m.modeltrace_request_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceRequestModel returns the old "modeltrace_request_model" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldModeltraceRequestModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceRequestModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceRequestModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceRequestModel: %w", err)
+	}
+	return oldValue.ModeltraceRequestModel, nil
+}
+
+// ResetModeltraceRequestModel resets all changes to the "modeltrace_request_model" field.
+func (m *GroupStatusConfigMutation) ResetModeltraceRequestModel() {
+	m.modeltrace_request_model = nil
+}
+
+// SetModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field.
+func (m *GroupStatusConfigMutation) SetModeltraceIntervalSeconds(i int) {
+	m.modeltrace_interval_seconds = &i
+	m.addmodeltrace_interval_seconds = nil
+}
+
+// ModeltraceIntervalSeconds returns the value of the "modeltrace_interval_seconds" field in the mutation.
+func (m *GroupStatusConfigMutation) ModeltraceIntervalSeconds() (r int, exists bool) {
+	v := m.modeltrace_interval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceIntervalSeconds returns the old "modeltrace_interval_seconds" field's value of the GroupStatusConfig entity.
+// If the GroupStatusConfig object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusConfigMutation) OldModeltraceIntervalSeconds(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceIntervalSeconds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceIntervalSeconds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceIntervalSeconds: %w", err)
+	}
+	return oldValue.ModeltraceIntervalSeconds, nil
+}
+
+// AddModeltraceIntervalSeconds adds i to the "modeltrace_interval_seconds" field.
+func (m *GroupStatusConfigMutation) AddModeltraceIntervalSeconds(i int) {
+	if m.addmodeltrace_interval_seconds != nil {
+		*m.addmodeltrace_interval_seconds += i
+	} else {
+		m.addmodeltrace_interval_seconds = &i
+	}
+}
+
+// AddedModeltraceIntervalSeconds returns the value that was added to the "modeltrace_interval_seconds" field in this mutation.
+func (m *GroupStatusConfigMutation) AddedModeltraceIntervalSeconds() (r int, exists bool) {
+	v := m.addmodeltrace_interval_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceIntervalSeconds resets all changes to the "modeltrace_interval_seconds" field.
+func (m *GroupStatusConfigMutation) ResetModeltraceIntervalSeconds() {
+	m.modeltrace_interval_seconds = nil
+	m.addmodeltrace_interval_seconds = nil
+}
+
 // SetAstraCheckEnabled sets the "astra_check_enabled" field.
 func (m *GroupStatusConfigMutation) SetAstraCheckEnabled(b bool) {
 	m.astra_check_enabled = &b
@@ -27969,7 +28140,7 @@ func (m *GroupStatusConfigMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusConfigMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 23)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusconfig.FieldCreatedAt)
 	}
@@ -28014,6 +28185,18 @@ func (m *GroupStatusConfigMutation) Fields() []string {
 	}
 	if m.sol_juice_model != nil {
 		fields = append(fields, groupstatusconfig.FieldSolJuiceModel)
+	}
+	if m.modeltrace_enabled != nil {
+		fields = append(fields, groupstatusconfig.FieldModeltraceEnabled)
+	}
+	if m.modeltrace_expected_model != nil {
+		fields = append(fields, groupstatusconfig.FieldModeltraceExpectedModel)
+	}
+	if m.modeltrace_request_model != nil {
+		fields = append(fields, groupstatusconfig.FieldModeltraceRequestModel)
+	}
+	if m.modeltrace_interval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldModeltraceIntervalSeconds)
 	}
 	if m.astra_check_enabled != nil {
 		fields = append(fields, groupstatusconfig.FieldAstraCheckEnabled)
@@ -28065,6 +28248,14 @@ func (m *GroupStatusConfigMutation) Field(name string) (ent.Value, bool) {
 		return m.SolJuiceIntervalSeconds()
 	case groupstatusconfig.FieldSolJuiceModel:
 		return m.SolJuiceModel()
+	case groupstatusconfig.FieldModeltraceEnabled:
+		return m.ModeltraceEnabled()
+	case groupstatusconfig.FieldModeltraceExpectedModel:
+		return m.ModeltraceExpectedModel()
+	case groupstatusconfig.FieldModeltraceRequestModel:
+		return m.ModeltraceRequestModel()
+	case groupstatusconfig.FieldModeltraceIntervalSeconds:
+		return m.ModeltraceIntervalSeconds()
 	case groupstatusconfig.FieldAstraCheckEnabled:
 		return m.AstraCheckEnabled()
 	case groupstatusconfig.FieldAstraCheckRequestModel:
@@ -28112,6 +28303,14 @@ func (m *GroupStatusConfigMutation) OldField(ctx context.Context, name string) (
 		return m.OldSolJuiceIntervalSeconds(ctx)
 	case groupstatusconfig.FieldSolJuiceModel:
 		return m.OldSolJuiceModel(ctx)
+	case groupstatusconfig.FieldModeltraceEnabled:
+		return m.OldModeltraceEnabled(ctx)
+	case groupstatusconfig.FieldModeltraceExpectedModel:
+		return m.OldModeltraceExpectedModel(ctx)
+	case groupstatusconfig.FieldModeltraceRequestModel:
+		return m.OldModeltraceRequestModel(ctx)
+	case groupstatusconfig.FieldModeltraceIntervalSeconds:
+		return m.OldModeltraceIntervalSeconds(ctx)
 	case groupstatusconfig.FieldAstraCheckEnabled:
 		return m.OldAstraCheckEnabled(ctx)
 	case groupstatusconfig.FieldAstraCheckRequestModel:
@@ -28234,6 +28433,34 @@ func (m *GroupStatusConfigMutation) SetField(name string, value ent.Value) error
 		}
 		m.SetSolJuiceModel(v)
 		return nil
+	case groupstatusconfig.FieldModeltraceEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceEnabled(v)
+		return nil
+	case groupstatusconfig.FieldModeltraceExpectedModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceExpectedModel(v)
+		return nil
+	case groupstatusconfig.FieldModeltraceRequestModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceRequestModel(v)
+		return nil
+	case groupstatusconfig.FieldModeltraceIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceIntervalSeconds(v)
+		return nil
 	case groupstatusconfig.FieldAstraCheckEnabled:
 		v, ok := value.(bool)
 		if !ok {
@@ -28285,6 +28512,9 @@ func (m *GroupStatusConfigMutation) AddedFields() []string {
 	if m.addsol_juice_interval_seconds != nil {
 		fields = append(fields, groupstatusconfig.FieldSolJuiceIntervalSeconds)
 	}
+	if m.addmodeltrace_interval_seconds != nil {
+		fields = append(fields, groupstatusconfig.FieldModeltraceIntervalSeconds)
+	}
 	if m.addastra_check_interval_seconds != nil {
 		fields = append(fields, groupstatusconfig.FieldAstraCheckIntervalSeconds)
 	}
@@ -28306,6 +28536,8 @@ func (m *GroupStatusConfigMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedSlowLatencyMs()
 	case groupstatusconfig.FieldSolJuiceIntervalSeconds:
 		return m.AddedSolJuiceIntervalSeconds()
+	case groupstatusconfig.FieldModeltraceIntervalSeconds:
+		return m.AddedModeltraceIntervalSeconds()
 	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
 		return m.AddedAstraCheckIntervalSeconds()
 	}
@@ -28351,6 +28583,13 @@ func (m *GroupStatusConfigMutation) AddField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddSolJuiceIntervalSeconds(v)
+		return nil
+	case groupstatusconfig.FieldModeltraceIntervalSeconds:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceIntervalSeconds(v)
 		return nil
 	case groupstatusconfig.FieldAstraCheckIntervalSeconds:
 		v, ok := value.(int)
@@ -28430,6 +28669,18 @@ func (m *GroupStatusConfigMutation) ResetField(name string) error {
 		return nil
 	case groupstatusconfig.FieldSolJuiceModel:
 		m.ResetSolJuiceModel()
+		return nil
+	case groupstatusconfig.FieldModeltraceEnabled:
+		m.ResetModeltraceEnabled()
+		return nil
+	case groupstatusconfig.FieldModeltraceExpectedModel:
+		m.ResetModeltraceExpectedModel()
+		return nil
+	case groupstatusconfig.FieldModeltraceRequestModel:
+		m.ResetModeltraceRequestModel()
+		return nil
+	case groupstatusconfig.FieldModeltraceIntervalSeconds:
+		m.ResetModeltraceIntervalSeconds()
 		return nil
 	case groupstatusconfig.FieldAstraCheckEnabled:
 		m.ResetAstraCheckEnabled()
@@ -30955,6 +31206,2844 @@ func (m *GroupStatusJuiceRecordMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown GroupStatusJuiceRecord edge %s", name)
 }
 
+// GroupStatusModelTraceRunMutation represents an operation that mutates the GroupStatusModelTraceRun nodes in the graph.
+type GroupStatusModelTraceRunMutation struct {
+	config
+	op                         Op
+	typ                        string
+	id                         *int64
+	group_id                   *int64
+	addgroup_id                *int64
+	config_id                  *int64
+	addconfig_id               *int64
+	platform                   *string
+	bank_sha256                *string
+	bank_built_at              *string
+	expected_model             *string
+	request_model              *string
+	account_id                 *int64
+	addaccount_id              *int64
+	account_type               *string
+	round                      *int
+	addround                   *int
+	verdict                    *string
+	outcome                    *string
+	top_model                  *string
+	top_probability            *float64
+	addtop_probability         *float64
+	expected_probability       *float64
+	addexpected_probability    *float64
+	calibration_queries        *int
+	addcalibration_queries     *int
+	beta                       *float64
+	addbeta                    *float64
+	ranking                    *[]map[string]interface{}
+	appendranking              []map[string]interface{}
+	family_probabilities       *[]map[string]interface{}
+	appendfamily_probabilities []map[string]interface{}
+	reasons                    *[]string
+	appendreasons              []string
+	outputs                    *[]map[string]interface{}
+	appendoutputs              []map[string]interface{}
+	attempts_planned           *int
+	addattempts_planned        *int
+	attempts_made              *int
+	addattempts_made           *int
+	valid_outputs              *int
+	addvalid_outputs           *int
+	input_tokens               *int64
+	addinput_tokens            *int64
+	output_tokens              *int64
+	addoutput_tokens           *int64
+	reasoning_tokens           *int64
+	addreasoning_tokens        *int64
+	cost_usd                   *float64
+	addcost_usd                *float64
+	latency_ms                 *int64
+	addlatency_ms              *int64
+	http_code                  *int
+	addhttp_code               *int
+	error_detail               *string
+	started_at                 *time.Time
+	finished_at                *time.Time
+	created_at                 *time.Time
+	clearedFields              map[string]struct{}
+	done                       bool
+	oldValue                   func(context.Context) (*GroupStatusModelTraceRun, error)
+	predicates                 []predicate.GroupStatusModelTraceRun
+}
+
+var _ ent.Mutation = (*GroupStatusModelTraceRunMutation)(nil)
+
+// groupstatusmodeltracerunOption allows management of the mutation configuration using functional options.
+type groupstatusmodeltracerunOption func(*GroupStatusModelTraceRunMutation)
+
+// newGroupStatusModelTraceRunMutation creates new mutation for the GroupStatusModelTraceRun entity.
+func newGroupStatusModelTraceRunMutation(c config, op Op, opts ...groupstatusmodeltracerunOption) *GroupStatusModelTraceRunMutation {
+	m := &GroupStatusModelTraceRunMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupStatusModelTraceRun,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupStatusModelTraceRunID sets the ID field of the mutation.
+func withGroupStatusModelTraceRunID(id int64) groupstatusmodeltracerunOption {
+	return func(m *GroupStatusModelTraceRunMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupStatusModelTraceRun
+		)
+		m.oldValue = func(ctx context.Context) (*GroupStatusModelTraceRun, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupStatusModelTraceRun.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupStatusModelTraceRun sets the old GroupStatusModelTraceRun of the mutation.
+func withGroupStatusModelTraceRun(node *GroupStatusModelTraceRun) groupstatusmodeltracerunOption {
+	return func(m *GroupStatusModelTraceRunMutation) {
+		m.oldValue = func(context.Context) (*GroupStatusModelTraceRun, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupStatusModelTraceRunMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupStatusModelTraceRunMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupStatusModelTraceRunMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupStatusModelTraceRunMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupStatusModelTraceRun.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *GroupStatusModelTraceRunMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldGroupID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *GroupStatusModelTraceRunMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *GroupStatusModelTraceRunMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+}
+
+// SetConfigID sets the "config_id" field.
+func (m *GroupStatusModelTraceRunMutation) SetConfigID(i int64) {
+	m.config_id = &i
+	m.addconfig_id = nil
+}
+
+// ConfigID returns the value of the "config_id" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) ConfigID() (r int64, exists bool) {
+	v := m.config_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigID returns the old "config_id" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldConfigID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigID: %w", err)
+	}
+	return oldValue.ConfigID, nil
+}
+
+// AddConfigID adds i to the "config_id" field.
+func (m *GroupStatusModelTraceRunMutation) AddConfigID(i int64) {
+	if m.addconfig_id != nil {
+		*m.addconfig_id += i
+	} else {
+		m.addconfig_id = &i
+	}
+}
+
+// AddedConfigID returns the value that was added to the "config_id" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedConfigID() (r int64, exists bool) {
+	v := m.addconfig_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetConfigID resets all changes to the "config_id" field.
+func (m *GroupStatusModelTraceRunMutation) ResetConfigID() {
+	m.config_id = nil
+	m.addconfig_id = nil
+}
+
+// SetPlatform sets the "platform" field.
+func (m *GroupStatusModelTraceRunMutation) SetPlatform(s string) {
+	m.platform = &s
+}
+
+// Platform returns the value of the "platform" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Platform() (r string, exists bool) {
+	v := m.platform
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlatform returns the old "platform" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldPlatform(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlatform requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlatform: %w", err)
+	}
+	return oldValue.Platform, nil
+}
+
+// ResetPlatform resets all changes to the "platform" field.
+func (m *GroupStatusModelTraceRunMutation) ResetPlatform() {
+	m.platform = nil
+}
+
+// SetBankSha256 sets the "bank_sha256" field.
+func (m *GroupStatusModelTraceRunMutation) SetBankSha256(s string) {
+	m.bank_sha256 = &s
+}
+
+// BankSha256 returns the value of the "bank_sha256" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) BankSha256() (r string, exists bool) {
+	v := m.bank_sha256
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBankSha256 returns the old "bank_sha256" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldBankSha256(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBankSha256 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBankSha256 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBankSha256: %w", err)
+	}
+	return oldValue.BankSha256, nil
+}
+
+// ResetBankSha256 resets all changes to the "bank_sha256" field.
+func (m *GroupStatusModelTraceRunMutation) ResetBankSha256() {
+	m.bank_sha256 = nil
+}
+
+// SetBankBuiltAt sets the "bank_built_at" field.
+func (m *GroupStatusModelTraceRunMutation) SetBankBuiltAt(s string) {
+	m.bank_built_at = &s
+}
+
+// BankBuiltAt returns the value of the "bank_built_at" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) BankBuiltAt() (r string, exists bool) {
+	v := m.bank_built_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBankBuiltAt returns the old "bank_built_at" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldBankBuiltAt(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBankBuiltAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBankBuiltAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBankBuiltAt: %w", err)
+	}
+	return oldValue.BankBuiltAt, nil
+}
+
+// ResetBankBuiltAt resets all changes to the "bank_built_at" field.
+func (m *GroupStatusModelTraceRunMutation) ResetBankBuiltAt() {
+	m.bank_built_at = nil
+}
+
+// SetExpectedModel sets the "expected_model" field.
+func (m *GroupStatusModelTraceRunMutation) SetExpectedModel(s string) {
+	m.expected_model = &s
+}
+
+// ExpectedModel returns the value of the "expected_model" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) ExpectedModel() (r string, exists bool) {
+	v := m.expected_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedModel returns the old "expected_model" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldExpectedModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedModel: %w", err)
+	}
+	return oldValue.ExpectedModel, nil
+}
+
+// ResetExpectedModel resets all changes to the "expected_model" field.
+func (m *GroupStatusModelTraceRunMutation) ResetExpectedModel() {
+	m.expected_model = nil
+}
+
+// SetRequestModel sets the "request_model" field.
+func (m *GroupStatusModelTraceRunMutation) SetRequestModel(s string) {
+	m.request_model = &s
+}
+
+// RequestModel returns the value of the "request_model" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) RequestModel() (r string, exists bool) {
+	v := m.request_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestModel returns the old "request_model" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldRequestModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestModel: %w", err)
+	}
+	return oldValue.RequestModel, nil
+}
+
+// ResetRequestModel resets all changes to the "request_model" field.
+func (m *GroupStatusModelTraceRunMutation) ResetRequestModel() {
+	m.request_model = nil
+}
+
+// SetAccountID sets the "account_id" field.
+func (m *GroupStatusModelTraceRunMutation) SetAccountID(i int64) {
+	m.account_id = &i
+	m.addaccount_id = nil
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) AccountID() (r int64, exists bool) {
+	v := m.account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldAccountID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// AddAccountID adds i to the "account_id" field.
+func (m *GroupStatusModelTraceRunMutation) AddAccountID(i int64) {
+	if m.addaccount_id != nil {
+		*m.addaccount_id += i
+	} else {
+		m.addaccount_id = &i
+	}
+}
+
+// AddedAccountID returns the value that was added to the "account_id" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedAccountID() (r int64, exists bool) {
+	v := m.addaccount_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAccountID clears the value of the "account_id" field.
+func (m *GroupStatusModelTraceRunMutation) ClearAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+	m.clearedFields[groupstatusmodeltracerun.FieldAccountID] = struct{}{}
+}
+
+// AccountIDCleared returns if the "account_id" field was cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AccountIDCleared() bool {
+	_, ok := m.clearedFields[groupstatusmodeltracerun.FieldAccountID]
+	return ok
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *GroupStatusModelTraceRunMutation) ResetAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+	delete(m.clearedFields, groupstatusmodeltracerun.FieldAccountID)
+}
+
+// SetAccountType sets the "account_type" field.
+func (m *GroupStatusModelTraceRunMutation) SetAccountType(s string) {
+	m.account_type = &s
+}
+
+// AccountType returns the value of the "account_type" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) AccountType() (r string, exists bool) {
+	v := m.account_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountType returns the old "account_type" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldAccountType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountType: %w", err)
+	}
+	return oldValue.AccountType, nil
+}
+
+// ResetAccountType resets all changes to the "account_type" field.
+func (m *GroupStatusModelTraceRunMutation) ResetAccountType() {
+	m.account_type = nil
+}
+
+// SetRound sets the "round" field.
+func (m *GroupStatusModelTraceRunMutation) SetRound(i int) {
+	m.round = &i
+	m.addround = nil
+}
+
+// Round returns the value of the "round" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Round() (r int, exists bool) {
+	v := m.round
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRound returns the old "round" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldRound(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRound is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRound requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRound: %w", err)
+	}
+	return oldValue.Round, nil
+}
+
+// AddRound adds i to the "round" field.
+func (m *GroupStatusModelTraceRunMutation) AddRound(i int) {
+	if m.addround != nil {
+		*m.addround += i
+	} else {
+		m.addround = &i
+	}
+}
+
+// AddedRound returns the value that was added to the "round" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedRound() (r int, exists bool) {
+	v := m.addround
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRound resets all changes to the "round" field.
+func (m *GroupStatusModelTraceRunMutation) ResetRound() {
+	m.round = nil
+	m.addround = nil
+}
+
+// SetVerdict sets the "verdict" field.
+func (m *GroupStatusModelTraceRunMutation) SetVerdict(s string) {
+	m.verdict = &s
+}
+
+// Verdict returns the value of the "verdict" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Verdict() (r string, exists bool) {
+	v := m.verdict
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVerdict returns the old "verdict" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldVerdict(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVerdict is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVerdict requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVerdict: %w", err)
+	}
+	return oldValue.Verdict, nil
+}
+
+// ResetVerdict resets all changes to the "verdict" field.
+func (m *GroupStatusModelTraceRunMutation) ResetVerdict() {
+	m.verdict = nil
+}
+
+// SetOutcome sets the "outcome" field.
+func (m *GroupStatusModelTraceRunMutation) SetOutcome(s string) {
+	m.outcome = &s
+}
+
+// Outcome returns the value of the "outcome" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Outcome() (r string, exists bool) {
+	v := m.outcome
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutcome returns the old "outcome" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldOutcome(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutcome is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutcome requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutcome: %w", err)
+	}
+	return oldValue.Outcome, nil
+}
+
+// ResetOutcome resets all changes to the "outcome" field.
+func (m *GroupStatusModelTraceRunMutation) ResetOutcome() {
+	m.outcome = nil
+}
+
+// SetTopModel sets the "top_model" field.
+func (m *GroupStatusModelTraceRunMutation) SetTopModel(s string) {
+	m.top_model = &s
+}
+
+// TopModel returns the value of the "top_model" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) TopModel() (r string, exists bool) {
+	v := m.top_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTopModel returns the old "top_model" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldTopModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTopModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTopModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTopModel: %w", err)
+	}
+	return oldValue.TopModel, nil
+}
+
+// ResetTopModel resets all changes to the "top_model" field.
+func (m *GroupStatusModelTraceRunMutation) ResetTopModel() {
+	m.top_model = nil
+}
+
+// SetTopProbability sets the "top_probability" field.
+func (m *GroupStatusModelTraceRunMutation) SetTopProbability(f float64) {
+	m.top_probability = &f
+	m.addtop_probability = nil
+}
+
+// TopProbability returns the value of the "top_probability" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) TopProbability() (r float64, exists bool) {
+	v := m.top_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTopProbability returns the old "top_probability" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldTopProbability(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTopProbability is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTopProbability requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTopProbability: %w", err)
+	}
+	return oldValue.TopProbability, nil
+}
+
+// AddTopProbability adds f to the "top_probability" field.
+func (m *GroupStatusModelTraceRunMutation) AddTopProbability(f float64) {
+	if m.addtop_probability != nil {
+		*m.addtop_probability += f
+	} else {
+		m.addtop_probability = &f
+	}
+}
+
+// AddedTopProbability returns the value that was added to the "top_probability" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedTopProbability() (r float64, exists bool) {
+	v := m.addtop_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTopProbability resets all changes to the "top_probability" field.
+func (m *GroupStatusModelTraceRunMutation) ResetTopProbability() {
+	m.top_probability = nil
+	m.addtop_probability = nil
+}
+
+// SetExpectedProbability sets the "expected_probability" field.
+func (m *GroupStatusModelTraceRunMutation) SetExpectedProbability(f float64) {
+	m.expected_probability = &f
+	m.addexpected_probability = nil
+}
+
+// ExpectedProbability returns the value of the "expected_probability" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) ExpectedProbability() (r float64, exists bool) {
+	v := m.expected_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedProbability returns the old "expected_probability" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldExpectedProbability(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedProbability is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedProbability requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedProbability: %w", err)
+	}
+	return oldValue.ExpectedProbability, nil
+}
+
+// AddExpectedProbability adds f to the "expected_probability" field.
+func (m *GroupStatusModelTraceRunMutation) AddExpectedProbability(f float64) {
+	if m.addexpected_probability != nil {
+		*m.addexpected_probability += f
+	} else {
+		m.addexpected_probability = &f
+	}
+}
+
+// AddedExpectedProbability returns the value that was added to the "expected_probability" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedExpectedProbability() (r float64, exists bool) {
+	v := m.addexpected_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearExpectedProbability clears the value of the "expected_probability" field.
+func (m *GroupStatusModelTraceRunMutation) ClearExpectedProbability() {
+	m.expected_probability = nil
+	m.addexpected_probability = nil
+	m.clearedFields[groupstatusmodeltracerun.FieldExpectedProbability] = struct{}{}
+}
+
+// ExpectedProbabilityCleared returns if the "expected_probability" field was cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) ExpectedProbabilityCleared() bool {
+	_, ok := m.clearedFields[groupstatusmodeltracerun.FieldExpectedProbability]
+	return ok
+}
+
+// ResetExpectedProbability resets all changes to the "expected_probability" field.
+func (m *GroupStatusModelTraceRunMutation) ResetExpectedProbability() {
+	m.expected_probability = nil
+	m.addexpected_probability = nil
+	delete(m.clearedFields, groupstatusmodeltracerun.FieldExpectedProbability)
+}
+
+// SetCalibrationQueries sets the "calibration_queries" field.
+func (m *GroupStatusModelTraceRunMutation) SetCalibrationQueries(i int) {
+	m.calibration_queries = &i
+	m.addcalibration_queries = nil
+}
+
+// CalibrationQueries returns the value of the "calibration_queries" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) CalibrationQueries() (r int, exists bool) {
+	v := m.calibration_queries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCalibrationQueries returns the old "calibration_queries" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldCalibrationQueries(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCalibrationQueries is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCalibrationQueries requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCalibrationQueries: %w", err)
+	}
+	return oldValue.CalibrationQueries, nil
+}
+
+// AddCalibrationQueries adds i to the "calibration_queries" field.
+func (m *GroupStatusModelTraceRunMutation) AddCalibrationQueries(i int) {
+	if m.addcalibration_queries != nil {
+		*m.addcalibration_queries += i
+	} else {
+		m.addcalibration_queries = &i
+	}
+}
+
+// AddedCalibrationQueries returns the value that was added to the "calibration_queries" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedCalibrationQueries() (r int, exists bool) {
+	v := m.addcalibration_queries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCalibrationQueries resets all changes to the "calibration_queries" field.
+func (m *GroupStatusModelTraceRunMutation) ResetCalibrationQueries() {
+	m.calibration_queries = nil
+	m.addcalibration_queries = nil
+}
+
+// SetBeta sets the "beta" field.
+func (m *GroupStatusModelTraceRunMutation) SetBeta(f float64) {
+	m.beta = &f
+	m.addbeta = nil
+}
+
+// Beta returns the value of the "beta" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Beta() (r float64, exists bool) {
+	v := m.beta
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBeta returns the old "beta" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldBeta(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBeta is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBeta requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBeta: %w", err)
+	}
+	return oldValue.Beta, nil
+}
+
+// AddBeta adds f to the "beta" field.
+func (m *GroupStatusModelTraceRunMutation) AddBeta(f float64) {
+	if m.addbeta != nil {
+		*m.addbeta += f
+	} else {
+		m.addbeta = &f
+	}
+}
+
+// AddedBeta returns the value that was added to the "beta" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedBeta() (r float64, exists bool) {
+	v := m.addbeta
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetBeta resets all changes to the "beta" field.
+func (m *GroupStatusModelTraceRunMutation) ResetBeta() {
+	m.beta = nil
+	m.addbeta = nil
+}
+
+// SetRanking sets the "ranking" field.
+func (m *GroupStatusModelTraceRunMutation) SetRanking(value []map[string]interface{}) {
+	m.ranking = &value
+	m.appendranking = nil
+}
+
+// Ranking returns the value of the "ranking" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Ranking() (r []map[string]interface{}, exists bool) {
+	v := m.ranking
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRanking returns the old "ranking" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldRanking(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRanking is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRanking requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRanking: %w", err)
+	}
+	return oldValue.Ranking, nil
+}
+
+// AppendRanking adds value to the "ranking" field.
+func (m *GroupStatusModelTraceRunMutation) AppendRanking(value []map[string]interface{}) {
+	m.appendranking = append(m.appendranking, value...)
+}
+
+// AppendedRanking returns the list of values that were appended to the "ranking" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AppendedRanking() ([]map[string]interface{}, bool) {
+	if len(m.appendranking) == 0 {
+		return nil, false
+	}
+	return m.appendranking, true
+}
+
+// ResetRanking resets all changes to the "ranking" field.
+func (m *GroupStatusModelTraceRunMutation) ResetRanking() {
+	m.ranking = nil
+	m.appendranking = nil
+}
+
+// SetFamilyProbabilities sets the "family_probabilities" field.
+func (m *GroupStatusModelTraceRunMutation) SetFamilyProbabilities(value []map[string]interface{}) {
+	m.family_probabilities = &value
+	m.appendfamily_probabilities = nil
+}
+
+// FamilyProbabilities returns the value of the "family_probabilities" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) FamilyProbabilities() (r []map[string]interface{}, exists bool) {
+	v := m.family_probabilities
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFamilyProbabilities returns the old "family_probabilities" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldFamilyProbabilities(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFamilyProbabilities is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFamilyProbabilities requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFamilyProbabilities: %w", err)
+	}
+	return oldValue.FamilyProbabilities, nil
+}
+
+// AppendFamilyProbabilities adds value to the "family_probabilities" field.
+func (m *GroupStatusModelTraceRunMutation) AppendFamilyProbabilities(value []map[string]interface{}) {
+	m.appendfamily_probabilities = append(m.appendfamily_probabilities, value...)
+}
+
+// AppendedFamilyProbabilities returns the list of values that were appended to the "family_probabilities" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AppendedFamilyProbabilities() ([]map[string]interface{}, bool) {
+	if len(m.appendfamily_probabilities) == 0 {
+		return nil, false
+	}
+	return m.appendfamily_probabilities, true
+}
+
+// ResetFamilyProbabilities resets all changes to the "family_probabilities" field.
+func (m *GroupStatusModelTraceRunMutation) ResetFamilyProbabilities() {
+	m.family_probabilities = nil
+	m.appendfamily_probabilities = nil
+}
+
+// SetReasons sets the "reasons" field.
+func (m *GroupStatusModelTraceRunMutation) SetReasons(s []string) {
+	m.reasons = &s
+	m.appendreasons = nil
+}
+
+// Reasons returns the value of the "reasons" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Reasons() (r []string, exists bool) {
+	v := m.reasons
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReasons returns the old "reasons" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldReasons(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReasons is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReasons requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReasons: %w", err)
+	}
+	return oldValue.Reasons, nil
+}
+
+// AppendReasons adds s to the "reasons" field.
+func (m *GroupStatusModelTraceRunMutation) AppendReasons(s []string) {
+	m.appendreasons = append(m.appendreasons, s...)
+}
+
+// AppendedReasons returns the list of values that were appended to the "reasons" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AppendedReasons() ([]string, bool) {
+	if len(m.appendreasons) == 0 {
+		return nil, false
+	}
+	return m.appendreasons, true
+}
+
+// ResetReasons resets all changes to the "reasons" field.
+func (m *GroupStatusModelTraceRunMutation) ResetReasons() {
+	m.reasons = nil
+	m.appendreasons = nil
+}
+
+// SetOutputs sets the "outputs" field.
+func (m *GroupStatusModelTraceRunMutation) SetOutputs(value []map[string]interface{}) {
+	m.outputs = &value
+	m.appendoutputs = nil
+}
+
+// Outputs returns the value of the "outputs" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) Outputs() (r []map[string]interface{}, exists bool) {
+	v := m.outputs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutputs returns the old "outputs" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldOutputs(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutputs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutputs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutputs: %w", err)
+	}
+	return oldValue.Outputs, nil
+}
+
+// AppendOutputs adds value to the "outputs" field.
+func (m *GroupStatusModelTraceRunMutation) AppendOutputs(value []map[string]interface{}) {
+	m.appendoutputs = append(m.appendoutputs, value...)
+}
+
+// AppendedOutputs returns the list of values that were appended to the "outputs" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AppendedOutputs() ([]map[string]interface{}, bool) {
+	if len(m.appendoutputs) == 0 {
+		return nil, false
+	}
+	return m.appendoutputs, true
+}
+
+// ResetOutputs resets all changes to the "outputs" field.
+func (m *GroupStatusModelTraceRunMutation) ResetOutputs() {
+	m.outputs = nil
+	m.appendoutputs = nil
+}
+
+// SetAttemptsPlanned sets the "attempts_planned" field.
+func (m *GroupStatusModelTraceRunMutation) SetAttemptsPlanned(i int) {
+	m.attempts_planned = &i
+	m.addattempts_planned = nil
+}
+
+// AttemptsPlanned returns the value of the "attempts_planned" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) AttemptsPlanned() (r int, exists bool) {
+	v := m.attempts_planned
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptsPlanned returns the old "attempts_planned" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldAttemptsPlanned(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptsPlanned is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptsPlanned requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptsPlanned: %w", err)
+	}
+	return oldValue.AttemptsPlanned, nil
+}
+
+// AddAttemptsPlanned adds i to the "attempts_planned" field.
+func (m *GroupStatusModelTraceRunMutation) AddAttemptsPlanned(i int) {
+	if m.addattempts_planned != nil {
+		*m.addattempts_planned += i
+	} else {
+		m.addattempts_planned = &i
+	}
+}
+
+// AddedAttemptsPlanned returns the value that was added to the "attempts_planned" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedAttemptsPlanned() (r int, exists bool) {
+	v := m.addattempts_planned
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttemptsPlanned resets all changes to the "attempts_planned" field.
+func (m *GroupStatusModelTraceRunMutation) ResetAttemptsPlanned() {
+	m.attempts_planned = nil
+	m.addattempts_planned = nil
+}
+
+// SetAttemptsMade sets the "attempts_made" field.
+func (m *GroupStatusModelTraceRunMutation) SetAttemptsMade(i int) {
+	m.attempts_made = &i
+	m.addattempts_made = nil
+}
+
+// AttemptsMade returns the value of the "attempts_made" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) AttemptsMade() (r int, exists bool) {
+	v := m.attempts_made
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptsMade returns the old "attempts_made" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldAttemptsMade(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptsMade is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptsMade requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptsMade: %w", err)
+	}
+	return oldValue.AttemptsMade, nil
+}
+
+// AddAttemptsMade adds i to the "attempts_made" field.
+func (m *GroupStatusModelTraceRunMutation) AddAttemptsMade(i int) {
+	if m.addattempts_made != nil {
+		*m.addattempts_made += i
+	} else {
+		m.addattempts_made = &i
+	}
+}
+
+// AddedAttemptsMade returns the value that was added to the "attempts_made" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedAttemptsMade() (r int, exists bool) {
+	v := m.addattempts_made
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttemptsMade resets all changes to the "attempts_made" field.
+func (m *GroupStatusModelTraceRunMutation) ResetAttemptsMade() {
+	m.attempts_made = nil
+	m.addattempts_made = nil
+}
+
+// SetValidOutputs sets the "valid_outputs" field.
+func (m *GroupStatusModelTraceRunMutation) SetValidOutputs(i int) {
+	m.valid_outputs = &i
+	m.addvalid_outputs = nil
+}
+
+// ValidOutputs returns the value of the "valid_outputs" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) ValidOutputs() (r int, exists bool) {
+	v := m.valid_outputs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidOutputs returns the old "valid_outputs" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldValidOutputs(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidOutputs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidOutputs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidOutputs: %w", err)
+	}
+	return oldValue.ValidOutputs, nil
+}
+
+// AddValidOutputs adds i to the "valid_outputs" field.
+func (m *GroupStatusModelTraceRunMutation) AddValidOutputs(i int) {
+	if m.addvalid_outputs != nil {
+		*m.addvalid_outputs += i
+	} else {
+		m.addvalid_outputs = &i
+	}
+}
+
+// AddedValidOutputs returns the value that was added to the "valid_outputs" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedValidOutputs() (r int, exists bool) {
+	v := m.addvalid_outputs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetValidOutputs resets all changes to the "valid_outputs" field.
+func (m *GroupStatusModelTraceRunMutation) ResetValidOutputs() {
+	m.valid_outputs = nil
+	m.addvalid_outputs = nil
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) SetInputTokens(i int64) {
+	m.input_tokens = &i
+	m.addinput_tokens = nil
+}
+
+// InputTokens returns the value of the "input_tokens" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) InputTokens() (r int64, exists bool) {
+	v := m.input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInputTokens returns the old "input_tokens" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldInputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInputTokens: %w", err)
+	}
+	return oldValue.InputTokens, nil
+}
+
+// AddInputTokens adds i to the "input_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) AddInputTokens(i int64) {
+	if m.addinput_tokens != nil {
+		*m.addinput_tokens += i
+	} else {
+		m.addinput_tokens = &i
+	}
+}
+
+// AddedInputTokens returns the value that was added to the "input_tokens" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedInputTokens() (r int64, exists bool) {
+	v := m.addinput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetInputTokens resets all changes to the "input_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) ResetInputTokens() {
+	m.input_tokens = nil
+	m.addinput_tokens = nil
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) SetOutputTokens(i int64) {
+	m.output_tokens = &i
+	m.addoutput_tokens = nil
+}
+
+// OutputTokens returns the value of the "output_tokens" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) OutputTokens() (r int64, exists bool) {
+	v := m.output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutputTokens returns the old "output_tokens" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldOutputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutputTokens: %w", err)
+	}
+	return oldValue.OutputTokens, nil
+}
+
+// AddOutputTokens adds i to the "output_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) AddOutputTokens(i int64) {
+	if m.addoutput_tokens != nil {
+		*m.addoutput_tokens += i
+	} else {
+		m.addoutput_tokens = &i
+	}
+}
+
+// AddedOutputTokens returns the value that was added to the "output_tokens" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedOutputTokens() (r int64, exists bool) {
+	v := m.addoutput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOutputTokens resets all changes to the "output_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) ResetOutputTokens() {
+	m.output_tokens = nil
+	m.addoutput_tokens = nil
+}
+
+// SetReasoningTokens sets the "reasoning_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) SetReasoningTokens(i int64) {
+	m.reasoning_tokens = &i
+	m.addreasoning_tokens = nil
+}
+
+// ReasoningTokens returns the value of the "reasoning_tokens" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) ReasoningTokens() (r int64, exists bool) {
+	v := m.reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReasoningTokens returns the old "reasoning_tokens" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldReasoningTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReasoningTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReasoningTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReasoningTokens: %w", err)
+	}
+	return oldValue.ReasoningTokens, nil
+}
+
+// AddReasoningTokens adds i to the "reasoning_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) AddReasoningTokens(i int64) {
+	if m.addreasoning_tokens != nil {
+		*m.addreasoning_tokens += i
+	} else {
+		m.addreasoning_tokens = &i
+	}
+}
+
+// AddedReasoningTokens returns the value that was added to the "reasoning_tokens" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedReasoningTokens() (r int64, exists bool) {
+	v := m.addreasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReasoningTokens resets all changes to the "reasoning_tokens" field.
+func (m *GroupStatusModelTraceRunMutation) ResetReasoningTokens() {
+	m.reasoning_tokens = nil
+	m.addreasoning_tokens = nil
+}
+
+// SetCostUsd sets the "cost_usd" field.
+func (m *GroupStatusModelTraceRunMutation) SetCostUsd(f float64) {
+	m.cost_usd = &f
+	m.addcost_usd = nil
+}
+
+// CostUsd returns the value of the "cost_usd" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) CostUsd() (r float64, exists bool) {
+	v := m.cost_usd
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCostUsd returns the old "cost_usd" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldCostUsd(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCostUsd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCostUsd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCostUsd: %w", err)
+	}
+	return oldValue.CostUsd, nil
+}
+
+// AddCostUsd adds f to the "cost_usd" field.
+func (m *GroupStatusModelTraceRunMutation) AddCostUsd(f float64) {
+	if m.addcost_usd != nil {
+		*m.addcost_usd += f
+	} else {
+		m.addcost_usd = &f
+	}
+}
+
+// AddedCostUsd returns the value that was added to the "cost_usd" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedCostUsd() (r float64, exists bool) {
+	v := m.addcost_usd
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCostUsd resets all changes to the "cost_usd" field.
+func (m *GroupStatusModelTraceRunMutation) ResetCostUsd() {
+	m.cost_usd = nil
+	m.addcost_usd = nil
+}
+
+// SetLatencyMs sets the "latency_ms" field.
+func (m *GroupStatusModelTraceRunMutation) SetLatencyMs(i int64) {
+	m.latency_ms = &i
+	m.addlatency_ms = nil
+}
+
+// LatencyMs returns the value of the "latency_ms" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) LatencyMs() (r int64, exists bool) {
+	v := m.latency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLatencyMs returns the old "latency_ms" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldLatencyMs(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLatencyMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLatencyMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLatencyMs: %w", err)
+	}
+	return oldValue.LatencyMs, nil
+}
+
+// AddLatencyMs adds i to the "latency_ms" field.
+func (m *GroupStatusModelTraceRunMutation) AddLatencyMs(i int64) {
+	if m.addlatency_ms != nil {
+		*m.addlatency_ms += i
+	} else {
+		m.addlatency_ms = &i
+	}
+}
+
+// AddedLatencyMs returns the value that was added to the "latency_ms" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedLatencyMs() (r int64, exists bool) {
+	v := m.addlatency_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLatencyMs clears the value of the "latency_ms" field.
+func (m *GroupStatusModelTraceRunMutation) ClearLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	m.clearedFields[groupstatusmodeltracerun.FieldLatencyMs] = struct{}{}
+}
+
+// LatencyMsCleared returns if the "latency_ms" field was cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) LatencyMsCleared() bool {
+	_, ok := m.clearedFields[groupstatusmodeltracerun.FieldLatencyMs]
+	return ok
+}
+
+// ResetLatencyMs resets all changes to the "latency_ms" field.
+func (m *GroupStatusModelTraceRunMutation) ResetLatencyMs() {
+	m.latency_ms = nil
+	m.addlatency_ms = nil
+	delete(m.clearedFields, groupstatusmodeltracerun.FieldLatencyMs)
+}
+
+// SetHTTPCode sets the "http_code" field.
+func (m *GroupStatusModelTraceRunMutation) SetHTTPCode(i int) {
+	m.http_code = &i
+	m.addhttp_code = nil
+}
+
+// HTTPCode returns the value of the "http_code" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) HTTPCode() (r int, exists bool) {
+	v := m.http_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHTTPCode returns the old "http_code" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldHTTPCode(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHTTPCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHTTPCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHTTPCode: %w", err)
+	}
+	return oldValue.HTTPCode, nil
+}
+
+// AddHTTPCode adds i to the "http_code" field.
+func (m *GroupStatusModelTraceRunMutation) AddHTTPCode(i int) {
+	if m.addhttp_code != nil {
+		*m.addhttp_code += i
+	} else {
+		m.addhttp_code = &i
+	}
+}
+
+// AddedHTTPCode returns the value that was added to the "http_code" field in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedHTTPCode() (r int, exists bool) {
+	v := m.addhttp_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearHTTPCode clears the value of the "http_code" field.
+func (m *GroupStatusModelTraceRunMutation) ClearHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	m.clearedFields[groupstatusmodeltracerun.FieldHTTPCode] = struct{}{}
+}
+
+// HTTPCodeCleared returns if the "http_code" field was cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) HTTPCodeCleared() bool {
+	_, ok := m.clearedFields[groupstatusmodeltracerun.FieldHTTPCode]
+	return ok
+}
+
+// ResetHTTPCode resets all changes to the "http_code" field.
+func (m *GroupStatusModelTraceRunMutation) ResetHTTPCode() {
+	m.http_code = nil
+	m.addhttp_code = nil
+	delete(m.clearedFields, groupstatusmodeltracerun.FieldHTTPCode)
+}
+
+// SetErrorDetail sets the "error_detail" field.
+func (m *GroupStatusModelTraceRunMutation) SetErrorDetail(s string) {
+	m.error_detail = &s
+}
+
+// ErrorDetail returns the value of the "error_detail" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) ErrorDetail() (r string, exists bool) {
+	v := m.error_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorDetail returns the old "error_detail" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldErrorDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorDetail: %w", err)
+	}
+	return oldValue.ErrorDetail, nil
+}
+
+// ClearErrorDetail clears the value of the "error_detail" field.
+func (m *GroupStatusModelTraceRunMutation) ClearErrorDetail() {
+	m.error_detail = nil
+	m.clearedFields[groupstatusmodeltracerun.FieldErrorDetail] = struct{}{}
+}
+
+// ErrorDetailCleared returns if the "error_detail" field was cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) ErrorDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusmodeltracerun.FieldErrorDetail]
+	return ok
+}
+
+// ResetErrorDetail resets all changes to the "error_detail" field.
+func (m *GroupStatusModelTraceRunMutation) ResetErrorDetail() {
+	m.error_detail = nil
+	delete(m.clearedFields, groupstatusmodeltracerun.FieldErrorDetail)
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *GroupStatusModelTraceRunMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldStartedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *GroupStatusModelTraceRunMutation) ResetStartedAt() {
+	m.started_at = nil
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (m *GroupStatusModelTraceRunMutation) SetFinishedAt(t time.Time) {
+	m.finished_at = &t
+}
+
+// FinishedAt returns the value of the "finished_at" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) FinishedAt() (r time.Time, exists bool) {
+	v := m.finished_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFinishedAt returns the old "finished_at" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldFinishedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFinishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFinishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFinishedAt: %w", err)
+	}
+	return oldValue.FinishedAt, nil
+}
+
+// ResetFinishedAt resets all changes to the "finished_at" field.
+func (m *GroupStatusModelTraceRunMutation) ResetFinishedAt() {
+	m.finished_at = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *GroupStatusModelTraceRunMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *GroupStatusModelTraceRunMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the GroupStatusModelTraceRun entity.
+// If the GroupStatusModelTraceRun object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusModelTraceRunMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *GroupStatusModelTraceRunMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// Where appends a list predicates to the GroupStatusModelTraceRunMutation builder.
+func (m *GroupStatusModelTraceRunMutation) Where(ps ...predicate.GroupStatusModelTraceRun) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupStatusModelTraceRunMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupStatusModelTraceRunMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupStatusModelTraceRun, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupStatusModelTraceRunMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupStatusModelTraceRunMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupStatusModelTraceRun).
+func (m *GroupStatusModelTraceRunMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupStatusModelTraceRunMutation) Fields() []string {
+	fields := make([]string, 0, 34)
+	if m.group_id != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldGroupID)
+	}
+	if m.config_id != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldConfigID)
+	}
+	if m.platform != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldPlatform)
+	}
+	if m.bank_sha256 != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldBankSha256)
+	}
+	if m.bank_built_at != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldBankBuiltAt)
+	}
+	if m.expected_model != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldExpectedModel)
+	}
+	if m.request_model != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldRequestModel)
+	}
+	if m.account_id != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldAccountID)
+	}
+	if m.account_type != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldAccountType)
+	}
+	if m.round != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldRound)
+	}
+	if m.verdict != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldVerdict)
+	}
+	if m.outcome != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldOutcome)
+	}
+	if m.top_model != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldTopModel)
+	}
+	if m.top_probability != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldTopProbability)
+	}
+	if m.expected_probability != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldExpectedProbability)
+	}
+	if m.calibration_queries != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldCalibrationQueries)
+	}
+	if m.beta != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldBeta)
+	}
+	if m.ranking != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldRanking)
+	}
+	if m.family_probabilities != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldFamilyProbabilities)
+	}
+	if m.reasons != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldReasons)
+	}
+	if m.outputs != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldOutputs)
+	}
+	if m.attempts_planned != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldAttemptsPlanned)
+	}
+	if m.attempts_made != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldAttemptsMade)
+	}
+	if m.valid_outputs != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldValidOutputs)
+	}
+	if m.input_tokens != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldInputTokens)
+	}
+	if m.output_tokens != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldOutputTokens)
+	}
+	if m.reasoning_tokens != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldReasoningTokens)
+	}
+	if m.cost_usd != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldCostUsd)
+	}
+	if m.latency_ms != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldLatencyMs)
+	}
+	if m.http_code != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldHTTPCode)
+	}
+	if m.error_detail != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldErrorDetail)
+	}
+	if m.started_at != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldStartedAt)
+	}
+	if m.finished_at != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldFinishedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupStatusModelTraceRunMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusmodeltracerun.FieldGroupID:
+		return m.GroupID()
+	case groupstatusmodeltracerun.FieldConfigID:
+		return m.ConfigID()
+	case groupstatusmodeltracerun.FieldPlatform:
+		return m.Platform()
+	case groupstatusmodeltracerun.FieldBankSha256:
+		return m.BankSha256()
+	case groupstatusmodeltracerun.FieldBankBuiltAt:
+		return m.BankBuiltAt()
+	case groupstatusmodeltracerun.FieldExpectedModel:
+		return m.ExpectedModel()
+	case groupstatusmodeltracerun.FieldRequestModel:
+		return m.RequestModel()
+	case groupstatusmodeltracerun.FieldAccountID:
+		return m.AccountID()
+	case groupstatusmodeltracerun.FieldAccountType:
+		return m.AccountType()
+	case groupstatusmodeltracerun.FieldRound:
+		return m.Round()
+	case groupstatusmodeltracerun.FieldVerdict:
+		return m.Verdict()
+	case groupstatusmodeltracerun.FieldOutcome:
+		return m.Outcome()
+	case groupstatusmodeltracerun.FieldTopModel:
+		return m.TopModel()
+	case groupstatusmodeltracerun.FieldTopProbability:
+		return m.TopProbability()
+	case groupstatusmodeltracerun.FieldExpectedProbability:
+		return m.ExpectedProbability()
+	case groupstatusmodeltracerun.FieldCalibrationQueries:
+		return m.CalibrationQueries()
+	case groupstatusmodeltracerun.FieldBeta:
+		return m.Beta()
+	case groupstatusmodeltracerun.FieldRanking:
+		return m.Ranking()
+	case groupstatusmodeltracerun.FieldFamilyProbabilities:
+		return m.FamilyProbabilities()
+	case groupstatusmodeltracerun.FieldReasons:
+		return m.Reasons()
+	case groupstatusmodeltracerun.FieldOutputs:
+		return m.Outputs()
+	case groupstatusmodeltracerun.FieldAttemptsPlanned:
+		return m.AttemptsPlanned()
+	case groupstatusmodeltracerun.FieldAttemptsMade:
+		return m.AttemptsMade()
+	case groupstatusmodeltracerun.FieldValidOutputs:
+		return m.ValidOutputs()
+	case groupstatusmodeltracerun.FieldInputTokens:
+		return m.InputTokens()
+	case groupstatusmodeltracerun.FieldOutputTokens:
+		return m.OutputTokens()
+	case groupstatusmodeltracerun.FieldReasoningTokens:
+		return m.ReasoningTokens()
+	case groupstatusmodeltracerun.FieldCostUsd:
+		return m.CostUsd()
+	case groupstatusmodeltracerun.FieldLatencyMs:
+		return m.LatencyMs()
+	case groupstatusmodeltracerun.FieldHTTPCode:
+		return m.HTTPCode()
+	case groupstatusmodeltracerun.FieldErrorDetail:
+		return m.ErrorDetail()
+	case groupstatusmodeltracerun.FieldStartedAt:
+		return m.StartedAt()
+	case groupstatusmodeltracerun.FieldFinishedAt:
+		return m.FinishedAt()
+	case groupstatusmodeltracerun.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupStatusModelTraceRunMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupstatusmodeltracerun.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case groupstatusmodeltracerun.FieldConfigID:
+		return m.OldConfigID(ctx)
+	case groupstatusmodeltracerun.FieldPlatform:
+		return m.OldPlatform(ctx)
+	case groupstatusmodeltracerun.FieldBankSha256:
+		return m.OldBankSha256(ctx)
+	case groupstatusmodeltracerun.FieldBankBuiltAt:
+		return m.OldBankBuiltAt(ctx)
+	case groupstatusmodeltracerun.FieldExpectedModel:
+		return m.OldExpectedModel(ctx)
+	case groupstatusmodeltracerun.FieldRequestModel:
+		return m.OldRequestModel(ctx)
+	case groupstatusmodeltracerun.FieldAccountID:
+		return m.OldAccountID(ctx)
+	case groupstatusmodeltracerun.FieldAccountType:
+		return m.OldAccountType(ctx)
+	case groupstatusmodeltracerun.FieldRound:
+		return m.OldRound(ctx)
+	case groupstatusmodeltracerun.FieldVerdict:
+		return m.OldVerdict(ctx)
+	case groupstatusmodeltracerun.FieldOutcome:
+		return m.OldOutcome(ctx)
+	case groupstatusmodeltracerun.FieldTopModel:
+		return m.OldTopModel(ctx)
+	case groupstatusmodeltracerun.FieldTopProbability:
+		return m.OldTopProbability(ctx)
+	case groupstatusmodeltracerun.FieldExpectedProbability:
+		return m.OldExpectedProbability(ctx)
+	case groupstatusmodeltracerun.FieldCalibrationQueries:
+		return m.OldCalibrationQueries(ctx)
+	case groupstatusmodeltracerun.FieldBeta:
+		return m.OldBeta(ctx)
+	case groupstatusmodeltracerun.FieldRanking:
+		return m.OldRanking(ctx)
+	case groupstatusmodeltracerun.FieldFamilyProbabilities:
+		return m.OldFamilyProbabilities(ctx)
+	case groupstatusmodeltracerun.FieldReasons:
+		return m.OldReasons(ctx)
+	case groupstatusmodeltracerun.FieldOutputs:
+		return m.OldOutputs(ctx)
+	case groupstatusmodeltracerun.FieldAttemptsPlanned:
+		return m.OldAttemptsPlanned(ctx)
+	case groupstatusmodeltracerun.FieldAttemptsMade:
+		return m.OldAttemptsMade(ctx)
+	case groupstatusmodeltracerun.FieldValidOutputs:
+		return m.OldValidOutputs(ctx)
+	case groupstatusmodeltracerun.FieldInputTokens:
+		return m.OldInputTokens(ctx)
+	case groupstatusmodeltracerun.FieldOutputTokens:
+		return m.OldOutputTokens(ctx)
+	case groupstatusmodeltracerun.FieldReasoningTokens:
+		return m.OldReasoningTokens(ctx)
+	case groupstatusmodeltracerun.FieldCostUsd:
+		return m.OldCostUsd(ctx)
+	case groupstatusmodeltracerun.FieldLatencyMs:
+		return m.OldLatencyMs(ctx)
+	case groupstatusmodeltracerun.FieldHTTPCode:
+		return m.OldHTTPCode(ctx)
+	case groupstatusmodeltracerun.FieldErrorDetail:
+		return m.OldErrorDetail(ctx)
+	case groupstatusmodeltracerun.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case groupstatusmodeltracerun.FieldFinishedAt:
+		return m.OldFinishedAt(ctx)
+	case groupstatusmodeltracerun.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupStatusModelTraceRun field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusModelTraceRunMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusmodeltracerun.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case groupstatusmodeltracerun.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigID(v)
+		return nil
+	case groupstatusmodeltracerun.FieldPlatform:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlatform(v)
+		return nil
+	case groupstatusmodeltracerun.FieldBankSha256:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBankSha256(v)
+		return nil
+	case groupstatusmodeltracerun.FieldBankBuiltAt:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBankBuiltAt(v)
+		return nil
+	case groupstatusmodeltracerun.FieldExpectedModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedModel(v)
+		return nil
+	case groupstatusmodeltracerun.FieldRequestModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestModel(v)
+		return nil
+	case groupstatusmodeltracerun.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
+	case groupstatusmodeltracerun.FieldAccountType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountType(v)
+		return nil
+	case groupstatusmodeltracerun.FieldRound:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRound(v)
+		return nil
+	case groupstatusmodeltracerun.FieldVerdict:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVerdict(v)
+		return nil
+	case groupstatusmodeltracerun.FieldOutcome:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutcome(v)
+		return nil
+	case groupstatusmodeltracerun.FieldTopModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTopModel(v)
+		return nil
+	case groupstatusmodeltracerun.FieldTopProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTopProbability(v)
+		return nil
+	case groupstatusmodeltracerun.FieldExpectedProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedProbability(v)
+		return nil
+	case groupstatusmodeltracerun.FieldCalibrationQueries:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCalibrationQueries(v)
+		return nil
+	case groupstatusmodeltracerun.FieldBeta:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBeta(v)
+		return nil
+	case groupstatusmodeltracerun.FieldRanking:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRanking(v)
+		return nil
+	case groupstatusmodeltracerun.FieldFamilyProbabilities:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFamilyProbabilities(v)
+		return nil
+	case groupstatusmodeltracerun.FieldReasons:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReasons(v)
+		return nil
+	case groupstatusmodeltracerun.FieldOutputs:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutputs(v)
+		return nil
+	case groupstatusmodeltracerun.FieldAttemptsPlanned:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptsPlanned(v)
+		return nil
+	case groupstatusmodeltracerun.FieldAttemptsMade:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptsMade(v)
+		return nil
+	case groupstatusmodeltracerun.FieldValidOutputs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidOutputs(v)
+		return nil
+	case groupstatusmodeltracerun.FieldInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInputTokens(v)
+		return nil
+	case groupstatusmodeltracerun.FieldOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutputTokens(v)
+		return nil
+	case groupstatusmodeltracerun.FieldReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReasoningTokens(v)
+		return nil
+	case groupstatusmodeltracerun.FieldCostUsd:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCostUsd(v)
+		return nil
+	case groupstatusmodeltracerun.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLatencyMs(v)
+		return nil
+	case groupstatusmodeltracerun.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHTTPCode(v)
+		return nil
+	case groupstatusmodeltracerun.FieldErrorDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorDetail(v)
+		return nil
+	case groupstatusmodeltracerun.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case groupstatusmodeltracerun.FieldFinishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFinishedAt(v)
+		return nil
+	case groupstatusmodeltracerun.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusModelTraceRun field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedFields() []string {
+	var fields []string
+	if m.addgroup_id != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldGroupID)
+	}
+	if m.addconfig_id != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldConfigID)
+	}
+	if m.addaccount_id != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldAccountID)
+	}
+	if m.addround != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldRound)
+	}
+	if m.addtop_probability != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldTopProbability)
+	}
+	if m.addexpected_probability != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldExpectedProbability)
+	}
+	if m.addcalibration_queries != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldCalibrationQueries)
+	}
+	if m.addbeta != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldBeta)
+	}
+	if m.addattempts_planned != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldAttemptsPlanned)
+	}
+	if m.addattempts_made != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldAttemptsMade)
+	}
+	if m.addvalid_outputs != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldValidOutputs)
+	}
+	if m.addinput_tokens != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldInputTokens)
+	}
+	if m.addoutput_tokens != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldOutputTokens)
+	}
+	if m.addreasoning_tokens != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldReasoningTokens)
+	}
+	if m.addcost_usd != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldCostUsd)
+	}
+	if m.addlatency_ms != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldLatencyMs)
+	}
+	if m.addhttp_code != nil {
+		fields = append(fields, groupstatusmodeltracerun.FieldHTTPCode)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupStatusModelTraceRunMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case groupstatusmodeltracerun.FieldGroupID:
+		return m.AddedGroupID()
+	case groupstatusmodeltracerun.FieldConfigID:
+		return m.AddedConfigID()
+	case groupstatusmodeltracerun.FieldAccountID:
+		return m.AddedAccountID()
+	case groupstatusmodeltracerun.FieldRound:
+		return m.AddedRound()
+	case groupstatusmodeltracerun.FieldTopProbability:
+		return m.AddedTopProbability()
+	case groupstatusmodeltracerun.FieldExpectedProbability:
+		return m.AddedExpectedProbability()
+	case groupstatusmodeltracerun.FieldCalibrationQueries:
+		return m.AddedCalibrationQueries()
+	case groupstatusmodeltracerun.FieldBeta:
+		return m.AddedBeta()
+	case groupstatusmodeltracerun.FieldAttemptsPlanned:
+		return m.AddedAttemptsPlanned()
+	case groupstatusmodeltracerun.FieldAttemptsMade:
+		return m.AddedAttemptsMade()
+	case groupstatusmodeltracerun.FieldValidOutputs:
+		return m.AddedValidOutputs()
+	case groupstatusmodeltracerun.FieldInputTokens:
+		return m.AddedInputTokens()
+	case groupstatusmodeltracerun.FieldOutputTokens:
+		return m.AddedOutputTokens()
+	case groupstatusmodeltracerun.FieldReasoningTokens:
+		return m.AddedReasoningTokens()
+	case groupstatusmodeltracerun.FieldCostUsd:
+		return m.AddedCostUsd()
+	case groupstatusmodeltracerun.FieldLatencyMs:
+		return m.AddedLatencyMs()
+	case groupstatusmodeltracerun.FieldHTTPCode:
+		return m.AddedHTTPCode()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupStatusModelTraceRunMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case groupstatusmodeltracerun.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case groupstatusmodeltracerun.FieldConfigID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfigID(v)
+		return nil
+	case groupstatusmodeltracerun.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAccountID(v)
+		return nil
+	case groupstatusmodeltracerun.FieldRound:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRound(v)
+		return nil
+	case groupstatusmodeltracerun.FieldTopProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTopProbability(v)
+		return nil
+	case groupstatusmodeltracerun.FieldExpectedProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddExpectedProbability(v)
+		return nil
+	case groupstatusmodeltracerun.FieldCalibrationQueries:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCalibrationQueries(v)
+		return nil
+	case groupstatusmodeltracerun.FieldBeta:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddBeta(v)
+		return nil
+	case groupstatusmodeltracerun.FieldAttemptsPlanned:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttemptsPlanned(v)
+		return nil
+	case groupstatusmodeltracerun.FieldAttemptsMade:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttemptsMade(v)
+		return nil
+	case groupstatusmodeltracerun.FieldValidOutputs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddValidOutputs(v)
+		return nil
+	case groupstatusmodeltracerun.FieldInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddInputTokens(v)
+		return nil
+	case groupstatusmodeltracerun.FieldOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOutputTokens(v)
+		return nil
+	case groupstatusmodeltracerun.FieldReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReasoningTokens(v)
+		return nil
+	case groupstatusmodeltracerun.FieldCostUsd:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCostUsd(v)
+		return nil
+	case groupstatusmodeltracerun.FieldLatencyMs:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLatencyMs(v)
+		return nil
+	case groupstatusmodeltracerun.FieldHTTPCode:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddHTTPCode(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusModelTraceRun numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupStatusModelTraceRunMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(groupstatusmodeltracerun.FieldAccountID) {
+		fields = append(fields, groupstatusmodeltracerun.FieldAccountID)
+	}
+	if m.FieldCleared(groupstatusmodeltracerun.FieldExpectedProbability) {
+		fields = append(fields, groupstatusmodeltracerun.FieldExpectedProbability)
+	}
+	if m.FieldCleared(groupstatusmodeltracerun.FieldLatencyMs) {
+		fields = append(fields, groupstatusmodeltracerun.FieldLatencyMs)
+	}
+	if m.FieldCleared(groupstatusmodeltracerun.FieldHTTPCode) {
+		fields = append(fields, groupstatusmodeltracerun.FieldHTTPCode)
+	}
+	if m.FieldCleared(groupstatusmodeltracerun.FieldErrorDetail) {
+		fields = append(fields, groupstatusmodeltracerun.FieldErrorDetail)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupStatusModelTraceRunMutation) ClearField(name string) error {
+	switch name {
+	case groupstatusmodeltracerun.FieldAccountID:
+		m.ClearAccountID()
+		return nil
+	case groupstatusmodeltracerun.FieldExpectedProbability:
+		m.ClearExpectedProbability()
+		return nil
+	case groupstatusmodeltracerun.FieldLatencyMs:
+		m.ClearLatencyMs()
+		return nil
+	case groupstatusmodeltracerun.FieldHTTPCode:
+		m.ClearHTTPCode()
+		return nil
+	case groupstatusmodeltracerun.FieldErrorDetail:
+		m.ClearErrorDetail()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusModelTraceRun nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupStatusModelTraceRunMutation) ResetField(name string) error {
+	switch name {
+	case groupstatusmodeltracerun.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case groupstatusmodeltracerun.FieldConfigID:
+		m.ResetConfigID()
+		return nil
+	case groupstatusmodeltracerun.FieldPlatform:
+		m.ResetPlatform()
+		return nil
+	case groupstatusmodeltracerun.FieldBankSha256:
+		m.ResetBankSha256()
+		return nil
+	case groupstatusmodeltracerun.FieldBankBuiltAt:
+		m.ResetBankBuiltAt()
+		return nil
+	case groupstatusmodeltracerun.FieldExpectedModel:
+		m.ResetExpectedModel()
+		return nil
+	case groupstatusmodeltracerun.FieldRequestModel:
+		m.ResetRequestModel()
+		return nil
+	case groupstatusmodeltracerun.FieldAccountID:
+		m.ResetAccountID()
+		return nil
+	case groupstatusmodeltracerun.FieldAccountType:
+		m.ResetAccountType()
+		return nil
+	case groupstatusmodeltracerun.FieldRound:
+		m.ResetRound()
+		return nil
+	case groupstatusmodeltracerun.FieldVerdict:
+		m.ResetVerdict()
+		return nil
+	case groupstatusmodeltracerun.FieldOutcome:
+		m.ResetOutcome()
+		return nil
+	case groupstatusmodeltracerun.FieldTopModel:
+		m.ResetTopModel()
+		return nil
+	case groupstatusmodeltracerun.FieldTopProbability:
+		m.ResetTopProbability()
+		return nil
+	case groupstatusmodeltracerun.FieldExpectedProbability:
+		m.ResetExpectedProbability()
+		return nil
+	case groupstatusmodeltracerun.FieldCalibrationQueries:
+		m.ResetCalibrationQueries()
+		return nil
+	case groupstatusmodeltracerun.FieldBeta:
+		m.ResetBeta()
+		return nil
+	case groupstatusmodeltracerun.FieldRanking:
+		m.ResetRanking()
+		return nil
+	case groupstatusmodeltracerun.FieldFamilyProbabilities:
+		m.ResetFamilyProbabilities()
+		return nil
+	case groupstatusmodeltracerun.FieldReasons:
+		m.ResetReasons()
+		return nil
+	case groupstatusmodeltracerun.FieldOutputs:
+		m.ResetOutputs()
+		return nil
+	case groupstatusmodeltracerun.FieldAttemptsPlanned:
+		m.ResetAttemptsPlanned()
+		return nil
+	case groupstatusmodeltracerun.FieldAttemptsMade:
+		m.ResetAttemptsMade()
+		return nil
+	case groupstatusmodeltracerun.FieldValidOutputs:
+		m.ResetValidOutputs()
+		return nil
+	case groupstatusmodeltracerun.FieldInputTokens:
+		m.ResetInputTokens()
+		return nil
+	case groupstatusmodeltracerun.FieldOutputTokens:
+		m.ResetOutputTokens()
+		return nil
+	case groupstatusmodeltracerun.FieldReasoningTokens:
+		m.ResetReasoningTokens()
+		return nil
+	case groupstatusmodeltracerun.FieldCostUsd:
+		m.ResetCostUsd()
+		return nil
+	case groupstatusmodeltracerun.FieldLatencyMs:
+		m.ResetLatencyMs()
+		return nil
+	case groupstatusmodeltracerun.FieldHTTPCode:
+		m.ResetHTTPCode()
+		return nil
+	case groupstatusmodeltracerun.FieldErrorDetail:
+		m.ResetErrorDetail()
+		return nil
+	case groupstatusmodeltracerun.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case groupstatusmodeltracerun.FieldFinishedAt:
+		m.ResetFinishedAt()
+		return nil
+	case groupstatusmodeltracerun.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupStatusModelTraceRun field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupStatusModelTraceRunMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupStatusModelTraceRunMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupStatusModelTraceRunMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupStatusModelTraceRunMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupStatusModelTraceRunMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusModelTraceRun unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupStatusModelTraceRunMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown GroupStatusModelTraceRun edge %s", name)
+}
+
 // GroupStatusRecordMutation represents an operation that mutates the GroupStatusRecord nodes in the graph.
 type GroupStatusRecordMutation struct {
 	config
@@ -32131,6 +35220,34 @@ type GroupStatusStateMutation struct {
 	addsol_juice_output_tokens          *int64
 	sol_juice_reasoning_tokens          *int64
 	addsol_juice_reasoning_tokens       *int64
+	modeltrace_verdict                  *string
+	modeltrace_stable_status            *string
+	modeltrace_run_expected_model       *string
+	modeltrace_top_model                *string
+	modeltrace_top_probability          *float64
+	addmodeltrace_top_probability       *float64
+	modeltrace_expected_probability     *float64
+	addmodeltrace_expected_probability  *float64
+	modeltrace_ranking                  *[]map[string]interface{}
+	appendmodeltrace_ranking            []map[string]interface{}
+	modeltrace_reasons                  *[]string
+	appendmodeltrace_reasons            []string
+	modeltrace_detail                   *string
+	modeltrace_checked_at               *time.Time
+	modeltrace_consecutive_mismatch     *int
+	addmodeltrace_consecutive_mismatch  *int
+	modeltrace_valid_outputs            *int
+	addmodeltrace_valid_outputs         *int
+	modeltrace_input_tokens             *int64
+	addmodeltrace_input_tokens          *int64
+	modeltrace_output_tokens            *int64
+	addmodeltrace_output_tokens         *int64
+	modeltrace_reasoning_tokens         *int64
+	addmodeltrace_reasoning_tokens      *int64
+	modeltrace_last_cost_usd            *float64
+	addmodeltrace_last_cost_usd         *float64
+	modeltrace_last_run_id              *int64
+	addmodeltrace_last_run_id           *int64
 	astra_check_verdict                 *string
 	astra_check_stable_status           *string
 	astra_check_winner                  *string
@@ -33449,6 +36566,882 @@ func (m *GroupStatusStateMutation) ResetSolJuiceReasoningTokens() {
 	m.addsol_juice_reasoning_tokens = nil
 }
 
+// SetModeltraceVerdict sets the "modeltrace_verdict" field.
+func (m *GroupStatusStateMutation) SetModeltraceVerdict(s string) {
+	m.modeltrace_verdict = &s
+}
+
+// ModeltraceVerdict returns the value of the "modeltrace_verdict" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceVerdict() (r string, exists bool) {
+	v := m.modeltrace_verdict
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceVerdict returns the old "modeltrace_verdict" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceVerdict(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceVerdict is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceVerdict requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceVerdict: %w", err)
+	}
+	return oldValue.ModeltraceVerdict, nil
+}
+
+// ResetModeltraceVerdict resets all changes to the "modeltrace_verdict" field.
+func (m *GroupStatusStateMutation) ResetModeltraceVerdict() {
+	m.modeltrace_verdict = nil
+}
+
+// SetModeltraceStableStatus sets the "modeltrace_stable_status" field.
+func (m *GroupStatusStateMutation) SetModeltraceStableStatus(s string) {
+	m.modeltrace_stable_status = &s
+}
+
+// ModeltraceStableStatus returns the value of the "modeltrace_stable_status" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceStableStatus() (r string, exists bool) {
+	v := m.modeltrace_stable_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceStableStatus returns the old "modeltrace_stable_status" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceStableStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceStableStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceStableStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceStableStatus: %w", err)
+	}
+	return oldValue.ModeltraceStableStatus, nil
+}
+
+// ResetModeltraceStableStatus resets all changes to the "modeltrace_stable_status" field.
+func (m *GroupStatusStateMutation) ResetModeltraceStableStatus() {
+	m.modeltrace_stable_status = nil
+}
+
+// SetModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field.
+func (m *GroupStatusStateMutation) SetModeltraceRunExpectedModel(s string) {
+	m.modeltrace_run_expected_model = &s
+}
+
+// ModeltraceRunExpectedModel returns the value of the "modeltrace_run_expected_model" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceRunExpectedModel() (r string, exists bool) {
+	v := m.modeltrace_run_expected_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceRunExpectedModel returns the old "modeltrace_run_expected_model" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceRunExpectedModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceRunExpectedModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceRunExpectedModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceRunExpectedModel: %w", err)
+	}
+	return oldValue.ModeltraceRunExpectedModel, nil
+}
+
+// ResetModeltraceRunExpectedModel resets all changes to the "modeltrace_run_expected_model" field.
+func (m *GroupStatusStateMutation) ResetModeltraceRunExpectedModel() {
+	m.modeltrace_run_expected_model = nil
+}
+
+// SetModeltraceTopModel sets the "modeltrace_top_model" field.
+func (m *GroupStatusStateMutation) SetModeltraceTopModel(s string) {
+	m.modeltrace_top_model = &s
+}
+
+// ModeltraceTopModel returns the value of the "modeltrace_top_model" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceTopModel() (r string, exists bool) {
+	v := m.modeltrace_top_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceTopModel returns the old "modeltrace_top_model" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceTopModel(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceTopModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceTopModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceTopModel: %w", err)
+	}
+	return oldValue.ModeltraceTopModel, nil
+}
+
+// ResetModeltraceTopModel resets all changes to the "modeltrace_top_model" field.
+func (m *GroupStatusStateMutation) ResetModeltraceTopModel() {
+	m.modeltrace_top_model = nil
+}
+
+// SetModeltraceTopProbability sets the "modeltrace_top_probability" field.
+func (m *GroupStatusStateMutation) SetModeltraceTopProbability(f float64) {
+	m.modeltrace_top_probability = &f
+	m.addmodeltrace_top_probability = nil
+}
+
+// ModeltraceTopProbability returns the value of the "modeltrace_top_probability" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceTopProbability() (r float64, exists bool) {
+	v := m.modeltrace_top_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceTopProbability returns the old "modeltrace_top_probability" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceTopProbability(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceTopProbability is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceTopProbability requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceTopProbability: %w", err)
+	}
+	return oldValue.ModeltraceTopProbability, nil
+}
+
+// AddModeltraceTopProbability adds f to the "modeltrace_top_probability" field.
+func (m *GroupStatusStateMutation) AddModeltraceTopProbability(f float64) {
+	if m.addmodeltrace_top_probability != nil {
+		*m.addmodeltrace_top_probability += f
+	} else {
+		m.addmodeltrace_top_probability = &f
+	}
+}
+
+// AddedModeltraceTopProbability returns the value that was added to the "modeltrace_top_probability" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceTopProbability() (r float64, exists bool) {
+	v := m.addmodeltrace_top_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceTopProbability resets all changes to the "modeltrace_top_probability" field.
+func (m *GroupStatusStateMutation) ResetModeltraceTopProbability() {
+	m.modeltrace_top_probability = nil
+	m.addmodeltrace_top_probability = nil
+}
+
+// SetModeltraceExpectedProbability sets the "modeltrace_expected_probability" field.
+func (m *GroupStatusStateMutation) SetModeltraceExpectedProbability(f float64) {
+	m.modeltrace_expected_probability = &f
+	m.addmodeltrace_expected_probability = nil
+}
+
+// ModeltraceExpectedProbability returns the value of the "modeltrace_expected_probability" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceExpectedProbability() (r float64, exists bool) {
+	v := m.modeltrace_expected_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceExpectedProbability returns the old "modeltrace_expected_probability" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceExpectedProbability(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceExpectedProbability is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceExpectedProbability requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceExpectedProbability: %w", err)
+	}
+	return oldValue.ModeltraceExpectedProbability, nil
+}
+
+// AddModeltraceExpectedProbability adds f to the "modeltrace_expected_probability" field.
+func (m *GroupStatusStateMutation) AddModeltraceExpectedProbability(f float64) {
+	if m.addmodeltrace_expected_probability != nil {
+		*m.addmodeltrace_expected_probability += f
+	} else {
+		m.addmodeltrace_expected_probability = &f
+	}
+}
+
+// AddedModeltraceExpectedProbability returns the value that was added to the "modeltrace_expected_probability" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceExpectedProbability() (r float64, exists bool) {
+	v := m.addmodeltrace_expected_probability
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearModeltraceExpectedProbability clears the value of the "modeltrace_expected_probability" field.
+func (m *GroupStatusStateMutation) ClearModeltraceExpectedProbability() {
+	m.modeltrace_expected_probability = nil
+	m.addmodeltrace_expected_probability = nil
+	m.clearedFields[groupstatusstate.FieldModeltraceExpectedProbability] = struct{}{}
+}
+
+// ModeltraceExpectedProbabilityCleared returns if the "modeltrace_expected_probability" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) ModeltraceExpectedProbabilityCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldModeltraceExpectedProbability]
+	return ok
+}
+
+// ResetModeltraceExpectedProbability resets all changes to the "modeltrace_expected_probability" field.
+func (m *GroupStatusStateMutation) ResetModeltraceExpectedProbability() {
+	m.modeltrace_expected_probability = nil
+	m.addmodeltrace_expected_probability = nil
+	delete(m.clearedFields, groupstatusstate.FieldModeltraceExpectedProbability)
+}
+
+// SetModeltraceRanking sets the "modeltrace_ranking" field.
+func (m *GroupStatusStateMutation) SetModeltraceRanking(value []map[string]interface{}) {
+	m.modeltrace_ranking = &value
+	m.appendmodeltrace_ranking = nil
+}
+
+// ModeltraceRanking returns the value of the "modeltrace_ranking" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceRanking() (r []map[string]interface{}, exists bool) {
+	v := m.modeltrace_ranking
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceRanking returns the old "modeltrace_ranking" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceRanking(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceRanking is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceRanking requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceRanking: %w", err)
+	}
+	return oldValue.ModeltraceRanking, nil
+}
+
+// AppendModeltraceRanking adds value to the "modeltrace_ranking" field.
+func (m *GroupStatusStateMutation) AppendModeltraceRanking(value []map[string]interface{}) {
+	m.appendmodeltrace_ranking = append(m.appendmodeltrace_ranking, value...)
+}
+
+// AppendedModeltraceRanking returns the list of values that were appended to the "modeltrace_ranking" field in this mutation.
+func (m *GroupStatusStateMutation) AppendedModeltraceRanking() ([]map[string]interface{}, bool) {
+	if len(m.appendmodeltrace_ranking) == 0 {
+		return nil, false
+	}
+	return m.appendmodeltrace_ranking, true
+}
+
+// ResetModeltraceRanking resets all changes to the "modeltrace_ranking" field.
+func (m *GroupStatusStateMutation) ResetModeltraceRanking() {
+	m.modeltrace_ranking = nil
+	m.appendmodeltrace_ranking = nil
+}
+
+// SetModeltraceReasons sets the "modeltrace_reasons" field.
+func (m *GroupStatusStateMutation) SetModeltraceReasons(s []string) {
+	m.modeltrace_reasons = &s
+	m.appendmodeltrace_reasons = nil
+}
+
+// ModeltraceReasons returns the value of the "modeltrace_reasons" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceReasons() (r []string, exists bool) {
+	v := m.modeltrace_reasons
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceReasons returns the old "modeltrace_reasons" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceReasons(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceReasons is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceReasons requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceReasons: %w", err)
+	}
+	return oldValue.ModeltraceReasons, nil
+}
+
+// AppendModeltraceReasons adds s to the "modeltrace_reasons" field.
+func (m *GroupStatusStateMutation) AppendModeltraceReasons(s []string) {
+	m.appendmodeltrace_reasons = append(m.appendmodeltrace_reasons, s...)
+}
+
+// AppendedModeltraceReasons returns the list of values that were appended to the "modeltrace_reasons" field in this mutation.
+func (m *GroupStatusStateMutation) AppendedModeltraceReasons() ([]string, bool) {
+	if len(m.appendmodeltrace_reasons) == 0 {
+		return nil, false
+	}
+	return m.appendmodeltrace_reasons, true
+}
+
+// ResetModeltraceReasons resets all changes to the "modeltrace_reasons" field.
+func (m *GroupStatusStateMutation) ResetModeltraceReasons() {
+	m.modeltrace_reasons = nil
+	m.appendmodeltrace_reasons = nil
+}
+
+// SetModeltraceDetail sets the "modeltrace_detail" field.
+func (m *GroupStatusStateMutation) SetModeltraceDetail(s string) {
+	m.modeltrace_detail = &s
+}
+
+// ModeltraceDetail returns the value of the "modeltrace_detail" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceDetail() (r string, exists bool) {
+	v := m.modeltrace_detail
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceDetail returns the old "modeltrace_detail" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceDetail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceDetail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceDetail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceDetail: %w", err)
+	}
+	return oldValue.ModeltraceDetail, nil
+}
+
+// ClearModeltraceDetail clears the value of the "modeltrace_detail" field.
+func (m *GroupStatusStateMutation) ClearModeltraceDetail() {
+	m.modeltrace_detail = nil
+	m.clearedFields[groupstatusstate.FieldModeltraceDetail] = struct{}{}
+}
+
+// ModeltraceDetailCleared returns if the "modeltrace_detail" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) ModeltraceDetailCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldModeltraceDetail]
+	return ok
+}
+
+// ResetModeltraceDetail resets all changes to the "modeltrace_detail" field.
+func (m *GroupStatusStateMutation) ResetModeltraceDetail() {
+	m.modeltrace_detail = nil
+	delete(m.clearedFields, groupstatusstate.FieldModeltraceDetail)
+}
+
+// SetModeltraceCheckedAt sets the "modeltrace_checked_at" field.
+func (m *GroupStatusStateMutation) SetModeltraceCheckedAt(t time.Time) {
+	m.modeltrace_checked_at = &t
+}
+
+// ModeltraceCheckedAt returns the value of the "modeltrace_checked_at" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceCheckedAt() (r time.Time, exists bool) {
+	v := m.modeltrace_checked_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceCheckedAt returns the old "modeltrace_checked_at" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceCheckedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceCheckedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceCheckedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceCheckedAt: %w", err)
+	}
+	return oldValue.ModeltraceCheckedAt, nil
+}
+
+// ClearModeltraceCheckedAt clears the value of the "modeltrace_checked_at" field.
+func (m *GroupStatusStateMutation) ClearModeltraceCheckedAt() {
+	m.modeltrace_checked_at = nil
+	m.clearedFields[groupstatusstate.FieldModeltraceCheckedAt] = struct{}{}
+}
+
+// ModeltraceCheckedAtCleared returns if the "modeltrace_checked_at" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) ModeltraceCheckedAtCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldModeltraceCheckedAt]
+	return ok
+}
+
+// ResetModeltraceCheckedAt resets all changes to the "modeltrace_checked_at" field.
+func (m *GroupStatusStateMutation) ResetModeltraceCheckedAt() {
+	m.modeltrace_checked_at = nil
+	delete(m.clearedFields, groupstatusstate.FieldModeltraceCheckedAt)
+}
+
+// SetModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) SetModeltraceConsecutiveMismatch(i int) {
+	m.modeltrace_consecutive_mismatch = &i
+	m.addmodeltrace_consecutive_mismatch = nil
+}
+
+// ModeltraceConsecutiveMismatch returns the value of the "modeltrace_consecutive_mismatch" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceConsecutiveMismatch() (r int, exists bool) {
+	v := m.modeltrace_consecutive_mismatch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceConsecutiveMismatch returns the old "modeltrace_consecutive_mismatch" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceConsecutiveMismatch(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceConsecutiveMismatch is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceConsecutiveMismatch requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceConsecutiveMismatch: %w", err)
+	}
+	return oldValue.ModeltraceConsecutiveMismatch, nil
+}
+
+// AddModeltraceConsecutiveMismatch adds i to the "modeltrace_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) AddModeltraceConsecutiveMismatch(i int) {
+	if m.addmodeltrace_consecutive_mismatch != nil {
+		*m.addmodeltrace_consecutive_mismatch += i
+	} else {
+		m.addmodeltrace_consecutive_mismatch = &i
+	}
+}
+
+// AddedModeltraceConsecutiveMismatch returns the value that was added to the "modeltrace_consecutive_mismatch" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceConsecutiveMismatch() (r int, exists bool) {
+	v := m.addmodeltrace_consecutive_mismatch
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceConsecutiveMismatch resets all changes to the "modeltrace_consecutive_mismatch" field.
+func (m *GroupStatusStateMutation) ResetModeltraceConsecutiveMismatch() {
+	m.modeltrace_consecutive_mismatch = nil
+	m.addmodeltrace_consecutive_mismatch = nil
+}
+
+// SetModeltraceValidOutputs sets the "modeltrace_valid_outputs" field.
+func (m *GroupStatusStateMutation) SetModeltraceValidOutputs(i int) {
+	m.modeltrace_valid_outputs = &i
+	m.addmodeltrace_valid_outputs = nil
+}
+
+// ModeltraceValidOutputs returns the value of the "modeltrace_valid_outputs" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceValidOutputs() (r int, exists bool) {
+	v := m.modeltrace_valid_outputs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceValidOutputs returns the old "modeltrace_valid_outputs" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceValidOutputs(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceValidOutputs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceValidOutputs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceValidOutputs: %w", err)
+	}
+	return oldValue.ModeltraceValidOutputs, nil
+}
+
+// AddModeltraceValidOutputs adds i to the "modeltrace_valid_outputs" field.
+func (m *GroupStatusStateMutation) AddModeltraceValidOutputs(i int) {
+	if m.addmodeltrace_valid_outputs != nil {
+		*m.addmodeltrace_valid_outputs += i
+	} else {
+		m.addmodeltrace_valid_outputs = &i
+	}
+}
+
+// AddedModeltraceValidOutputs returns the value that was added to the "modeltrace_valid_outputs" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceValidOutputs() (r int, exists bool) {
+	v := m.addmodeltrace_valid_outputs
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceValidOutputs resets all changes to the "modeltrace_valid_outputs" field.
+func (m *GroupStatusStateMutation) ResetModeltraceValidOutputs() {
+	m.modeltrace_valid_outputs = nil
+	m.addmodeltrace_valid_outputs = nil
+}
+
+// SetModeltraceInputTokens sets the "modeltrace_input_tokens" field.
+func (m *GroupStatusStateMutation) SetModeltraceInputTokens(i int64) {
+	m.modeltrace_input_tokens = &i
+	m.addmodeltrace_input_tokens = nil
+}
+
+// ModeltraceInputTokens returns the value of the "modeltrace_input_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceInputTokens() (r int64, exists bool) {
+	v := m.modeltrace_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceInputTokens returns the old "modeltrace_input_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceInputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceInputTokens: %w", err)
+	}
+	return oldValue.ModeltraceInputTokens, nil
+}
+
+// AddModeltraceInputTokens adds i to the "modeltrace_input_tokens" field.
+func (m *GroupStatusStateMutation) AddModeltraceInputTokens(i int64) {
+	if m.addmodeltrace_input_tokens != nil {
+		*m.addmodeltrace_input_tokens += i
+	} else {
+		m.addmodeltrace_input_tokens = &i
+	}
+}
+
+// AddedModeltraceInputTokens returns the value that was added to the "modeltrace_input_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceInputTokens() (r int64, exists bool) {
+	v := m.addmodeltrace_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceInputTokens resets all changes to the "modeltrace_input_tokens" field.
+func (m *GroupStatusStateMutation) ResetModeltraceInputTokens() {
+	m.modeltrace_input_tokens = nil
+	m.addmodeltrace_input_tokens = nil
+}
+
+// SetModeltraceOutputTokens sets the "modeltrace_output_tokens" field.
+func (m *GroupStatusStateMutation) SetModeltraceOutputTokens(i int64) {
+	m.modeltrace_output_tokens = &i
+	m.addmodeltrace_output_tokens = nil
+}
+
+// ModeltraceOutputTokens returns the value of the "modeltrace_output_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceOutputTokens() (r int64, exists bool) {
+	v := m.modeltrace_output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceOutputTokens returns the old "modeltrace_output_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceOutputTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceOutputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceOutputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceOutputTokens: %w", err)
+	}
+	return oldValue.ModeltraceOutputTokens, nil
+}
+
+// AddModeltraceOutputTokens adds i to the "modeltrace_output_tokens" field.
+func (m *GroupStatusStateMutation) AddModeltraceOutputTokens(i int64) {
+	if m.addmodeltrace_output_tokens != nil {
+		*m.addmodeltrace_output_tokens += i
+	} else {
+		m.addmodeltrace_output_tokens = &i
+	}
+}
+
+// AddedModeltraceOutputTokens returns the value that was added to the "modeltrace_output_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceOutputTokens() (r int64, exists bool) {
+	v := m.addmodeltrace_output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceOutputTokens resets all changes to the "modeltrace_output_tokens" field.
+func (m *GroupStatusStateMutation) ResetModeltraceOutputTokens() {
+	m.modeltrace_output_tokens = nil
+	m.addmodeltrace_output_tokens = nil
+}
+
+// SetModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) SetModeltraceReasoningTokens(i int64) {
+	m.modeltrace_reasoning_tokens = &i
+	m.addmodeltrace_reasoning_tokens = nil
+}
+
+// ModeltraceReasoningTokens returns the value of the "modeltrace_reasoning_tokens" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceReasoningTokens() (r int64, exists bool) {
+	v := m.modeltrace_reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceReasoningTokens returns the old "modeltrace_reasoning_tokens" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceReasoningTokens(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceReasoningTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceReasoningTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceReasoningTokens: %w", err)
+	}
+	return oldValue.ModeltraceReasoningTokens, nil
+}
+
+// AddModeltraceReasoningTokens adds i to the "modeltrace_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) AddModeltraceReasoningTokens(i int64) {
+	if m.addmodeltrace_reasoning_tokens != nil {
+		*m.addmodeltrace_reasoning_tokens += i
+	} else {
+		m.addmodeltrace_reasoning_tokens = &i
+	}
+}
+
+// AddedModeltraceReasoningTokens returns the value that was added to the "modeltrace_reasoning_tokens" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceReasoningTokens() (r int64, exists bool) {
+	v := m.addmodeltrace_reasoning_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceReasoningTokens resets all changes to the "modeltrace_reasoning_tokens" field.
+func (m *GroupStatusStateMutation) ResetModeltraceReasoningTokens() {
+	m.modeltrace_reasoning_tokens = nil
+	m.addmodeltrace_reasoning_tokens = nil
+}
+
+// SetModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field.
+func (m *GroupStatusStateMutation) SetModeltraceLastCostUsd(f float64) {
+	m.modeltrace_last_cost_usd = &f
+	m.addmodeltrace_last_cost_usd = nil
+}
+
+// ModeltraceLastCostUsd returns the value of the "modeltrace_last_cost_usd" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceLastCostUsd() (r float64, exists bool) {
+	v := m.modeltrace_last_cost_usd
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceLastCostUsd returns the old "modeltrace_last_cost_usd" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceLastCostUsd(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceLastCostUsd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceLastCostUsd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceLastCostUsd: %w", err)
+	}
+	return oldValue.ModeltraceLastCostUsd, nil
+}
+
+// AddModeltraceLastCostUsd adds f to the "modeltrace_last_cost_usd" field.
+func (m *GroupStatusStateMutation) AddModeltraceLastCostUsd(f float64) {
+	if m.addmodeltrace_last_cost_usd != nil {
+		*m.addmodeltrace_last_cost_usd += f
+	} else {
+		m.addmodeltrace_last_cost_usd = &f
+	}
+}
+
+// AddedModeltraceLastCostUsd returns the value that was added to the "modeltrace_last_cost_usd" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceLastCostUsd() (r float64, exists bool) {
+	v := m.addmodeltrace_last_cost_usd
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetModeltraceLastCostUsd resets all changes to the "modeltrace_last_cost_usd" field.
+func (m *GroupStatusStateMutation) ResetModeltraceLastCostUsd() {
+	m.modeltrace_last_cost_usd = nil
+	m.addmodeltrace_last_cost_usd = nil
+}
+
+// SetModeltraceLastRunID sets the "modeltrace_last_run_id" field.
+func (m *GroupStatusStateMutation) SetModeltraceLastRunID(i int64) {
+	m.modeltrace_last_run_id = &i
+	m.addmodeltrace_last_run_id = nil
+}
+
+// ModeltraceLastRunID returns the value of the "modeltrace_last_run_id" field in the mutation.
+func (m *GroupStatusStateMutation) ModeltraceLastRunID() (r int64, exists bool) {
+	v := m.modeltrace_last_run_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModeltraceLastRunID returns the old "modeltrace_last_run_id" field's value of the GroupStatusState entity.
+// If the GroupStatusState object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupStatusStateMutation) OldModeltraceLastRunID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModeltraceLastRunID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModeltraceLastRunID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModeltraceLastRunID: %w", err)
+	}
+	return oldValue.ModeltraceLastRunID, nil
+}
+
+// AddModeltraceLastRunID adds i to the "modeltrace_last_run_id" field.
+func (m *GroupStatusStateMutation) AddModeltraceLastRunID(i int64) {
+	if m.addmodeltrace_last_run_id != nil {
+		*m.addmodeltrace_last_run_id += i
+	} else {
+		m.addmodeltrace_last_run_id = &i
+	}
+}
+
+// AddedModeltraceLastRunID returns the value that was added to the "modeltrace_last_run_id" field in this mutation.
+func (m *GroupStatusStateMutation) AddedModeltraceLastRunID() (r int64, exists bool) {
+	v := m.addmodeltrace_last_run_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearModeltraceLastRunID clears the value of the "modeltrace_last_run_id" field.
+func (m *GroupStatusStateMutation) ClearModeltraceLastRunID() {
+	m.modeltrace_last_run_id = nil
+	m.addmodeltrace_last_run_id = nil
+	m.clearedFields[groupstatusstate.FieldModeltraceLastRunID] = struct{}{}
+}
+
+// ModeltraceLastRunIDCleared returns if the "modeltrace_last_run_id" field was cleared in this mutation.
+func (m *GroupStatusStateMutation) ModeltraceLastRunIDCleared() bool {
+	_, ok := m.clearedFields[groupstatusstate.FieldModeltraceLastRunID]
+	return ok
+}
+
+// ResetModeltraceLastRunID resets all changes to the "modeltrace_last_run_id" field.
+func (m *GroupStatusStateMutation) ResetModeltraceLastRunID() {
+	m.modeltrace_last_run_id = nil
+	m.addmodeltrace_last_run_id = nil
+	delete(m.clearedFields, groupstatusstate.FieldModeltraceLastRunID)
+}
+
 // SetAstraCheckVerdict sets the "astra_check_verdict" field.
 func (m *GroupStatusStateMutation) SetAstraCheckVerdict(s string) {
 	m.astra_check_verdict = &s
@@ -34197,7 +38190,7 @@ func (m *GroupStatusStateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupStatusStateMutation) Fields() []string {
-	fields := make([]string, 0, 38)
+	fields := make([]string, 0, 55)
 	if m.created_at != nil {
 		fields = append(fields, groupstatusstate.FieldCreatedAt)
 	}
@@ -34269,6 +38262,57 @@ func (m *GroupStatusStateMutation) Fields() []string {
 	}
 	if m.sol_juice_reasoning_tokens != nil {
 		fields = append(fields, groupstatusstate.FieldSolJuiceReasoningTokens)
+	}
+	if m.modeltrace_verdict != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceVerdict)
+	}
+	if m.modeltrace_stable_status != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceStableStatus)
+	}
+	if m.modeltrace_run_expected_model != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceRunExpectedModel)
+	}
+	if m.modeltrace_top_model != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceTopModel)
+	}
+	if m.modeltrace_top_probability != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceTopProbability)
+	}
+	if m.modeltrace_expected_probability != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceExpectedProbability)
+	}
+	if m.modeltrace_ranking != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceRanking)
+	}
+	if m.modeltrace_reasons != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceReasons)
+	}
+	if m.modeltrace_detail != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceDetail)
+	}
+	if m.modeltrace_checked_at != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceCheckedAt)
+	}
+	if m.modeltrace_consecutive_mismatch != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceConsecutiveMismatch)
+	}
+	if m.modeltrace_valid_outputs != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceValidOutputs)
+	}
+	if m.modeltrace_input_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceInputTokens)
+	}
+	if m.modeltrace_output_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceOutputTokens)
+	}
+	if m.modeltrace_reasoning_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceReasoningTokens)
+	}
+	if m.modeltrace_last_cost_usd != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceLastCostUsd)
+	}
+	if m.modeltrace_last_run_id != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceLastRunID)
 	}
 	if m.astra_check_verdict != nil {
 		fields = append(fields, groupstatusstate.FieldAstraCheckVerdict)
@@ -34368,6 +38412,40 @@ func (m *GroupStatusStateMutation) Field(name string) (ent.Value, bool) {
 		return m.SolJuiceOutputTokens()
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		return m.SolJuiceReasoningTokens()
+	case groupstatusstate.FieldModeltraceVerdict:
+		return m.ModeltraceVerdict()
+	case groupstatusstate.FieldModeltraceStableStatus:
+		return m.ModeltraceStableStatus()
+	case groupstatusstate.FieldModeltraceRunExpectedModel:
+		return m.ModeltraceRunExpectedModel()
+	case groupstatusstate.FieldModeltraceTopModel:
+		return m.ModeltraceTopModel()
+	case groupstatusstate.FieldModeltraceTopProbability:
+		return m.ModeltraceTopProbability()
+	case groupstatusstate.FieldModeltraceExpectedProbability:
+		return m.ModeltraceExpectedProbability()
+	case groupstatusstate.FieldModeltraceRanking:
+		return m.ModeltraceRanking()
+	case groupstatusstate.FieldModeltraceReasons:
+		return m.ModeltraceReasons()
+	case groupstatusstate.FieldModeltraceDetail:
+		return m.ModeltraceDetail()
+	case groupstatusstate.FieldModeltraceCheckedAt:
+		return m.ModeltraceCheckedAt()
+	case groupstatusstate.FieldModeltraceConsecutiveMismatch:
+		return m.ModeltraceConsecutiveMismatch()
+	case groupstatusstate.FieldModeltraceValidOutputs:
+		return m.ModeltraceValidOutputs()
+	case groupstatusstate.FieldModeltraceInputTokens:
+		return m.ModeltraceInputTokens()
+	case groupstatusstate.FieldModeltraceOutputTokens:
+		return m.ModeltraceOutputTokens()
+	case groupstatusstate.FieldModeltraceReasoningTokens:
+		return m.ModeltraceReasoningTokens()
+	case groupstatusstate.FieldModeltraceLastCostUsd:
+		return m.ModeltraceLastCostUsd()
+	case groupstatusstate.FieldModeltraceLastRunID:
+		return m.ModeltraceLastRunID()
 	case groupstatusstate.FieldAstraCheckVerdict:
 		return m.AstraCheckVerdict()
 	case groupstatusstate.FieldAstraCheckStableStatus:
@@ -34453,6 +38531,40 @@ func (m *GroupStatusStateMutation) OldField(ctx context.Context, name string) (e
 		return m.OldSolJuiceOutputTokens(ctx)
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		return m.OldSolJuiceReasoningTokens(ctx)
+	case groupstatusstate.FieldModeltraceVerdict:
+		return m.OldModeltraceVerdict(ctx)
+	case groupstatusstate.FieldModeltraceStableStatus:
+		return m.OldModeltraceStableStatus(ctx)
+	case groupstatusstate.FieldModeltraceRunExpectedModel:
+		return m.OldModeltraceRunExpectedModel(ctx)
+	case groupstatusstate.FieldModeltraceTopModel:
+		return m.OldModeltraceTopModel(ctx)
+	case groupstatusstate.FieldModeltraceTopProbability:
+		return m.OldModeltraceTopProbability(ctx)
+	case groupstatusstate.FieldModeltraceExpectedProbability:
+		return m.OldModeltraceExpectedProbability(ctx)
+	case groupstatusstate.FieldModeltraceRanking:
+		return m.OldModeltraceRanking(ctx)
+	case groupstatusstate.FieldModeltraceReasons:
+		return m.OldModeltraceReasons(ctx)
+	case groupstatusstate.FieldModeltraceDetail:
+		return m.OldModeltraceDetail(ctx)
+	case groupstatusstate.FieldModeltraceCheckedAt:
+		return m.OldModeltraceCheckedAt(ctx)
+	case groupstatusstate.FieldModeltraceConsecutiveMismatch:
+		return m.OldModeltraceConsecutiveMismatch(ctx)
+	case groupstatusstate.FieldModeltraceValidOutputs:
+		return m.OldModeltraceValidOutputs(ctx)
+	case groupstatusstate.FieldModeltraceInputTokens:
+		return m.OldModeltraceInputTokens(ctx)
+	case groupstatusstate.FieldModeltraceOutputTokens:
+		return m.OldModeltraceOutputTokens(ctx)
+	case groupstatusstate.FieldModeltraceReasoningTokens:
+		return m.OldModeltraceReasoningTokens(ctx)
+	case groupstatusstate.FieldModeltraceLastCostUsd:
+		return m.OldModeltraceLastCostUsd(ctx)
+	case groupstatusstate.FieldModeltraceLastRunID:
+		return m.OldModeltraceLastRunID(ctx)
 	case groupstatusstate.FieldAstraCheckVerdict:
 		return m.OldAstraCheckVerdict(ctx)
 	case groupstatusstate.FieldAstraCheckStableStatus:
@@ -34658,6 +38770,125 @@ func (m *GroupStatusStateMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetSolJuiceReasoningTokens(v)
 		return nil
+	case groupstatusstate.FieldModeltraceVerdict:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceVerdict(v)
+		return nil
+	case groupstatusstate.FieldModeltraceStableStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceStableStatus(v)
+		return nil
+	case groupstatusstate.FieldModeltraceRunExpectedModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceRunExpectedModel(v)
+		return nil
+	case groupstatusstate.FieldModeltraceTopModel:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceTopModel(v)
+		return nil
+	case groupstatusstate.FieldModeltraceTopProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceTopProbability(v)
+		return nil
+	case groupstatusstate.FieldModeltraceExpectedProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceExpectedProbability(v)
+		return nil
+	case groupstatusstate.FieldModeltraceRanking:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceRanking(v)
+		return nil
+	case groupstatusstate.FieldModeltraceReasons:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceReasons(v)
+		return nil
+	case groupstatusstate.FieldModeltraceDetail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceDetail(v)
+		return nil
+	case groupstatusstate.FieldModeltraceCheckedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceCheckedAt(v)
+		return nil
+	case groupstatusstate.FieldModeltraceConsecutiveMismatch:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceConsecutiveMismatch(v)
+		return nil
+	case groupstatusstate.FieldModeltraceValidOutputs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceValidOutputs(v)
+		return nil
+	case groupstatusstate.FieldModeltraceInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceInputTokens(v)
+		return nil
+	case groupstatusstate.FieldModeltraceOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceOutputTokens(v)
+		return nil
+	case groupstatusstate.FieldModeltraceReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceReasoningTokens(v)
+		return nil
+	case groupstatusstate.FieldModeltraceLastCostUsd:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceLastCostUsd(v)
+		return nil
+	case groupstatusstate.FieldModeltraceLastRunID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModeltraceLastRunID(v)
+		return nil
 	case groupstatusstate.FieldAstraCheckVerdict:
 		v, ok := value.(string)
 		if !ok {
@@ -34797,6 +39028,33 @@ func (m *GroupStatusStateMutation) AddedFields() []string {
 	if m.addsol_juice_reasoning_tokens != nil {
 		fields = append(fields, groupstatusstate.FieldSolJuiceReasoningTokens)
 	}
+	if m.addmodeltrace_top_probability != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceTopProbability)
+	}
+	if m.addmodeltrace_expected_probability != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceExpectedProbability)
+	}
+	if m.addmodeltrace_consecutive_mismatch != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceConsecutiveMismatch)
+	}
+	if m.addmodeltrace_valid_outputs != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceValidOutputs)
+	}
+	if m.addmodeltrace_input_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceInputTokens)
+	}
+	if m.addmodeltrace_output_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceOutputTokens)
+	}
+	if m.addmodeltrace_reasoning_tokens != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceReasoningTokens)
+	}
+	if m.addmodeltrace_last_cost_usd != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceLastCostUsd)
+	}
+	if m.addmodeltrace_last_run_id != nil {
+		fields = append(fields, groupstatusstate.FieldModeltraceLastRunID)
+	}
 	if m.addastra_check_consecutive_mismatch != nil {
 		fields = append(fields, groupstatusstate.FieldAstraCheckConsecutiveMismatch)
 	}
@@ -34848,6 +39106,24 @@ func (m *GroupStatusStateMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedSolJuiceOutputTokens()
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		return m.AddedSolJuiceReasoningTokens()
+	case groupstatusstate.FieldModeltraceTopProbability:
+		return m.AddedModeltraceTopProbability()
+	case groupstatusstate.FieldModeltraceExpectedProbability:
+		return m.AddedModeltraceExpectedProbability()
+	case groupstatusstate.FieldModeltraceConsecutiveMismatch:
+		return m.AddedModeltraceConsecutiveMismatch()
+	case groupstatusstate.FieldModeltraceValidOutputs:
+		return m.AddedModeltraceValidOutputs()
+	case groupstatusstate.FieldModeltraceInputTokens:
+		return m.AddedModeltraceInputTokens()
+	case groupstatusstate.FieldModeltraceOutputTokens:
+		return m.AddedModeltraceOutputTokens()
+	case groupstatusstate.FieldModeltraceReasoningTokens:
+		return m.AddedModeltraceReasoningTokens()
+	case groupstatusstate.FieldModeltraceLastCostUsd:
+		return m.AddedModeltraceLastCostUsd()
+	case groupstatusstate.FieldModeltraceLastRunID:
+		return m.AddedModeltraceLastRunID()
 	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
 		return m.AddedAstraCheckConsecutiveMismatch()
 	case groupstatusstate.FieldAstraCheckValidSamples:
@@ -34948,6 +39224,69 @@ func (m *GroupStatusStateMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddSolJuiceReasoningTokens(v)
 		return nil
+	case groupstatusstate.FieldModeltraceTopProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceTopProbability(v)
+		return nil
+	case groupstatusstate.FieldModeltraceExpectedProbability:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceExpectedProbability(v)
+		return nil
+	case groupstatusstate.FieldModeltraceConsecutiveMismatch:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceConsecutiveMismatch(v)
+		return nil
+	case groupstatusstate.FieldModeltraceValidOutputs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceValidOutputs(v)
+		return nil
+	case groupstatusstate.FieldModeltraceInputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceInputTokens(v)
+		return nil
+	case groupstatusstate.FieldModeltraceOutputTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceOutputTokens(v)
+		return nil
+	case groupstatusstate.FieldModeltraceReasoningTokens:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceReasoningTokens(v)
+		return nil
+	case groupstatusstate.FieldModeltraceLastCostUsd:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceLastCostUsd(v)
+		return nil
+	case groupstatusstate.FieldModeltraceLastRunID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddModeltraceLastRunID(v)
+		return nil
 	case groupstatusstate.FieldAstraCheckConsecutiveMismatch:
 		v, ok := value.(int)
 		if !ok {
@@ -35029,6 +39368,18 @@ func (m *GroupStatusStateMutation) ClearedFields() []string {
 	if m.FieldCleared(groupstatusstate.FieldSolJuiceCheckedAt) {
 		fields = append(fields, groupstatusstate.FieldSolJuiceCheckedAt)
 	}
+	if m.FieldCleared(groupstatusstate.FieldModeltraceExpectedProbability) {
+		fields = append(fields, groupstatusstate.FieldModeltraceExpectedProbability)
+	}
+	if m.FieldCleared(groupstatusstate.FieldModeltraceDetail) {
+		fields = append(fields, groupstatusstate.FieldModeltraceDetail)
+	}
+	if m.FieldCleared(groupstatusstate.FieldModeltraceCheckedAt) {
+		fields = append(fields, groupstatusstate.FieldModeltraceCheckedAt)
+	}
+	if m.FieldCleared(groupstatusstate.FieldModeltraceLastRunID) {
+		fields = append(fields, groupstatusstate.FieldModeltraceLastRunID)
+	}
 	if m.FieldCleared(groupstatusstate.FieldAstraCheckDetail) {
 		fields = append(fields, groupstatusstate.FieldAstraCheckDetail)
 	}
@@ -35075,6 +39426,18 @@ func (m *GroupStatusStateMutation) ClearField(name string) error {
 		return nil
 	case groupstatusstate.FieldSolJuiceCheckedAt:
 		m.ClearSolJuiceCheckedAt()
+		return nil
+	case groupstatusstate.FieldModeltraceExpectedProbability:
+		m.ClearModeltraceExpectedProbability()
+		return nil
+	case groupstatusstate.FieldModeltraceDetail:
+		m.ClearModeltraceDetail()
+		return nil
+	case groupstatusstate.FieldModeltraceCheckedAt:
+		m.ClearModeltraceCheckedAt()
+		return nil
+	case groupstatusstate.FieldModeltraceLastRunID:
+		m.ClearModeltraceLastRunID()
 		return nil
 	case groupstatusstate.FieldAstraCheckDetail:
 		m.ClearAstraCheckDetail()
@@ -35164,6 +39527,57 @@ func (m *GroupStatusStateMutation) ResetField(name string) error {
 		return nil
 	case groupstatusstate.FieldSolJuiceReasoningTokens:
 		m.ResetSolJuiceReasoningTokens()
+		return nil
+	case groupstatusstate.FieldModeltraceVerdict:
+		m.ResetModeltraceVerdict()
+		return nil
+	case groupstatusstate.FieldModeltraceStableStatus:
+		m.ResetModeltraceStableStatus()
+		return nil
+	case groupstatusstate.FieldModeltraceRunExpectedModel:
+		m.ResetModeltraceRunExpectedModel()
+		return nil
+	case groupstatusstate.FieldModeltraceTopModel:
+		m.ResetModeltraceTopModel()
+		return nil
+	case groupstatusstate.FieldModeltraceTopProbability:
+		m.ResetModeltraceTopProbability()
+		return nil
+	case groupstatusstate.FieldModeltraceExpectedProbability:
+		m.ResetModeltraceExpectedProbability()
+		return nil
+	case groupstatusstate.FieldModeltraceRanking:
+		m.ResetModeltraceRanking()
+		return nil
+	case groupstatusstate.FieldModeltraceReasons:
+		m.ResetModeltraceReasons()
+		return nil
+	case groupstatusstate.FieldModeltraceDetail:
+		m.ResetModeltraceDetail()
+		return nil
+	case groupstatusstate.FieldModeltraceCheckedAt:
+		m.ResetModeltraceCheckedAt()
+		return nil
+	case groupstatusstate.FieldModeltraceConsecutiveMismatch:
+		m.ResetModeltraceConsecutiveMismatch()
+		return nil
+	case groupstatusstate.FieldModeltraceValidOutputs:
+		m.ResetModeltraceValidOutputs()
+		return nil
+	case groupstatusstate.FieldModeltraceInputTokens:
+		m.ResetModeltraceInputTokens()
+		return nil
+	case groupstatusstate.FieldModeltraceOutputTokens:
+		m.ResetModeltraceOutputTokens()
+		return nil
+	case groupstatusstate.FieldModeltraceReasoningTokens:
+		m.ResetModeltraceReasoningTokens()
+		return nil
+	case groupstatusstate.FieldModeltraceLastCostUsd:
+		m.ResetModeltraceLastCostUsd()
+		return nil
+	case groupstatusstate.FieldModeltraceLastRunID:
+		m.ResetModeltraceLastRunID()
 		return nil
 	case groupstatusstate.FieldAstraCheckVerdict:
 		m.ResetAstraCheckVerdict()

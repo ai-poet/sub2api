@@ -23,6 +23,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusmodeltracerun"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
@@ -1214,20 +1215,36 @@ func init() {
 	groupstatusconfigDescSolJuiceModel := groupstatusconfigFields[12].Descriptor()
 	// groupstatusconfig.DefaultSolJuiceModel holds the default value on creation for the sol_juice_model field.
 	groupstatusconfig.DefaultSolJuiceModel = groupstatusconfigDescSolJuiceModel.Default.(string)
+	// groupstatusconfigDescModeltraceEnabled is the schema descriptor for modeltrace_enabled field.
+	groupstatusconfigDescModeltraceEnabled := groupstatusconfigFields[13].Descriptor()
+	// groupstatusconfig.DefaultModeltraceEnabled holds the default value on creation for the modeltrace_enabled field.
+	groupstatusconfig.DefaultModeltraceEnabled = groupstatusconfigDescModeltraceEnabled.Default.(bool)
+	// groupstatusconfigDescModeltraceExpectedModel is the schema descriptor for modeltrace_expected_model field.
+	groupstatusconfigDescModeltraceExpectedModel := groupstatusconfigFields[14].Descriptor()
+	// groupstatusconfig.DefaultModeltraceExpectedModel holds the default value on creation for the modeltrace_expected_model field.
+	groupstatusconfig.DefaultModeltraceExpectedModel = groupstatusconfigDescModeltraceExpectedModel.Default.(string)
+	// groupstatusconfigDescModeltraceRequestModel is the schema descriptor for modeltrace_request_model field.
+	groupstatusconfigDescModeltraceRequestModel := groupstatusconfigFields[15].Descriptor()
+	// groupstatusconfig.DefaultModeltraceRequestModel holds the default value on creation for the modeltrace_request_model field.
+	groupstatusconfig.DefaultModeltraceRequestModel = groupstatusconfigDescModeltraceRequestModel.Default.(string)
+	// groupstatusconfigDescModeltraceIntervalSeconds is the schema descriptor for modeltrace_interval_seconds field.
+	groupstatusconfigDescModeltraceIntervalSeconds := groupstatusconfigFields[16].Descriptor()
+	// groupstatusconfig.DefaultModeltraceIntervalSeconds holds the default value on creation for the modeltrace_interval_seconds field.
+	groupstatusconfig.DefaultModeltraceIntervalSeconds = groupstatusconfigDescModeltraceIntervalSeconds.Default.(int)
 	// groupstatusconfigDescAstraCheckEnabled is the schema descriptor for astra_check_enabled field.
-	groupstatusconfigDescAstraCheckEnabled := groupstatusconfigFields[13].Descriptor()
+	groupstatusconfigDescAstraCheckEnabled := groupstatusconfigFields[17].Descriptor()
 	// groupstatusconfig.DefaultAstraCheckEnabled holds the default value on creation for the astra_check_enabled field.
 	groupstatusconfig.DefaultAstraCheckEnabled = groupstatusconfigDescAstraCheckEnabled.Default.(bool)
 	// groupstatusconfigDescAstraCheckRequestModel is the schema descriptor for astra_check_request_model field.
-	groupstatusconfigDescAstraCheckRequestModel := groupstatusconfigFields[14].Descriptor()
+	groupstatusconfigDescAstraCheckRequestModel := groupstatusconfigFields[18].Descriptor()
 	// groupstatusconfig.DefaultAstraCheckRequestModel holds the default value on creation for the astra_check_request_model field.
 	groupstatusconfig.DefaultAstraCheckRequestModel = groupstatusconfigDescAstraCheckRequestModel.Default.(string)
 	// groupstatusconfigDescAstraCheckTier is the schema descriptor for astra_check_tier field.
-	groupstatusconfigDescAstraCheckTier := groupstatusconfigFields[15].Descriptor()
+	groupstatusconfigDescAstraCheckTier := groupstatusconfigFields[19].Descriptor()
 	// groupstatusconfig.DefaultAstraCheckTier holds the default value on creation for the astra_check_tier field.
 	groupstatusconfig.DefaultAstraCheckTier = groupstatusconfigDescAstraCheckTier.Default.(string)
 	// groupstatusconfigDescAstraCheckIntervalSeconds is the schema descriptor for astra_check_interval_seconds field.
-	groupstatusconfigDescAstraCheckIntervalSeconds := groupstatusconfigFields[16].Descriptor()
+	groupstatusconfigDescAstraCheckIntervalSeconds := groupstatusconfigFields[20].Descriptor()
 	// groupstatusconfig.DefaultAstraCheckIntervalSeconds holds the default value on creation for the astra_check_interval_seconds field.
 	groupstatusconfig.DefaultAstraCheckIntervalSeconds = groupstatusconfigDescAstraCheckIntervalSeconds.Default.(int)
 	groupstatuseventFields := schema.GroupStatusEvent{}.Fields()
@@ -1278,6 +1295,104 @@ func init() {
 	groupstatusjuicerecordDescCreatedAt := groupstatusjuicerecordFields[14].Descriptor()
 	// groupstatusjuicerecord.DefaultCreatedAt holds the default value on creation for the created_at field.
 	groupstatusjuicerecord.DefaultCreatedAt = groupstatusjuicerecordDescCreatedAt.Default.(func() time.Time)
+	groupstatusmodeltracerunFields := schema.GroupStatusModelTraceRun{}.Fields()
+	_ = groupstatusmodeltracerunFields
+	// groupstatusmodeltracerunDescPlatform is the schema descriptor for platform field.
+	groupstatusmodeltracerunDescPlatform := groupstatusmodeltracerunFields[2].Descriptor()
+	// groupstatusmodeltracerun.DefaultPlatform holds the default value on creation for the platform field.
+	groupstatusmodeltracerun.DefaultPlatform = groupstatusmodeltracerunDescPlatform.Default.(string)
+	// groupstatusmodeltracerunDescBankSha256 is the schema descriptor for bank_sha256 field.
+	groupstatusmodeltracerunDescBankSha256 := groupstatusmodeltracerunFields[3].Descriptor()
+	// groupstatusmodeltracerun.DefaultBankSha256 holds the default value on creation for the bank_sha256 field.
+	groupstatusmodeltracerun.DefaultBankSha256 = groupstatusmodeltracerunDescBankSha256.Default.(string)
+	// groupstatusmodeltracerunDescBankBuiltAt is the schema descriptor for bank_built_at field.
+	groupstatusmodeltracerunDescBankBuiltAt := groupstatusmodeltracerunFields[4].Descriptor()
+	// groupstatusmodeltracerun.DefaultBankBuiltAt holds the default value on creation for the bank_built_at field.
+	groupstatusmodeltracerun.DefaultBankBuiltAt = groupstatusmodeltracerunDescBankBuiltAt.Default.(string)
+	// groupstatusmodeltracerunDescExpectedModel is the schema descriptor for expected_model field.
+	groupstatusmodeltracerunDescExpectedModel := groupstatusmodeltracerunFields[5].Descriptor()
+	// groupstatusmodeltracerun.DefaultExpectedModel holds the default value on creation for the expected_model field.
+	groupstatusmodeltracerun.DefaultExpectedModel = groupstatusmodeltracerunDescExpectedModel.Default.(string)
+	// groupstatusmodeltracerunDescRequestModel is the schema descriptor for request_model field.
+	groupstatusmodeltracerunDescRequestModel := groupstatusmodeltracerunFields[6].Descriptor()
+	// groupstatusmodeltracerun.DefaultRequestModel holds the default value on creation for the request_model field.
+	groupstatusmodeltracerun.DefaultRequestModel = groupstatusmodeltracerunDescRequestModel.Default.(string)
+	// groupstatusmodeltracerunDescAccountType is the schema descriptor for account_type field.
+	groupstatusmodeltracerunDescAccountType := groupstatusmodeltracerunFields[8].Descriptor()
+	// groupstatusmodeltracerun.DefaultAccountType holds the default value on creation for the account_type field.
+	groupstatusmodeltracerun.DefaultAccountType = groupstatusmodeltracerunDescAccountType.Default.(string)
+	// groupstatusmodeltracerunDescRound is the schema descriptor for round field.
+	groupstatusmodeltracerunDescRound := groupstatusmodeltracerunFields[9].Descriptor()
+	// groupstatusmodeltracerun.DefaultRound holds the default value on creation for the round field.
+	groupstatusmodeltracerun.DefaultRound = groupstatusmodeltracerunDescRound.Default.(int)
+	// groupstatusmodeltracerunDescOutcome is the schema descriptor for outcome field.
+	groupstatusmodeltracerunDescOutcome := groupstatusmodeltracerunFields[11].Descriptor()
+	// groupstatusmodeltracerun.DefaultOutcome holds the default value on creation for the outcome field.
+	groupstatusmodeltracerun.DefaultOutcome = groupstatusmodeltracerunDescOutcome.Default.(string)
+	// groupstatusmodeltracerunDescTopModel is the schema descriptor for top_model field.
+	groupstatusmodeltracerunDescTopModel := groupstatusmodeltracerunFields[12].Descriptor()
+	// groupstatusmodeltracerun.DefaultTopModel holds the default value on creation for the top_model field.
+	groupstatusmodeltracerun.DefaultTopModel = groupstatusmodeltracerunDescTopModel.Default.(string)
+	// groupstatusmodeltracerunDescTopProbability is the schema descriptor for top_probability field.
+	groupstatusmodeltracerunDescTopProbability := groupstatusmodeltracerunFields[13].Descriptor()
+	// groupstatusmodeltracerun.DefaultTopProbability holds the default value on creation for the top_probability field.
+	groupstatusmodeltracerun.DefaultTopProbability = groupstatusmodeltracerunDescTopProbability.Default.(float64)
+	// groupstatusmodeltracerunDescCalibrationQueries is the schema descriptor for calibration_queries field.
+	groupstatusmodeltracerunDescCalibrationQueries := groupstatusmodeltracerunFields[15].Descriptor()
+	// groupstatusmodeltracerun.DefaultCalibrationQueries holds the default value on creation for the calibration_queries field.
+	groupstatusmodeltracerun.DefaultCalibrationQueries = groupstatusmodeltracerunDescCalibrationQueries.Default.(int)
+	// groupstatusmodeltracerunDescBeta is the schema descriptor for beta field.
+	groupstatusmodeltracerunDescBeta := groupstatusmodeltracerunFields[16].Descriptor()
+	// groupstatusmodeltracerun.DefaultBeta holds the default value on creation for the beta field.
+	groupstatusmodeltracerun.DefaultBeta = groupstatusmodeltracerunDescBeta.Default.(float64)
+	// groupstatusmodeltracerunDescRanking is the schema descriptor for ranking field.
+	groupstatusmodeltracerunDescRanking := groupstatusmodeltracerunFields[17].Descriptor()
+	// groupstatusmodeltracerun.DefaultRanking holds the default value on creation for the ranking field.
+	groupstatusmodeltracerun.DefaultRanking = groupstatusmodeltracerunDescRanking.Default.([]map[string]interface{})
+	// groupstatusmodeltracerunDescFamilyProbabilities is the schema descriptor for family_probabilities field.
+	groupstatusmodeltracerunDescFamilyProbabilities := groupstatusmodeltracerunFields[18].Descriptor()
+	// groupstatusmodeltracerun.DefaultFamilyProbabilities holds the default value on creation for the family_probabilities field.
+	groupstatusmodeltracerun.DefaultFamilyProbabilities = groupstatusmodeltracerunDescFamilyProbabilities.Default.([]map[string]interface{})
+	// groupstatusmodeltracerunDescReasons is the schema descriptor for reasons field.
+	groupstatusmodeltracerunDescReasons := groupstatusmodeltracerunFields[19].Descriptor()
+	// groupstatusmodeltracerun.DefaultReasons holds the default value on creation for the reasons field.
+	groupstatusmodeltracerun.DefaultReasons = groupstatusmodeltracerunDescReasons.Default.([]string)
+	// groupstatusmodeltracerunDescOutputs is the schema descriptor for outputs field.
+	groupstatusmodeltracerunDescOutputs := groupstatusmodeltracerunFields[20].Descriptor()
+	// groupstatusmodeltracerun.DefaultOutputs holds the default value on creation for the outputs field.
+	groupstatusmodeltracerun.DefaultOutputs = groupstatusmodeltracerunDescOutputs.Default.([]map[string]interface{})
+	// groupstatusmodeltracerunDescAttemptsPlanned is the schema descriptor for attempts_planned field.
+	groupstatusmodeltracerunDescAttemptsPlanned := groupstatusmodeltracerunFields[21].Descriptor()
+	// groupstatusmodeltracerun.DefaultAttemptsPlanned holds the default value on creation for the attempts_planned field.
+	groupstatusmodeltracerun.DefaultAttemptsPlanned = groupstatusmodeltracerunDescAttemptsPlanned.Default.(int)
+	// groupstatusmodeltracerunDescAttemptsMade is the schema descriptor for attempts_made field.
+	groupstatusmodeltracerunDescAttemptsMade := groupstatusmodeltracerunFields[22].Descriptor()
+	// groupstatusmodeltracerun.DefaultAttemptsMade holds the default value on creation for the attempts_made field.
+	groupstatusmodeltracerun.DefaultAttemptsMade = groupstatusmodeltracerunDescAttemptsMade.Default.(int)
+	// groupstatusmodeltracerunDescValidOutputs is the schema descriptor for valid_outputs field.
+	groupstatusmodeltracerunDescValidOutputs := groupstatusmodeltracerunFields[23].Descriptor()
+	// groupstatusmodeltracerun.DefaultValidOutputs holds the default value on creation for the valid_outputs field.
+	groupstatusmodeltracerun.DefaultValidOutputs = groupstatusmodeltracerunDescValidOutputs.Default.(int)
+	// groupstatusmodeltracerunDescInputTokens is the schema descriptor for input_tokens field.
+	groupstatusmodeltracerunDescInputTokens := groupstatusmodeltracerunFields[24].Descriptor()
+	// groupstatusmodeltracerun.DefaultInputTokens holds the default value on creation for the input_tokens field.
+	groupstatusmodeltracerun.DefaultInputTokens = groupstatusmodeltracerunDescInputTokens.Default.(int64)
+	// groupstatusmodeltracerunDescOutputTokens is the schema descriptor for output_tokens field.
+	groupstatusmodeltracerunDescOutputTokens := groupstatusmodeltracerunFields[25].Descriptor()
+	// groupstatusmodeltracerun.DefaultOutputTokens holds the default value on creation for the output_tokens field.
+	groupstatusmodeltracerun.DefaultOutputTokens = groupstatusmodeltracerunDescOutputTokens.Default.(int64)
+	// groupstatusmodeltracerunDescReasoningTokens is the schema descriptor for reasoning_tokens field.
+	groupstatusmodeltracerunDescReasoningTokens := groupstatusmodeltracerunFields[26].Descriptor()
+	// groupstatusmodeltracerun.DefaultReasoningTokens holds the default value on creation for the reasoning_tokens field.
+	groupstatusmodeltracerun.DefaultReasoningTokens = groupstatusmodeltracerunDescReasoningTokens.Default.(int64)
+	// groupstatusmodeltracerunDescCostUsd is the schema descriptor for cost_usd field.
+	groupstatusmodeltracerunDescCostUsd := groupstatusmodeltracerunFields[27].Descriptor()
+	// groupstatusmodeltracerun.DefaultCostUsd holds the default value on creation for the cost_usd field.
+	groupstatusmodeltracerun.DefaultCostUsd = groupstatusmodeltracerunDescCostUsd.Default.(float64)
+	// groupstatusmodeltracerunDescCreatedAt is the schema descriptor for created_at field.
+	groupstatusmodeltracerunDescCreatedAt := groupstatusmodeltracerunFields[33].Descriptor()
+	// groupstatusmodeltracerun.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupstatusmodeltracerun.DefaultCreatedAt = groupstatusmodeltracerunDescCreatedAt.Default.(func() time.Time)
 	groupstatusrecordFields := schema.GroupStatusRecord{}.Fields()
 	_ = groupstatusrecordFields
 	// groupstatusrecordDescSubStatus is the schema descriptor for sub_status field.
@@ -1351,48 +1466,100 @@ func init() {
 	groupstatusstateDescSolJuiceReasoningTokens := groupstatusstateFields[21].Descriptor()
 	// groupstatusstate.DefaultSolJuiceReasoningTokens holds the default value on creation for the sol_juice_reasoning_tokens field.
 	groupstatusstate.DefaultSolJuiceReasoningTokens = groupstatusstateDescSolJuiceReasoningTokens.Default.(int64)
+	// groupstatusstateDescModeltraceVerdict is the schema descriptor for modeltrace_verdict field.
+	groupstatusstateDescModeltraceVerdict := groupstatusstateFields[22].Descriptor()
+	// groupstatusstate.DefaultModeltraceVerdict holds the default value on creation for the modeltrace_verdict field.
+	groupstatusstate.DefaultModeltraceVerdict = groupstatusstateDescModeltraceVerdict.Default.(string)
+	// groupstatusstateDescModeltraceStableStatus is the schema descriptor for modeltrace_stable_status field.
+	groupstatusstateDescModeltraceStableStatus := groupstatusstateFields[23].Descriptor()
+	// groupstatusstate.DefaultModeltraceStableStatus holds the default value on creation for the modeltrace_stable_status field.
+	groupstatusstate.DefaultModeltraceStableStatus = groupstatusstateDescModeltraceStableStatus.Default.(string)
+	// groupstatusstateDescModeltraceRunExpectedModel is the schema descriptor for modeltrace_run_expected_model field.
+	groupstatusstateDescModeltraceRunExpectedModel := groupstatusstateFields[24].Descriptor()
+	// groupstatusstate.DefaultModeltraceRunExpectedModel holds the default value on creation for the modeltrace_run_expected_model field.
+	groupstatusstate.DefaultModeltraceRunExpectedModel = groupstatusstateDescModeltraceRunExpectedModel.Default.(string)
+	// groupstatusstateDescModeltraceTopModel is the schema descriptor for modeltrace_top_model field.
+	groupstatusstateDescModeltraceTopModel := groupstatusstateFields[25].Descriptor()
+	// groupstatusstate.DefaultModeltraceTopModel holds the default value on creation for the modeltrace_top_model field.
+	groupstatusstate.DefaultModeltraceTopModel = groupstatusstateDescModeltraceTopModel.Default.(string)
+	// groupstatusstateDescModeltraceTopProbability is the schema descriptor for modeltrace_top_probability field.
+	groupstatusstateDescModeltraceTopProbability := groupstatusstateFields[26].Descriptor()
+	// groupstatusstate.DefaultModeltraceTopProbability holds the default value on creation for the modeltrace_top_probability field.
+	groupstatusstate.DefaultModeltraceTopProbability = groupstatusstateDescModeltraceTopProbability.Default.(float64)
+	// groupstatusstateDescModeltraceRanking is the schema descriptor for modeltrace_ranking field.
+	groupstatusstateDescModeltraceRanking := groupstatusstateFields[28].Descriptor()
+	// groupstatusstate.DefaultModeltraceRanking holds the default value on creation for the modeltrace_ranking field.
+	groupstatusstate.DefaultModeltraceRanking = groupstatusstateDescModeltraceRanking.Default.([]map[string]interface{})
+	// groupstatusstateDescModeltraceReasons is the schema descriptor for modeltrace_reasons field.
+	groupstatusstateDescModeltraceReasons := groupstatusstateFields[29].Descriptor()
+	// groupstatusstate.DefaultModeltraceReasons holds the default value on creation for the modeltrace_reasons field.
+	groupstatusstate.DefaultModeltraceReasons = groupstatusstateDescModeltraceReasons.Default.([]string)
+	// groupstatusstateDescModeltraceConsecutiveMismatch is the schema descriptor for modeltrace_consecutive_mismatch field.
+	groupstatusstateDescModeltraceConsecutiveMismatch := groupstatusstateFields[32].Descriptor()
+	// groupstatusstate.DefaultModeltraceConsecutiveMismatch holds the default value on creation for the modeltrace_consecutive_mismatch field.
+	groupstatusstate.DefaultModeltraceConsecutiveMismatch = groupstatusstateDescModeltraceConsecutiveMismatch.Default.(int)
+	// groupstatusstateDescModeltraceValidOutputs is the schema descriptor for modeltrace_valid_outputs field.
+	groupstatusstateDescModeltraceValidOutputs := groupstatusstateFields[33].Descriptor()
+	// groupstatusstate.DefaultModeltraceValidOutputs holds the default value on creation for the modeltrace_valid_outputs field.
+	groupstatusstate.DefaultModeltraceValidOutputs = groupstatusstateDescModeltraceValidOutputs.Default.(int)
+	// groupstatusstateDescModeltraceInputTokens is the schema descriptor for modeltrace_input_tokens field.
+	groupstatusstateDescModeltraceInputTokens := groupstatusstateFields[34].Descriptor()
+	// groupstatusstate.DefaultModeltraceInputTokens holds the default value on creation for the modeltrace_input_tokens field.
+	groupstatusstate.DefaultModeltraceInputTokens = groupstatusstateDescModeltraceInputTokens.Default.(int64)
+	// groupstatusstateDescModeltraceOutputTokens is the schema descriptor for modeltrace_output_tokens field.
+	groupstatusstateDescModeltraceOutputTokens := groupstatusstateFields[35].Descriptor()
+	// groupstatusstate.DefaultModeltraceOutputTokens holds the default value on creation for the modeltrace_output_tokens field.
+	groupstatusstate.DefaultModeltraceOutputTokens = groupstatusstateDescModeltraceOutputTokens.Default.(int64)
+	// groupstatusstateDescModeltraceReasoningTokens is the schema descriptor for modeltrace_reasoning_tokens field.
+	groupstatusstateDescModeltraceReasoningTokens := groupstatusstateFields[36].Descriptor()
+	// groupstatusstate.DefaultModeltraceReasoningTokens holds the default value on creation for the modeltrace_reasoning_tokens field.
+	groupstatusstate.DefaultModeltraceReasoningTokens = groupstatusstateDescModeltraceReasoningTokens.Default.(int64)
+	// groupstatusstateDescModeltraceLastCostUsd is the schema descriptor for modeltrace_last_cost_usd field.
+	groupstatusstateDescModeltraceLastCostUsd := groupstatusstateFields[37].Descriptor()
+	// groupstatusstate.DefaultModeltraceLastCostUsd holds the default value on creation for the modeltrace_last_cost_usd field.
+	groupstatusstate.DefaultModeltraceLastCostUsd = groupstatusstateDescModeltraceLastCostUsd.Default.(float64)
 	// groupstatusstateDescAstraCheckVerdict is the schema descriptor for astra_check_verdict field.
-	groupstatusstateDescAstraCheckVerdict := groupstatusstateFields[22].Descriptor()
+	groupstatusstateDescAstraCheckVerdict := groupstatusstateFields[39].Descriptor()
 	// groupstatusstate.DefaultAstraCheckVerdict holds the default value on creation for the astra_check_verdict field.
 	groupstatusstate.DefaultAstraCheckVerdict = groupstatusstateDescAstraCheckVerdict.Default.(string)
 	// groupstatusstateDescAstraCheckStableStatus is the schema descriptor for astra_check_stable_status field.
-	groupstatusstateDescAstraCheckStableStatus := groupstatusstateFields[23].Descriptor()
+	groupstatusstateDescAstraCheckStableStatus := groupstatusstateFields[40].Descriptor()
 	// groupstatusstate.DefaultAstraCheckStableStatus holds the default value on creation for the astra_check_stable_status field.
 	groupstatusstate.DefaultAstraCheckStableStatus = groupstatusstateDescAstraCheckStableStatus.Default.(string)
 	// groupstatusstateDescAstraCheckWinner is the schema descriptor for astra_check_winner field.
-	groupstatusstateDescAstraCheckWinner := groupstatusstateFields[24].Descriptor()
+	groupstatusstateDescAstraCheckWinner := groupstatusstateFields[41].Descriptor()
 	// groupstatusstate.DefaultAstraCheckWinner holds the default value on creation for the astra_check_winner field.
 	groupstatusstate.DefaultAstraCheckWinner = groupstatusstateDescAstraCheckWinner.Default.(string)
 	// groupstatusstateDescAstraCheckMatches is the schema descriptor for astra_check_matches field.
-	groupstatusstateDescAstraCheckMatches := groupstatusstateFields[25].Descriptor()
+	groupstatusstateDescAstraCheckMatches := groupstatusstateFields[42].Descriptor()
 	// groupstatusstate.DefaultAstraCheckMatches holds the default value on creation for the astra_check_matches field.
 	groupstatusstate.DefaultAstraCheckMatches = groupstatusstateDescAstraCheckMatches.Default.([]map[string]interface{})
 	// groupstatusstateDescAstraCheckReasons is the schema descriptor for astra_check_reasons field.
-	groupstatusstateDescAstraCheckReasons := groupstatusstateFields[26].Descriptor()
+	groupstatusstateDescAstraCheckReasons := groupstatusstateFields[43].Descriptor()
 	// groupstatusstate.DefaultAstraCheckReasons holds the default value on creation for the astra_check_reasons field.
 	groupstatusstate.DefaultAstraCheckReasons = groupstatusstateDescAstraCheckReasons.Default.([]string)
 	// groupstatusstateDescAstraCheckConsecutiveMismatch is the schema descriptor for astra_check_consecutive_mismatch field.
-	groupstatusstateDescAstraCheckConsecutiveMismatch := groupstatusstateFields[29].Descriptor()
+	groupstatusstateDescAstraCheckConsecutiveMismatch := groupstatusstateFields[46].Descriptor()
 	// groupstatusstate.DefaultAstraCheckConsecutiveMismatch holds the default value on creation for the astra_check_consecutive_mismatch field.
 	groupstatusstate.DefaultAstraCheckConsecutiveMismatch = groupstatusstateDescAstraCheckConsecutiveMismatch.Default.(int)
 	// groupstatusstateDescAstraCheckValidSamples is the schema descriptor for astra_check_valid_samples field.
-	groupstatusstateDescAstraCheckValidSamples := groupstatusstateFields[30].Descriptor()
+	groupstatusstateDescAstraCheckValidSamples := groupstatusstateFields[47].Descriptor()
 	// groupstatusstate.DefaultAstraCheckValidSamples holds the default value on creation for the astra_check_valid_samples field.
 	groupstatusstate.DefaultAstraCheckValidSamples = groupstatusstateDescAstraCheckValidSamples.Default.(int)
 	// groupstatusstateDescAstraCheckPlannedSamples is the schema descriptor for astra_check_planned_samples field.
-	groupstatusstateDescAstraCheckPlannedSamples := groupstatusstateFields[31].Descriptor()
+	groupstatusstateDescAstraCheckPlannedSamples := groupstatusstateFields[48].Descriptor()
 	// groupstatusstate.DefaultAstraCheckPlannedSamples holds the default value on creation for the astra_check_planned_samples field.
 	groupstatusstate.DefaultAstraCheckPlannedSamples = groupstatusstateDescAstraCheckPlannedSamples.Default.(int)
 	// groupstatusstateDescAstraCheckInputTokens is the schema descriptor for astra_check_input_tokens field.
-	groupstatusstateDescAstraCheckInputTokens := groupstatusstateFields[32].Descriptor()
+	groupstatusstateDescAstraCheckInputTokens := groupstatusstateFields[49].Descriptor()
 	// groupstatusstate.DefaultAstraCheckInputTokens holds the default value on creation for the astra_check_input_tokens field.
 	groupstatusstate.DefaultAstraCheckInputTokens = groupstatusstateDescAstraCheckInputTokens.Default.(int64)
 	// groupstatusstateDescAstraCheckOutputTokens is the schema descriptor for astra_check_output_tokens field.
-	groupstatusstateDescAstraCheckOutputTokens := groupstatusstateFields[33].Descriptor()
+	groupstatusstateDescAstraCheckOutputTokens := groupstatusstateFields[50].Descriptor()
 	// groupstatusstate.DefaultAstraCheckOutputTokens holds the default value on creation for the astra_check_output_tokens field.
 	groupstatusstate.DefaultAstraCheckOutputTokens = groupstatusstateDescAstraCheckOutputTokens.Default.(int64)
 	// groupstatusstateDescAstraCheckReasoningTokens is the schema descriptor for astra_check_reasoning_tokens field.
-	groupstatusstateDescAstraCheckReasoningTokens := groupstatusstateFields[34].Descriptor()
+	groupstatusstateDescAstraCheckReasoningTokens := groupstatusstateFields[51].Descriptor()
 	// groupstatusstate.DefaultAstraCheckReasoningTokens holds the default value on creation for the astra_check_reasoning_tokens field.
 	groupstatusstate.DefaultAstraCheckReasoningTokens = groupstatusstateDescAstraCheckReasoningTokens.Default.(int64)
 	idempotencyrecordMixin := schema.IdempotencyRecord{}.Mixin()

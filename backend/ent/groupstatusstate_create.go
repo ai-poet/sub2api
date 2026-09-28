@@ -342,6 +342,228 @@ func (_c *GroupStatusStateCreate) SetNillableSolJuiceReasoningTokens(v *int64) *
 	return _c
 }
 
+// SetModeltraceVerdict sets the "modeltrace_verdict" field.
+func (_c *GroupStatusStateCreate) SetModeltraceVerdict(v string) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceVerdict(v)
+	return _c
+}
+
+// SetNillableModeltraceVerdict sets the "modeltrace_verdict" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceVerdict(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceVerdict(*v)
+	}
+	return _c
+}
+
+// SetModeltraceStableStatus sets the "modeltrace_stable_status" field.
+func (_c *GroupStatusStateCreate) SetModeltraceStableStatus(v string) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceStableStatus(v)
+	return _c
+}
+
+// SetNillableModeltraceStableStatus sets the "modeltrace_stable_status" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceStableStatus(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceStableStatus(*v)
+	}
+	return _c
+}
+
+// SetModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field.
+func (_c *GroupStatusStateCreate) SetModeltraceRunExpectedModel(v string) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceRunExpectedModel(v)
+	return _c
+}
+
+// SetNillableModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceRunExpectedModel(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceRunExpectedModel(*v)
+	}
+	return _c
+}
+
+// SetModeltraceTopModel sets the "modeltrace_top_model" field.
+func (_c *GroupStatusStateCreate) SetModeltraceTopModel(v string) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceTopModel(v)
+	return _c
+}
+
+// SetNillableModeltraceTopModel sets the "modeltrace_top_model" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceTopModel(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceTopModel(*v)
+	}
+	return _c
+}
+
+// SetModeltraceTopProbability sets the "modeltrace_top_probability" field.
+func (_c *GroupStatusStateCreate) SetModeltraceTopProbability(v float64) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceTopProbability(v)
+	return _c
+}
+
+// SetNillableModeltraceTopProbability sets the "modeltrace_top_probability" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceTopProbability(v *float64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceTopProbability(*v)
+	}
+	return _c
+}
+
+// SetModeltraceExpectedProbability sets the "modeltrace_expected_probability" field.
+func (_c *GroupStatusStateCreate) SetModeltraceExpectedProbability(v float64) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceExpectedProbability(v)
+	return _c
+}
+
+// SetNillableModeltraceExpectedProbability sets the "modeltrace_expected_probability" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceExpectedProbability(v *float64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceExpectedProbability(*v)
+	}
+	return _c
+}
+
+// SetModeltraceRanking sets the "modeltrace_ranking" field.
+func (_c *GroupStatusStateCreate) SetModeltraceRanking(v []map[string]interface{}) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceRanking(v)
+	return _c
+}
+
+// SetModeltraceReasons sets the "modeltrace_reasons" field.
+func (_c *GroupStatusStateCreate) SetModeltraceReasons(v []string) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceReasons(v)
+	return _c
+}
+
+// SetModeltraceDetail sets the "modeltrace_detail" field.
+func (_c *GroupStatusStateCreate) SetModeltraceDetail(v string) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceDetail(v)
+	return _c
+}
+
+// SetNillableModeltraceDetail sets the "modeltrace_detail" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceDetail(v *string) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceDetail(*v)
+	}
+	return _c
+}
+
+// SetModeltraceCheckedAt sets the "modeltrace_checked_at" field.
+func (_c *GroupStatusStateCreate) SetModeltraceCheckedAt(v time.Time) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceCheckedAt(v)
+	return _c
+}
+
+// SetNillableModeltraceCheckedAt sets the "modeltrace_checked_at" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceCheckedAt(v *time.Time) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceCheckedAt(*v)
+	}
+	return _c
+}
+
+// SetModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field.
+func (_c *GroupStatusStateCreate) SetModeltraceConsecutiveMismatch(v int) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceConsecutiveMismatch(v)
+	return _c
+}
+
+// SetNillableModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceConsecutiveMismatch(v *int) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceConsecutiveMismatch(*v)
+	}
+	return _c
+}
+
+// SetModeltraceValidOutputs sets the "modeltrace_valid_outputs" field.
+func (_c *GroupStatusStateCreate) SetModeltraceValidOutputs(v int) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceValidOutputs(v)
+	return _c
+}
+
+// SetNillableModeltraceValidOutputs sets the "modeltrace_valid_outputs" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceValidOutputs(v *int) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceValidOutputs(*v)
+	}
+	return _c
+}
+
+// SetModeltraceInputTokens sets the "modeltrace_input_tokens" field.
+func (_c *GroupStatusStateCreate) SetModeltraceInputTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceInputTokens(v)
+	return _c
+}
+
+// SetNillableModeltraceInputTokens sets the "modeltrace_input_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceInputTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceInputTokens(*v)
+	}
+	return _c
+}
+
+// SetModeltraceOutputTokens sets the "modeltrace_output_tokens" field.
+func (_c *GroupStatusStateCreate) SetModeltraceOutputTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceOutputTokens(v)
+	return _c
+}
+
+// SetNillableModeltraceOutputTokens sets the "modeltrace_output_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceOutputTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceOutputTokens(*v)
+	}
+	return _c
+}
+
+// SetModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field.
+func (_c *GroupStatusStateCreate) SetModeltraceReasoningTokens(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceReasoningTokens(v)
+	return _c
+}
+
+// SetNillableModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceReasoningTokens(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceReasoningTokens(*v)
+	}
+	return _c
+}
+
+// SetModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field.
+func (_c *GroupStatusStateCreate) SetModeltraceLastCostUsd(v float64) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceLastCostUsd(v)
+	return _c
+}
+
+// SetNillableModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceLastCostUsd(v *float64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceLastCostUsd(*v)
+	}
+	return _c
+}
+
+// SetModeltraceLastRunID sets the "modeltrace_last_run_id" field.
+func (_c *GroupStatusStateCreate) SetModeltraceLastRunID(v int64) *GroupStatusStateCreate {
+	_c.mutation.SetModeltraceLastRunID(v)
+	return _c
+}
+
+// SetNillableModeltraceLastRunID sets the "modeltrace_last_run_id" field if the given value is not nil.
+func (_c *GroupStatusStateCreate) SetNillableModeltraceLastRunID(v *int64) *GroupStatusStateCreate {
+	if v != nil {
+		_c.SetModeltraceLastRunID(*v)
+	}
+	return _c
+}
+
 // SetAstraCheckVerdict sets the "astra_check_verdict" field.
 func (_c *GroupStatusStateCreate) SetAstraCheckVerdict(v string) *GroupStatusStateCreate {
 	_c.mutation.SetAstraCheckVerdict(v)
@@ -613,6 +835,58 @@ func (_c *GroupStatusStateCreate) defaults() {
 		v := groupstatusstate.DefaultSolJuiceReasoningTokens
 		_c.mutation.SetSolJuiceReasoningTokens(v)
 	}
+	if _, ok := _c.mutation.ModeltraceVerdict(); !ok {
+		v := groupstatusstate.DefaultModeltraceVerdict
+		_c.mutation.SetModeltraceVerdict(v)
+	}
+	if _, ok := _c.mutation.ModeltraceStableStatus(); !ok {
+		v := groupstatusstate.DefaultModeltraceStableStatus
+		_c.mutation.SetModeltraceStableStatus(v)
+	}
+	if _, ok := _c.mutation.ModeltraceRunExpectedModel(); !ok {
+		v := groupstatusstate.DefaultModeltraceRunExpectedModel
+		_c.mutation.SetModeltraceRunExpectedModel(v)
+	}
+	if _, ok := _c.mutation.ModeltraceTopModel(); !ok {
+		v := groupstatusstate.DefaultModeltraceTopModel
+		_c.mutation.SetModeltraceTopModel(v)
+	}
+	if _, ok := _c.mutation.ModeltraceTopProbability(); !ok {
+		v := groupstatusstate.DefaultModeltraceTopProbability
+		_c.mutation.SetModeltraceTopProbability(v)
+	}
+	if _, ok := _c.mutation.ModeltraceRanking(); !ok {
+		v := groupstatusstate.DefaultModeltraceRanking
+		_c.mutation.SetModeltraceRanking(v)
+	}
+	if _, ok := _c.mutation.ModeltraceReasons(); !ok {
+		v := groupstatusstate.DefaultModeltraceReasons
+		_c.mutation.SetModeltraceReasons(v)
+	}
+	if _, ok := _c.mutation.ModeltraceConsecutiveMismatch(); !ok {
+		v := groupstatusstate.DefaultModeltraceConsecutiveMismatch
+		_c.mutation.SetModeltraceConsecutiveMismatch(v)
+	}
+	if _, ok := _c.mutation.ModeltraceValidOutputs(); !ok {
+		v := groupstatusstate.DefaultModeltraceValidOutputs
+		_c.mutation.SetModeltraceValidOutputs(v)
+	}
+	if _, ok := _c.mutation.ModeltraceInputTokens(); !ok {
+		v := groupstatusstate.DefaultModeltraceInputTokens
+		_c.mutation.SetModeltraceInputTokens(v)
+	}
+	if _, ok := _c.mutation.ModeltraceOutputTokens(); !ok {
+		v := groupstatusstate.DefaultModeltraceOutputTokens
+		_c.mutation.SetModeltraceOutputTokens(v)
+	}
+	if _, ok := _c.mutation.ModeltraceReasoningTokens(); !ok {
+		v := groupstatusstate.DefaultModeltraceReasoningTokens
+		_c.mutation.SetModeltraceReasoningTokens(v)
+	}
+	if _, ok := _c.mutation.ModeltraceLastCostUsd(); !ok {
+		v := groupstatusstate.DefaultModeltraceLastCostUsd
+		_c.mutation.SetModeltraceLastCostUsd(v)
+	}
 	if _, ok := _c.mutation.AstraCheckVerdict(); !ok {
 		v := groupstatusstate.DefaultAstraCheckVerdict
 		_c.mutation.SetAstraCheckVerdict(v)
@@ -708,6 +982,45 @@ func (_c *GroupStatusStateCreate) check() error {
 	}
 	if _, ok := _c.mutation.SolJuiceReasoningTokens(); !ok {
 		return &ValidationError{Name: "sol_juice_reasoning_tokens", err: errors.New(`ent: missing required field "GroupStatusState.sol_juice_reasoning_tokens"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceVerdict(); !ok {
+		return &ValidationError{Name: "modeltrace_verdict", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_verdict"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceStableStatus(); !ok {
+		return &ValidationError{Name: "modeltrace_stable_status", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_stable_status"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceRunExpectedModel(); !ok {
+		return &ValidationError{Name: "modeltrace_run_expected_model", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_run_expected_model"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceTopModel(); !ok {
+		return &ValidationError{Name: "modeltrace_top_model", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_top_model"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceTopProbability(); !ok {
+		return &ValidationError{Name: "modeltrace_top_probability", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_top_probability"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceRanking(); !ok {
+		return &ValidationError{Name: "modeltrace_ranking", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_ranking"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceReasons(); !ok {
+		return &ValidationError{Name: "modeltrace_reasons", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_reasons"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceConsecutiveMismatch(); !ok {
+		return &ValidationError{Name: "modeltrace_consecutive_mismatch", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_consecutive_mismatch"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceValidOutputs(); !ok {
+		return &ValidationError{Name: "modeltrace_valid_outputs", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_valid_outputs"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceInputTokens(); !ok {
+		return &ValidationError{Name: "modeltrace_input_tokens", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_input_tokens"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceOutputTokens(); !ok {
+		return &ValidationError{Name: "modeltrace_output_tokens", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_output_tokens"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceReasoningTokens(); !ok {
+		return &ValidationError{Name: "modeltrace_reasoning_tokens", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_reasoning_tokens"`)}
+	}
+	if _, ok := _c.mutation.ModeltraceLastCostUsd(); !ok {
+		return &ValidationError{Name: "modeltrace_last_cost_usd", err: errors.New(`ent: missing required field "GroupStatusState.modeltrace_last_cost_usd"`)}
 	}
 	if _, ok := _c.mutation.AstraCheckVerdict(); !ok {
 		return &ValidationError{Name: "astra_check_verdict", err: errors.New(`ent: missing required field "GroupStatusState.astra_check_verdict"`)}
@@ -864,6 +1177,74 @@ func (_c *GroupStatusStateCreate) createSpec() (*GroupStatusState, *sqlgraph.Cre
 	if value, ok := _c.mutation.SolJuiceReasoningTokens(); ok {
 		_spec.SetField(groupstatusstate.FieldSolJuiceReasoningTokens, field.TypeInt64, value)
 		_node.SolJuiceReasoningTokens = value
+	}
+	if value, ok := _c.mutation.ModeltraceVerdict(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceVerdict, field.TypeString, value)
+		_node.ModeltraceVerdict = value
+	}
+	if value, ok := _c.mutation.ModeltraceStableStatus(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceStableStatus, field.TypeString, value)
+		_node.ModeltraceStableStatus = value
+	}
+	if value, ok := _c.mutation.ModeltraceRunExpectedModel(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceRunExpectedModel, field.TypeString, value)
+		_node.ModeltraceRunExpectedModel = value
+	}
+	if value, ok := _c.mutation.ModeltraceTopModel(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceTopModel, field.TypeString, value)
+		_node.ModeltraceTopModel = value
+	}
+	if value, ok := _c.mutation.ModeltraceTopProbability(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceTopProbability, field.TypeFloat64, value)
+		_node.ModeltraceTopProbability = value
+	}
+	if value, ok := _c.mutation.ModeltraceExpectedProbability(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceExpectedProbability, field.TypeFloat64, value)
+		_node.ModeltraceExpectedProbability = &value
+	}
+	if value, ok := _c.mutation.ModeltraceRanking(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceRanking, field.TypeJSON, value)
+		_node.ModeltraceRanking = value
+	}
+	if value, ok := _c.mutation.ModeltraceReasons(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceReasons, field.TypeJSON, value)
+		_node.ModeltraceReasons = value
+	}
+	if value, ok := _c.mutation.ModeltraceDetail(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceDetail, field.TypeString, value)
+		_node.ModeltraceDetail = &value
+	}
+	if value, ok := _c.mutation.ModeltraceCheckedAt(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceCheckedAt, field.TypeTime, value)
+		_node.ModeltraceCheckedAt = &value
+	}
+	if value, ok := _c.mutation.ModeltraceConsecutiveMismatch(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceConsecutiveMismatch, field.TypeInt, value)
+		_node.ModeltraceConsecutiveMismatch = value
+	}
+	if value, ok := _c.mutation.ModeltraceValidOutputs(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceValidOutputs, field.TypeInt, value)
+		_node.ModeltraceValidOutputs = value
+	}
+	if value, ok := _c.mutation.ModeltraceInputTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceInputTokens, field.TypeInt64, value)
+		_node.ModeltraceInputTokens = value
+	}
+	if value, ok := _c.mutation.ModeltraceOutputTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceOutputTokens, field.TypeInt64, value)
+		_node.ModeltraceOutputTokens = value
+	}
+	if value, ok := _c.mutation.ModeltraceReasoningTokens(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceReasoningTokens, field.TypeInt64, value)
+		_node.ModeltraceReasoningTokens = value
+	}
+	if value, ok := _c.mutation.ModeltraceLastCostUsd(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceLastCostUsd, field.TypeFloat64, value)
+		_node.ModeltraceLastCostUsd = value
+	}
+	if value, ok := _c.mutation.ModeltraceLastRunID(); ok {
+		_spec.SetField(groupstatusstate.FieldModeltraceLastRunID, field.TypeInt64, value)
+		_node.ModeltraceLastRunID = &value
 	}
 	if value, ok := _c.mutation.AstraCheckVerdict(); ok {
 		_spec.SetField(groupstatusstate.FieldAstraCheckVerdict, field.TypeString, value)
@@ -1360,6 +1741,288 @@ func (u *GroupStatusStateUpsert) UpdateSolJuiceReasoningTokens() *GroupStatusSta
 // AddSolJuiceReasoningTokens adds v to the "sol_juice_reasoning_tokens" field.
 func (u *GroupStatusStateUpsert) AddSolJuiceReasoningTokens(v int64) *GroupStatusStateUpsert {
 	u.Add(groupstatusstate.FieldSolJuiceReasoningTokens, v)
+	return u
+}
+
+// SetModeltraceVerdict sets the "modeltrace_verdict" field.
+func (u *GroupStatusStateUpsert) SetModeltraceVerdict(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceVerdict, v)
+	return u
+}
+
+// UpdateModeltraceVerdict sets the "modeltrace_verdict" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceVerdict() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceVerdict)
+	return u
+}
+
+// SetModeltraceStableStatus sets the "modeltrace_stable_status" field.
+func (u *GroupStatusStateUpsert) SetModeltraceStableStatus(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceStableStatus, v)
+	return u
+}
+
+// UpdateModeltraceStableStatus sets the "modeltrace_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceStableStatus() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceStableStatus)
+	return u
+}
+
+// SetModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field.
+func (u *GroupStatusStateUpsert) SetModeltraceRunExpectedModel(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceRunExpectedModel, v)
+	return u
+}
+
+// UpdateModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceRunExpectedModel() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceRunExpectedModel)
+	return u
+}
+
+// SetModeltraceTopModel sets the "modeltrace_top_model" field.
+func (u *GroupStatusStateUpsert) SetModeltraceTopModel(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceTopModel, v)
+	return u
+}
+
+// UpdateModeltraceTopModel sets the "modeltrace_top_model" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceTopModel() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceTopModel)
+	return u
+}
+
+// SetModeltraceTopProbability sets the "modeltrace_top_probability" field.
+func (u *GroupStatusStateUpsert) SetModeltraceTopProbability(v float64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceTopProbability, v)
+	return u
+}
+
+// UpdateModeltraceTopProbability sets the "modeltrace_top_probability" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceTopProbability() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceTopProbability)
+	return u
+}
+
+// AddModeltraceTopProbability adds v to the "modeltrace_top_probability" field.
+func (u *GroupStatusStateUpsert) AddModeltraceTopProbability(v float64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceTopProbability, v)
+	return u
+}
+
+// SetModeltraceExpectedProbability sets the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsert) SetModeltraceExpectedProbability(v float64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceExpectedProbability, v)
+	return u
+}
+
+// UpdateModeltraceExpectedProbability sets the "modeltrace_expected_probability" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceExpectedProbability() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceExpectedProbability)
+	return u
+}
+
+// AddModeltraceExpectedProbability adds v to the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsert) AddModeltraceExpectedProbability(v float64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceExpectedProbability, v)
+	return u
+}
+
+// ClearModeltraceExpectedProbability clears the value of the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsert) ClearModeltraceExpectedProbability() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldModeltraceExpectedProbability)
+	return u
+}
+
+// SetModeltraceRanking sets the "modeltrace_ranking" field.
+func (u *GroupStatusStateUpsert) SetModeltraceRanking(v []map[string]interface{}) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceRanking, v)
+	return u
+}
+
+// UpdateModeltraceRanking sets the "modeltrace_ranking" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceRanking() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceRanking)
+	return u
+}
+
+// SetModeltraceReasons sets the "modeltrace_reasons" field.
+func (u *GroupStatusStateUpsert) SetModeltraceReasons(v []string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceReasons, v)
+	return u
+}
+
+// UpdateModeltraceReasons sets the "modeltrace_reasons" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceReasons() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceReasons)
+	return u
+}
+
+// SetModeltraceDetail sets the "modeltrace_detail" field.
+func (u *GroupStatusStateUpsert) SetModeltraceDetail(v string) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceDetail, v)
+	return u
+}
+
+// UpdateModeltraceDetail sets the "modeltrace_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceDetail() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceDetail)
+	return u
+}
+
+// ClearModeltraceDetail clears the value of the "modeltrace_detail" field.
+func (u *GroupStatusStateUpsert) ClearModeltraceDetail() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldModeltraceDetail)
+	return u
+}
+
+// SetModeltraceCheckedAt sets the "modeltrace_checked_at" field.
+func (u *GroupStatusStateUpsert) SetModeltraceCheckedAt(v time.Time) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceCheckedAt, v)
+	return u
+}
+
+// UpdateModeltraceCheckedAt sets the "modeltrace_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceCheckedAt() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceCheckedAt)
+	return u
+}
+
+// ClearModeltraceCheckedAt clears the value of the "modeltrace_checked_at" field.
+func (u *GroupStatusStateUpsert) ClearModeltraceCheckedAt() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldModeltraceCheckedAt)
+	return u
+}
+
+// SetModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsert) SetModeltraceConsecutiveMismatch(v int) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceConsecutiveMismatch, v)
+	return u
+}
+
+// UpdateModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceConsecutiveMismatch() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceConsecutiveMismatch)
+	return u
+}
+
+// AddModeltraceConsecutiveMismatch adds v to the "modeltrace_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsert) AddModeltraceConsecutiveMismatch(v int) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceConsecutiveMismatch, v)
+	return u
+}
+
+// SetModeltraceValidOutputs sets the "modeltrace_valid_outputs" field.
+func (u *GroupStatusStateUpsert) SetModeltraceValidOutputs(v int) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceValidOutputs, v)
+	return u
+}
+
+// UpdateModeltraceValidOutputs sets the "modeltrace_valid_outputs" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceValidOutputs() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceValidOutputs)
+	return u
+}
+
+// AddModeltraceValidOutputs adds v to the "modeltrace_valid_outputs" field.
+func (u *GroupStatusStateUpsert) AddModeltraceValidOutputs(v int) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceValidOutputs, v)
+	return u
+}
+
+// SetModeltraceInputTokens sets the "modeltrace_input_tokens" field.
+func (u *GroupStatusStateUpsert) SetModeltraceInputTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceInputTokens, v)
+	return u
+}
+
+// UpdateModeltraceInputTokens sets the "modeltrace_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceInputTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceInputTokens)
+	return u
+}
+
+// AddModeltraceInputTokens adds v to the "modeltrace_input_tokens" field.
+func (u *GroupStatusStateUpsert) AddModeltraceInputTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceInputTokens, v)
+	return u
+}
+
+// SetModeltraceOutputTokens sets the "modeltrace_output_tokens" field.
+func (u *GroupStatusStateUpsert) SetModeltraceOutputTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceOutputTokens, v)
+	return u
+}
+
+// UpdateModeltraceOutputTokens sets the "modeltrace_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceOutputTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceOutputTokens)
+	return u
+}
+
+// AddModeltraceOutputTokens adds v to the "modeltrace_output_tokens" field.
+func (u *GroupStatusStateUpsert) AddModeltraceOutputTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceOutputTokens, v)
+	return u
+}
+
+// SetModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field.
+func (u *GroupStatusStateUpsert) SetModeltraceReasoningTokens(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceReasoningTokens, v)
+	return u
+}
+
+// UpdateModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceReasoningTokens() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceReasoningTokens)
+	return u
+}
+
+// AddModeltraceReasoningTokens adds v to the "modeltrace_reasoning_tokens" field.
+func (u *GroupStatusStateUpsert) AddModeltraceReasoningTokens(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceReasoningTokens, v)
+	return u
+}
+
+// SetModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field.
+func (u *GroupStatusStateUpsert) SetModeltraceLastCostUsd(v float64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceLastCostUsd, v)
+	return u
+}
+
+// UpdateModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceLastCostUsd() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceLastCostUsd)
+	return u
+}
+
+// AddModeltraceLastCostUsd adds v to the "modeltrace_last_cost_usd" field.
+func (u *GroupStatusStateUpsert) AddModeltraceLastCostUsd(v float64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceLastCostUsd, v)
+	return u
+}
+
+// SetModeltraceLastRunID sets the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsert) SetModeltraceLastRunID(v int64) *GroupStatusStateUpsert {
+	u.Set(groupstatusstate.FieldModeltraceLastRunID, v)
+	return u
+}
+
+// UpdateModeltraceLastRunID sets the "modeltrace_last_run_id" field to the value that was provided on create.
+func (u *GroupStatusStateUpsert) UpdateModeltraceLastRunID() *GroupStatusStateUpsert {
+	u.SetExcluded(groupstatusstate.FieldModeltraceLastRunID)
+	return u
+}
+
+// AddModeltraceLastRunID adds v to the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsert) AddModeltraceLastRunID(v int64) *GroupStatusStateUpsert {
+	u.Add(groupstatusstate.FieldModeltraceLastRunID, v)
+	return u
+}
+
+// ClearModeltraceLastRunID clears the value of the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsert) ClearModeltraceLastRunID() *GroupStatusStateUpsert {
+	u.SetNull(groupstatusstate.FieldModeltraceLastRunID)
 	return u
 }
 
@@ -2088,6 +2751,335 @@ func (u *GroupStatusStateUpsertOne) AddSolJuiceReasoningTokens(v int64) *GroupSt
 func (u *GroupStatusStateUpsertOne) UpdateSolJuiceReasoningTokens() *GroupStatusStateUpsertOne {
 	return u.Update(func(s *GroupStatusStateUpsert) {
 		s.UpdateSolJuiceReasoningTokens()
+	})
+}
+
+// SetModeltraceVerdict sets the "modeltrace_verdict" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceVerdict(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceVerdict(v)
+	})
+}
+
+// UpdateModeltraceVerdict sets the "modeltrace_verdict" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceVerdict() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceVerdict()
+	})
+}
+
+// SetModeltraceStableStatus sets the "modeltrace_stable_status" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceStableStatus(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceStableStatus(v)
+	})
+}
+
+// UpdateModeltraceStableStatus sets the "modeltrace_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceStableStatus() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceStableStatus()
+	})
+}
+
+// SetModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceRunExpectedModel(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceRunExpectedModel(v)
+	})
+}
+
+// UpdateModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceRunExpectedModel() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceRunExpectedModel()
+	})
+}
+
+// SetModeltraceTopModel sets the "modeltrace_top_model" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceTopModel(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceTopModel(v)
+	})
+}
+
+// UpdateModeltraceTopModel sets the "modeltrace_top_model" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceTopModel() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceTopModel()
+	})
+}
+
+// SetModeltraceTopProbability sets the "modeltrace_top_probability" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceTopProbability(v float64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceTopProbability(v)
+	})
+}
+
+// AddModeltraceTopProbability adds v to the "modeltrace_top_probability" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceTopProbability(v float64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceTopProbability(v)
+	})
+}
+
+// UpdateModeltraceTopProbability sets the "modeltrace_top_probability" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceTopProbability() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceTopProbability()
+	})
+}
+
+// SetModeltraceExpectedProbability sets the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceExpectedProbability(v float64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceExpectedProbability(v)
+	})
+}
+
+// AddModeltraceExpectedProbability adds v to the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceExpectedProbability(v float64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceExpectedProbability(v)
+	})
+}
+
+// UpdateModeltraceExpectedProbability sets the "modeltrace_expected_probability" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceExpectedProbability() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceExpectedProbability()
+	})
+}
+
+// ClearModeltraceExpectedProbability clears the value of the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsertOne) ClearModeltraceExpectedProbability() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceExpectedProbability()
+	})
+}
+
+// SetModeltraceRanking sets the "modeltrace_ranking" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceRanking(v []map[string]interface{}) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceRanking(v)
+	})
+}
+
+// UpdateModeltraceRanking sets the "modeltrace_ranking" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceRanking() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceRanking()
+	})
+}
+
+// SetModeltraceReasons sets the "modeltrace_reasons" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceReasons(v []string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceReasons(v)
+	})
+}
+
+// UpdateModeltraceReasons sets the "modeltrace_reasons" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceReasons() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceReasons()
+	})
+}
+
+// SetModeltraceDetail sets the "modeltrace_detail" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceDetail(v string) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceDetail(v)
+	})
+}
+
+// UpdateModeltraceDetail sets the "modeltrace_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceDetail() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceDetail()
+	})
+}
+
+// ClearModeltraceDetail clears the value of the "modeltrace_detail" field.
+func (u *GroupStatusStateUpsertOne) ClearModeltraceDetail() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceDetail()
+	})
+}
+
+// SetModeltraceCheckedAt sets the "modeltrace_checked_at" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceCheckedAt(v time.Time) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceCheckedAt(v)
+	})
+}
+
+// UpdateModeltraceCheckedAt sets the "modeltrace_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceCheckedAt() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceCheckedAt()
+	})
+}
+
+// ClearModeltraceCheckedAt clears the value of the "modeltrace_checked_at" field.
+func (u *GroupStatusStateUpsertOne) ClearModeltraceCheckedAt() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceCheckedAt()
+	})
+}
+
+// SetModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceConsecutiveMismatch(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceConsecutiveMismatch(v)
+	})
+}
+
+// AddModeltraceConsecutiveMismatch adds v to the "modeltrace_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceConsecutiveMismatch(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceConsecutiveMismatch(v)
+	})
+}
+
+// UpdateModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceConsecutiveMismatch() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceConsecutiveMismatch()
+	})
+}
+
+// SetModeltraceValidOutputs sets the "modeltrace_valid_outputs" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceValidOutputs(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceValidOutputs(v)
+	})
+}
+
+// AddModeltraceValidOutputs adds v to the "modeltrace_valid_outputs" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceValidOutputs(v int) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceValidOutputs(v)
+	})
+}
+
+// UpdateModeltraceValidOutputs sets the "modeltrace_valid_outputs" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceValidOutputs() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceValidOutputs()
+	})
+}
+
+// SetModeltraceInputTokens sets the "modeltrace_input_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceInputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceInputTokens(v)
+	})
+}
+
+// AddModeltraceInputTokens adds v to the "modeltrace_input_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceInputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceInputTokens(v)
+	})
+}
+
+// UpdateModeltraceInputTokens sets the "modeltrace_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceInputTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceInputTokens()
+	})
+}
+
+// SetModeltraceOutputTokens sets the "modeltrace_output_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceOutputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceOutputTokens(v)
+	})
+}
+
+// AddModeltraceOutputTokens adds v to the "modeltrace_output_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceOutputTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceOutputTokens(v)
+	})
+}
+
+// UpdateModeltraceOutputTokens sets the "modeltrace_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceOutputTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceOutputTokens()
+	})
+}
+
+// SetModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceReasoningTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceReasoningTokens(v)
+	})
+}
+
+// AddModeltraceReasoningTokens adds v to the "modeltrace_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceReasoningTokens(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceReasoningTokens(v)
+	})
+}
+
+// UpdateModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceReasoningTokens() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceReasoningTokens()
+	})
+}
+
+// SetModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceLastCostUsd(v float64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceLastCostUsd(v)
+	})
+}
+
+// AddModeltraceLastCostUsd adds v to the "modeltrace_last_cost_usd" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceLastCostUsd(v float64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceLastCostUsd(v)
+	})
+}
+
+// UpdateModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceLastCostUsd() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceLastCostUsd()
+	})
+}
+
+// SetModeltraceLastRunID sets the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsertOne) SetModeltraceLastRunID(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceLastRunID(v)
+	})
+}
+
+// AddModeltraceLastRunID adds v to the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsertOne) AddModeltraceLastRunID(v int64) *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceLastRunID(v)
+	})
+}
+
+// UpdateModeltraceLastRunID sets the "modeltrace_last_run_id" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertOne) UpdateModeltraceLastRunID() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceLastRunID()
+	})
+}
+
+// ClearModeltraceLastRunID clears the value of the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsertOne) ClearModeltraceLastRunID() *GroupStatusStateUpsertOne {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceLastRunID()
 	})
 }
 
@@ -3020,6 +4012,335 @@ func (u *GroupStatusStateUpsertBulk) AddSolJuiceReasoningTokens(v int64) *GroupS
 func (u *GroupStatusStateUpsertBulk) UpdateSolJuiceReasoningTokens() *GroupStatusStateUpsertBulk {
 	return u.Update(func(s *GroupStatusStateUpsert) {
 		s.UpdateSolJuiceReasoningTokens()
+	})
+}
+
+// SetModeltraceVerdict sets the "modeltrace_verdict" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceVerdict(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceVerdict(v)
+	})
+}
+
+// UpdateModeltraceVerdict sets the "modeltrace_verdict" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceVerdict() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceVerdict()
+	})
+}
+
+// SetModeltraceStableStatus sets the "modeltrace_stable_status" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceStableStatus(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceStableStatus(v)
+	})
+}
+
+// UpdateModeltraceStableStatus sets the "modeltrace_stable_status" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceStableStatus() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceStableStatus()
+	})
+}
+
+// SetModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceRunExpectedModel(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceRunExpectedModel(v)
+	})
+}
+
+// UpdateModeltraceRunExpectedModel sets the "modeltrace_run_expected_model" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceRunExpectedModel() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceRunExpectedModel()
+	})
+}
+
+// SetModeltraceTopModel sets the "modeltrace_top_model" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceTopModel(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceTopModel(v)
+	})
+}
+
+// UpdateModeltraceTopModel sets the "modeltrace_top_model" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceTopModel() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceTopModel()
+	})
+}
+
+// SetModeltraceTopProbability sets the "modeltrace_top_probability" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceTopProbability(v float64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceTopProbability(v)
+	})
+}
+
+// AddModeltraceTopProbability adds v to the "modeltrace_top_probability" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceTopProbability(v float64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceTopProbability(v)
+	})
+}
+
+// UpdateModeltraceTopProbability sets the "modeltrace_top_probability" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceTopProbability() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceTopProbability()
+	})
+}
+
+// SetModeltraceExpectedProbability sets the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceExpectedProbability(v float64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceExpectedProbability(v)
+	})
+}
+
+// AddModeltraceExpectedProbability adds v to the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceExpectedProbability(v float64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceExpectedProbability(v)
+	})
+}
+
+// UpdateModeltraceExpectedProbability sets the "modeltrace_expected_probability" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceExpectedProbability() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceExpectedProbability()
+	})
+}
+
+// ClearModeltraceExpectedProbability clears the value of the "modeltrace_expected_probability" field.
+func (u *GroupStatusStateUpsertBulk) ClearModeltraceExpectedProbability() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceExpectedProbability()
+	})
+}
+
+// SetModeltraceRanking sets the "modeltrace_ranking" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceRanking(v []map[string]interface{}) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceRanking(v)
+	})
+}
+
+// UpdateModeltraceRanking sets the "modeltrace_ranking" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceRanking() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceRanking()
+	})
+}
+
+// SetModeltraceReasons sets the "modeltrace_reasons" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceReasons(v []string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceReasons(v)
+	})
+}
+
+// UpdateModeltraceReasons sets the "modeltrace_reasons" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceReasons() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceReasons()
+	})
+}
+
+// SetModeltraceDetail sets the "modeltrace_detail" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceDetail(v string) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceDetail(v)
+	})
+}
+
+// UpdateModeltraceDetail sets the "modeltrace_detail" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceDetail() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceDetail()
+	})
+}
+
+// ClearModeltraceDetail clears the value of the "modeltrace_detail" field.
+func (u *GroupStatusStateUpsertBulk) ClearModeltraceDetail() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceDetail()
+	})
+}
+
+// SetModeltraceCheckedAt sets the "modeltrace_checked_at" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceCheckedAt(v time.Time) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceCheckedAt(v)
+	})
+}
+
+// UpdateModeltraceCheckedAt sets the "modeltrace_checked_at" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceCheckedAt() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceCheckedAt()
+	})
+}
+
+// ClearModeltraceCheckedAt clears the value of the "modeltrace_checked_at" field.
+func (u *GroupStatusStateUpsertBulk) ClearModeltraceCheckedAt() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceCheckedAt()
+	})
+}
+
+// SetModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceConsecutiveMismatch(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceConsecutiveMismatch(v)
+	})
+}
+
+// AddModeltraceConsecutiveMismatch adds v to the "modeltrace_consecutive_mismatch" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceConsecutiveMismatch(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceConsecutiveMismatch(v)
+	})
+}
+
+// UpdateModeltraceConsecutiveMismatch sets the "modeltrace_consecutive_mismatch" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceConsecutiveMismatch() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceConsecutiveMismatch()
+	})
+}
+
+// SetModeltraceValidOutputs sets the "modeltrace_valid_outputs" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceValidOutputs(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceValidOutputs(v)
+	})
+}
+
+// AddModeltraceValidOutputs adds v to the "modeltrace_valid_outputs" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceValidOutputs(v int) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceValidOutputs(v)
+	})
+}
+
+// UpdateModeltraceValidOutputs sets the "modeltrace_valid_outputs" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceValidOutputs() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceValidOutputs()
+	})
+}
+
+// SetModeltraceInputTokens sets the "modeltrace_input_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceInputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceInputTokens(v)
+	})
+}
+
+// AddModeltraceInputTokens adds v to the "modeltrace_input_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceInputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceInputTokens(v)
+	})
+}
+
+// UpdateModeltraceInputTokens sets the "modeltrace_input_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceInputTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceInputTokens()
+	})
+}
+
+// SetModeltraceOutputTokens sets the "modeltrace_output_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceOutputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceOutputTokens(v)
+	})
+}
+
+// AddModeltraceOutputTokens adds v to the "modeltrace_output_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceOutputTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceOutputTokens(v)
+	})
+}
+
+// UpdateModeltraceOutputTokens sets the "modeltrace_output_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceOutputTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceOutputTokens()
+	})
+}
+
+// SetModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceReasoningTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceReasoningTokens(v)
+	})
+}
+
+// AddModeltraceReasoningTokens adds v to the "modeltrace_reasoning_tokens" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceReasoningTokens(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceReasoningTokens(v)
+	})
+}
+
+// UpdateModeltraceReasoningTokens sets the "modeltrace_reasoning_tokens" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceReasoningTokens() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceReasoningTokens()
+	})
+}
+
+// SetModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceLastCostUsd(v float64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceLastCostUsd(v)
+	})
+}
+
+// AddModeltraceLastCostUsd adds v to the "modeltrace_last_cost_usd" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceLastCostUsd(v float64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceLastCostUsd(v)
+	})
+}
+
+// UpdateModeltraceLastCostUsd sets the "modeltrace_last_cost_usd" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceLastCostUsd() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceLastCostUsd()
+	})
+}
+
+// SetModeltraceLastRunID sets the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsertBulk) SetModeltraceLastRunID(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.SetModeltraceLastRunID(v)
+	})
+}
+
+// AddModeltraceLastRunID adds v to the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsertBulk) AddModeltraceLastRunID(v int64) *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.AddModeltraceLastRunID(v)
+	})
+}
+
+// UpdateModeltraceLastRunID sets the "modeltrace_last_run_id" field to the value that was provided on create.
+func (u *GroupStatusStateUpsertBulk) UpdateModeltraceLastRunID() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.UpdateModeltraceLastRunID()
+	})
+}
+
+// ClearModeltraceLastRunID clears the value of the "modeltrace_last_run_id" field.
+func (u *GroupStatusStateUpsertBulk) ClearModeltraceLastRunID() *GroupStatusStateUpsertBulk {
+	return u.Update(func(s *GroupStatusStateUpsert) {
+		s.ClearModeltraceLastRunID()
 	})
 }
 

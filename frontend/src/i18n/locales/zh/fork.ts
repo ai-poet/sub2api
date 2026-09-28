@@ -216,20 +216,25 @@ export default {
     "eventTypes": {
       "up": "恢复",
       "down": "中断",
-      "sol_juice_mismatch": "疑似非 Sol",
-      "sol_juice_recovered": "Sol 验证恢复",
+      "modeltrace_mismatch": "ModelTrace 指纹不符",
+      "modeltrace_recovered": "ModelTrace 指纹恢复",
+      "sol_juice_mismatch": "疑似非 Sol（旧 Juice 探测）",
+      "sol_juice_recovered": "Sol 验证恢复（旧 Juice 探测）",
       "astra_mismatch": "Astra 指纹异常",
       "astra_recovered": "Astra 指纹恢复"
     },
-    "solJuice": {
-      "pass": "Sol Juice 正常",
-      "mismatch": "Sol Juice 异常（非 Sol）",
-      "pending": "Sol Juice 待验证",
+    "modelTrace": {
+      "pass": "指纹一致（{expected}）",
+      "suspect": "指纹疑似不符（待复测）",
+      "mismatch": "指纹不符（强指向 {top}）",
+      "pending": "指纹待检测",
       "statuses": {
-        "pass": "Sol Juice 正常",
-        "mismatch": "Sol Juice 异常（非 Sol）",
-        "inconclusive": "Sol Juice 证据不足",
-        "unknown": "Sol Juice 待验证"
+        "pass": "指纹一致",
+        "mismatch": "指纹不符",
+        "suspect": "指纹疑似不符",
+        "inconclusive": "指纹未能判定",
+        "pending": "指纹待检测",
+        "unknown": "未知"
       }
     },
     "astraCheck": {
@@ -282,6 +287,29 @@ export default {
       "completeRegistration": "完成注册",
       "completing": "正在完成注册...",
       "completeRegistrationFailed": "注册失败，请检查邀请码后重试。"
+    },
+    "desktopBridge": {
+      "pageTitle": "客户端登录",
+      "title": "正在连接桌面客户端",
+      "preparing": "正在为客户端准备登录会话…",
+      "preparingRoutes": "正在准备 Claude Code 与 Codex 线路…",
+      "creatingSession": "正在为客户端创建会话…",
+      "creatingCode": "正在生成登录码…",
+      "opening": "正在打开客户端…",
+      "manualHint": "如果客户端没有自动打开，请点击下方按钮继续：",
+      "openApp": "打开客户端",
+      "failed": "无法完成客户端登录。",
+      "failedStatus": "无法自动继续。",
+      "code": {
+        "label": "登录码",
+        "copy": "复制",
+        "copied": "已复制",
+        "hint": "如果客户端没有自动完成登录，请复制登录码，粘贴到客户端的登录窗口（也可以粘贴地址栏里的整条链接）。",
+        "expiresIn": "{time} 内有效，只能使用一次",
+        "warning": "只把登录码粘贴到你刚刚发起登录的客户端里，不要发给任何人——拿到登录码的人可能借此登录你的账号。",
+        "expired": "登录码已过期，请回到客户端重新发起登录。",
+        "returnToApp": "返回客户端"
+      }
     }
   },
   "integrationGuide": {
@@ -392,31 +420,82 @@ export default {
         "footerHint": "“立即探测”会先保存当前配置，再立即执行一次探测。",
         "notifyEnabled": "变红 / 恢复时推送提醒",
         "notifyEnabledHint": "仅当站点设置中已启用 Server酱³ 推送时生效；关闭后本分组的状态变化不再推送。",
-        "solJuice": {
-          "title": "纯 Sol 验证（Juice 指纹）",
-          "hint": "向本分组的 OpenAI 账号发一条 reasoning=high 的请求读取模型内部 Juice 预算：Sol 应回 40，回 32 / 48 等即为其他型号。连续 2 次非 Sol（首次会立即复测）才判定并推送，不影响在线率。每次约 $0.006–0.045（主要是 reasoning token），请勿把间隔设得太短。",
-          "intervalSeconds": "验证间隔（秒，最小 300）",
-          "model": "请求模型名",
-          "modelPlaceholder": "gpt-5.6-sol",
+        "modelTrace": {
+          "title": "ModelTrace 指纹验证",
+          "hint": "向本分组的一个账号发 3 条（不够时补到最多 6 条）「凭第一反应逐项输出 292–332 个 1 到 355 的整数」的挑战，用 ModelTrace 统一指纹库对 16 个 GPT / Claude 模型做闭集归因。第一候选是预期模型且概率 ≥ 50% 判为一致；第一候选是其他模型、概率 ≥ 80% 且预期模型 ≤ 15% 判为不符。连续 2 次不符（首次会在同一账号立即复测）才判定并推送，不影响在线率。每次约输出 3–6 千 token。",
+          "bank": "指纹库",
+          "expectedModel": "预期模型",
+          "requestModel": "请求模型名（留空 = 预期模型）",
+          "intervalSeconds": "验证间隔（秒，最小 900）",
           "latestResult": "最近一次验证",
-          "latestResultEmpty": "尚未验证。保存后等待调度，或点击“立即验证”。",
-          "status": "结论",
-          "value": "Juice 值",
+          "latestResultEmpty": "尚未验证。保存后等待调度，或点击“立即检测”。",
+          "verdict": "结论",
+          "topCandidate": "第一候选",
+          "expectedProbability": "预期 {model}：{probability}",
           "checkedAt": "验证时间",
+          "validOutputs": "有效回答 {valid}/3",
           "tokens": "Token（输入 / 输出）",
-          "reasoningTokens": "其中 reasoning",
-          "lastCost": "最近一次成本",
+          "lastCost": "本次成本",
           "monthlyEstimate": "按当前间隔折算每月",
+          "ranking": "归因概率（前 5 名，含预期模型）",
           "detail": "说明",
-          "probeNow": "立即验证",
-          "probing": "验证中...",
-          "probeSucceeded": "Sol 验证已完成",
-          "probeFailed": "Sol 验证失败",
+          "disclaimer": "结果是指纹库内候选之间的闭集归因，仅供参考：库外模型也会被归到最相似的已收录模型，「不符」表示强烈像另一个已收录模型，不等于确证。",
+          "probeNow": "立即检测",
+          "running": "检测中...",
+          "probeStarted": "已开始 ModelTrace 检测，完成后自动刷新",
+          "probeSucceeded": "ModelTrace 检测已完成",
+          "probeFailed": "ModelTrace 检测失败",
+          "progress": {
+            "title": "第 {round} 轮进行中",
+            "phases": {
+              "selecting_account": "选择账号",
+              "running": "发送挑战",
+              "scoring": "评分"
+            },
+            "account": "账号",
+            "accepted": "有效",
+            "used": "已用挑战",
+            "rejected": "无效",
+            "failed": "失败",
+            "inFlight": "进行中"
+          },
+          "outcomes": {
+            "accepted": "有效",
+            "rejected": "无效",
+            "failed": "失败"
+          },
+          "rejections": {
+            "too_few_numbers": "数字不足",
+            "max_tokens": "达到 max_tokens 被截断",
+            "refusal": "模型拒答",
+            "stream_incomplete": "流未正常结束",
+            "stream_error": "流中报错"
+          },
+          "outputTable": {
+            "title": "最近一次运行的挑战明细（{count} 条）",
+            "runMeta": "有效 {valid}，已用 {made}/{planned}，耗时 {latency}",
+            "numbers": "数字 / 要求",
+            "result": "结果",
+            "singleTop": "单条第一候选",
+            "excerpt": "回答摘要",
+            "latency": "耗时"
+          },
+          "reasons": {
+            "unknown_expected_model": "预期模型不在指纹库中",
+            "no_valid_outputs": "没有有效回答",
+            "insufficient_outputs": "有效回答不足 2 条",
+            "ambiguous": "归因不够明确",
+            "target_not_allowed": "预期模型不适用于本分组平台",
+            "bank_invalid": "指纹库不可用",
+            "no_account": "没有可用账号"
+          },
           "statuses": {
-            "pass": "Sol Juice 正常",
-            "mismatch": "Sol Juice 异常（非 Sol）",
-            "inconclusive": "Sol Juice 证据不足",
-            "unknown": "Sol Juice 待验证"
+            "pass": "指纹一致（{expected}）",
+            "mismatch": "指纹不符（强指向 {top}）",
+            "suspect": "疑似不符（强指向 {top}，待复测）",
+            "inconclusive": "未能判定",
+            "pending": "已更换预期模型，待检测",
+            "unknown": "待检测"
           }
         },
         "astraCheck": {

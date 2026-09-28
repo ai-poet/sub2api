@@ -26,6 +26,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusconfig"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusevent"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusjuicerecord"
+	"github.com/Wei-Shaw/sub2api/ent/groupstatusmodeltracerun"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusrecord"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusstate"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
@@ -593,6 +594,33 @@ func (f TraverseGroupStatusJuiceRecord) Traverse(ctx context.Context, q ent.Quer
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusJuiceRecordQuery", q)
+}
+
+// The GroupStatusModelTraceRunFunc type is an adapter to allow the use of ordinary function as a Querier.
+type GroupStatusModelTraceRunFunc func(context.Context, *ent.GroupStatusModelTraceRunQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f GroupStatusModelTraceRunFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.GroupStatusModelTraceRunQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusModelTraceRunQuery", q)
+}
+
+// The TraverseGroupStatusModelTraceRun type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseGroupStatusModelTraceRun func(context.Context, *ent.GroupStatusModelTraceRunQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseGroupStatusModelTraceRun) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseGroupStatusModelTraceRun) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.GroupStatusModelTraceRunQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.GroupStatusModelTraceRunQuery", q)
 }
 
 // The GroupStatusRecordFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1282,6 +1310,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.GroupStatusEventQuery, predicate.GroupStatusEvent, groupstatusevent.OrderOption]{typ: ent.TypeGroupStatusEvent, tq: q}, nil
 	case *ent.GroupStatusJuiceRecordQuery:
 		return &query[*ent.GroupStatusJuiceRecordQuery, predicate.GroupStatusJuiceRecord, groupstatusjuicerecord.OrderOption]{typ: ent.TypeGroupStatusJuiceRecord, tq: q}, nil
+	case *ent.GroupStatusModelTraceRunQuery:
+		return &query[*ent.GroupStatusModelTraceRunQuery, predicate.GroupStatusModelTraceRun, groupstatusmodeltracerun.OrderOption]{typ: ent.TypeGroupStatusModelTraceRun, tq: q}, nil
 	case *ent.GroupStatusRecordQuery:
 		return &query[*ent.GroupStatusRecordQuery, predicate.GroupStatusRecord, groupstatusrecord.OrderOption]{typ: ent.TypeGroupStatusRecord, tq: q}, nil
 	case *ent.GroupStatusStateQuery:

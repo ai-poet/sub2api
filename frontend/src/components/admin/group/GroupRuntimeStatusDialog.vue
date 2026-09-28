@@ -137,140 +137,292 @@
         </div>
 
         <div
-          v-if="group.platform === 'openai'"
+          v-if="modelTraceSupported"
           class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-dark-700"
         >
           <div class="flex items-center justify-between gap-3">
             <div>
               <div class="font-medium text-gray-900 dark:text-white">
-                {{ t('admin.groups.runtimeStatus.solJuice.title') }}
+                {{ t('admin.groups.runtimeStatus.modelTrace.title') }}
               </div>
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {{ t('admin.groups.runtimeStatus.solJuice.hint') }}
+                {{ t('admin.groups.runtimeStatus.modelTrace.hint') }}
+              </p>
+              <p v-if="summary.modeltrace_bank_sha256" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                {{ t('admin.groups.runtimeStatus.modelTrace.bank') }}: {{ summary.modeltrace_bank_sha256 }}
+                <template v-if="summary.modeltrace_bank_built_at">
+                  · {{ formatDateTime(summary.modeltrace_bank_built_at) }}
+                </template>
               </p>
             </div>
-            <Toggle v-model="form.sol_juice_enabled" />
+            <Toggle v-model="form.modeltrace_enabled" />
           </div>
 
-          <div class="grid gap-5 md:grid-cols-2">
+          <div class="grid gap-5 md:grid-cols-3">
             <div>
-              <label class="input-label">{{ t('admin.groups.runtimeStatus.solJuice.intervalSeconds') }}</label>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.modelTrace.expectedModel') }}</label>
+              <select v-model="form.modeltrace_expected_model" class="input">
+                <option v-for="target in modelTraceTargets" :key="target.id" :value="target.id">
+                  {{ target.display_name }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.modelTrace.requestModel') }}</label>
               <input
-                v-model.number="form.sol_juice_interval_seconds"
-                type="number"
-                min="300"
-                step="60"
+                v-model.trim="form.modeltrace_request_model"
+                type="text"
                 class="input"
+                :placeholder="form.modeltrace_expected_model"
               />
             </div>
             <div>
-              <label class="input-label">{{ t('admin.groups.runtimeStatus.solJuice.model') }}</label>
+              <label class="input-label">{{ t('admin.groups.runtimeStatus.modelTrace.intervalSeconds') }}</label>
               <input
-                v-model.trim="form.sol_juice_model"
-                type="text"
+                v-model.number="form.modeltrace_interval_seconds"
+                type="number"
+                min="900"
+                step="300"
                 class="input"
-                :placeholder="t('admin.groups.runtimeStatus.solJuice.modelPlaceholder')"
               />
             </div>
           </div>
 
           <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ t('admin.groups.runtimeStatus.solJuice.latestResult') }}
+              {{ t('admin.groups.runtimeStatus.modelTrace.latestResult') }}
             </div>
             <button
               type="button"
               class="btn btn-secondary btn-sm"
-              :disabled="loading || saving || probing || solJuiceProbing"
-              @click="handleSolJuiceProbe"
+              :disabled="loading || saving || probing || modelTraceProbing || summary.modeltrace_running"
+              @click="handleModelTraceProbe"
             >
               <span
-                v-if="solJuiceProbing"
+                v-if="modelTraceProbing || summary.modeltrace_running"
                 class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
               ></span>
-              {{ solJuiceProbing ? t('admin.groups.runtimeStatus.solJuice.probing') : t('admin.groups.runtimeStatus.solJuice.probeNow') }}
+              {{
+                modelTraceProbing || summary.modeltrace_running
+                  ? t('admin.groups.runtimeStatus.modelTrace.running')
+                  : t('admin.groups.runtimeStatus.modelTrace.probeNow')
+              }}
             </button>
           </div>
 
-          <div v-if="summary.sol_juice_checked_at" class="space-y-3">
+          <div
+            v-if="modelTraceProgress"
+            class="space-y-3 rounded-lg border border-sky-200 bg-sky-50/40 px-3 py-3 dark:border-sky-900/40 dark:bg-sky-950/20"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <div class="font-medium text-gray-900 dark:text-white">
+                {{ t('admin.groups.runtimeStatus.modelTrace.progress.title', { round: modelTraceProgress.round }) }}
+                <span class="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                  {{ t(`admin.groups.runtimeStatus.modelTrace.progress.phases.${modelTraceProgress.phase}`) }}
+                  <template v-if="modelTraceProgress.account_id">
+                    · {{ t('admin.groups.runtimeStatus.modelTrace.progress.account') }} #{{ modelTraceProgress.account_id }}
+                  </template>
+                  · {{ formatGroupRuntimeLatency(modelTraceProgress.elapsed_ms) }}
+                </span>
+              </div>
+              <div class="text-xs text-gray-600 dark:text-gray-300">
+                {{ t('admin.groups.runtimeStatus.modelTrace.progress.accepted') }} {{ modelTraceProgress.accepted }} / {{ modelTraceProgress.target }}
+                · {{ t('admin.groups.runtimeStatus.modelTrace.progress.used') }} {{ modelTraceProgress.used }} / {{ modelTraceProgress.planned }}
+                · {{ t('admin.groups.runtimeStatus.modelTrace.progress.rejected') }} {{ modelTraceProgress.rejected }}
+                · {{ t('admin.groups.runtimeStatus.modelTrace.progress.failed') }} {{ modelTraceProgress.failed }}
+                <template v-if="modelTraceProgress.in_flight">
+                  · {{ t('admin.groups.runtimeStatus.modelTrace.progress.inFlight') }} {{ modelTraceProgress.in_flight }}
+                </template>
+              </div>
+            </div>
+            <div class="h-2 w-full rounded bg-gray-200 dark:bg-dark-700">
+              <div class="h-2 rounded bg-sky-500 transition-all" :style="{ width: `${modelTraceProgressPercent}%` }"></div>
+            </div>
+            <div v-if="(modelTraceProgress.attempts?.length ?? 0) > 0" class="space-y-1 text-xs text-gray-600 dark:text-gray-300">
+              <div v-for="attempt in modelTraceProgress.attempts" :key="attempt.seq">
+                #{{ attempt.seq }} ·
+                <span :class="modelTraceOutcomeClass(attempt.outcome)">
+                  {{ t(`admin.groups.runtimeStatus.modelTrace.outcomes.${attempt.outcome}`) }}
+                </span>
+                · {{ attempt.parsed_numbers }} / {{ attempt.expected_count }}
+                <template v-if="attempt.rejection"> · {{ modelTraceRejectionLabel(attempt.rejection) }}</template>
+                <template v-if="attempt.http_code && attempt.http_code !== 200"> · HTTP {{ attempt.http_code }}</template>
+                · {{ formatGroupRuntimeLatency(attempt.latency_ms) }}
+              </div>
+            </div>
+          </div>
+
+          <div v-if="summary.modeltrace_checked_at" class="space-y-3">
             <div class="grid gap-3 md:grid-cols-4">
               <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.solJuice.status') }}
+                  {{ t('admin.groups.runtimeStatus.modelTrace.verdict') }}
                 </div>
                 <div class="mt-1">
-                  <span :class="['badge', getSolJuiceBadgeClass(solJuiceDisplayStatus)]">
-                    {{ t(`admin.groups.runtimeStatus.solJuice.statuses.${solJuiceDisplayStatus}`) }}
+                  <span :class="['badge', getModelTraceBadgeClass(modelTraceDisplayStatus)]">
+                    {{ modelTraceStatusText }}
                   </span>
                 </div>
               </div>
               <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.solJuice.value') }}
+                  {{ t('admin.groups.runtimeStatus.modelTrace.topCandidate') }}
                 </div>
                 <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ summary.sol_juice_value || '-' }}
-                </div>
-              </div>
-              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.solJuice.checkedAt') }}
-                </div>
-                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ formatDateTime(summary.sol_juice_checked_at) }}
+                  {{ summary.modeltrace_top_model ? modelTraceModelLabel(summary.modeltrace_top_model) : '-' }}
+                  <span v-if="summary.modeltrace_top_model" class="text-xs font-normal text-gray-500 dark:text-gray-400">
+                    {{ formatMatchPercent(summary.modeltrace_top_probability) }}
+                  </span>
                 </div>
                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {{ formatRelativeTime(summary.sol_juice_checked_at) }}
+                  {{ t('admin.groups.runtimeStatus.modelTrace.expectedProbability', {
+                    model: modelTraceModelLabel(summary.modeltrace_run_expected_model || summary.modeltrace_expected_model),
+                    probability: formatMatchPercent(summary.modeltrace_expected_probability)
+                  }) }}
                 </div>
               </div>
               <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.solJuice.tokens') }}
+                  {{ t('admin.groups.runtimeStatus.modelTrace.checkedAt') }}
                 </div>
                 <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ summary.sol_juice_input_tokens }} / {{ summary.sol_juice_output_tokens }}
+                  {{ formatDateTime(summary.modeltrace_checked_at) }}
                 </div>
                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.solJuice.reasoningTokens') }}: {{ summary.sol_juice_reasoning_tokens }}
-                </div>
-              </div>
-            </div>
-
-            <div class="grid gap-3 md:grid-cols-2">
-              <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.solJuice.lastCost') }}
-                </div>
-                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ formatUsd(summary.sol_juice_last_cost_usd) }}
+                  {{ formatRelativeTime(summary.modeltrace_checked_at) }}
+                  · {{ t('admin.groups.runtimeStatus.modelTrace.validOutputs', { valid: summary.modeltrace_valid_outputs }) }}
                 </div>
               </div>
               <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800">
                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.solJuice.monthlyEstimate') }}
+                  {{ t('admin.groups.runtimeStatus.modelTrace.tokens') }}
                 </div>
                 <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ formatUsd(solJuiceMonthlyCost, 2) }}
+                  {{ summary.modeltrace_input_tokens }} / {{ summary.modeltrace_output_tokens }}
+                </div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.runtimeStatus.modelTrace.lastCost') }}: {{ formatUsd(summary.modeltrace_last_cost_usd) }}
+                  · {{ t('admin.groups.runtimeStatus.modelTrace.monthlyEstimate') }}: {{ formatUsd(modelTraceMonthlyCost, 2) }}
                 </div>
               </div>
             </div>
 
             <div
-              v-if="summary.sol_juice_detail"
+              v-if="(summary.modeltrace_ranking?.length ?? 0) > 0"
+              class="space-y-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
+            >
+              <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.modelTrace.ranking') }}
+              </div>
+              <div v-for="entry in summary.modeltrace_ranking" :key="entry.model">
+                <div class="flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
+                  <span :class="entry.model === modelTraceRankingExpected ? 'font-semibold' : ''">
+                    {{ modelTraceModelLabel(entry.model) }}
+                    <span class="text-gray-400">· {{ entry.family_name }}</span>
+                  </span>
+                  <span>{{ formatMatchPercent(entry.probability) }}</span>
+                </div>
+                <div class="mt-1 h-2 w-full rounded bg-gray-200 dark:bg-dark-700">
+                  <div
+                    class="h-2 rounded"
+                    :class="entry.model === modelTraceRankingExpected ? 'bg-emerald-500' : 'bg-rose-500'"
+                    :style="{ width: `${Math.min(100, Math.max(0.5, entry.probability * 100))}%` }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <details
+              v-if="modelTraceLastRun && (modelTraceLastRun.outputs?.length ?? 0) > 0"
+              class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
+            >
+              <summary class="cursor-pointer text-xs font-medium text-gray-500 dark:text-gray-400">
+                {{ t('admin.groups.runtimeStatus.modelTrace.outputTable.title', { count: modelTraceLastRun.outputs.length }) }}
+                <span class="ml-1 font-normal">
+                  · {{ t('admin.groups.runtimeStatus.modelTrace.outputTable.runMeta', {
+                    valid: modelTraceLastRun.valid_outputs,
+                    made: modelTraceLastRun.attempts_made,
+                    planned: modelTraceLastRun.attempts_planned,
+                    latency: formatGroupRuntimeLatency(modelTraceLastRun.latency_ms)
+                  }) }}
+                  <template v-if="modelTraceLastRun.account_id">
+                    · {{ t('admin.groups.runtimeStatus.modelTrace.progress.account') }} #{{ modelTraceLastRun.account_id }}
+                    ({{ modelTraceLastRun.account_type }})
+                  </template>
+                </span>
+              </summary>
+              <div class="mt-2 max-h-72 overflow-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="text-gray-500 dark:text-gray-400">
+                    <tr>
+                      <th class="pr-2 font-medium">#</th>
+                      <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.modelTrace.outputTable.numbers') }}</th>
+                      <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.modelTrace.outputTable.result') }}</th>
+                      <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.modelTrace.outputTable.singleTop') }}</th>
+                      <th class="pr-2 font-medium">{{ t('admin.groups.runtimeStatus.modelTrace.outputTable.excerpt') }}</th>
+                      <th class="font-medium">{{ t('admin.groups.runtimeStatus.modelTrace.outputTable.latency') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-gray-700 dark:text-gray-200">
+                    <tr
+                      v-for="(row, index) in modelTraceLastRun.outputs"
+                      :key="`${row.seq}-${index}`"
+                      class="border-t border-gray-100 dark:border-dark-700"
+                    >
+                      <td class="py-1 pr-2 text-gray-400">{{ row.seq }}</td>
+                      <td class="py-1 pr-2">{{ row.parsed_numbers }} / {{ row.expected_count }}</td>
+                      <td class="py-1 pr-2" :class="modelTraceOutcomeClass(modelTraceRowOutcome(row))">
+                        {{
+                          row.accepted
+                            ? t('admin.groups.runtimeStatus.modelTrace.outcomes.accepted')
+                            : row.rejection
+                              ? modelTraceRejectionLabel(row.rejection)
+                              : t('admin.groups.runtimeStatus.modelTrace.outcomes.failed')
+                        }}
+                        <template v-if="row.http_code && row.http_code !== 200"> · HTTP {{ row.http_code }}</template>
+                      </td>
+                      <td class="py-1 pr-2">
+                        <template v-if="row.top_model">
+                          {{ modelTraceModelLabel(row.top_model) }} {{ formatMatchPercent(row.top_probability) }}
+                        </template>
+                        <template v-else>-</template>
+                      </td>
+                      <td class="max-w-[16rem] truncate py-1 pr-2" :title="row.error || row.excerpt">
+                        {{ row.error || row.excerpt || '-' }}
+                      </td>
+                      <td class="py-1">{{ formatGroupRuntimeLatency(row.latency_ms) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </details>
+
+            <div v-if="(summary.modeltrace_reasons?.length ?? 0) > 0" class="flex flex-wrap gap-2">
+              <span v-for="reason in summary.modeltrace_reasons" :key="reason" class="badge badge-warning">
+                {{ modelTraceReasonLabel(reason) }}
+              </span>
+            </div>
+
+            <div
+              v-if="summary.modeltrace_detail"
               class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
             >
               <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                {{ t('admin.groups.runtimeStatus.solJuice.detail') }}
+                {{ t('admin.groups.runtimeStatus.modelTrace.detail') }}
               </div>
-              <pre class="mt-2 whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-gray-200">{{ summary.sol_juice_detail }}</pre>
+              <pre class="mt-2 whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-gray-200">{{ summary.modeltrace_detail }}</pre>
             </div>
           </div>
           <div
             v-else
             class="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500 dark:border-dark-700 dark:text-gray-400"
           >
-            {{ t('admin.groups.runtimeStatus.solJuice.latestResultEmpty') }}
+            {{ t('admin.groups.runtimeStatus.modelTrace.latestResultEmpty') }}
           </div>
+
+          <p class="text-xs text-gray-400 dark:text-gray-500">
+            {{ t('admin.groups.runtimeStatus.modelTrace.disclaimer') }}
+          </p>
         </div>
 
         <div
@@ -701,21 +853,26 @@ import type {
   GroupStatusAdminView,
   GroupStatusSummary,
   GroupStatusValidationMode,
+  ModelTraceLastRun,
+  ModelTraceOutputRecord,
+  ModelTraceProgress,
+  ModelTraceTarget,
 } from '@/types'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import {
   astraMismatchTextKey,
   astraModelShortName,
-  estimateSolJuiceMonthlyCostUsd,
+  estimateMonthlyProbeCostUsd,
   formatGroupRuntimeLatency,
   formatMatchPercent,
   formatUsd,
   getAstraCheckBadgeClass,
   getGroupRuntimeStatusBadgeClass,
-  getSolJuiceBadgeClass,
+  getModelTraceBadgeClass,
   joinRuntimeKeywordsText,
+  modelTraceModelLabel,
   normalizeAstraCheckStatus,
-  normalizeSolJuiceStatus,
+  normalizeModelTraceStatus,
   normalizeGroupRuntimeStatus,
   shouldShowRuntimeKeywordEditor,
   splitRuntimeKeywordsText,
@@ -752,16 +909,21 @@ const form = reactive({
   timeout_seconds: 30,
   slow_latency_ms: 15000,
   notify_enabled: true,
-  sol_juice_enabled: false,
-  sol_juice_interval_seconds: 900,
-  sol_juice_model: 'gpt-5.6-sol',
+  modeltrace_enabled: false,
+  modeltrace_expected_model: '',
+  modeltrace_request_model: '',
+  modeltrace_interval_seconds: 3600,
   astra_check_enabled: false,
   astra_check_request_model: 'gpt-6-astra',
   astra_check_tier: 'low' as AstraCheckTier,
   astra_check_interval_seconds: 3600,
 })
 
-const solJuiceProbing = ref(false)
+const modelTraceProbing = ref(false)
+let modelTracePollTimer: ReturnType<typeof setTimeout> | null = null
+let modelTracePollStartedAt = 0
+const MODEL_TRACE_POLL_INTERVAL_MS = 3000
+const MODEL_TRACE_POLL_MAX_MS = 20 * 60 * 1000
 const astraProbing = ref(false)
 let astraPollTimer: ReturnType<typeof setTimeout> | null = null
 let astraPollStartedAt = 0
@@ -807,19 +969,29 @@ const summary = computed<GroupStatusSummary>(() => {
     observed_at: null,
     consecutive_down: 0,
     consecutive_non_down: 0,
-    sol_juice_enabled: false,
-    sol_juice_model: '',
-    sol_juice_interval_seconds: 900,
-    sol_juice_status: '',
-    sol_juice_stable_status: '',
-    sol_juice_value: '',
-    sol_juice_detail: '',
-    sol_juice_checked_at: null,
-    sol_juice_consecutive_mismatch: 0,
-    sol_juice_input_tokens: 0,
-    sol_juice_output_tokens: 0,
-    sol_juice_reasoning_tokens: 0,
-    sol_juice_last_cost_usd: 0,
+    modeltrace_enabled: false,
+    modeltrace_expected_model: '',
+    modeltrace_request_model: '',
+    modeltrace_interval_seconds: 3600,
+    modeltrace_verdict: '',
+    modeltrace_stable_status: '',
+    modeltrace_run_expected_model: '',
+    modeltrace_top_model: '',
+    modeltrace_top_probability: 0,
+    modeltrace_expected_probability: null,
+    modeltrace_ranking: [],
+    modeltrace_reasons: [],
+    modeltrace_detail: '',
+    modeltrace_checked_at: null,
+    modeltrace_consecutive_mismatch: 0,
+    modeltrace_valid_outputs: 0,
+    modeltrace_input_tokens: 0,
+    modeltrace_output_tokens: 0,
+    modeltrace_reasoning_tokens: 0,
+    modeltrace_last_cost_usd: 0,
+    modeltrace_running: false,
+    modeltrace_bank_sha256: '',
+    modeltrace_bank_built_at: '',
     astra_check_enabled: false,
     astra_check_request_model: 'gpt-6-astra',
     astra_check_tier: 'low',
@@ -870,7 +1042,7 @@ const astraStatusText = computed(() => {
 })
 
 const astraMonthlyCost = computed(() =>
-  estimateSolJuiceMonthlyCostUsd(summary.value.astra_check_last_cost_usd, Number(form.astra_check_interval_seconds) || 0)
+  estimateMonthlyProbeCostUsd(summary.value.astra_check_last_cost_usd, Number(form.astra_check_interval_seconds) || 0)
 )
 
 function astraReasonLabel(reason: string): string {
@@ -915,13 +1087,76 @@ function formatAstraCellCounts(cell: AstraCheckCellSummary): string {
   return `${counts}（${t('admin.groups.runtimeStatus.astraCheck.progress.valid')} ${cell.valid}/${cell.planned}）`
 }
 
-const solJuiceDisplayStatus = computed(() =>
-  normalizeSolJuiceStatus(summary.value.sol_juice_stable_status || summary.value.sol_juice_status)
+// ModelTrace 指纹验证：可选预期模型来自后端（按分组平台），结果与进度都从管理视图读
+const modelTraceSupported = computed(() => props.group?.platform === 'openai' || props.group?.platform === 'anthropic')
+const modelTraceTargets = computed<ModelTraceTarget[]>(() => currentView.value?.modeltrace_targets ?? [])
+const modelTraceProgress = computed<ModelTraceProgress | null>(() => currentView.value?.modeltrace_progress ?? null)
+const modelTraceLastRun = computed<ModelTraceLastRun | null>(() => currentView.value?.modeltrace_last_run ?? null)
+
+const modelTraceDisplayStatus = computed(() =>
+  normalizeModelTraceStatus(
+    summary.value.modeltrace_stable_status,
+    summary.value.modeltrace_verdict,
+    summary.value.modeltrace_run_expected_model,
+    form.modeltrace_expected_model
+  )
 )
 
-const solJuiceMonthlyCost = computed(() =>
-  estimateSolJuiceMonthlyCostUsd(summary.value.sol_juice_last_cost_usd, Number(form.sol_juice_interval_seconds) || 0)
+// 排名条高亮最近一次运行所对照的预期模型
+const modelTraceRankingExpected = computed(
+  () => summary.value.modeltrace_run_expected_model || summary.value.modeltrace_expected_model
 )
+
+const modelTraceStatusText = computed(() => {
+  const status = modelTraceDisplayStatus.value
+  const params = {
+    expected: modelTraceModelLabel(modelTraceRankingExpected.value),
+    top: modelTraceModelLabel(summary.value.modeltrace_top_model)
+  }
+  return t(`admin.groups.runtimeStatus.modelTrace.statuses.${status}`, params)
+})
+
+const modelTraceMonthlyCost = computed(() =>
+  estimateMonthlyProbeCostUsd(summary.value.modeltrace_last_cost_usd, Number(form.modeltrace_interval_seconds) || 0)
+)
+
+const modelTraceProgressPercent = computed(() => {
+  const p = modelTraceProgress.value
+  if (!p || p.target <= 0) {
+    return 0
+  }
+  return Math.min(100, Math.round((p.accepted / p.target) * 100))
+})
+
+function modelTraceReasonLabel(reason: string): string {
+  const key = `admin.groups.runtimeStatus.modelTrace.reasons.${reason}`
+  return te(key) ? t(key) : reason
+}
+
+function modelTraceRejectionLabel(rejection: string): string {
+  const key = `admin.groups.runtimeStatus.modelTrace.rejections.${rejection}`
+  return te(key) ? t(key) : rejection
+}
+
+function modelTraceRowOutcome(row: ModelTraceOutputRecord): string {
+  if (row.accepted) {
+    return 'accepted'
+  }
+  return row.rejection ? 'rejected' : 'failed'
+}
+
+function modelTraceOutcomeClass(outcome: string): string {
+  switch (outcome) {
+    case 'accepted':
+      return 'text-emerald-600 dark:text-emerald-400'
+    case 'rejected':
+      return 'text-amber-600 dark:text-amber-400'
+    case 'failed':
+      return 'text-rose-600 dark:text-rose-400'
+    default:
+      return ''
+  }
+}
 
 const summaryStatus = computed(() => {
   if (!form.enabled) {
@@ -959,9 +1194,10 @@ function resetForm() {
   form.timeout_seconds = 30
   form.slow_latency_ms = 15000
   form.notify_enabled = true
-  form.sol_juice_enabled = false
-  form.sol_juice_interval_seconds = 900
-  form.sol_juice_model = 'gpt-5.6-sol'
+  form.modeltrace_enabled = false
+  form.modeltrace_expected_model = ''
+  form.modeltrace_request_model = ''
+  form.modeltrace_interval_seconds = 3600
   form.astra_check_enabled = false
   form.astra_check_request_model = 'gpt-6-astra'
   form.astra_check_tier = 'low'
@@ -978,6 +1214,18 @@ function normalizeAstraView(view: GroupStatusAdminView): GroupStatusAdminView {
     if (!Array.isArray(summary.astra_check_reasons)) summary.astra_check_reasons = []
     if (!Array.isArray(summary.astra_check_benchmark_models)) summary.astra_check_benchmark_models = []
     if (!Array.isArray(summary.astra_check_benchmark_tiers)) summary.astra_check_benchmark_tiers = []
+    if (!Array.isArray(summary.modeltrace_ranking)) summary.modeltrace_ranking = []
+    if (!Array.isArray(summary.modeltrace_reasons)) summary.modeltrace_reasons = []
+  }
+  if (!Array.isArray(view.modeltrace_targets)) view.modeltrace_targets = []
+  if (view.modeltrace_progress && !Array.isArray(view.modeltrace_progress.attempts)) {
+    view.modeltrace_progress.attempts = []
+  }
+  const modelTraceRun = view.modeltrace_last_run
+  if (modelTraceRun) {
+    if (!Array.isArray(modelTraceRun.outputs)) modelTraceRun.outputs = []
+    if (!Array.isArray(modelTraceRun.ranking)) modelTraceRun.ranking = []
+    if (!Array.isArray(modelTraceRun.reasons)) modelTraceRun.reasons = []
   }
   if (view.astra_check_progress && !Array.isArray(view.astra_check_progress.samples)) {
     view.astra_check_progress.samples = []
@@ -1002,9 +1250,11 @@ function applyView(view: GroupStatusAdminView) {
   form.timeout_seconds = view.config.timeout_seconds
   form.slow_latency_ms = view.config.slow_latency_ms
   form.notify_enabled = view.config.notify_enabled !== false
-  form.sol_juice_enabled = view.config.sol_juice_enabled === true
-  form.sol_juice_interval_seconds = view.config.sol_juice_interval_seconds || 900
-  form.sol_juice_model = view.config.sol_juice_model || 'gpt-5.6-sol'
+  form.modeltrace_enabled = view.config.modeltrace_enabled === true
+  form.modeltrace_expected_model =
+    view.config.modeltrace_expected_model || view.modeltrace_targets?.[0]?.id || ''
+  form.modeltrace_request_model = view.config.modeltrace_request_model || ''
+  form.modeltrace_interval_seconds = view.config.modeltrace_interval_seconds || 3600
   form.astra_check_enabled = view.config.astra_check_enabled === true
   form.astra_check_request_model = view.config.astra_check_request_model || 'gpt-6-astra'
   form.astra_check_tier = view.config.astra_check_tier || 'low'
@@ -1023,6 +1273,11 @@ async function loadRuntimeStatus(groupId: number) {
       astraProbing.value = true
       astraPollStartedAt = Date.now()
       scheduleAstraPoll(groupId)
+    }
+    if (view.summary.modeltrace_running && !modelTracePollTimer) {
+      modelTraceProbing.value = true
+      modelTracePollStartedAt = Date.now()
+      scheduleModelTracePoll(groupId)
     }
   } catch (error: any) {
     loadError.value = error?.message || t('admin.groups.runtimeStatus.failedToLoad')
@@ -1049,9 +1304,14 @@ async function saveRuntimeStatus(showToast = true): Promise<GroupStatusAdminView
       timeout_seconds: Math.max(1, Math.round(Number(form.timeout_seconds) || 30)),
       slow_latency_ms: Math.max(100, Math.round(Number(form.slow_latency_ms) || 15000)),
       notify_enabled: form.notify_enabled,
-      sol_juice_enabled: form.sol_juice_enabled,
-      sol_juice_interval_seconds: Math.max(300, Math.round(Number(form.sol_juice_interval_seconds) || 900)),
-      sol_juice_model: form.sol_juice_model.trim() || 'gpt-5.6-sol',
+      ...(modelTraceSupported.value
+        ? {
+            modeltrace_enabled: form.modeltrace_enabled,
+            modeltrace_expected_model: form.modeltrace_expected_model,
+            modeltrace_request_model: form.modeltrace_request_model.trim(),
+            modeltrace_interval_seconds: Math.max(900, Math.round(Number(form.modeltrace_interval_seconds) || 3600)),
+          }
+        : {}),
       astra_check_enabled: form.astra_check_enabled,
       astra_check_request_model: form.astra_check_request_model.trim() || 'gpt-6-astra',
       astra_check_tier: form.astra_check_tier,
@@ -1101,7 +1361,42 @@ async function handleProbe() {
   }
 }
 
-async function handleSolJuiceProbe() {
+function stopModelTracePolling() {
+  if (modelTracePollTimer) {
+    clearTimeout(modelTracePollTimer)
+    modelTracePollTimer = null
+  }
+  modelTraceProbing.value = false
+}
+
+// 一轮 ModelTrace 验证要发 3–6 条长输出请求，后端在后台跑；这里定时拉管理视图直到 running 结束。
+function scheduleModelTracePoll(groupId: number) {
+  modelTracePollTimer = setTimeout(async () => {
+    modelTracePollTimer = null
+    if (!props.show || props.group?.id !== groupId) {
+      stopModelTracePolling()
+      return
+    }
+    try {
+      const view = await adminAPI.groups.getRuntimeStatus(groupId)
+      applyView(view)
+      if (view.summary.modeltrace_running && Date.now() - modelTracePollStartedAt < MODEL_TRACE_POLL_MAX_MS) {
+        scheduleModelTracePoll(groupId)
+        return
+      }
+      stopModelTracePolling()
+      emit('updated')
+      if (!view.summary.modeltrace_running) {
+        appStore.showSuccess(t('admin.groups.runtimeStatus.modelTrace.probeSucceeded'))
+      }
+    } catch (error: any) {
+      stopModelTracePolling()
+      appStore.showError(error?.message || t('admin.groups.runtimeStatus.modelTrace.probeFailed'))
+    }
+  }, MODEL_TRACE_POLL_INTERVAL_MS)
+}
+
+async function handleModelTraceProbe() {
   if (!props.group) {
     return
   }
@@ -1111,16 +1406,16 @@ async function handleSolJuiceProbe() {
     return
   }
 
-  solJuiceProbing.value = true
+  modelTraceProbing.value = true
   try {
-    const view = await adminAPI.groups.probeRuntimeStatusSolJuice(props.group.id)
+    const view = await adminAPI.groups.probeRuntimeStatusModelTrace(props.group.id)
     applyView(view)
-    appStore.showSuccess(t('admin.groups.runtimeStatus.solJuice.probeSucceeded'))
-    emit('updated')
+    appStore.showSuccess(t('admin.groups.runtimeStatus.modelTrace.probeStarted'))
+    modelTracePollStartedAt = Date.now()
+    scheduleModelTracePoll(props.group.id)
   } catch (error: any) {
-    appStore.showError(error?.message || t('admin.groups.runtimeStatus.solJuice.probeFailed'))
-  } finally {
-    solJuiceProbing.value = false
+    modelTraceProbing.value = false
+    appStore.showError(error?.message || t('admin.groups.runtimeStatus.modelTrace.probeFailed'))
   }
 }
 
@@ -1187,12 +1482,14 @@ watch(
   (show) => {
     if (!show) {
       stopAstraPolling()
+      stopModelTracePolling()
     }
   }
 )
 
 onBeforeUnmount(() => {
   stopAstraPolling()
+  stopModelTracePolling()
 })
 
 watch(

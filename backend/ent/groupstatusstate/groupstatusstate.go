@@ -61,6 +61,40 @@ const (
 	FieldSolJuiceOutputTokens = "sol_juice_output_tokens"
 	// FieldSolJuiceReasoningTokens holds the string denoting the sol_juice_reasoning_tokens field in the database.
 	FieldSolJuiceReasoningTokens = "sol_juice_reasoning_tokens"
+	// FieldModeltraceVerdict holds the string denoting the modeltrace_verdict field in the database.
+	FieldModeltraceVerdict = "modeltrace_verdict"
+	// FieldModeltraceStableStatus holds the string denoting the modeltrace_stable_status field in the database.
+	FieldModeltraceStableStatus = "modeltrace_stable_status"
+	// FieldModeltraceRunExpectedModel holds the string denoting the modeltrace_run_expected_model field in the database.
+	FieldModeltraceRunExpectedModel = "modeltrace_run_expected_model"
+	// FieldModeltraceTopModel holds the string denoting the modeltrace_top_model field in the database.
+	FieldModeltraceTopModel = "modeltrace_top_model"
+	// FieldModeltraceTopProbability holds the string denoting the modeltrace_top_probability field in the database.
+	FieldModeltraceTopProbability = "modeltrace_top_probability"
+	// FieldModeltraceExpectedProbability holds the string denoting the modeltrace_expected_probability field in the database.
+	FieldModeltraceExpectedProbability = "modeltrace_expected_probability"
+	// FieldModeltraceRanking holds the string denoting the modeltrace_ranking field in the database.
+	FieldModeltraceRanking = "modeltrace_ranking"
+	// FieldModeltraceReasons holds the string denoting the modeltrace_reasons field in the database.
+	FieldModeltraceReasons = "modeltrace_reasons"
+	// FieldModeltraceDetail holds the string denoting the modeltrace_detail field in the database.
+	FieldModeltraceDetail = "modeltrace_detail"
+	// FieldModeltraceCheckedAt holds the string denoting the modeltrace_checked_at field in the database.
+	FieldModeltraceCheckedAt = "modeltrace_checked_at"
+	// FieldModeltraceConsecutiveMismatch holds the string denoting the modeltrace_consecutive_mismatch field in the database.
+	FieldModeltraceConsecutiveMismatch = "modeltrace_consecutive_mismatch"
+	// FieldModeltraceValidOutputs holds the string denoting the modeltrace_valid_outputs field in the database.
+	FieldModeltraceValidOutputs = "modeltrace_valid_outputs"
+	// FieldModeltraceInputTokens holds the string denoting the modeltrace_input_tokens field in the database.
+	FieldModeltraceInputTokens = "modeltrace_input_tokens"
+	// FieldModeltraceOutputTokens holds the string denoting the modeltrace_output_tokens field in the database.
+	FieldModeltraceOutputTokens = "modeltrace_output_tokens"
+	// FieldModeltraceReasoningTokens holds the string denoting the modeltrace_reasoning_tokens field in the database.
+	FieldModeltraceReasoningTokens = "modeltrace_reasoning_tokens"
+	// FieldModeltraceLastCostUsd holds the string denoting the modeltrace_last_cost_usd field in the database.
+	FieldModeltraceLastCostUsd = "modeltrace_last_cost_usd"
+	// FieldModeltraceLastRunID holds the string denoting the modeltrace_last_run_id field in the database.
+	FieldModeltraceLastRunID = "modeltrace_last_run_id"
 	// FieldAstraCheckVerdict holds the string denoting the astra_check_verdict field in the database.
 	FieldAstraCheckVerdict = "astra_check_verdict"
 	// FieldAstraCheckStableStatus holds the string denoting the astra_check_stable_status field in the database.
@@ -120,6 +154,23 @@ var Columns = []string{
 	FieldSolJuiceInputTokens,
 	FieldSolJuiceOutputTokens,
 	FieldSolJuiceReasoningTokens,
+	FieldModeltraceVerdict,
+	FieldModeltraceStableStatus,
+	FieldModeltraceRunExpectedModel,
+	FieldModeltraceTopModel,
+	FieldModeltraceTopProbability,
+	FieldModeltraceExpectedProbability,
+	FieldModeltraceRanking,
+	FieldModeltraceReasons,
+	FieldModeltraceDetail,
+	FieldModeltraceCheckedAt,
+	FieldModeltraceConsecutiveMismatch,
+	FieldModeltraceValidOutputs,
+	FieldModeltraceInputTokens,
+	FieldModeltraceOutputTokens,
+	FieldModeltraceReasoningTokens,
+	FieldModeltraceLastCostUsd,
+	FieldModeltraceLastRunID,
 	FieldAstraCheckVerdict,
 	FieldAstraCheckStableStatus,
 	FieldAstraCheckWinner,
@@ -177,6 +228,32 @@ var (
 	DefaultSolJuiceOutputTokens int64
 	// DefaultSolJuiceReasoningTokens holds the default value on creation for the "sol_juice_reasoning_tokens" field.
 	DefaultSolJuiceReasoningTokens int64
+	// DefaultModeltraceVerdict holds the default value on creation for the "modeltrace_verdict" field.
+	DefaultModeltraceVerdict string
+	// DefaultModeltraceStableStatus holds the default value on creation for the "modeltrace_stable_status" field.
+	DefaultModeltraceStableStatus string
+	// DefaultModeltraceRunExpectedModel holds the default value on creation for the "modeltrace_run_expected_model" field.
+	DefaultModeltraceRunExpectedModel string
+	// DefaultModeltraceTopModel holds the default value on creation for the "modeltrace_top_model" field.
+	DefaultModeltraceTopModel string
+	// DefaultModeltraceTopProbability holds the default value on creation for the "modeltrace_top_probability" field.
+	DefaultModeltraceTopProbability float64
+	// DefaultModeltraceRanking holds the default value on creation for the "modeltrace_ranking" field.
+	DefaultModeltraceRanking []map[string]interface{}
+	// DefaultModeltraceReasons holds the default value on creation for the "modeltrace_reasons" field.
+	DefaultModeltraceReasons []string
+	// DefaultModeltraceConsecutiveMismatch holds the default value on creation for the "modeltrace_consecutive_mismatch" field.
+	DefaultModeltraceConsecutiveMismatch int
+	// DefaultModeltraceValidOutputs holds the default value on creation for the "modeltrace_valid_outputs" field.
+	DefaultModeltraceValidOutputs int
+	// DefaultModeltraceInputTokens holds the default value on creation for the "modeltrace_input_tokens" field.
+	DefaultModeltraceInputTokens int64
+	// DefaultModeltraceOutputTokens holds the default value on creation for the "modeltrace_output_tokens" field.
+	DefaultModeltraceOutputTokens int64
+	// DefaultModeltraceReasoningTokens holds the default value on creation for the "modeltrace_reasoning_tokens" field.
+	DefaultModeltraceReasoningTokens int64
+	// DefaultModeltraceLastCostUsd holds the default value on creation for the "modeltrace_last_cost_usd" field.
+	DefaultModeltraceLastCostUsd float64
 	// DefaultAstraCheckVerdict holds the default value on creation for the "astra_check_verdict" field.
 	DefaultAstraCheckVerdict string
 	// DefaultAstraCheckStableStatus holds the default value on creation for the "astra_check_stable_status" field.
@@ -327,6 +404,81 @@ func BySolJuiceOutputTokens(opts ...sql.OrderTermOption) OrderOption {
 // BySolJuiceReasoningTokens orders the results by the sol_juice_reasoning_tokens field.
 func BySolJuiceReasoningTokens(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSolJuiceReasoningTokens, opts...).ToFunc()
+}
+
+// ByModeltraceVerdict orders the results by the modeltrace_verdict field.
+func ByModeltraceVerdict(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceVerdict, opts...).ToFunc()
+}
+
+// ByModeltraceStableStatus orders the results by the modeltrace_stable_status field.
+func ByModeltraceStableStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceStableStatus, opts...).ToFunc()
+}
+
+// ByModeltraceRunExpectedModel orders the results by the modeltrace_run_expected_model field.
+func ByModeltraceRunExpectedModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceRunExpectedModel, opts...).ToFunc()
+}
+
+// ByModeltraceTopModel orders the results by the modeltrace_top_model field.
+func ByModeltraceTopModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceTopModel, opts...).ToFunc()
+}
+
+// ByModeltraceTopProbability orders the results by the modeltrace_top_probability field.
+func ByModeltraceTopProbability(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceTopProbability, opts...).ToFunc()
+}
+
+// ByModeltraceExpectedProbability orders the results by the modeltrace_expected_probability field.
+func ByModeltraceExpectedProbability(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceExpectedProbability, opts...).ToFunc()
+}
+
+// ByModeltraceDetail orders the results by the modeltrace_detail field.
+func ByModeltraceDetail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceDetail, opts...).ToFunc()
+}
+
+// ByModeltraceCheckedAt orders the results by the modeltrace_checked_at field.
+func ByModeltraceCheckedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceCheckedAt, opts...).ToFunc()
+}
+
+// ByModeltraceConsecutiveMismatch orders the results by the modeltrace_consecutive_mismatch field.
+func ByModeltraceConsecutiveMismatch(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceConsecutiveMismatch, opts...).ToFunc()
+}
+
+// ByModeltraceValidOutputs orders the results by the modeltrace_valid_outputs field.
+func ByModeltraceValidOutputs(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceValidOutputs, opts...).ToFunc()
+}
+
+// ByModeltraceInputTokens orders the results by the modeltrace_input_tokens field.
+func ByModeltraceInputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceInputTokens, opts...).ToFunc()
+}
+
+// ByModeltraceOutputTokens orders the results by the modeltrace_output_tokens field.
+func ByModeltraceOutputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceOutputTokens, opts...).ToFunc()
+}
+
+// ByModeltraceReasoningTokens orders the results by the modeltrace_reasoning_tokens field.
+func ByModeltraceReasoningTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceReasoningTokens, opts...).ToFunc()
+}
+
+// ByModeltraceLastCostUsd orders the results by the modeltrace_last_cost_usd field.
+func ByModeltraceLastCostUsd(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceLastCostUsd, opts...).ToFunc()
+}
+
+// ByModeltraceLastRunID orders the results by the modeltrace_last_run_id field.
+func ByModeltraceLastRunID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceLastRunID, opts...).ToFunc()
 }
 
 // ByAstraCheckVerdict orders the results by the astra_check_verdict field.

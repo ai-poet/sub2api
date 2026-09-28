@@ -49,11 +49,13 @@ type GroupStatusConfig struct {
 	TimeoutSeconds   int      `json:"timeout_seconds"`
 	SlowLatencyMS    int64    `json:"slow_latency_ms"`
 	NotifyEnabled    bool     `json:"notify_enabled"`
-	// 纯 Sol 验证（Juice 指纹探测），仅 OpenAI 分组可开启
-	SolJuiceEnabled         bool   `json:"sol_juice_enabled"`
-	SolJuiceIntervalSeconds int    `json:"sol_juice_interval_seconds"`
-	SolJuiceModel           string `json:"sol_juice_model"`
-	// Astra 指纹验证（meow 基准），与 Sol Juice 并列、字段独立；仅 OpenAI 分组
+	// ModelTrace 指纹验证（数字分布指纹），OpenAI / Anthropic 分组可开启；
+	// RequestModel 为空表示用预期模型 id 发请求
+	ModelTraceEnabled         bool   `json:"modeltrace_enabled"`
+	ModelTraceExpectedModel   string `json:"modeltrace_expected_model"`
+	ModelTraceRequestModel    string `json:"modeltrace_request_model"`
+	ModelTraceIntervalSeconds int    `json:"modeltrace_interval_seconds"`
+	// Astra 指纹验证（meow 基准），与 ModelTrace 并列、字段独立；仅 OpenAI 分组
 	AstraCheckEnabled         bool      `json:"astra_check_enabled"`
 	AstraCheckRequestModel    string    `json:"astra_check_request_model"`
 	AstraCheckTier            string    `json:"astra_check_tier"`
@@ -92,16 +94,24 @@ type GroupStatusState struct {
 	ObservedAt         *time.Time `json:"observed_at"`
 	ConsecutiveDown    int        `json:"consecutive_down"`
 	ConsecutiveNonDown int        `json:"consecutive_non_down"`
-	// 纯 Sol 验证的最近结果与稳定结论
-	SolJuiceStatus              string     `json:"sol_juice_status"`
-	SolJuiceStableStatus        string     `json:"sol_juice_stable_status"`
-	SolJuiceValue               string     `json:"sol_juice_value"`
-	SolJuiceDetail              string     `json:"sol_juice_detail"`
-	SolJuiceCheckedAt           *time.Time `json:"sol_juice_checked_at"`
-	SolJuiceConsecutiveMismatch int        `json:"sol_juice_consecutive_mismatch"`
-	SolJuiceInputTokens         int64      `json:"sol_juice_input_tokens"`
-	SolJuiceOutputTokens        int64      `json:"sol_juice_output_tokens"`
-	SolJuiceReasoningTokens     int64      `json:"sol_juice_reasoning_tokens"`
+	// ModelTrace 指纹验证的最近结果与稳定结论；RunExpectedModel 是稳定结论对应的预期模型
+	ModelTraceVerdict             string                `json:"modeltrace_verdict"`
+	ModelTraceStableStatus        string                `json:"modeltrace_stable_status"`
+	ModelTraceRunExpectedModel    string                `json:"modeltrace_run_expected_model"`
+	ModelTraceTopModel            string                `json:"modeltrace_top_model"`
+	ModelTraceTopProbability      float64               `json:"modeltrace_top_probability"`
+	ModelTraceExpectedProbability *float64              `json:"modeltrace_expected_probability"`
+	ModelTraceRanking             []ModelTraceRankEntry `json:"modeltrace_ranking"`
+	ModelTraceReasons             []string              `json:"modeltrace_reasons"`
+	ModelTraceDetail              string                `json:"modeltrace_detail"`
+	ModelTraceCheckedAt           *time.Time            `json:"modeltrace_checked_at"`
+	ModelTraceConsecutiveMismatch int                   `json:"modeltrace_consecutive_mismatch"`
+	ModelTraceValidOutputs        int                   `json:"modeltrace_valid_outputs"`
+	ModelTraceInputTokens         int64                 `json:"modeltrace_input_tokens"`
+	ModelTraceOutputTokens        int64                 `json:"modeltrace_output_tokens"`
+	ModelTraceReasoningTokens     int64                 `json:"modeltrace_reasoning_tokens"`
+	ModelTraceLastCostUSD         float64               `json:"modeltrace_last_cost_usd"`
+	ModelTraceLastRunID           *int64                `json:"modeltrace_last_run_id"`
 	// Astra 指纹验证的最近结果与稳定结论
 	AstraCheckVerdict             string                 `json:"astra_check_verdict"`
 	AstraCheckStableStatus        string                 `json:"astra_check_stable_status"`
@@ -152,20 +162,30 @@ type GroupStatusSummary struct {
 	ObservedAt         *time.Time `json:"observed_at"`
 	ConsecutiveDown    int        `json:"consecutive_down"`
 	ConsecutiveNonDown int        `json:"consecutive_non_down"`
-	// 纯 Sol 验证：配置 + 最近结果；LastCostUSD 为派生字段，不落库
-	SolJuiceEnabled             bool       `json:"sol_juice_enabled"`
-	SolJuiceModel               string     `json:"sol_juice_model"`
-	SolJuiceIntervalSeconds     int        `json:"sol_juice_interval_seconds"`
-	SolJuiceStatus              string     `json:"sol_juice_status"`
-	SolJuiceStableStatus        string     `json:"sol_juice_stable_status"`
-	SolJuiceValue               string     `json:"sol_juice_value"`
-	SolJuiceDetail              string     `json:"sol_juice_detail"`
-	SolJuiceCheckedAt           *time.Time `json:"sol_juice_checked_at"`
-	SolJuiceConsecutiveMismatch int        `json:"sol_juice_consecutive_mismatch"`
-	SolJuiceInputTokens         int64      `json:"sol_juice_input_tokens"`
-	SolJuiceOutputTokens        int64      `json:"sol_juice_output_tokens"`
-	SolJuiceReasoningTokens     int64      `json:"sol_juice_reasoning_tokens"`
-	SolJuiceLastCostUSD         float64    `json:"sol_juice_last_cost_usd"`
+	// ModelTrace 指纹验证：配置 + 最近结果；Running / Bank* 为派生字段，不落库
+	ModelTraceEnabled             bool                  `json:"modeltrace_enabled"`
+	ModelTraceExpectedModel       string                `json:"modeltrace_expected_model"`
+	ModelTraceRequestModel        string                `json:"modeltrace_request_model"`
+	ModelTraceIntervalSeconds     int                   `json:"modeltrace_interval_seconds"`
+	ModelTraceVerdict             string                `json:"modeltrace_verdict"`
+	ModelTraceStableStatus        string                `json:"modeltrace_stable_status"`
+	ModelTraceRunExpectedModel    string                `json:"modeltrace_run_expected_model"`
+	ModelTraceTopModel            string                `json:"modeltrace_top_model"`
+	ModelTraceTopProbability      float64               `json:"modeltrace_top_probability"`
+	ModelTraceExpectedProbability *float64              `json:"modeltrace_expected_probability"`
+	ModelTraceRanking             []ModelTraceRankEntry `json:"modeltrace_ranking"`
+	ModelTraceReasons             []string              `json:"modeltrace_reasons"`
+	ModelTraceDetail              string                `json:"modeltrace_detail"`
+	ModelTraceCheckedAt           *time.Time            `json:"modeltrace_checked_at"`
+	ModelTraceConsecutiveMismatch int                   `json:"modeltrace_consecutive_mismatch"`
+	ModelTraceValidOutputs        int                   `json:"modeltrace_valid_outputs"`
+	ModelTraceInputTokens         int64                 `json:"modeltrace_input_tokens"`
+	ModelTraceOutputTokens        int64                 `json:"modeltrace_output_tokens"`
+	ModelTraceReasoningTokens     int64                 `json:"modeltrace_reasoning_tokens"`
+	ModelTraceLastCostUSD         float64               `json:"modeltrace_last_cost_usd"`
+	ModelTraceRunning             bool                  `json:"modeltrace_running"`
+	ModelTraceBankSHA256          string                `json:"modeltrace_bank_sha256"`
+	ModelTraceBankBuiltAt         string                `json:"modeltrace_bank_built_at"`
 	// Astra 指纹验证：配置 + 最近结果；LastCostUSD / Running / Benchmark* 为派生字段，不落库
 	AstraCheckEnabled             bool                     `json:"astra_check_enabled"`
 	AstraCheckRequestModel        string                   `json:"astra_check_request_model"`
@@ -221,11 +241,11 @@ type GroupStatusRepository interface {
 	ListEvents(ctx context.Context, groupID int64, limit int) ([]GroupStatusEvent, error)
 	CalculateAvailability(ctx context.Context, groupIDs []int64, since time.Time) (map[int64]float64, error)
 	DeleteRecordsOlderThan(ctx context.Context, before time.Time) (int64, error)
-	// 纯 Sol 验证（Juice 指纹探测）
-	ListDueSolJuiceConfigs(ctx context.Context, now time.Time, limit int) ([]*GroupStatusConfig, error)
-	SaveSolJuiceResult(ctx context.Context, result *GroupStatusSolJuiceResult) (*GroupStatusState, *GroupStatusEvent, error)
-	ListRecentSolJuiceRecords(ctx context.Context, groupID int64, limit int) ([]GroupStatusJuiceRecord, error)
-	DeleteSolJuiceRecordsOlderThan(ctx context.Context, before time.Time) (int64, error)
+	// ModelTrace 指纹验证（数字分布指纹）
+	ListDueModelTraceConfigs(ctx context.Context, now time.Time, limit int) ([]*GroupStatusConfig, error)
+	SaveModelTraceRun(ctx context.Context, result *GroupStatusModelTraceResult) (*GroupStatusModelTraceRun, *GroupStatusState, *GroupStatusEvent, error)
+	ListRecentModelTraceRuns(ctx context.Context, groupID int64, limit int) ([]GroupStatusModelTraceRun, error)
+	DeleteModelTraceRunsOlderThan(ctx context.Context, before time.Time) (int64, error)
 	// Astra 指纹验证（meow 基准）
 	ListDueAstraCheckConfigs(ctx context.Context, now time.Time, limit int) ([]*GroupStatusConfig, error)
 	SaveAstraCheckRun(ctx context.Context, result *GroupStatusAstraCheckResult) (*GroupStatusAstraCheckRun, *GroupStatusState, *GroupStatusEvent, error)
@@ -256,55 +276,6 @@ type GroupStatusProbeExecution struct {
 	Event   *GroupStatusEvent       `json:"event,omitempty"`
 }
 
-// GroupStatusSolJuiceResult 是一次 Juice 探测的样本。
-type GroupStatusSolJuiceResult struct {
-	GroupID         int64     `json:"group_id"`
-	ConfigID        int64     `json:"config_id"`
-	Model           string    `json:"model"`
-	Effort          string    `json:"effort"`
-	Classification  string    `json:"classification"`
-	NormalizedValue string    `json:"normalized_value"`
-	AnswerExcerpt   string    `json:"answer_excerpt"`
-	HTTPCode        *int      `json:"http_code"`
-	LatencyMS       *int64    `json:"latency_ms"`
-	InputTokens     int64     `json:"input_tokens"`
-	OutputTokens    int64     `json:"output_tokens"`
-	ReasoningTokens int64     `json:"reasoning_tokens"`
-	ErrorDetail     string    `json:"error_detail"`
-	ObservedAt      time.Time `json:"observed_at"`
-}
-
-// GroupStatusJuiceRecord 是落库后的 Juice 样本。
-type GroupStatusJuiceRecord struct {
-	ID              int64     `json:"id"`
-	GroupID         int64     `json:"group_id"`
-	ConfigID        int64     `json:"config_id"`
-	Model           string    `json:"model"`
-	Effort          string    `json:"effort"`
-	Classification  string    `json:"classification"`
-	NormalizedValue string    `json:"normalized_value"`
-	AnswerExcerpt   string    `json:"answer_excerpt"`
-	HTTPCode        *int      `json:"http_code"`
-	LatencyMS       *int64    `json:"latency_ms"`
-	InputTokens     int64     `json:"input_tokens"`
-	OutputTokens    int64     `json:"output_tokens"`
-	ReasoningTokens int64     `json:"reasoning_tokens"`
-	ErrorDetail     string    `json:"error_detail"`
-	ObservedAt      time.Time `json:"observed_at"`
-	CreatedAt       time.Time `json:"created_at"`
-}
-
-type GroupStatusSolJuiceExecution struct {
-	Group   *Group                     `json:"group,omitempty"`
-	Config  *GroupStatusConfig         `json:"config,omitempty"`
-	Account *Account                   `json:"account,omitempty"`
-	Result  *GroupStatusSolJuiceResult `json:"result,omitempty"`
-	State   *GroupStatusState          `json:"state,omitempty"`
-	Event   *GroupStatusEvent          `json:"event,omitempty"`
-	// Confirmed 表示本次是首次 mismatch 后的立即复测
-	Confirmed bool `json:"confirmed"`
-}
-
 type GroupStatusConfigUpsertInput struct {
 	Enabled          bool
 	ProbeModel       string
@@ -316,10 +287,11 @@ type GroupStatusConfigUpsertInput struct {
 	SlowLatencyMS    int64
 	// NotifyEnabled 为 nil 表示请求未携带，保留已保存的值
 	NotifyEnabled *bool
-	// SolJuiceEnabled 为 nil 表示请求未携带，保留已保存的三项 Juice 配置
-	SolJuiceEnabled         *bool
-	SolJuiceIntervalSeconds int
-	SolJuiceModel           string
+	// ModelTraceEnabled 为 nil 表示请求未携带，保留已保存的四项 ModelTrace 配置
+	ModelTraceEnabled         *bool
+	ModelTraceExpectedModel   string
+	ModelTraceRequestModel    string
+	ModelTraceIntervalSeconds int
 	// AstraCheckEnabled 为 nil 表示请求未携带，保留已保存的四项 Astra 配置
 	AstraCheckEnabled         *bool
 	AstraCheckRequestModel    string
@@ -333,8 +305,10 @@ type AvailableGroupReader interface {
 
 func DefaultGroupStatusConfig(group *Group) *GroupStatusConfig {
 	model := defaultProbeModelByPlatform("")
+	modelTraceExpected := ""
 	if group != nil {
 		model = defaultProbeModelByPlatform(group.Platform)
+		modelTraceExpected = modelTraceDefaultExpected(group.Platform)
 	}
 	return &GroupStatusConfig{
 		GroupID: func() int64 {
@@ -352,9 +326,10 @@ func DefaultGroupStatusConfig(group *Group) *GroupStatusConfig {
 		TimeoutSeconds:            groupStatusDefaultTimeoutSeconds,
 		SlowLatencyMS:             groupStatusDefaultSlowLatencyMS,
 		NotifyEnabled:             true,
-		SolJuiceEnabled:           false,
-		SolJuiceIntervalSeconds:   groupStatusSolJuiceDefaultIntervalSeconds,
-		SolJuiceModel:             groupStatusSolJuiceDefaultModel,
+		ModelTraceEnabled:         false,
+		ModelTraceExpectedModel:   modelTraceExpected,
+		ModelTraceRequestModel:    "",
+		ModelTraceIntervalSeconds: groupStatusModelTraceDefaultIntervalSeconds,
 		AstraCheckEnabled:         false,
 		AstraCheckRequestModel:    groupStatusAstraCheckDefaultRequestModel,
 		AstraCheckTier:            groupStatusAstraCheckDefaultTier,
@@ -411,17 +386,21 @@ func NormalizeGroupStatusConfig(group *Group, input *GroupStatusConfigUpsertInpu
 	if input.NotifyEnabled != nil {
 		cfg.NotifyEnabled = *input.NotifyEnabled
 	}
-	if input.SolJuiceEnabled != nil {
-		cfg.SolJuiceEnabled = *input.SolJuiceEnabled
+	if input.ModelTraceEnabled != nil {
+		cfg.ModelTraceEnabled = *input.ModelTraceEnabled
 	}
-	if input.SolJuiceIntervalSeconds > 0 {
-		cfg.SolJuiceIntervalSeconds = input.SolJuiceIntervalSeconds
+	if model := strings.TrimSpace(input.ModelTraceExpectedModel); model != "" {
+		cfg.ModelTraceExpectedModel = model
 	}
-	if model := strings.TrimSpace(input.SolJuiceModel); model != "" {
-		cfg.SolJuiceModel = model
+	cfg.ModelTraceRequestModel = strings.TrimSpace(input.ModelTraceRequestModel)
+	if input.ModelTraceIntervalSeconds > 0 {
+		cfg.ModelTraceIntervalSeconds = input.ModelTraceIntervalSeconds
 	}
-	if cfg.SolJuiceEnabled && (group == nil || group.Platform != PlatformOpenAI) {
-		return nil, fmt.Errorf("%w: sol_juice is only available for openai groups", ErrGroupStatusInvalidConfig)
+	if cfg.ModelTraceEnabled && (group == nil || !modelTraceSupportsPlatform(group.Platform)) {
+		return nil, fmt.Errorf("%w: modeltrace is only available for openai and anthropic groups", ErrGroupStatusInvalidConfig)
+	}
+	if group != nil && modelTraceSupportsPlatform(group.Platform) && !modelTraceTargetAllowed(group.Platform, cfg.ModelTraceExpectedModel) {
+		return nil, ErrGroupStatusModelTraceTargetInvalid
 	}
 	if input.AstraCheckEnabled != nil {
 		cfg.AstraCheckEnabled = *input.AstraCheckEnabled
@@ -474,15 +453,16 @@ func ValidateGroupStatusConfig(cfg *GroupStatusConfig) error {
 	if cfg.SlowLatencyMS <= 0 {
 		cfg.SlowLatencyMS = groupStatusDefaultSlowLatencyMS
 	}
-	cfg.SolJuiceModel = strings.TrimSpace(cfg.SolJuiceModel)
-	if cfg.SolJuiceModel == "" {
-		cfg.SolJuiceModel = groupStatusSolJuiceDefaultModel
+	cfg.ModelTraceExpectedModel = strings.TrimSpace(cfg.ModelTraceExpectedModel)
+	cfg.ModelTraceRequestModel = strings.TrimSpace(cfg.ModelTraceRequestModel)
+	if cfg.ModelTraceExpectedModel != "" && !modelTraceKnownTarget(cfg.ModelTraceExpectedModel) {
+		return ErrGroupStatusModelTraceTargetInvalid
 	}
-	if cfg.SolJuiceIntervalSeconds <= 0 {
-		cfg.SolJuiceIntervalSeconds = groupStatusSolJuiceDefaultIntervalSeconds
+	if cfg.ModelTraceIntervalSeconds <= 0 {
+		cfg.ModelTraceIntervalSeconds = groupStatusModelTraceDefaultIntervalSeconds
 	}
-	if cfg.SolJuiceIntervalSeconds < groupStatusSolJuiceMinIntervalSeconds {
-		return fmt.Errorf("%w: sol_juice_interval_seconds must be >= %d", ErrGroupStatusInvalidConfig, groupStatusSolJuiceMinIntervalSeconds)
+	if cfg.ModelTraceIntervalSeconds < groupStatusModelTraceMinIntervalSeconds {
+		return fmt.Errorf("%w: modeltrace_interval_seconds must be >= %d", ErrGroupStatusInvalidConfig, groupStatusModelTraceMinIntervalSeconds)
 	}
 	cfg.AstraCheckRequestModel = strings.TrimSpace(cfg.AstraCheckRequestModel)
 	if cfg.AstraCheckRequestModel == "" {

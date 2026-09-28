@@ -117,27 +117,45 @@ export function shortenRuntimeExcerpt(text?: string | null, maxLength: number = 
   return `${trimmed.slice(0, maxLength).trimEnd()}...`
 }
 
-// ==================== 纯 Sol 验证（Juice 指纹探测） ====================
+// ==================== ModelTrace 指纹验证（数字分布指纹） ====================
 
-export type NormalizedSolJuiceStatus = 'pass' | 'mismatch' | 'inconclusive' | 'unknown'
+export type NormalizedModelTraceStatus = 'pass' | 'mismatch' | 'suspect' | 'inconclusive' | 'pending' | 'unknown'
 
-export function normalizeSolJuiceStatus(status?: string | null): NormalizedSolJuiceStatus {
-  switch (status) {
-    case 'pass':
+// 稳定 mismatch（连续 2 次确认）优先显示红色；否则看最近一次结果：match → 一致，
+// 单次 mismatch → 疑似（等复测），inconclusive → 未能判定。刚换了预期模型、还没按新预期跑过时显示待检测。
+export function normalizeModelTraceStatus(
+  stable?: string | null,
+  verdict?: string | null,
+  runExpectedModel?: string | null,
+  expectedModel?: string | null
+): NormalizedModelTraceStatus {
+  const ran = (runExpectedModel || '').trim()
+  const expected = (expectedModel || '').trim()
+  if (ran && expected && ran !== expected) {
+    return 'pending'
+  }
+  if (stable === 'mismatch') {
+    return 'mismatch'
+  }
+  switch (verdict) {
+    case 'match':
+      return 'pass'
     case 'mismatch':
+      return 'suspect'
     case 'inconclusive':
-      return status
+      return 'inconclusive'
     default:
-      return 'unknown'
+      return stable === 'pass' ? 'pass' : 'unknown'
   }
 }
 
-export function getSolJuiceBadgeClass(status?: string | null): string {
-  switch (normalizeSolJuiceStatus(status)) {
+export function getModelTraceBadgeClass(status?: string | null): string {
+  switch (status) {
     case 'pass':
       return 'badge-success'
     case 'mismatch':
       return 'badge-danger'
+    case 'suspect':
     case 'inconclusive':
       return 'badge-warning'
     default:
@@ -145,17 +163,52 @@ export function getSolJuiceBadgeClass(status?: string | null): string {
   }
 }
 
-export function isSolJuiceEvent(eventType?: string | null): boolean {
+export function isModelTraceEvent(eventType?: string | null): boolean {
+  return eventType === 'modeltrace_mismatch' || eventType === 'modeltrace_recovered'
+}
+
+// 已下线的纯 Sol 验证（Juice）留下的历史事件
+export function isLegacySolJuiceEvent(eventType?: string | null): boolean {
   return eventType === 'sol_juice_mismatch' || eventType === 'sol_juice_recovered'
+}
+
+const MODEL_TRACE_MODEL_LABELS: Record<string, string> = {
+  'gpt-5.4': 'GPT-5.4',
+  'gpt-5.5': 'GPT-5.5',
+  'gpt-5.6-sol': 'GPT-5.6 Sol',
+  'gpt-5.6-terra': 'GPT-5.6 Terra',
+  'gpt-5.6-luna': 'GPT-5.6 Luna',
+  'gpt-6-astra': 'GPT-6 Astra',
+  'gpt-6-sol': 'GPT-6 Sol',
+  'gpt-6-luna': 'GPT-6 Luna',
+  'claude-haiku-4-5-20251001': 'Claude Haiku 4.5',
+  'claude-sonnet-4-6': 'Claude Sonnet 4.6',
+  'claude-sonnet-5': 'Claude Sonnet 5',
+  'claude-opus-4-6': 'Claude Opus 4.6',
+  'claude-opus-4-7': 'Claude Opus 4.7',
+  'claude-opus-4-8': 'Claude Opus 4.8',
+  'claude-opus-5': 'Claude Opus 5',
+  'claude-opus-5-5': 'Claude Opus 5.5'
+}
+
+// 指纹库模型 id → 可读名；未知 id 原样返回
+export function modelTraceModelLabel(model?: string | null): string {
+  const id = (model || '').trim()
+  if (!id) {
+    return '?'
+  }
+  return MODEL_TRACE_MODEL_LABELS[id] || id
 }
 
 export function getGroupRuntimeEventBadgeClass(eventType?: string | null): string {
   switch (eventType) {
     case 'down':
+    case 'modeltrace_mismatch':
     case 'sol_juice_mismatch':
     case 'astra_mismatch':
       return 'badge-danger'
     case 'up':
+    case 'modeltrace_recovered':
     case 'sol_juice_recovered':
     case 'astra_recovered':
       return 'badge-success'
@@ -172,7 +225,7 @@ export function formatUsd(value?: number | null, digits: number = 4): string {
 }
 
 // 按当前间隔把最近一次成本折算成每月（30 天）估算；没有样本时返回 null
-export function estimateSolJuiceMonthlyCostUsd(
+export function estimateMonthlyProbeCostUsd(
   lastCostUsd?: number | null,
   intervalSeconds?: number | null
 ): number | null {

@@ -43,6 +43,14 @@ const (
 	FieldSolJuiceIntervalSeconds = "sol_juice_interval_seconds"
 	// FieldSolJuiceModel holds the string denoting the sol_juice_model field in the database.
 	FieldSolJuiceModel = "sol_juice_model"
+	// FieldModeltraceEnabled holds the string denoting the modeltrace_enabled field in the database.
+	FieldModeltraceEnabled = "modeltrace_enabled"
+	// FieldModeltraceExpectedModel holds the string denoting the modeltrace_expected_model field in the database.
+	FieldModeltraceExpectedModel = "modeltrace_expected_model"
+	// FieldModeltraceRequestModel holds the string denoting the modeltrace_request_model field in the database.
+	FieldModeltraceRequestModel = "modeltrace_request_model"
+	// FieldModeltraceIntervalSeconds holds the string denoting the modeltrace_interval_seconds field in the database.
+	FieldModeltraceIntervalSeconds = "modeltrace_interval_seconds"
 	// FieldAstraCheckEnabled holds the string denoting the astra_check_enabled field in the database.
 	FieldAstraCheckEnabled = "astra_check_enabled"
 	// FieldAstraCheckRequestModel holds the string denoting the astra_check_request_model field in the database.
@@ -73,6 +81,10 @@ var Columns = []string{
 	FieldSolJuiceEnabled,
 	FieldSolJuiceIntervalSeconds,
 	FieldSolJuiceModel,
+	FieldModeltraceEnabled,
+	FieldModeltraceExpectedModel,
+	FieldModeltraceRequestModel,
+	FieldModeltraceIntervalSeconds,
 	FieldAstraCheckEnabled,
 	FieldAstraCheckRequestModel,
 	FieldAstraCheckTier,
@@ -120,6 +132,14 @@ var (
 	DefaultSolJuiceIntervalSeconds int
 	// DefaultSolJuiceModel holds the default value on creation for the "sol_juice_model" field.
 	DefaultSolJuiceModel string
+	// DefaultModeltraceEnabled holds the default value on creation for the "modeltrace_enabled" field.
+	DefaultModeltraceEnabled bool
+	// DefaultModeltraceExpectedModel holds the default value on creation for the "modeltrace_expected_model" field.
+	DefaultModeltraceExpectedModel string
+	// DefaultModeltraceRequestModel holds the default value on creation for the "modeltrace_request_model" field.
+	DefaultModeltraceRequestModel string
+	// DefaultModeltraceIntervalSeconds holds the default value on creation for the "modeltrace_interval_seconds" field.
+	DefaultModeltraceIntervalSeconds int
 	// DefaultAstraCheckEnabled holds the default value on creation for the "astra_check_enabled" field.
 	DefaultAstraCheckEnabled bool
 	// DefaultAstraCheckRequestModel holds the default value on creation for the "astra_check_request_model" field.
@@ -206,6 +226,26 @@ func BySolJuiceIntervalSeconds(opts ...sql.OrderTermOption) OrderOption {
 // BySolJuiceModel orders the results by the sol_juice_model field.
 func BySolJuiceModel(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSolJuiceModel, opts...).ToFunc()
+}
+
+// ByModeltraceEnabled orders the results by the modeltrace_enabled field.
+func ByModeltraceEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceEnabled, opts...).ToFunc()
+}
+
+// ByModeltraceExpectedModel orders the results by the modeltrace_expected_model field.
+func ByModeltraceExpectedModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceExpectedModel, opts...).ToFunc()
+}
+
+// ByModeltraceRequestModel orders the results by the modeltrace_request_model field.
+func ByModeltraceRequestModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceRequestModel, opts...).ToFunc()
+}
+
+// ByModeltraceIntervalSeconds orders the results by the modeltrace_interval_seconds field.
+func ByModeltraceIntervalSeconds(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModeltraceIntervalSeconds, opts...).ToFunc()
 }
 
 // ByAstraCheckEnabled orders the results by the astra_check_enabled field.

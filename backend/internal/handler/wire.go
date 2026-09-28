@@ -219,6 +219,7 @@ func ProvideHandlers(
 	ticketHandler *TicketHandler,
 	ticketAttachmentHandler *TicketAttachmentHandler,
 	personalTokenHandler *PersonalTokenHandler,
+	desktopLoginHandler *DesktopLoginHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 	_ *service.OpenAIQuotaAutoResetService,
@@ -249,6 +250,7 @@ func ProvideHandlers(
 		Ticket:           ticketHandler,
 		TicketAttachment: ticketAttachmentHandler,
 		PersonalToken:    personalTokenHandler,
+		DesktopLogin:     desktopLoginHandler,
 	}
 }
 
@@ -279,6 +281,7 @@ var ProviderSet = wire.NewSet(
 	NewTicketHandler,
 	NewTicketAttachmentHandler,
 	NewPersonalTokenHandler,
+	NewDesktopLoginHandler,
 
 	// Admin handlers
 	admin.NewDashboardHandler,

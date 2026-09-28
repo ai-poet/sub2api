@@ -35,7 +35,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/PaseoBridgeView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Paseo Login'
+      title: 'Desktop Sign-in',
+      titleKey: 'auth.desktopBridge.pageTitle'
     }
   },
   {

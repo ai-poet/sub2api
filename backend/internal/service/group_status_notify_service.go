@@ -317,10 +317,10 @@ func buildGroupStatusNotifyMessage(siteName string, group *Group, event *GroupSt
 		title = fmt.Sprintf("[%s] 分组「%s」状态变红", siteName, groupName)
 	case GroupStatusEventUp:
 		title = fmt.Sprintf("[%s] 分组「%s」已恢复", siteName, groupName)
-	case GroupStatusEventSolJuiceMismatch:
-		title = fmt.Sprintf("[%s] 分组「%s」疑似非 Sol（Juice 指纹 %s）", siteName, groupName, solJuiceValueFromEvent(event))
-	case GroupStatusEventSolJuiceRecovered:
-		title = fmt.Sprintf("[%s] 分组「%s」Sol 验证已恢复", siteName, groupName)
+	case GroupStatusEventModelTraceMismatch:
+		title = fmt.Sprintf("[%s] 分组「%s」ModelTrace 指纹不符（强指向 %s）", siteName, groupName, modelTraceTopFromEvent(event))
+	case GroupStatusEventModelTraceRecovered:
+		title = fmt.Sprintf("[%s] 分组「%s」ModelTrace 指纹验证已恢复", siteName, groupName)
 	case GroupStatusEventAstraMismatch:
 		title = fmt.Sprintf("[%s] 分组「%s」Astra 指纹疑似非 Astra（%s）", siteName, groupName, astraEventPointerText(event))
 	case GroupStatusEventAstraRecovered:
@@ -370,10 +370,6 @@ func groupStatusStatusLabel(status string) string {
 		return "降级"
 	case GroupRuntimeStatusDown:
 		return "不可用"
-	case SolJuiceStatusPass:
-		return "Sol 验证通过"
-	case SolJuiceStatusMismatch:
-		return "非 Sol"
 	case "":
 		return "未知"
 	default:
@@ -381,24 +377,26 @@ func groupStatusStatusLabel(status string) string {
 	}
 }
 
-// groupStatusEventStatusLabel 按事件类型选择状态标签：Astra 事件用指纹标签，其余沿用原逻辑。
+// groupStatusEventStatusLabel 按事件类型选择状态标签：指纹事件用各自的标签，其余沿用原逻辑。
 func groupStatusEventStatusLabel(event *GroupStatusEvent, status string) string {
 	if event != nil && isAstraCheckEvent(event.EventType) {
 		return astraCheckStatusLabel(status)
 	}
+	if event != nil && isModelTraceEvent(event.EventType) {
+		return modelTraceStatusLabel(status)
+	}
 	return groupStatusStatusLabel(status)
 }
 
-// solJuiceValueFromEvent 从事件的 sub_status（juice_32）里取出指纹值，缺失时返回 ?。
-func solJuiceValueFromEvent(event *GroupStatusEvent) string {
-	if event == nil {
-		return "?"
+// isGroupStatusNotifyEvent 报告事件类型是否需要推送提醒。
+func isGroupStatusNotifyEvent(eventType string) bool {
+	switch eventType {
+	case GroupStatusEventDown, GroupStatusEventUp, GroupStatusEventModelTraceMismatch, GroupStatusEventModelTraceRecovered,
+		GroupStatusEventAstraMismatch, GroupStatusEventAstraRecovered:
+		return true
+	default:
+		return false
 	}
-	value := strings.TrimPrefix(strings.TrimSpace(event.SubStatus), "juice_")
-	if value == "" || value == "unknown" {
-		return "?"
-	}
-	return value
 }
 
 // truncateGroupStatusErrorDetail 压平换行并截断，避免推送正文被超长错误撑爆。

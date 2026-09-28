@@ -250,6 +250,69 @@ func (_u *GroupStatusConfigUpdate) SetNillableSolJuiceModel(v *string) *GroupSta
 	return _u
 }
 
+// SetModeltraceEnabled sets the "modeltrace_enabled" field.
+func (_u *GroupStatusConfigUpdate) SetModeltraceEnabled(v bool) *GroupStatusConfigUpdate {
+	_u.mutation.SetModeltraceEnabled(v)
+	return _u
+}
+
+// SetNillableModeltraceEnabled sets the "modeltrace_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableModeltraceEnabled(v *bool) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetModeltraceEnabled(*v)
+	}
+	return _u
+}
+
+// SetModeltraceExpectedModel sets the "modeltrace_expected_model" field.
+func (_u *GroupStatusConfigUpdate) SetModeltraceExpectedModel(v string) *GroupStatusConfigUpdate {
+	_u.mutation.SetModeltraceExpectedModel(v)
+	return _u
+}
+
+// SetNillableModeltraceExpectedModel sets the "modeltrace_expected_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableModeltraceExpectedModel(v *string) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetModeltraceExpectedModel(*v)
+	}
+	return _u
+}
+
+// SetModeltraceRequestModel sets the "modeltrace_request_model" field.
+func (_u *GroupStatusConfigUpdate) SetModeltraceRequestModel(v string) *GroupStatusConfigUpdate {
+	_u.mutation.SetModeltraceRequestModel(v)
+	return _u
+}
+
+// SetNillableModeltraceRequestModel sets the "modeltrace_request_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableModeltraceRequestModel(v *string) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetModeltraceRequestModel(*v)
+	}
+	return _u
+}
+
+// SetModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field.
+func (_u *GroupStatusConfigUpdate) SetModeltraceIntervalSeconds(v int) *GroupStatusConfigUpdate {
+	_u.mutation.ResetModeltraceIntervalSeconds()
+	_u.mutation.SetModeltraceIntervalSeconds(v)
+	return _u
+}
+
+// SetNillableModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdate) SetNillableModeltraceIntervalSeconds(v *int) *GroupStatusConfigUpdate {
+	if v != nil {
+		_u.SetModeltraceIntervalSeconds(*v)
+	}
+	return _u
+}
+
+// AddModeltraceIntervalSeconds adds value to the "modeltrace_interval_seconds" field.
+func (_u *GroupStatusConfigUpdate) AddModeltraceIntervalSeconds(v int) *GroupStatusConfigUpdate {
+	_u.mutation.AddModeltraceIntervalSeconds(v)
+	return _u
+}
+
 // SetAstraCheckEnabled sets the "astra_check_enabled" field.
 func (_u *GroupStatusConfigUpdate) SetAstraCheckEnabled(v bool) *GroupStatusConfigUpdate {
 	_u.mutation.SetAstraCheckEnabled(v)
@@ -424,6 +487,21 @@ func (_u *GroupStatusConfigUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.SolJuiceModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ModeltraceEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.ModeltraceExpectedModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceExpectedModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ModeltraceRequestModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceRequestModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ModeltraceIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedModeltraceIntervalSeconds(); ok {
+		_spec.AddField(groupstatusconfig.FieldModeltraceIntervalSeconds, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.AstraCheckEnabled(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckEnabled, field.TypeBool, value)
@@ -681,6 +759,69 @@ func (_u *GroupStatusConfigUpdateOne) SetNillableSolJuiceModel(v *string) *Group
 	return _u
 }
 
+// SetModeltraceEnabled sets the "modeltrace_enabled" field.
+func (_u *GroupStatusConfigUpdateOne) SetModeltraceEnabled(v bool) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetModeltraceEnabled(v)
+	return _u
+}
+
+// SetNillableModeltraceEnabled sets the "modeltrace_enabled" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableModeltraceEnabled(v *bool) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetModeltraceEnabled(*v)
+	}
+	return _u
+}
+
+// SetModeltraceExpectedModel sets the "modeltrace_expected_model" field.
+func (_u *GroupStatusConfigUpdateOne) SetModeltraceExpectedModel(v string) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetModeltraceExpectedModel(v)
+	return _u
+}
+
+// SetNillableModeltraceExpectedModel sets the "modeltrace_expected_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableModeltraceExpectedModel(v *string) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetModeltraceExpectedModel(*v)
+	}
+	return _u
+}
+
+// SetModeltraceRequestModel sets the "modeltrace_request_model" field.
+func (_u *GroupStatusConfigUpdateOne) SetModeltraceRequestModel(v string) *GroupStatusConfigUpdateOne {
+	_u.mutation.SetModeltraceRequestModel(v)
+	return _u
+}
+
+// SetNillableModeltraceRequestModel sets the "modeltrace_request_model" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableModeltraceRequestModel(v *string) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetModeltraceRequestModel(*v)
+	}
+	return _u
+}
+
+// SetModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field.
+func (_u *GroupStatusConfigUpdateOne) SetModeltraceIntervalSeconds(v int) *GroupStatusConfigUpdateOne {
+	_u.mutation.ResetModeltraceIntervalSeconds()
+	_u.mutation.SetModeltraceIntervalSeconds(v)
+	return _u
+}
+
+// SetNillableModeltraceIntervalSeconds sets the "modeltrace_interval_seconds" field if the given value is not nil.
+func (_u *GroupStatusConfigUpdateOne) SetNillableModeltraceIntervalSeconds(v *int) *GroupStatusConfigUpdateOne {
+	if v != nil {
+		_u.SetModeltraceIntervalSeconds(*v)
+	}
+	return _u
+}
+
+// AddModeltraceIntervalSeconds adds value to the "modeltrace_interval_seconds" field.
+func (_u *GroupStatusConfigUpdateOne) AddModeltraceIntervalSeconds(v int) *GroupStatusConfigUpdateOne {
+	_u.mutation.AddModeltraceIntervalSeconds(v)
+	return _u
+}
+
 // SetAstraCheckEnabled sets the "astra_check_enabled" field.
 func (_u *GroupStatusConfigUpdateOne) SetAstraCheckEnabled(v bool) *GroupStatusConfigUpdateOne {
 	_u.mutation.SetAstraCheckEnabled(v)
@@ -885,6 +1026,21 @@ func (_u *GroupStatusConfigUpdateOne) sqlSave(ctx context.Context) (_node *Group
 	}
 	if value, ok := _u.mutation.SolJuiceModel(); ok {
 		_spec.SetField(groupstatusconfig.FieldSolJuiceModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ModeltraceEnabled(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.ModeltraceExpectedModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceExpectedModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ModeltraceRequestModel(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceRequestModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ModeltraceIntervalSeconds(); ok {
+		_spec.SetField(groupstatusconfig.FieldModeltraceIntervalSeconds, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedModeltraceIntervalSeconds(); ok {
+		_spec.AddField(groupstatusconfig.FieldModeltraceIntervalSeconds, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.AstraCheckEnabled(); ok {
 		_spec.SetField(groupstatusconfig.FieldAstraCheckEnabled, field.TypeBool, value)

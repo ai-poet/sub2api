@@ -181,6 +181,9 @@ var auditBodyOmittedRoutes = map[string]struct{}{
 	// fork：工单图片上传是二进制 multipart，即使 handler 未及执行（如被限流拦截）也不捕获 body
 	"POST /api/v1/tickets/attachments":       {},
 	"POST /api/v1/admin/tickets/attachments": {},
+	// fork：客户端登录码。申请体带网关 API Key 与 PKCE challenge，兑换体带一次性码与 verifier，都不入库
+	"POST /api/v1/auth/desktop-session/code":     {},
+	"POST /api/v1/auth/desktop-session/exchange": {},
 }
 
 // NewAuditLogMiddleware 创建审计中间件。

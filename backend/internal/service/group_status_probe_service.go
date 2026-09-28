@@ -37,6 +37,15 @@ type GroupStatusProbeService struct {
 	astraRunning     sync.Map
 	astraSleep       func(ctx context.Context, d time.Duration) error
 	astraProgress    sync.Map // groupID → *astraProgressTracker，验证进行中的实时进度
+
+	// ModelTrace 指纹验证：指纹库来源（nil = 内置库）、每账号并发（0 = 默认 3）、运行中标记、实时进度，
+	// 以及重试退避与挑战生成（测试可替换）
+	modelTraceBanks       modelTraceBankProvider
+	modelTraceConcurrency int
+	modelTraceRunning     sync.Map
+	modelTraceProgress    sync.Map // groupID → *modelTraceProgressTracker
+	modelTraceSleep       func(ctx context.Context, d time.Duration) error
+	modelTraceChallenges  func(n int) []ModelTraceChallenge
 }
 
 // groupStatusTransitionNotifier 消费探测落库后产生的稳定状态切换事件（如 Server酱³ 推送）。
@@ -652,55 +661,12 @@ func (s *GroupStatusProbeService) probeAnthropic(ctx context.Context, account *A
 		return s.probeBedrock(ctx, account, cfg)
 	}
 
-	testModelID := cfg.ProbeModel
-	if account.Type == AccountTypeAPIKey {
-		testModelID = account.GetMappedModel(testModelID)
-	}
-
-	var authToken string
-	var useBearer bool
-	var apiURL string
-
-	if account.IsOAuth() {
-		useBearer = true
-		apiURL = testClaudeAPIURL
-		authToken = account.GetCredential("access_token")
-		if authToken == "" {
-			return "", nil, errors.New("no access token available")
-		}
-	} else if account.Type == AccountTypeAPIKey {
-		authToken = account.GetCredential("api_key")
-		if authToken == "" {
-			return "", nil, errors.New("no API key available")
-		}
-		baseURL := account.GetBaseURL()
-		normalizedBaseURL, err := s.accountTestSvc.validateUpstreamBaseURL(baseURL)
-		if err != nil {
-			return "", nil, fmt.Errorf("invalid base URL: %w", err)
-		}
-		apiURL = strings.TrimSuffix(normalizedBaseURL, "/") + "/v1/messages?beta=true"
-	} else {
-		return "", nil, fmt.Errorf("unsupported account type: %s", account.Type)
-	}
-
-	payload, err := createAnthropicProbePayload(testModelID, cfg.ProbePrompt)
+	req, err := s.buildAnthropicMessagesProbeRequest(ctx, account, cfg.ProbeModel, anthropicProbeHeadersMinimal, func(modelID string, _ bool) (map[string]any, error) {
+		return createAnthropicProbePayload(modelID, cfg.ProbePrompt)
+	})
 	if err != nil {
 		return "", nil, err
 	}
-	payloadBytes, _ := json.Marshal(payload)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(payloadBytes))
-	if err != nil {
-		return "", nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("anthropic-version", "2023-06-01")
-	req.Header.Set("accept", "text/event-stream")
-	if useBearer {
-		req.Header.Set("Authorization", "Bearer "+authToken)
-	} else {
-		req.Header.Set("x-api-key", authToken)
-	}
-
 	return s.executeStreamingProbe(req, account, parseClaudeProbeStream)
 }
 

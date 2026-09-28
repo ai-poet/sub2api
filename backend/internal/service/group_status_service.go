@@ -15,6 +15,10 @@ type GroupStatusAdminView struct {
 	// Astra 指纹验证：正在进行的实时进度（handler 从探测服务内存里填）与最近一次运行的完整记录（含逐请求样本）
 	AstraCheckProgress *AstraCheckProgress       `json:"astra_check_progress,omitempty"`
 	AstraCheckLastRun  *GroupStatusAstraCheckRun `json:"astra_check_last_run,omitempty"`
+	// ModelTrace 指纹验证：本平台可选的预期模型、正在进行的实时进度与最近一次运行的完整记录（含逐条诊断）
+	ModelTraceTargets  []ModelTraceTarget        `json:"modeltrace_targets"`
+	ModelTraceProgress *ModelTraceProgress       `json:"modeltrace_progress,omitempty"`
+	ModelTraceLastRun  *GroupStatusModelTraceRun `json:"modeltrace_last_run,omitempty"`
 }
 
 type GroupStatusService struct {
@@ -60,21 +64,33 @@ func (s *GroupStatusService) GetAdminView(ctx context.Context, groupID int64) (*
 		summary.GroupID = groupID
 		summary.Enabled = cfg.Enabled
 		summary.ProbeModel = cfg.ProbeModel
-		summary.SolJuiceEnabled = cfg.SolJuiceEnabled
-		summary.SolJuiceModel = cfg.SolJuiceModel
-		summary.SolJuiceIntervalSeconds = cfg.SolJuiceIntervalSeconds
+		summary.ModelTraceEnabled = cfg.ModelTraceEnabled
+		summary.ModelTraceExpectedModel = cfg.ModelTraceExpectedModel
+		summary.ModelTraceRequestModel = cfg.ModelTraceRequestModel
+		summary.ModelTraceIntervalSeconds = cfg.ModelTraceIntervalSeconds
 		summary.AstraCheckEnabled = cfg.AstraCheckEnabled
 		summary.AstraCheckRequestModel = cfg.AstraCheckRequestModel
 		summary.AstraCheckTier = cfg.AstraCheckTier
 		summary.AstraCheckIntervalSeconds = cfg.AstraCheckIntervalSeconds
 	}
-	decorateSolJuiceSummary(&summary)
+	decorateModelTraceSummary(&summary)
 	decorateAstraCheckSummary(&summary)
 
 	view := &GroupStatusAdminView{
-		Group:   group,
-		Config:  cfg,
-		Summary: summary,
+		Group:             group,
+		Config:            cfg,
+		Summary:           summary,
+		ModelTraceTargets: ModelTraceTargetsForPlatform(group.Platform),
+	}
+	if modelTraceSupportsPlatform(group.Platform) {
+		runs, err := s.repo.ListRecentModelTraceRuns(ctx, groupID, 1)
+		if err != nil {
+			return nil, err
+		}
+		if len(runs) > 0 {
+			run := runs[0]
+			view.ModelTraceLastRun = &run
+		}
 	}
 	if group.Platform == PlatformOpenAI {
 		runs, err := s.repo.ListRecentAstraCheckRuns(ctx, groupID, 1)
@@ -95,23 +111,20 @@ func (s *GroupStatusService) UpdateConfig(ctx context.Context, groupID int64, in
 		return nil, err
 	}
 
-	// notify_enabled / sol_juice_* / astra_check_* 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认值
-	if input != nil && (input.NotifyEnabled == nil || input.SolJuiceEnabled == nil || input.AstraCheckEnabled == nil) {
+	// notify_enabled / modeltrace_* / astra_check_* 未携带时保留已保存的值（省略 = 保持现值）；尚无配置时走默认值
+	if input != nil && (input.NotifyEnabled == nil || input.ModelTraceEnabled == nil || input.AstraCheckEnabled == nil) {
 		if prev, err := s.repo.GetConfig(ctx, groupID); err == nil && prev != nil {
 			merged := *input
 			if merged.NotifyEnabled == nil {
 				notifyEnabled := prev.NotifyEnabled
 				merged.NotifyEnabled = &notifyEnabled
 			}
-			if merged.SolJuiceEnabled == nil {
-				solJuiceEnabled := prev.SolJuiceEnabled
-				merged.SolJuiceEnabled = &solJuiceEnabled
-				if merged.SolJuiceIntervalSeconds <= 0 {
-					merged.SolJuiceIntervalSeconds = prev.SolJuiceIntervalSeconds
-				}
-				if strings.TrimSpace(merged.SolJuiceModel) == "" {
-					merged.SolJuiceModel = prev.SolJuiceModel
-				}
+			if merged.ModelTraceEnabled == nil {
+				modelTraceEnabled := prev.ModelTraceEnabled
+				merged.ModelTraceEnabled = &modelTraceEnabled
+				merged.ModelTraceExpectedModel = prev.ModelTraceExpectedModel
+				merged.ModelTraceRequestModel = prev.ModelTraceRequestModel
+				merged.ModelTraceIntervalSeconds = prev.ModelTraceIntervalSeconds
 			}
 			if merged.AstraCheckEnabled == nil {
 				astraEnabled := prev.AstraCheckEnabled
@@ -155,7 +168,7 @@ func (s *GroupStatusService) ListAdminSummaries(ctx context.Context) ([]GroupSta
 		return nil, err
 	}
 	for i := range summaries {
-		decorateSolJuiceSummary(&summaries[i])
+		decorateModelTraceSummary(&summaries[i])
 		decorateAstraCheckSummary(&summaries[i])
 	}
 	return summaries, nil
@@ -217,7 +230,7 @@ func (s *GroupStatusService) ListUserStatuses(ctx context.Context, userID int64)
 			continue
 		}
 		summary := summaryMap[groupID]
-		decorateSolJuiceSummary(&summary)
+		decorateModelTraceSummary(&summary)
 		decorateAstraCheckSummary(&summary)
 		items = append(items, GroupStatusListItem{
 			Group:          group,

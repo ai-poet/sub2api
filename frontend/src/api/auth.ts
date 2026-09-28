@@ -711,6 +711,35 @@ export async function createDesktopSession(): Promise<RefreshTokenResponse> {
   return data
 }
 
+/** Body of `POST /auth/desktop-session/code`. */
+export interface DesktopLoginCodeRequest {
+  /** base64url(SHA-256(verifier)), unpadded — 43 characters. */
+  code_challenge: string
+  code_challenge_method: 'S256'
+  api_key: string | null
+  claude_api_key: string | null
+  codex_api_key: string | null
+}
+
+export interface DesktopLoginCodeResponse {
+  /** Short single-use code the user can paste into the app, e.g. "K7QM-3XPD". */
+  code: string
+  /** Seconds until the code expires. */
+  expires_in: number
+}
+
+/**
+ * Issue a one-time sign-in code for the desktop app, bound to its PKCE
+ * challenge. The app redeems it with the verifier for a session of its own,
+ * so no token ever travels in a URL.
+ */
+export async function createDesktopLoginCode(
+  body: DesktopLoginCodeRequest
+): Promise<DesktopLoginCodeResponse> {
+  const { data } = await apiClient.post<DesktopLoginCodeResponse>('/auth/desktop-session/code', body)
+  return data
+}
+
 export const authAPI = {
   login,
   login2FA,
@@ -736,6 +765,7 @@ export const authAPI = {
   refreshToken,
   revokeAllSessions,
   createDesktopSession,
+  createDesktopLoginCode,
   getPendingOAuthBindLoginKind,
   isPendingOAuthCreateAccountRequired,
   hasPendingOAuthSuggestedProfile,

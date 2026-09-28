@@ -949,6 +949,10 @@ var (
 		{Name: "sol_juice_enabled", Type: field.TypeBool, Default: false},
 		{Name: "sol_juice_interval_seconds", Type: field.TypeInt, Default: 900},
 		{Name: "sol_juice_model", Type: field.TypeString, Default: "gpt-5.6-sol"},
+		{Name: "modeltrace_enabled", Type: field.TypeBool, Default: false},
+		{Name: "modeltrace_expected_model", Type: field.TypeString, Default: ""},
+		{Name: "modeltrace_request_model", Type: field.TypeString, Default: ""},
+		{Name: "modeltrace_interval_seconds", Type: field.TypeInt, Default: 3600},
 		{Name: "astra_check_enabled", Type: field.TypeBool, Default: false},
 		{Name: "astra_check_request_model", Type: field.TypeString, Default: "gpt-6-astra"},
 		{Name: "astra_check_tier", Type: field.TypeString, Default: "low"},
@@ -1042,6 +1046,57 @@ var (
 			},
 		},
 	}
+	// GroupStatusModeltraceRunsColumns holds the columns for the "group_status_modeltrace_runs" table.
+	GroupStatusModeltraceRunsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "group_id", Type: field.TypeInt64},
+		{Name: "config_id", Type: field.TypeInt64},
+		{Name: "platform", Type: field.TypeString, Default: ""},
+		{Name: "bank_sha256", Type: field.TypeString, Default: ""},
+		{Name: "bank_built_at", Type: field.TypeString, Default: ""},
+		{Name: "expected_model", Type: field.TypeString, Default: ""},
+		{Name: "request_model", Type: field.TypeString, Default: ""},
+		{Name: "account_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "account_type", Type: field.TypeString, Default: ""},
+		{Name: "round", Type: field.TypeInt, Default: 1},
+		{Name: "verdict", Type: field.TypeString},
+		{Name: "outcome", Type: field.TypeString, Default: ""},
+		{Name: "top_model", Type: field.TypeString, Default: ""},
+		{Name: "top_probability", Type: field.TypeFloat64, Default: 0},
+		{Name: "expected_probability", Type: field.TypeFloat64, Nullable: true},
+		{Name: "calibration_queries", Type: field.TypeInt, Default: 0},
+		{Name: "beta", Type: field.TypeFloat64, Default: 0},
+		{Name: "ranking", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "family_probabilities", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "reasons", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "outputs", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "attempts_planned", Type: field.TypeInt, Default: 0},
+		{Name: "attempts_made", Type: field.TypeInt, Default: 0},
+		{Name: "valid_outputs", Type: field.TypeInt, Default: 0},
+		{Name: "input_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "output_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "cost_usd", Type: field.TypeFloat64, Default: 0},
+		{Name: "latency_ms", Type: field.TypeInt64, Nullable: true},
+		{Name: "http_code", Type: field.TypeInt, Nullable: true},
+		{Name: "error_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "started_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "finished_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// GroupStatusModeltraceRunsTable holds the schema information for the "group_status_modeltrace_runs" table.
+	GroupStatusModeltraceRunsTable = &schema.Table{
+		Name:       "group_status_modeltrace_runs",
+		Columns:    GroupStatusModeltraceRunsColumns,
+		PrimaryKey: []*schema.Column{GroupStatusModeltraceRunsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "groupstatusmodeltracerun_group_id_finished_at",
+				Unique:  false,
+				Columns: []*schema.Column{GroupStatusModeltraceRunsColumns[1], GroupStatusModeltraceRunsColumns[33]},
+			},
+		},
+	}
 	// GroupStatusRecordsColumns holds the columns for the "group_status_records" table.
 	GroupStatusRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -1102,6 +1157,23 @@ var (
 		{Name: "sol_juice_input_tokens", Type: field.TypeInt64, Default: 0},
 		{Name: "sol_juice_output_tokens", Type: field.TypeInt64, Default: 0},
 		{Name: "sol_juice_reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "modeltrace_verdict", Type: field.TypeString, Default: ""},
+		{Name: "modeltrace_stable_status", Type: field.TypeString, Default: ""},
+		{Name: "modeltrace_run_expected_model", Type: field.TypeString, Default: ""},
+		{Name: "modeltrace_top_model", Type: field.TypeString, Default: ""},
+		{Name: "modeltrace_top_probability", Type: field.TypeFloat64, Default: 0},
+		{Name: "modeltrace_expected_probability", Type: field.TypeFloat64, Nullable: true},
+		{Name: "modeltrace_ranking", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "modeltrace_reasons", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "modeltrace_detail", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "modeltrace_checked_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "modeltrace_consecutive_mismatch", Type: field.TypeInt, Default: 0},
+		{Name: "modeltrace_valid_outputs", Type: field.TypeInt, Default: 0},
+		{Name: "modeltrace_input_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "modeltrace_output_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "modeltrace_reasoning_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "modeltrace_last_cost_usd", Type: field.TypeFloat64, Default: 0},
+		{Name: "modeltrace_last_run_id", Type: field.TypeInt64, Nullable: true},
 		{Name: "astra_check_verdict", Type: field.TypeString, Default: ""},
 		{Name: "astra_check_stable_status", Type: field.TypeString, Default: ""},
 		{Name: "astra_check_winner", Type: field.TypeString, Default: ""},
@@ -2163,6 +2235,7 @@ var (
 		GroupStatusConfigsTable,
 		GroupStatusEventsTable,
 		GroupStatusJuiceRecordsTable,
+		GroupStatusModeltraceRunsTable,
 		GroupStatusRecordsTable,
 		GroupStatusStatesTable,
 		IdempotencyRecordsTable,
@@ -2255,6 +2328,9 @@ func init() {
 	}
 	GroupStatusJuiceRecordsTable.Annotation = &entsql.Annotation{
 		Table: "group_status_juice_records",
+	}
+	GroupStatusModeltraceRunsTable.Annotation = &entsql.Annotation{
+		Table: "group_status_modeltrace_runs",
 	}
 	GroupStatusRecordsTable.Annotation = &entsql.Annotation{
 		Table: "group_status_records",
