@@ -514,10 +514,12 @@ type astraBenchmarkProvider interface {
 
 // ---------- 可检测的目标模型 ----------
 
-// 目标的检测方法：meow 基准（一批短答题 + v3 判定）或 Juice 读数（一条 high 推理请求）。
+// 目标的检测方法：meow 基准（一批短答题 + v3 判定）、Juice 读数（一条 high 推理请求）
+// 或 ModelTrace 数字指纹（3–6 条长数字挑战 + 闭集归因）。
 const (
-	AstraCheckMethodMeow     = "meow"
-	AstraCheckMethodSolJuice = "sol_juice"
+	AstraCheckMethodMeow       = "meow"
+	AstraCheckMethodSolJuice   = "sol_juice"
+	AstraCheckMethodModelTrace = "modeltrace"
 )
 
 // AstraCheckTarget 是某个平台可选的预期模型、判定它的方法，以及 meow 方法所用的基准包。
@@ -528,34 +530,47 @@ type AstraCheckTarget struct {
 	DefaultRequestModel string `json:"default_request_model"`
 	Method              string `json:"method"`
 	PackageID           string `json:"package_id"`
+	// TraceModelID 是 ModelTrace 指纹库里对应的模型 id（仅 modeltrace 方法）
+	TraceModelID string `json:"-"`
 }
 
-// astraCheckTargets 是固定的目标列表；meow 方法的目标必须在对应基准包里（测试钉住）。
+// astraCheckTargets 是固定的目标列表；meow 方法的目标必须在对应基准包里、modeltrace 方法的目标必须在指纹库里（测试钉住）。
+// Claude Opus 5.5 用 ModelTrace；Fable 5.1 不在 ModelTrace 指纹库里，仍用 meow 基准。
 // GPT-5.6 Sol 用 Juice 读数（Sol 回 40）：官方渠道下它在 meow 基准里的答案分布会漂移、被判成其他模型，
 // 而 Juice 一条请求就能把 Sol / Terra / Luna 区分开。
 var astraCheckTargets = []AstraCheckTarget{
 	{ID: "gpt-5.6-sol", DisplayName: "GPT-5.6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-5.6-sol", Method: AstraCheckMethodSolJuice},
 	{ID: "gpt-6-sol", DisplayName: "GPT-6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-sol", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
 	{ID: "gpt-6-astra", DisplayName: "GPT-6 Astra", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-astra", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
-	{ID: "claude-opus-5.5", DisplayName: "Claude Opus 5.5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5-5", Method: AstraCheckMethodMeow, PackageID: "meow-claude-other-cap98-efficient"},
+	{ID: "claude-opus-5.5", DisplayName: "Claude Opus 5.5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5-5", Method: AstraCheckMethodModelTrace, TraceModelID: "claude-opus-5-5"},
 	{ID: "claude-fable-5.1", DisplayName: "Claude Fable 5.1", Platform: PlatformAnthropic, DefaultRequestModel: "claude-fable-5-1", Method: AstraCheckMethodMeow, PackageID: "meow-claude-other-cap98-efficient"},
 }
 
 // astraModelLabels 是包内候选的可读名（含非目标的候选，用于「强指向 X」）。
 var astraModelLabels = map[string]string{
-	"gpt-6-astra":        "GPT-6 Astra",
-	"gpt-6-sol":          "GPT-6 Sol",
-	"gpt-6-luna":         "GPT-6 Luna",
-	"gpt-5.6-sol":        "GPT-5.6 Sol",
-	"gpt-5.6-terra":      "GPT-5.6 Terra",
-	"gpt-5.6-luna":       "GPT-5.6 Luna",
-	"gpt-5.5":            "GPT-5.5 / GPT-5.4",
-	"gpt-5.4-mini":       "GPT-5.4 mini",
-	"claude-opus-5.5":    "Claude Opus 5.5",
-	"claude-fable-5.1":   "Claude Fable 5.1",
-	"claude-sonnet-5":    "Claude Sonnet 5",
-	"claude-haiku-4.5":   "Claude Haiku 4.5",
-	AstraCheckOtherModel: "其他模型",
+	"gpt-6-astra":      "GPT-6 Astra",
+	"gpt-6-sol":        "GPT-6 Sol",
+	"gpt-6-luna":       "GPT-6 Luna",
+	"gpt-5.6-sol":      "GPT-5.6 Sol",
+	"gpt-5.6-terra":    "GPT-5.6 Terra",
+	"gpt-5.6-luna":     "GPT-5.6 Luna",
+	"gpt-5.5":          "GPT-5.5",
+	"gpt-5.5/5.4":      "GPT-5.5 / GPT-5.4",
+	"gpt-5.4-mini":     "GPT-5.4 mini",
+	"claude-opus-5.5":  "Claude Opus 5.5",
+	"claude-fable-5.1": "Claude Fable 5.1",
+	"claude-sonnet-5":  "Claude Sonnet 5",
+	"claude-haiku-4.5": "Claude Haiku 4.5",
+	// ModelTrace 指纹库里的模型 id
+	"gpt-5.4":                   "GPT-5.4",
+	"claude-haiku-4-5-20251001": "Claude Haiku 4.5",
+	"claude-sonnet-4-6":         "Claude Sonnet 4.6",
+	"claude-opus-4-6":           "Claude Opus 4.6",
+	"claude-opus-4-7":           "Claude Opus 4.7",
+	"claude-opus-4-8":           "Claude Opus 4.8",
+	"claude-opus-5":             "Claude Opus 5",
+	"claude-opus-5-5":           "Claude Opus 5.5",
+	AstraCheckOtherModel:        "其他模型",
 }
 
 // AstraModelLabel 把候选 id 转成可读名；未知 id 原样返回。

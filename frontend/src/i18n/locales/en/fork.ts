@@ -411,13 +411,16 @@ export default {
         "notifyEnabledHint": "Only effective when Server酱³ push is enabled in site settings; turn off to silence this group.",
         "astraCheck": {
           "title": "meow fingerprint check",
-          "hint": "Sends a batch of fixed short-answer prompts to one account of this group that matches its platform and scores the answer distribution against the bundled meow v3 benchmark: every candidate accumulates evidence per prompt, and only a candidate whose evidence is uniquely highest and clears its own strong-direction line counts as a strong match. Several expected models can be checked at once; each is judged and pushed on its own. Two consecutive strong matches on another model (the first triggers an immediate re-run on the same account) flip the verdict; availability is not affected. GPT-5.6 Sol uses the Juice reading instead (one request at reasoning=high, Sol should answer 40) and ignores the tier. The default medium tier (recommended by meow) sends 64–96 requests per model; the low tier halves that but lets models with spread-out answers such as Sol drift more easily.",
+          "hint": "Sends a batch of fixed short-answer prompts to one account of this group that matches its platform and scores the answer distribution against the bundled meow v3 benchmark: every candidate accumulates evidence per prompt, and only a candidate whose evidence is uniquely highest and clears its own strong-direction line counts as a strong match. Several expected models can be checked at once; each is judged and pushed on its own. Two consecutive strong matches on another model (the first triggers an immediate re-run on the same account) flip the verdict; availability is not affected. GPT-5.6 Sol uses the Juice reading instead (one request at reasoning=high, Sol should answer 40) and ignores the tier; Claude Opus 5.5 uses the ModelTrace number fingerprint (3–6 long number challenges, attributed against the prompts and bank of the official web version), which also ignores the tier. The default medium tier (recommended by meow) sends 64–96 requests per model; the low tier halves that but lets models with spread-out answers such as Sol drift more easily.",
           "benchmark": "Benchmark",
           "methods": {
             "meow": "meow benchmark",
-            "sol_juice": "Juice reading"
+            "sol_juice": "Juice reading",
+            "modeltrace": "ModelTrace"
           },
           "juiceHint": "Reads Juice at high reasoning · Sol should answer 40 (Terra 32 / Luna 48)",
+          "modeltraceHint": "ModelTrace number fingerprint · 3 valid outputs (up to 6 challenges) · closed-set attribution",
+          "modeltraceProbabilities": "Attribution probabilities (top 5 plus the expected model; match line 50%, strong line 80%)",
           "models": "Models to check",
           "modelsHint": "Tick the expected models to verify; the field on the right is the model name sent upstream (empty = default).",
           "requestModel": "Request model",
@@ -492,6 +495,11 @@ export default {
             "benchmark_invalid": "Benchmark unavailable",
             "no_account": "No available account",
             "juice_inconclusive": "Juice reading inconclusive",
+            "unknown_expected_model": "Expected model is not in the ModelTrace bank",
+            "no_valid_outputs": "No valid outputs",
+            "insufficient_outputs": "Fewer than 2 valid outputs",
+            "ambiguous": "Attribution is ambiguous",
+            "bank_invalid": "ModelTrace bank unavailable",
             "scoring_failed": "Scoring failed",
             "empty_result": "Empty result"
           }

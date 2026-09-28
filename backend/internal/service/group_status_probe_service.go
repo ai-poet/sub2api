@@ -41,6 +41,9 @@ type GroupStatusProbeService struct {
 	astraSleep            func(ctx context.Context, d time.Duration) error
 	astraProgress         sync.Map
 	astraAccounts         astraAccountRegistry
+	// ModelTrace 方法：指纹库来源（nil = 内置库）与挑战生成器（nil = 加密随机，测试可替换）
+	modelTraceBankSource   modelTraceBankProvider
+	modelTraceChallengeGen func(n int) []ModelTraceChallenge
 }
 
 // groupStatusTransitionNotifier 消费探测落库后产生的稳定状态切换事件（如 Server酱³ 推送）。

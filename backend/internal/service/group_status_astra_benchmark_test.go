@@ -50,8 +50,8 @@ func TestAstraCheckTargets_AreInTheirBenchmarkPackages(t *testing.T) {
 	reg, err := LoadEmbeddedAstraBenchmarks()
 	require.NoError(t, err)
 	for _, target := range astraCheckTargets {
-		if target.Method == AstraCheckMethodSolJuice {
-			require.Empty(t, target.PackageID, "juice target %s must not point at a package", target.ID)
+		if target.Method == AstraCheckMethodSolJuice || target.Method == AstraCheckMethodModelTrace {
+			require.Empty(t, target.PackageID, "%s target %s must not point at a meow package", target.Method, target.ID)
 			continue
 		}
 		require.Equal(t, AstraCheckMethodMeow, target.Method, "target %s", target.ID)

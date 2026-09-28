@@ -411,13 +411,16 @@ export default {
         "notifyEnabledHint": "仅当站点设置中已启用 Server酱³ 推送时生效；关闭后本分组的状态变化不再推送。",
         "astraCheck": {
           "title": "meow 指纹验证",
-          "hint": "向本分组一个与平台一致的账号发一批固定短答题，把答案分布交给内置的 meow v3 基准判定：每个候选按各题累计证据，只有证据唯一最高、且越过自身强指向线的候选才算强指向。可同时检测多个预期模型，每个模型各自判定、各自推送；连续 2 次强指向其他模型（首次会在同一账号立即复测）才判定不符，不影响在线率。其中 GPT-5.6 Sol 改用 Juice 读数（reasoning=high 一条请求，Sol 应回 40），不受档位影响。默认中档（meow 推荐），每个模型 64–96 个请求；低档请求减半，但 Sol 等答案分散的模型更容易被带偏。",
+          "hint": "向本分组一个与平台一致的账号发一批固定短答题，把答案分布交给内置的 meow v3 基准判定：每个候选按各题累计证据，只有证据唯一最高、且越过自身强指向线的候选才算强指向。可同时检测多个预期模型，每个模型各自判定、各自推送；连续 2 次强指向其他模型（首次会在同一账号立即复测）才判定不符，不影响在线率。其中 GPT-5.6 Sol 改用 Juice 读数（reasoning=high 一条请求，Sol 应回 40），不受档位影响；Claude Opus 5.5 改用 ModelTrace 数字指纹（3–6 条长数字挑战，按官方网页版的题目与指纹库做闭集归因），同样不受档位影响。默认中档（meow 推荐），每个模型 64–96 个请求；低档请求减半，但 Sol 等答案分散的模型更容易被带偏。",
           "benchmark": "基准包",
           "methods": {
             "meow": "meow 基准",
-            "sol_juice": "Juice 读数"
+            "sol_juice": "Juice 读数",
+            "modeltrace": "ModelTrace"
           },
           "juiceHint": "high 推理读取 Juice · Sol 应为 40（Terra 32 / Luna 48）",
+          "modeltraceHint": "ModelTrace 数字指纹 · 3 条有效回答（最多 6 条挑战）· 闭集归因",
+          "modeltraceProbabilities": "归因概率（前 5 名，含预期模型；一致线 50%，强指向线 80%）",
           "models": "检测模型",
           "modelsHint": "勾选要核对的预期模型；右侧是发往上游的请求模型名，留空用默认名。",
           "requestModel": "请求模型名",
@@ -492,6 +495,11 @@ export default {
             "benchmark_invalid": "基准包不可用",
             "no_account": "没有可用账号",
             "juice_inconclusive": "Juice 读数无法判定",
+            "unknown_expected_model": "预期模型不在 ModelTrace 指纹库中",
+            "no_valid_outputs": "没有有效回答",
+            "insufficient_outputs": "有效回答不足 2 条",
+            "ambiguous": "归因不够明确",
+            "bank_invalid": "ModelTrace 指纹库不可用",
             "scoring_failed": "判定计算失败",
             "empty_result": "空结果"
           }

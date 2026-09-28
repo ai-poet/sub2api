@@ -23,3 +23,4 @@ Dockerfile text eol=lf
 
 # meow 指纹基准包按字节嵌入（校验和与包内 content_sha256 对得上），禁止换行符转换
 backend/resources/astra-benchmark/*.meow.json -text
+backend/resources/modeltrace-bank/unified_bank.json -text

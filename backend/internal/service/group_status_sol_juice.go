@@ -47,7 +47,7 @@ var (
 	solJuiceKnownOtherFingerprints = map[string]string{
 		"32": "gpt-5.6-terra",
 		"48": "gpt-5.6-luna",
-		"96": "gpt-5.5",
+		"96": "gpt-5.5/5.4", // Juice 区分不了 5.5 与 5.4
 		"64": "gpt-5.4-mini",
 	}
 )

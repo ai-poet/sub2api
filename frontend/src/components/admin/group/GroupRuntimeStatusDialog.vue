@@ -178,8 +178,8 @@
                   :data-astra-model="target.id"
                 />
                 <span>{{ target.display_name }}</span>
-                <span v-if="target.method === 'sol_juice'" class="badge badge-gray">
-                  {{ t('admin.groups.runtimeStatus.astraCheck.methods.sol_juice') }}
+                <span v-if="target.method && target.method !== 'meow'" class="badge badge-gray">
+                  {{ t(`admin.groups.runtimeStatus.astraCheck.methods.${target.method}`) }}
                 </span>
               </label>
               <input
@@ -315,8 +315,8 @@
                 <span class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ state.display_name || astraModelName(state.expected_model) }}
                 </span>
-                <span v-if="state.method === 'sol_juice'" class="badge badge-gray">
-                  {{ t('admin.groups.runtimeStatus.astraCheck.methods.sol_juice') }}
+                <span v-if="state.method && state.method !== 'meow'" class="badge badge-gray">
+                  {{ t(`admin.groups.runtimeStatus.astraCheck.methods.${state.method}`) }}
                 </span>
                 <span :class="['badge', getAstraCheckBadgeClass(astraStateStatus(state))]">
                   {{ astraStateText(state) }}
@@ -344,6 +344,10 @@
                   </div>
                   <div v-if="state.method === 'sol_juice'" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {{ t('admin.groups.runtimeStatus.astraCheck.juiceHint') }}
+                  </div>
+                  <div v-else-if="state.method === 'modeltrace'" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('admin.groups.runtimeStatus.astraCheck.modeltraceHint') }}
+                    <template v-if="state.benchmark_version"> · {{ state.benchmark_version }}</template>
                   </div>
                   <div v-else-if="state.benchmark_version" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {{ t('admin.groups.runtimeStatus.astraCheck.benchmark') }} {{ state.benchmark_version }}
@@ -380,7 +384,7 @@
                 class="space-y-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800"
               >
                 <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.groups.runtimeStatus.astraCheck.matches') }}
+                  {{ t(state.method === 'modeltrace' ? 'admin.groups.runtimeStatus.astraCheck.modeltraceProbabilities' : 'admin.groups.runtimeStatus.astraCheck.matches') }}
                 </div>
                 <div v-for="m in state.matches" :key="m.model">
                   <div class="flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">

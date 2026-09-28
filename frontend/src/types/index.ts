@@ -2489,9 +2489,9 @@ export interface AstraCheckModelConfig {
 }
 
 // 某平台可选的预期模型，以及判定它所用的基准包
-export type AstraCheckMethod = 'meow' | 'sol_juice'
+export type AstraCheckMethod = 'meow' | 'sol_juice' | 'modeltrace'
 
-// method：meow 基准（一批短答题）或 Juice 读数（GPT-5.6 Sol，一条 high 推理请求）；Juice 没有基准包
+// method：meow 基准（一批短答题）、Juice 读数（GPT-5.6 Sol，一条 high 推理请求）或 ModelTrace 数字指纹（Claude Opus 5.5）；后两者没有 meow 基准包
 export interface AstraCheckTarget {
   id: string
   display_name: string

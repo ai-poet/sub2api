@@ -440,19 +440,19 @@ func TestAstraCheckProbe_AllAccountsFailingYieldsInsufficient(t *testing.T) {
 
 func TestAstraCheckProbe_AnthropicAPIKeyUsesClaudeCodeContract(t *testing.T) {
 	responses := []*http.Response{
-		messagesSSE("a", "max_tokens"), // 第一次被截断：不投票，重试
-		messagesSSE(" A ", "end_turn"),
-		messagesSSE("1", "end_turn"),
-		messagesSSE("a", "end_turn"),
-		messagesSSE("1", "end_turn"),
+		messagesSSE("b", "max_tokens"), // 第一次被截断：不投票，重试
+		messagesSSE(" B ", "end_turn"),
+		messagesSSE("2", "end_turn"),
+		messagesSSE("b", "end_turn"),
+		messagesSSE("2", "end_turn"),
 	}
-	f := newAstraProbeFixture(t, PlatformAnthropic, onlyModels("claude-opus-5.5"), responses...)
+	f := newAstraProbeFixture(t, PlatformAnthropic, onlyModels("claude-fable-5.1"), responses...)
 
 	execution := f.run(t)[0]
 	require.Len(t, f.upstream.requests, 5)
 	require.Equal(t, AstraCheckVerdictMatch, execution.Result.Verdict)
-	require.Equal(t, "claude-opus-5.5", execution.Result.Winner)
-	require.Equal(t, "claude-opus-5-5", execution.Result.RequestModel)
+	require.Equal(t, "claude-fable-5.1", execution.Result.Winner)
+	require.Equal(t, "claude-fable-5-1", execution.Result.RequestModel)
 	require.Equal(t, "meow-claude-other-cap98-efficient", execution.Result.BenchmarkPackageID)
 	require.Equal(t, PlatformAnthropic, execution.Result.Platform)
 	require.Equal(t, 4, execution.Result.ValidSamples)
@@ -460,7 +460,7 @@ func TestAstraCheckProbe_AnthropicAPIKeyUsesClaudeCodeContract(t *testing.T) {
 	require.Equal(t, int64(30), execution.Result.OutputTokens)
 	require.Equal(t, AstraCheckSampleInvalid, execution.Result.Samples[0].Outcome)
 	require.Equal(t, "truncated at max_tokens", execution.Result.Samples[0].Error)
-	require.Equal(t, "a", execution.Result.Samples[1].Category)
+	require.Equal(t, "b", execution.Result.Samples[1].Category)
 
 	req := f.upstream.requests[0]
 	require.Equal(t, "https://example.com/v1/messages?beta=true", req.URL.String())
@@ -468,7 +468,7 @@ func TestAstraCheckProbe_AnthropicAPIKeyUsesClaudeCodeContract(t *testing.T) {
 	require.Equal(t, claude.APIKeyBetaHeader, req.Header.Get("anthropic-beta"))
 	require.Equal(t, "text/event-stream", req.Header.Get("accept"))
 	payload := decodeProbeRequestBody(t, req)
-	require.Equal(t, "claude-opus-5-5", payload["model"])
+	require.Equal(t, "claude-fable-5-1", payload["model"])
 	require.Equal(t, ".", payload["system"])
 	require.Equal(t, float64(128), payload["max_tokens"])
 	require.Equal(t, true, payload["stream"])
@@ -482,7 +482,7 @@ func TestAstraCheckProbe_AnthropicAPIKeyUsesClaudeCodeContract(t *testing.T) {
 }
 
 func TestAstraCheckProbe_AnthropicOAuthRequest(t *testing.T) {
-	f := newAstraProbeFixture(t, PlatformAnthropic, onlyModels("claude-opus-5.5"))
+	f := newAstraProbeFixture(t, PlatformAnthropic, onlyModels("claude-fable-5.1"))
 	reg := syntheticAstraRegistry(t)
 	cell := reg.Package("meow-claude-other-cap98-efficient").CellIndex["c1"]
 	account := &Account{ID: 9, Platform: PlatformAnthropic, Type: AccountTypeOAuth, Credentials: map[string]any{"access_token": "oauth-token"}}

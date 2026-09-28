@@ -364,9 +364,14 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(
 ) (*Account, *GroupStatusAstraCheckResult) {
 	target, targetKnown := astraCheckTarget(model.ExpectedModel)
 	requestModel := model.requestModelFor(target)
-	// GPT-5.6 Sol 走 Juice 读数，不用基准包
-	if targetKnown && target.Method == AstraCheckMethodSolJuice && astraCheckTargetAllowed(group.Platform, model.ExpectedModel) {
-		return s.executeSolJuiceRun(ctx, group, cfg, model, target, requestModel, progress, round, pinned)
+	// GPT-5.6 Sol 走 Juice 读数、Claude Opus 5.5 走 ModelTrace，都不用 meow 基准包
+	if targetKnown && astraCheckTargetAllowed(group.Platform, model.ExpectedModel) {
+		switch target.Method {
+		case AstraCheckMethodSolJuice:
+			return s.executeSolJuiceRun(ctx, group, cfg, model, target, requestModel, progress, round, pinned)
+		case AstraCheckMethodModelTrace:
+			return s.executeModelTraceRun(ctx, group, cfg, model, target, requestModel, progress, round, pinned)
+		}
 	}
 	startedAt := time.Now()
 	tier := strings.TrimSpace(cfg.AstraCheckTier)

@@ -56,7 +56,7 @@ func TestClassifySolJuiceAnswer(t *testing.T) {
 		{"40.5", solJuiceStatusPass, "40.5", "gpt-5.6-sol", ""},
 		{"32", solJuiceStatusMismatch, "32", "gpt-5.6-terra", "GPT-5.6 Terra"},
 		{"48", solJuiceStatusMismatch, "48", "gpt-5.6-luna", "GPT-5.6 Luna"},
-		{"96", solJuiceStatusMismatch, "96", "gpt-5.5", "GPT-5.5"},
+		{"96", solJuiceStatusMismatch, "96", "gpt-5.5/5.4", "GPT-5.5 / GPT-5.4"},
 		{"64", solJuiceStatusMismatch, "64", "gpt-5.4-mini", "GPT-5.4 mini"},
 		{"41", solJuiceStatusInconclusive, "41", "", "unknown juice value"},
 		{"I can't provide that", solJuiceStatusInconclusive, "", "", "non-numeric"},

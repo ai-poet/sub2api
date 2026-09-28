@@ -30,7 +30,7 @@ const gptTargets = [
   { id: 'gpt-6-astra', display_name: 'GPT-6 Astra', platform: 'openai', default_request_model: 'gpt-6-astra', method: 'meow' as const, package_id: 'meow-gpt-other-cap98-efficient' }
 ]
 const claudeTargets = [
-  { id: 'claude-opus-5.5', display_name: 'Claude Opus 5.5', platform: 'anthropic', default_request_model: 'claude-opus-5-5', method: 'meow' as const, package_id: 'meow-claude-other-cap98-efficient' },
+  { id: 'claude-opus-5.5', display_name: 'Claude Opus 5.5', platform: 'anthropic', default_request_model: 'claude-opus-5-5', method: 'modeltrace' as const, package_id: '' },
   { id: 'claude-fable-5.1', display_name: 'Claude Fable 5.1', platform: 'anthropic', default_request_model: 'claude-fable-5-1', method: 'meow' as const, package_id: 'meow-claude-other-cap98-efficient' }
 ]
 
