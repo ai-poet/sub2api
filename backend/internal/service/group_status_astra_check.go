@@ -42,15 +42,17 @@ const (
 	astraCheckEventSubStatusWinnerPrefix  = ":winner_"
 	astraCheckEventSubStatusUnknownWinner = "unknown"
 
-	groupStatusAstraCheckDefaultTier           = AstraCheckTierLow
+	groupStatusAstraCheckDefaultTier           = AstraCheckTierMedium
 	groupStatusAstraCheckDefaultIntervalSecond = 3600
 	groupStatusAstraCheckMinIntervalSeconds    = 900
-	groupStatusAstraCheckDefaultConcurrency    = 8
+	groupStatusAstraCheckDefaultConcurrency    = 16
 	groupStatusAstraCheckRequestTimeout        = 120 * time.Second
 	groupStatusAstraCheckMaxAttempts           = 3
 	groupStatusAstraCheckMismatchThreshold     = 2
 	groupStatusAstraCheckRunBudget             = 20 * time.Minute
 	groupStatusAstraCheckMaxModels             = 8
+	// 一次运行里同时检测的模型数；各模型优先摊到不同账号上
+	groupStatusAstraCheckModelParallelism = 4
 )
 
 var (
@@ -204,6 +206,8 @@ type GroupStatusAstraCheckState struct {
 	ConfigID            int64                  `json:"config_id"`
 	ExpectedModel       string                 `json:"expected_model"`
 	DisplayName         string                 `json:"display_name"`
+	// Method 是该目标的检测方法（meow / sol_juice），派生字段，不落库
+	Method              string                 `json:"method"`
 	Verdict             string                 `json:"verdict"`
 	StableStatus        string                 `json:"stable_status"`
 	Winner              string                 `json:"winner"`
@@ -637,6 +641,9 @@ func decorateAstraCheckSummary(summary *GroupStatusSummary) {
 			state = GroupStatusAstraCheckState{GroupID: summary.GroupID, ConfigID: summary.ConfigID, ExpectedModel: m.ExpectedModel}
 		}
 		state.DisplayName = AstraModelLabel(m.ExpectedModel)
+		if target, ok := astraCheckTarget(m.ExpectedModel); ok {
+			state.Method = target.Method
+		}
 		// 前端直接读 .length，切片必须是 []
 		if state.Matches == nil {
 			state.Matches = []AstraCheckModelMatch{}

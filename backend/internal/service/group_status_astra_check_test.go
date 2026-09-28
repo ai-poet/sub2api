@@ -428,7 +428,7 @@ func TestNormalizeGroupStatusConfig_AstraCheckModels(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, cfg.AstraCheckEnabled)
 	require.Equal(t, []AstraCheckModelConfig{{ExpectedModel: "gpt-5.6-sol"}}, cfg.AstraCheckModels)
-	require.Equal(t, AstraCheckTierLow, cfg.AstraCheckTier)
+	require.Equal(t, AstraCheckTierMedium, cfg.AstraCheckTier) // 默认中档（meow 推荐）
 	require.Equal(t, 3600, cfg.AstraCheckIntervalSeconds)
 
 	cfg, err = NormalizeGroupStatusConfig(anthropic, base())
@@ -443,13 +443,13 @@ func TestNormalizeGroupStatusConfig_AstraCheckModels(t *testing.T) {
 		{ExpectedModel: "gpt-6-sol"},
 		{ExpectedModel: ""},
 	}
-	on.AstraCheckTier = "Medium"
+	on.AstraCheckTier = "Low"
 	on.AstraCheckIntervalSeconds = 1800
 	cfg, err = NormalizeGroupStatusConfig(openAI, on)
 	require.NoError(t, err)
 	require.True(t, cfg.AstraCheckEnabled)
 	require.Equal(t, []AstraCheckModelConfig{{ExpectedModel: "gpt-6-sol"}, {ExpectedModel: "gpt-6-astra", RequestModel: "astra-alias"}}, cfg.AstraCheckModels)
-	require.Equal(t, AstraCheckTierMedium, cfg.AstraCheckTier)
+	require.Equal(t, AstraCheckTierLow, cfg.AstraCheckTier)
 	require.Equal(t, 1800, cfg.AstraCheckIntervalSeconds)
 
 	claudeOn := base()

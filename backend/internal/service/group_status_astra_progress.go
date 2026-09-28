@@ -1,6 +1,7 @@
 package service
 
 import (
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -232,12 +233,42 @@ func truncateAstraAnswer(text string) string {
 
 // ---------- 探测服务上的进度存取 ----------
 
+// astraGroupProgress 是一个分组里正在并行检测的各模型的进度（按预期模型）。
+type astraGroupProgress struct {
+	mu       sync.Mutex
+	trackers map[string]*astraProgressTracker
+}
+
+func (s *GroupStatusProbeService) groupAstraProgress(groupID int64) *astraGroupProgress {
+	v, _ := s.astraProgress.LoadOrStore(groupID, &astraGroupProgress{trackers: make(map[string]*astraProgressTracker)})
+	return v.(*astraGroupProgress)
+}
+
+// beginAstraProgress 为某个模型开始一轮新的进度（同一模型的复测会替换上一轮）。
 func (s *GroupStatusProbeService) beginAstraProgress(groupID int64, round int, expectedModel string, index, count int) *astraProgressTracker {
 	tracker := newAstraProgressTracker(round, expectedModel, index, count)
 	if s != nil {
-		s.astraProgress.Store(groupID, tracker)
+		group := s.groupAstraProgress(groupID)
+		group.mu.Lock()
+		group.trackers[expectedModel] = tracker
+		group.mu.Unlock()
 	}
 	return tracker
+}
+
+// endAstraProgress 在某个模型检测结束（结果已落库）后移除它的进度。
+func (s *GroupStatusProbeService) endAstraProgress(groupID int64, expectedModel string) {
+	if s == nil {
+		return
+	}
+	v, ok := s.astraProgress.Load(groupID)
+	if !ok {
+		return
+	}
+	group := v.(*astraGroupProgress)
+	group.mu.Lock()
+	delete(group.trackers, expectedModel)
+	group.mu.Unlock()
 }
 
 func (s *GroupStatusProbeService) clearAstraProgress(groupID int64) {
@@ -246,18 +277,33 @@ func (s *GroupStatusProbeService) clearAstraProgress(groupID int64) {
 	}
 }
 
-// AstraCheckProgress 返回该分组正在进行的验证进度；没有在跑时返回 nil。
-func (s *GroupStatusProbeService) AstraCheckProgress(groupID int64) *AstraCheckProgress {
+// AstraCheckProgresses 返回该分组正在检测的各模型进度（按模型序号）；没有在跑时返回空切片。
+func (s *GroupStatusProbeService) AstraCheckProgresses(groupID int64) []AstraCheckProgress {
+	out := []AstraCheckProgress{}
 	if s == nil {
-		return nil
+		return out
 	}
 	v, ok := s.astraProgress.Load(groupID)
 	if !ok {
-		return nil
+		return out
 	}
-	tracker, ok := v.(*astraProgressTracker)
-	if !ok {
-		return nil
+	group := v.(*astraGroupProgress)
+	group.mu.Lock()
+	trackers := make([]*astraProgressTracker, 0, len(group.trackers))
+	for _, tracker := range group.trackers {
+		trackers = append(trackers, tracker)
 	}
-	return tracker.snapshot()
+	group.mu.Unlock()
+	for _, tracker := range trackers {
+		if snap := tracker.snapshot(); snap != nil {
+			out = append(out, *snap)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].ModelIndex != out[j].ModelIndex {
+			return out[i].ModelIndex < out[j].ModelIndex
+		}
+		return out[i].ExpectedModel < out[j].ExpectedModel
+	})
+	return out
 }

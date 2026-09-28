@@ -60,7 +60,7 @@ func (GroupStatusConfig) Fields() []ent.Field {
 		field.JSON("astra_check_models", []map[string]any{}).
 			Default([]map[string]any{}).
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
-		field.String("astra_check_tier").Default("low"),
+		field.String("astra_check_tier").Default("medium"),
 		field.Int("astra_check_interval_seconds").Default(3600),
 	}
 }

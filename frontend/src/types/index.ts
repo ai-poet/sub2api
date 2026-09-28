@@ -2692,7 +2692,8 @@ export interface GroupStatusAdminView {
   config: GroupStatusConfig
   summary: GroupStatusSummary
   astra_check_targets?: AstraCheckTarget[] | null
-  astra_check_progress?: AstraCheckProgress | null
+  // 正在并行检测的各模型的实时进度（按模型序号），没有在跑时为空
+  astra_check_progresses?: AstraCheckProgress[] | null
   // 每个已配置模型最近一次运行的完整记录（含逐请求样本），按配置顺序
   astra_check_last_runs?: AstraCheckLastRun[] | null
 }

@@ -134,14 +134,21 @@ func (s *GroupStatusRunnerService) runAstraCheckOnce() {
 		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] list due astra check configs failed: %v", err)
 		return
 	}
+	// 到期的分组并行检测：分组通常各有各的账号；同一账号上的在途请求由探测服务的账号名额统一限流
+	var wg sync.WaitGroup
 	for _, cfg := range configs {
-		if ctx.Err() != nil {
-			return
-		}
-		if _, err := s.probeSvc.ProbeAstraCheckWithConfig(ctx, cfg); err != nil {
-			logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] astra check group=%d failed: %v", cfg.GroupID, err)
-		}
+		wg.Add(1)
+		go func(cfg *GroupStatusConfig) {
+			defer wg.Done()
+			if ctx.Err() != nil {
+				return
+			}
+			if _, err := s.probeSvc.ProbeAstraCheckWithConfig(ctx, cfg); err != nil {
+				logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] astra check group=%d failed: %v", cfg.GroupID, err)
+			}
+		}(cfg)
 	}
+	wg.Wait()
 }
 
 func (s *GroupStatusRunnerService) cleanupOldRecords() {
@@ -157,7 +164,6 @@ func (s *GroupStatusRunnerService) cleanupOldRecords() {
 	if deleted > 0 {
 		logger.LegacyPrintf("service.group_status_runner", "[GroupStatusRunner] cleaned %d old records", deleted)
 	}
-
 
 	deletedAstra, err := s.repo.DeleteAstraCheckRunsOlderThan(ctx, before)
 	if err != nil {

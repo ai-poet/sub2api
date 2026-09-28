@@ -239,7 +239,8 @@
           </div>
 
           <div
-            v-if="astraProgress"
+            v-for="astraProgress in astraProgresses"
+            :key="astraProgress.expected_model"
             class="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/40 px-3 py-3 dark:border-emerald-900/40 dark:bg-emerald-950/20"
           >
             <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -270,7 +271,7 @@
               </div>
             </div>
             <div class="h-2 w-full rounded bg-gray-200 dark:bg-dark-700">
-              <div class="h-2 rounded bg-emerald-500 transition-all" :style="{ width: `${astraProgressPercent}%` }"></div>
+              <div class="h-2 rounded bg-emerald-500 transition-all" :style="{ width: `${astraProgressPercent(astraProgress)}%` }"></div>
             </div>
             <div v-if="(astraProgress.samples?.length ?? 0) > 0" class="max-h-56 overflow-auto">
               <table class="w-full text-left text-xs">
@@ -690,7 +691,7 @@ const form = reactive({
   slow_latency_ms: 15000,
   notify_enabled: true,
   astra_check_enabled: false,
-  astra_check_tier: 'low' as AstraCheckTier,
+  astra_check_tier: 'medium' as AstraCheckTier,
   astra_check_interval_seconds: 3600,
 })
 
@@ -750,7 +751,7 @@ const summary = computed<GroupStatusSummary>(() => {
     consecutive_non_down: 0,
     astra_check_enabled: false,
     astra_check_models: [],
-    astra_check_tier: 'low',
+    astra_check_tier: 'medium',
     astra_check_interval_seconds: 3600,
     astra_check_states: [],
     astra_check_running: false,
@@ -847,15 +848,16 @@ function astraReasonLabel(reason: string): string {
 }
 
 // 验证进行中的实时进度（仅运行时后端才返回）与每个模型最近一次运行的完整记录
-const astraProgress = computed<AstraCheckProgress | null>(() => currentView.value?.astra_check_progress ?? null)
+// 多个模型并行检测，每个在跑的模型一块进度
+const astraProgresses = computed<AstraCheckProgress[]>(() => currentView.value?.astra_check_progresses ?? [])
 const astraLastRuns = computed<AstraCheckLastRun[]>(() => currentView.value?.astra_check_last_runs ?? [])
-const astraProgressPercent = computed(() => {
-  const p = astraProgress.value
-  if (!p || p.planned <= 0) {
+
+function astraProgressPercent(p: AstraCheckProgress): number {
+  if (p.planned <= 0) {
     return 0
   }
   return Math.min(100, Math.round((p.completed / p.planned) * 100))
-})
+}
 
 function astraLastRunFor(model: string): AstraCheckLastRun | null {
   return astraLastRuns.value.find((run) => run.expected_model === model) ?? null
@@ -939,7 +941,7 @@ function resetForm() {
   form.slow_latency_ms = 15000
   form.notify_enabled = true
   form.astra_check_enabled = false
-  form.astra_check_tier = 'low'
+  form.astra_check_tier = 'medium'
   form.astra_check_interval_seconds = 3600
   resetAstraModelForms([], [])
   expectedKeywordsText.value = ''
@@ -961,8 +963,9 @@ function normalizeAstraView(view: GroupStatusAdminView): GroupStatusAdminView {
   if (view.config && !Array.isArray(view.config.astra_check_models)) view.config.astra_check_models = []
   if (!Array.isArray(view.astra_check_targets)) view.astra_check_targets = []
   if (!Array.isArray(view.astra_check_last_runs)) view.astra_check_last_runs = []
-  if (view.astra_check_progress && !Array.isArray(view.astra_check_progress.samples)) {
-    view.astra_check_progress.samples = []
+  if (!Array.isArray(view.astra_check_progresses)) view.astra_check_progresses = []
+  for (const progress of view.astra_check_progresses) {
+    if (!Array.isArray(progress.samples)) progress.samples = []
   }
   for (const run of view.astra_check_last_runs) {
     if (!Array.isArray(run.samples)) run.samples = []
@@ -987,7 +990,7 @@ function applyView(view: GroupStatusAdminView, syncAstraForm = true) {
   expectedKeywordsText.value = joinRuntimeKeywordsText(view.config.expected_keywords)
   if (syncAstraForm) {
     form.astra_check_enabled = view.config.astra_check_enabled === true
-    form.astra_check_tier = view.config.astra_check_tier || 'low'
+    form.astra_check_tier = view.config.astra_check_tier || 'medium'
     form.astra_check_interval_seconds = view.config.astra_check_interval_seconds || 3600
     resetAstraModelForms(view.astra_check_targets ?? [], view.config.astra_check_models ?? [])
   }

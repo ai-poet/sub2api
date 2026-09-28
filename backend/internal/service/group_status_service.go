@@ -13,9 +13,9 @@ type GroupStatusAdminView struct {
 	Summary GroupStatusSummary `json:"summary"`
 	// meow 指纹验证：本平台可选的预期模型、正在进行的实时进度，
 	// 以及每个已配置模型最近一次运行的完整记录（含逐请求样本，按配置顺序）
-	AstraCheckTargets  []AstraCheckTarget         `json:"astra_check_targets"`
-	AstraCheckProgress *AstraCheckProgress        `json:"astra_check_progress,omitempty"`
-	AstraCheckLastRuns []GroupStatusAstraCheckRun `json:"astra_check_last_runs"`
+	AstraCheckTargets    []AstraCheckTarget         `json:"astra_check_targets"`
+	AstraCheckProgresses []AstraCheckProgress       `json:"astra_check_progresses"`
+	AstraCheckLastRuns   []GroupStatusAstraCheckRun `json:"astra_check_last_runs"`
 }
 
 type GroupStatusService struct {
@@ -69,11 +69,12 @@ func (s *GroupStatusService) GetAdminView(ctx context.Context, groupID int64) (*
 	decorateAstraCheckSummary(&summary)
 
 	view := &GroupStatusAdminView{
-		Group:             group,
-		Config:            cfg,
-		Summary:           summary,
-		AstraCheckTargets:  AstraCheckTargetsForPlatform(group.Platform),
-		AstraCheckLastRuns: []GroupStatusAstraCheckRun{},
+		Group:                group,
+		Config:               cfg,
+		Summary:              summary,
+		AstraCheckTargets:    AstraCheckTargetsForPlatform(group.Platform),
+		AstraCheckProgresses: []AstraCheckProgress{},
+		AstraCheckLastRuns:   []GroupStatusAstraCheckRun{},
 	}
 	if astraCheckSupportsPlatform(group.Platform) {
 		runs, err := s.repo.ListLatestAstraCheckRuns(ctx, groupID)

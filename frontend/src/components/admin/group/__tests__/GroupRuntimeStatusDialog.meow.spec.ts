@@ -316,6 +316,51 @@ describe('GroupRuntimeStatusDialog meow fingerprint card', () => {
     expect(toasts.showError).toHaveBeenCalledWith('admin.groups.runtimeStatus.astraCheck.noModelSelected')
   })
 
+  it('shows one progress panel per model that is being checked in parallel', async () => {
+    const view = buildView('openai')
+    const progress = (model: string, index: number, completed: number) => ({
+      expected_model: model,
+      model_index: index,
+      model_count: 2,
+      round: 1,
+      phase: 'running' as const,
+      account_id: index,
+      planned: 32,
+      completed,
+      valid: completed,
+      invalid: 0,
+      failed: 0,
+      requests: completed,
+      in_flight: 2,
+      started_at: '',
+      updated_at: '',
+      elapsed_ms: 5000,
+      samples: []
+    })
+    view.summary.astra_check_running = true
+    view.astra_check_progresses = [progress('gpt-6-sol', 1, 16), progress('gpt-6-astra', 2, 8)]
+    mocks.getRuntimeStatus.mockResolvedValue(view)
+    const wrapper = mount(GroupRuntimeStatusDialog, {
+      props: { show: true, group: { id: 5, name: 'G', platform: 'openai' } as AdminGroup },
+      global: {
+        stubs: {
+          BaseDialog: { props: ['show'], template: '<div v-if="show"><slot /><slot name="footer" /></div>' },
+          Toggle: { props: ['modelValue'], template: '<input type="checkbox" :checked="modelValue" />' }
+        }
+      }
+    })
+    await flushPromises()
+
+    const text = wrapper.text()
+    expect(text).toContain('"model":"GPT-6 Sol","index":1,"count":2')
+    expect(text).toContain('"model":"GPT-6 Astra","index":2,"count":2')
+    expect(text).toContain('16 / 32')
+    expect(text).toContain('8 / 32')
+    // 运行中：检测按钮都不可点
+    expect(wrapper.find('[data-astra-probe-all]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[data-astra-probe-model="gpt-6-sol"]').attributes('disabled')).toBeDefined()
+  })
+
   it('hides the card and leaves the fingerprint settings out of the payload on other platforms', async () => {
     const wrapper = await mountDialog('gemini')
     expect(wrapper.text()).not.toContain('admin.groups.runtimeStatus.astraCheck.title')

@@ -12,6 +12,5 @@ var FS embed.FS
 // Files 是内置基准包的文件名，按加载顺序排列。
 var Files = []string{
 	"meow-gpt-other-cap98-efficient--4.5.4-predictive.20260924.2.meow.json",
-	"meow-gpt-other-cap98--4.5.3-predictive.2.meow.json",
 	"meow-claude-other-cap98-efficient--4.5.4-predictive.20260924.1.meow.json",
 }

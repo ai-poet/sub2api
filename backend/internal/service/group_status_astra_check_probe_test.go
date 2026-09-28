@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -18,6 +19,8 @@ import (
 // groupStatusAstraRepo 按（分组, 预期模型）保存状态，与真实仓储的 ON CONFLICT (group_id, expected_model) 一致。
 type groupStatusAstraRepo struct {
 	GroupStatusRepository
+	// 多模型并行检测时会并发落库
+	mu      sync.Mutex
 	cfg     *GroupStatusConfig
 	states  map[string]*GroupStatusAstraCheckState
 	results []*GroupStatusAstraCheckResult
@@ -27,6 +30,8 @@ type groupStatusAstraRepo struct {
 }
 
 func (r *groupStatusAstraRepo) GetConfig(_ context.Context, groupID int64) (*GroupStatusConfig, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if r.cfg == nil || r.cfg.GroupID != groupID {
 		return nil, ErrGroupStatusConfigNotFound
 	}
@@ -34,6 +39,8 @@ func (r *groupStatusAstraRepo) GetConfig(_ context.Context, groupID int64) (*Gro
 }
 
 func (r *groupStatusAstraRepo) ListAstraCheckStates(_ context.Context, groupIDs []int64) ([]GroupStatusAstraCheckState, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	wanted := make(map[int64]struct{}, len(groupIDs))
 	for _, id := range groupIDs {
 		wanted[id] = struct{}{}
@@ -51,6 +58,8 @@ func (r *groupStatusAstraRepo) SaveAstraCheckRun(_ context.Context, result *Grou
 	if r.onSave != nil {
 		r.onSave(result)
 	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	copied := *result
 	r.results = append(r.results, &copied)
 	runID := int64(len(r.results))
@@ -133,6 +142,7 @@ func newAstraProbeFixture(t *testing.T, platform string, models []AstraCheckMode
 
 	// 测试桩按顺序弹出响应且无锁，串行执行；重试退避不等待
 	svc.astraConcurrency = 1
+	svc.astraModelParallelism = 1
 	svc.astraSleep = func(context.Context, time.Duration) error { return nil }
 	svc.SetAstraBenchmarkProvider(staticAstraRegistryProvider{reg: syntheticAstraRegistry(t)})
 	return &astraProbeFixture{svc: svc, group: group, cfg: cfg, repo: repo, upstream: upstream, notifier: notifier}
@@ -187,7 +197,11 @@ func TestAstraCheckProbe_RunsEveryConfiguredModel(t *testing.T) {
 	responses := append(solLike(), astraLike()...)
 	f := newAstraProbeFixture(t, PlatformOpenAI, onlyModels("gpt-6-sol", "gpt-6-astra"), responses...)
 	var progress []*AstraCheckProgress
-	f.repo.onSave = func(*GroupStatusAstraCheckResult) { progress = append(progress, f.svc.AstraCheckProgress(f.group.ID)) }
+	f.repo.onSave = func(*GroupStatusAstraCheckResult) {
+		snaps := f.svc.AstraCheckProgresses(f.group.ID)
+		require.Len(t, snaps, 1)
+		progress = append(progress, &snaps[0])
+	}
 
 	executions := f.run(t)
 	require.Len(t, executions, 2)
@@ -225,7 +239,7 @@ func TestAstraCheckProbe_RunsEveryConfiguredModel(t *testing.T) {
 	require.Empty(t, f.repo.events)
 	require.Equal(t, 0, f.notifier.calls)
 	require.False(t, f.svc.IsAstraCheckRunning(f.group.ID))
-	require.Nil(t, f.svc.AstraCheckProgress(f.group.ID))
+	require.Empty(t, f.svc.AstraCheckProgresses(f.group.ID))
 
 	// 运行中途的进度标明正在检测第几个模型
 	require.Len(t, progress, 2)

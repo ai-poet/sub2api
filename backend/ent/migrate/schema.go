@@ -1005,7 +1005,7 @@ var (
 		{Name: "astra_check_enabled", Type: field.TypeBool, Default: false},
 		{Name: "astra_check_request_model", Type: field.TypeString, Default: "gpt-6-astra"},
 		{Name: "astra_check_models", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
-		{Name: "astra_check_tier", Type: field.TypeString, Default: "low"},
+		{Name: "astra_check_tier", Type: field.TypeString, Default: "medium"},
 		{Name: "astra_check_interval_seconds", Type: field.TypeInt, Default: 3600},
 	}
 	// GroupStatusConfigsTable holds the schema information for the "group_status_configs" table.

@@ -210,7 +210,8 @@ func astraCheckRunBudget(models int) time.Duration {
 	return budget
 }
 
-// probeAstraCheck 依次检测给定的每个模型；每个模型各自落库、各自判定、各自推送。
+// probeAstraCheck 并行检测给定的各个模型（同时最多 astraCheckModelParallelism 个，优先摊到不同账号）；
+// 每个模型各自落库、各自判定、各自推送，结果按传入顺序返回。
 func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Group, cfg *GroupStatusConfig, models []AstraCheckModelConfig) ([]*GroupStatusAstraCheckExecution, error) {
 	if group == nil || cfg == nil {
 		return nil, ErrGroupStatusInvalidConfig
@@ -231,18 +232,45 @@ func (s *GroupStatusProbeService) probeAstraCheck(ctx context.Context, group *Gr
 	defer s.clearAstraProgress(group.ID)
 
 	registry, regErr := s.astraBenchmarks()
-	executions := make([]*GroupStatusAstraCheckExecution, 0, len(models))
-	for i, model := range models {
-		if ctx.Err() != nil {
-			break
-		}
-		execution, err := s.probeAstraCheckModel(ctx, group, cfg, model, i+1, len(models), registry, regErr)
-		if err != nil {
-			return executions, err
-		}
-		executions = append(executions, execution)
+	parallel := s.astraCheckModelParallelism()
+	if parallel > len(models) {
+		parallel = len(models)
 	}
-	return executions, nil
+	results := make([]*GroupStatusAstraCheckExecution, len(models))
+	errs := make([]error, len(models))
+	// 名额在发起循环里按配置顺序占用，模型按顺序开始（并行度为 1 时即严格串行）
+	gate := make(chan struct{}, parallel)
+	var wg sync.WaitGroup
+launch:
+	for i, model := range models {
+		select {
+		case gate <- struct{}{}:
+		case <-ctx.Done():
+			break launch
+		}
+		wg.Add(1)
+		go func(i int, model AstraCheckModelConfig) {
+			defer wg.Done()
+			defer func() { <-gate }()
+			if ctx.Err() != nil {
+				return
+			}
+			results[i], errs[i] = s.probeAstraCheckModel(ctx, group, cfg, model, i+1, len(models), registry, regErr)
+		}(i, model)
+	}
+	wg.Wait()
+
+	executions := make([]*GroupStatusAstraCheckExecution, 0, len(models))
+	var firstErr error
+	for i := range models {
+		if errs[i] != nil && firstErr == nil {
+			firstErr = errs[i]
+		}
+		if results[i] != nil {
+			executions = append(executions, results[i])
+		}
+	}
+	return executions, firstErr
 }
 
 // probeAstraCheckModel 检测一个模型；首次出现「强指向其他模型」时在同一账号上立即复测一轮确认：
@@ -256,6 +284,8 @@ func (s *GroupStatusProbeService) probeAstraCheckModel(
 	registry *AstraBenchmarkRegistry,
 	regErr error,
 ) (*GroupStatusAstraCheckExecution, error) {
+	// 结果落库后移除这个模型的进度，前端转而显示它的结果
+	defer s.endAstraProgress(group.ID, model.ExpectedModel)
 	progress := s.beginAstraProgress(group.ID, 1, model.ExpectedModel, index, count)
 	account, result := s.executeAstraCheckRun(ctx, group, cfg, model, registry, regErr, progress, 1, nil)
 	logAstraCheckRun(group, account, result)
@@ -332,9 +362,13 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(
 	round int,
 	pinned *Account,
 ) (*Account, *GroupStatusAstraCheckResult) {
-	startedAt := time.Now()
 	target, targetKnown := astraCheckTarget(model.ExpectedModel)
 	requestModel := model.requestModelFor(target)
+	// GPT-5.6 Sol 走 Juice 读数，不用基准包
+	if targetKnown && target.Method == AstraCheckMethodSolJuice && astraCheckTargetAllowed(group.Platform, model.ExpectedModel) {
+		return s.executeSolJuiceRun(ctx, group, cfg, model, target, requestModel, progress, round, pinned)
+	}
+	startedAt := time.Now()
 	tier := strings.TrimSpace(cfg.AstraCheckTier)
 	if tier == "" {
 		tier = groupStatusAstraCheckDefaultTier
@@ -459,55 +493,13 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(
 	probeCfg.ProbeModel = requestModel
 
 	// 账号锁定：同步跑第一个任务，拿到 2xx 后整批固定在该账号
-	excludedIDs := make(map[int64]struct{})
-	maxAttempts := s.maxProbeAttempts(group)
-	tryPinned := pinned != nil && astraAccountCompatible(group, pinned)
-	var (
-		account            *Account
-		firstSample        *astraSample
-		firstFailureDetail string
-		failedSamples      []astraSample // 换号前失败的首个任务，保留以便汇总 HTTP 码与 token
-	)
-	for attemptNo := 0; attemptNo < maxAttempts; attemptNo++ {
-		var candidate *Account
-		if tryPinned {
-			tryPinned = false
-			candidate = pinned
-		} else {
-			attempt, selectErr := s.selectProbeAttempt(ctx, group, &probeCfg, excludedIDs)
-			if selectErr != nil {
-				return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "no schedulable account: "+selectErr.Error()), AstraCheckReasonNoAccount)
-			}
-			if attempt == nil || attempt.Account == nil {
-				return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "no schedulable account available"), AstraCheckReasonNoAccount)
-			}
-			candidate = attempt.Account
-			if _, excluded := excludedIDs[candidate.ID]; excluded || !astraAccountCompatible(group, candidate) || attempt.WaitPlan != nil {
-				excludedIDs[candidate.ID] = struct{}{}
-				continue
-			}
-		}
-		progress.setAccount(candidate.ID)
-		sample := s.runAstraJob(ctx, candidate, requestModel, bench, jobs[0], progress)
-		if sample.TransportFailed {
-			failure := &GroupStatusProbeResult{HTTPCode: sample.HTTPCode}
-			if s.shouldProbeFailover(candidate, failure, errors.New(sample.ErrDetail)) && attemptNo < maxAttempts-1 {
-				if firstFailureDetail == "" {
-					firstFailureDetail = fmt.Sprintf("account %d: %s", candidate.ID, truncateProbeText(sample.ErrDetail))
-				}
-				failedSamples = append(failedSamples, sample)
-				excludedIDs[candidate.ID] = struct{}{}
-				// 首个任务会在下一个账号上重跑，不算已完成
-				progress.rollbackJob(AstraCheckSampleFailed)
-				continue
-			}
-		}
-		account = candidate
-		firstSample = &sample
-		break
-	}
+	lock := s.lockAstraAccount(ctx, group, &probeCfg, pinned, progress, func(candidate *Account) astraSample {
+		return s.runAstraJob(ctx, candidate, requestModel, bench, jobs[0], progress)
+	})
+	defer lock.release()
+	account, firstSample, failedSamples, firstFailureDetail := lock.account, lock.first, lock.failed, lock.firstFailureDetail
 	if account == nil {
-		return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, "failover_exhausted"), AstraCheckReasonNoAccount)
+		return finish(nil, failedSamples, mergeProbeErrorDetails(firstFailureDetail, lock.noAccountDetail), AstraCheckReasonNoAccount)
 	}
 	progress.setPhase(AstraCheckPhaseRunning)
 
@@ -520,11 +512,9 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(
 		var wg sync.WaitGroup
 		queue := make(chan AstraJob)
 		// 连接池按账号隔离时上游连接数 = 账号并发数，超出的请求只会在传输层排队并把超时耗光，
-		// 所以并发不能高于账号并发。
-		workers := s.astraCheckConcurrency()
-		if account.Concurrency > 0 && workers > account.Concurrency {
-			workers = account.Concurrency
-		}
+		// 所以在途请求不能高于账号并发：runAstraJob 每次请求前占用账号的服务级名额，
+		// 同一账号上并行的其他模型 / 分组合计也不超过这个上限。
+		workers := s.astraAccountCapacity(account)
 		if workers > len(rest) {
 			workers = len(rest)
 		}
@@ -574,11 +564,21 @@ func (s *GroupStatusProbeService) runAstraJob(ctx context.Context, account *Acco
 			return sample
 		}
 		sample.Attempts = attempt
+		// 占用账号的一个在途名额（与同一账号上并行的其他检测共享），等待不计入请求超时
+		release, acquireErr := s.astraAccounts.acquire(ctx, account.ID, s.astraAccountCapacity(account))
+		if acquireErr != nil {
+			sample.TransportFailed = true
+			sample.Completed = false
+			sample.ErrDetail = acquireErr.Error()
+			progress.record(astraSampleRecordFrom(&sample, attempt, true), false)
+			return sample
+		}
 		timeoutCtx, cancel := context.WithTimeout(ctx, groupStatusAstraCheckRequestTimeout)
 		progress.requestStarted()
 		started := time.Now()
 		resp, httpCode, err := s.astraCheckRequest(timeoutCtx, account, requestModel, cell)
 		cancel()
+		release()
 		sample.LatencyMS = time.Since(started).Milliseconds()
 		sample.Usage.InputTokens += resp.Usage.InputTokens
 		sample.Usage.OutputTokens += resp.Usage.OutputTokens

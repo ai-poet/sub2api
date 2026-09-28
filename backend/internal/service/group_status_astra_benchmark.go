@@ -17,7 +17,7 @@ import (
 // meow 指纹验证的基准包（meow LLM detector 的 *.meow.json），本 fork 自有功能。
 //
 // 历史上只检测 GPT-6 Astra，所以代码与表名沿用 astra_check；现在内置多个 v3 基准包
-// （GPT 新旧两代 + Claude），一个分组可以同时检测多个预期模型。包内已经给出每道题的类别词表、
+// （GPT-6 + Claude），一个分组可以同时检测多个预期模型（GPT-5.6 Sol 改用 Juice 读数，见 group_status_sol_juice.go）。包内已经给出每道题的类别词表、
 // 各来源的 Dirichlet 参数和各档强指向线；这里只做解析、严格校验与内存缓存，判定见 group_status_astra_check.go。
 
 const (
@@ -514,23 +514,31 @@ type astraBenchmarkProvider interface {
 
 // ---------- 可检测的目标模型 ----------
 
-// AstraCheckTarget 是某个平台可选的预期模型，以及判定它所用的基准包。
+// 目标的检测方法：meow 基准（一批短答题 + v3 判定）或 Juice 读数（一条 high 推理请求）。
+const (
+	AstraCheckMethodMeow     = "meow"
+	AstraCheckMethodSolJuice = "sol_juice"
+)
+
+// AstraCheckTarget 是某个平台可选的预期模型、判定它的方法，以及 meow 方法所用的基准包。
 type AstraCheckTarget struct {
 	ID                  string `json:"id"`
 	DisplayName         string `json:"display_name"`
 	Platform            string `json:"platform"`
 	DefaultRequestModel string `json:"default_request_model"`
+	Method              string `json:"method"`
 	PackageID           string `json:"package_id"`
 }
 
-// astraCheckTargets 是固定的目标列表；每个目标必须在对应基准包里（测试钉住）。
-// 5.6 Sol 用 4.5.3 包：4.5.4 包把旧 Sol / 旧 Luna 并入了 other，不再能正向识别。
+// astraCheckTargets 是固定的目标列表；meow 方法的目标必须在对应基准包里（测试钉住）。
+// GPT-5.6 Sol 用 Juice 读数（Sol 回 40）：官方渠道下它在 meow 基准里的答案分布会漂移、被判成其他模型，
+// 而 Juice 一条请求就能把 Sol / Terra / Luna 区分开。
 var astraCheckTargets = []AstraCheckTarget{
-	{ID: "gpt-5.6-sol", DisplayName: "GPT-5.6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-5.6-sol", PackageID: "meow-gpt-other-cap98"},
-	{ID: "gpt-6-sol", DisplayName: "GPT-6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-sol", PackageID: "meow-gpt-other-cap98-efficient"},
-	{ID: "gpt-6-astra", DisplayName: "GPT-6 Astra", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-astra", PackageID: "meow-gpt-other-cap98-efficient"},
-	{ID: "claude-opus-5.5", DisplayName: "Claude Opus 5.5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5-5", PackageID: "meow-claude-other-cap98-efficient"},
-	{ID: "claude-fable-5.1", DisplayName: "Claude Fable 5.1", Platform: PlatformAnthropic, DefaultRequestModel: "claude-fable-5-1", PackageID: "meow-claude-other-cap98-efficient"},
+	{ID: "gpt-5.6-sol", DisplayName: "GPT-5.6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-5.6-sol", Method: AstraCheckMethodSolJuice},
+	{ID: "gpt-6-sol", DisplayName: "GPT-6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-sol", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
+	{ID: "gpt-6-astra", DisplayName: "GPT-6 Astra", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-astra", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
+	{ID: "claude-opus-5.5", DisplayName: "Claude Opus 5.5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5-5", Method: AstraCheckMethodMeow, PackageID: "meow-claude-other-cap98-efficient"},
+	{ID: "claude-fable-5.1", DisplayName: "Claude Fable 5.1", Platform: PlatformAnthropic, DefaultRequestModel: "claude-fable-5-1", Method: AstraCheckMethodMeow, PackageID: "meow-claude-other-cap98-efficient"},
 }
 
 // astraModelLabels 是包内候选的可读名（含非目标的候选，用于「强指向 X」）。
@@ -541,6 +549,8 @@ var astraModelLabels = map[string]string{
 	"gpt-5.6-sol":        "GPT-5.6 Sol",
 	"gpt-5.6-terra":      "GPT-5.6 Terra",
 	"gpt-5.6-luna":       "GPT-5.6 Luna",
+	"gpt-5.5":            "GPT-5.5 / GPT-5.4",
+	"gpt-5.4-mini":       "GPT-5.4 mini",
 	"claude-opus-5.5":    "Claude Opus 5.5",
 	"claude-fable-5.1":   "Claude Fable 5.1",
 	"claude-sonnet-5":    "Claude Sonnet 5",
