@@ -195,3 +195,58 @@ func TestDecorateAstraCheckSummary_ReportsMethodPerModel(t *testing.T) {
 	require.Equal(t, AstraCheckMethodSolJuice, summary.AstraCheckStates[0].Method)
 	require.Equal(t, AstraCheckMethodMeow, summary.AstraCheckStates[1].Method)
 }
+
+// Juice 沿用原纯 Sol 验证的选号：取调度器首选账号，不避让其他并行检测占用的账号。
+func TestSolJuiceProbe_UsesSchedulerFirstChoiceEvenWhenBusy(t *testing.T) {
+	f := newAstraProbeFixture(t, PlatformOpenAI, onlyModels("gpt-5.6-sol"), juiceSSE("40"))
+	done := f.svc.astraAccounts.use(1) // 账号 1 正被别的检测占用
+	defer done()
+
+	execution := f.run(t)[0]
+	require.Equal(t, AstraCheckVerdictMatch, execution.Result.Verdict)
+	require.Equal(t, int64(1), *execution.Result.AccountID)
+}
+
+// 对照：meow 目标会避开被占用的账号。
+func TestAstraCheckProbe_MeowPrefersIdleAccount(t *testing.T) {
+	f := newAstraProbeFixture(t, PlatformOpenAI, onlyModels("gpt-6-astra"), astraLike()...)
+	done := f.svc.astraAccounts.use(1)
+	defer done()
+
+	execution := f.run(t)[0]
+	require.Equal(t, AstraCheckVerdictMatch, execution.Result.Verdict)
+	require.Equal(t, int64(2), *execution.Result.AccountID)
+}
+
+// 结果来源换了（meow 基准 → Juice）：旧来源的稳定结论与计数静默清零，不发事件。
+func TestComputeAstraCheckTransition_ResetsWhenSourceChanges(t *testing.T) {
+	prev := &GroupStatusAstraCheckState{
+		GroupID:             30,
+		ExpectedModel:       "gpt-5.6-sol",
+		StableStatus:        AstraCheckStatusMismatch,
+		ConsecutiveMismatch: 3,
+		BenchmarkPackageID:  "meow-gpt-other-cap98",
+	}
+	juice := astraResult(AstraCheckVerdictMatch, "gpt-5.6-sol", "gpt-5.6-sol")
+	juice.BenchmarkPackageID = solJuicePackageID
+	next, event := ComputeAstraCheckTransition(prev, juice, 1)
+	require.Nil(t, event, "no recovered push for a result from a different source")
+	require.Equal(t, AstraCheckStatusPass, next.StableStatus)
+	require.Equal(t, 0, next.ConsecutiveMismatch)
+	require.Equal(t, solJuicePackageID, next.BenchmarkPackageID)
+
+	// 旧来源留下 1 次不符：新来源第一次不符只算第 1 次，不会直接凑满 2 次变红
+	prev = &GroupStatusAstraCheckState{ExpectedModel: "gpt-5.6-sol", StableStatus: AstraCheckStatusPass, ConsecutiveMismatch: 1, BenchmarkPackageID: "meow-gpt-other-cap98"}
+	mismatch := astraResult(AstraCheckVerdictMismatch, "gpt-5.6-sol", "gpt-5.6-terra")
+	mismatch.BenchmarkPackageID = solJuicePackageID
+	next, event = ComputeAstraCheckTransition(prev, mismatch, 2)
+	require.Nil(t, event)
+	require.Equal(t, 1, next.ConsecutiveMismatch)
+	require.Equal(t, "", next.StableStatus)
+
+	// 同一来源（含包版本升级，包 id 不变）照常累计
+	same := &GroupStatusAstraCheckState{StableStatus: AstraCheckStatusPass, ConsecutiveMismatch: 1, BenchmarkPackageID: solJuicePackageID}
+	next, event = ComputeAstraCheckTransition(same, mismatch, 3)
+	require.NotNil(t, event)
+	require.Equal(t, AstraCheckStatusMismatch, next.StableStatus)
+}

@@ -475,6 +475,7 @@ import {
   isAstraCheckEvent,
   isLegacyFingerprintEvent,
   normalizeAstraCheckStatus,
+  normalizeAstraStateStatus,
   normalizeGroupRuntimeStatus,
   parseAstraEventSubStatus,
   sanitizeRuntimeErrorDetail,
@@ -636,7 +637,7 @@ function astraModelName(model?: string | null): string {
 }
 
 function getAstraStateStatus(state: AstraCheckState): NormalizedAstraCheckStatus {
-  return normalizeAstraCheckStatus(state.stable_status, state.verdict)
+  return normalizeAstraStateStatus(state)
 }
 
 // 公开徽章：每个检测的预期模型一个，带模型名；不符时带上强指向的模型，没检测过的显示待验证

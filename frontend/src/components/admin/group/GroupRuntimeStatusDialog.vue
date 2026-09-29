@@ -666,7 +666,7 @@ import {
   getAstraCheckBadgeClass,
   getGroupRuntimeStatusBadgeClass,
   joinRuntimeKeywordsText,
-  normalizeAstraCheckStatus,
+  normalizeAstraStateStatus,
   normalizeGroupRuntimeStatus,
   shouldShowRuntimeKeywordEditor,
   splitRuntimeKeywordsText,
@@ -827,7 +827,7 @@ const astraTierOptions = computed(() => {
 })
 
 function astraStateStatus(state: AstraCheckState) {
-  return normalizeAstraCheckStatus(state.stable_status, state.verdict)
+  return normalizeAstraStateStatus(state)
 }
 
 function astraStateText(state: AstraCheckState): string {

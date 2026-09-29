@@ -106,12 +106,16 @@ func (s *GroupStatusProbeService) astraCheckModelParallelism() int {
 	return groupStatusAstraCheckModelParallelism
 }
 
-// selectAstraAccount 选一个账号并登记占用：先排除正被其他并行运行使用的账号，选不到再允许共用。
-func (s *GroupStatusProbeService) selectAstraAccount(ctx context.Context, group *Group, cfg *GroupStatusConfig, excludedIDs map[int64]struct{}) (*groupStatusProbeAttempt, func(), error) {
+// selectAstraAccount 选一个账号并登记占用。preferIdle 时先排除正被其他并行运行使用的账号，选不到再允许共用；
+// 否则直接取调度器的首选（Juice 沿用原纯 Sol 验证的选号方式）。
+func (s *GroupStatusProbeService) selectAstraAccount(ctx context.Context, group *Group, cfg *GroupStatusConfig, excludedIDs map[int64]struct{}, preferIdle bool) (*groupStatusProbeAttempt, func(), error) {
 	s.astraAccounts.selectMu.Lock()
 	defer s.astraAccounts.selectMu.Unlock()
 
-	busy := s.astraAccounts.busy()
+	busy := map[int64]struct{}{}
+	if preferIdle {
+		busy = s.astraAccounts.busy()
+	}
 	preferred := make(map[int64]struct{}, len(excludedIDs)+len(busy))
 	for id := range excludedIDs {
 		preferred[id] = struct{}{}
@@ -147,9 +151,9 @@ type astraAccountLock struct {
 	release            func()
 }
 
-// lockAstraAccount 为一次运行锁定账号：pinned 可用时先用它（复测确认），否则按调度器选（优先未被占用的账号）；
+// lockAstraAccount 为一次运行锁定账号：pinned 可用时先用它（复测确认），否则按调度器选（preferIdle 时优先未被占用的账号）；
 // 在候选账号上同步跑 first，传输 / 上游错误按存活探测的规则换号。拿到结果后整次运行固定在该账号。
-func (s *GroupStatusProbeService) lockAstraAccount(ctx context.Context, group *Group, probeCfg *GroupStatusConfig, pinned *Account, progress *astraProgressTracker, first func(*Account) astraSample) *astraAccountLock {
+func (s *GroupStatusProbeService) lockAstraAccount(ctx context.Context, group *Group, probeCfg *GroupStatusConfig, pinned *Account, preferIdle bool, progress *astraProgressTracker, first func(*Account) astraSample) *astraAccountLock {
 	lock := &astraAccountLock{release: func() {}}
 	excludedIDs := make(map[int64]struct{})
 	maxAttempts := s.maxProbeAttempts(group)
@@ -161,7 +165,7 @@ func (s *GroupStatusProbeService) lockAstraAccount(ctx context.Context, group *G
 			candidate = pinned
 			lock.release = s.astraAccounts.use(pinned.ID)
 		} else {
-			attempt, done, selectErr := s.selectAstraAccount(ctx, group, probeCfg, excludedIDs)
+			attempt, done, selectErr := s.selectAstraAccount(ctx, group, probeCfg, excludedIDs, preferIdle)
 			if selectErr != nil {
 				lock.noAccountDetail = "no schedulable account: " + selectErr.Error()
 				return lock

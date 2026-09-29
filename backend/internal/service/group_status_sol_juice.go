@@ -206,7 +206,7 @@ func (s *GroupStatusProbeService) executeSolJuiceRun(
 	requestModel string,
 	progress *astraProgressTracker,
 	round int,
-	pinned *Account,
+	pinned *Account, // Juice 不钉账号（复测也重新选号），保留参数只为与其他方法同形
 ) (*Account, *GroupStatusAstraCheckResult) {
 	startedAt := time.Now()
 	result := &GroupStatusAstraCheckResult{
@@ -229,7 +229,9 @@ func (s *GroupStatusProbeService) executeSolJuiceRun(
 
 	probeCfg := *cfg
 	probeCfg.ProbeModel = requestModel
-	lock := s.lockAstraAccount(ctx, group, &probeCfg, pinned, progress, func(candidate *Account) astraSample {
+	// 选号沿用原纯 Sol 验证：每次（含首次不符后的立即复测）都取调度器的首选账号，不避让并行检测占用的账号、
+	// 也不钉在上一轮的账号上——一条 Juice 请求很便宜，复测换到分组里另一个正常账号时就不会被单个账号拖成红色。
+	lock := s.lockAstraAccount(ctx, group, &probeCfg, nil, false, progress, func(candidate *Account) astraSample {
 		return s.runSolJuiceJob(ctx, candidate, requestModel, progress)
 	})
 	defer lock.release()

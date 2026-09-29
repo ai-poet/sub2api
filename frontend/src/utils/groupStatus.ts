@@ -142,6 +142,25 @@ export function normalizeAstraCheckStatus(
   }
 }
 
+// 某个预期模型徽章的状态。Juice（GPT-5.6 Sol）沿用原纯 Sol 验证的显示：稳定结论优先——
+// 单次不符（等复测）或读数无法判定都不改变已有的绿色 / 红色，只有还没有稳定结论时才看最近一次结果。
+// meow / ModelTrace 仍按最近一次结果显示（旧的绿色不盖住新的疑似结果）。
+export function normalizeAstraStateStatus(state: {
+  method?: string | null
+  stable_status?: string | null
+  verdict?: string | null
+}): NormalizedAstraCheckStatus {
+  if (state.method === 'sol_juice') {
+    if (state.stable_status === 'pass') {
+      return 'pass'
+    }
+    if (state.stable_status === 'mismatch') {
+      return 'mismatch'
+    }
+  }
+  return normalizeAstraCheckStatus(state.stable_status, state.verdict)
+}
+
 export function getAstraCheckBadgeClass(status?: string | null): string {
   switch (status) {
     case 'pass':

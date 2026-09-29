@@ -525,6 +525,12 @@ func ComputeAstraCheckTransition(prev *GroupStatusAstraCheckState, result *Group
 	next := &GroupStatusAstraCheckState{}
 	if prev != nil {
 		*next = *prev
+		// 结果来源换了（如 GPT-5.6 Sol 从 meow 基准改为 Juice、Claude Opus 5.5 改为 ModelTrace）：旧来源的
+		// 稳定结论与连续计数不再有意义，静默清零，不发事件，避免旧来源的误判拖着新来源一起变红
+		if prev.BenchmarkPackageID != "" && result.BenchmarkPackageID != "" && prev.BenchmarkPackageID != result.BenchmarkPackageID {
+			next.StableStatus = ""
+			next.ConsecutiveMismatch = 0
+		}
 	}
 	next.GroupID = result.GroupID
 	next.ConfigID = result.ConfigID

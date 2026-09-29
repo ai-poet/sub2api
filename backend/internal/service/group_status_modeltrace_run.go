@@ -372,7 +372,7 @@ func (s *GroupStatusProbeService) executeModelTraceRun(
 	// 让调度器按请求模型过滤账号，其余配置照抄；首条挑战同步发出以锁定账号
 	probeCfg := *cfg
 	probeCfg.ProbeModel = requestModel
-	lock := s.lockAstraAccount(ctx, group, &probeCfg, pinned, progress, func(candidate *Account) astraSample {
+	lock := s.lockAstraAccount(ctx, group, &probeCfg, pinned, true, progress, func(candidate *Account) astraSample {
 		att := s.runModelTraceChallenge(ctx, candidate, requestModel, challenges[0], 1, progress)
 		attempts = append(attempts, att)
 		return att.sample

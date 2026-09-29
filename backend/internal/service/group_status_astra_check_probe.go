@@ -498,7 +498,7 @@ func (s *GroupStatusProbeService) executeAstraCheckRun(
 	probeCfg.ProbeModel = requestModel
 
 	// 账号锁定：同步跑第一个任务，拿到 2xx 后整批固定在该账号
-	lock := s.lockAstraAccount(ctx, group, &probeCfg, pinned, progress, func(candidate *Account) astraSample {
+	lock := s.lockAstraAccount(ctx, group, &probeCfg, pinned, true, progress, func(candidate *Account) astraSample {
 		return s.runAstraJob(ctx, candidate, requestModel, bench, jobs[0], progress)
 	})
 	defer lock.release()
