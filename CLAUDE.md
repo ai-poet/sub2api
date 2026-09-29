@@ -209,6 +209,15 @@ The features below are locally maintained customizations of this fork. During up
   (`waku-agent-bridge/src/images.rs`): the engine never read the `@path`
   mentions the composer appends per attachment, so the bridge sends each
   mentioned PNG / JPEG / GIF / WebP as an image block ahead of the text.
+  One more departure: on the Responses and Chat Completions routes the calls
+  of one assistant message no longer run strictly one after another — each
+  stretch of calls that may overlap (sub-agents and read-only tools,
+  `runner/tools.rs::{runs_concurrently, concurrency_runs}`) runs as one
+  `run_tool_batch`, the way the Messages route runs a message's calls, while
+  writes, commands and state switches still run alone and in order, results
+  keep the calls' order, and a cancel abandons the batch in flight
+  (`query/src/lib.rs` provider branch — sub-agents asked for together ran back
+  to back on every GPT, Grok and Chinese model).
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
@@ -236,7 +245,12 @@ The features below are locally maintained customizations of this fork. During up
   Code's `parent_tool_use_id` messages feed the same record
   (`driver/claude_subagent.rs`). The desktop shows a sub-agent call as one
   summary line (`src/app/subagent_row.rs`) that opens its live record in the
-  right panel (`subagent_panel.rs`, store in `subagent_transcript.rs`).
+  right panel (`subagent_panel.rs`, store in `subagent_transcript.rs`). A
+  foreground child runs on a Tokio task of its own (as a background one
+  does): the engine polls a message's calls on the parent's one task, so a
+  child waiting on an approval dialog or a synchronous tool froze its
+  siblings; the call's drop guard cancels the child's token so it cannot
+  outlive the call.
 - Context windows: the gateway catalog's `context_window` (and windows a user
   declared on their own endpoint) are written as
   `provider_configs.*.options.context_windows` in the engine's
