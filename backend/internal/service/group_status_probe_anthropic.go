@@ -110,7 +110,7 @@ func (s *GroupStatusProbeService) buildAnthropicMessagesProbeRequest(
 	req.Header.Set("anthropic-version", "2023-06-01")
 
 	if mode == anthropicProbeHeadersClaudeCode {
-		for key, value := range claude.DefaultHeaders {
+		for key, value := range claude.DefaultHeaders() {
 			req.Header.Set(key, value)
 		}
 		req.Header.Set("accept", "text/event-stream")

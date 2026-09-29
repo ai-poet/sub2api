@@ -36,6 +36,7 @@ type StreamingProcessor struct {
 	outputTokens      int
 	cacheReadTokens   int
 	imageOutputTokens int
+	hasContent        bool
 }
 
 // NewStreamingProcessor 创建流式响应处理器
@@ -147,6 +148,11 @@ func (p *StreamingProcessor) Finish() ([]byte, *ClaudeUsage) {
 // MessageStartSent 报告流中是否已发出过 message_start 事件（即是否收到过有效的上游数据）
 func (p *StreamingProcessor) MessageStartSent() bool {
 	return p.messageStartSent
+}
+
+// HasContent reports whether any substantive text, thinking, or tool calls were emitted.
+func (p *StreamingProcessor) HasContent() bool {
+	return p.hasContent
 }
 
 // emitMessageStart 发送 message_start 事件
@@ -263,6 +269,7 @@ func (p *StreamingProcessor) processThinking(text, signature string) []byte {
 	}
 
 	if text != "" {
+		p.hasContent = true
 		_, _ = result.Write(p.emitDelta("thinking_delta", map[string]any{
 			"thinking": text,
 		}))
@@ -317,6 +324,7 @@ func (p *StreamingProcessor) processText(text, signature string) []byte {
 		}))
 	}
 
+	p.hasContent = true
 	_, _ = result.Write(p.emitDelta("text_delta", map[string]any{
 		"text": text,
 	}))
@@ -329,6 +337,7 @@ func (p *StreamingProcessor) processFunctionCall(fc *GeminiFunctionCall, signatu
 	var result bytes.Buffer
 
 	p.usedTool = true
+	p.hasContent = true
 
 	toolID := fc.ID
 	if toolID == "" {
