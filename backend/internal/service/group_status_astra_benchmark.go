@@ -535,7 +535,7 @@ type AstraCheckTarget struct {
 }
 
 // astraCheckTargets 是固定的目标列表；meow 方法的目标必须在对应基准包里、modeltrace 方法的目标必须在指纹库里（测试钉住）。
-// Claude Opus 5.5 用 ModelTrace；Fable 5.1 不在 ModelTrace 指纹库里，仍用 meow 基准。
+// Claude Opus 5.5 / Opus 5 用 ModelTrace；Fable 5.1 不在 ModelTrace 指纹库里，仍用 meow 基准。
 // GPT-5.6 Sol 用 Juice 读数（Sol 回 40）：官方渠道下它在 meow 基准里的答案分布会漂移、被判成其他模型，
 // 而 Juice 一条请求就能把 Sol / Terra / Luna 区分开。
 var astraCheckTargets = []AstraCheckTarget{
@@ -543,6 +543,7 @@ var astraCheckTargets = []AstraCheckTarget{
 	{ID: "gpt-6-sol", DisplayName: "GPT-6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-sol", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
 	{ID: "gpt-6-astra", DisplayName: "GPT-6 Astra", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-astra", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
 	{ID: "claude-opus-5.5", DisplayName: "Claude Opus 5.5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5-5", Method: AstraCheckMethodModelTrace, TraceModelID: "claude-opus-5-5"},
+	{ID: "claude-opus-5", DisplayName: "Claude Opus 5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5", Method: AstraCheckMethodModelTrace, TraceModelID: "claude-opus-5"},
 	{ID: "claude-fable-5.1", DisplayName: "Claude Fable 5.1", Platform: PlatformAnthropic, DefaultRequestModel: "claude-fable-5-1", Method: AstraCheckMethodMeow, PackageID: "meow-claude-other-cap98-efficient"},
 }
 

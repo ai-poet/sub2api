@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// ModelTrace 数字分布指纹（本 fork 自有功能），是指纹验证里 Claude Opus 5.5 目标的检测方法。
+// ModelTrace 数字分布指纹（本 fork 自有功能），是指纹验证里 Claude Opus 5.5 / Opus 5 目标的检测方法。
 //
 // 每次运行向分组的一个账号发 3 条（不够时补到最多 6 条）「凭第一反应逐项输出 292–332 个 1..355 整数」的
 // 挑战，用 ModelTrace（MIT）统一指纹库对库内全部 16 个模型做闭集归因，再按 ModelTrace Guard 的

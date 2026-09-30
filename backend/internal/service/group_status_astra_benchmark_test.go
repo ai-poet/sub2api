@@ -68,13 +68,15 @@ func TestAstraCheckTargets_AreInTheirBenchmarkPackages(t *testing.T) {
 		return out
 	}
 	require.Equal(t, []string{"gpt-5.6-sol", "gpt-6-sol", "gpt-6-astra"}, ids(PlatformOpenAI))
-	require.Equal(t, []string{"claude-opus-5.5", "claude-fable-5.1"}, ids(PlatformAnthropic))
+	require.Equal(t, []string{"claude-opus-5.5", "claude-opus-5", "claude-fable-5.1"}, ids(PlatformAnthropic))
 	require.Empty(t, ids(PlatformGemini))
 	gpt56, ok := astraCheckTarget("gpt-5.6-sol")
 	require.True(t, ok)
 	require.Equal(t, AstraCheckMethodSolJuice, gpt56.Method)
 	require.True(t, astraCheckTargetAllowed(PlatformAnthropic, "claude-opus-5.5"))
 	require.False(t, astraCheckTargetAllowed(PlatformOpenAI, "claude-opus-5.5"))
+	require.True(t, astraCheckTargetAllowed(PlatformAnthropic, "claude-opus-5"))
+	require.False(t, astraCheckTargetAllowed(PlatformOpenAI, "claude-opus-5"))
 }
 
 func mutateEmbeddedAstraPackage(t *testing.T, mutate func(pkg map[string]any)) []byte {

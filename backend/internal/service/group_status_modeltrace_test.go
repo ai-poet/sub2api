@@ -44,11 +44,17 @@ func TestModelTraceTargets_AreInEmbeddedBank(t *testing.T) {
 		require.Empty(t, target.PackageID, "modeltrace target %s must not point at a meow package", target.ID)
 		require.True(t, bank.HasModel(target.TraceModelID), "target %s (%s) is missing from the fingerprint bank", target.ID, target.TraceModelID)
 	}
-	require.Equal(t, 1, found)
+	require.Equal(t, 2, found)
 	opus, ok := astraCheckTarget("claude-opus-5.5")
 	require.True(t, ok)
 	require.Equal(t, AstraCheckMethodModelTrace, opus.Method)
 	require.Equal(t, "claude-opus-5-5", opus.TraceModelID)
+	opus5, ok := astraCheckTarget("claude-opus-5")
+	require.True(t, ok)
+	require.Equal(t, PlatformAnthropic, opus5.Platform)
+	require.Equal(t, AstraCheckMethodModelTrace, opus5.Method)
+	require.Equal(t, "claude-opus-5", opus5.TraceModelID)
+	require.Equal(t, "claude-opus-5", opus5.DefaultRequestModel)
 	// Fable 5.1 不在 ModelTrace 指纹库里，仍用 meow 基准
 	fable, ok := astraCheckTarget("claude-fable-5.1")
 	require.True(t, ok)
@@ -278,7 +284,12 @@ func modelTraceAnthropicResponses(texts []string, stopReason string) []*http.Res
 
 func newModelTraceProbeFixture(t *testing.T, responses ...*http.Response) *astraProbeFixture {
 	t.Helper()
-	f := newAstraProbeFixture(t, PlatformAnthropic, onlyModels("claude-opus-5.5"), responses...)
+	return newModelTraceProbeFixtureFor(t, "claude-opus-5.5", responses...)
+}
+
+func newModelTraceProbeFixtureFor(t *testing.T, expected string, responses ...*http.Response) *astraProbeFixture {
+	t.Helper()
+	f := newAstraProbeFixture(t, PlatformAnthropic, onlyModels(expected), responses...)
 	f.svc.modelTraceChallengeGen = modelTraceFixedChallenges
 	return f
 }
@@ -332,6 +343,48 @@ func TestModelTraceProbe_OpusMatch(t *testing.T) {
 	messages := payload["messages"].([]any)
 	require.Len(t, messages, 1)
 	require.Equal(t, "challenge 1: 300 个 1 到 355（含端点）的整数", messages[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
+}
+
+func TestModelTraceProbe_Opus5Match(t *testing.T) {
+	opus5 := modelTraceReferenceTexts(t, "self-claude-opus-5")
+	f := newModelTraceProbeFixtureFor(t, "claude-opus-5", modelTraceAnthropicResponses(opus5, "end_turn")...)
+
+	execution := f.run(t)[0]
+	result := execution.Result
+	require.Equal(t, AstraCheckVerdictMatch, result.Verdict)
+	require.Equal(t, "claude-opus-5", result.Winner)
+	require.Equal(t, modelTracePackageID, result.BenchmarkPackageID)
+	require.Equal(t, 3, result.ValidSamples)
+	require.Equal(t, "Claude Opus 5", result.Matches[0].Name)
+	require.True(t, result.Matches[0].Passed)
+	require.Equal(t, AstraCheckStatusPass, execution.State.StableStatus)
+	require.Len(t, f.upstream.requests, 3)
+	require.Equal(t, "claude-opus-5", decodeProbeRequestBody(t, f.upstream.requests[0])["model"])
+}
+
+// Opus 5 与 Opus 5.5 在指纹库里分得开：互换答案会被判成对方，而不是证据不足。
+func TestModelTraceProbe_Opus5AndOpus55TellEachOtherApart(t *testing.T) {
+	cases := []struct {
+		expected, reference, winner string
+	}{
+		{expected: "claude-opus-5", reference: "self-claude-opus-5-5", winner: "claude-opus-5.5"},
+		{expected: "claude-opus-5.5", reference: "self-claude-opus-5", winner: "claude-opus-5"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.expected, func(t *testing.T) {
+			texts := modelTraceReferenceTexts(t, tc.reference)
+			responses := append(modelTraceAnthropicResponses(texts, "end_turn"), modelTraceAnthropicResponses(texts, "end_turn")...)
+			f := newModelTraceProbeFixtureFor(t, tc.expected, responses...)
+
+			execution := f.run(t)[0]
+			require.True(t, execution.Confirmed)
+			require.Equal(t, AstraCheckVerdictMismatch, execution.Result.Verdict)
+			require.Equal(t, tc.winner, execution.Result.Winner)
+			require.Equal(t, AstraCheckStatusMismatch, execution.State.StableStatus)
+			require.NotNil(t, execution.Event)
+			require.Equal(t, tc.expected+":winner_"+tc.winner, execution.Event.SubStatus)
+		})
+	}
 }
 
 func TestModelTraceProbe_CrossFamilyMismatchConfirmedOnSameAccount(t *testing.T) {
@@ -400,8 +453,9 @@ func TestModelTraceProbe_OAuthCarriesClaudeCodeIdentity(t *testing.T) {
 }
 
 func TestModelTraceProbe_FableStaysOnMeow(t *testing.T) {
-	summary := &GroupStatusSummary{AstraCheckModels: onlyModels("claude-opus-5.5", "claude-fable-5.1")}
+	summary := &GroupStatusSummary{AstraCheckModels: onlyModels("claude-opus-5.5", "claude-opus-5", "claude-fable-5.1")}
 	decorateAstraCheckSummary(summary)
 	require.Equal(t, AstraCheckMethodModelTrace, summary.AstraCheckStates[0].Method)
-	require.Equal(t, AstraCheckMethodMeow, summary.AstraCheckStates[1].Method)
+	require.Equal(t, AstraCheckMethodModelTrace, summary.AstraCheckStates[1].Method)
+	require.Equal(t, AstraCheckMethodMeow, summary.AstraCheckStates[2].Method)
 }
