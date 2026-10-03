@@ -27,6 +27,8 @@ type AuthHandler struct {
 	redeemService        *service.RedeemService
 	totpService          *service.TotpService
 	userAttributeService *service.UserAttributeService
+	// fork：封禁申诉会话（SetAppealService 注入，可为 nil）
+	appealService *service.AppealService
 
 	dingTalkClientInstance *DingTalkClient
 	dingTalkClientMu       sync.Mutex
@@ -105,7 +107,7 @@ func ensureLoginUserActive(user *service.User) error {
 		return infraerrors.Unauthorized("INVALID_USER", "user not found")
 	}
 	if !user.IsActive() {
-		return service.ErrUserNotActive
+		return service.NewUserNotActiveError(user) // fork：申诉（调用方都已验证身份）
 	}
 	return nil
 }
@@ -258,6 +260,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	token, user, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
+		if h.handleDisabledPasswordLogin(c, err) { // fork：申诉
+			return
+		}
 		response.ErrorFrom(c, err)
 		return
 	}
@@ -350,6 +355,10 @@ func (h *AuthHandler) Login2FA(c *gin.Context) {
 		return
 	}
 	if err := ensureLoginUserActive(user); err != nil {
+		if respondAppealIfDisabled(c, h.appealService, err) { // fork：申诉（2FA 已通过）
+			_ = h.totpService.DeleteLoginSession(c.Request.Context(), req.TempToken)
+			return
+		}
 		response.ErrorFrom(c, err)
 		return
 	}

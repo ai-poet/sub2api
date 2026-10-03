@@ -81,7 +81,9 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/users/:id/platform-quotas": {},
 	"GET /api/v1/admin/users/:id/attributes":      {},
 	"GET /api/v1/admin/users/:id/subscriptions":   {},
-	"GET /api/v1/admin/user-attributes":           {},
+	// 站内信历史（fork 本地）：只有消息正文、发件工作人员邮箱与已读状态，无凭证 / 余额 / IP
+	"GET /api/v1/admin/users/:id/site-messages": {},
+	"GET /api/v1/admin/user-attributes":         {},
 
 	// 订阅管理（只读部分）
 	"GET /api/v1/admin/subscriptions":              {},
@@ -131,6 +133,8 @@ var operatorApprovalScope = map[string]struct{}{
 	"POST /api/v1/admin/users/:id/platform-quotas/reset": {},
 	"PUT /api/v1/admin/users/:id/attributes":             {},
 	"POST /api/v1/admin/users/:id/auth-identities":       {},
+	// 给单个用户发站内信（fork 本地）：重放时 handler 把发件人记回发起的 operator
+	"POST /api/v1/admin/users/:id/site-messages": {},
 	// 用户 API Key 的分组调整（用户管理页的 API Key 弹窗）
 	"PUT /api/v1/admin/api-keys/:id": {},
 	// 订阅管理

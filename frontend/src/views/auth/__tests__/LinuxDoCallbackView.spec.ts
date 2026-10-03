@@ -96,6 +96,55 @@ describe('LinuxDoCallbackView', () => {
     sessionStorage.clear()
   })
 
+  // fork：被禁用账号的 LinuxDo 登录 → 申诉页，不建立任何登录态
+  it('routes a disabled account to the appeal page with only an appeal token', async () => {
+    window.location.hash = '#appeal_token=apl_from_linuxdo&expires_in=7200'
+
+    mount(LinuxDoCallbackView, {
+      global: {
+        stubs: {
+          AuthLayout: { template: '<div><slot /></div>' },
+          Icon: true,
+          RouterLink: { template: '<a><slot /></a>' },
+          transition: false
+        }
+      }
+    })
+    await flushPromises()
+
+    expect(replace).toHaveBeenCalledWith('/appeal')
+    expect(sessionStorage.getItem('sub2api_appeal_session')).toContain('apl_from_linuxdo')
+    expect(setToken).not.toHaveBeenCalled()
+    expect(exchangePendingOAuthCompletion).not.toHaveBeenCalled()
+    expect(localStorage.getItem('auth_token')).toBeNull()
+  })
+
+  it('routes to the appeal page when the pending exchange reports a disabled account', async () => {
+    exchangePendingOAuthCompletion.mockRejectedValue({
+      status: 403,
+      reason: 'USER_NOT_ACTIVE',
+      message: 'user is not active',
+      metadata: { appeal_token: 'apl_from_exchange', expires_in: '7200' }
+    })
+
+    mount(LinuxDoCallbackView, {
+      global: {
+        stubs: {
+          AuthLayout: { template: '<div><slot /></div>' },
+          Icon: true,
+          RouterLink: { template: '<a><slot /></a>' },
+          transition: false
+        }
+      }
+    })
+    await flushPromises()
+
+    expect(exchangePendingOAuthCompletion).toHaveBeenCalled()
+    expect(replace).toHaveBeenCalledWith('/appeal')
+    expect(sessionStorage.getItem('sub2api_appeal_session')).toContain('apl_from_exchange')
+    expect(setToken).not.toHaveBeenCalled()
+  })
+
   it('accepts the legacy fragment token success callback without pending-session exchange', async () => {
     window.location.hash =
       '#access_token=legacy-access-token&refresh_token=legacy-refresh-token&expires_in=3600&token_type=Bearer&redirect=%2Flegacy-dashboard'

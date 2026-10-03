@@ -66,6 +66,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { captureAppealToken, consumeAppealFragment } from '@/utils/appeal'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
@@ -130,6 +131,11 @@ async function handleSubmitInvitation() {
     clearStoredOAuthReturnPathIfObsoletedByOAuthRedirect(target)
     await router.replace(parseAppInternalRedirect(target))
   } catch (e: unknown) {
+    // fork：被禁用账号完成 GitHub 登录时，后端在 403 里带申诉令牌
+    if (captureAppealToken(e)) {
+      await router.replace('/appeal')
+      return
+    }
     const err = e as { message?: string; response?: { data?: { message?: string } } }
     invitationError.value =
       err.response?.data?.message || err.message || t('auth.github.completeRegistrationFailed')
@@ -139,6 +145,11 @@ async function handleSubmitInvitation() {
 }
 
 onMounted(async () => {
+  // fork：被禁用账号的第三方登录，回调 fragment 里带申诉令牌 → 申诉页
+  if (consumeAppealFragment(parseFragmentParams())) {
+    await router.replace('/appeal')
+    return
+  }
   const params = parseFragmentParams()
 
   const token = params.get('access_token') || ''

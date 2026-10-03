@@ -12,6 +12,7 @@
 import { onBeforeUnmount, reactive } from 'vue'
 import { fetchAttachment as fetchUserAttachment } from '@/api/tickets'
 import { fetchAttachment as fetchAdminAttachment } from '@/api/admin/tickets'
+import { fetchAttachment as fetchAppealAttachment } from '@/api/appeal'
 import { TICKET_ATTACHMENT_PLACEHOLDER, type TicketSide } from '@/utils/tickets'
 
 export function useTicketAttachmentImages(side: TicketSide) {
@@ -20,7 +21,7 @@ export function useTicketAttachmentImages(side: TicketSide) {
   const pending = reactive(new Set<string>())
   const failed = reactive(new Set<string>())
 
-  const fetchAttachment = side === 'admin' ? fetchAdminAttachment : fetchUserAttachment
+  const fetchAttachment = side === 'admin' ? fetchAdminAttachment : side === 'appeal' ? fetchAppealAttachment : fetchUserAttachment
 
   async function load(key: string) {
     if (urls.has(key) || pending.has(key) || failed.has(key)) return

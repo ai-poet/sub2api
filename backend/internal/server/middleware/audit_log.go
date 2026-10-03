@@ -64,6 +64,8 @@ var auditExtraAllowedKeys = map[string]struct{}{
 	"ticket_id": {}, "ticket_status": {}, "ticket_user_id": {},
 	// fork：运维个人令牌（令牌 ID，不含任何凭证内容）
 	"personal_token_id": {},
+	// fork：站内信（新建的站内信 id）
+	"site_message_id": {},
 }
 
 // SetAuditExtra adds allowlisted, scalar details to the current audit entry.
@@ -181,6 +183,8 @@ var auditBodyOmittedRoutes = map[string]struct{}{
 	// fork：工单图片上传是二进制 multipart，即使 handler 未及执行（如被限流拦截）也不捕获 body
 	"POST /api/v1/tickets/attachments":       {},
 	"POST /api/v1/admin/tickets/attachments": {},
+	// fork：封禁申诉会话的附件上传（multipart）
+	"POST /api/v1/appeal/tickets/attachments": {},
 	// fork：客户端登录码。申请体带网关 API Key 与 PKCE challenge，兑换体带一次性码与 verifier，都不入库
 	"POST /api/v1/auth/desktop-session/code":     {},
 	"POST /api/v1/auth/desktop-session/exchange": {},

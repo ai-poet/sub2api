@@ -45,6 +45,7 @@ type AdminHandlers struct {
 	Ticket                *admin.TicketHandler
 	TicketAttachment      *admin.TicketAttachmentHandler
 	PersonalToken         *admin.PersonalTokenHandler
+	UserSiteMessage       *admin.UserSiteMessageHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -75,6 +76,8 @@ type Handlers struct {
 	TicketAttachment *TicketAttachmentHandler
 	PersonalToken    *PersonalTokenHandler
 	DesktopLogin     *DesktopLoginHandler
+	SiteMessage      *SiteMessageHandler
+	Appeal           *AppealHandler
 }
 
 // BuildInfo contains build-time information

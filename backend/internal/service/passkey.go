@@ -306,7 +306,7 @@ func (s *PasskeyService) FinishLogin(
 			return nil, ErrPasskeyVerify
 		}
 		account, lookupErr := s.userRepo.GetByID(ctx, record.UserID)
-		if lookupErr != nil || account == nil || !account.IsActive() {
+		if lookupErr != nil || account == nil || !passkeyLoginAccountUsable(account) { // fork：申诉（disabled 也放行，由 handler 发申诉令牌）
 			return nil, ErrPasskeyVerify
 		}
 		return s.loadWebAuthnUser(ctx, account, record.UserHandle)

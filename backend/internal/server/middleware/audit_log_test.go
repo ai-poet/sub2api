@@ -25,6 +25,8 @@ func TestDeriveAuditAction(t *testing.T) {
 		{"DELETE", "/api/v1/admin/backups/:id", "admin.backups.delete"},
 		{"GET", "/api/v1/admin/users/:id/api-keys", "admin.users.api_keys.read"},
 		{"POST", "/api/v1/admin/redeem-codes/batch", "admin.redeem_codes.batch.create"},
+		// fork：站内信（审批 / 推送标签 / 前端 approvalDescribe 都按这个动作名匹配）
+		{"POST", "/api/v1/admin/users/:id/site-messages", "admin.users.site_messages.create"},
 	}
 	for _, tc := range cases {
 		if got := deriveAuditAction(tc.method, tc.path); got != tc.want {

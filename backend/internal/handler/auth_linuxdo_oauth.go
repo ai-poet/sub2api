@@ -301,6 +301,9 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 
 	existingIdentityUser, err := h.findOAuthIdentityUser(c.Request.Context(), identityKey)
 	if err != nil {
+		if h.redirectAppealIfDisabled(c, frontendCallback, err) { // fork：申诉
+			return
+		}
 		redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 		return
 	}
@@ -377,6 +380,9 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 			return
 		}
 		if !errors.Is(err, service.ErrOAuthInvitationRequired) {
+			if h.redirectAppealIfDisabled(c, frontendCallback, err) { // fork：申诉
+				return
+			}
 			redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 			return
 		}

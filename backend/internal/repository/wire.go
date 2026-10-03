@@ -71,6 +71,7 @@ var ProviderSet = wire.NewSet(
 	NewGroupStatusRepository,
 	NewAdminApprovalRepository,
 	NewSupportTicketRepository,
+	NewSiteMessageRepository,
 	NewPersonalTokenRepository,
 	NewReferralRepository,
 	NewAdminGroupRepository,
@@ -96,6 +97,7 @@ var ProviderSet = wire.NewSet(
 	NewPasskeyRepository,
 	NewPasskeySessionStore,
 	NewDesktopLoginCodeStore, // fork：客户端一次性登录码
+	NewAppealSessionStore,    // fork：封禁申诉会话
 	NewUserSubscriptionRepository,
 	NewUserAttributeDefinitionRepository,
 	NewUserAttributeValueRepository,

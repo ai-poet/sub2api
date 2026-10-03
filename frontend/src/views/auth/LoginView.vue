@@ -251,6 +251,7 @@ import type {
   TotpLoginResponse
 } from '@/types'
 import { extractI18nErrorMessage } from '@/utils/apiError'
+import { captureAppealToken, consumeAppealLoginNotice } from '@/utils/appeal'
 import { clearAllAffiliateReferralCodes } from '@/utils/oauthAffiliate'
 
 const { t } = useI18n()
@@ -372,6 +373,14 @@ watch(validationToastMessage, (value, previousValue) => {
 // ==================== Lifecycle ====================
 
 onMounted(async () => {
+  // fork：从申诉页回来（账户已恢复 / 申诉会话过期）
+  const appealNotice = consumeAppealLoginNotice()
+  if (appealNotice === 'restored') {
+    appStore.showSuccess(t('appeal.loginNotice.restored'))
+  } else if (appealNotice === 'expired') {
+    appStore.showWarning(t('appeal.loginNotice.expired'))
+  }
+
   const expiredFlag = sessionStorage.getItem('auth_expired')
   if (expiredFlag) {
     sessionStorage.removeItem('auth_expired')
@@ -606,6 +615,11 @@ async function handleLogin(): Promise<void> {
     rememberPaseoBridgeTargetIfApplicable(redirectTo)
     await router.push(redirectTo)
   } catch (error: unknown) {
+    // fork：被禁用的账号凭证正确时，后端在 403 里带上申诉令牌 → 进入申诉页
+    if (captureAppealToken(error)) {
+      await router.push('/appeal')
+      return
+    }
     errorMessage.value = extractI18nErrorMessage(error, t, 'auth.errors', t('auth.loginFailed'))
 
     // Also show error toast
@@ -647,6 +661,11 @@ async function handlePasskeyLogin(): Promise<void> {
     const redirectTo = (router.currentRoute.value.query.redirect as string) || authStore.homePath
     await router.push(redirectTo)
   } catch (error: unknown) {
+    // fork：被禁用的账号 Passkey 验证通过时进入申诉页
+    if (captureAppealToken(error)) {
+      await router.push('/appeal')
+      return
+    }
     const fallback = error instanceof DOMException && error.name === 'NotAllowedError'
       ? t('auth.passkeyCancelled')
       : t('auth.passkeyFailed')
@@ -717,6 +736,12 @@ async function handle2FAVerify(code: string): Promise<void> {
     rememberPaseoBridgeTargetIfApplicable(redirectTo)
     await router.push(redirectTo)
   } catch (error: unknown) {
+    // fork：被禁用的账号 2FA 通过后进入申诉页
+    if (captureAppealToken(error)) {
+      show2FAModal.value = false
+      await router.push('/appeal')
+      return
+    }
     const err = error as { message?: string; response?: { data?: { message?: string } } }
     const message = err.response?.data?.message || err.message || t('profile.totp.loginFailed')
 

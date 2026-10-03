@@ -25,6 +25,8 @@ const (
 	// AuditAuthMethodPersonalToken 运维管理员个人令牌（fork 本地，Authorization: Bearer pat-...）。
 	// 机器凭证：没有会话 ID，不能通过 step-up，也不能做审批决策。
 	AuditAuthMethodPersonalToken = "personal_token"
+	// AuditAuthMethodAppealToken 封禁申诉会话（fork 本地，X-Appeal-Token；只能访问 /api/v1/appeal/* 白名单）。
+	AuditAuthMethodAppealToken = "appeal_token"
 
 	// auditRequestBodyMaxBytes 请求体脱敏后入库的最大长度（字节），超出截断。
 	auditRequestBodyMaxBytes = 16 * 1024

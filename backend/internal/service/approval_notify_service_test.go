@@ -119,6 +119,7 @@ func TestApprovalNotifyService_RedactsSendKeyInErrors(t *testing.T) {
 
 func TestApprovalActionLabelAndLink(t *testing.T) {
 	require.Equal(t, "分配订阅", approvalActionLabel("admin.subscriptions.assign.create"))
+	require.Equal(t, "发送站内信", approvalActionLabel("admin.users.site_messages.create"))
 	require.Equal(t, "admin.unknown.create", approvalActionLabel("admin.unknown.create"))
 	require.Equal(t, "写操作", approvalActionLabel(""))
 	require.Equal(t, "", approvalPageLink("", "", 1))

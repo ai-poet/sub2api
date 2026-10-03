@@ -381,7 +381,41 @@ export default {
   },
   "admin": {
     "users": {
-      "typeReferralReward": "余额（推荐奖励）"
+      "typeReferralReward": "余额（推荐奖励）",
+      "siteMessage": {
+        "menuItem": "发送站内信",
+        "title": "给 {email} 发送站内信",
+        "recipient": "收件人",
+        "titleLabel": "标题",
+        "titlePlaceholder": "例如：账户使用提醒",
+        "contentLabel": "正文（支持 Markdown）",
+        "contentPlaceholder": "写给用户的内容，发送后用户登录即会弹窗提醒",
+        "edit": "编辑",
+        "preview": "预览",
+        "previewEmpty": "暂无内容",
+        "send": "发送",
+        "sent": "站内信已发送",
+        "operatorHint": "运维管理员发送的站内信需要管理员审批后才会送达。",
+        "disabledHint": "该账户已被禁用，用户可在申诉页查看站内信。",
+        "titleRequired": "请填写标题",
+        "contentRequired": "请填写正文",
+        "titleTooLong": "标题最多 {max} 个字符",
+        "contentTooLong": "正文最多 {max} 个字符",
+        "history": "历史站内信",
+        "historyEmpty": "该用户还没有收到过站内信",
+        "read": "已读",
+        "unread": "未读",
+        "readAt": "已读于 {time}",
+        "senderSystem": "系统",
+        "viaApproval": "经审批 #{id}",
+        "loadFailed": "加载站内信历史失败",
+        "showContent": "查看正文",
+        "hideContent": "收起正文"
+      }
+    },
+    "riskControl": {
+      "siteMessageOnHit": "命中时发送站内信",
+      "siteMessageOnHitHint": "命中风控规则、账户被自动封禁或触发网络安全策略拦截时，给用户发站内信（默认弹窗提醒），不依赖邮件配置；关闭后内容审计不再发送任何站内信，包括封禁通知。"
     },
     "groups": {
       "columns": {
@@ -606,7 +640,8 @@ export default {
     },
     "audit": {
       "filters": {
-        "personalToken": "运维个人令牌"
+        "personalToken": "运维个人令牌",
+        "appealToken": "申诉会话"
       }
     },
     "referral": {
@@ -968,7 +1003,9 @@ export default {
           "validity": "有效期",
           "providerKey": "提供方标识",
           "providerSubject": "提供方账号",
-          "resetRateLimit": "重置限速用量"
+          "resetRateLimit": "重置限速用量",
+          "messageTitle": "站内信标题",
+          "messageContent": "站内信正文"
         },
         "values": {
           "yes": "是",
@@ -986,7 +1023,8 @@ export default {
           "scopeAll": "全部用户",
           "scopeUsers": "{count} 个用户（{ids}）",
           "days": "{n} 天",
-          "validityDefault": "按分组默认"
+          "validityDefault": "按分组默认",
+          "bodyTooLong": "正文过长，无法预览，请展开下方的原始请求查看"
         },
         "summary": {
           "userCreate": "新建用户 {email}",
@@ -1013,6 +1051,7 @@ export default {
           "subscriptionRevoke": "撤销订阅 {target}",
           "subscriptionRestore": "恢复订阅 {target}",
           "subscriptionDelete": "删除订阅 {target}",
+          "userSiteMessage": "给 {target} 发送站内信",
           "unknown": "{action}：{target}"
         }
       },
@@ -1035,7 +1074,8 @@ export default {
         "subscriptionExtend": "调整订阅有效期",
         "subscriptionResetQuota": "重置订阅额度",
         "subscriptionRevoke": "撤销订阅",
-        "subscriptionRestore": "恢复订阅"
+        "subscriptionRestore": "恢复订阅",
+        "userSiteMessage": "发送站内信"
       }
     }
   },
@@ -1071,7 +1111,8 @@ export default {
       "account": "账号",
       "billing": "计费 / 额度",
       "api": "API 调用",
-      "other": "其他"
+      "other": "其他",
+      "appeal": "账号申诉"
     },
     "columns": {
       "id": "ID",
@@ -1137,12 +1178,81 @@ export default {
       "empty": "没有符合条件的工单",
       "searchPlaceholder": "搜索标题或用户邮箱",
       "categoryAll": "全部分类",
+      "userStatus": {
+        "active": "账户正常",
+        "disabled": "账户已禁用"
+      },
+      "restoreAccount": "恢复账户",
+      "restoreConfirmTitle": "恢复账户",
+      "restoreConfirmMessage": "确定恢复 {email} 的账户吗？恢复后对方可以正常登录和调用 API，并会收到一条站内信。",
+      "restoreSuccess": "账户已恢复",
       "tabs": {
         "open": "待处理",
         "replied": "已回复",
         "closed": "已关闭",
         "all": "全部"
       }
+    }
+  },
+  "appeal": {
+    "title": "账号申诉",
+    "exit": "退出",
+    "banner": {
+      "title": "您的账户已被停用",
+      "desc": "在这里可以查看停用原因，并提交申诉。管理员处理后会在工单中回复您；账户恢复后请重新登录。"
+    },
+    "expiresAt": "本次申诉会话有效至 {time}",
+    "notices": "通知",
+    "noNotices": "暂无通知",
+    "ticketTitle": "申诉",
+    "createTitle": "说明情况并提交申诉，每个账号同时只能有一个进行中的申诉。",
+    "submitAgain": "重新提交申诉",
+    "form": {
+      "title": "标题",
+      "defaultTitle": "申请恢复账户",
+      "body": "申诉说明",
+      "bodyPlaceholder": "请说明账户的用途、触发风控的原因以及后续如何避免，便于管理员处理",
+      "submit": "提交申诉",
+      "submitted": "申诉已提交，请耐心等待管理员处理"
+    },
+    "errors": {
+      "activeExists": "已有进行中的申诉，请在下方继续沟通",
+      "rateLimited": "操作过于频繁，请稍后再试",
+      "expired": "申诉会话已过期，请重新登录"
+    },
+    "loginNotice": {
+      "restored": "账户已恢复，请重新登录",
+      "expired": "申诉会话已过期，请重新登录后继续申诉"
+    }
+  },
+  "siteMessages": {
+    "title": "站内信",
+    "open": "打开站内信",
+    "tabs": {
+      "all": "全部",
+      "unread": "未读"
+    },
+    "empty": "还没有站内信",
+    "emptyUnread": "没有未读站内信",
+    "loadMore": "加载更多",
+    "loadFailed": "加载站内信失败",
+    "markAllRead": "全部标为已读",
+    "allMarkedRead": "已全部标为已读",
+    "back": "关闭",
+    "from": {
+      "system": "系统通知",
+      "staff": "工作人员"
+    },
+    "categories": {
+      "security": "安全提醒",
+      "admin": "通知",
+      "system": "系统"
+    },
+    "popup": {
+      "badge": "新站内信",
+      "acknowledge": "知道了",
+      "viewAll": "查看全部",
+      "more": "还有 {count} 条未读"
     }
   }
 } as const

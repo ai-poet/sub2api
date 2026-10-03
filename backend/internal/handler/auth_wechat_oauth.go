@@ -253,12 +253,18 @@ func (h *AuthHandler) WeChatOAuthCallback(c *gin.Context) {
 
 	existingIdentityUser, err := h.findOAuthIdentityUser(c.Request.Context(), identityRef)
 	if err != nil {
+		if h.redirectAppealIfDisabled(c, frontendCallback, err) { // fork：申诉
+			return
+		}
 		redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 		return
 	}
 	if existingIdentityUser == nil {
 		existingIdentityUser, err = h.findWeChatUserByLegacyOpenID(c.Request.Context(), identityRef, cfg, openid)
 		if err != nil {
+			if h.redirectAppealIfDisabled(c, frontendCallback, err) { // fork：申诉
+				return
+			}
 			redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 			return
 		}

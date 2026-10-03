@@ -49,6 +49,7 @@ func ProvideAdminHandlers(
 	ticketHandler *admin.TicketHandler,
 	ticketAttachmentHandler *admin.TicketAttachmentHandler,
 	personalTokenHandler *admin.PersonalTokenHandler,
+	userSiteMessageHandler *admin.UserSiteMessageHandler,
 	upstreamBillingProbe *service.UpstreamBillingProbeService,
 	ollamaCloudUsage *service.OllamaCloudUsageService,
 	opencodeGoUsage *service.OpenCodeGoUsageService,
@@ -97,6 +98,7 @@ func ProvideAdminHandlers(
 		Ticket:                ticketHandler,
 		TicketAttachment:      ticketAttachmentHandler,
 		PersonalToken:         personalTokenHandler,
+		UserSiteMessage:       userSiteMessageHandler,
 	}
 }
 
@@ -226,6 +228,8 @@ func ProvideHandlers(
 	ticketAttachmentHandler *TicketAttachmentHandler,
 	personalTokenHandler *PersonalTokenHandler,
 	desktopLoginHandler *DesktopLoginHandler,
+	siteMessageHandler *SiteMessageHandler,
+	appealHandler *AppealHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 	_ *service.OpenAIQuotaAutoResetService,
@@ -257,13 +261,15 @@ func ProvideHandlers(
 		TicketAttachment: ticketAttachmentHandler,
 		PersonalToken:    personalTokenHandler,
 		DesktopLogin:     desktopLoginHandler,
+		SiteMessage:      siteMessageHandler,
+		Appeal:           appealHandler,
 	}
 }
 
 // ProviderSet is the Wire provider set for all handlers
 var ProviderSet = wire.NewSet(
 	// Top-level handlers
-	NewAuthHandler,
+	ProvideAuthHandler, // fork：申诉（替换 NewAuthHandler，注入 AppealService）
 	NewUserHandler,
 	NewAPIKeyHandler,
 	NewUsageHandler,
@@ -278,7 +284,7 @@ var ProviderSet = wire.NewSet(
 	NewPublicPricingHandler,
 	NewClientChangelogHandler,
 	NewGroupStatusHandler,
-	NewPasskeyHandler,
+	ProvidePasskeyHandler, // fork：申诉（替换 NewPasskeyHandler，注入 AppealService）
 	ProvideSettingHandler,
 	NewAvailableChannelHandler,
 	NewAsyncImageHandler,
@@ -288,6 +294,8 @@ var ProviderSet = wire.NewSet(
 	NewTicketAttachmentHandler,
 	NewPersonalTokenHandler,
 	NewDesktopLoginHandler,
+	NewSiteMessageHandler,
+	NewAppealHandler,
 
 	// Admin handlers
 	admin.NewDashboardHandler,
@@ -324,9 +332,10 @@ var ProviderSet = wire.NewSet(
 	admin.NewAuditLogHandler,
 	admin.NewConsoleHandler,
 	admin.NewApprovalHandler,
-	admin.NewTicketHandler,
+	admin.ProvideTicketHandler, // fork：申诉（详情带发起人账号状态）
 	admin.NewTicketAttachmentHandler,
 	admin.NewPersonalTokenHandler,
+	admin.NewUserSiteMessageHandler,
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,

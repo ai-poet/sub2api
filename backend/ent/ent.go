@@ -44,6 +44,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/securitysecret"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
+	"github.com/Wei-Shaw/sub2api/ent/sitemessage"
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
@@ -148,6 +149,7 @@ func checkColumn(t, c string) error {
 			redeemcode.Table:                 redeemcode.ValidColumn,
 			securitysecret.Table:             securitysecret.ValidColumn,
 			setting.Table:                    setting.ValidColumn,
+			sitemessage.Table:                sitemessage.ValidColumn,
 			supportticket.Table:              supportticket.ValidColumn,
 			supportticketmessage.Table:       supportticketmessage.ValidColumn,
 			tlsfingerprintprofile.Table:      tlsfingerprintprofile.ValidColumn,

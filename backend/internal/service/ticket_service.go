@@ -124,6 +124,10 @@ func (s *TicketService) Create(ctx context.Context, actor TicketActor, in Ticket
 	if err != nil {
 		return nil, err
 	}
+	// 申诉工单只能经申诉会话创建（CreateAppeal），正常账号不能自己开
+	if category == TicketCategoryAppeal {
+		return nil, ErrTicketInvalidCategory
+	}
 	body, err := normalizeTicketBody(in.Body)
 	if err != nil {
 		return nil, err
@@ -135,7 +139,11 @@ func (s *TicketService) Create(ctx context.Context, actor TicketActor, in Ticket
 	if active >= TicketOpenLimitPerUser {
 		return nil, ErrTicketOpenLimit
 	}
+	return s.createTicket(ctx, actor, title, category, body, requestOrigin)
+}
 
+// createTicket 落库工单 + 首条消息并异步推送（校验与配额由调用方负责）。
+func (s *TicketService) createTicket(ctx context.Context, actor TicketActor, title, category, body, requestOrigin string) (*SupportTicket, error) {
 	now := s.now()
 	email := ticketActorEmail(actor)
 	ticket := &SupportTicket{

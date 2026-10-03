@@ -979,7 +979,7 @@ var ProviderSet = wire.NewSet(
 	NewChannelService,
 	wire.Bind(new(ChannelCacheInvalidator), new(*ChannelService)),
 	NewModelPricingResolver,
-	NewContentModerationService,
+	ProvideContentModerationService, // fork：站内信（替换 NewContentModerationService）
 	ProvideUserPlatformQuotaUsageFlusher,
 	ProvideBalanceNotifyService,
 	NewModelCatalogService,
@@ -994,6 +994,8 @@ var ProviderSet = wire.NewSet(
 	wire.Bind(new(AdminApprovalGate), new(*AdminApprovalService)),
 	NewTicketNotifyService,
 	ProvideTicketService,
+	NewSiteMessageService,
+	ProvideAppealService,
 	ProvidePersonalTokenService,
 	NewDesktopLoginService,
 	ProvideReferralRewardRecordRepository,

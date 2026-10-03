@@ -6,8 +6,9 @@ import NavigationProgress from '@/components/common/NavigationProgress.vue'
 import AdminComplianceDialog from '@/components/admin/AdminComplianceDialog.vue'
 import { resolveRouteDocumentTitle } from '@/router/title'
 import AnnouncementPopup from '@/components/common/AnnouncementPopup.vue'
+import SiteMessagePopup from '@/components/common/SiteMessagePopup.vue'
 import { useI18n } from 'vue-i18n'
-import { useAppStore, useAuthStore, useSubscriptionStore, useAnnouncementStore, useAdminComplianceStore, useAdminSettingsStore, useApprovalsStore, useTicketsStore } from '@/stores'
+import { useAppStore, useAuthStore, useSubscriptionStore, useAnnouncementStore, useAdminComplianceStore, useAdminSettingsStore, useApprovalsStore, useTicketsStore, useSiteMessagesStore } from '@/stores'
 import { APPROVAL_QUEUED_EVENT, type ApprovalQueuedPayload } from '@/utils/approval'
 import { getSetupStatus } from '@/api/setup'
 import { updateFavicon } from '@/utils/branding'
@@ -24,6 +25,7 @@ const adminComplianceStore = useAdminComplianceStore()
 const adminSettingsStore = useAdminSettingsStore()
 const approvalsStore = useApprovalsStore()
 const ticketsStore = useTicketsStore()
+const siteMessagesStore = useSiteMessagesStore()
 const { t } = useI18n()
 
 function updateDocumentTitle() {
@@ -118,6 +120,8 @@ watch(
       // 后端模式下普通用户会被 BackendModeUserGuard 拦下，不轮询。
       if (authStore.hasConsoleAccess || !appStore.backendModeEnabled) {
         ticketsStore.start()
+        // 站内信角标 + 默认弹窗（fork 本地）：与工单同口径，后端模式下普通用户不轮询
+        siteMessagesStore.start()
       }
 
       // User logged in: preload subscriptions and start polling (skipped when the
@@ -144,6 +148,7 @@ watch(
       adminComplianceStore.reset()
       approvalsStore.reset()
       ticketsStore.reset()
+      siteMessagesStore.reset()
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   },
@@ -191,5 +196,6 @@ onMounted(async () => {
   <RouterView />
   <Toast />
   <AnnouncementPopup />
+  <SiteMessagePopup />
   <AdminComplianceDialog />
 </template>

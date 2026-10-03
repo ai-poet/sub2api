@@ -255,7 +255,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 						code = "USAGE_LIMIT_EXCEEDED"
 						status = 429
 					}
-					AbortWithError(c, status, code, validateErr.Error())
+					AbortWithError(c, status, code, gatewayErrorMessage(validateErr)) // fork：网关双语（不再把 ApplicationError 调试串返回给客户端）
 					return
 				}
 			} else {

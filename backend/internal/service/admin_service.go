@@ -712,6 +712,8 @@ type adminServiceImpl struct {
 	channelCacheInvalidator ChannelCacheInvalidator
 	// fork：角色离开 operator 时吊销个人令牌（SetPersonalTokenRevoker 注入，可为 nil）
 	personalTokenRevoker PersonalTokenRevoker
+	// fork：账号状态变更通知（申诉会话；SetUserStatusObserver 注入，可为 nil）
+	userStatusObserver UserStatusObserver
 }
 
 // ChannelCacheInvalidator 失效渠道缓存。

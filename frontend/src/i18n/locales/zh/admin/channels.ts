@@ -363,7 +363,7 @@ export default {
       queueSize: '异步队列大小',
       blockStatus: '拦截 HTTP 状态码',
       blockMessage: '自定义拦截提示',
-      defaultBlockMessage: '内容审计命中风险规则，请调整输入后重试',
+      defaultBlockMessage: '内容审计命中风险规则，请调整输入后重试 / Content audit matched a risk rule. Please adjust your input and try again.',
       emailOnHit: '命中后发送邮件',
       emailOnHitHint: '开启后每次达到阈值都会向用户发送风控提醒邮件；自动封禁通知始终发送。',
       autoBan: '自动封禁用户',

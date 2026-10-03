@@ -76,7 +76,7 @@ func NewErrorResponse(code, message string) ErrorResponse {
 
 // AbortWithError 中断请求并返回JSON错误
 func AbortWithError(c *gin.Context, statusCode int, code, message string) {
-	c.JSON(statusCode, NewErrorResponse(code, message))
+	c.JSON(statusCode, NewErrorResponse(code, localizeGatewayMessage(c, message))) // fork：网关双语
 	c.Abort()
 }
 
@@ -84,7 +84,7 @@ func AbortWithError(c *gin.Context, statusCode int, code, message string) {
 func abortWithOpenAIQuotaError(c *gin.Context, statusCode int, message string) {
 	c.JSON(statusCode, gin.H{
 		"error": gin.H{
-			"message": message,
+			"message": localizeGatewayMessage(c, message), // fork：网关双语
 			"type":    "insufficient_quota",
 			"param":   nil,
 			"code":    "insufficient_quota",
@@ -154,7 +154,7 @@ func RequireGroupAssignment(settingService *service.SettingService, writeError G
 		}
 		service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonAPIKeyGroupUnassigned)
 		MarkIngressRejected(c, IngressRejectGroupUnassigned)
-		writeError(c, http.StatusForbidden, "API Key is not assigned to any group and cannot be used. Please contact the administrator to assign it to a group.")
+		writeError(c, http.StatusForbidden, localizeGatewayMessage(c, "API Key is not assigned to any group and cannot be used. Please contact the administrator to assign it to a group.")) // fork：网关双语
 		c.Abort()
 	}
 }

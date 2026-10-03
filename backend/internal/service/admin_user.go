@@ -320,6 +320,7 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	if err := s.userRepo.Update(ctx, user, fields); err != nil {
 		return nil, err
 	}
+	s.notifyUserStatusChanged(ctx, user.ID, oldStatus, user.Status) // fork：申诉（恢复时作废申诉会话并发站内信）
 
 	// 角色变更属权限敏感操作，落审计日志（含操作者），便于事后追溯。
 	if user.Role != oldRole {

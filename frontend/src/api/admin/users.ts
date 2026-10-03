@@ -5,6 +5,7 @@
 
 import { apiClient } from '../client'
 import type { AdminUser, UpdateUserRequest, PaginatedResponse, ApiKey } from '@/types'
+import type { SiteMessage } from '../siteMessages'
 
 export interface AdminBindAuthIdentityChannelRequest {
   channel: string
@@ -404,6 +405,51 @@ export async function resetPlatformQuotaWindow(
   return data
 }
 
+// ---------- 站内信（fork 本地） ----------
+
+/** 工作人员视图的站内信：带发件人、来源与审批单号 */
+export interface AdminSiteMessage extends SiteMessage {
+  user_id: number
+  source_type: string
+  source_id?: string
+  sender_user_id?: number
+  sender_role?: string
+  sender_email?: string
+  approval_id?: number
+}
+
+export interface SendSiteMessagePayload {
+  title: string
+  content: string
+}
+
+/**
+ * 给单个用户发站内信。运维管理员调用时后端返回 202（进入审批），
+ * apiClient 会把它变成 isApprovalQueued 可识别的 rejection。
+ */
+export async function sendSiteMessage(
+  id: number,
+  payload: SendSiteMessagePayload,
+  idempotencyKey?: string
+): Promise<AdminSiteMessage> {
+  const { data } = await apiClient.post<AdminSiteMessage>(`/admin/users/${id}/site-messages`, payload, {
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined
+  })
+  return data
+}
+
+/** 某个用户收到的站内信（含已读状态），按时间倒序 */
+export async function listSiteMessages(
+  id: number,
+  page = 1,
+  pageSize = 10
+): Promise<PaginatedResponse<AdminSiteMessage>> {
+  const { data } = await apiClient.get<PaginatedResponse<AdminSiteMessage>>(`/admin/users/${id}/site-messages`, {
+    params: { page, page_size: pageSize }
+  })
+  return data
+}
+
 export const usersAPI = {
   list,
   getById,
@@ -422,6 +468,8 @@ export const usersAPI = {
   getPlatformQuotas,
   updatePlatformQuotas,
   resetPlatformQuotaWindow,
+  sendSiteMessage,
+  listSiteMessages,
 }
 
 export default usersAPI

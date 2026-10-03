@@ -47,6 +47,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/securitysecret"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
+	"github.com/Wei-Shaw/sub2api/ent/sitemessage"
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
@@ -132,6 +133,8 @@ type Client struct {
 	SecuritySecret *SecuritySecretClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
+	// SiteMessage is the client for interacting with the SiteMessage builders.
+	SiteMessage *SiteMessageClient
 	// SupportTicket is the client for interacting with the SupportTicket builders.
 	SupportTicket *SupportTicketClient
 	// SupportTicketMessage is the client for interacting with the SupportTicketMessage builders.
@@ -199,6 +202,7 @@ func (c *Client) init() {
 	c.RedeemCode = NewRedeemCodeClient(c.config)
 	c.SecuritySecret = NewSecuritySecretClient(c.config)
 	c.Setting = NewSettingClient(c.config)
+	c.SiteMessage = NewSiteMessageClient(c.config)
 	c.SupportTicket = NewSupportTicketClient(c.config)
 	c.SupportTicketMessage = NewSupportTicketMessageClient(c.config)
 	c.TLSFingerprintProfile = NewTLSFingerprintProfileClient(c.config)
@@ -335,6 +339,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		RedeemCode:                 NewRedeemCodeClient(cfg),
 		SecuritySecret:             NewSecuritySecretClient(cfg),
 		Setting:                    NewSettingClient(cfg),
+		SiteMessage:                NewSiteMessageClient(cfg),
 		SupportTicket:              NewSupportTicketClient(cfg),
 		SupportTicketMessage:       NewSupportTicketMessageClient(cfg),
 		TLSFingerprintProfile:      NewTLSFingerprintProfileClient(cfg),
@@ -398,6 +403,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		RedeemCode:                 NewRedeemCodeClient(cfg),
 		SecuritySecret:             NewSecuritySecretClient(cfg),
 		Setting:                    NewSettingClient(cfg),
+		SiteMessage:                NewSiteMessageClient(cfg),
 		SupportTicket:              NewSupportTicketClient(cfg),
 		SupportTicketMessage:       NewSupportTicketMessageClient(cfg),
 		TLSFingerprintProfile:      NewTLSFingerprintProfileClient(cfg),
@@ -447,7 +453,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun, c.GroupStatusRecord,
 		c.GroupStatusState, c.IdempotencyRecord, c.IdentityAdoptionDecision,
 		c.PendingAuthSession, c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy,
-		c.RedeemCode, c.SecuritySecret, c.Setting, c.SupportTicket,
+		c.RedeemCode, c.SecuritySecret, c.Setting, c.SiteMessage, c.SupportTicket,
 		c.SupportTicketMessage, c.TLSFingerprintProfile, c.UsageCleanupTask,
 		c.UsageLog, c.User, c.UserAllowedGroup, c.UserAttributeDefinition,
 		c.UserAttributeValue, c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
@@ -468,7 +474,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun, c.GroupStatusRecord,
 		c.GroupStatusState, c.IdempotencyRecord, c.IdentityAdoptionDecision,
 		c.PendingAuthSession, c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy,
-		c.RedeemCode, c.SecuritySecret, c.Setting, c.SupportTicket,
+		c.RedeemCode, c.SecuritySecret, c.Setting, c.SiteMessage, c.SupportTicket,
 		c.SupportTicketMessage, c.TLSFingerprintProfile, c.UsageCleanupTask,
 		c.UsageLog, c.User, c.UserAllowedGroup, c.UserAttributeDefinition,
 		c.UserAttributeValue, c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
@@ -544,6 +550,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.SecuritySecret.mutate(ctx, m)
 	case *SettingMutation:
 		return c.Setting.mutate(ctx, m)
+	case *SiteMessageMutation:
+		return c.SiteMessage.mutate(ctx, m)
 	case *SupportTicketMutation:
 		return c.SupportTicket.mutate(ctx, m)
 	case *SupportTicketMessageMutation:
@@ -5414,6 +5422,139 @@ func (c *SettingClient) mutate(ctx context.Context, m *SettingMutation) (Value, 
 	}
 }
 
+// SiteMessageClient is a client for the SiteMessage schema.
+type SiteMessageClient struct {
+	config
+}
+
+// NewSiteMessageClient returns a client for the SiteMessage from the given config.
+func NewSiteMessageClient(c config) *SiteMessageClient {
+	return &SiteMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sitemessage.Hooks(f(g(h())))`.
+func (c *SiteMessageClient) Use(hooks ...Hook) {
+	c.hooks.SiteMessage = append(c.hooks.SiteMessage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sitemessage.Intercept(f(g(h())))`.
+func (c *SiteMessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SiteMessage = append(c.inters.SiteMessage, interceptors...)
+}
+
+// Create returns a builder for creating a SiteMessage entity.
+func (c *SiteMessageClient) Create() *SiteMessageCreate {
+	mutation := newSiteMessageMutation(c.config, OpCreate)
+	return &SiteMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SiteMessage entities.
+func (c *SiteMessageClient) CreateBulk(builders ...*SiteMessageCreate) *SiteMessageCreateBulk {
+	return &SiteMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SiteMessageClient) MapCreateBulk(slice any, setFunc func(*SiteMessageCreate, int)) *SiteMessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SiteMessageCreateBulk{err: fmt.Errorf("calling to SiteMessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SiteMessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SiteMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SiteMessage.
+func (c *SiteMessageClient) Update() *SiteMessageUpdate {
+	mutation := newSiteMessageMutation(c.config, OpUpdate)
+	return &SiteMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SiteMessageClient) UpdateOne(_m *SiteMessage) *SiteMessageUpdateOne {
+	mutation := newSiteMessageMutation(c.config, OpUpdateOne, withSiteMessage(_m))
+	return &SiteMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SiteMessageClient) UpdateOneID(id int64) *SiteMessageUpdateOne {
+	mutation := newSiteMessageMutation(c.config, OpUpdateOne, withSiteMessageID(id))
+	return &SiteMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SiteMessage.
+func (c *SiteMessageClient) Delete() *SiteMessageDelete {
+	mutation := newSiteMessageMutation(c.config, OpDelete)
+	return &SiteMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SiteMessageClient) DeleteOne(_m *SiteMessage) *SiteMessageDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SiteMessageClient) DeleteOneID(id int64) *SiteMessageDeleteOne {
+	builder := c.Delete().Where(sitemessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SiteMessageDeleteOne{builder}
+}
+
+// Query returns a query builder for SiteMessage.
+func (c *SiteMessageClient) Query() *SiteMessageQuery {
+	return &SiteMessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSiteMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SiteMessage entity by its id.
+func (c *SiteMessageClient) Get(ctx context.Context, id int64) (*SiteMessage, error) {
+	return c.Query().Where(sitemessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SiteMessageClient) GetX(ctx context.Context, id int64) *SiteMessage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SiteMessageClient) Hooks() []Hook {
+	return c.hooks.SiteMessage
+}
+
+// Interceptors returns the client interceptors.
+func (c *SiteMessageClient) Interceptors() []Interceptor {
+	return c.inters.SiteMessage
+}
+
+func (c *SiteMessageClient) mutate(ctx context.Context, m *SiteMessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SiteMessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SiteMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SiteMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SiteMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SiteMessage mutation op: %q", m.Op())
+	}
+}
+
 // SupportTicketClient is a client for the SupportTicket schema.
 type SupportTicketClient struct {
 	config
@@ -7491,9 +7632,9 @@ type (
 		GroupStatusEvent, GroupStatusJuiceRecord, GroupStatusModelTraceRun,
 		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
 		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
-		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
-		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SiteMessage,
+		SupportTicket, SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask,
+		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
 		UserPlatformQuota, UserReferral, UserSubscription []ent.Hook
 	}
 	inters struct {
@@ -7504,9 +7645,9 @@ type (
 		GroupStatusEvent, GroupStatusJuiceRecord, GroupStatusModelTraceRun,
 		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
 		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SupportTicket,
-		SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
-		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SiteMessage,
+		SupportTicket, SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask,
+		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
 		UserPlatformQuota, UserReferral, UserSubscription []ent.Interceptor
 	}
 )

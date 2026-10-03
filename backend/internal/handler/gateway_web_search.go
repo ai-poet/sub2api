@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Wei-Shaw/sub2api/internal/pkg/bilingual"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ip"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/websearch"
@@ -109,6 +110,7 @@ func (h *GatewayHandler) WebSearch(c *gin.Context) {
 		if msg == "" {
 			msg = "Request blocked by content policy"
 		}
+		msg = bilingual.Gateway(msg) // fork：网关双语
 		c.JSON(status, gin.H{"error": gin.H{"type": code, "message": msg}})
 		return
 	}

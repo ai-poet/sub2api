@@ -29,6 +29,23 @@ function req(action: string, body: unknown, extra: Partial<AdminApprovalRequest>
 }
 
 describe('describeApproval', () => {
+  it('describes a site message with its title and content (fork)', () => {
+    const d = describeApproval(req('admin.users.site_messages.create', { title: '提醒', content: '**请注意**' }), ctx)
+    expect(d.summary).toBe('operator.approval.describe.summary.userSiteMessage:{"target":"u@example.com"}')
+    expect(d.lines).toEqual([
+      { label: 'operator.approval.describe.fields.messageTitle', value: '提醒' },
+      { label: 'operator.approval.describe.fields.messageContent', value: '**请注意**' }
+    ])
+  })
+
+  it('falls back to a summary when the redacted site message body was truncated (fork)', () => {
+    const d = describeApproval(req('admin.users.site_messages.create', '{"title":"x","content":"aaa...<truncated>'), ctx)
+    expect(d.summary).toBe('operator.approval.describe.summary.userSiteMessage:{"target":"u@example.com"}')
+    expect(d.lines).toEqual([
+      { label: 'operator.approval.describe.fields.messageContent', value: 'operator.approval.describe.values.bodyTooLong' }
+    ])
+  })
+
   it('describes a balance top-up with the amount and target', () => {
     const d = describeApproval(req('admin.users.balance.create', { balance: 10.5, operation: 'add', notes: '充值' }), ctx)
     expect(d.summary).toBe('operator.approval.describe.summary.balanceAdd:{"target":"u@example.com","amount":"10.5"}')

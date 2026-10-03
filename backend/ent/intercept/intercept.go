@@ -41,6 +41,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/securitysecret"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
+	"github.com/Wei-Shaw/sub2api/ent/sitemessage"
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
@@ -975,6 +976,33 @@ func (f TraverseSetting) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.SettingQuery", q)
 }
 
+// The SiteMessageFunc type is an adapter to allow the use of ordinary function as a Querier.
+type SiteMessageFunc func(context.Context, *ent.SiteMessageQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f SiteMessageFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.SiteMessageQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.SiteMessageQuery", q)
+}
+
+// The TraverseSiteMessage type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseSiteMessage func(context.Context, *ent.SiteMessageQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseSiteMessage) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseSiteMessage) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.SiteMessageQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.SiteMessageQuery", q)
+}
+
 // The SupportTicketFunc type is an adapter to allow the use of ordinary function as a Querier.
 type SupportTicketFunc func(context.Context, *ent.SupportTicketQuery) (ent.Value, error)
 
@@ -1366,6 +1394,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.SecuritySecretQuery, predicate.SecuritySecret, securitysecret.OrderOption]{typ: ent.TypeSecuritySecret, tq: q}, nil
 	case *ent.SettingQuery:
 		return &query[*ent.SettingQuery, predicate.Setting, setting.OrderOption]{typ: ent.TypeSetting, tq: q}, nil
+	case *ent.SiteMessageQuery:
+		return &query[*ent.SiteMessageQuery, predicate.SiteMessage, sitemessage.OrderOption]{typ: ent.TypeSiteMessage, tq: q}, nil
 	case *ent.SupportTicketQuery:
 		return &query[*ent.SupportTicketQuery, predicate.SupportTicket, supportticket.OrderOption]{typ: ent.TypeSupportTicket, tq: q}, nil
 	case *ent.SupportTicketMessageQuery:

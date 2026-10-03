@@ -16,7 +16,8 @@ import type {
 } from '@/api/tickets'
 
 export interface AdminSupportTicket extends SupportTicket {
-  user: { id: number; email: string }
+  /** status：发起人当前账号状态（fork：申诉工单详情里显示，并决定是否给「恢复账户」按钮） */
+  user: { id: number; email: string; status?: string }
   closed_by_role?: string
 }
 

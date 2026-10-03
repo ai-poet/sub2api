@@ -12,6 +12,7 @@ export { useAnnouncementStore } from './announcements'
 export { useAdminComplianceStore } from './adminCompliance'
 export { useApprovalsStore } from './approvals'
 export { useTicketsStore } from './tickets'
+export { useSiteMessagesStore } from './siteMessages'
 
 // Re-export types for convenience
 export type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types'

@@ -57,6 +57,7 @@ const APPROVAL_ACTION_LABEL_KEYS: Record<string, string> = {
   'admin.users.platform_quotas.reset.create': 'userPlatformQuotaReset',
   'admin.users.attributes.update': 'userAttributes',
   'admin.users.auth_identities.create': 'userAuthIdentity',
+  'admin.users.site_messages.create': 'userSiteMessage',
   'admin.api_keys.update': 'apiKeyUpdate',
   'admin.subscriptions.assign.create': 'subscriptionAssign',
   'admin.subscriptions.bulk_assign.create': 'subscriptionBulkAssign',

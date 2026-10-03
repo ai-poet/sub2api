@@ -176,6 +176,16 @@ export function describeApproval(req: AdminApprovalRequest, ctx: ApprovalDescrib
       if (isPresent(notes)) add('notes', fmtRaw(notes))
       break
     }
+    case 'admin.users.site_messages.create': {
+      // fork：站内信。脱敏后的请求体超过 16 KiB 会被截断成非法 JSON，此时只能给出摘要。
+      summary = t(`${P}.summary.userSiteMessage`, { target })
+      const title = take('title')
+      const content = take('content')
+      if (isPresent(title)) add('messageTitle', fmtRaw(title))
+      if (isPresent(content)) add('messageContent', fmtRaw(content))
+      if (!isPresent(title) && !isPresent(content)) add('messageContent', t(`${P}.values.bodyTooLong`))
+      break
+    }
     case 'admin.users.replace_group.create': {
       const from = num(take('old_group_id'))
       const to = num(take('new_group_id'))

@@ -107,6 +107,16 @@
           <span :class="ticketStatusBadgeClass(detail.status)" data-test="ticket-detail-status">{{ ticketStatusLabel(t, detail.status) }}</span>
           <span>{{ ticketCategoryLabel(t, detail.category) }}</span>
           <span class="font-medium text-gray-700 dark:text-gray-200" data-test="ticket-detail-user">{{ detail.user?.email }}</span>
+          <!-- fork：申诉工单显示发起人账号状态 -->
+          <span
+            v-if="detail.category === 'appeal' && detail.user?.status"
+            data-test="ticket-detail-user-status"
+            :class="['rounded-full px-2 py-0.5 text-xs font-medium', detail.user.status === 'disabled'
+              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300']"
+          >
+            {{ detail.user.status === 'disabled' ? t('tickets.admin.userStatus.disabled') : t('tickets.admin.userStatus.active') }}
+          </span>
           <span>{{ formatDateTime(detail.created_at) }}</span>
         </div>
         <TicketThread
@@ -122,6 +132,17 @@
       </div>
       <div v-else class="py-6 text-center text-sm text-gray-400">{{ t('tickets.loading') }}</div>
       <template #footer>
+        <!-- fork：申诉工单一键恢复账户（运维点击会进入审批） -->
+        <button
+          v-if="canRestoreAccount"
+          type="button"
+          class="btn btn-primary"
+          :disabled="restoring"
+          data-test="ticket-restore-account"
+          @click="restoreVisible = true"
+        >
+          {{ t('tickets.admin.restoreAccount') }}
+        </button>
         <button
           v-if="detail && detail.status !== 'closed'"
           type="button"
@@ -145,6 +166,14 @@
         <button type="button" class="btn btn-secondary" @click="closeDetail">{{ t('tickets.actions.dismiss') }}</button>
       </template>
     </BaseDialog>
+
+    <ConfirmDialog
+      :show="restoreVisible"
+      :title="t('tickets.admin.restoreConfirmTitle')"
+      :message="t('tickets.admin.restoreConfirmMessage', { email: detail?.user?.email ?? '' })"
+      @confirm="restoreAccount"
+      @cancel="restoreVisible = false"
+    />
 
     <ConfirmDialog
       :show="closeVisible"
@@ -178,8 +207,9 @@ import { useAppStore } from '@/stores/app'
 import { useTicketsStore } from '@/stores/tickets'
 import { formatDateTime } from '@/utils/format'
 import { extractApiErrorMessage } from '@/utils/apiError'
+import { isApprovalQueued } from '@/utils/approval'
 import {
-  TICKET_CATEGORIES,
+  TICKET_ALL_CATEGORIES,
   parseTicketDeepLinkId,
   ticketCategoryLabel,
   ticketStatusBadgeClass,
@@ -206,7 +236,7 @@ const category = ref<TicketCategory | ''>('')
 
 const categoryOptions = computed(() => [
   { value: '', label: t('tickets.admin.categoryAll') },
-  ...TICKET_CATEGORIES.map((value) => ({ value, label: ticketCategoryLabel(t, value) }))
+  ...TICKET_ALL_CATEGORIES.map((value) => ({ value, label: ticketCategoryLabel(t, value) }))
 ])
 
 const items = ref<AdminSupportTicket[]>([])
@@ -353,6 +383,31 @@ const sendReply = async (body: string) => {
     if (err?.reason === 'TICKET_CLOSED' || err?.status === 409) await openDetailById(current.id)
   } finally {
     replying.value = false
+  }
+}
+
+// ---------- 申诉：恢复账户（fork 本地） ----------
+const restoring = ref(false)
+const restoreVisible = ref(false)
+const canRestoreAccount = computed(
+  () => detail.value?.category === 'appeal' && detail.value?.user?.status === 'disabled'
+)
+
+const restoreAccount = async () => {
+  restoreVisible.value = false
+  const current = detail.value
+  if (!current?.user?.id || restoring.value) return
+  restoring.value = true
+  try {
+    await adminAPI.users.toggleStatus(current.user.id, 'active')
+    appStore.showSuccess(t('tickets.admin.restoreSuccess'))
+    await openDetailById(current.id)
+  } catch (err: any) {
+    // 运维管理员：已排队等待管理员审批（全局提示已弹出）
+    if (isApprovalQueued(err)) return
+    appStore.showError(extractApiErrorMessage(err, t('common.error')))
+  } finally {
+    restoring.value = false
   }
 }
 

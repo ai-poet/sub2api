@@ -306,6 +306,46 @@ describe('API Client', () => {
 
       window.removeEventListener('admin-compliance-required', listener)
     })
+
+    // 上游 faee59ee1：reason / metadata 必须透传（登录页 USER_NOT_ACTIVE i18n、申诉令牌都依赖它）
+    it('HTTP 错误保留 reason 与 metadata', async () => {
+      apiClient.defaults.adapter = vi.fn().mockRejectedValue({
+        response: {
+          status: 403,
+          data: {
+            code: 403,
+            reason: 'USER_NOT_ACTIVE',
+            message: 'user is not active',
+            metadata: { appeal_token: 'apl_x', expires_in: '7200' },
+          },
+        },
+        config: { url: '/auth/login', headers: {} },
+        code: 'ERR_BAD_REQUEST',
+      })
+
+      await expect(apiClient.post('/auth/login', {})).rejects.toEqual(
+        expect.objectContaining({
+          status: 403,
+          code: 403,
+          reason: 'USER_NOT_ACTIVE',
+          metadata: { appeal_token: 'apl_x', expires_in: '7200' },
+        })
+      )
+    })
+
+    it('code!=0 的业务错误保留 reason 与 metadata', async () => {
+      apiClient.defaults.adapter = vi.fn().mockResolvedValue({
+        status: 200,
+        data: { code: 1001, reason: 'SOME_REASON', message: 'bad', metadata: { k: 'v' }, data: null },
+        headers: {},
+        config: {},
+        statusText: 'OK',
+      })
+
+      await expect(apiClient.get('/test')).rejects.toEqual(
+        expect.objectContaining({ code: 1001, reason: 'SOME_REASON', metadata: { k: 'v' } })
+      )
+    })
   })
 
   // --- 401 Token 刷新 ---

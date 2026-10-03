@@ -21,6 +21,8 @@ type PasskeyHandler struct {
 	passkeys    *service.PasskeyService
 	authService *service.AuthService
 	settingSvc  *service.SettingService
+	// fork：封禁申诉会话（SetAppealService 注入，可为 nil）
+	appealService *service.AppealService
 }
 
 func NewPasskeyHandler(
@@ -112,6 +114,9 @@ func (h *PasskeyHandler) FinishLogin(c *gin.Context) {
 	user, err := h.passkeys.FinishLogin(c.Request.Context(), req.SessionToken, credentialRequest)
 	if err != nil {
 		response.ErrorFrom(c, err)
+		return
+	}
+	if h.rejectInactivePasskeyUser(c, user) { // fork：申诉（Passkey 服务对 disabled 放行到这里）
 		return
 	}
 	if err = h.ensureBackendModeAllowsUser(c.Request.Context(), user); err != nil {

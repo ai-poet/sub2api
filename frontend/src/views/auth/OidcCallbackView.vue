@@ -244,6 +244,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { captureAppealToken, consumeAppealFragment } from '@/utils/appeal'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
@@ -688,6 +689,12 @@ async function handleContinueLogin() {
     const completion = await exchangePendingOAuthCompletion(currentAdoptionDecision()) as PendingOidcCompletion
     await finalizePendingAccountResponse(completion)
   } catch (e: unknown) {
+    // fork：被禁用账号完成第三方登录时，后端在 403 里带申诉令牌
+    if (captureAppealToken(e)) {
+      clearPendingAuthSession()
+      await router.replace('/appeal')
+      return
+    }
     errorMessage.value = getRequestErrorMessage(e, t('auth.loginFailed'))
     needsAdoptionConfirmation.value = false
   } finally {
@@ -772,6 +779,11 @@ async function handleSubmitTotpChallenge() {
 }
 
 onMounted(async () => {
+  // fork：被禁用账号的第三方登录，回调 fragment 里带申诉令牌 → 申诉页
+  if (consumeAppealFragment(parseFragmentParams())) {
+    await router.replace('/appeal')
+    return
+  }
   void loadProviderName()
 
   const params = parseFragmentParams()
@@ -842,6 +854,12 @@ onMounted(async () => {
 
     await finalizeCompletion(completion, completionRedirect)
   } catch (e: unknown) {
+    // fork：被禁用账号完成第三方登录时，后端在 403 里带申诉令牌
+    if (captureAppealToken(e)) {
+      clearPendingAuthSession()
+      await router.replace('/appeal')
+      return
+    }
     clearPendingAuthSession()
     errorMessage.value = getRequestErrorMessage(e, t('auth.loginFailed'))
     isProcessing.value = false

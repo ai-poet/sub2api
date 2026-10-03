@@ -160,6 +160,7 @@ type ContentModerationConfig struct {
 	BlockStatus          int                          `json:"block_status"`
 	BlockMessage         string                       `json:"block_message"`
 	EmailOnHit           bool                         `json:"email_on_hit"`
+	SiteMessageOnHit     bool                         `json:"site_message_on_hit"` // fork：站内信
 	AutoBanEnabled       bool                         `json:"auto_ban_enabled"`
 	BanThreshold         int                          `json:"ban_threshold"`
 	ViolationWindowHours int                          `json:"violation_window_hours"`
@@ -200,6 +201,7 @@ type ContentModerationConfigView struct {
 	BlockStatus                    int                                     `json:"block_status"`
 	BlockMessage                   string                                  `json:"block_message"`
 	EmailOnHit                     bool                                    `json:"email_on_hit"`
+	SiteMessageOnHit               bool                                    `json:"site_message_on_hit"` // fork：站内信
 	AutoBanEnabled                 bool                                    `json:"auto_ban_enabled"`
 	BanThreshold                   int                                     `json:"ban_threshold"`
 	ViolationWindowHours           int                                     `json:"violation_window_hours"`
@@ -297,6 +299,7 @@ type UpdateContentModerationConfigInput struct {
 	BlockStatus                    *int                          `json:"block_status"`
 	BlockMessage                   *string                       `json:"block_message"`
 	EmailOnHit                     *bool                         `json:"email_on_hit"`
+	SiteMessageOnHit               *bool                         `json:"site_message_on_hit"` // fork：站内信
 	AutoBanEnabled                 *bool                         `json:"auto_ban_enabled"`
 	BanThreshold                   *int                          `json:"ban_threshold"`
 	ViolationWindowHours           *int                          `json:"violation_window_hours"`
@@ -518,6 +521,8 @@ type ContentModerationService struct {
 	proxyRepo                ProxyRepository
 	authCacheInvalidator     APIKeyAuthCacheInvalidator
 	emailService             *EmailService
+	siteMessageNotifier      ContentModerationSiteMessageNotifier // fork：站内信（SetSiteMessageNotifier 注入，可为 nil）
+	userStatusObserver       UserStatusObserver                   // fork：申诉（解封时通知，SetUserStatusObserver 注入，可为 nil）
 	httpClient               *http.Client
 	moderationProxyCache     atomic.Pointer[moderationProxyURLCacheEntry]
 	asyncQueue               chan contentModerationTask
@@ -658,6 +663,9 @@ func (s *ContentModerationService) UpdateConfig(ctx context.Context, input Updat
 	}
 	if input.EmailOnHit != nil {
 		cfg.EmailOnHit = *input.EmailOnHit
+	}
+	if input.SiteMessageOnHit != nil { // fork：站内信
+		cfg.SiteMessageOnHit = *input.SiteMessageOnHit
 	}
 	if input.AutoBanEnabled != nil {
 		cfg.AutoBanEnabled = *input.AutoBanEnabled
@@ -1345,10 +1353,12 @@ func (s *ContentModerationService) UnbanUser(ctx context.Context, userID int64) 
 		return nil, fmt.Errorf("get content moderation unban user: %w", err)
 	}
 	if user.Status != StatusActive {
+		oldStatus := user.Status // fork：申诉
 		user.Status = StatusActive
 		if err := s.userRepo.Update(ctx, user, UserUpdateFields{Status: true}); err != nil {
 			return nil, fmt.Errorf("update content moderation unban user: %w", err)
 		}
+		s.notifyUserStatusChanged(ctx, userID, oldStatus, StatusActive) // fork：申诉（作废申诉会话并发站内信）
 	}
 	if s.authCacheInvalidator != nil {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
@@ -1947,6 +1957,7 @@ func (s *ContentModerationService) persistContentModerationLog(ctx context.Conte
 	if applySideEffects {
 		autoBanJustApplied = s.applyFlaggedAccountSideEffects(ctx, cfg, log)
 		s.sendFlaggedNotificationSideEffects(ctx, cfg, log, autoBanJustApplied)
+		s.deliverFlaggedSiteMessages(ctx, cfg, log, autoBanJustApplied) // fork：站内信
 	}
 	if s.repo != nil {
 		if err := s.repo.CreateLog(ctx, log); err != nil {
@@ -2141,6 +2152,7 @@ func defaultContentModerationConfig() *ContentModerationConfig {
 		BlockStatus:          defaultContentModerationBlockHTTPStatus,
 		BlockMessage:         defaultContentModerationBlockMessage,
 		EmailOnHit:           true,
+		SiteMessageOnHit:     true, // fork：站内信
 		AutoBanEnabled:       true,
 		BanThreshold:         defaultContentModerationBanThreshold,
 		ViolationWindowHours: defaultContentModerationViolationWindowHours,
@@ -2481,6 +2493,7 @@ func (s *ContentModerationService) configView(cfg *ContentModerationConfig) *Con
 		BlockStatus:                    cfg.BlockStatus,
 		BlockMessage:                   cfg.BlockMessage,
 		EmailOnHit:                     cfg.EmailOnHit,
+		SiteMessageOnHit:               cfg.SiteMessageOnHit, // fork：站内信
 		AutoBanEnabled:                 cfg.AutoBanEnabled,
 		BanThreshold:                   cfg.BanThreshold,
 		ViolationWindowHours:           cfg.ViolationWindowHours,
@@ -3132,6 +3145,7 @@ func (s *ContentModerationService) RecordCyberPolicyEvent(ctx context.Context, i
 			slog.Warn("content_moderation.cyber_update_email_sent_failed", "log_id", log.ID, "error", err)
 		}
 	}
+	s.deliverCyberPolicySiteMessages(ctx, cfg, log, in.LogOnly, autoBanned) // fork：站内信
 }
 
 func (s *ContentModerationService) sendCyberPolicyEmail(ctx context.Context, log *ContentModerationLog) error {

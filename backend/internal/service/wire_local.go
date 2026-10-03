@@ -80,6 +80,49 @@ func ProvideTicketService(repo SupportTicketRepository, notifier *TicketNotifySe
 	return svc
 }
 
+// ProvideContentModerationService 构造内容审计服务并挂上站内信投递（fork 本地）。
+// 用 setter 而非改上游构造函数签名，保持 NewContentModerationService 的现有用法与测试不变。
+func ProvideContentModerationService(
+	settingRepo SettingRepository,
+	repo ContentModerationRepository,
+	hashCache ContentModerationHashCache,
+	groupRepo GroupRepository,
+	userRepo UserRepository,
+	proxyRepo ProxyRepository,
+	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	emailService *EmailService,
+	siteMessages *SiteMessageService,
+) *ContentModerationService {
+	svc := NewContentModerationService(settingRepo, repo, hashCache, groupRepo, userRepo, proxyRepo, authCacheInvalidator, emailService)
+	// 显式判空，避免 nil 指针包进非 nil 接口
+	if siteMessages != nil {
+		svc.SetSiteMessageNotifier(siteMessages)
+	}
+	return svc
+}
+
+// ProvideAppealService 构造封禁申诉服务（fork 本地），并把自己注册为账号状态观察者：
+// 管理员修改用户状态（含运维经审批的重放）与风控中心解封时，作废申诉会话并发「账户已恢复」站内信。
+// 用类型断言 + setter，保持上游 NewAdminService / NewContentModerationService 签名不变。
+func ProvideAppealService(
+	store AppealSessionStore,
+	users UserRepository,
+	settings *SettingService,
+	tickets *TicketService,
+	siteMessages *SiteMessageService,
+	adminService AdminService,
+	moderation *ContentModerationService,
+) *AppealService {
+	svc := NewAppealService(store, users, settings, tickets, siteMessages)
+	if setter, ok := adminService.(interface{ SetUserStatusObserver(UserStatusObserver) }); ok {
+		setter.SetUserStatusObserver(svc)
+	}
+	if moderation != nil {
+		moderation.SetUserStatusObserver(svc)
+	}
+	return svc
+}
+
 // ProvidePersonalTokenService 构造运维管理员个人令牌服务（fork 本地）。
 // 同时把自己作为吊销器挂到 AdminService 上：角色离开 operator 时吊销其令牌。
 // 用类型断言 + setter，保持上游 NewAdminService 签名不变。

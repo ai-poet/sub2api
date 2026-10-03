@@ -158,6 +158,15 @@ func RegisterUserRoutes(
 			tickets.POST("/:id/reopen", h.Ticket.Reopen)
 		}
 
+		// 站内信（fork 本地）：只读写自己的收件箱
+		siteMessages := authenticated.Group("/site-messages")
+		{
+			siteMessages.GET("", h.SiteMessage.List)
+			siteMessages.GET("/unread-count", h.SiteMessage.UnreadCount)
+			siteMessages.POST("/read-all", h.SiteMessage.MarkAllRead)
+			siteMessages.POST("/:id/read", h.SiteMessage.MarkRead)
+		}
+
 		groupStatus := authenticated.Group("/group-status")
 		{
 			groupStatus.GET("", h.GroupStatus.List)

@@ -16,6 +16,8 @@ const TicketMessageAuthorStaff = "staff"
 type SupportTicketUserRef struct {
 	ID    int64  `json:"id"`
 	Email string `json:"email"`
+	// Status 发起人当前账号状态（fork：申诉工单详情里显示，并决定是否给「恢复账户」按钮）
+	Status string `json:"status,omitempty"`
 }
 
 // SupportTicket 工单（用户视图）。

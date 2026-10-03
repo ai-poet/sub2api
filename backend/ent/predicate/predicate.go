@@ -102,6 +102,9 @@ type SecuritySecret func(*sql.Selector)
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
 
+// SiteMessage is the predicate function for sitemessage builders.
+type SiteMessage func(*sql.Selector)
+
 // SupportTicket is the predicate function for supportticket builders.
 type SupportTicket func(*sql.Selector)
 

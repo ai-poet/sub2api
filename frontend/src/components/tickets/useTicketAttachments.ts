@@ -10,6 +10,7 @@ import { ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { uploadAttachment as uploadUserAttachment } from '@/api/tickets'
 import { uploadAttachment as uploadAdminAttachment } from '@/api/admin/tickets'
+import { uploadAttachment as uploadAppealAttachment } from '@/api/appeal'
 import { useAppStore } from '@/stores/app'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import {
@@ -33,7 +34,7 @@ export function useTicketAttachments({ side, draft }: UseTicketAttachmentsOption
   const uploadingCount = ref(0)
   let placeholderSeq = 0
 
-  const upload = side === 'admin' ? uploadAdminAttachment : uploadUserAttachment
+  const upload = side === 'admin' ? uploadAdminAttachment : side === 'appeal' ? uploadAppealAttachment : uploadUserAttachment
 
   function pickImage() {
     fileInput.value?.click()

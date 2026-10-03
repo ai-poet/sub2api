@@ -143,3 +143,14 @@ func TestTicketNotifyHelpers(t *testing.T) {
 	require.Contains(t, desp, "**内容**：-")
 	require.NotContains(t, desp, "[查看工单]")
 }
+
+// fork：申诉工单的推送标题带「【申诉】」，分类标签为「账号申诉」。
+func TestTicketNotify_AppealTicketsAreMarked(t *testing.T) {
+	ticket, _ := sampleTicketForNotify()
+	ticket.Category = TicketCategoryAppeal
+	title, _ := buildTicketNotifyMessage(ticketNotifyKindCreated, "Site", ticket, nil, "")
+	require.Equal(t, "[Site] 【申诉】新工单 #7：API 报 429", title)
+	title, _ = buildTicketNotifyMessage(ticketNotifyKindUserReplied, "Site", ticket, nil, "")
+	require.Equal(t, "[Site] 【申诉】工单 #7 有新回复：API 报 429", title)
+	require.Equal(t, "账号申诉", ticketCategoryLabel(TicketCategoryAppeal))
+}

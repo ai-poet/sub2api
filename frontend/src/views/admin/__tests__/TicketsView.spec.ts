@@ -12,7 +12,8 @@ const state = vi.hoisted(() => ({
   reopen: vi.fn(),
   fetchCounts: vi.fn(),
   showSuccess: vi.fn(),
-  showError: vi.fn()
+  showError: vi.fn(),
+  toggleStatus: vi.fn()
 }))
 
 vi.mock('@/api/admin', () => ({
@@ -23,7 +24,8 @@ vi.mock('@/api/admin', () => ({
       reply: state.reply,
       close: state.close,
       reopen: state.reopen
-    }
+    },
+    users: { toggleStatus: state.toggleStatus }
   }
 }))
 
@@ -228,5 +230,48 @@ describe('admin TicketsView (fork)', () => {
     expect(state.get).toHaveBeenCalledWith(2)
     expect(wrapper.find('[data-test="detail-dialog"]').exists()).toBe(true)
     expect(state.list).toHaveBeenLastCalledWith(1, 20, { status: 'closed', category: '', search: '' }, expect.anything())
+  })
+
+  // fork：申诉工单显示账号状态，并能一键恢复账户（运维会进入审批）
+  it('restores a disabled account from an appeal ticket', async () => {
+    const appeal = (status: string) => ticketRow(1, { category: 'appeal', user: { id: 101, email: 'user1@example.com', status } })
+    state.get.mockResolvedValueOnce({ ticket: appeal('disabled'), messages: [] })
+    state.get.mockResolvedValueOnce({ ticket: appeal('active'), messages: [] })
+    state.toggleStatus.mockResolvedValue({ id: 101, status: 'active' })
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.find('[data-test="ticket-view-1"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="ticket-detail-user-status"]').text()).toBe('tickets.admin.userStatus.disabled')
+    await wrapper.find('[data-test="ticket-restore-account"]').trigger('click')
+    await wrapper.find('[data-test="confirm-ok"]').trigger('click')
+    await flushPromises()
+
+    expect(state.toggleStatus).toHaveBeenCalledWith(101, 'active')
+    expect(state.showSuccess).toHaveBeenCalledWith('tickets.admin.restoreSuccess')
+    expect(wrapper.find('[data-test="ticket-detail-user-status"]').text()).toBe('tickets.admin.userStatus.active')
+    expect(wrapper.find('[data-test="ticket-restore-account"]').exists()).toBe(false)
+  })
+
+  it('stays quiet when an operator restore is queued for approval', async () => {
+    state.get.mockResolvedValue({ ticket: ticketRow(1, { category: 'appeal', user: { id: 101, email: 'user1@example.com', status: 'disabled' } }), messages: [] })
+    state.toggleStatus.mockRejectedValue({ status: 202, code: 'APPROVAL_PENDING', approval: { approval_request_id: 9 } })
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.find('[data-test="ticket-view-1"]').trigger('click')
+    await flushPromises()
+    await wrapper.find('[data-test="ticket-restore-account"]').trigger('click')
+    await wrapper.find('[data-test="confirm-ok"]').trigger('click')
+    await flushPromises()
+    expect(state.showError).not.toHaveBeenCalled()
+  })
+
+  it('does not offer restore on normal tickets', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    await wrapper.find('[data-test="ticket-view-1"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-test="ticket-restore-account"]').exists()).toBe(false)
   })
 })

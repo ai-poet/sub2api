@@ -1637,6 +1637,34 @@ var (
 		Columns:    SettingsColumns,
 		PrimaryKey: []*schema.Column{SettingsColumns[0]},
 	}
+	// SiteMessagesColumns holds the columns for the "site_messages" table.
+	SiteMessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "category", Type: field.TypeString, Size: 20, Default: "admin"},
+		{Name: "title", Type: field.TypeString, Size: 200},
+		{Name: "content", Type: field.TypeString, Size: 2147483647},
+		{Name: "source_type", Type: field.TypeString, Size: 32, Default: ""},
+		{Name: "source_id", Type: field.TypeString, Size: 128, Default: ""},
+		{Name: "sender_user_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "sender_role", Type: field.TypeString, Size: 20, Default: ""},
+		{Name: "approval_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "read_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// SiteMessagesTable holds the schema information for the "site_messages" table.
+	SiteMessagesTable = &schema.Table{
+		Name:       "site_messages",
+		Columns:    SiteMessagesColumns,
+		PrimaryKey: []*schema.Column{SiteMessagesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sitemessage_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{SiteMessagesColumns[1], SiteMessagesColumns[11]},
+			},
+		},
+	}
 	// SupportTicketsColumns holds the columns for the "support_tickets" table.
 	SupportTicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -2299,6 +2327,7 @@ var (
 		RedeemCodesTable,
 		SecuritySecretsTable,
 		SettingsTable,
+		SiteMessagesTable,
 		SupportTicketsTable,
 		SupportTicketMessagesTable,
 		TLSFingerprintProfilesTable,
@@ -2429,6 +2458,9 @@ func init() {
 	}
 	SettingsTable.Annotation = &entsql.Annotation{
 		Table: "settings",
+	}
+	SiteMessagesTable.Annotation = &entsql.Annotation{
+		Table: "site_messages",
 	}
 	SupportTicketsTable.Annotation = &entsql.Annotation{
 		Table: "support_tickets",

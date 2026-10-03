@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Wei-Shaw/sub2api/internal/pkg/bilingual"
 	"github.com/Wei-Shaw/sub2api/internal/securityaudit"
 	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -191,7 +192,8 @@ func securityAuditErrorCode(decision *securityaudit.Decision) string {
 	return decision.ErrorCode
 }
 
-func securityAuditMessage(decision *securityaudit.Decision) string {
+func securityAuditMessage(decision *securityaudit.Decision) (message string) {
+	defer func() { message = bilingual.Gateway(message) }() // fork：网关双语
 	if decision == nil {
 		return "Request blocked by content policy"
 	}

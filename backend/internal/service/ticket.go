@@ -25,6 +25,8 @@ const (
 	TicketCategoryBilling = "billing"
 	TicketCategoryAPI     = "api"
 	TicketCategoryOther   = "other"
+	// TicketCategoryAppeal 封禁申诉（fork 本地）：只能经申诉会话（/api/v1/appeal/tickets）创建，见 ticket_appeal.go。
+	TicketCategoryAppeal = "appeal"
 )
 
 // TicketAuthorRoleUser 消息 / 关闭动作来自工单发起方；客服侧存真实角色（RoleAdmin / RoleOperator）。
@@ -40,7 +42,10 @@ const (
 )
 
 // TicketCategories 全部合法分类（顺序即前端展示顺序）。
-var TicketCategories = []string{TicketCategoryAccount, TicketCategoryBilling, TicketCategoryAPI, TicketCategoryOther}
+var TicketCategories = []string{TicketCategoryAccount, TicketCategoryBilling, TicketCategoryAPI, TicketCategoryOther, TicketCategoryAppeal}
+
+// TicketUserCategories 普通创建入口可选的分类（不含 appeal）。
+var TicketUserCategories = []string{TicketCategoryAccount, TicketCategoryBilling, TicketCategoryAPI, TicketCategoryOther}
 
 // IsValidTicketCategory 报告 v 是否为合法分类。
 func IsValidTicketCategory(v string) bool {
@@ -72,6 +77,7 @@ var (
 	ErrTicketBodyInvalid     = infraerrors.BadRequest("TICKET_BODY_INVALID", "body is required and must be at most 5000 characters")
 	ErrTicketForbidden       = infraerrors.Forbidden("TICKET_FORBIDDEN", "not allowed to act on this ticket")
 	ErrTicketUnavailable     = infraerrors.ServiceUnavailable("TICKET_UNAVAILABLE", "ticket service is not available")
+	ErrTicketAppealActive    = infraerrors.Conflict("TICKET_APPEAL_ACTIVE", "an appeal ticket is already open")
 )
 
 // SupportTicket 一个工单。
@@ -170,6 +176,8 @@ type SupportTicketRepository interface {
 	CountByStatus(ctx context.Context, status string) (int64, error)
 	// CountActiveByUser 某用户未关闭的工单数（配额）。
 	CountActiveByUser(ctx context.Context, userID int64) (int64, error)
+	// CountActiveByUserCategory 某用户某分类未关闭的工单数（申诉工单每人最多一个）。
+	CountActiveByUserCategory(ctx context.Context, userID int64, category string) (int64, error)
 	// CountUserUnread 某用户有未读客服回复的工单数（用户角标）。
 	CountUserUnread(ctx context.Context, userID int64) (int64, error)
 	// StaffAttachmentReferencedForUser 报告 key 是否被 userID 拥有的某个工单里的一条客服消息

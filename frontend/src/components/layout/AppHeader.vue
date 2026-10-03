@@ -26,6 +26,9 @@
         <!-- Announcement Bell -->
         <AnnouncementBell v-if="user" />
 
+        <!-- 站内信（fork 本地） -->
+        <SiteMessageInbox v-if="user" />
+
         <!-- Community Group QR Code -->
         <CommunityQRCodeButton v-if="user" />
 
@@ -256,6 +259,7 @@ import { useAdminSettingsStore } from '@/stores/adminSettings'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import SubscriptionProgressMini from '@/components/common/SubscriptionProgressMini.vue'
 import AnnouncementBell from '@/components/common/AnnouncementBell.vue'
+import SiteMessageInbox from '@/components/common/SiteMessageInbox.vue'
 import CommunityQRCodeButton from '@/components/common/CommunityQRCodeButton.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { sanitizeUrl } from '@/utils/url'

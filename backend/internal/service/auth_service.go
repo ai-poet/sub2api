@@ -555,7 +555,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 
 	// 检查用户状态
 	if !user.IsActive() {
-		return "", nil, ErrUserNotActive
+		return "", nil, userNotActiveError(user) // fork：申诉（密码已验证，带上身份）
 	}
 
 	// 生成JWT token
@@ -650,7 +650,7 @@ func (s *AuthService) LoginOrRegisterOAuth(ctx context.Context, email, username 
 	}
 
 	if !user.IsActive() {
-		return "", nil, ErrUserNotActive
+		return "", nil, userNotActiveError(user) // fork：申诉（第三方已验证，带上身份）
 	}
 
 	// 尽力补全：当用户名为空时，使用第三方返回的用户名回填。
@@ -843,7 +843,7 @@ func (s *AuthService) loginOrRegisterOAuthWithTokenPair(ctx context.Context, ema
 	}
 
 	if !user.IsActive() {
-		return nil, nil, ErrUserNotActive
+		return nil, nil, userNotActiveError(user) // fork：申诉（第三方已验证，带上身份）
 	}
 
 	if user.Username == "" && username != "" {

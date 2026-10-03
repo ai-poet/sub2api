@@ -148,6 +148,7 @@ var approvalActionLabels = map[string]string{
 	"admin.users.platform_quotas.reset.create": "重置平台额度窗口",
 	"admin.users.attributes.update":            "修改用户属性",
 	"admin.users.auth_identities.create":       "绑定登录身份",
+	"admin.users.site_messages.create":         "发送站内信",
 	"admin.api_keys.update":                    "调整 API Key 分组",
 	"admin.subscriptions.assign.create":        "分配订阅",
 	"admin.subscriptions.bulk_assign.create":   "批量分配订阅",

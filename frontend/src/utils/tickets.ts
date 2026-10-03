@@ -17,7 +17,8 @@ export const TICKET_OPEN_LIMIT = 5
 /** 前端预检与后端一致：单张图片不超过 5MiB */
 export const TICKET_ATTACHMENT_MAX_SIZE = 5 * 1024 * 1024
 
-export type TicketSide = 'user' | 'admin'
+/** appeal：封禁申诉会话（fork 本地，走 api/appeal.ts 的独立客户端） */
+export type TicketSide = 'user' | 'admin' | 'appeal'
 
 /** 消息体里图片附件的 Markdown 写法：![image](ticket-attachment://<key>) */
 export function ticketAttachmentMarkdown(key: string): string {
@@ -32,7 +33,9 @@ export function ticketAttachmentMarkdown(key: string): string {
  * 取字节要走 api 层的 fetchAttachment，再由 useTicketAttachmentImages 换成 blob: URL。
  */
 export function ticketAttachmentContentPath(side: TicketSide): string {
-  return side === 'admin' ? '/admin/tickets/attachments/content' : '/tickets/attachments/content'
+  if (side === 'admin') return '/admin/tickets/attachments/content'
+  if (side === 'appeal') return '/appeal/tickets/attachments/content'
+  return '/tickets/attachments/content'
 }
 
 /** 附件还没取回来时的占位：1×1 透明 PNG，免得先闪一张裂图 */
@@ -87,10 +90,15 @@ export function ticketCategoryLabel(t: TranslateFn, category: string): string {
       return t('tickets.category.api')
     case 'other':
       return t('tickets.category.other')
+    case 'appeal':
+      return t('tickets.category.appeal')
     default:
       return category
   }
 }
+
+/** 客服侧筛选可选的全部分类（含申诉）；用户新建工单仍只用 TICKET_CATEGORIES。 */
+export const TICKET_ALL_CATEGORIES: TicketCategory[] = [...TICKET_CATEGORIES, 'appeal']
 
 export function ticketStatusBadgeClass(status: string): string {
   const base = 'inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium'

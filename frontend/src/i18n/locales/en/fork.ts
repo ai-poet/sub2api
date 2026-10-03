@@ -381,7 +381,41 @@ export default {
   },
   "admin": {
     "users": {
-      "typeReferralReward": "Balance (Referral Reward)"
+      "typeReferralReward": "Balance (Referral Reward)",
+      "siteMessage": {
+        "menuItem": "Send site message",
+        "title": "Send a site message to {email}",
+        "recipient": "Recipient",
+        "titleLabel": "Title",
+        "titlePlaceholder": "e.g. Account usage reminder",
+        "contentLabel": "Content (Markdown supported)",
+        "contentPlaceholder": "What you want to tell the user. It pops up the next time they open the site.",
+        "edit": "Edit",
+        "preview": "Preview",
+        "previewEmpty": "Nothing to preview",
+        "send": "Send",
+        "sent": "Site message sent",
+        "operatorHint": "Messages sent by an operator are delivered after an admin approves them.",
+        "disabledHint": "This account is disabled. The user can read site messages on the appeal page.",
+        "titleRequired": "Title is required",
+        "contentRequired": "Content is required",
+        "titleTooLong": "Title must be at most {max} characters",
+        "contentTooLong": "Content must be at most {max} characters",
+        "history": "Message history",
+        "historyEmpty": "This user has not received any site messages",
+        "read": "Read",
+        "unread": "Unread",
+        "readAt": "Read {time}",
+        "senderSystem": "System",
+        "viaApproval": "Approval #{id}",
+        "loadFailed": "Failed to load message history",
+        "showContent": "Show content",
+        "hideContent": "Hide content"
+      }
+    },
+    "riskControl": {
+      "siteMessageOnHit": "Send site message on hit",
+      "siteMessageOnHitHint": "Send the user a site message (shown as a popup) when a request hits a risk rule, the account is auto-disabled, or the cyber-security policy blocks a request. Works without email settings. When off, content audit sends no site messages at all, including disable notices."
     },
     "groups": {
       "columns": {
@@ -606,7 +640,8 @@ export default {
     },
     "audit": {
       "filters": {
-        "personalToken": "Personal token"
+        "personalToken": "Personal token",
+        "appealToken": "Appeal session"
       }
     },
     "referral": {
@@ -968,7 +1003,9 @@ export default {
           "validity": "Validity",
           "providerKey": "Provider key",
           "providerSubject": "Provider subject",
-          "resetRateLimit": "Reset rate-limit usage"
+          "resetRateLimit": "Reset rate-limit usage",
+          "messageTitle": "Message title",
+          "messageContent": "Message content"
         },
         "values": {
           "yes": "Yes",
@@ -986,7 +1023,8 @@ export default {
           "scopeAll": "all users",
           "scopeUsers": "{count} users ({ids})",
           "days": "{n} days",
-          "validityDefault": "Group default"
+          "validityDefault": "Group default",
+          "bodyTooLong": "Content too long to preview. Expand the raw request below."
         },
         "summary": {
           "userCreate": "Create user {email}",
@@ -1013,6 +1051,7 @@ export default {
           "subscriptionRevoke": "Revoke subscription {target}",
           "subscriptionRestore": "Restore subscription {target}",
           "subscriptionDelete": "Delete subscription {target}",
+          "userSiteMessage": "Send a site message to {target}",
           "unknown": "{action}: {target}"
         }
       },
@@ -1035,7 +1074,8 @@ export default {
         "subscriptionExtend": "Adjust subscription validity",
         "subscriptionResetQuota": "Reset subscription quota",
         "subscriptionRevoke": "Revoke subscription",
-        "subscriptionRestore": "Restore subscription"
+        "subscriptionRestore": "Restore subscription",
+        "userSiteMessage": "Send site message"
       }
     }
   },
@@ -1071,7 +1111,8 @@ export default {
       "account": "Account",
       "billing": "Billing / Quota",
       "api": "API calls",
-      "other": "Other"
+      "other": "Other",
+      "appeal": "Account appeal"
     },
     "columns": {
       "id": "ID",
@@ -1137,12 +1178,81 @@ export default {
       "empty": "No tickets match the current filters",
       "searchPlaceholder": "Search by title or user email",
       "categoryAll": "All categories",
+      "userStatus": {
+        "active": "Account active",
+        "disabled": "Account disabled"
+      },
+      "restoreAccount": "Restore account",
+      "restoreConfirmTitle": "Restore account",
+      "restoreConfirmMessage": "Restore the account of {email}? They will be able to sign in and call the API again, and will receive a site message.",
+      "restoreSuccess": "Account restored",
       "tabs": {
         "open": "Open",
         "replied": "Replied",
         "closed": "Closed",
         "all": "All"
       }
+    }
+  },
+  "appeal": {
+    "title": "Account appeal",
+    "exit": "Exit",
+    "banner": {
+      "title": "Your account has been disabled",
+      "desc": "See why it was disabled and submit an appeal here. An administrator will reply in the ticket. Once the account is restored, sign in again."
+    },
+    "expiresAt": "This appeal session is valid until {time}",
+    "notices": "Notices",
+    "noNotices": "No notices",
+    "ticketTitle": "Appeal",
+    "createTitle": "Explain the situation and submit an appeal. Each account can have one open appeal at a time.",
+    "submitAgain": "Submit a new appeal",
+    "form": {
+      "title": "Title",
+      "defaultTitle": "Request to restore my account",
+      "body": "Details",
+      "bodyPlaceholder": "Describe what the account is used for, why the risk rule may have been triggered, and how you will avoid it",
+      "submit": "Submit appeal",
+      "submitted": "Appeal submitted. Please wait for an administrator to respond."
+    },
+    "errors": {
+      "activeExists": "You already have an open appeal. Continue the conversation below.",
+      "rateLimited": "Too many requests. Please try again later.",
+      "expired": "The appeal session has expired. Please sign in again."
+    },
+    "loginNotice": {
+      "restored": "Your account has been restored. Please sign in again.",
+      "expired": "The appeal session has expired. Sign in again to continue your appeal."
+    }
+  },
+  "siteMessages": {
+    "title": "Messages",
+    "open": "Open messages",
+    "tabs": {
+      "all": "All",
+      "unread": "Unread"
+    },
+    "empty": "No messages yet",
+    "emptyUnread": "No unread messages",
+    "loadMore": "Load more",
+    "loadFailed": "Failed to load messages",
+    "markAllRead": "Mark all as read",
+    "allMarkedRead": "All messages marked as read",
+    "back": "Close",
+    "from": {
+      "system": "System",
+      "staff": "Staff"
+    },
+    "categories": {
+      "security": "Security",
+      "admin": "Notice",
+      "system": "System"
+    },
+    "popup": {
+      "badge": "New message",
+      "acknowledge": "Got it",
+      "viewAll": "View all",
+      "more": "{count} more unread"
     }
   }
 } as const

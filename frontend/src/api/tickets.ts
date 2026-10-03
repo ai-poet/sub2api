@@ -7,7 +7,7 @@ import { apiClient } from './client'
 import type { FetchOptions, PaginatedResponse } from '@/types'
 
 export type TicketStatus = 'open' | 'replied' | 'closed'
-export type TicketCategory = 'account' | 'billing' | 'api' | 'other'
+export type TicketCategory = 'account' | 'billing' | 'api' | 'other' | 'appeal'
 /** 用户视图里客服折叠为 staff；客服视图保留真实角色 admin / operator */
 export type TicketMessageAuthorRole = 'user' | 'staff' | 'admin' | 'operator'
 

@@ -213,6 +213,18 @@ func (r *ticketRepoStub) CountActiveByUser(_ context.Context, userID int64) (int
 	return n, nil
 }
 
+func (r *ticketRepoStub) CountActiveByUserCategory(_ context.Context, userID int64, category string) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var n int64
+	for _, item := range r.tickets {
+		if item.UserID == userID && item.Category == category && item.Status != TicketStatusClosed {
+			n++
+		}
+	}
+	return n, nil
+}
+
 func (r *ticketRepoStub) CountUserUnread(_ context.Context, userID int64) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

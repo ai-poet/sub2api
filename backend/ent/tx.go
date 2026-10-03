@@ -78,6 +78,8 @@ type Tx struct {
 	SecuritySecret *SecuritySecretClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
+	// SiteMessage is the client for interacting with the SiteMessage builders.
+	SiteMessage *SiteMessageClient
 	// SupportTicket is the client for interacting with the SupportTicket builders.
 	SupportTicket *SupportTicketClient
 	// SupportTicketMessage is the client for interacting with the SupportTicketMessage builders.
@@ -265,6 +267,7 @@ func (tx *Tx) init() {
 	tx.RedeemCode = NewRedeemCodeClient(tx.config)
 	tx.SecuritySecret = NewSecuritySecretClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
+	tx.SiteMessage = NewSiteMessageClient(tx.config)
 	tx.SupportTicket = NewSupportTicketClient(tx.config)
 	tx.SupportTicketMessage = NewSupportTicketMessageClient(tx.config)
 	tx.TLSFingerprintProfile = NewTLSFingerprintProfileClient(tx.config)

@@ -171,6 +171,9 @@ func (h *AuthHandler) emailOAuthCallbackWithProfile(
 	}
 	affiliateCode := h.emailOAuthAffiliateCode(c)
 	if shouldCreate, err := h.emailOAuthShouldCreatePendingRegistration(c.Request.Context(), input); err != nil {
+		if h.redirectAppealIfDisabled(c, frontendCallback, err) { // fork：申诉
+			return
+		}
 		redirectOAuthError(c, frontendCallback, infraerrors.Reason(err), infraerrors.Message(err), "")
 		return
 	} else if shouldCreate {
@@ -196,6 +199,9 @@ func (h *AuthHandler) emailOAuthCallbackWithProfile(
 				return
 			}
 			redirectToFrontendCallback(c, frontendCallback)
+			return
+		}
+		if h.redirectAppealIfDisabled(c, frontendCallback, err) { // fork：申诉
 			return
 		}
 		redirectOAuthError(c, frontendCallback, infraerrors.Reason(err), infraerrors.Message(err), "")

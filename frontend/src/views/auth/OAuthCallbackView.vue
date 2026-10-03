@@ -147,6 +147,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { captureAppealToken, consumeAppealFragment } from '@/utils/appeal'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useClipboard } from '@/composables/useClipboard'
@@ -312,6 +313,11 @@ async function resumePendingEmailOAuth() {
 
     appStore.showError(completion.error || t('auth.loginFailed'))
   } catch (e: unknown) {
+    // fork：被禁用账号完成第三方登录时，后端在 403 里带申诉令牌
+    if (captureAppealToken(e)) {
+      await router.replace('/appeal')
+      return
+    }
     const err = e as { message?: string; response?: { data?: { message?: string } } }
     const message = err.response?.data?.message || err.message || t('auth.loginFailed')
     appStore.showError(message)
@@ -364,6 +370,11 @@ async function handleSubmitRegistration() {
 }
 
 onMounted(async () => {
+  // fork：被禁用账号的第三方登录，回调 fragment 里带申诉令牌 → 申诉页
+  if (consumeAppealFragment(parseFragmentParams())) {
+    await router.replace('/appeal')
+    return
+  }
   const params = parseFragmentParams()
   const tokenResponse = readTokenResponse(params)
   const fragmentError = params.get('error') || ''

@@ -194,7 +194,7 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 					errors.Is(err, service.ErrMonthlyLimitExceeded) {
 					status = 429
 				}
-				abortWithGoogleError(c, status, err.Error())
+				abortWithGoogleError(c, status, gatewayErrorMessage(err)) // fork：网关双语（不再把 ApplicationError 调试串返回给客户端）
 				return
 			}
 
@@ -261,7 +261,7 @@ func abortWithGoogleError(c *gin.Context, status int, message string) {
 	c.JSON(status, gin.H{
 		"error": gin.H{
 			"code":    status,
-			"message": message,
+			"message": localizeGatewayMessage(c, message), // fork：网关双语
 			"status":  googleapi.HTTPStatusToGoogleStatus(status),
 		},
 	})

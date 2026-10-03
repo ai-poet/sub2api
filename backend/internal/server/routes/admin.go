@@ -38,6 +38,7 @@ func RegisterAdminRoutes(
 		registerApprovalRoutes(admin, h)
 		registerTicketRoutes(admin, h)
 		registerPersonalTokenRoutes(admin, h)
+		registerUserSiteMessageRoutes(admin, h)
 
 		// 仪表盘
 		registerDashboardRoutes(admin, h)
@@ -882,5 +883,16 @@ func registerChannelRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		channels.POST("", h.Admin.Channel.Create)
 		channels.PUT("/:id", h.Admin.Channel.Update)
 		channels.DELETE("/:id", h.Admin.Channel.Delete)
+	}
+}
+
+// registerUserSiteMessageRoutes 用户管理里的站内信（fork 本地）：给单个账号发送 + 查看其历史。
+// 不加 AdminOnly：operator 读历史在 operatorReadScope 直接放行；发送在 operatorApprovalScope，
+// 被 adminAuth 截获成审批申请，管理员批准后重放（见 middleware/console_scope.go）。
+func registerUserSiteMessageRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	users := admin.Group("/users")
+	{
+		users.GET("/:id/site-messages", h.Admin.UserSiteMessage.List)
+		users.POST("/:id/site-messages", h.Admin.UserSiteMessage.Send)
 	}
 }

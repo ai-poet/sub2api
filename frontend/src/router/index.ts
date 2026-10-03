@@ -194,6 +194,17 @@ const routes: RouteRecordRaw[] = [
       titleKey: 'home.login'
     }
   },
+  // fork：封禁申诉会话（只认 sessionStorage 里的申诉令牌，不需要正常登录）
+  {
+    path: '/appeal',
+    name: 'Appeal',
+    component: () => import('@/views/auth/AppealView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Appeal',
+      titleKey: 'appeal.title'
+    }
+  },
   {
     path: '/register',
     name: 'Register',

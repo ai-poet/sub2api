@@ -116,7 +116,7 @@ func (s *AuthService) loginOrRegisterVerifiedEmailOAuth(
 	}
 
 	if !user.IsActive() {
-		return nil, nil, ErrUserNotActive
+		return nil, nil, userNotActiveError(user) // fork：申诉（第三方已验证，带上身份）
 	}
 	if err := s.ensureEmailOAuthIdentity(ctx, user.ID, EmailOAuthIdentityInput{
 		ProviderType:     providerType,

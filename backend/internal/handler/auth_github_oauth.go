@@ -268,6 +268,9 @@ func (h *AuthHandler) GitHubOAuthCallback(c *gin.Context) {
 			redirectWithFragment(c, frontendCallback, fragment)
 			return
 		}
+		if h.redirectAppealIfDisabled(c, frontendCallback, err) { // fork：申诉
+			return
+		}
 		// 避免把内部细节泄露给客户端；给前端保留结构化原因与提示信息即可。
 		redirectOAuthError(c, frontendCallback, "login_failed", infraerrors.Reason(err), infraerrors.Message(err))
 		return
@@ -308,6 +311,9 @@ func (h *AuthHandler) CompleteGitHubOAuthRegistration(c *gin.Context) {
 	affiliateCode := firstNonEmpty(identity.AffCode, sanitizeOAuthAffiliateCode(req.AffCode))
 	tokenPair, _, err := h.authService.LoginOrRegisterOAuthWithTokenPair(c.Request.Context(), identity.Email, identity.Username, req.InvitationCode, affiliateCode, "github")
 	if err != nil {
+		if respondAppealIfDisabled(c, h.appealService, err) { // fork：申诉
+			return
+		}
 		response.ErrorFrom(c, err)
 		return
 	}

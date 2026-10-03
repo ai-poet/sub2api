@@ -363,7 +363,7 @@ export default {
       queueSize: 'Async Queue Size',
       blockStatus: 'Block HTTP Status',
       blockMessage: 'Custom Block Message',
-      defaultBlockMessage: 'Content audit matched a risk rule. Please adjust your input and try again.',
+      defaultBlockMessage: '内容审计命中风险规则，请调整输入后重试 / Content audit matched a risk rule. Please adjust your input and try again.',
       emailOnHit: 'Email on Hit',
       emailOnHitHint: 'When enabled, send a risk-control email on every hit; auto-ban notices are always sent.',
       autoBan: 'Auto Ban User',

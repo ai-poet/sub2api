@@ -16,6 +16,8 @@ import (
 // 运维管理员的写操作在 middleware/console_scope.go 的 operatorWriteScope 里显式放行（不走审批），全部留审计。
 type TicketHandler struct {
 	svc *service.TicketService
+	// users 可为 nil；详情里补发起人当前账号状态（fork：申诉）
+	users ticketUserLookup
 }
 
 // NewTicketHandler 构造客服侧工单 handler。
@@ -97,7 +99,7 @@ func (h *TicketHandler) Get(c *gin.Context) {
 		return
 	}
 	response.Success(c, dto.AdminSupportTicketDetail{
-		Ticket:   dto.AdminSupportTicketFromService(ticket),
+		Ticket:   h.withUserStatus(c.Request.Context(), dto.AdminSupportTicketFromService(ticket)), // fork：申诉（带上账号状态）
 		Messages: dto.SupportTicketMessagesForStaff(msgs),
 	})
 }

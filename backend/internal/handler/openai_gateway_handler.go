@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/bilingual"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ctxkey"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ip"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
@@ -3819,10 +3820,7 @@ func closeOpenAIClientWS(conn *coderws.Conn, status coderws.StatusCode, reason s
 	if conn == nil {
 		return
 	}
-	reason = strings.TrimSpace(reason)
-	if len(reason) > 120 {
-		reason = reason[:120]
-	}
+	reason = bilingual.TruncateUTF8(strings.TrimSpace(reason), 120) // fork：网关双语（按字符边界截断）
 	_ = conn.Close(status, reason)
 	_ = conn.CloseNow()
 }
@@ -3888,6 +3886,7 @@ func writeContentModerationWSError(ctx context.Context, conn *coderws.Conn, deci
 	if message == "" {
 		message = "content moderation blocked this request"
 	}
+	message = bilingual.Gateway(message) // fork：网关双语
 	payload, err := json.Marshal(gin.H{
 		"event_id": "evt_content_moderation_blocked",
 		"type":     "error",

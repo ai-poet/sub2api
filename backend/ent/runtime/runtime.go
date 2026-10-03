@@ -38,6 +38,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/schema"
 	"github.com/Wei-Shaw/sub2api/ent/securitysecret"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
+	"github.com/Wei-Shaw/sub2api/ent/sitemessage"
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
@@ -2108,6 +2109,40 @@ func init() {
 	setting.DefaultUpdatedAt = settingDescUpdatedAt.Default.(func() time.Time)
 	// setting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	setting.UpdateDefaultUpdatedAt = settingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	sitemessageFields := schema.SiteMessage{}.Fields()
+	_ = sitemessageFields
+	// sitemessageDescCategory is the schema descriptor for category field.
+	sitemessageDescCategory := sitemessageFields[1].Descriptor()
+	// sitemessage.DefaultCategory holds the default value on creation for the category field.
+	sitemessage.DefaultCategory = sitemessageDescCategory.Default.(string)
+	// sitemessage.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	sitemessage.CategoryValidator = sitemessageDescCategory.Validators[0].(func(string) error)
+	// sitemessageDescTitle is the schema descriptor for title field.
+	sitemessageDescTitle := sitemessageFields[2].Descriptor()
+	// sitemessage.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	sitemessage.TitleValidator = sitemessageDescTitle.Validators[0].(func(string) error)
+	// sitemessageDescSourceType is the schema descriptor for source_type field.
+	sitemessageDescSourceType := sitemessageFields[4].Descriptor()
+	// sitemessage.DefaultSourceType holds the default value on creation for the source_type field.
+	sitemessage.DefaultSourceType = sitemessageDescSourceType.Default.(string)
+	// sitemessage.SourceTypeValidator is a validator for the "source_type" field. It is called by the builders before save.
+	sitemessage.SourceTypeValidator = sitemessageDescSourceType.Validators[0].(func(string) error)
+	// sitemessageDescSourceID is the schema descriptor for source_id field.
+	sitemessageDescSourceID := sitemessageFields[5].Descriptor()
+	// sitemessage.DefaultSourceID holds the default value on creation for the source_id field.
+	sitemessage.DefaultSourceID = sitemessageDescSourceID.Default.(string)
+	// sitemessage.SourceIDValidator is a validator for the "source_id" field. It is called by the builders before save.
+	sitemessage.SourceIDValidator = sitemessageDescSourceID.Validators[0].(func(string) error)
+	// sitemessageDescSenderRole is the schema descriptor for sender_role field.
+	sitemessageDescSenderRole := sitemessageFields[7].Descriptor()
+	// sitemessage.DefaultSenderRole holds the default value on creation for the sender_role field.
+	sitemessage.DefaultSenderRole = sitemessageDescSenderRole.Default.(string)
+	// sitemessage.SenderRoleValidator is a validator for the "sender_role" field. It is called by the builders before save.
+	sitemessage.SenderRoleValidator = sitemessageDescSenderRole.Validators[0].(func(string) error)
+	// sitemessageDescCreatedAt is the schema descriptor for created_at field.
+	sitemessageDescCreatedAt := sitemessageFields[10].Descriptor()
+	// sitemessage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sitemessage.DefaultCreatedAt = sitemessageDescCreatedAt.Default.(func() time.Time)
 	supportticketMixin := schema.SupportTicket{}.Mixin()
 	supportticketMixinFields0 := supportticketMixin[0].Fields()
 	_ = supportticketMixinFields0

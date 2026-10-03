@@ -155,6 +155,7 @@ var ticketCategoryLabels = map[string]string{
 	TicketCategoryBilling: "计费 / 额度",
 	TicketCategoryAPI:     "API 调用",
 	TicketCategoryOther:   "其他",
+	TicketCategoryAppeal:  "账号申诉",
 }
 
 func ticketCategoryLabel(category string) string {
@@ -190,9 +191,9 @@ func buildTicketNotifyMessage(kind, siteName string, ticket *SupportTicket, msg 
 	var title string
 	switch kind {
 	case ticketNotifyKindUserReplied:
-		title = fmt.Sprintf("[%s] 工单 #%d 有新回复：%s", siteName, ticket.ID, ticket.Title)
+		title = fmt.Sprintf("[%s] %s工单 #%d 有新回复：%s", siteName, ticketNotifyAppealMark(ticket), ticket.ID, ticket.Title)
 	default:
-		title = fmt.Sprintf("[%s] 新工单 #%d：%s", siteName, ticket.ID, ticket.Title)
+		title = fmt.Sprintf("[%s] %s新工单 #%d：%s", siteName, ticketNotifyAppealMark(ticket), ticket.ID, ticket.Title)
 	}
 
 	user := strings.TrimSpace(ticket.UserEmail)
@@ -220,4 +221,12 @@ func buildTicketNotifyMessage(kind, siteName string, ticket *SupportTicket, msg 
 		lines = append(lines, fmt.Sprintf("[查看工单](%s)", link))
 	}
 	return title, strings.Join(lines, "\n\n")
+}
+
+// ticketNotifyAppealMark 申诉工单在推送标题前加「【申诉】」，方便一眼认出被封账号的申请。
+func ticketNotifyAppealMark(ticket *SupportTicket) string {
+	if ticket != nil && ticket.Category == TicketCategoryAppeal {
+		return "【申诉】"
+	}
+	return ""
 }

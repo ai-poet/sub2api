@@ -487,7 +487,9 @@ const authMethodOptions = computed(() => [
   { value: 'jwt', label: 'JWT' },
   { value: 'admin_api_key', label: 'Admin API Key' },
   // fork：运维管理员个人令牌（Authorization: Bearer pat-...）
-  { value: 'personal_token', label: t('admin.audit.filters.personalToken') }
+  { value: 'personal_token', label: t('admin.audit.filters.personalToken') },
+  // fork：封禁申诉会话（X-Appeal-Token）
+  { value: 'appeal_token', label: t('admin.audit.filters.appealToken') }
 ])
 
 const resultOptions = computed(() => [

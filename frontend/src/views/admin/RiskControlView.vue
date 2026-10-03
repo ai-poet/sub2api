@@ -900,6 +900,14 @@
                 </div>
                 <Toggle v-model="configForm.email_on_hit" />
               </div>
+              <!-- fork：站内信 -->
+              <div class="flex items-center justify-between rounded-lg border border-gray-100 p-4 dark:border-dark-700">
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('admin.riskControl.siteMessageOnHit') }}</p>
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.siteMessageOnHitHint') }}</p>
+                </div>
+                <Toggle v-model="configForm.site_message_on_hit" data-testid="risk-site-message-on-hit" />
+              </div>
               <div class="flex items-center justify-between rounded-lg border border-gray-100 p-4 dark:border-dark-700">
                 <div>
                   <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('admin.riskControl.autoBan') }}</p>
@@ -1282,6 +1290,7 @@ const configForm = reactive({
   block_status: 403,
   block_message: defaultBlockMessage(),
   email_on_hit: true,
+  site_message_on_hit: true,
   auto_ban_enabled: true,
   cyber_policy_exclude_from_ban_count: false,
   ban_threshold: 10,
@@ -1809,6 +1818,7 @@ function applyConfig(config: ContentModerationConfig) {
   configForm.block_status = config.block_status || 403
   configForm.block_message = config.block_message || defaultBlockMessage()
   configForm.email_on_hit = config.email_on_hit ?? true
+  configForm.site_message_on_hit = config.site_message_on_hit ?? true
   configForm.auto_ban_enabled = config.auto_ban_enabled ?? true
   configForm.cyber_policy_exclude_from_ban_count = config.cyber_policy_exclude_from_ban_count ?? false
   configForm.ban_threshold = config.ban_threshold || 10
@@ -1903,6 +1913,7 @@ async function saveConfig() {
       block_status: Number(configForm.block_status) || 403,
       block_message: configForm.block_message || defaultBlockMessage(),
       email_on_hit: configForm.email_on_hit,
+      site_message_on_hit: configForm.site_message_on_hit,
       auto_ban_enabled: configForm.auto_ban_enabled,
       cyber_policy_exclude_from_ban_count: configForm.cyber_policy_exclude_from_ban_count,
       ban_threshold: Number(configForm.ban_threshold) || 10,

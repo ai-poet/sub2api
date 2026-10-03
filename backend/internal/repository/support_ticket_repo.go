@@ -294,6 +294,14 @@ func (r *supportTicketRepository) CountActiveByUser(ctx context.Context, userID 
 	return total, err
 }
 
+func (r *supportTicketRepository) CountActiveByUserCategory(ctx context.Context, userID int64, category string) (int64, error) {
+	var total int64
+	err := r.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM support_tickets WHERE user_id = $1 AND category = $2 AND status <> 'closed'`,
+		userID, category).Scan(&total)
+	return total, err
+}
+
 func (r *supportTicketRepository) CountUserUnread(ctx context.Context, userID int64) (int64, error) {
 	var total int64
 	err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM support_tickets WHERE user_id = $1 AND user_unread`, userID).Scan(&total)

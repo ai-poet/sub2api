@@ -72,12 +72,12 @@ func TestOperatorScopeTableInvariants(t *testing.T) {
 		require.Truef(t, strings.HasPrefix(key, "GET /api/v1/admin/"), "read scope entry must live under /api/v1/admin: %s", key)
 	}
 	require.Equal(t, map[string]struct{}{
-		"POST /api/v1/admin/user-attributes/batch":  {},
-		"POST /api/v1/admin/approvals/:id/cancel":   {},
-		"POST /api/v1/admin/tickets/:id/messages":   {},
-		"POST /api/v1/admin/tickets/:id/close":      {},
-		"POST /api/v1/admin/tickets/:id/reopen":     {},
-		"POST /api/v1/admin/tickets/attachments":    {},
+		"POST /api/v1/admin/user-attributes/batch": {},
+		"POST /api/v1/admin/approvals/:id/cancel":  {},
+		"POST /api/v1/admin/tickets/:id/messages":  {},
+		"POST /api/v1/admin/tickets/:id/close":     {},
+		"POST /api/v1/admin/tickets/:id/reopen":    {},
+		"POST /api/v1/admin/tickets/attachments":   {},
 	}, operatorWriteScope, "直接放行的写条目必须保持最小；除工单客服动作外，新的写接口应走审批范围")
 
 	routes := OperatorScopeRoutes()
@@ -151,4 +151,15 @@ func TestOperatorDenyAuditLimiter(t *testing.T) {
 	require.True(t, limiter.allow(8, base), "other users have their own bucket")
 	require.True(t, limiter.allow(7, base.Add(operatorDenyAuditWindow)), "new window resets")
 	require.NotContains(t, limiter.buckets, int64(8), "expired buckets are collected on rollover")
+}
+
+// 站内信（fork 本地）：operator 可以直接读某个用户的站内信历史，发送必须经管理员审批。
+func TestOperatorSiteMessageScope(t *testing.T) {
+	t.Parallel()
+
+	require.True(t, OperatorScopeAllows(http.MethodGet, "/api/v1/admin/users/:id/site-messages"))
+
+	require.True(t, OperatorApprovalRequired(http.MethodPost, "/api/v1/admin/users/:id/site-messages"))
+	require.False(t, OperatorScopeAllows(http.MethodPost, "/api/v1/admin/users/:id/site-messages"), "send must never bypass approval")
+	require.False(t, OperatorActionRefused(http.MethodPost, "/api/v1/admin/users/:id/site-messages"))
 }
