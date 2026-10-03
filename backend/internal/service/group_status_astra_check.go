@@ -206,8 +206,10 @@ type GroupStatusAstraCheckState struct {
 	ConfigID      int64  `json:"config_id"`
 	ExpectedModel string `json:"expected_model"`
 	DisplayName   string `json:"display_name"`
-	// Method 是该目标的检测方法（meow / sol_juice），派生字段，不落库
-	Method              string                 `json:"method"`
+	// Method 是该目标的检测方法（meow / sol_juice / modeltrace），派生字段，不落库
+	Method string `json:"method"`
+	// TraceProxyModel 是代表该目标做 ModelTrace 归因的库内模型（目标本身不在指纹库里时，如 GPT-6.1 Sol → gpt-6-astra），派生字段
+	TraceProxyModel     string                 `json:"trace_proxy_model,omitempty"`
 	Verdict             string                 `json:"verdict"`
 	StableStatus        string                 `json:"stable_status"`
 	Winner              string                 `json:"winner"`
@@ -649,6 +651,9 @@ func decorateAstraCheckSummary(summary *GroupStatusSummary) {
 		state.DisplayName = AstraModelLabel(m.ExpectedModel)
 		if target, ok := astraCheckTarget(m.ExpectedModel); ok {
 			state.Method = target.Method
+			if target.TraceProxy {
+				state.TraceProxyModel = target.TraceModelID
+			}
 		}
 		// 前端直接读 .length，切片必须是 []
 		if state.Matches == nil {

@@ -2633,6 +2633,8 @@ export interface AstraCheckState {
   expected_model: string
   display_name: string
   method?: AstraCheckMethod
+  // ModelTrace 代表模型：目标本身不在指纹库里时，归因到它即算一致（如 GPT-6.1 Sol → gpt-6-astra）
+  trace_proxy_model?: string
   verdict: AstraCheckVerdict
   stable_status: AstraCheckStableStatus
   winner: string

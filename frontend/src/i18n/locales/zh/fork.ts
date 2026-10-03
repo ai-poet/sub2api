@@ -241,6 +241,31 @@ export default {
         "insufficient": "指纹证据不足",
         "unknown": "未知"
       }
+    },
+    "benchmarks": {
+      "title": "指纹检测基准",
+      "description": "带「指纹」徽章的分组会定期向上游发送检测题，判断实际提供服务的模型是否与标称一致。各系列使用的检测基准与开源地址如下。",
+      "families": {
+        "gpt": "GPT 系列",
+        "claude": "Claude 系列"
+      },
+      "methods": {
+        "meow": "meow 基准",
+        "modeltrace": "ModelTrace 数字指纹",
+        "sol_juice": "Juice 读数"
+      },
+      "sources": {
+        "gptMeow": "meow v3 基准（meow-llm-detector v4.5.4 官方 GPT 基准包）：发一批固定短答题，把答案分布与基准里各模型的分布比对，只有证据明显指向某个模型时才下结论。",
+        "gptModelTrace": "ModelTrace 数字指纹：发 3–6 条「凭第一反应输出 1–355 的整数」挑战，在指纹库收录的 16 个模型之间做归因。GPT-6.1 Sol 尚未收录，它与 GPT-6 Astra 的数字指纹几乎相同，归因为 GPT-6 Astra 即视为一致。",
+        "gptJuice": "Juice 读数：在 high 推理档位下读取模型内部的 Juice 数值，GPT-5.6 Sol 应为 40（GPT-5.6 Terra 为 32、Luna 为 48）。",
+        "claudeModelTrace": "ModelTrace 数字指纹：与 GPT 相同的数字挑战，在同一个指纹库里归因（库内收录 Opus 4.6–5.5、Sonnet、Haiku 等 8 个 Claude 模型）。",
+        "claudeMeow": "meow v3 基准（meow-llm-detector v4.5.4 官方 Claude 基准包）：固定短答题的答案分布比对。"
+      },
+      "repo": "开源地址",
+      "site": "在线版",
+      "license": "许可证",
+      "selfImplemented": "本站实现",
+      "disclaimer": "检测只在基准收录的模型之间判断：「指纹不符」表示回答明显更像另一个已收录的模型，是参考信号，不能单独作为替换模型的证据；未收录的模型也可能被归到最接近的候选。"
     }
   },
   "nav": {
@@ -411,7 +436,7 @@ export default {
         "notifyEnabledHint": "仅当站点设置中已启用 Server酱³ 推送时生效；关闭后本分组的状态变化不再推送。",
         "astraCheck": {
           "title": "meow 指纹验证",
-          "hint": "向本分组一个与平台一致的账号发一批固定短答题，把答案分布交给内置的 meow v3 基准判定：每个候选按各题累计证据，只有证据唯一最高、且越过自身强指向线的候选才算强指向。可同时检测多个预期模型，每个模型各自判定、各自推送；连续 2 次强指向其他模型（首次会在同一账号立即复测）才判定不符，不影响在线率。其中 GPT-5.6 Sol 改用 Juice 读数（reasoning=high 一条请求，Sol 应回 40），不受档位影响；Claude Opus 5.5 与 Opus 5 改用 ModelTrace 数字指纹（3–6 条长数字挑战，按官方网页版的题目与指纹库做闭集归因），同样不受档位影响。默认中档（meow 推荐），每个模型 64–96 个请求；低档请求减半，但 Sol 等答案分散的模型更容易被带偏。",
+          "hint": "向本分组一个与平台一致的账号发一批固定短答题，把答案分布交给内置的 meow v3 基准判定：每个候选按各题累计证据，只有证据唯一最高、且越过自身强指向线的候选才算强指向。可同时检测多个预期模型，每个模型各自判定、各自推送；连续 2 次强指向其他模型（首次会在同一账号立即复测）才判定不符，不影响在线率。其中 GPT-5.6 Sol 改用 Juice 读数（reasoning=high 一条请求，Sol 应回 40），不受档位影响；Claude Opus 5.5、Opus 5 与 GPT-6.1 Sol 改用 ModelTrace 数字指纹（3–6 条长数字挑战，按官方网页版的题目与指纹库做闭集归因），同样不受档位影响；GPT-6.1 Sol 不在指纹库里，归因为数字指纹几乎相同的 GPT-6 Astra 即算一致。默认中档（meow 推荐），每个模型 64–96 个请求；低档请求减半，但 Sol 等答案分散的模型更容易被带偏。",
           "benchmark": "基准包",
           "methods": {
             "meow": "meow 基准",
@@ -420,6 +445,7 @@ export default {
           },
           "juiceHint": "high 推理读取 Juice · Sol 应为 40（Terra 32 / Luna 48）",
           "modeltraceHint": "ModelTrace 数字指纹 · 3 条有效回答（最多 6 条挑战）· 闭集归因",
+          "modeltraceProxyHint": "{model} 不在指纹库里，按数字指纹几乎相同的 {proxy} 判定：归因为 {proxy} 即算一致",
           "modeltraceProbabilities": "归因概率（前 5 名，含预期模型；一致线 50%，强指向线 80%）",
           "models": "检测模型",
           "modelsHint": "勾选要核对的预期模型；右侧是发往上游的请求模型名，留空用默认名。",

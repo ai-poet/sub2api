@@ -219,6 +219,8 @@
             </div>
           </article>
         </div>
+
+        <FingerprintBenchmarkNotes v-if="hasFingerprintChecks" />
       </template>
     </div>
 
@@ -453,6 +455,7 @@ import BaseDialog from '@/components/common/BaseDialog.vue'
 import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import FingerprintBenchmarkNotes from '@/components/user/FingerprintBenchmarkNotes.vue'
 import { useAppStore } from '@/stores'
 import type {
   AstraCheckState,
@@ -524,6 +527,9 @@ const lastUpdatedLabel = computed(() => {
   }
   return `${formatRelativeTime(lastUpdatedAt.value)} (${formatDateTime(lastUpdatedAt.value)})`
 })
+
+// 有分组开了指纹验证时才在页尾说明各系列的检测基准与开源地址
+const hasFingerprintChecks = computed(() => items.value.some((item) => item.summary.astra_check_enabled))
 
 const healthyCount = computed(() => items.value.filter((item) => getItemStatus(item) === 'up').length)
 const degradedCount = computed(() => items.value.filter((item) => getItemStatus(item) === 'degraded').length)

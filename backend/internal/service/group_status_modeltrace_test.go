@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	modeltracebank "github.com/Wei-Shaw/sub2api/resources/modeltrace-bank"
 	"github.com/stretchr/testify/require"
 )
@@ -44,7 +45,7 @@ func TestModelTraceTargets_AreInEmbeddedBank(t *testing.T) {
 		require.Empty(t, target.PackageID, "modeltrace target %s must not point at a meow package", target.ID)
 		require.True(t, bank.HasModel(target.TraceModelID), "target %s (%s) is missing from the fingerprint bank", target.ID, target.TraceModelID)
 	}
-	require.Equal(t, 2, found)
+	require.Equal(t, 3, found)
 	opus, ok := astraCheckTarget("claude-opus-5.5")
 	require.True(t, ok)
 	require.Equal(t, AstraCheckMethodModelTrace, opus.Method)
@@ -289,7 +290,9 @@ func newModelTraceProbeFixture(t *testing.T, responses ...*http.Response) *astra
 
 func newModelTraceProbeFixtureFor(t *testing.T, expected string, responses ...*http.Response) *astraProbeFixture {
 	t.Helper()
-	f := newAstraProbeFixture(t, PlatformAnthropic, onlyModels(expected), responses...)
+	target, ok := astraCheckTarget(expected)
+	require.True(t, ok)
+	f := newAstraProbeFixture(t, target.Platform, onlyModels(expected), responses...)
 	f.svc.modelTraceChallengeGen = modelTraceFixedChallenges
 	return f
 }
@@ -458,4 +461,192 @@ func TestModelTraceProbe_FableStaysOnMeow(t *testing.T) {
 	require.Equal(t, AstraCheckMethodModelTrace, summary.AstraCheckStates[0].Method)
 	require.Equal(t, AstraCheckMethodModelTrace, summary.AstraCheckStates[1].Method)
 	require.Equal(t, AstraCheckMethodMeow, summary.AstraCheckStates[2].Method)
+}
+
+// ---------- GPT-6.1 Sol（代表模型 GPT-6 Astra） ----------
+
+func modelTraceResponsesSSE(text string) *http.Response {
+	delta, _ := json.Marshal(map[string]any{"type": "response.output_text.delta", "delta": text})
+	body := "data: {\"type\":\"response.created\",\"response\":{\"model\":\"gpt-6.1-sol\"}}\n\n" +
+		"data: " + string(delta) + "\n\n" +
+		"data: {\"type\":\"response.completed\",\"response\":{\"status\":\"completed\",\"usage\":{\"input_tokens\":5200,\"output_tokens\":1400,\"output_tokens_details\":{\"reasoning_tokens\":200}}}}\n\n"
+	return groupStatusProbeResponse(200, body)
+}
+
+func modelTraceResponsesAll(texts []string) []*http.Response {
+	out := make([]*http.Response, 0, len(texts))
+	for _, text := range texts {
+		out = append(out, modelTraceResponsesSSE(text))
+	}
+	return out
+}
+
+func TestModelTraceTargets_GPT61SolUsesAstraAsProxy(t *testing.T) {
+	bank, _, err := LoadEmbeddedModelTraceBank()
+	require.NoError(t, err)
+	sol, ok := astraCheckTarget("gpt-6.1-sol")
+	require.True(t, ok)
+	require.Equal(t, PlatformOpenAI, sol.Platform)
+	require.Equal(t, AstraCheckMethodModelTrace, sol.Method)
+	require.Equal(t, "gpt-6-astra", sol.TraceModelID)
+	require.True(t, sol.TraceProxy)
+	require.False(t, bank.HasModel("gpt-6.1-sol"), "once the bank enrolls GPT-6.1 Sol, point the target at its own fingerprint")
+	require.True(t, bank.HasModel("gpt-6-astra"))
+	// 代表模型不改名：别的目标归因到 gpt-6-astra 时仍显示 GPT-6 Astra
+	require.Equal(t, "gpt-6-astra", modelTraceCandidateID("gpt-6-astra"))
+	require.Equal(t, "GPT-6.1 Sol", AstraModelLabel("gpt-6.1-sol"))
+
+	summary := &GroupStatusSummary{AstraCheckModels: onlyModels("gpt-6.1-sol", "gpt-6-astra")}
+	decorateAstraCheckSummary(summary)
+	require.Equal(t, AstraCheckMethodModelTrace, summary.AstraCheckStates[0].Method)
+	require.Equal(t, "gpt-6-astra", summary.AstraCheckStates[0].TraceProxyModel)
+	require.Equal(t, AstraCheckMethodMeow, summary.AstraCheckStates[1].Method)
+	require.Empty(t, summary.AstraCheckStates[1].TraceProxyModel)
+}
+
+func TestModelTraceProbe_GPT61SolMatchesWhenAttributedToAstra(t *testing.T) {
+	astra := modelTraceReferenceTexts(t, "self-gpt-6-astra")
+	f := newModelTraceProbeFixtureFor(t, "gpt-6.1-sol", modelTraceResponsesAll(astra)...)
+
+	execution := f.run(t)[0]
+	result := execution.Result
+	require.Equal(t, AstraCheckVerdictMatch, result.Verdict)
+	require.Equal(t, "gpt-6.1-sol", result.Winner)
+	require.Equal(t, "gpt-6-astra", result.Strongest)
+	require.Empty(t, result.Reasons)
+	require.Equal(t, modelTracePackageID, result.BenchmarkPackageID)
+	require.Equal(t, 3, result.ValidSamples)
+	require.Equal(t, int64(3*5200), result.InputTokens)
+	require.Equal(t, int64(3*1400), result.OutputTokens)
+	require.Equal(t, int64(3*200), result.ReasoningTokens)
+	// 预期那一行是代表模型：用 50% 的一致线，判为通过
+	require.Equal(t, "gpt-6-astra", result.Matches[0].Model)
+	require.Equal(t, "GPT-6 Astra", result.Matches[0].Name)
+	require.Equal(t, modelTraceMatchMinProbability, result.Matches[0].Threshold)
+	require.True(t, result.Matches[0].Passed)
+	require.Equal(t, AstraCheckStatusPass, execution.State.StableStatus)
+	require.Contains(t, execution.State.Detail, "expected GPT-6.1 Sol")
+	require.Contains(t, execution.State.Detail, "strongest GPT-6 Astra")
+
+	// 请求贴近 Codex 采集环境：Responses、该模型的 Codex base instructions、low 推理与 low verbosity，不带 temperature
+	require.Len(t, f.upstream.requests, 3)
+	req := f.upstream.requests[0]
+	require.Equal(t, "https://example.com/responses", req.URL.String())
+	require.Equal(t, "Bearer sk-test", req.Header.Get("Authorization"))
+	payload := decodeProbeRequestBody(t, req)
+	require.Equal(t, "gpt-6.1-sol", payload["model"])
+	require.NotEmpty(t, payload["instructions"])
+	require.Equal(t, openai.CodexBaseInstructionsForModel("gpt-6.1-sol"), payload["instructions"])
+	require.Equal(t, map[string]any{"effort": "low"}, payload["reasoning"])
+	require.Equal(t, map[string]any{"verbosity": "low"}, payload["text"])
+	require.Equal(t, float64(groupStatusModelTraceOpenAIMaxOutputTokens), payload["max_output_tokens"])
+	require.Equal(t, false, payload["store"])
+	require.Equal(t, true, payload["stream"])
+	for _, key := range []string{"temperature", "include", "tools"} {
+		require.NotContains(t, payload, key)
+	}
+	input := payload["input"].([]any)
+	require.Len(t, input, 1)
+	message := input[0].(map[string]any)
+	require.Equal(t, "user", message["role"])
+	require.Equal(t, "challenge 1: 300 个 1 到 355（含端点）的整数", message["content"].([]any)[0].(map[string]any)["text"])
+}
+
+func TestModelTraceProbe_GPT61SolMismatchOnAnotherModel(t *testing.T) {
+	sol := modelTraceReferenceTexts(t, "self-gpt-6-sol")
+	responses := append(modelTraceResponsesAll(sol), modelTraceResponsesAll(sol)...)
+	f := newModelTraceProbeFixtureFor(t, "gpt-6.1-sol", responses...)
+
+	execution := f.run(t)[0]
+	require.True(t, execution.Confirmed)
+	require.Len(t, f.upstream.requests, 6)
+	require.Equal(t, AstraCheckVerdictMismatch, execution.Result.Verdict)
+	require.Equal(t, "gpt-6-sol", execution.Result.Winner)
+	require.Equal(t, *f.repo.results[0].AccountID, *f.repo.results[1].AccountID)
+	require.Equal(t, AstraCheckStatusMismatch, execution.State.StableStatus)
+	require.NotNil(t, execution.Event)
+	require.Equal(t, "gpt-6.1-sol:winner_gpt-6-sol", execution.Event.SubStatus)
+}
+
+func TestModelTraceProbe_GPT61SolTruncatedOutputIsReplaced(t *testing.T) {
+	astra := modelTraceReferenceTexts(t, "self-gpt-6-astra")
+	truncated := groupStatusProbeResponse(200, "data: {\"type\":\"response.output_text.delta\",\"delta\":\"[1, 2\"}\n\n"+
+		"data: {\"type\":\"response.incomplete\",\"response\":{\"status\":\"incomplete\",\"incomplete_details\":{\"reason\":\"max_output_tokens\"},\"usage\":{\"input_tokens\":5200,\"output_tokens\":8192}}}\n\n")
+	f := newModelTraceProbeFixtureFor(t, "gpt-6.1-sol", append([]*http.Response{truncated}, modelTraceResponsesAll(astra)...)...)
+
+	execution := f.run(t)[0]
+	require.Len(t, f.upstream.requests, 4)
+	require.Equal(t, AstraCheckVerdictMatch, execution.Result.Verdict)
+	require.Equal(t, AstraCheckSampleInvalid, execution.Result.Samples[0].Outcome)
+	require.Contains(t, execution.Result.Samples[0].Error, ModelTraceRejectionMaxTokens)
+}
+
+func TestCreateOpenAIModelTracePayload_OAuthKeepsCodexShape(t *testing.T) {
+	payload := createOpenAIModelTracePayload("gpt-6.1-sol", "prompt", true)
+	require.Equal(t, openai.CodexBaseInstructionsForModel("gpt-6.1-sol"), payload["instructions"])
+	require.Equal(t, []string{"reasoning.encrypted_content"}, payload["include"])
+	require.NotContains(t, payload, "temperature")
+}
+
+func TestParseOpenAIModelTraceStream(t *testing.T) {
+	cases := []struct {
+		name      string
+		body      string
+		text      string
+		stop      string
+		completed bool
+		err       bool
+	}{
+		{
+			name:      "completed",
+			body:      "data: {\"type\":\"response.output_text.delta\",\"delta\":\"[1,2,3]\"}\n\ndata: {\"type\":\"response.completed\",\"response\":{\"usage\":{\"input_tokens\":1,\"output_tokens\":2}}}\n\n",
+			text:      "[1,2,3]",
+			completed: true,
+		},
+		{
+			name:      "final output only",
+			body:      "data: {\"type\":\"response.completed\",\"response\":{\"output\":[{\"type\":\"message\",\"content\":[{\"type\":\"output_text\",\"text\":\"[4,5]\"}]}]}}\n\n",
+			text:      "[4,5]",
+			completed: true,
+		},
+		{
+			name:      "refusal",
+			body:      "data: {\"type\":\"response.refusal.delta\",\"delta\":\"I cannot\"}\n\ndata: {\"type\":\"response.completed\",\"response\":{}}\n\n",
+			stop:      "refusal",
+			completed: true,
+		},
+		{
+			name:      "content filter",
+			body:      "data: {\"type\":\"response.incomplete\",\"response\":{\"incomplete_details\":{\"reason\":\"content_filter\"}}}\n\n",
+			stop:      "refusal",
+			completed: true,
+		},
+		{
+			name: "other incomplete",
+			body: "data: {\"type\":\"response.incomplete\",\"response\":{\"incomplete_details\":{\"reason\":\"interrupted\"}}}\n\n",
+		},
+		{
+			name: "cut off",
+			body: "data: {\"type\":\"response.output_text.delta\",\"delta\":\"[1,2\"}\n\n",
+			text: "[1,2",
+		},
+		{
+			name: "failed",
+			body: "data: {\"type\":\"response.failed\",\"response\":{\"error\":{\"message\":\"boom\"}}}\n\n",
+			err:  true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := parseOpenAIModelTraceStream(strings.NewReader(tc.body))
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.text, res.Text)
+			require.Equal(t, tc.stop, res.StopReason)
+			require.Equal(t, tc.completed, res.Completed)
+		})
+	}
 }

@@ -67,7 +67,7 @@ func TestAstraCheckTargets_AreInTheirBenchmarkPackages(t *testing.T) {
 		}
 		return out
 	}
-	require.Equal(t, []string{"gpt-5.6-sol", "gpt-6-sol", "gpt-6-astra"}, ids(PlatformOpenAI))
+	require.Equal(t, []string{"gpt-5.6-sol", "gpt-6-sol", "gpt-6-astra", "gpt-6.1-sol"}, ids(PlatformOpenAI))
 	require.Equal(t, []string{"claude-opus-5.5", "claude-opus-5", "claude-fable-5.1"}, ids(PlatformAnthropic))
 	require.Empty(t, ids(PlatformGemini))
 	gpt56, ok := astraCheckTarget("gpt-5.6-sol")

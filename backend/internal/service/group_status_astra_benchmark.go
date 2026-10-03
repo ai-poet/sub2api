@@ -532,16 +532,22 @@ type AstraCheckTarget struct {
 	PackageID           string `json:"package_id"`
 	// TraceModelID 是 ModelTrace 指纹库里对应的模型 id（仅 modeltrace 方法）
 	TraceModelID string `json:"-"`
+	// TraceProxy 表示目标本身不在指纹库里，TraceModelID 只是代表它的库内模型：归因到代表模型即算一致，
+	// 但代表模型在其他目标的结果里仍按自己的 id 显示（不会被换成这个目标）
+	TraceProxy bool `json:"-"`
 }
 
 // astraCheckTargets 是固定的目标列表；meow 方法的目标必须在对应基准包里、modeltrace 方法的目标必须在指纹库里（测试钉住）。
 // Claude Opus 5.5 / Opus 5 用 ModelTrace；Fable 5.1 不在 ModelTrace 指纹库里，仍用 meow 基准。
+// GPT-6.1 Sol 也不在指纹库里，但它的数字指纹与 GPT-6 Astra 几乎一样，所以用 ModelTrace、归因为 Astra 即算一致。
+// 公开状态页的「指纹检测基准」说明（前端 utils/groupStatus.ts 的 FINGERPRINT_BENCHMARKS）按这里的目标与方法写，改动时一起改。
 // GPT-5.6 Sol 用 Juice 读数（Sol 回 40）：官方渠道下它在 meow 基准里的答案分布会漂移、被判成其他模型，
 // 而 Juice 一条请求就能把 Sol / Terra / Luna 区分开。
 var astraCheckTargets = []AstraCheckTarget{
 	{ID: "gpt-5.6-sol", DisplayName: "GPT-5.6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-5.6-sol", Method: AstraCheckMethodSolJuice},
 	{ID: "gpt-6-sol", DisplayName: "GPT-6 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-sol", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
 	{ID: "gpt-6-astra", DisplayName: "GPT-6 Astra", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6-astra", Method: AstraCheckMethodMeow, PackageID: "meow-gpt-other-cap98-efficient"},
+	{ID: "gpt-6.1-sol", DisplayName: "GPT-6.1 Sol", Platform: PlatformOpenAI, DefaultRequestModel: "gpt-6.1-sol", Method: AstraCheckMethodModelTrace, TraceModelID: "gpt-6-astra", TraceProxy: true},
 	{ID: "claude-opus-5.5", DisplayName: "Claude Opus 5.5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5-5", Method: AstraCheckMethodModelTrace, TraceModelID: "claude-opus-5-5"},
 	{ID: "claude-opus-5", DisplayName: "Claude Opus 5", Platform: PlatformAnthropic, DefaultRequestModel: "claude-opus-5", Method: AstraCheckMethodModelTrace, TraceModelID: "claude-opus-5"},
 	{ID: "claude-fable-5.1", DisplayName: "Claude Fable 5.1", Platform: PlatformAnthropic, DefaultRequestModel: "claude-fable-5-1", Method: AstraCheckMethodMeow, PackageID: "meow-claude-other-cap98-efficient"},
@@ -552,6 +558,7 @@ var astraModelLabels = map[string]string{
 	"gpt-6-astra":      "GPT-6 Astra",
 	"gpt-6-sol":        "GPT-6 Sol",
 	"gpt-6-luna":       "GPT-6 Luna",
+	"gpt-6.1-sol":      "GPT-6.1 Sol",
 	"gpt-5.6-sol":      "GPT-5.6 Sol",
 	"gpt-5.6-terra":    "GPT-5.6 Terra",
 	"gpt-5.6-luna":     "GPT-5.6 Luna",

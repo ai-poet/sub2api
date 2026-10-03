@@ -241,6 +241,31 @@ export default {
         "insufficient": "Fingerprint inconclusive",
         "unknown": "Unknown"
       }
+    },
+    "benchmarks": {
+      "title": "Fingerprint benchmarks",
+      "description": "Groups with a fingerprint badge periodically send test prompts upstream to check that the model actually serving them is the one advertised. Each family uses the benchmarks and open-source projects below.",
+      "families": {
+        "gpt": "GPT family",
+        "claude": "Claude family"
+      },
+      "methods": {
+        "meow": "meow benchmark",
+        "modeltrace": "ModelTrace number fingerprint",
+        "sol_juice": "Juice reading"
+      },
+      "sources": {
+        "gptMeow": "meow v3 benchmark (the official GPT package of meow-llm-detector v4.5.4): a batch of fixed short-answer prompts whose answer distribution is compared with every model in the benchmark; a verdict needs evidence that clearly points at one model.",
+        "gptModelTrace": "ModelTrace number fingerprint: 3–6 challenges asking for first-instinct integers from 1 to 355, attributed among the 16 models in the fingerprint bank. GPT-6.1 Sol is not enrolled yet; its number fingerprint is nearly identical to GPT-6 Astra's, so attribution to GPT-6 Astra counts as a match.",
+        "gptJuice": "Juice reading: reads the model's internal Juice value at high reasoning; GPT-5.6 Sol should answer 40 (GPT-5.6 Terra 32, Luna 48).",
+        "claudeModelTrace": "ModelTrace number fingerprint: the same number challenges, attributed in the same bank (it enrolls 8 Claude models, including Opus 4.6–5.5, Sonnet and Haiku).",
+        "claudeMeow": "meow v3 benchmark (the official Claude package of meow-llm-detector v4.5.4): answer distributions of fixed short-answer prompts."
+      },
+      "repo": "Source",
+      "site": "Web version",
+      "license": "License",
+      "selfImplemented": "Implemented by this site",
+      "disclaimer": "Checks only decide among the models a benchmark enrolls: a mismatch means the answers clearly resemble another enrolled model. It is a signal, not proof of substitution on its own, and a model outside the benchmark may be attributed to its closest candidate."
     }
   },
   "nav": {
@@ -411,7 +436,7 @@ export default {
         "notifyEnabledHint": "Only effective when Server酱³ push is enabled in site settings; turn off to silence this group.",
         "astraCheck": {
           "title": "meow fingerprint check",
-          "hint": "Sends a batch of fixed short-answer prompts to one account of this group that matches its platform and scores the answer distribution against the bundled meow v3 benchmark: every candidate accumulates evidence per prompt, and only a candidate whose evidence is uniquely highest and clears its own strong-direction line counts as a strong match. Several expected models can be checked at once; each is judged and pushed on its own. Two consecutive strong matches on another model (the first triggers an immediate re-run on the same account) flip the verdict; availability is not affected. GPT-5.6 Sol uses the Juice reading instead (one request at reasoning=high, Sol should answer 40) and ignores the tier; Claude Opus 5.5 and Opus 5 use the ModelTrace number fingerprint (3–6 long number challenges, attributed against the prompts and bank of the official web version), which also ignores the tier. The default medium tier (recommended by meow) sends 64–96 requests per model; the low tier halves that but lets models with spread-out answers such as Sol drift more easily.",
+          "hint": "Sends a batch of fixed short-answer prompts to one account of this group that matches its platform and scores the answer distribution against the bundled meow v3 benchmark: every candidate accumulates evidence per prompt, and only a candidate whose evidence is uniquely highest and clears its own strong-direction line counts as a strong match. Several expected models can be checked at once; each is judged and pushed on its own. Two consecutive strong matches on another model (the first triggers an immediate re-run on the same account) flip the verdict; availability is not affected. GPT-5.6 Sol uses the Juice reading instead (one request at reasoning=high, Sol should answer 40) and ignores the tier; Claude Opus 5.5, Opus 5 and GPT-6.1 Sol use the ModelTrace number fingerprint (3–6 long number challenges, attributed against the prompts and bank of the official web version), which also ignores the tier; GPT-6.1 Sol is not in the bank, so attribution to GPT-6 Astra, whose number fingerprint is nearly identical, counts as a match. The default medium tier (recommended by meow) sends 64–96 requests per model; the low tier halves that but lets models with spread-out answers such as Sol drift more easily.",
           "benchmark": "Benchmark",
           "methods": {
             "meow": "meow benchmark",
@@ -420,6 +445,7 @@ export default {
           },
           "juiceHint": "Reads Juice at high reasoning · Sol should answer 40 (Terra 32 / Luna 48)",
           "modeltraceHint": "ModelTrace number fingerprint · 3 valid outputs (up to 6 challenges) · closed-set attribution",
+          "modeltraceProxyHint": "{model} is not in the bank and is judged by {proxy}, whose number fingerprint is nearly identical: attribution to {proxy} counts as a match",
           "modeltraceProbabilities": "Attribution probabilities (top 5 plus the expected model; match line 50%, strong line 80%)",
           "models": "Models to check",
           "modelsHint": "Tick the expected models to verify; the field on the right is the model name sent upstream (empty = default).",

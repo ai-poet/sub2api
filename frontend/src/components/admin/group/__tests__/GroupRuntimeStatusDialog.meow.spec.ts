@@ -197,9 +197,11 @@ function buildView(platform: 'openai' | 'anthropic'): GroupStatusAdminView {
   } as GroupStatusAdminView
 }
 
-async function mountDialog(platform: 'openai' | 'anthropic' | 'gemini') {
+async function mountDialog(platform: 'openai' | 'anthropic' | 'gemini', mutate?: (view: GroupStatusAdminView) => void) {
   if (platform !== 'gemini') {
-    mocks.getRuntimeStatus.mockResolvedValue(buildView(platform))
+    const view = buildView(platform)
+    mutate?.(view)
+    mocks.getRuntimeStatus.mockResolvedValue(view)
   } else {
     const view = buildView('openai')
     view.astra_check_targets = []
@@ -362,6 +364,51 @@ describe('GroupRuntimeStatusDialog meow fingerprint card', () => {
     // 运行中：检测按钮都不可点
     expect(wrapper.find('[data-astra-probe-all]').attributes('disabled')).toBeDefined()
     expect(wrapper.find('[data-astra-probe-model="gpt-6-sol"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('treats the ModelTrace proxy model as the expected row for GPT-6.1 Sol', async () => {
+    const wrapper = await mountDialog('openai', (view) => {
+      view.astra_check_targets.push({
+        id: 'gpt-6.1-sol',
+        display_name: 'GPT-6.1 Sol',
+        platform: 'openai',
+        default_request_model: 'gpt-6.1-sol',
+        method: 'modeltrace',
+        package_id: ''
+      })
+      const models = [...view.config.astra_check_models, { expected_model: 'gpt-6.1-sol', request_model: '' }]
+      view.config.astra_check_models = models
+      view.summary.astra_check_models = models
+      view.summary.astra_check_states = [
+        ...(view.summary.astra_check_states ?? []),
+        state('gpt-6.1-sol', 'GPT-6.1 Sol', {
+          method: 'modeltrace',
+          trace_proxy_model: 'gpt-6-astra',
+          verdict: 'match',
+          stable_status: 'pass',
+          winner: 'gpt-6.1-sol',
+          checked_at: '2026-10-03T00:00:00Z',
+          matches: [
+            { model: 'gpt-6-astra', name: 'GPT-6 Astra', score: -10, match: 0.93, threshold: 0.5, passed: true },
+            { model: 'gpt-6-sol', name: 'GPT-6 Sol', score: -30, match: 0.05, threshold: 0.8, passed: false }
+          ]
+        })
+      ]
+    })
+
+    const card = wrapper.find('[data-astra-state="gpt-6.1-sol"]')
+    expect(card.exists()).toBe(true)
+    // 归因到代表模型 GPT-6 Astra 是一致：绿色，不是「强指向其他模型」的红色
+    const astraRow = card.find('[data-astra-match="gpt-6-astra"]')
+    expect(astraRow.find('.bg-emerald-500').exists()).toBe(true)
+    expect(astraRow.find('.bg-rose-500').exists()).toBe(false)
+    expect(card.find('[data-astra-trace-proxy]').text()).toContain('admin.groups.runtimeStatus.astraCheck.modeltraceProxyHint')
+    expect(card.find('[data-astra-trace-proxy]').text()).toContain('"proxy":"GPT-6 Astra"')
+
+    // 其他模型自己的卡片不受影响：GPT-6 Sol 被强指向 Astra 仍是红色
+    const solCard = wrapper.find('[data-astra-state="gpt-6-sol"]')
+    expect(solCard.find('[data-astra-match="gpt-6-astra"] .bg-rose-500').exists()).toBe(true)
+    expect(solCard.find('[data-astra-trace-proxy]').exists()).toBe(false)
   })
 
   it('hides the card and leaves the fingerprint settings out of the payload on other platforms', async () => {

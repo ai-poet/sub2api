@@ -1,17 +1,24 @@
 package service
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 )
 
 // ModelTrace 方法的执行：锁定一个账号 → 发 3 条（不够时补到最多 6 条）数字挑战 → 本地归因 → Guard 规则判定，
-// 写成与 meow / Juice 相同形状的运行结果。请求刻意贴近指纹库的采集环境：Claude 只带一条 user 消息、
-// max_tokens 4096，不带 temperature / thinking；OAuth 账号只带通道硬性要求的一行 Claude Code system。
+// 写成与 meow / Juice 相同形状的运行结果。请求刻意贴近指纹库的采集环境：Claude（库内数据经 API 直接采集）
+// 只带一条 user 消息、max_tokens 4096，不带 temperature / thinking，OAuth 账号只带通道硬性要求的一行
+// Claude Code system；GPT（库内数据在官方 Codex 里采集）走 Responses，带该模型真实的 Codex base
+// instructions、Codex 默认的 low 推理与 low verbosity，不带 temperature。
 
 // modelTraceAttempt 是一条挑战的最终结果。
 type modelTraceAttempt struct {
@@ -44,10 +51,11 @@ func (s *GroupStatusProbeService) newModelTraceChallenges(n int) []ModelTraceCha
 }
 
 // modelTraceCandidateID 把指纹库里的模型 id 换成目标 id（如 claude-opus-5-5 → claude-opus-5.5），
-// 让状态、事件与界面用同一套 id；不是目标的模型原样返回。
+// 让状态、事件与界面用同一套 id；不是目标的模型原样返回。代表模型（TraceProxy）不换：
+// gpt-6-astra 始终是 GPT-6 Astra，不会因为它代表 GPT-6.1 Sol 就在别的结果里显示成 6.1 Sol。
 func modelTraceCandidateID(bankModel string) string {
 	for _, target := range astraCheckTargets {
-		if target.TraceModelID != "" && target.TraceModelID == bankModel {
+		if target.TraceModelID != "" && !target.TraceProxy && target.TraceModelID == bankModel {
 			return target.ID
 		}
 	}
@@ -97,11 +105,22 @@ func modelTraceMatches(analysis *ModelTraceAnalysis, expectedBank, verdict strin
 	return out
 }
 
-// modelTraceRequest 发一条挑战（ModelTrace 方法目前只用于 Claude 目标）。
+// modelTraceRequest 按账号平台发一条挑战：Claude 走 Messages，GPT 走 Responses。
 func (s *GroupStatusProbeService) modelTraceRequest(ctx context.Context, account *Account, requestModel, prompt string) (modelTraceResponse, *int, error) {
-	if account == nil || account.Platform != PlatformAnthropic {
-		return modelTraceResponse{}, nil, errors.New("modeltrace probe only supports anthropic accounts")
+	if account == nil {
+		return modelTraceResponse{}, nil, errors.New("nil account")
 	}
+	switch account.Platform {
+	case PlatformAnthropic:
+		return s.modelTraceAnthropicRequest(ctx, account, requestModel, prompt)
+	case PlatformOpenAI:
+		return s.modelTraceOpenAIRequest(ctx, account, requestModel, prompt)
+	default:
+		return modelTraceResponse{}, nil, fmt.Errorf("modeltrace probe does not support %s accounts", account.Platform)
+	}
+}
+
+func (s *GroupStatusProbeService) modelTraceAnthropicRequest(ctx context.Context, account *Account, requestModel, prompt string) (modelTraceResponse, *int, error) {
 	req, err := s.buildAnthropicMessagesProbeRequest(ctx, account, requestModel, anthropicProbeHeadersClaudeCode, func(modelID string, isOAuth bool) (map[string]any, error) {
 		return createAnthropicModelTracePayload(modelID, prompt, isOAuth)
 	})
@@ -147,6 +166,139 @@ func createAnthropicModelTracePayload(modelID, prompt string, isOAuth bool) (map
 		payload["metadata"] = map[string]string{"user_id": sessionID}
 	}
 	return payload, nil
+}
+
+func (s *GroupStatusProbeService) modelTraceOpenAIRequest(ctx context.Context, account *Account, requestModel, prompt string) (modelTraceResponse, *int, error) {
+	var parsed modelTraceResponse
+	text, usage, code, err := s.openAIResponsesProbeRequest(ctx, account, requestModel, func(modelID string, isOAuth bool) map[string]any {
+		return createOpenAIModelTracePayload(modelID, prompt, isOAuth)
+	}, func(body io.Reader) (string, openAIProbeUsage, error) {
+		res, parseErr := parseOpenAIModelTraceStream(body)
+		parsed = res
+		return res.Text, res.Usage, parseErr
+	})
+	parsed.Text = text
+	parsed.Usage = usage
+	return parsed, code, err
+}
+
+// createOpenAIModelTracePayload：Codex 为该模型使用的 base instructions + 一条 user 消息，low 推理、low verbosity，
+// 不带 temperature、不落库。API-Key 账号也带同一份 instructions，让两类账号与库内的 Codex 采集环境一致。
+func createOpenAIModelTracePayload(modelID, prompt string, isOAuth bool) map[string]any {
+	payload := map[string]any{
+		"model":        modelID,
+		"instructions": openai.CodexBaseInstructionsForModel(modelID),
+		"input": []map[string]any{
+			{
+				"role": "user",
+				"content": []map[string]any{
+					{"type": "input_text", "text": prompt},
+				},
+			},
+		},
+		"reasoning":         map[string]any{"effort": groupStatusModelTraceOpenAIEffort},
+		"text":              map[string]any{"verbosity": groupStatusModelTraceOpenAIVerbosity},
+		"max_output_tokens": groupStatusModelTraceOpenAIMaxOutputTokens,
+		"stream":            true,
+		"store":             false,
+	}
+	if isOAuth {
+		payload["include"] = []string{"reasoning.encrypted_content"}
+	}
+	return payload
+}
+
+// parseOpenAIModelTraceStream 解析一条挑战的 Responses 流，把收尾方式折算成与 Claude 相同的判据：
+// 撞到 max_output_tokens 记为 max_tokens，拒答或内容过滤记为 refusal，流没有正常收尾时 Completed 为 false。
+func parseOpenAIModelTraceStream(body io.Reader) (modelTraceResponse, error) {
+	var (
+		res     modelTraceResponse
+		parts   []string
+		refused bool
+	)
+	reader := bufio.NewReader(body)
+	for {
+		line, readErr := reader.ReadString('\n')
+		if readErr != nil && line == "" {
+			res.Text = strings.Join(parts, "")
+			if readErr == io.EOF {
+				return res, nil
+			}
+			return res, readErr
+		}
+		line = strings.TrimSpace(line)
+		if line == "" || !sseDataPrefix.MatchString(line) {
+			continue
+		}
+		jsonStr := sseDataPrefix.ReplaceAllString(line, "")
+		if jsonStr == "[DONE]" {
+			res.Text = strings.Join(parts, "")
+			return res, nil
+		}
+		var data map[string]any
+		if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+			continue
+		}
+		switch data["type"] {
+		case "response.output_text.delta":
+			if delta, ok := data["delta"].(string); ok {
+				parts = append(parts, delta)
+			}
+		case "response.refusal.delta", "response.refusal.done":
+			refused = true
+		case "response.completed", "response.incomplete":
+			resp, _ := data["response"].(map[string]any)
+			res.Usage = parseOpenAIResponseUsage(resp)
+			res.Text = strings.Join(parts, "")
+			if strings.TrimSpace(res.Text) == "" {
+				res.Text = extractOpenAIResponseOutputText(resp)
+			}
+			res.Completed = true
+			if data["type"] == "response.incomplete" {
+				details, _ := resp["incomplete_details"].(map[string]any)
+				switch reason, _ := details["reason"].(string); reason {
+				case "max_output_tokens":
+					res.StopReason = "max_tokens"
+				case "content_filter":
+					res.StopReason = "refusal"
+				default:
+					res.Completed = false
+				}
+			}
+			if refused || openAIResponseHasRefusal(resp) {
+				res.StopReason = "refusal"
+			}
+			return res, nil
+		case "response.failed":
+			resp, _ := data["response"].(map[string]any)
+			res.Usage = parseOpenAIResponseUsage(resp)
+			res.Text = strings.Join(parts, "")
+			return res, errors.New(openAIResponseFailureMessage(resp, "openai probe response.failed"))
+		case "error":
+			res.Text = strings.Join(parts, "")
+			if errData, ok := data["error"].(map[string]any); ok {
+				if msg, ok := errData["message"].(string); ok && msg != "" {
+					return res, errors.New(msg)
+				}
+			}
+			return res, errors.New("openai probe failed")
+		}
+	}
+}
+
+// openAIResponseHasRefusal 报告最终 output 里是否有 refusal 内容块。
+func openAIResponseHasRefusal(resp map[string]any) bool {
+	output, _ := resp["output"].([]any)
+	for _, item := range output {
+		itemMap, _ := item.(map[string]any)
+		content, _ := itemMap["content"].([]any)
+		for _, block := range content {
+			if blockMap, ok := block.(map[string]any); ok && blockMap["type"] == "refusal" {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // runModelTraceChallenge 执行一条挑战：传输错误 / 408 / 429 / 5xx 最多试 3 次；内容不合格（数字不够、
@@ -235,7 +387,7 @@ func (s *GroupStatusProbeService) runModelTraceChallenge(ctx context.Context, ac
 	return att
 }
 
-// executeModelTraceRun 用 ModelTrace 检测一个 Claude 目标（target.TraceModelID 是它在指纹库里的 id）。
+// executeModelTraceRun 用 ModelTrace 检测一个目标（target.TraceModelID 是它在指纹库里的 id，或代表它的库内模型）。
 func (s *GroupStatusProbeService) executeModelTraceRun(
 	ctx context.Context,
 	group *Group,

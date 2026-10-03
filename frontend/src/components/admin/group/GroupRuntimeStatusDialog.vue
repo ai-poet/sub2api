@@ -348,6 +348,9 @@
                   <div v-else-if="state.method === 'modeltrace'" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {{ t('admin.groups.runtimeStatus.astraCheck.modeltraceHint') }}
                     <template v-if="state.benchmark_version"> · {{ state.benchmark_version }}</template>
+                    <div v-if="state.trace_proxy_model" data-astra-trace-proxy>
+                      {{ t('admin.groups.runtimeStatus.astraCheck.modeltraceProxyHint', { model: astraModelName(state.expected_model), proxy: astraModelName(state.trace_proxy_model) }) }}
+                    </div>
                   </div>
                   <div v-else-if="state.benchmark_version" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {{ t('admin.groups.runtimeStatus.astraCheck.benchmark') }} {{ state.benchmark_version }}
@@ -386,9 +389,9 @@
                 <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {{ t(state.method === 'modeltrace' ? 'admin.groups.runtimeStatus.astraCheck.modeltraceProbabilities' : 'admin.groups.runtimeStatus.astraCheck.matches') }}
                 </div>
-                <div v-for="m in state.matches" :key="m.model">
+                <div v-for="m in state.matches" :key="m.model" :data-astra-match="m.model">
                   <div class="flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
-                    <span :class="m.model === state.expected_model || m.passed ? 'font-semibold' : ''">
+                    <span :class="isExpectedAstraMatch(state, m.model) || m.passed ? 'font-semibold' : ''">
                       {{ astraModelName(m.model) }}
                     </span>
                     <span>
@@ -399,7 +402,7 @@
                   <div class="mt-1 h-2 w-full rounded bg-gray-200 dark:bg-dark-700">
                     <div
                       class="h-2 rounded"
-                      :class="m.passed ? (m.model === state.expected_model ? 'bg-emerald-500' : 'bg-rose-500') : 'bg-gray-400'"
+                      :class="m.passed ? (isExpectedAstraMatch(state, m.model) ? 'bg-emerald-500' : 'bg-rose-500') : 'bg-gray-400'"
                       :style="{ width: `${Math.min(100, Math.round(m.match * 100))}%` }"
                     ></div>
                   </div>
@@ -807,6 +810,11 @@ function astraModelName(model?: string | null): string {
   }
   const target = astraTargets.value.find((item) => item.id === model)
   return target?.display_name || astraModelLabel(model)
+}
+
+// 候选是不是预期模型：ModelTrace 代表模型（如 GPT-6.1 Sol 的 gpt-6-astra）也算
+function isExpectedAstraMatch(state: AstraCheckState, model: string): boolean {
+  return model === state.expected_model || (!!state.trace_proxy_model && model === state.trace_proxy_model)
 }
 
 function astraBenchmarkModelNames(bench: AstraBenchmarkMeta): string {

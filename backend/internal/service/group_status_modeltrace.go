@@ -9,11 +9,12 @@ import (
 	"time"
 )
 
-// ModelTrace 数字分布指纹（本 fork 自有功能），是指纹验证里 Claude Opus 5.5 / Opus 5 目标的检测方法。
+// ModelTrace 数字分布指纹（本 fork 自有功能），是指纹验证里 Claude Opus 5.5 / Opus 5 与 GPT-6.1 Sol 目标的检测方法。
 //
 // 每次运行向分组的一个账号发 3 条（不够时补到最多 6 条）「凭第一反应逐项输出 292–332 个 1..355 整数」的
 // 挑战，用 ModelTrace（MIT）统一指纹库对库内全部 16 个模型做闭集归因，再按 ModelTrace Guard 的
-// classifySample 阈值判定是否与预期模型一致。挑战措辞与 ModelTrace 网页版（challenge-browser.js）逐字一致，
+// classifySample 阈值判定是否与预期模型一致。GPT-6.1 Sol 不在库里，按代表模型 GPT-6 Astra 判定
+// （两者的数字指纹几乎一样，见 AstraCheckTarget.TraceProxy）。挑战措辞与 ModelTrace 网页版（challenge-browser.js）逐字一致，
 // 评分器是 fingerprint-core.js 的 Go 移植（数值一致性由 testdata/modeltrace 钉住）；结果与 meow / Juice
 // 目标一样落到按模型的状态里，走同一套稳定结论、复测与推送。
 
@@ -44,8 +45,13 @@ const (
 	groupStatusModelTraceMaxHTTPAttempts    = 3
 	groupStatusModelTraceRequestTimeout     = 240 * time.Second
 	groupStatusModelTraceAnthropicMaxTokens = 4096
-	groupStatusModelTraceRankingSize        = 5
-	modelTraceExcerptMaxRunes               = 120
+	// GPT 目标贴近指纹库的采集环境（官方 Codex）：Codex 对 GPT-6.1 Sol 的默认推理档位与 verbosity 都是 low；
+	// 输出上限只防失控，正常回答（low 推理 + 约 1200 token 的数组）远用不到
+	groupStatusModelTraceOpenAIEffort          = "low"
+	groupStatusModelTraceOpenAIVerbosity       = "low"
+	groupStatusModelTraceOpenAIMaxOutputTokens = 8192
+	groupStatusModelTraceRankingSize           = 5
+	modelTraceExcerptMaxRunes                  = 120
 
 	// ModelTrace Guard classifySample 的阈值
 	modelTraceMatchMinProbability       = 0.5

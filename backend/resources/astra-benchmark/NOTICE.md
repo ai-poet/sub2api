@@ -8,7 +8,7 @@
 | 文件 | sha256 | 候选模型 | 本仓库用于 |
 |---|---|---|---|
 | `meow-gpt-other-cap98-efficient--4.5.4-predictive.20260924.2.meow.json` | `98f8d12c83100352addf44db15d8b57aa183338a4fb5f83ba30ffdbc06d78612` | gpt-6-astra、gpt-6-sol、gpt-5.6-terra、gpt-6-luna、other | GPT-6 Sol、GPT-6 Astra |
-| `meow-claude-other-cap98-efficient--4.5.4-predictive.20260924.1.meow.json` | `df005a15ef72cc805b57fd0caf8c8f6b99496ca37d73c6cc759adaa43158ef8c` | claude-fable-5.1、claude-opus-5.5、claude-sonnet-5、claude-haiku-4.5、other | Claude Opus 5.5、Claude Fable 5.1 |
+| `meow-claude-other-cap98-efficient--4.5.4-predictive.20260924.1.meow.json` | `df005a15ef72cc805b57fd0caf8c8f6b99496ca37d73c6cc759adaa43158ef8c` | claude-fable-5.1、claude-opus-5.5、claude-sonnet-5、claude-haiku-4.5、other | Claude Fable 5.1（Claude Opus 5.5 已改用 ModelTrace） |
 
 各包含固定短答题（题面、请求参数）、每题的类别词表与各来源的 Dirichlet 参数（`fitted`）、低 / 中 / 高三档的请求配额与强指向线（`tiers`）、校准与验证记录。
 

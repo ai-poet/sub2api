@@ -1,4 +1,4 @@
-import type { GroupRuntimeStatus, GroupStatusValidationMode } from '@/types'
+import type { AstraCheckMethod, GroupRuntimeStatus, GroupStatusValidationMode } from '@/types'
 
 export type NormalizedGroupRuntimeStatus = GroupRuntimeStatus | 'unknown'
 
@@ -197,6 +197,7 @@ const ASTRA_MODEL_LABELS: Record<string, string> = {
   'gpt-6-astra': 'GPT-6 Astra',
   'gpt-6-sol': 'GPT-6 Sol',
   'gpt-6-luna': 'GPT-6 Luna',
+  'gpt-6.1-sol': 'GPT-6.1 Sol',
   'gpt-5.6-sol': 'GPT-5.6 Sol',
   'gpt-5.6-terra': 'GPT-5.6 Terra',
   'gpt-5.6-luna': 'GPT-5.6 Luna',
@@ -229,6 +230,44 @@ export function astraModelLabel(model?: string | null): string {
 }
 
 export const ASTRA_OTHER_MODEL = 'other_known_external'
+
+export const MEOW_REPO_URL = 'https://github.com/chen-006/meow-llm-detector'
+export const MODELTRACE_REPO_URL = 'https://github.com/xqy2006/ModelTrace'
+
+// 公开状态页「指纹检测基准」说明的数据：每个系列用到的方法、由它判定的预期模型与开源地址。
+// 与后端 astraCheckTargets 的 Method 一一对应，目标或方法变化时两边一起改。
+export interface FingerprintBenchmarkSource {
+  // i18n 键 modelStatus.benchmarks.sources.<key>
+  key: string
+  method: AstraCheckMethod
+  models: string[]
+  repo?: string
+  site?: string
+  license?: string
+}
+
+export interface FingerprintBenchmarkFamily {
+  family: 'gpt' | 'claude'
+  sources: FingerprintBenchmarkSource[]
+}
+
+export const FINGERPRINT_BENCHMARKS: FingerprintBenchmarkFamily[] = [
+  {
+    family: 'gpt',
+    sources: [
+      { key: 'gptMeow', method: 'meow', models: ['gpt-6-sol', 'gpt-6-astra'], repo: MEOW_REPO_URL, site: 'https://meowllm.top/', license: 'PolyForm Noncommercial 1.0.0' },
+      { key: 'gptModelTrace', method: 'modeltrace', models: ['gpt-6.1-sol'], repo: MODELTRACE_REPO_URL, site: 'https://xqy2006.github.io/ModelTrace/', license: 'MIT' },
+      { key: 'gptJuice', method: 'sol_juice', models: ['gpt-5.6-sol'] }
+    ]
+  },
+  {
+    family: 'claude',
+    sources: [
+      { key: 'claudeModelTrace', method: 'modeltrace', models: ['claude-opus-5.5', 'claude-opus-5'], repo: MODELTRACE_REPO_URL, site: 'https://xqy2006.github.io/ModelTrace/', license: 'MIT' },
+      { key: 'claudeMeow', method: 'meow', models: ['claude-fable-5.1'], repo: MEOW_REPO_URL, site: 'https://meowllm.top/', license: 'PolyForm Noncommercial 1.0.0' }
+    ]
+  }
+]
 
 export interface AstraEventModels {
   expected: string
