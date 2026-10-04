@@ -129,7 +129,7 @@
 
           <!-- 场景常驻、靠透明度切换，右侧面板在同一层里；窗口高度不跳 -->
           <div
-            class="relative flex min-h-0 flex-1 transition-opacity duration-500 motion-reduce:transition-none"
+            class="relative flex min-h-0 flex-1 transition-opacity duration-300 motion-reduce:transition-none"
             :class="frame.fading ? 'opacity-0' : 'opacity-100'"
           >
             <div class="relative min-w-0 flex-1">

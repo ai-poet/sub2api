@@ -1,7 +1,8 @@
-/* 首屏客户端演示的时间线：24 秒一轮，分三幕，每一帧的状态都由时间点推出来。
+/* 首屏客户端演示的时间线：约 17.7 秒一轮，分三幕，每一帧的状态都由时间点推出来。
  * 1. 计划 → 执行：计划模式下先交计划（右侧计划面板），批准后派两个子智能体并行查找，再改代码、跑测试
  * 2. 智能体团队：/agent-teams 拟好三人团队，在团队面板确认启动，任务按依赖逐个完成，T2 检查没过返工一轮
  * 3. 画图：打出提示词、提交、生成中、出图
+ * 节奏尽量紧：等待审批、做完后的停留都控制在 1 秒上下，幕间淡出淡入合计不到 0.7 秒。
  * 每幕开头淡入、结尾淡出，切换内容发生在全透明的那一刻。
  */
 
@@ -24,14 +25,15 @@ export interface Chapter {
   staticT: number
 }
 
-export const CYCLE_MS = 24000
-export const FADE_IN_MS = 400
-export const FADE_OUT_MS = 500
+export const CYCLE_MS = 17650
+/** 淡入 / 淡出时长；窗口的透明度过渡（HomeAgentWorkflowPreview 的 duration-300）不能比淡出长 */
+export const FADE_IN_MS = 300
+export const FADE_OUT_MS = 350
 
 export const CHAPTERS: readonly Chapter[] = [
-  { id: 'plan', start: 0, end: 12000, staticT: 4800 },
-  { id: 'team', start: 12000, end: 19000, staticT: 15600 },
-  { id: 'image', start: 19000, end: CYCLE_MS, staticT: 22200 },
+  { id: 'plan', start: 0, end: 8750, staticT: 3500 },
+  { id: 'team', start: 8750, end: 13800, staticT: 11300 },
+  { id: 'image', start: 13800, end: CYCLE_MS, staticT: 16600 },
 ]
 
 /** 第一章的静态帧：计划已交、等你审批，卡片和计划面板都在 */
@@ -49,33 +51,33 @@ export const TEAM_TASK_DEPS: ReadonlyArray<readonly number[]> = [[], [0], [1], [
 
 export const MOMENTS = {
   // 第一幕
-  pickerOpen: 400,
-  pickerClose: 1800,
-  send: 2100,
-  planRows: [2500, 3100, 3700],
-  planReady: 4100,
-  approvePress: 5600,
-  approved: 5900,
-  subagentRows: [6100, 6300],
-  subagentsDone: 7700,
-  execRows: [7900, 8400, 8900],
-  runDone: 9900,
-  teamSessionCue: 11300,
+  pickerOpen: 250,
+  pickerClose: 1200,
+  send: 1400,
+  planRows: [1700, 2150, 2600],
+  planReady: 3000,
+  approvePress: 3900,
+  approved: 4150,
+  subagentRows: [4300, 4450],
+  subagentsDone: 5500,
+  execRows: [5650, 6000, 6350],
+  runDone: 7200,
+  teamSessionCue: 8100,
   // 第二幕
-  teamApprovePress: 13500,
-  teamStart: 13800,
-  teamRound2: 15500,
-  teamDone: 17400,
-  imageRowCue: 18300,
+  teamApprovePress: 9700,
+  teamStart: 9900,
+  teamRound2: 11150,
+  teamDone: 12600,
+  imageRowCue: 13150,
   // 第三幕
-  typeStart: 19500,
-  typeEnd: 20300,
-  imageSubmit: 20500,
-  imageDone: 21700,
+  typeStart: 14200,
+  typeEnd: 14900,
+  imageSubmit: 15050,
+  imageDone: 16100,
 } as const
 
 /** 开始计时时这一轮已经跑了多少秒，让「工作中」的数字看起来像真的任务 */
-const WORK_SECONDS_OFFSET = 24
+const WORK_SECONDS_OFFSET = 26
 
 export interface TeamFrame {
   phase: TeamPhase
@@ -197,8 +199,8 @@ function planStatus(t: number): TurnStatus | null {
 
 function turnTokens(t: number): number {
   if (t < MOMENTS.send) return 0
-  const planning = 0.45 * clamp(t - MOMENTS.send, 0, MOMENTS.planReady - MOMENTS.send)
-  const running = 0.6 * clamp(t - MOMENTS.approved, 0, MOMENTS.runDone - MOMENTS.approved)
+  const planning = 0.5 * clamp(t - MOMENTS.send, 0, MOMENTS.planReady - MOMENTS.send)
+  const running = 0.75 * clamp(t - MOMENTS.approved, 0, MOMENTS.runDone - MOMENTS.approved)
   return Math.round((planning + running) / 100) * 100
 }
 
@@ -210,17 +212,17 @@ interface TeamKeyframe {
   messages: number
 }
 
-// 团队面板的关键帧：成员按依赖领取任务，T2 第一轮没过检查，返工后在 16500 通过
+// 团队面板的关键帧：成员按依赖领取任务，T2 第一轮没过检查，返工后在 11900 通过
 const TEAM_KEYFRAMES: readonly TeamKeyframe[] = [
-  { at: 12000, members: ['waiting', 'waiting', 'waiting'], memberTask: [null, null, null], tasks: ['open', 'blocked', 'blocked', 'blocked'], messages: 0 },
-  { at: 13800, members: ['working', 'waiting', 'waiting'], memberTask: [0, null, null], tasks: ['running', 'blocked', 'blocked', 'blocked'], messages: 1 },
-  { at: 14600, members: ['idle', 'waiting', 'waiting'], memberTask: [null, null, null], tasks: ['completed', 'open', 'blocked', 'open'], messages: 3 },
-  { at: 14900, members: ['working', 'working', 'waiting'], memberTask: [3, 1, null], tasks: ['completed', 'running', 'blocked', 'running'], messages: 4 },
-  { at: 15500, members: ['working', 'working', 'waiting'], memberTask: [3, 1, null], tasks: ['completed', 'running', 'blocked', 'running'], messages: 6 },
-  { at: 16000, members: ['idle', 'working', 'waiting'], memberTask: [null, 1, null], tasks: ['completed', 'running', 'blocked', 'completed'], messages: 7 },
-  { at: 16500, members: ['idle', 'idle', 'waiting'], memberTask: [null, null, null], tasks: ['completed', 'completed', 'open', 'completed'], messages: 9 },
-  { at: 16700, members: ['idle', 'idle', 'working'], memberTask: [null, null, 2], tasks: ['completed', 'completed', 'running', 'completed'], messages: 10 },
-  { at: 17400, members: ['idle', 'idle', 'idle'], memberTask: [null, null, null], tasks: ['completed', 'completed', 'completed', 'completed'], messages: 12 },
+  { at: CHAPTERS[1].start, members: ['waiting', 'waiting', 'waiting'], memberTask: [null, null, null], tasks: ['open', 'blocked', 'blocked', 'blocked'], messages: 0 },
+  { at: MOMENTS.teamStart, members: ['working', 'waiting', 'waiting'], memberTask: [0, null, null], tasks: ['running', 'blocked', 'blocked', 'blocked'], messages: 1 },
+  { at: 10500, members: ['idle', 'waiting', 'waiting'], memberTask: [null, null, null], tasks: ['completed', 'open', 'blocked', 'open'], messages: 3 },
+  { at: 10700, members: ['working', 'working', 'waiting'], memberTask: [3, 1, null], tasks: ['completed', 'running', 'blocked', 'running'], messages: 4 },
+  { at: MOMENTS.teamRound2, members: ['working', 'working', 'waiting'], memberTask: [3, 1, null], tasks: ['completed', 'running', 'blocked', 'running'], messages: 6 },
+  { at: 11500, members: ['idle', 'working', 'waiting'], memberTask: [null, 1, null], tasks: ['completed', 'running', 'blocked', 'completed'], messages: 7 },
+  { at: 11900, members: ['idle', 'idle', 'waiting'], memberTask: [null, null, null], tasks: ['completed', 'completed', 'open', 'completed'], messages: 9 },
+  { at: 12050, members: ['idle', 'idle', 'working'], memberTask: [null, null, 2], tasks: ['completed', 'completed', 'running', 'completed'], messages: 10 },
+  { at: MOMENTS.teamDone, members: ['idle', 'idle', 'idle'], memberTask: [null, null, null], tasks: ['completed', 'completed', 'completed', 'completed'], messages: 12 },
 ]
 
 function teamFrame(t: number): TeamFrame {

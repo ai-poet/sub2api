@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import HomeAgentWorkflowPreview from '../HomeAgentWorkflowPreview.vue'
 import { DEMO_IMAGES, preloadDemoImages } from '../clientPreview/demoImages'
-import { MOMENTS } from '../clientPreview/timeline'
+import { CHAPTERS, FADE_IN_MS, MOMENTS } from '../clientPreview/timeline'
 
 const translations: Record<string, string> = {
   'home.clientWorkflow.sidebar.newTask': 'New Task',
@@ -228,7 +228,7 @@ describe('HomeAgentWorkflowPreview', () => {
     expect(view.find('[data-test="preview-surface-team"]').exists()).toBe(true)
     expect(view.findAll('[data-test="preview-team-task"]')).toHaveLength(4)
 
-    await advance(MOMENTS.teamStart - 12000)
+    await advance(MOMENTS.teamStart - CHAPTERS[1].start)
     expect(view.find('[data-test="preview-team-panel"]').attributes('data-phase')).toBe('running')
 
     await advance(MOMENTS.teamDone - MOMENTS.teamStart)
@@ -359,7 +359,7 @@ describe('HomeAgentWorkflowPreview', () => {
 
     await view.find('[data-test="preview-chapter-image"]').trigger('click')
     // 跳章后第一帧只记时间不推进，多走 200ms 余量
-    await advance(MOMENTS.imageDone - 19400 + 200)
+    await advance(MOMENTS.imageDone - (CHAPTERS[2].start + FADE_IN_MS) + 200)
     expect(view.find('[data-test="preview-image-done"] img').attributes('src')).toBe(DEMO_IMAGES.cat)
   })
 })

@@ -90,7 +90,7 @@ describe('client preview timeline: chapters', () => {
 
   it('reports progress through the current chapter', () => {
     expect(chapterProgressAt(0)).toBe(0)
-    expect(chapterProgressAt(6000)).toBeCloseTo(0.5)
+    expect(chapterProgressAt(CHAPTERS[0].end / 2)).toBeCloseTo(0.5)
     expect(chapterProgressAt(CHAPTERS[1].start)).toBe(0)
     expect(chapterProgressAt(CYCLE_MS - 1)).toBeCloseTo(1, 3)
   })
