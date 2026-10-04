@@ -46,7 +46,7 @@
           >
             <div class="mb-2 flex items-center justify-between">
               <span class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ subscription.group?.name || `Group #${subscription.group_id}` }}
+                {{ tx(subscription.group?.name) || `Group #${subscription.group_id}` }}
               </span>
               <span
                 v-if="subscription.expires_at"
@@ -185,8 +185,11 @@ import { useSubscriptionStore } from '@/stores'
 import { FeatureFlags, isFeatureFlagEnabled } from '@/utils/featureFlags'
 import type { UserSubscription } from '@/types'
 import { getExpirationDateRelation } from '@/utils/subscriptionQuota'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的分组名）
+const { tx } = useContentTranslation()
 
 const subscriptionStore = useSubscriptionStore()
 

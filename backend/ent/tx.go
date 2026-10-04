@@ -38,6 +38,10 @@ type Tx struct {
 	BatchImageJob *BatchImageJobClient
 	// CompositeModelRoute is the client for interacting with the CompositeModelRoute builders.
 	CompositeModelRoute *CompositeModelRouteClient
+	// ContentTranslation is the client for interacting with the ContentTranslation builders.
+	ContentTranslation *ContentTranslationClient
+	// ContentTranslationSource is the client for interacting with the ContentTranslationSource builders.
+	ContentTranslationSource *ContentTranslationSourceClient
 	// ErrorPassthroughRule is the client for interacting with the ErrorPassthroughRule builders.
 	ErrorPassthroughRule *ErrorPassthroughRuleClient
 	// Group is the client for interacting with the Group builders.
@@ -247,6 +251,8 @@ func (tx *Tx) init() {
 	tx.BatchImageItem = NewBatchImageItemClient(tx.config)
 	tx.BatchImageJob = NewBatchImageJobClient(tx.config)
 	tx.CompositeModelRoute = NewCompositeModelRouteClient(tx.config)
+	tx.ContentTranslation = NewContentTranslationClient(tx.config)
+	tx.ContentTranslationSource = NewContentTranslationSourceClient(tx.config)
 	tx.ErrorPassthroughRule = NewErrorPassthroughRuleClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.GroupStatusAstraCheckRun = NewGroupStatusAstraCheckRunClient(tx.config)

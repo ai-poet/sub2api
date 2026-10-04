@@ -3,6 +3,7 @@ import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { resolveLocale } from '@/lib/locale';
 import { getPromotionUsageStats } from '@/lib/promotion/service';
+import { schedulePayTranslationSync } from '@/lib/sub2api/content-translations';
 import { promotionCreateSchema, serializePromotion, toPromotionData, validationErrorBody } from '@/lib/promotion/admin';
 
 export async function GET(request: NextRequest) {
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const promotion = await prisma.rechargePromotion.create({ data: toPromotionData(parsed.data) });
+    schedulePayTranslationSync();
     return NextResponse.json(serializePromotion(promotion), { status: 201 });
   } catch (error) {
     console.error('Failed to create recharge promotion:', error);

@@ -39,7 +39,7 @@
             <div class="min-w-0 flex-1">
               <p class="text-xs font-medium text-white/80">{{ t('announcements.newAnnouncement') }}</p>
               <p class="mt-0.5 truncate text-sm font-semibold text-white cursor-pointer hover:underline" @click="openLatestUnread">
-                {{ latestUnread.title }}
+                {{ tx(latestUnread.title) }}
               </p>
             </div>
             <button
@@ -154,7 +154,7 @@
                   <div class="flex min-w-0 flex-1 items-center justify-between gap-4">
                     <div class="min-w-0 flex-1">
                       <h3 class="truncate text-sm font-medium text-gray-900 dark:text-white">
-                        {{ item.title }}
+                        {{ tx(item.title) }}
                       </h3>
                       <div class="mt-1 flex items-center gap-2">
                         <time class="text-xs text-gray-500 dark:text-gray-400">
@@ -263,7 +263,7 @@
 
                   <!-- Title -->
                   <h2 class="mb-3 text-2xl font-bold leading-tight text-gray-900 dark:text-white">
-                    {{ selectedAnnouncement.title }}
+                    {{ tx(selectedAnnouncement.title) }}
                   </h2>
 
                   <!-- Meta Info -->
@@ -361,8 +361,10 @@ import { formatRelativeTime, formatRelativeWithDateTime } from '@/utils/format'
 import type { UserAnnouncement } from '@/types'
 import Icon from '@/components/icons/Icon.vue'
 import '@/styles/announcement-markdown.css'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const { t } = useI18n()
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 const announcementStore = useAnnouncementStore()
 
@@ -393,7 +395,8 @@ const latestUnread = computed(() => {
 // Methods
 function renderMarkdown(content: string): string {
   if (!content) return ''
-  const html = marked.parse(content) as string
+  // fork：内容自动翻译——先换 Markdown 原文再渲染
+  const html = marked.parse(tx(content)) as string
   return DOMPurify.sanitize(html)
 }
 

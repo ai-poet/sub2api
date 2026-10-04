@@ -35,6 +35,12 @@ vi.mock('@/lib/promotion/service', () => ({
   getPromotionUsageStats: (...args: unknown[]) => mockGetPromotionUsageStats(...args),
 }));
 
+const mockSchedulePayTranslationSync = vi.fn();
+
+vi.mock('@/lib/sub2api/content-translations', () => ({
+  schedulePayTranslationSync: (...args: unknown[]) => mockSchedulePayTranslationSync(...args),
+}));
+
 import { GET, POST } from '@/app/api/admin/promotions/route';
 import { PUT, DELETE } from '@/app/api/admin/promotions/[id]/route';
 
@@ -198,6 +204,16 @@ describe('POST /api/admin/promotions', () => {
     await POST(createRequest('POST', { ...validBody, max_bonus: 50 }));
     expect(mockPromotionCreate.mock.calls[0][0].data.maxBonus).toBeNull();
   });
+
+  it('schedules a translation source sync after a create, not after a rejected one', async () => {
+    await POST(createRequest('POST', { ...validBody, min_amount: -1 }));
+    expect(mockSchedulePayTranslationSync).not.toHaveBeenCalled();
+
+    mockPromotionCreate.mockResolvedValue(makeRecord());
+    const res = await POST(createRequest('POST', validBody));
+    expect(res.status).toBe(201);
+    expect(mockSchedulePayTranslationSync).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('PUT /api/admin/promotions/[id]', () => {
@@ -217,6 +233,7 @@ describe('PUT /api/admin/promotions/[id]', () => {
     );
     expect(res.status).toBe(400);
     expect(mockPromotionUpdate).not.toHaveBeenCalled();
+    expect(mockSchedulePayTranslationSync).not.toHaveBeenCalled();
   });
 
   it('updates partial fields', async () => {
@@ -232,6 +249,7 @@ describe('PUT /api/admin/promotions/[id]', () => {
     });
     const data = await res.json();
     expect(data.status).toBe('disabled');
+    expect(mockSchedulePayTranslationSync).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -250,6 +268,7 @@ describe('DELETE /api/admin/promotions/[id]', () => {
     const res = await DELETE(createRequest('DELETE', undefined, '/api/admin/promotions/promo-1'), { params });
     expect(res.status).toBe(409);
     expect(mockPromotionDelete).not.toHaveBeenCalled();
+    expect(mockSchedulePayTranslationSync).not.toHaveBeenCalled();
   });
 
   it('deletes the promotion', async () => {
@@ -258,5 +277,6 @@ describe('DELETE /api/admin/promotions/[id]', () => {
     const res = await DELETE(createRequest('DELETE', undefined, '/api/admin/promotions/promo-1'), { params });
     expect(res.status).toBe(200);
     expect(mockPromotionDelete).toHaveBeenCalledWith({ where: { id: 'promo-1' } });
+    expect(mockSchedulePayTranslationSync).toHaveBeenCalledTimes(1);
   });
 });

@@ -735,6 +735,53 @@ var (
 			},
 		},
 	}
+	// ContentTranslationsColumns holds the columns for the "content_translations" table.
+	ContentTranslationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "source_hash", Type: field.TypeString, Size: 64, SchemaType: map[string]string{"postgres": "char(64)"}},
+		{Name: "target_lang", Type: field.TypeString, Size: 8},
+		{Name: "source_text", Type: field.TypeString, Size: 2147483647},
+		{Name: "translated_text", Type: field.TypeString, Size: 2147483647},
+		{Name: "model", Type: field.TypeString, Size: 128, Default: ""},
+		{Name: "manual", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "last_seen_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// ContentTranslationsTable holds the schema information for the "content_translations" table.
+	ContentTranslationsTable = &schema.Table{
+		Name:       "content_translations",
+		Columns:    ContentTranslationsColumns,
+		PrimaryKey: []*schema.Column{ContentTranslationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "contenttranslation_source_hash_target_lang",
+				Unique:  true,
+				Columns: []*schema.Column{ContentTranslationsColumns[1], ContentTranslationsColumns[2]},
+			},
+		},
+	}
+	// ContentTranslationSourcesColumns holds the columns for the "content_translation_sources" table.
+	ContentTranslationSourcesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "namespace", Type: field.TypeString, Size: 32},
+		{Name: "source_hash", Type: field.TypeString, Size: 64, SchemaType: map[string]string{"postgres": "char(64)"}},
+		{Name: "source_text", Type: field.TypeString, Size: 2147483647},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// ContentTranslationSourcesTable holds the schema information for the "content_translation_sources" table.
+	ContentTranslationSourcesTable = &schema.Table{
+		Name:       "content_translation_sources",
+		Columns:    ContentTranslationSourcesColumns,
+		PrimaryKey: []*schema.Column{ContentTranslationSourcesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "contenttranslationsource_namespace_source_hash",
+				Unique:  true,
+				Columns: []*schema.Column{ContentTranslationSourcesColumns[1], ContentTranslationSourcesColumns[2]},
+			},
+		},
+	}
 	// ErrorPassthroughRulesColumns holds the columns for the "error_passthrough_rules" table.
 	ErrorPassthroughRulesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -2307,6 +2354,8 @@ var (
 		BatchImageItemsTable,
 		BatchImageJobsTable,
 		CompositeModelRoutesTable,
+		ContentTranslationsTable,
+		ContentTranslationSourcesTable,
 		ErrorPassthroughRulesTable,
 		GroupsTable,
 		GroupStatusAstraCheckRunsTable,
@@ -2390,6 +2439,12 @@ func init() {
 	CompositeModelRoutesTable.ForeignKeys[0].RefTable = GroupsTable
 	CompositeModelRoutesTable.Annotation = &entsql.Annotation{
 		Table: "composite_model_routes",
+	}
+	ContentTranslationsTable.Annotation = &entsql.Annotation{
+		Table: "content_translations",
+	}
+	ContentTranslationSourcesTable.Annotation = &entsql.Annotation{
+		Table: "content_translation_sources",
 	}
 	ErrorPassthroughRulesTable.Annotation = &entsql.Annotation{
 		Table: "error_passthrough_rules",

@@ -46,6 +46,9 @@ type AdminHandlers struct {
 	TicketAttachment      *admin.TicketAttachmentHandler
 	PersonalToken         *admin.PersonalTokenHandler
 	UserSiteMessage       *admin.UserSiteMessageHandler
+
+	// fork：内容自动翻译
+	ContentTranslation *admin.ContentTranslationHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -78,6 +81,9 @@ type Handlers struct {
 	DesktopLogin     *DesktopLoginHandler
 	SiteMessage      *SiteMessageHandler
 	Appeal           *AppealHandler
+
+	// fork：内容自动翻译
+	ContentTranslation *ContentTranslationHandler
 }
 
 // BuildInfo contains build-time information

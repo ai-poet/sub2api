@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getCurrentUserByToken, getGroup } from '@/lib/sub2api/client';
+import { syncPayTranslationSourcesIfStale } from '@/lib/sub2api/content-translations';
 import { readUserToken } from '@/lib/utils/request-token';
 
 export async function GET(request: NextRequest) {
@@ -14,6 +15,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: '无效的 token' }, { status: 401 });
   }
+
+  // 内容自动翻译：顺手把套餐 / 活动 / 渠道文案登记给后端（每 10 分钟最多一次，不等待）
+  syncPayTranslationSourcesIfStale();
 
   try {
     const plans = await prisma.subscriptionPlan.findMany({

@@ -1166,7 +1166,7 @@
                 ? 'bg-primary-50 dark:bg-primary-900/20'
                 : 'hover:bg-gray-100 dark:hover:bg-dark-700'
             ]"
-            :title="option.description || undefined"
+            :title="tx(option.description) || undefined"
           >
             <GroupOptionItem
               :name="option.label"
@@ -1202,8 +1202,11 @@
 	import { useOnboardingStore } from '@/stores/onboarding'
 	import { useClipboard } from '@/composables/useClipboard'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示；分组搜索仍按原文匹配）
+const { tx } = useContentTranslation()
 import { keysAPI, authAPI, usageAPI, userGroupsAPI } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'

@@ -23,6 +23,7 @@ export { default as announcementsAPI } from './announcements'
 export { default as ticketsAPI } from './tickets'
 export { default as siteMessagesAPI } from './siteMessages'
 export { personalTokenAPI } from './personalToken'
+export { default as contentTranslationsAPI } from './contentTranslations'
 
 // Admin APIs
 export { adminAPI } from './admin'

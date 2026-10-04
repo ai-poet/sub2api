@@ -27,7 +27,7 @@
             <h3 class="font-semibold text-primary-800 dark:text-primary-200">
               {{ t('common.contactSupport') }}
             </h3>
-            <p class="text-sm font-medium">{{ contactInfo }}</p>
+            <p class="text-sm font-medium">{{ tx(contactInfo) }}</p>
           </div>
         </div>
       </div>
@@ -65,8 +65,11 @@ import ProfilePersonalTokenCard from '@/components/user/profile/ProfilePersonalT
 import { isWeChatWebOAuthEnabled } from '@/api/auth'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的联系方式）
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)

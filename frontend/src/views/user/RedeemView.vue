@@ -107,7 +107,7 @@
                     </p>
                     <p v-else-if="redeemResult.type === 'subscription'" class="font-medium">
                       {{ t('redeem.subscriptionAssigned') }}
-                      <span v-if="redeemResult.group_name"> - {{ redeemResult.group_name }}</span>
+                      <span v-if="redeemResult.group_name"> - {{ tx(redeemResult.group_name) }}</span>
                       <span v-if="redeemResult.validity_days">
                         ({{
                           t('redeem.subscriptionDays', { days: redeemResult.validity_days })
@@ -188,7 +188,7 @@
                     v-if="contactInfo"
                     class="ml-1.5 inline-flex items-center rounded-md bg-primary-200/50 px-2 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-800/40 dark:text-primary-200"
                   >
-                    {{ contactInfo }}
+                    {{ tx(contactInfo) }}
                   </span>
                 </li>
                 <li>{{ t('redeem.codeRule4') }}</li>
@@ -375,8 +375,11 @@ import { redeemAPI, authAPI, type RedeemHistoryItem } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { formatDateTime } from '@/utils/format'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的分组名 / 联系方式）
+const { tx } = useContentTranslation()
 const authStore = useAuthStore()
 const appStore = useAppStore()
 const subscriptionStore = useSubscriptionStore()
@@ -443,7 +446,7 @@ const formatHistoryValue = (item: RedeemHistoryItem) => {
   } else if (isSubscriptionType(item.type)) {
     // 订阅类型显示有效天数和分组名称
     const days = item.validity_days || Math.round(item.value)
-    const groupName = item.group?.name || ''
+    const groupName = tx(item.group?.name)
     return groupName ? `${days}${t('redeem.days')} - ${groupName}` : `${days}${t('redeem.days')}`
   } else {
     const sign = item.value >= 0 ? '+' : ''

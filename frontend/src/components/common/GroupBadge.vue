@@ -8,7 +8,7 @@
     <!-- Platform logo -->
     <PlatformIcon v-if="platform" :platform="platform" size="sm" />
     <!-- Group name -->
-    <span class="truncate">{{ name }}</span>
+    <span class="truncate">{{ tx(name) }}</span>
     <!-- Right side label -->
     <span v-if="showLabel" :class="labelClass">
       <template v-if="hasCustomRate">
@@ -33,6 +33,7 @@ import type { SubscriptionType, GroupPlatform } from '@/types'
 import { useAppStore } from '@/stores/app'
 import { formatPeakRateWindow, serverTimezoneLabel } from '@/utils/peak-rate'
 import PlatformIcon from './PlatformIcon.vue'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 interface Props {
   name: string
@@ -64,6 +65,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的分组名）
+const { tx } = useContentTranslation()
 
 const isSubscription = computed(() => props.subscriptionType === 'subscription')
 

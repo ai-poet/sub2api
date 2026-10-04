@@ -60,7 +60,7 @@
           </div>
 
           <div class="text-xs text-gray-500 dark:text-gray-400">
-            {{ t('modelCatalog.groupTabs.currentGroup', { group: activeGroupTabLabel }) }}
+            {{ t('modelCatalog.groupTabs.currentGroup', { group: tx(activeGroupTabLabel) }) }}
           </div>
         </div>
 
@@ -73,7 +73,7 @@
             :class="selectedGroupId === tab.id ? 'group-tab-active' : 'group-tab-inactive'"
             @click="selectedGroupId = tab.id"
           >
-            <span class="truncate">{{ tab.name }}</span>
+            <span class="truncate">{{ tx(tab.name) }}</span>
             <span class="group-tab-count">
               {{ tab.count }}
             </span>
@@ -180,7 +180,7 @@
                 {{ billingModeLabel(item.billing_mode) }}
               </span>
               <span class="group-pill">
-                {{ item.best_group.name }}
+                {{ tx(item.best_group.name) }}
               </span>
             </div>
 
@@ -336,7 +336,7 @@
                   >
                     <div class="flex items-start gap-3">
                       <div>
-                        <div class="font-medium text-gray-900 dark:text-white">{{ other.group.name }}</div>
+                        <div class="font-medium text-gray-900 dark:text-white">{{ tx(other.group.name) }}</div>
                         <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           {{ t('modelCatalog.groupRateLabel', { rate: formatRate(other.group.rate_multiplier) }) }}
                         </div>
@@ -395,6 +395,7 @@ import {
   type ModelCatalogPriceInterval,
   type ModelCatalogSortKey,
 } from '@/api/modelCatalog'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 interface PriceRow {
   key: string
@@ -420,6 +421,8 @@ interface GroupTab {
 }
 
 const { t, locale } = useI18n()
+// fork：内容自动翻译（只换显示的分组名；排序 / 搜索仍按原文）
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 

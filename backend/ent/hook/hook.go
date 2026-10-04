@@ -153,6 +153,30 @@ func (f CompositeModelRouteFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CompositeModelRouteMutation", m)
 }
 
+// The ContentTranslationFunc type is an adapter to allow the use of ordinary
+// function as ContentTranslation mutator.
+type ContentTranslationFunc func(context.Context, *ent.ContentTranslationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ContentTranslationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ContentTranslationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContentTranslationMutation", m)
+}
+
+// The ContentTranslationSourceFunc type is an adapter to allow the use of ordinary
+// function as ContentTranslationSource mutator.
+type ContentTranslationSourceFunc func(context.Context, *ent.ContentTranslationSourceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ContentTranslationSourceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ContentTranslationSourceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContentTranslationSourceMutation", m)
+}
+
 // The ErrorPassthroughRuleFunc type is an adapter to allow the use of ordinary
 // function as ErrorPassthroughRule mutator.
 type ErrorPassthroughRuleFunc func(context.Context, *ent.ErrorPassthroughRuleMutation) (ent.Value, error)

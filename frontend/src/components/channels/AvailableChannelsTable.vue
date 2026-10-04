@@ -59,7 +59,7 @@
             :rowspan="channel.platforms.length"
             class="px-4 py-3 align-middle text-xs text-gray-500 dark:text-gray-400"
           >
-            <template v-if="channel.description">{{ channel.description }}</template>
+            <template v-if="channel.description">{{ tx(channel.description) }}</template>
             <span v-else class="text-gray-400">-</span>
           </td>
 
@@ -191,7 +191,7 @@
             {{ channel.name }}
           </h3>
           <p class="mt-1 break-words text-xs leading-5 text-gray-500 dark:text-gray-400">
-            {{ channel.description || '-' }}
+            {{ tx(channel.description) || '-' }}
           </p>
         </header>
 
@@ -330,6 +330,7 @@ import type { GroupPlatform, SubscriptionType } from '@/types'
 import { platformBadgeClass } from '@/utils/platformColors'
 import { useAppStore } from '@/stores/app'
 import { hasPeakRate as groupHasPeakRate, formatPeakRateWindow, serverTimezoneLabel } from '@/utils/peak-rate'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const props = defineProps<{
   columns: {
@@ -354,6 +355,8 @@ const props = defineProps<{
 void props.userGroupRates
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的渠道描述）
+const { tx } = useContentTranslation()
 
 function exclusiveGroups(section: UserChannelPlatformSection): UserAvailableGroup[] {
   return section.groups.filter((g) => g.is_exclusive)

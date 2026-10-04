@@ -64,7 +64,7 @@
             <div class="min-w-0">
               <p class="text-sm font-medium text-primary-700 dark:text-primary-300">{{ documentTypeLabel }}</p>
               <h1 class="mt-2 break-words text-2xl font-bold tracking-normal text-gray-950 dark:text-white sm:text-3xl">
-                {{ currentDocument.title }}
+                {{ displayText(currentDocument.title) }}
               </h1>
               <p v-if="updatedAt" class="mt-3 text-sm text-gray-500 dark:text-dark-400">
                 {{ t('legal.updatedAt', { date: updatedAt }) }}
@@ -100,6 +100,7 @@ import { getLocale } from '@/i18n'
 import { sanitizeUrl } from '@/utils/url'
 import { useAppStore } from '@/stores/app'
 import type { LoginAgreementDocument } from '@/types'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 import zhAdminCompliance from '../../../../docs/legal/admin-compliance.zh.md?raw'
 import enAdminCompliance from '../../../../docs/legal/admin-compliance.en.md?raw'
 
@@ -107,6 +108,7 @@ type LegalDocumentIcon = 'document' | 'shield' | 'globe' | 'cog'
 
 const route = useRoute()
 const { t } = useI18n()
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 const settings = computed(() => appStore.cachedPublicSettings)
 const loading = ref(!settings.value)
@@ -149,12 +151,18 @@ const currentDocument = computed<LoginAgreementDocument | null>(() => {
 
 const hasContent = computed(() => Boolean(currentDocument.value?.content_md?.trim()))
 
+// fork：内容自动翻译——只换显示的标题与 Markdown 原文（渲染前替换）；图标匹配仍用原标题。
+// 内置的管理员合规文档本身已按语言提供，不走翻译。
+function displayText(text: string): string {
+  return isAdminComplianceDocument.value ? text : tx(text)
+}
+
 const renderedHtml = computed(() => {
   const content = currentDocument.value?.content_md?.trim() || ''
   if (!content) {
     return ''
   }
-  const html = marked.parse(content) as string
+  const html = marked.parse(displayText(content)) as string
   return DOMPurify.sanitize(html)
 })
 

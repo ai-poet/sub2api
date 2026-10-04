@@ -61,7 +61,7 @@
           <span
             v-if="row.group_name"
             class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
-          >{{ row.group_name }}</span>
+          >{{ tx(row.group_name) }}</span>
           <span v-else class="text-sm text-gray-400 dark:text-gray-500">-</span>
         </template>
 
@@ -139,6 +139,7 @@ import {
 } from '@/utils/errorBadges'
 import type { UserErrorRequest } from '@/types'
 import type { Column } from '@/components/common/types'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const props = defineProps<{
   rows: UserErrorRequest[]
@@ -162,6 +163,8 @@ function onSort(key: string, order: 'asc' | 'desc') {
 }
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的分组名）
+const { tx } = useContentTranslation()
 
 // 列序对齐用户端用量明细:Key → 模型 → 端点 → IP → 分组 → 类型 → 平台 → 分类
 // → 结果(状态→消息)→ 时间 → UA(用量明细 UA 同在时间之后的尾部)

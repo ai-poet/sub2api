@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
 import PaymentForm from '@/components/PaymentForm';
 import PaymentQRCode from '@/components/PaymentQRCode';
 import OrderStatus from '@/components/OrderStatus';
@@ -24,6 +24,7 @@ import { detectDeviceIsMobile, applySublabelOverrides, type UserInfo, type MyOrd
 import { notifyParentPaymentSuccess } from '@/lib/embed-bridge';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
 import { buildAppApiPath } from '@/lib/public-path';
+import { useContentTranslations, type Translate } from '@/lib/use-content-translations';
 import type { MethodLimitInfo } from '@/components/PaymentForm';
 import type { ChannelInfo } from '@/components/ChannelGrid';
 import type { PlanInfo } from '@/components/SubscriptionPlanCard';
@@ -61,6 +62,34 @@ interface AppConfig {
   balanceDisabled?: boolean;
   maxPendingOrders?: number;
   promotions?: PublicPromotion[];
+}
+
+// 内容自动翻译只替换显示用的副本：plans / channels / promotions 原数据（下单、续费判断、
+// 活动赠送计算）始终是原文——桌面客户端按原文分流，接口返回也不改。
+function translatePlan(plan: PlanInfo, tx: Translate): PlanInfo {
+  return {
+    ...plan,
+    name: tx(plan.name),
+    description: plan.description ? tx(plan.description) : plan.description,
+    features: plan.features.map((feature) => tx(feature)),
+  };
+}
+
+function translateChannel(channel: ChannelInfo, tx: Translate): ChannelInfo {
+  return {
+    ...channel,
+    name: tx(channel.name),
+    description: channel.description ? tx(channel.description) : channel.description,
+    features: channel.features.map((feature) => tx(feature)),
+  };
+}
+
+function translatePromotion(promotion: PublicPromotion, tx: Translate): PublicPromotion {
+  return {
+    ...promotion,
+    name: tx(promotion.name),
+    description: promotion.description ? tx(promotion.description) : promotion.description,
+  };
 }
 
 function PayContent() {
@@ -122,6 +151,23 @@ function PayContent() {
   const helpText = (config.helpText || '').trim();
   const hasHelpContent = Boolean(helpImageUrl || helpText);
 
+  // 管理员手写的文案（套餐、渠道、活动、帮助）一次批量查译文
+  const translationSources = useMemo(
+    () => [
+      helpText,
+      ...plans.flatMap((plan) => [plan.name, plan.description, ...plan.features]),
+      ...channels.flatMap((channel) => [channel.name, channel.description, ...channel.features]),
+      ...(config.promotions ?? []).flatMap((promotion) => [promotion.name, promotion.description]),
+    ],
+    [helpText, plans, channels, config.promotions],
+  );
+  const tx = useContentTranslations(locale, translationSources);
+  const displayChannels = useMemo(() => channels.map((channel) => translateChannel(channel, tx)), [channels, tx]);
+  const displayPromotions = useMemo(
+    () => config.promotions?.map((promotion) => translatePromotion(promotion, tx)),
+    [config.promotions, tx],
+  );
+
   // 通用帮助/客服信息区块
   const renderHelpSection = (className = 'mt-6') => {
     if (!hasHelpContent) return null;
@@ -148,7 +194,7 @@ function PayContent() {
         )}
         {helpText && (
           <div className={['mt-3 space-y-1 text-sm leading-6', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-            {helpText.split('\n').map((line, i) => (
+            {tx(helpText).split('\n').map((line, i) => (
               <p key={i}>{line}</p>
             ))}
           </div>
@@ -204,7 +250,7 @@ function PayContent() {
       pendingBlocked={pendingBlocked}
       pendingCount={pendingCount}
       locale={locale}
-      promotions={config.promotions}
+      promotions={displayPromotions}
     />
   );
 
@@ -973,7 +1019,7 @@ function PayContent() {
 
                       {(config.promotions?.length ?? 0) > 0 && (
                         <PromotionBanner
-                          promotions={config.promotions ?? []}
+                          promotions={displayPromotions ?? []}
                           isDark={isDark}
                           locale={locale}
                           className="mb-6"
@@ -981,7 +1027,7 @@ function PayContent() {
                       )}
 
                       <ChannelGrid
-                        channels={channels}
+                        channels={displayChannels}
                         onTopUp={() => setShowTopUpForm(true)}
                         isDark={isDark}
                         locale={locale}
@@ -1039,7 +1085,7 @@ function PayContent() {
                       {(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => (
                         <SubscriptionPlanCard
                           key={plan.id}
-                          plan={plan}
+                          plan={translatePlan(plan, tx)}
                           onSubscribe={() => setSelectedPlan(plan)}
                           isDark={isDark}
                           locale={locale}
@@ -1085,7 +1131,7 @@ function PayContent() {
           {selectedPlan && step === 'form' && payTabVisible && (
             <>
               <SubscriptionConfirm
-                plan={selectedPlan}
+                plan={translatePlan(selectedPlan, tx)}
                 paymentTypes={config.enabledPaymentTypes}
                 usdExchangeRate={config.usdExchangeRate}
                 onBack={() => setSelectedPlan(null)}

@@ -205,7 +205,7 @@
                   </svg>
                   <span>{{ t('common.contactSupport') }}:</span>
                   <span class="font-medium text-gray-700 dark:text-gray-300">{{
-                    contactInfo
+                    tx(contactInfo)
                   }}</span>
                 </div>
               </div>
@@ -266,10 +266,13 @@ import { sanitizeUrl } from '@/utils/url'
 import { FeatureFlags, isFeatureFlagEnabled } from '@/utils/featureFlags'
 import { resolveRouteMetaKeys } from '@/router/title'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的联系方式 / 自定义菜单名）
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const adminSettingsStore = useAdminSettingsStore()
@@ -328,7 +331,7 @@ const pageTitle = computed(() => {
     const publicItems = appStore.cachedPublicSettings?.custom_menu_items ?? []
     const menuItem = publicItems.find((item) => item.id === id)
       ?? (authStore.hasConsoleAccess ? adminSettingsStore.customMenuItems.find((item) => item.id === id) : undefined)
-    if (menuItem?.label) return menuItem.label
+    if (menuItem?.label) return tx(menuItem.label)
   }
   const titleKey = routeMetaKeys.value.titleKey
   if (titleKey) {

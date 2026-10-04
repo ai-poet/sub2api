@@ -117,6 +117,7 @@ func provideCleanup(
 	openAIGateway *service.OpenAIGatewayService,
 	scheduledTestRunner *service.ScheduledTestRunnerService,
 	groupStatusRunner *service.GroupStatusRunnerService,
+	contentTranslation *service.ContentTranslationService, // fork：内容自动翻译
 	approvalSweeper *service.AdminApprovalSweeper,
 	backupSvc *service.BackupService,
 	quotaFlusher *service.UserPlatformQuotaUsageFlusher,
@@ -338,6 +339,12 @@ func provideCleanup(
 			{"GroupStatusRunnerService", func() error {
 				if groupStatusRunner != nil {
 					groupStatusRunner.Stop()
+				}
+				return nil
+			}},
+			{"ContentTranslationService", func() error {
+				if contentTranslation != nil {
+					contentTranslation.Stop()
 				}
 				return nil
 			}},

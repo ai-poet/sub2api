@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
+import { syncPayTranslationSourcesIfStale } from '@/lib/sub2api/content-translations';
 import { getEnv } from '@/lib/config';
 import { queryMethodLimits } from '@/lib/order/limits';
 import { paymentRegistry } from '@/lib/payment';
@@ -47,6 +48,9 @@ export async function GET(request: NextRequest) {
         { status: 403 },
       );
     }
+
+    // 内容自动翻译：顺手把套餐 / 活动 / 渠道文案登记给后端（每 10 分钟最多一次，不等待）
+    syncPayTranslationSourcesIfStale();
 
     const env = getEnv();
 

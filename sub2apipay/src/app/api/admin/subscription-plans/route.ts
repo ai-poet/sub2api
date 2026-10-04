@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { getGroup } from '@/lib/sub2api/client';
+import { schedulePayTranslationSync } from '@/lib/sub2api/content-translations';
 
 export async function GET(request: NextRequest) {
   if (!(await verifyAdminToken(request))) return unauthorizedResponse(request);
@@ -135,6 +136,7 @@ export async function POST(request: NextRequest) {
         sortOrder: sort_order ?? 0,
       },
     });
+    schedulePayTranslationSync();
 
     return NextResponse.json(
       {

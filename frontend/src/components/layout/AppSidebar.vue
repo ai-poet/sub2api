@@ -211,6 +211,7 @@ import { sanitizeUrl } from '@/utils/url'
 import { FeatureFlags, makeSidebarFlag } from '@/utils/featureFlags'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
 import { useBatchImageAccess } from '@/composables/useBatchImageAccess'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 interface NavItem {
   path: string
@@ -251,6 +252,7 @@ function applyFeatureFlags(items: NavItem[]): NavItem[] {
 }
 
 const { t } = useI18n()
+const { tx } = useContentTranslation()
 
 const route = useRoute()
 const router = useRouter()
@@ -746,7 +748,8 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/profile', label: t('nav.profile'), icon: UserIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,
-      label: item.label,
+      // fork：内容自动翻译（只换显示的菜单名）
+      label: tx(item.label),
       icon: null,
       iconSvg: item.icon_svg,
     })),

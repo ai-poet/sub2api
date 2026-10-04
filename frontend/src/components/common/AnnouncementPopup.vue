@@ -35,7 +35,7 @@
 
               <!-- Title -->
               <h2 class="mb-2 text-2xl font-bold leading-tight text-gray-900 dark:text-white">
-                {{ displayedAnnouncement.title }}
+                {{ tx(displayedAnnouncement.title) }}
               </h2>
 
               <!-- Time -->
@@ -95,6 +95,7 @@ import DOMPurify from 'dompurify'
 import { useAnnouncementStore } from '@/stores/announcements'
 import { formatRelativeWithDateTime } from '@/utils/format'
 import type { Announcement, UserAnnouncement } from '@/types'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 import '@/styles/announcement-markdown.css'
 
 type PreviewAnnouncement = Pick<Announcement | UserAnnouncement, 'title' | 'content' | 'created_at'>
@@ -112,6 +113,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { tx } = useContentTranslation()
 const announcementStore = useAnnouncementStore()
 const displayedAnnouncement = computed(() => (
   props.preview ? props.announcement : announcementStore.currentPopup
@@ -125,7 +127,8 @@ marked.setOptions({
 const renderedContent = computed(() => {
   const content = displayedAnnouncement.value?.content
   if (!content) return ''
-  const html = marked.parse(content) as string
+  // fork：内容自动翻译——先换 Markdown 原文再渲染（管理后台预览走 /admin 路由，总是原文）
+  const html = marked.parse(tx(content)) as string
   return DOMPurify.sanitize(html)
 })
 

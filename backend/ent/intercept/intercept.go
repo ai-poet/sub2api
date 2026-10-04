@@ -20,6 +20,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/batchimageitem"
 	"github.com/Wei-Shaw/sub2api/ent/batchimagejob"
 	"github.com/Wei-Shaw/sub2api/ent/compositemodelroute"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslation"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslationsource"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckrun"
@@ -434,6 +436,60 @@ func (f TraverseCompositeModelRoute) Traverse(ctx context.Context, q ent.Query) 
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.CompositeModelRouteQuery", q)
+}
+
+// The ContentTranslationFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ContentTranslationFunc func(context.Context, *ent.ContentTranslationQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ContentTranslationFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ContentTranslationQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ContentTranslationQuery", q)
+}
+
+// The TraverseContentTranslation type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseContentTranslation func(context.Context, *ent.ContentTranslationQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseContentTranslation) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseContentTranslation) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ContentTranslationQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ContentTranslationQuery", q)
+}
+
+// The ContentTranslationSourceFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ContentTranslationSourceFunc func(context.Context, *ent.ContentTranslationSourceQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ContentTranslationSourceFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ContentTranslationSourceQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ContentTranslationSourceQuery", q)
+}
+
+// The TraverseContentTranslationSource type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseContentTranslationSource func(context.Context, *ent.ContentTranslationSourceQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseContentTranslationSource) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseContentTranslationSource) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ContentTranslationSourceQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ContentTranslationSourceQuery", q)
 }
 
 // The ErrorPassthroughRuleFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1354,6 +1410,10 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.BatchImageJobQuery, predicate.BatchImageJob, batchimagejob.OrderOption]{typ: ent.TypeBatchImageJob, tq: q}, nil
 	case *ent.CompositeModelRouteQuery:
 		return &query[*ent.CompositeModelRouteQuery, predicate.CompositeModelRoute, compositemodelroute.OrderOption]{typ: ent.TypeCompositeModelRoute, tq: q}, nil
+	case *ent.ContentTranslationQuery:
+		return &query[*ent.ContentTranslationQuery, predicate.ContentTranslation, contenttranslation.OrderOption]{typ: ent.TypeContentTranslation, tq: q}, nil
+	case *ent.ContentTranslationSourceQuery:
+		return &query[*ent.ContentTranslationSourceQuery, predicate.ContentTranslationSource, contenttranslationsource.OrderOption]{typ: ent.TypeContentTranslationSource, tq: q}, nil
 	case *ent.ErrorPassthroughRuleQuery:
 		return &query[*ent.ErrorPassthroughRuleQuery, predicate.ErrorPassthroughRule, errorpassthroughrule.OrderOption]{typ: ent.TypeErrorPassthroughRule, tq: q}, nil
 	case *ent.GroupQuery:

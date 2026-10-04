@@ -17,6 +17,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/batchimageitem"
 	"github.com/Wei-Shaw/sub2api/ent/batchimagejob"
 	"github.com/Wei-Shaw/sub2api/ent/compositemodelroute"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslation"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslationsource"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckrun"
@@ -788,6 +790,52 @@ func init() {
 	compositemodelrouteDescEnabled := compositemodelrouteFields[7].Descriptor()
 	// compositemodelroute.DefaultEnabled holds the default value on creation for the enabled field.
 	compositemodelroute.DefaultEnabled = compositemodelrouteDescEnabled.Default.(bool)
+	contenttranslationFields := schema.ContentTranslation{}.Fields()
+	_ = contenttranslationFields
+	// contenttranslationDescSourceHash is the schema descriptor for source_hash field.
+	contenttranslationDescSourceHash := contenttranslationFields[0].Descriptor()
+	// contenttranslation.SourceHashValidator is a validator for the "source_hash" field. It is called by the builders before save.
+	contenttranslation.SourceHashValidator = contenttranslationDescSourceHash.Validators[0].(func(string) error)
+	// contenttranslationDescTargetLang is the schema descriptor for target_lang field.
+	contenttranslationDescTargetLang := contenttranslationFields[1].Descriptor()
+	// contenttranslation.TargetLangValidator is a validator for the "target_lang" field. It is called by the builders before save.
+	contenttranslation.TargetLangValidator = contenttranslationDescTargetLang.Validators[0].(func(string) error)
+	// contenttranslationDescModel is the schema descriptor for model field.
+	contenttranslationDescModel := contenttranslationFields[4].Descriptor()
+	// contenttranslation.DefaultModel holds the default value on creation for the model field.
+	contenttranslation.DefaultModel = contenttranslationDescModel.Default.(string)
+	// contenttranslation.ModelValidator is a validator for the "model" field. It is called by the builders before save.
+	contenttranslation.ModelValidator = contenttranslationDescModel.Validators[0].(func(string) error)
+	// contenttranslationDescManual is the schema descriptor for manual field.
+	contenttranslationDescManual := contenttranslationFields[5].Descriptor()
+	// contenttranslation.DefaultManual holds the default value on creation for the manual field.
+	contenttranslation.DefaultManual = contenttranslationDescManual.Default.(bool)
+	// contenttranslationDescCreatedAt is the schema descriptor for created_at field.
+	contenttranslationDescCreatedAt := contenttranslationFields[6].Descriptor()
+	// contenttranslation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	contenttranslation.DefaultCreatedAt = contenttranslationDescCreatedAt.Default.(func() time.Time)
+	// contenttranslationDescUpdatedAt is the schema descriptor for updated_at field.
+	contenttranslationDescUpdatedAt := contenttranslationFields[7].Descriptor()
+	// contenttranslation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	contenttranslation.DefaultUpdatedAt = contenttranslationDescUpdatedAt.Default.(func() time.Time)
+	// contenttranslationDescLastSeenAt is the schema descriptor for last_seen_at field.
+	contenttranslationDescLastSeenAt := contenttranslationFields[8].Descriptor()
+	// contenttranslation.DefaultLastSeenAt holds the default value on creation for the last_seen_at field.
+	contenttranslation.DefaultLastSeenAt = contenttranslationDescLastSeenAt.Default.(func() time.Time)
+	contenttranslationsourceFields := schema.ContentTranslationSource{}.Fields()
+	_ = contenttranslationsourceFields
+	// contenttranslationsourceDescNamespace is the schema descriptor for namespace field.
+	contenttranslationsourceDescNamespace := contenttranslationsourceFields[0].Descriptor()
+	// contenttranslationsource.NamespaceValidator is a validator for the "namespace" field. It is called by the builders before save.
+	contenttranslationsource.NamespaceValidator = contenttranslationsourceDescNamespace.Validators[0].(func(string) error)
+	// contenttranslationsourceDescSourceHash is the schema descriptor for source_hash field.
+	contenttranslationsourceDescSourceHash := contenttranslationsourceFields[1].Descriptor()
+	// contenttranslationsource.SourceHashValidator is a validator for the "source_hash" field. It is called by the builders before save.
+	contenttranslationsource.SourceHashValidator = contenttranslationsourceDescSourceHash.Validators[0].(func(string) error)
+	// contenttranslationsourceDescUpdatedAt is the schema descriptor for updated_at field.
+	contenttranslationsourceDescUpdatedAt := contenttranslationsourceFields[3].Descriptor()
+	// contenttranslationsource.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	contenttranslationsource.DefaultUpdatedAt = contenttranslationsourceDescUpdatedAt.Default.(func() time.Time)
 	errorpassthroughruleMixin := schema.ErrorPassthroughRule{}.Mixin()
 	errorpassthroughruleMixinFields0 := errorpassthroughruleMixin[0].Fields()
 	_ = errorpassthroughruleMixinFields0

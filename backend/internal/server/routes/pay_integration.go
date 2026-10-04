@@ -62,6 +62,7 @@ func RegisterPayRoutes(
 		attachments.DELETE("", h.PayBridge.DeleteAttachment)
 	}
 	internal.POST("/notifications/invoice-ready", h.PayBridge.SendInvoiceReadyEmail)
+	registerContentTranslationPayRoutes(internal, h) // fork：内容自动翻译（支付服务登记套餐 / 活动文案）
 
 	adminInternal := internal.Group("")
 	adminInternal.Use(internalPayAdminContextMiddleware(userService))

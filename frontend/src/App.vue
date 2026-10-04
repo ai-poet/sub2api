@@ -14,6 +14,7 @@ import { getSetupStatus } from '@/api/setup'
 import { updateFavicon } from '@/utils/branding'
 import { FeatureFlags, isFeatureFlagEnabled } from '@/utils/featureFlags'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
+import { useContentTranslationsStore } from '@/stores/contentTranslations'
 
 const router = useRouter()
 const route = useRoute()
@@ -26,6 +27,7 @@ const adminSettingsStore = useAdminSettingsStore()
 const approvalsStore = useApprovalsStore()
 const ticketsStore = useTicketsStore()
 const siteMessagesStore = useSiteMessagesStore()
+const contentTranslationsStore = useContentTranslationsStore()
 const { t } = useI18n()
 
 function updateDocumentTitle() {
@@ -64,6 +66,9 @@ watch(
   updateDocumentTitle,
   { deep: true }
 )
+
+// fork：内容自动翻译——自定义菜单名的译文异步到达后重算一次页签标题
+watch(() => contentTranslationsStore.version, updateDocumentTitle)
 
 // Watch for authentication state and manage subscription data + announcements
 function onVisibilityChange() {

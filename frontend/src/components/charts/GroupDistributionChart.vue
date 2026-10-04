@@ -64,7 +64,7 @@
                   <span class="inline-flex items-center gap-1">
                     <svg v-if="enableBreakdown && group.group_id > 0 && expandedKey === `group-${group.group_id}`" class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     <svg v-else-if="enableBreakdown && group.group_id > 0" class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    {{ group.group_name || t('admin.dashboard.noGroup') }}
+                    {{ tx(group.group_name) || t('admin.dashboard.noGroup') }}
                   </span>
                 </td>
                 <td class="py-1.5 text-right text-gray-600 dark:text-gray-400">
@@ -116,10 +116,13 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import UserBreakdownSubTable from './UserBreakdownSubTable.vue'
 import type { GroupStat, UserBreakdownItem } from '@/types'
 import { getUserBreakdown } from '@/api/admin/dashboard'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的分组名；/admin 下总是原文）
+const { tx } = useContentTranslation()
 
 type DistributionMetric = 'tokens' | 'actual_cost'
 
@@ -199,7 +202,7 @@ const chartData = computed(() => {
   if (!props.groupStats?.length) return null
 
   return {
-    labels: displayGroupStats.value.map((g) => g.group_name || String(g.group_id)),
+    labels: displayGroupStats.value.map((g) => tx(g.group_name) || String(g.group_id)),
     datasets: [
       {
         data: displayGroupStats.value.map((g) => toFiniteNumber(props.metric === 'actual_cost' ? g.actual_cost : g.total_tokens)),

@@ -18,6 +18,7 @@ import usageAPI from './usage'
 import approvalsAPI from './approvals'
 import ticketsAPI from './tickets'
 import personalTokensAPI from './personalTokens'
+import contentTranslationsAPI from './contentTranslations'
 import geminiAPI from './gemini'
 import antigravityAPI from './antigravity'
 import grokAPI from './grok'
@@ -56,6 +57,7 @@ export const adminAPI = {
   approvals: approvalsAPI,
   tickets: ticketsAPI,
   personalTokens: personalTokensAPI,
+  contentTranslations: contentTranslationsAPI,
   gemini: geminiAPI,
   antigravity: antigravityAPI,
   grok: grokAPI,
@@ -92,6 +94,7 @@ export {
   approvalsAPI,
   ticketsAPI,
   personalTokensAPI,
+  contentTranslationsAPI,
   geminiAPI,
   antigravityAPI,
   grokAPI,
@@ -117,6 +120,11 @@ export default adminAPI
 export type { AuditLog, AuditLogQuery, AuditLogListResponse } from './audit'
 export type { AdminSupportTicket, AdminTicketDetail, AdminTicketListFilters } from './tickets'
 export type { AdminPersonalTokenItem, AdminPersonalTokenList, PersonalTokenState } from './personalTokens'
+export type {
+  ContentTranslationConfig,
+  ContentTranslationItem,
+  ContentTranslationStatus
+} from './contentTranslations'
 export type { BalanceHistoryItem } from './users'
 export type { ErrorPassthroughRule, CreateRuleRequest, UpdateRuleRequest } from './errorPassthrough'
 export type { BackupAgentHealth, DataManagementConfig } from './dataManagement'

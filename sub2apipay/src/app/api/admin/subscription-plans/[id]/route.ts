@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { getGroup } from '@/lib/sub2api/client';
+import { schedulePayTranslationSync } from '@/lib/sub2api/content-translations';
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await verifyAdminToken(request))) return unauthorizedResponse(request);
@@ -32,6 +33,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         where: { id },
         data: { groupId: null, forSale: false },
       });
+      schedulePayTranslationSync();
       return NextResponse.json({ error: '该分组已在主系统中删除，已自动解绑，请重新选择分组' }, { status: 409 });
     }
 
@@ -77,6 +79,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       data,
     });
+    schedulePayTranslationSync();
 
     return NextResponse.json({
       id: plan.id,
@@ -125,6 +128,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     await prisma.subscriptionPlan.delete({ where: { id } });
+    schedulePayTranslationSync();
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -24,6 +24,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/batchimageitem"
 	"github.com/Wei-Shaw/sub2api/ent/batchimagejob"
 	"github.com/Wei-Shaw/sub2api/ent/compositemodelroute"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslation"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslationsource"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckrun"
@@ -129,6 +131,8 @@ func checkColumn(t, c string) error {
 			batchimageitem.Table:             batchimageitem.ValidColumn,
 			batchimagejob.Table:              batchimagejob.ValidColumn,
 			compositemodelroute.Table:        compositemodelroute.ValidColumn,
+			contenttranslation.Table:         contenttranslation.ValidColumn,
+			contenttranslationsource.Table:   contenttranslationsource.ValidColumn,
 			errorpassthroughrule.Table:       errorpassthroughrule.ValidColumn,
 			group.Table:                      group.ValidColumn,
 			groupstatusastracheckrun.Table:   groupstatusastracheckrun.ValidColumn,

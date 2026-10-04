@@ -39,7 +39,7 @@
             {{ siteName }}
           </h1>
           <p class="text-sm text-gray-500 dark:text-dark-400">
-            {{ siteSubtitle }}
+            {{ tx(siteSubtitle) }}
           </p>
         </template>
       </div>
@@ -66,8 +66,11 @@
 import { computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores'
 import { sanitizeUrl } from '@/utils/url'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const appStore = useAppStore()
+// fork：内容自动翻译（只换显示的站点副标题）
+const { tx } = useContentTranslation()
 
 const siteName = computed(() => appStore.siteName || 'Sub2API')
 const siteLogo = computed(() => sanitizeUrl(appStore.siteLogo || '', { allowRelative: true, allowDataUrl: true }))

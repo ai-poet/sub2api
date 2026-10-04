@@ -13,6 +13,7 @@ export { useAdminComplianceStore } from './adminCompliance'
 export { useApprovalsStore } from './approvals'
 export { useTicketsStore } from './tickets'
 export { useSiteMessagesStore } from './siteMessages'
+export { useContentTranslationsStore } from './contentTranslations'
 
 // Re-export types for convenience
 export type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types'

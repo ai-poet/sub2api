@@ -50,6 +50,7 @@ func ProvideAdminHandlers(
 	ticketAttachmentHandler *admin.TicketAttachmentHandler,
 	personalTokenHandler *admin.PersonalTokenHandler,
 	userSiteMessageHandler *admin.UserSiteMessageHandler,
+	contentTranslationHandler *admin.ContentTranslationHandler,
 	upstreamBillingProbe *service.UpstreamBillingProbeService,
 	ollamaCloudUsage *service.OllamaCloudUsageService,
 	opencodeGoUsage *service.OpenCodeGoUsageService,
@@ -99,6 +100,9 @@ func ProvideAdminHandlers(
 		TicketAttachment:      ticketAttachmentHandler,
 		PersonalToken:         personalTokenHandler,
 		UserSiteMessage:       userSiteMessageHandler,
+
+		// fork：内容自动翻译
+		ContentTranslation: contentTranslationHandler,
 	}
 }
 
@@ -230,6 +234,7 @@ func ProvideHandlers(
 	desktopLoginHandler *DesktopLoginHandler,
 	siteMessageHandler *SiteMessageHandler,
 	appealHandler *AppealHandler,
+	contentTranslationHandler *ContentTranslationHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 	_ *service.OpenAIQuotaAutoResetService,
@@ -263,6 +268,9 @@ func ProvideHandlers(
 		DesktopLogin:     desktopLoginHandler,
 		SiteMessage:      siteMessageHandler,
 		Appeal:           appealHandler,
+
+		// fork：内容自动翻译
+		ContentTranslation: contentTranslationHandler,
 	}
 }
 
@@ -296,6 +304,7 @@ var ProviderSet = wire.NewSet(
 	NewDesktopLoginHandler,
 	NewSiteMessageHandler,
 	NewAppealHandler,
+	NewContentTranslationHandler, // fork：内容自动翻译
 
 	// Admin handlers
 	admin.NewDashboardHandler,
@@ -336,6 +345,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewTicketAttachmentHandler,
 	admin.NewPersonalTokenHandler,
 	admin.NewUserSiteMessageHandler,
+	admin.NewContentTranslationHandler, // fork：内容自动翻译
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,

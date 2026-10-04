@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useClipboard } from '@/composables/useClipboard'
 import type { CustomEndpoint } from '@/types'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const props = defineProps<{
   apiBaseUrl: string
@@ -10,6 +11,8 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的自定义端点名称 / 说明）
+const { tx } = useContentTranslation()
 const { copyToClipboard } = useClipboard()
 const copiedEndpoint = ref<string | null>(null)
 
@@ -70,7 +73,7 @@ onBeforeUnmount(() => {
       :key="index"
       class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs transition-colors hover:border-primary-200 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-primary-700"
     >
-      <span class="font-medium text-gray-600 dark:text-gray-300">{{ item.name }}</span>
+      <span class="font-medium text-gray-600 dark:text-gray-300">{{ item.isDefault ? item.name : tx(item.name) }}</span>
       <span
         v-if="item.isDefault"
         class="rounded bg-primary-50 px-1 py-px text-[10px] font-medium leading-tight text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
@@ -86,7 +89,7 @@ onBeforeUnmount(() => {
             v-if="item.description"
             class="max-w-[24rem] break-words text-xs leading-5 text-gray-600 dark:text-gray-200"
           >
-            {{ item.description }}
+            {{ tx(item.description) }}
           </p>
           <p
             class="flex items-center gap-1.5 text-[11px] leading-4 text-primary-600 dark:text-primary-300"

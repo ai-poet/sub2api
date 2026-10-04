@@ -72,6 +72,7 @@ var ProviderSet = wire.NewSet(
 	NewAdminApprovalRepository,
 	NewSupportTicketRepository,
 	NewSiteMessageRepository,
+	NewContentTranslationRepository, // fork：内容自动翻译
 	NewPersonalTokenRepository,
 	NewReferralRepository,
 	NewAdminGroupRepository,

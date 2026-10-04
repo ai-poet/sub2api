@@ -63,7 +63,7 @@
                 >
                   <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ row.display_name }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-white/65">
-                    <span>{{ row.group.name }}</span>
+                    <span>{{ tx(row.group.name) }}</span>
                     <span
                       v-if="row.group.rate_multiplier !== 1"
                       class="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] text-gray-700 dark:bg-white/10 dark:text-white/70"
@@ -159,6 +159,7 @@ import { useI18n } from 'vue-i18n'
 import { fetchPublicCurrencyRates, getPublicPricing, type PublicPricingItem } from '@/api/pricing'
 import { useAppStore } from '@/stores/app'
 import { formatScaled } from '@/utils/pricing'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const props = withDefaults(defineProps<{
   siteName: string
@@ -167,6 +168,8 @@ const props = withDefaults(defineProps<{
 })
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的分组名）
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 
 /** 首屏默认展示的模型条数，避免落地页被上百行价目表撑爆。 */

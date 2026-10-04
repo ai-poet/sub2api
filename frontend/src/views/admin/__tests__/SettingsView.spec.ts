@@ -562,6 +562,8 @@ function mountView() {
         BackupSettings: true,
         // fork：运维个人令牌列表自己拉接口，这里不关心
         PersonalTokensPanel: true,
+        // fork：内容自动翻译卡片自己拉接口，这里不关心
+        ContentTranslationSettingsCard: true,
       },
     },
   });

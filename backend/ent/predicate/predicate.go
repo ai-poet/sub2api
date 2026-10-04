@@ -42,6 +42,12 @@ type BatchImageJob func(*sql.Selector)
 // CompositeModelRoute is the predicate function for compositemodelroute builders.
 type CompositeModelRoute func(*sql.Selector)
 
+// ContentTranslation is the predicate function for contenttranslation builders.
+type ContentTranslation func(*sql.Selector)
+
+// ContentTranslationSource is the predicate function for contenttranslationsource builders.
+type ContentTranslationSource func(*sql.Selector)
+
 // ErrorPassthroughRule is the predicate function for errorpassthroughrule builders.
 type ErrorPassthroughRule func(*sql.Selector)
 

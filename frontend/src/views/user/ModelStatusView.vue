@@ -135,7 +135,7 @@
                         class="max-w-full truncate"
                         :class="item.group.description ? 'text-gray-500 dark:text-gray-400' : 'italic text-gray-400 dark:text-gray-500'"
                       >
-                        {{ item.group.description || t('modelStatus.noDescription') }}
+                        {{ tx(item.group.description) || t('modelStatus.noDescription') }}
                       </span>
                     </div>
 
@@ -485,11 +485,13 @@ import {
   shortenRuntimeExcerpt,
 } from '@/utils/groupStatus'
 import type { NormalizedAstraCheckStatus } from '@/utils/groupStatus'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const POLL_INTERVAL_MS = 30_000
 const HEARTBEAT_RECORD_COUNT = 24
 
 const { t } = useI18n()
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 
 const initialLoading = ref(true)
@@ -553,7 +555,8 @@ function getGroupId(item: GroupStatusListItem | null): number {
 }
 
 function getGroupDisplayName(item: GroupStatusListItem): string {
-  return item.group.name?.trim() || (item.group as any)?.Name?.trim?.() || `#${getGroupId(item)}`
+  // fork：内容自动翻译——只用于显示
+  return tx(item.group.name?.trim() || (item.group as any)?.Name?.trim?.()) || `#${getGroupId(item)}`
 }
 
 function getMonitorDotClass(status: 'up' | 'degraded' | 'down' | 'unknown'): string {

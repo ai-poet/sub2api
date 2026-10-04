@@ -2,6 +2,7 @@ import { i18n } from '@/i18n'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import type { CustomMenuItem } from '@/types'
 import type { SiteBillingMode } from '@/utils/siteBillingMode'
+import { translateContent } from '@/composables/useContentTranslation'
 
 /**
  * 统一生成页面标题，避免多处写入 document.title 产生覆盖冲突。
@@ -63,7 +64,7 @@ export function resolveRouteMetaKeys(
 }
 
 export function resolveRouteDocumentTitle(
-  route: Pick<RouteLocationNormalizedLoaded, 'name' | 'params' | 'meta'>,
+  route: Pick<RouteLocationNormalizedLoaded, 'name' | 'params' | 'meta'> & { path?: string },
   siteName: string | undefined,
   customMenuItems: CustomMenuItem[] = [],
   options: RouteTitleOptions = {},
@@ -72,7 +73,8 @@ export function resolveRouteDocumentTitle(
   const menuItem = route.name === 'CustomPage' && id
     ? customMenuItems.find((item) => item.id === id)
     : undefined
-  const menuTitle = menuItem?.label.trim()
+  // fork：内容自动翻译（只换显示的菜单名；译文到达后 App.vue 会重算标题）
+  const menuTitle = translateContent(menuItem?.label.trim(), route.path) || undefined
   const { titleKey } = resolveRouteMetaKeys(route, options)
 
   return resolveDocumentTitle(menuTitle || route.meta.title, siteName, menuTitle ? undefined : titleKey)

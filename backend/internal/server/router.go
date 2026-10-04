@@ -139,6 +139,7 @@ func registerRoutes(
 	routes.RegisterAuthRoutes(v1, h, jwtAuth, auditLog, redisClient, settingService, panelRateLimiter)
 	routes.RegisterUserRoutes(v1, h, jwtAuth, auditLog, settingService, panelRateLimiter)
 	routes.RegisterAppealRoutes(v1, h, auditLog, redisClient, settingService, panelRateLimiter) // fork：封禁申诉会话
+	routes.RegisterContentTranslationRoutes(v1, h, panelRateLimiter)                            // fork：内容自动翻译
 	routes.RegisterAdminRoutes(v1, h, adminAuth, auditLog, stepUpAuth, settingService, panelRateLimiter)
 	routes.RegisterGatewayRoutes(r, h, apiKeyAuth, apiKeyService, subscriptionService, opsService, settingService, compositeResolver, cfg)
 	routes.RegisterPayRoutes(r, h, jwtAuth, adminAuth, userService, cfg)

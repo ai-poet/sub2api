@@ -3,7 +3,7 @@
     <!-- Left: name + description -->
     <div
       class="flex min-w-0 flex-1 flex-col items-start"
-      :title="description || undefined"
+      :title="tx(description) || undefined"
     >
       <!-- Row 1: platform badge (name bold) -->
       <GroupBadge
@@ -18,7 +18,7 @@
         v-if="description"
         class="mt-1.5 w-full whitespace-pre-line [overflow-wrap:anywhere] text-left text-xs leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-3"
       >
-        {{ description }}
+        {{ tx(description) }}
       </span>
     </div>
 
@@ -65,8 +65,11 @@ import GroupBadge from './GroupBadge.vue'
 import type { SubscriptionType, GroupPlatform } from '@/types'
 import { useAppStore } from '@/stores/app'
 import { formatPeakRateWindow, serverTimezoneLabel } from '@/utils/peak-rate'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示；名称由 GroupBadge 自己翻译）
+const { tx } = useContentTranslation()
 
 interface Props {
   name: string

@@ -119,7 +119,7 @@
 
         <template #cell-group="{ row }">
           <span v-if="row.group" class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-            {{ row.group.name }}
+            {{ tx(row.group.name) }}
           </span>
           <span v-else class="text-sm text-gray-400 dark:text-gray-500">-</span>
         </template>
@@ -586,6 +586,7 @@ import Icon from '@/components/icons/Icon.vue'
 import { fetchBatch, getEntry } from '@/utils/ipGeoLookup'
 import type { AdminUsageLog } from '@/types'
 import type { Column } from '@/components/common/types'
+import { useContentTranslation } from '@/composables/useContentTranslation'
 
 interface Props {
   data: AdminUsageLog[]
@@ -615,6 +616,8 @@ const emit = defineEmits<{
   ipGeoBatchFailed: []
 }>()
 const { t } = useI18n()
+// fork：内容自动翻译（只换显示的分组名；用户侧用量页复用本表，/admin 下总是原文）
+const { tx } = useContentTranslation()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const copiedRequestId = ref<string | null>(null)

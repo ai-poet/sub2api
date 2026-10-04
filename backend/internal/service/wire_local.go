@@ -138,3 +138,21 @@ func ProvidePersonalTokenService(
 	}
 	return svc
 }
+
+// ProvideContentTranslationService 构造内容自动翻译服务（fork 本地）并启动后台扫描循环；
+// 关停时由 cmd/server 的 provideCleanup 调 Stop。
+func ProvideContentTranslationService(
+	repo ContentTranslationRepository,
+	settingRepo SettingRepository,
+	apiKeyRepo APIKeyRepository,
+	userRepo UserRepository,
+	groupRepo GroupRepository,
+	channelRepo ChannelRepository,
+	announcementRepo AnnouncementRepository,
+	settingService *SettingService,
+	cfg *config.Config,
+) *ContentTranslationService {
+	svc := NewContentTranslationService(repo, settingRepo, apiKeyRepo, userRepo, groupRepo, channelRepo, announcementRepo, settingService, cfg)
+	svc.Start()
+	return svc
+}

@@ -15,6 +15,12 @@ vi.mock('@/lib/sub2api/client', () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),
 }));
 
+const mockSyncPayTranslationSourcesIfStale = vi.fn();
+
+vi.mock('@/lib/sub2api/content-translations', () => ({
+  syncPayTranslationSourcesIfStale: (...args: unknown[]) => mockSyncPayTranslationSourcesIfStale(...args),
+}));
+
 vi.mock('@/lib/config', () => ({
   getEnv: () => ({
     MIN_RECHARGE_AMOUNT: 1,
@@ -174,6 +180,15 @@ describe('GET /api/user', () => {
     mockGetCurrentUserByToken.mockResolvedValue({ id: 999, status: 'active' });
     const res = await GET(createRequest());
     expect(res.status).toBe(403);
+    expect(mockSyncPayTranslationSourcesIfStale).not.toHaveBeenCalled();
+  });
+
+  it('kicks the throttled translation source sync without changing the response', async () => {
+    const res = await GET(createRequest());
+    expect(res.status).toBe(200);
+    expect(mockSyncPayTranslationSourcesIfStale).toHaveBeenCalledTimes(1);
+    const data = await res.json();
+    expect(data.config.helpText).toBeNull();
   });
 
   it('ignores Accept-Language when lang is not provided', async () => {

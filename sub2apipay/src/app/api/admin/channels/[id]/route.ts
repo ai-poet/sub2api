@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
+import { schedulePayTranslationSync } from '@/lib/sub2api/content-translations';
 
 const updateChannelSchema = z.object({
   group_id: z.number().int().positive().nullable().optional(),
@@ -66,6 +67,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       data,
     });
+    schedulePayTranslationSync();
 
     return NextResponse.json({
       ...channel,
@@ -89,6 +91,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     await prisma.channel.delete({ where: { id } });
+    schedulePayTranslationSync();
 
     return NextResponse.json({ success: true });
   } catch (error) {

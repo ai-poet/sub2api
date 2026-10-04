@@ -995,6 +995,7 @@ var ProviderSet = wire.NewSet(
 	NewTicketNotifyService,
 	ProvideTicketService,
 	NewSiteMessageService,
+	ProvideContentTranslationService, // fork：内容自动翻译
 	ProvideAppealService,
 	ProvidePersonalTokenService,
 	NewDesktopLoginService,

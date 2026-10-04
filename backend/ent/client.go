@@ -27,6 +27,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/batchimageitem"
 	"github.com/Wei-Shaw/sub2api/ent/batchimagejob"
 	"github.com/Wei-Shaw/sub2api/ent/compositemodelroute"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslation"
+	"github.com/Wei-Shaw/sub2api/ent/contenttranslationsource"
 	"github.com/Wei-Shaw/sub2api/ent/errorpassthroughrule"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/groupstatusastracheckrun"
@@ -93,6 +95,10 @@ type Client struct {
 	BatchImageJob *BatchImageJobClient
 	// CompositeModelRoute is the client for interacting with the CompositeModelRoute builders.
 	CompositeModelRoute *CompositeModelRouteClient
+	// ContentTranslation is the client for interacting with the ContentTranslation builders.
+	ContentTranslation *ContentTranslationClient
+	// ContentTranslationSource is the client for interacting with the ContentTranslationSource builders.
+	ContentTranslationSource *ContentTranslationSourceClient
 	// ErrorPassthroughRule is the client for interacting with the ErrorPassthroughRule builders.
 	ErrorPassthroughRule *ErrorPassthroughRuleClient
 	// Group is the client for interacting with the Group builders.
@@ -182,6 +188,8 @@ func (c *Client) init() {
 	c.BatchImageItem = NewBatchImageItemClient(c.config)
 	c.BatchImageJob = NewBatchImageJobClient(c.config)
 	c.CompositeModelRoute = NewCompositeModelRouteClient(c.config)
+	c.ContentTranslation = NewContentTranslationClient(c.config)
+	c.ContentTranslationSource = NewContentTranslationSourceClient(c.config)
 	c.ErrorPassthroughRule = NewErrorPassthroughRuleClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.GroupStatusAstraCheckRun = NewGroupStatusAstraCheckRunClient(c.config)
@@ -319,6 +327,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		BatchImageItem:             NewBatchImageItemClient(cfg),
 		BatchImageJob:              NewBatchImageJobClient(cfg),
 		CompositeModelRoute:        NewCompositeModelRouteClient(cfg),
+		ContentTranslation:         NewContentTranslationClient(cfg),
+		ContentTranslationSource:   NewContentTranslationSourceClient(cfg),
 		ErrorPassthroughRule:       NewErrorPassthroughRuleClient(cfg),
 		Group:                      NewGroupClient(cfg),
 		GroupStatusAstraCheckRun:   NewGroupStatusAstraCheckRunClient(cfg),
@@ -383,6 +393,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		BatchImageItem:             NewBatchImageItemClient(cfg),
 		BatchImageJob:              NewBatchImageJobClient(cfg),
 		CompositeModelRoute:        NewCompositeModelRouteClient(cfg),
+		ContentTranslation:         NewContentTranslationClient(cfg),
+		ContentTranslationSource:   NewContentTranslationSourceClient(cfg),
 		ErrorPassthroughRule:       NewErrorPassthroughRuleClient(cfg),
 		Group:                      NewGroupClient(cfg),
 		GroupStatusAstraCheckRun:   NewGroupStatusAstraCheckRunClient(cfg),
@@ -447,16 +459,17 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.Account, c.AccountGroup, c.AdminApprovalRequest, c.Announcement,
 		c.AnnouncementRead, c.AuthIdentity, c.AuthIdentityChannel, c.BatchImageEvent,
-		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute,
-		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
-		c.GroupStatusAstraCheckState, c.GroupStatusConfig, c.GroupStatusEvent,
-		c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun, c.GroupStatusRecord,
-		c.GroupStatusState, c.IdempotencyRecord, c.IdentityAdoptionDecision,
-		c.PendingAuthSession, c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy,
-		c.RedeemCode, c.SecuritySecret, c.Setting, c.SiteMessage, c.SupportTicket,
-		c.SupportTicketMessage, c.TLSFingerprintProfile, c.UsageCleanupTask,
-		c.UsageLog, c.User, c.UserAllowedGroup, c.UserAttributeDefinition,
-		c.UserAttributeValue, c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
+		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute, c.ContentTranslation,
+		c.ContentTranslationSource, c.ErrorPassthroughRule, c.Group,
+		c.GroupStatusAstraCheckRun, c.GroupStatusAstraCheckState, c.GroupStatusConfig,
+		c.GroupStatusEvent, c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun,
+		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord,
+		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
+		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
+		c.SiteMessage, c.SupportTicket, c.SupportTicketMessage,
+		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
+		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -468,16 +481,17 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.Account, c.AccountGroup, c.AdminApprovalRequest, c.Announcement,
 		c.AnnouncementRead, c.AuthIdentity, c.AuthIdentityChannel, c.BatchImageEvent,
-		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute,
-		c.ErrorPassthroughRule, c.Group, c.GroupStatusAstraCheckRun,
-		c.GroupStatusAstraCheckState, c.GroupStatusConfig, c.GroupStatusEvent,
-		c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun, c.GroupStatusRecord,
-		c.GroupStatusState, c.IdempotencyRecord, c.IdentityAdoptionDecision,
-		c.PendingAuthSession, c.PersonalToken, c.PromoCode, c.PromoCodeUsage, c.Proxy,
-		c.RedeemCode, c.SecuritySecret, c.Setting, c.SiteMessage, c.SupportTicket,
-		c.SupportTicketMessage, c.TLSFingerprintProfile, c.UsageCleanupTask,
-		c.UsageLog, c.User, c.UserAllowedGroup, c.UserAttributeDefinition,
-		c.UserAttributeValue, c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
+		c.BatchImageItem, c.BatchImageJob, c.CompositeModelRoute, c.ContentTranslation,
+		c.ContentTranslationSource, c.ErrorPassthroughRule, c.Group,
+		c.GroupStatusAstraCheckRun, c.GroupStatusAstraCheckState, c.GroupStatusConfig,
+		c.GroupStatusEvent, c.GroupStatusJuiceRecord, c.GroupStatusModelTraceRun,
+		c.GroupStatusRecord, c.GroupStatusState, c.IdempotencyRecord,
+		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
+		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
+		c.SiteMessage, c.SupportTicket, c.SupportTicketMessage,
+		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
+		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -510,6 +524,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.BatchImageJob.mutate(ctx, m)
 	case *CompositeModelRouteMutation:
 		return c.CompositeModelRoute.mutate(ctx, m)
+	case *ContentTranslationMutation:
+		return c.ContentTranslation.mutate(ctx, m)
+	case *ContentTranslationSourceMutation:
+		return c.ContentTranslationSource.mutate(ctx, m)
 	case *ErrorPassthroughRuleMutation:
 		return c.ErrorPassthroughRule.mutate(ctx, m)
 	case *GroupMutation:
@@ -2435,6 +2453,272 @@ func (c *CompositeModelRouteClient) mutate(ctx context.Context, m *CompositeMode
 		return (&CompositeModelRouteDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CompositeModelRoute mutation op: %q", m.Op())
+	}
+}
+
+// ContentTranslationClient is a client for the ContentTranslation schema.
+type ContentTranslationClient struct {
+	config
+}
+
+// NewContentTranslationClient returns a client for the ContentTranslation from the given config.
+func NewContentTranslationClient(c config) *ContentTranslationClient {
+	return &ContentTranslationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `contenttranslation.Hooks(f(g(h())))`.
+func (c *ContentTranslationClient) Use(hooks ...Hook) {
+	c.hooks.ContentTranslation = append(c.hooks.ContentTranslation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `contenttranslation.Intercept(f(g(h())))`.
+func (c *ContentTranslationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ContentTranslation = append(c.inters.ContentTranslation, interceptors...)
+}
+
+// Create returns a builder for creating a ContentTranslation entity.
+func (c *ContentTranslationClient) Create() *ContentTranslationCreate {
+	mutation := newContentTranslationMutation(c.config, OpCreate)
+	return &ContentTranslationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ContentTranslation entities.
+func (c *ContentTranslationClient) CreateBulk(builders ...*ContentTranslationCreate) *ContentTranslationCreateBulk {
+	return &ContentTranslationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ContentTranslationClient) MapCreateBulk(slice any, setFunc func(*ContentTranslationCreate, int)) *ContentTranslationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ContentTranslationCreateBulk{err: fmt.Errorf("calling to ContentTranslationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ContentTranslationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ContentTranslationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ContentTranslation.
+func (c *ContentTranslationClient) Update() *ContentTranslationUpdate {
+	mutation := newContentTranslationMutation(c.config, OpUpdate)
+	return &ContentTranslationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ContentTranslationClient) UpdateOne(_m *ContentTranslation) *ContentTranslationUpdateOne {
+	mutation := newContentTranslationMutation(c.config, OpUpdateOne, withContentTranslation(_m))
+	return &ContentTranslationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ContentTranslationClient) UpdateOneID(id int64) *ContentTranslationUpdateOne {
+	mutation := newContentTranslationMutation(c.config, OpUpdateOne, withContentTranslationID(id))
+	return &ContentTranslationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ContentTranslation.
+func (c *ContentTranslationClient) Delete() *ContentTranslationDelete {
+	mutation := newContentTranslationMutation(c.config, OpDelete)
+	return &ContentTranslationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ContentTranslationClient) DeleteOne(_m *ContentTranslation) *ContentTranslationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ContentTranslationClient) DeleteOneID(id int64) *ContentTranslationDeleteOne {
+	builder := c.Delete().Where(contenttranslation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ContentTranslationDeleteOne{builder}
+}
+
+// Query returns a query builder for ContentTranslation.
+func (c *ContentTranslationClient) Query() *ContentTranslationQuery {
+	return &ContentTranslationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeContentTranslation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ContentTranslation entity by its id.
+func (c *ContentTranslationClient) Get(ctx context.Context, id int64) (*ContentTranslation, error) {
+	return c.Query().Where(contenttranslation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ContentTranslationClient) GetX(ctx context.Context, id int64) *ContentTranslation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ContentTranslationClient) Hooks() []Hook {
+	return c.hooks.ContentTranslation
+}
+
+// Interceptors returns the client interceptors.
+func (c *ContentTranslationClient) Interceptors() []Interceptor {
+	return c.inters.ContentTranslation
+}
+
+func (c *ContentTranslationClient) mutate(ctx context.Context, m *ContentTranslationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ContentTranslationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ContentTranslationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ContentTranslationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ContentTranslationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ContentTranslation mutation op: %q", m.Op())
+	}
+}
+
+// ContentTranslationSourceClient is a client for the ContentTranslationSource schema.
+type ContentTranslationSourceClient struct {
+	config
+}
+
+// NewContentTranslationSourceClient returns a client for the ContentTranslationSource from the given config.
+func NewContentTranslationSourceClient(c config) *ContentTranslationSourceClient {
+	return &ContentTranslationSourceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `contenttranslationsource.Hooks(f(g(h())))`.
+func (c *ContentTranslationSourceClient) Use(hooks ...Hook) {
+	c.hooks.ContentTranslationSource = append(c.hooks.ContentTranslationSource, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `contenttranslationsource.Intercept(f(g(h())))`.
+func (c *ContentTranslationSourceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ContentTranslationSource = append(c.inters.ContentTranslationSource, interceptors...)
+}
+
+// Create returns a builder for creating a ContentTranslationSource entity.
+func (c *ContentTranslationSourceClient) Create() *ContentTranslationSourceCreate {
+	mutation := newContentTranslationSourceMutation(c.config, OpCreate)
+	return &ContentTranslationSourceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ContentTranslationSource entities.
+func (c *ContentTranslationSourceClient) CreateBulk(builders ...*ContentTranslationSourceCreate) *ContentTranslationSourceCreateBulk {
+	return &ContentTranslationSourceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ContentTranslationSourceClient) MapCreateBulk(slice any, setFunc func(*ContentTranslationSourceCreate, int)) *ContentTranslationSourceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ContentTranslationSourceCreateBulk{err: fmt.Errorf("calling to ContentTranslationSourceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ContentTranslationSourceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ContentTranslationSourceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ContentTranslationSource.
+func (c *ContentTranslationSourceClient) Update() *ContentTranslationSourceUpdate {
+	mutation := newContentTranslationSourceMutation(c.config, OpUpdate)
+	return &ContentTranslationSourceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ContentTranslationSourceClient) UpdateOne(_m *ContentTranslationSource) *ContentTranslationSourceUpdateOne {
+	mutation := newContentTranslationSourceMutation(c.config, OpUpdateOne, withContentTranslationSource(_m))
+	return &ContentTranslationSourceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ContentTranslationSourceClient) UpdateOneID(id int64) *ContentTranslationSourceUpdateOne {
+	mutation := newContentTranslationSourceMutation(c.config, OpUpdateOne, withContentTranslationSourceID(id))
+	return &ContentTranslationSourceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ContentTranslationSource.
+func (c *ContentTranslationSourceClient) Delete() *ContentTranslationSourceDelete {
+	mutation := newContentTranslationSourceMutation(c.config, OpDelete)
+	return &ContentTranslationSourceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ContentTranslationSourceClient) DeleteOne(_m *ContentTranslationSource) *ContentTranslationSourceDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ContentTranslationSourceClient) DeleteOneID(id int64) *ContentTranslationSourceDeleteOne {
+	builder := c.Delete().Where(contenttranslationsource.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ContentTranslationSourceDeleteOne{builder}
+}
+
+// Query returns a query builder for ContentTranslationSource.
+func (c *ContentTranslationSourceClient) Query() *ContentTranslationSourceQuery {
+	return &ContentTranslationSourceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeContentTranslationSource},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ContentTranslationSource entity by its id.
+func (c *ContentTranslationSourceClient) Get(ctx context.Context, id int64) (*ContentTranslationSource, error) {
+	return c.Query().Where(contenttranslationsource.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ContentTranslationSourceClient) GetX(ctx context.Context, id int64) *ContentTranslationSource {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ContentTranslationSourceClient) Hooks() []Hook {
+	return c.hooks.ContentTranslationSource
+}
+
+// Interceptors returns the client interceptors.
+func (c *ContentTranslationSourceClient) Interceptors() []Interceptor {
+	return c.inters.ContentTranslationSource
+}
+
+func (c *ContentTranslationSourceClient) mutate(ctx context.Context, m *ContentTranslationSourceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ContentTranslationSourceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ContentTranslationSourceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ContentTranslationSourceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ContentTranslationSourceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ContentTranslationSource mutation op: %q", m.Op())
 	}
 }
 
@@ -7627,8 +7911,9 @@ type (
 	hooks struct {
 		APIKey, Account, AccountGroup, AdminApprovalRequest, Announcement,
 		AnnouncementRead, AuthIdentity, AuthIdentityChannel, BatchImageEvent,
-		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
-		Group, GroupStatusAstraCheckRun, GroupStatusAstraCheckState, GroupStatusConfig,
+		BatchImageItem, BatchImageJob, CompositeModelRoute, ContentTranslation,
+		ContentTranslationSource, ErrorPassthroughRule, Group,
+		GroupStatusAstraCheckRun, GroupStatusAstraCheckState, GroupStatusConfig,
 		GroupStatusEvent, GroupStatusJuiceRecord, GroupStatusModelTraceRun,
 		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
 		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
@@ -7640,8 +7925,9 @@ type (
 	inters struct {
 		APIKey, Account, AccountGroup, AdminApprovalRequest, Announcement,
 		AnnouncementRead, AuthIdentity, AuthIdentityChannel, BatchImageEvent,
-		BatchImageItem, BatchImageJob, CompositeModelRoute, ErrorPassthroughRule,
-		Group, GroupStatusAstraCheckRun, GroupStatusAstraCheckState, GroupStatusConfig,
+		BatchImageItem, BatchImageJob, CompositeModelRoute, ContentTranslation,
+		ContentTranslationSource, ErrorPassthroughRule, Group,
+		GroupStatusAstraCheckRun, GroupStatusAstraCheckState, GroupStatusConfig,
 		GroupStatusEvent, GroupStatusJuiceRecord, GroupStatusModelTraceRun,
 		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
 		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,

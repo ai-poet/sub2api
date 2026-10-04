@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { ORDER_STATUS } from '@/lib/constants';
 import { resolveLocale } from '@/lib/locale';
 import { getPromotionUsageStats } from '@/lib/promotion/service';
+import { schedulePayTranslationSync } from '@/lib/sub2api/content-translations';
 import {
   promotionCreateSchema,
   promotionPatchSchema,
@@ -40,6 +41,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       data: toPromotionData(merged.data),
     });
+    schedulePayTranslationSync();
     const stats = await getPromotionUsageStats([id]);
     return NextResponse.json(serializePromotion(promotion, stats.get(id)));
   } catch (error) {
@@ -82,6 +84,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     await prisma.rechargePromotion.delete({ where: { id } });
+    schedulePayTranslationSync();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to delete recharge promotion:', error);
