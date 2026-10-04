@@ -1,6 +1,10 @@
 <template>
   <!-- 内容自动翻译（fork 本地功能）：独立加载 / 保存，不属于 SettingsView 的大表单 -->
-  <div class="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-600" data-test="content-translation-card">
+  <div
+    ref="rootEl"
+    class="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-600"
+    data-test="content-translation-card"
+  >
     <div class="flex items-center justify-between gap-4">
       <div>
         <label class="font-medium text-gray-900 dark:text-white">
@@ -10,7 +14,13 @@
           {{ t('admin.settings.site.contentTranslation.description') }}
         </p>
       </div>
-      <Toggle v-model="form.enabled" data-test="content-translation-enabled" />
+      <!-- 开关一改就保存：页面上其它开关都随底部「保存设置」提交，这张卡片不在那张表单里，
+           让人先点开关再点底部保存就会白点一次 -->
+      <Toggle
+        :model-value="form.enabled"
+        data-test="content-translation-enabled"
+        @update:model-value="toggleEnabled"
+      />
     </div>
 
     <p v-if="loadFailed" class="text-sm text-red-600 dark:text-red-400" data-test="content-translation-load-failed">
@@ -100,6 +110,17 @@
     >
       <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
         <template v-if="status">
+          <span
+            :class="status.enabled ? 'font-medium text-green-700 dark:text-green-400' : 'font-medium text-amber-600 dark:text-amber-400'"
+            data-test="content-translation-status-enabled"
+          >
+            {{
+              status.enabled
+                ? t('admin.settings.site.contentTranslation.status.enabled')
+                : t('admin.settings.site.contentTranslation.status.disabled')
+            }}
+          </span>
+          <span>·</span>
           <span>
             {{
               t('admin.settings.site.contentTranslation.status.summary', {
@@ -155,7 +176,14 @@
       <p class="mt-1 whitespace-pre-wrap break-words">{{ testResult.translated }}</p>
     </div>
 
-    <div class="flex flex-wrap justify-end gap-2">
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      <span
+        v-if="dirty"
+        class="mr-auto text-xs text-amber-600 dark:text-amber-400"
+        data-test="content-translation-unsaved"
+      >
+        {{ t('admin.settings.site.contentTranslation.unsaved') }}
+      </span>
       <button type="button" class="btn btn-secondary btn-sm" data-test="content-translation-manage" @click="dialogOpen = true">
         {{ t('admin.settings.site.contentTranslation.manage') }}
       </button>
@@ -225,6 +253,12 @@ import { maskApiKey } from '@/utils/maskApiKey'
 
 // 内容自动翻译（fork 本地功能）的管理卡片。契约见 docs/CONTENT_TRANSLATION.md。
 // 管理员 Key 只按 id 引用：这里列出管理员自己的 Key（名称 + 掩码），保存的是 id。
+//
+// 保存方式有三条，都落到同一个 save()：
+//   1. 开关一改就保存（失败则弹回）；
+//   2. 右下角「保存翻译设置」；
+//   3. 这张卡片挂在 SettingsView 的 <form> 里，页面底部「保存设置」提交那张表单时，有未保存改动也一并保存。
+// 这样不管用户按哪种习惯操作，刷新后看到的都是真正生效的配置。
 
 const LANGUAGES: ContentTranslationLang[] = ['zh', 'en', 'ja']
 const KEYS_PAGE_SIZE = 100
@@ -233,6 +267,8 @@ const STATUS_POLL_MS = 5000
 
 const { t } = useI18n()
 const appStore = useAppStore()
+
+const rootEl = ref<HTMLElement | null>(null)
 
 const form = reactive<ContentTranslationConfigInput>({
   enabled: false,
@@ -243,6 +279,8 @@ const form = reactive<ContentTranslationConfigInput>({
 })
 /** GET 返回的所选 Key 名称：Key 不在列表里（已停用 / 删除）时用于兜底显示 */
 const savedKeyName = ref('')
+/** 最近一次从服务端拿到的配置（序列化后），用来判断表单有没有未保存的改动 */
+const savedSnapshot = ref('')
 
 const keys = ref<ApiKey[]>([])
 const status = ref<ContentTranslationStatus | null>(null)
@@ -260,6 +298,7 @@ const dialogOpen = ref(false)
 
 let statusTimer: ReturnType<typeof setTimeout> | null = null
 let disposed = false
+let hostForm: HTMLFormElement | null = null
 
 const keyOptions = computed(() => {
   const options = keys.value.map((key) => {
@@ -280,6 +319,8 @@ const keyOptions = computed(() => {
   return options
 })
 
+const dirty = computed(() => savedSnapshot.value !== '' && JSON.stringify(payload()) !== savedSnapshot.value)
+
 function applyConfig(config: ContentTranslationConfig) {
   form.enabled = Boolean(config.enabled)
   form.api_key_id = typeof config.api_key_id === 'number' ? config.api_key_id : null
@@ -289,6 +330,7 @@ function applyConfig(config: ContentTranslationConfig) {
     ? LANGUAGES.filter((lang) => config.languages.includes(lang))
     : [...LANGUAGES]
   savedKeyName.value = config.api_key_name || ''
+  savedSnapshot.value = JSON.stringify(payload())
 }
 
 function payload(): ContentTranslationConfigInput {
@@ -377,18 +419,38 @@ async function loadStatus() {
   scheduleStatusPoll()
 }
 
-async function save() {
-  if (saving.value) return
-  if (!validate(form.enabled)) return
+/** 保存当前表单；返回是否成功。 */
+async function save(): Promise<boolean> {
+  if (saving.value) return false
+  if (!validate(form.enabled)) return false
   saving.value = true
   try {
     applyConfig(await contentTranslationsAPI.updateConfig(payload()))
     appStore.showSuccess(t('admin.settings.site.contentTranslation.saved'))
     void loadStatus()
+    return true
   } catch (err) {
     appStore.showError(extractApiErrorMessage(err, t('admin.settings.site.contentTranslation.saveFailed')))
+    return false
   } finally {
     saving.value = false
+  }
+}
+
+/** 开关一改就保存；校验不过或保存失败时弹回原状态 */
+async function toggleEnabled(value: boolean) {
+  const previous = form.enabled
+  if (loading.value || saving.value) return
+  form.enabled = value
+  if (!(await save())) {
+    form.enabled = previous
+  }
+}
+
+/** 页面底部「保存设置」提交外层表单时，顺带保存这里未保存的改动 */
+function onHostFormSubmit() {
+  if (dirty.value && !saving.value) {
+    void save()
   }
 }
 
@@ -412,7 +474,12 @@ async function syncNow() {
   try {
     status.value = await contentTranslationsAPI.sync()
     statusLoadFailed.value = false
-    appStore.showSuccess(t('admin.settings.site.contentTranslation.syncStarted'))
+    if (status.value && status.value.enabled === false) {
+      // 服务端的配置是关闭的：扫描只会收集文案，不会翻译。多半是开关没保存成功。
+      appStore.showError(t('admin.settings.site.contentTranslation.syncDisabled'))
+    } else {
+      appStore.showSuccess(t('admin.settings.site.contentTranslation.syncStarted'))
+    }
     // 扫描是异步的：返回时可能还没标记 running，稍后再看一次
     clearStatusTimer()
     if (!disposed) {
@@ -429,6 +496,8 @@ async function syncNow() {
 }
 
 onMounted(() => {
+  hostForm = rootEl.value?.closest('form') ?? null
+  hostForm?.addEventListener('submit', onHostFormSubmit)
   void loadConfig()
   void loadKeys()
   void loadStatus()
@@ -437,5 +506,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   disposed = true
   clearStatusTimer()
+  hostForm?.removeEventListener('submit', onHostFormSubmit)
+  hostForm = null
 })
 </script>

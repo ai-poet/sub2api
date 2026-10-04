@@ -10,7 +10,8 @@ import type {
 // 组件在渲染时调 translate()（经 composables/useContentTranslation.ts 的 tx()）：命中缓存返回译文，
 // 否则返回原文并把文本排进查询队列。队列 50 ms 防抖后按 ≤200 条分批查询公开接口；接口说
 // pending 时隔 10 秒把仍没有译文的文本再查一次，最多 3 次。查过但没有译文的文本记下来，
-// 不会每次渲染都重查。译文到达时 version +1，读过它的渲染 / computed 随之刷新。
+// 5 分钟内不再重查（管理员刚开启翻译或刚翻好时，页面不用刷新也能在几分钟内换上译文）。
+// 译文到达时 version +1，读过它的渲染 / computed 随之刷新。
 //
 // 绝不要把 translate() 的结果写回数据对象，也不要拿它去做搜索、过滤、路由或 revision 计算。
 //
@@ -22,6 +23,8 @@ import type {
 export const CONTENT_TRANSLATION_DEBOUNCE_MS = 50
 export const CONTENT_TRANSLATION_PENDING_RETRY_MS = 10_000
 export const CONTENT_TRANSLATION_PENDING_MAX_RETRIES = 3
+/** 查过但没有译文的文本，过这么久后允许下一次渲染再查一次 */
+export const CONTENT_TRANSLATION_MISSING_COOLDOWN_MS = 5 * 60_000
 /** 单次查询最多 200 条（后端同一上限） */
 export const CONTENT_TRANSLATION_LOOKUP_MAX_TEXTS = 200
 /** 单条超过 20 000 字符后端直接忽略 */
@@ -198,12 +201,21 @@ export const useContentTranslationsStore = defineStore('contentTranslations', ()
       }
     }
     if (changed) version.value++
+    if (missing.length === 0) return
 
-    if (response?.pending === true && missing.length > 0 && attempt < CONTENT_TRANSLATION_PENDING_MAX_RETRIES) {
+    if (response?.pending === true && attempt < CONTENT_TRANSLATION_PENDING_MAX_RETRIES) {
       setTimeout(() => {
         void lookup(lang, missing, attempt + 1)
       }, CONTENT_TRANSLATION_PENDING_RETRY_MS)
+      return
     }
+
+    // 没有译文（功能未开、还没翻好、或本来就不翻）：冷却后放开，下次渲染到它时再问一次。
+    // 否则管理员开启翻译后，已经打开的页面要刷新才能看到译文。
+    setTimeout(() => {
+      const seen = requested.get(lang)
+      for (const text of missing) seen?.delete(text)
+    }, CONTENT_TRANSLATION_MISSING_COOLDOWN_MS)
   }
 
   return {

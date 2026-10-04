@@ -750,7 +750,7 @@ export default {
         },
         "contentTranslation": {
           "title": "Content auto-translation",
-          "description": "Uses one of your own API keys and a cheap model to translate admin-written copy (group names and descriptions, announcements, site subtitle, contact info, channel descriptions, custom menus and endpoints, login agreements, payment plans) into the selected languages, cached permanently. Only the text users see is replaced; API responses and routing stay unchanged, and the admin console always shows the original. This card saves on its own, not with the Save button at the bottom of the page.",
+          "description": "Uses one of your own API keys and a cheap model to translate admin-written copy (group names and descriptions, announcements, site subtitle, contact info, channel descriptions, custom menus and endpoints, login agreements, payment plans) into the selected languages, cached permanently. Only the text users see is replaced; API responses and routing stay unchanged, and the admin console always shows the original. The switch saves as soon as you flip it; the other fields save with “Save translation settings” or the Save button at the bottom of the page.",
           "enabled": "Enable auto-translation",
           "apiKey": "API key to call with",
           "apiKeyPlaceholder": "Choose one of your own API keys",
@@ -786,9 +786,13 @@ export default {
           "syncing": "Syncing...",
           "syncStarted": "Scan started; the status refreshes automatically",
           "syncFailed": "Failed to start a sync",
+          "syncDisabled": "Auto-translation is still disabled on the server, so this scan only collected the sources and translated nothing. Turn on the switch above (it saves at once), then sync again.",
+          "unsaved": "Unsaved changes: click “Save translation settings” on the right or Save at the bottom of the page",
           "manage": "Manage translations",
           "refreshStatus": "Refresh status",
           "status": {
+            "enabled": "Enabled",
+            "disabled": "Disabled",
             "summary": "{sources} sources · {translated} translations · {pending} pending",
             "running": "Translating…",
             "lastRun": "Last run: {time}",

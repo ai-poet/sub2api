@@ -12,6 +12,7 @@ vi.mock('@/api/contentTranslations', () => ({
 
 import {
   CONTENT_TRANSLATION_DEBOUNCE_MS,
+  CONTENT_TRANSLATION_MISSING_COOLDOWN_MS,
   CONTENT_TRANSLATION_PENDING_RETRY_MS,
   normalizeContentLang,
   shouldSkipContentTranslation,
@@ -156,6 +157,27 @@ describe('content translations store (fork)', () => {
     expect(store.translate('没有译文')).toBe('没有译文')
     await advance(CONTENT_TRANSLATION_PENDING_RETRY_MS * 4)
     expect(state.lookup).toHaveBeenCalledTimes(1)
+  })
+
+  it('asks again about texts without a translation once the cooldown has passed', async () => {
+    // 第一次问时服务端还没启用翻译；管理员稍后开启并翻好，页面不刷新也应该换上译文
+    state.lookup.mockImplementation(respond())
+    const store = useContentTranslationsStore()
+
+    store.translate('分组描述')
+    await advance(CONTENT_TRANSLATION_DEBOUNCE_MS)
+    expect(state.lookup).toHaveBeenCalledTimes(1)
+
+    state.lookup.mockImplementation(respond({ 分组描述: 'Group description' }))
+    await advance(CONTENT_TRANSLATION_MISSING_COOLDOWN_MS - CONTENT_TRANSLATION_DEBOUNCE_MS * 2)
+    expect(store.translate('分组描述')).toBe('分组描述')
+    expect(state.lookup).toHaveBeenCalledTimes(1)
+
+    await advance(CONTENT_TRANSLATION_DEBOUNCE_MS * 2)
+    expect(store.translate('分组描述')).toBe('分组描述')
+    await advance(CONTENT_TRANSLATION_DEBOUNCE_MS)
+    expect(state.lookup).toHaveBeenCalledTimes(2)
+    expect(store.translate('分组描述')).toBe('Group description')
   })
 
   it('re-looks up still-missing texts after 10 s while pending, at most 3 times', async () => {
