@@ -25,6 +25,9 @@
   --cw-inverse: #202227;
   --cw-on-inverse: #f8f8f9;
   --cw-mark: #34363b;
+  --cw-warning: #a66b20;
+  /* 子智能体类型 explore 的颜色：客户端按类型名哈希取色相（subagent_row.rs），explore 落在 185° */
+  --cw-kind-explore: hsl(185 62% 40%);
 
   font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   color: var(--cw-text);
@@ -55,6 +58,8 @@
   --cw-inverse: #e7e9ec;
   --cw-on-inverse: #17181c;
   --cw-mark: #f3f3f3;
+  --cw-warning: #e0b36a;
+  --cw-kind-explore: hsl(185 62% 72%);
 }
 
 /* 客户端里 26px 的图标按钮和按钮条上的小按钮。
@@ -126,6 +131,81 @@
   color: var(--cw-text-tertiary);
 }
 
+/* 卡片和面板上的主按钮（反色）与次按钮（描边），同客户端 permission_card.rs */
+:where(.client-window .cw-primary-button) {
+  display: inline-flex;
+  height: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 0 12px 0 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--cw-inverse);
+  color: var(--cw-on-inverse);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+:where(.client-window .cw-primary-button.no-key) {
+  padding: 0 12px;
+}
+
+:where(.client-window .cw-secondary-button) {
+  display: inline-flex;
+  height: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  border: 1px solid var(--cw-border-strong);
+  padding: 0 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--cw-text-secondary);
+}
+
+/* 按钮前的数字键提示 */
+:where(.client-window .cw-key) {
+  display: inline-flex;
+  height: 16px;
+  width: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--cw-overlay-strong);
+}
+
+:where(.client-window .cw-primary-button .cw-key) {
+  background: color-mix(in srgb, var(--cw-on-inverse) 16%, transparent);
+}
+
+/* 用户消息气泡 */
+:where(.client-window .cw-bubble) {
+  background: var(--cw-raised);
+  color: var(--cw-text);
+}
+
+/* 输入框里的光标 */
+:where(.client-window .cw-caret) {
+  display: inline-block;
+  width: 1px;
+  height: 16px;
+  margin-left: 1px;
+  vertical-align: -3px;
+  background: var(--cw-accent);
+}
+
+/* 演示里「按下去」的那一下 */
+:where(.client-window .is-pressed) {
+  transform: scale(0.96);
+  opacity: 0.8;
+}
+
 /* 进行中的动词带一道流光，和客户端的 shimmer 一样 */
 :where(.client-window .cw-shimmer) {
   background: linear-gradient(
@@ -150,6 +230,34 @@
   :where(.client-window .cw-spin) {
     animation: cw-spin 1s linear infinite;
   }
+
+  :where(.client-window .cw-caret) {
+    animation: cw-blink 1s steps(1) infinite;
+  }
+
+  :where(.client-window .cw-pulse) {
+    animation: cw-pulse 1.4s ease-in-out infinite;
+  }
+
+  /* 新出现的对话行、刚完成的块从下方落定 */
+  :where(.client-window .cw-row-in) {
+    animation: cw-settle-in 0.3s ease-out;
+  }
+
+  :where(.client-window .cw-settle) {
+    animation: cw-settle-in 0.35s ease-out;
+  }
+}
+
+@keyframes cw-settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes cw-shimmer {
@@ -164,5 +272,23 @@
 @keyframes cw-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes cw-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes cw-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.75);
   }
 }

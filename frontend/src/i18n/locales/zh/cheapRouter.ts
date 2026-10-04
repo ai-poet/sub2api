@@ -26,7 +26,7 @@ export default {
         "client": {
           "label": "Agent 桌面客户端",
           "title": "所有 Agent，一个工作区，API 全接入。",
-          "subtitle": "内置 Agent 免装 Node 和 CLI，Claude Code、Codex 等 Agent 都在一个窗口里跑，还能 AI 绘图。"
+          "subtitle": "下载即用，不装 Node、不配 CLI。Rust 原生，轻巧却不简陋：计划审阅、并行子智能体、智能体团队和画图都在，Claude Code、Codex 也能一起跑。"
         },
         "api": {
           "label": "保质量 AI 中转站",
@@ -51,7 +51,7 @@ export default {
         "client": {
           "titleLead": "Agent 干活需要一套系统，",
           "titleTail": "而不是一堆配置文件。",
-          "subtitle": "登录一次，Claude Code、Codex、Grok 就都接好了；余额、线路和用量都在同一个窗口里。"
+          "subtitle": "登录一次，Claude Code、Codex 等就接好了，已在用自己账号的会先问你；计划、团队、余额和用量都在同一个窗口里。"
         },
         "api": {
           "titleLead": "模型有质检，",
@@ -73,15 +73,15 @@ export default {
           },
           "builtinAgent": {
             "title": "内置 Agent",
-            "body": "装好客户端就能用，不装 Node、不装 CLI，Claude、GPT、Grok、DeepSeek、GLM、Kimi 等模型随手切"
+            "body": "装好就能用，不装 Node 和 CLI。看得懂图、能直接画图，Windows 上能操控内置浏览器跑测试，子智能体并行干活"
+          },
+          "agentTeams": {
+            "title": "智能体团队 · 计划审阅",
+            "body": "/agent-teams 一句话组队，成员各用各的模型，每个任务过检查才算完成；计划完整显示、逐版对比，批准后才动手"
           },
           "allAgents": {
             "title": "所有 Agent 一个窗口",
-            "body": "Claude Code、Codex、Grok、OpenCode、Pi 登录即自动接好，Amp、Cursor、Kimi Code 等也能在这里跑"
-          },
-          "images": {
-            "title": "AI 绘图",
-            "body": "一句话出图，或拖入图片直接改，出图前先报价，作品自动归档到图库"
+            "body": "Claude Code、Codex、Grok、OpenCode、Pi 登录即接好；已在用自己账号或中转的会先问你，选保留就原样不动。Amp、Cursor、Kimi Code 等也能在这里跑"
           },
           "compatible": {
             "title": "原生协议兼容",
@@ -105,7 +105,7 @@ export default {
         "overline": "多模型 · 一处切换",
         "titleLead": "不止一个模型。",
         "titleTail": "每一步都用对的那个。",
-        "clientSubtitle": "内置 Agent、Claude Code、Codex、Grok 在同一个客户端里随手切换，项目、文件和上下文都留在原地。",
+        "clientSubtitle": "内置 Agent、Claude Code、Codex、Grok 在同一个客户端里随手切换，每个模型附一句用途说明，自己的接口也单独成栏；项目、文件和上下文都留在原地。",
         "apiSubtitle": "Claude、GPT、Grok 和 DeepSeek、GLM、Kimi 等国产模型共用一个 Key 和一份余额，换模型只改一个参数。",
         "cta": "查看模型价格"
       },
@@ -198,13 +198,24 @@ export default {
       }
     },
     "clientWorkflow": {
-      "ariaLabel": "{siteName} 桌面客户端演示：内置 Agent 执行编码任务，在模型选择器里切换各家 Agent，再到画图页生成一张图",
+      "ariaLabel": "{siteName} 桌面客户端演示，分三段：内置 Agent 先交计划，批准后派两个子智能体并行查找再改代码；用 /agent-teams 组建三人团队，任务按依赖逐个完成并通过检查；最后在画图页生成一张图",
+      "chapters": {
+        "label": "演示章节",
+        "plan": "计划 → 执行",
+        "team": "智能体团队",
+        "image": "画图",
+        "pause": "暂停演示",
+        "play": "继续播放"
+      },
       "sidebar": {
         "newTask": "新建任务",
         "search": "搜索",
         "images": "画图",
+        "modelStatus": "模型运行状态",
         "today": "今天",
         "taskTitle": "登录后跳回原页面",
+        "teamTaskTitle": "拆分设置页",
+        "teamTime": "1 小时前",
         "working": "工作中 · {seconds} 秒",
         "justNow": "刚刚",
         "olderTask": "给首页加客户端下载按钮",
@@ -215,8 +226,11 @@ export default {
         "prompt": "登录成功后跳回原来的页面，别总是回首页",
         "explored": "查阅 · 1 搜索，2 文件",
         "thought": "思考 · 持续了 3 秒",
+        "handedOver": "提交了计划",
+        "subagent": "子智能体",
+        "subagentFind": "找出所有跳转登录页的入口",
+        "subagentGuard": "检查路由守卫里的跳转逻辑",
         "edited": "已编辑",
-        "ran": "已执行",
         "running": "正在执行",
         "working": "工作中 · {seconds} 秒",
         "workedFor": "已工作 {seconds} 秒",
@@ -225,11 +239,21 @@ export default {
         "review": "审阅",
         "undo": "撤销"
       },
+      "status": {
+        "tokens": "{count} tokens",
+        "thinking": "思考中…",
+        "writing": "输出中…",
+        "runningTool": "运行工具中…",
+        "runningTools": "运行 {count} 个工具中…",
+        "waitingForModel": "等待模型…",
+        "waitingForYou": "等待你的操作"
+      },
       "composer": {
         "placeholder": "做什么都可以…",
         "effort": "高",
         "access": "完全访问",
-        "build": "构建"
+        "build": "构建",
+        "plan": "计划"
       },
       "footer": {
         "project": "amadeus-web",
@@ -237,14 +261,80 @@ export default {
       },
       "picker": {
         "search": "搜索模型…",
-        "builtinAgent": "内置 Agent"
+        "builtinAgent": "内置 Agent",
+        "vendorZhipu": "智谱 GLM",
+        "ownEndpoint": "我的中转",
+        "descriptions": {
+          "claudeSonnet": "速度与能力均衡，适合日常智能体编程。",
+          "claudeOpus": "大型混合推理模型，面向复杂编程与智能体。",
+          "claudeFable": "Anthropic 前沿模型线，面向最难的编程与知识工作。"
+        }
+      },
+      "plan": {
+        "surface": "计划",
+        "readyTitle": "规划完成",
+        "cardHint": "完整计划在右侧面板，可以在那里写修改意见。",
+        "viewInPanel": "查看计划",
+        "approve": "批准并执行",
+        "keepPlanning": "继续规划",
+        "keepPlanningWithNotes": "按说明继续规划",
+        "statusPending": "等待审批",
+        "statusApproved": "已批准",
+        "quote": "引用选中内容",
+        "quoteHint": "选中计划中的文字并引用，再在下方写修改意见。",
+        "notesPlaceholder": "写下修改意见。Enter 退回继续规划，Shift+Enter 换行。",
+        "title": "登录后跳回原页面",
+        "step1": "进登录页前，把当前地址写进 redirect 参数",
+        "step2": "登录成功后校验 redirect，只接受站内路径",
+        "step3": "没有 redirect 时仍进控制台",
+        "step4": "给路由守卫补一条单元测试"
+      },
+      "team": {
+        "surface": "团队",
+        "name": "设置页拆分",
+        "command": "把设置页拆成独立模块，补齐测试",
+        "draftReply": "团队计划拟好了：3 名成员、4 个任务，在右侧团队面板确认后启动。",
+        "doneReply": "4 个任务都完成了，每个都通过了检查；T2 第一轮没过，返工后通过。",
+        "phaseReview": "待审批",
+        "phaseRunning": "运行中",
+        "phaseDone": "已完成",
+        "stats": "{members} 名成员中 {working} 名在工作 · 任务完成 {done}/{tasks} · {messages} 条消息",
+        "approve": "确认并启动",
+        "revise": "返回对话修改",
+        "discard": "放弃计划",
+        "stop": "停止团队",
+        "members": "成员",
+        "tasks": "任务",
+        "memberWorking": "工作中",
+        "memberIdle": "空闲",
+        "memberWaiting": "未启动",
+        "memberTasks": "任务 {done}/{total}",
+        "memberCurrent": "正在处理 {task}",
+        "taskBlocked": "被阻塞",
+        "taskOpen": "就绪",
+        "taskRunning": "进行中",
+        "taskCompleted": "已完成",
+        "taskRound": "第 {round} 轮",
+        "effortHigh": "高",
+        "effortMedium": "中",
+        "memberNames": {
+          "architect": "架构",
+          "builder": "实现",
+          "tester": "测试"
+        },
+        "taskSubjects": {
+          "t1": "抽出设置模块",
+          "t2": "迁移表单组件",
+          "t3": "补齐单元测试",
+          "t4": "更新路由"
+        }
       },
       "image": {
         "title": "画图",
         "pictureCount": "共 {count} 张",
         "openFolder": "打开文件夹",
         "placeholder": "描述你想要的画面，或拖入、粘贴图片来改图…",
-        "prompt": "霓虹灯下敲代码的橘猫，赛博朋克风",
+        "prompt": "趴在键盘上的橘猫，暖色调",
         "addImages": "添加图片",
         "group": "分组：自动",
         "quality": "质量：高",
@@ -257,7 +347,7 @@ export default {
         "gallery": {
           "sunset": "海边日落，胶片质感",
           "mountain": "雪山下的星空营地",
-          "city": "雨夜霓虹街道，赛博朋克"
+          "city": "雨夜的霓虹街道"
         }
       }
     },
@@ -276,7 +366,8 @@ export default {
         "pricing": {
           "feature": "官方账号 + 手工配置",
           "official": "每个工具一个账号，多套配置、多份账单，需要自己手动维护本地设置",
-          "us": "一个账户开通后，自动配置好两套工具，余额跨工具共用"
+          "us": "一个账户、一个 Key，Claude Code、Codex 等工具只改 Base URL 即可接入，余额跨工具共用",
+          "usClient": "一个账户开通后，登录即配置好 Claude Code、Codex 等工具；已在用自己账号的可以选择保留，余额跨工具共用"
         },
         "models": {
           "feature": "本地切换脚本",
@@ -286,7 +377,8 @@ export default {
         "stability": {
           "feature": "工作流",
           "official": "Cursor、Windsurf 等云端 IDE 需要你把代码上传到它们的服务器",
-          "us": "比 Cursor、Windsurf 更尊重你本地的 Claude Code 和 Codex 工作流，MCP、Skill 和 Workflow 无需额外配置"
+          "us": "代码留在本地，Claude Code 和 Codex 照常使用你的 MCP 和 Skill，无需额外配置",
+          "usClient": "代码留在本地，Claude Code 和 Codex 照常使用 MCP 和 Skill；内置 Agent 还能用 /agent-teams 组建团队，每个任务过检查才算完成"
         }
       }
     },

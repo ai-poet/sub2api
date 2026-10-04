@@ -167,6 +167,47 @@ export const CLIENT_ICONS = {
     stroke: 2,
     body: '<rect x="5" y="5" width="14" height="14" rx="1"/>',
   },
+  // 计划 / 团队 / 子智能体 / 模型运行状态用到的图标
+  list: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>',
+  },
+  users: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87m-3-12a4 4 0 0 1 0 7.75"/>',
+  },
+  bot: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+  },
+  check: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<path d="M20 6 9 17l-5-5"/>',
+  },
+  lock: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  },
+  queue: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<path d="M4 4h16"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/><polyline points="15 10 20 15 15 20"/>',
+  },
+  server: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/>',
+  },
+  chevronLeft: {
+    viewBox: '0 0 24 24',
+    stroke: 2,
+    body: '<path d="m15 18-6-6 6-6"/>',
+  },
   // 以下是 PlatformIcon 里没有的 Agent 标志
   providerWaku: {
     viewBox: '0 0 24 24',

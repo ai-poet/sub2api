@@ -51,8 +51,11 @@ import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(defineProps<{
   siteName: string
+  /** 有客户端时，开通和工作流两行讲客户端的做法；没有时只讲 API 接入 */
+  mode?: 'client' | 'api'
 }>(), {
   siteName: 'CheapRouter',
+  mode: 'api',
 })
 
 const { t } = useI18n()
@@ -61,7 +64,7 @@ const rows = computed(() => [
   {
     feature: t('home.comparison.items.pricing.feature'),
     official: t('home.comparison.items.pricing.official'),
-    us: t('home.comparison.items.pricing.us'),
+    us: props.mode === 'client' ? t('home.comparison.items.pricing.usClient') : t('home.comparison.items.pricing.us'),
   },
   {
     feature: t('home.comparison.items.models.feature'),
@@ -71,7 +74,7 @@ const rows = computed(() => [
   {
     feature: t('home.comparison.items.stability.feature'),
     official: t('home.comparison.items.stability.official'),
-    us: t('home.comparison.items.stability.us'),
+    us: props.mode === 'client' ? t('home.comparison.items.stability.usClient') : t('home.comparison.items.stability.us'),
   },
 ])
 </script>

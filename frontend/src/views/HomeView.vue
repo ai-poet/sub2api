@@ -51,7 +51,7 @@
       </HomeReveal>
 
       <HomeReveal class="px-4 py-16 md:px-6 md:py-24">
-        <HomeComparisonSection :site-name="siteName" />
+        <HomeComparisonSection :site-name="siteName" :mode="homeMode" />
       </HomeReveal>
 
       <HomeClosingCta

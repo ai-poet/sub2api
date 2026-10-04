@@ -1,7 +1,7 @@
 <template>
-  <!-- 客户端输入框上方的模型选择器：左栏是各家 Agent，右边是当前 Agent 的模型 -->
+  <!-- 客户端输入框上方的模型选择器：左栏是各家 Agent，内置 Agent 按厂商分栏，每个模型带一句用途说明 -->
   <div
-    class="absolute bottom-full left-0 z-20 mb-2 h-[300px] w-full max-w-[560px] origin-bottom-left transition-all duration-200 ease-out sm:h-[360px]"
+    class="absolute bottom-full left-0 z-20 mb-2 h-[300px] w-full max-w-[560px] origin-bottom-left transition-all duration-200 ease-out motion-reduce:transition-none sm:h-[340px]"
     :class="open ? 'scale-100 opacity-100' : 'pointer-events-none scale-[0.97] opacity-0'"
     data-test="preview-model-picker"
   >
@@ -16,7 +16,7 @@
           v-for="(agent, index) in agents"
           :key="agent.id"
           class="cw-rail-item"
-          :class="index === activeIndex ? 'is-active' : ''"
+          :class="index === 0 ? 'is-active' : ''"
           :title="agent.name"
           :style="{ color: agent.color }"
           data-test="preview-agent-rail-item"
@@ -33,33 +33,36 @@
         </div>
 
         <div class="flex min-h-0 flex-1 gap-1 px-1.5 pb-1.5">
-          <!-- 只有内置 Agent 有厂商列 -->
-          <ul v-if="activeAgent.id === 'builtin'" class="hidden w-[124px] shrink-0 flex-col gap-px sm:flex">
+          <!-- 厂商栏，末尾是自己添加的接口 -->
+          <ul class="hidden w-[124px] shrink-0 flex-col gap-px sm:flex">
             <li
-              v-for="vendor in VENDORS"
+              v-for="vendor in vendors"
               :key="vendor.name"
-              class="flex h-8 items-center gap-2 rounded-[7px] px-2 text-[12.5px]"
+              class="flex h-8 shrink-0 items-center gap-2 rounded-[7px] px-2 text-[12.5px]"
               :class="vendor.selected
                 ? 'bg-[color:var(--cw-overlay-strong)] text-[color:var(--cw-text)]'
                 : 'text-[color:var(--cw-text-secondary)]'"
             >
-              <PlatformIcon :platform="vendor.platform" size="sm" />
+              <PlatformIcon v-if="vendor.platform" :platform="vendor.platform" size="sm" />
+              <ClientIcon v-else name="server" class="h-3.5 w-3.5 text-[color:var(--cw-text-tertiary)]" />
               <span class="truncate">{{ vendor.name }}</span>
             </li>
           </ul>
 
           <ul class="flex min-w-0 flex-1 flex-col gap-px">
             <li
-              v-for="(model, index) in activeModels.models"
-              :key="model"
-              class="flex h-[52px] items-center gap-2 rounded-[9px] px-3"
-              :class="activeAgent.id === 'builtin' && index === 0 ? 'bg-[color:var(--cw-overlay-strong)]' : ''"
+              v-for="(model, index) in models"
+              :key="model.name"
+              class="flex h-[72px] shrink-0 items-center gap-2 rounded-[9px] px-3"
+              :class="index === 0 ? 'bg-[color:var(--cw-overlay-strong)]' : ''"
+              data-test="preview-picker-model"
             >
               <div class="min-w-0 flex-1">
-                <div class="truncate text-[13px] font-semibold text-[color:var(--cw-text)]">{{ model }}</div>
-                <div class="mt-0.5 flex items-center gap-1 truncate text-[12px] text-[color:var(--cw-text-tertiary)]">
-                  <PlatformIcon :platform="activeModels.vendor" size="xs" />
-                  <span class="truncate">{{ siteName }} · {{ activeModels.vendor }}</span>
+                <div class="truncate text-[13px] font-semibold text-[color:var(--cw-text)]">{{ model.name }}</div>
+                <div class="mt-[3px] truncate text-[12px] text-[color:var(--cw-text-secondary)]">{{ model.description }}</div>
+                <div class="mt-1 flex items-center gap-1.5 truncate text-[12px] text-[color:var(--cw-text-tertiary)]">
+                  <PlatformIcon platform="anthropic" size="xs" />
+                  <span class="truncate">{{ siteName }} · Anthropic</span>
                 </div>
               </div>
               <ClientIcon name="star" class="h-3.5 w-3.5 shrink-0 text-[color:var(--cw-text-ghost)]" />
@@ -79,10 +82,8 @@ import type { GroupPlatform } from '@/types'
 import ClientIcon from './ClientIcon.vue'
 import type { ClientIconName } from './icons'
 
-const props = defineProps<{
+defineProps<{
   open: boolean
-  /** 左栏停留的 Agent 下标 */
-  activeIndex: number
   siteName: string
 }>()
 
@@ -114,25 +115,24 @@ const agents = computed<AgentEntry[]>(() => [
   { id: 'pi', name: 'Pi', icon: 'providerPi', color: MARK },
 ])
 
-const VENDORS: Array<{ name: string; platform: GroupPlatform; selected?: boolean }> = [
-  { name: 'Anthropic', platform: 'anthropic' },
-  { name: 'OpenAI', platform: 'openai', selected: true },
+// 内置 Agent 的厂商栏（0.2.2 起按厂商分栏），末尾一栏是在「设置 → 模型接口」里加的自己的接口（0.2.8）
+const vendors = computed<Array<{ name: string; platform?: GroupPlatform; selected?: boolean }>>(() => [
+  { name: 'Anthropic', platform: 'anthropic', selected: true },
+  { name: 'OpenAI', platform: 'openai' },
   { name: 'Google', platform: 'gemini' },
   { name: 'xAI', platform: 'grok' },
   { name: 'DeepSeek', platform: 'deepseek' },
-  { name: '智谱 GLM', platform: 'zhipu' },
+  { name: t('home.clientWorkflow.picker.vendorZhipu'), platform: 'zhipu' },
   { name: 'Kimi', platform: 'kimi' },
-  { name: 'MiniMax', platform: 'minimax' },
-]
+  { name: t('home.clientWorkflow.picker.ownEndpoint') },
+])
 
-const MODELS: Record<string, { vendor: GroupPlatform; models: string[] }> = {
-  builtin: { vendor: 'openai', models: ['gpt-5.6-sol', 'gpt-5.5', 'gpt-5.4', 'gpt-5.3-codex'] },
-  claude: { vendor: 'anthropic', models: ['claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5'] },
-  codex: { vendor: 'openai', models: ['gpt-5.5', 'gpt-5.4', 'gpt-5.3-codex'] },
-}
-
-const activeAgent = computed(() => agents.value[props.activeIndex] ?? agents.value[0])
-const activeModels = computed(() => MODELS[activeAgent.value.id] ?? MODELS.builtin)
+// 模型名用网关目录里的显示名；说明文字同客户端 model_copy
+const models = computed(() => [
+  { name: 'Claude Sonnet 5.5', description: t('home.clientWorkflow.picker.descriptions.claudeSonnet') },
+  { name: 'Claude Opus 5.5', description: t('home.clientWorkflow.picker.descriptions.claudeOpus') },
+  { name: 'Claude Fable 5.1', description: t('home.clientWorkflow.picker.descriptions.claudeFable') },
+])
 </script>
 
 <style scoped>
@@ -153,7 +153,6 @@ const activeModels = computed(() => MODELS[activeAgent.value.id] ?? MODELS.built
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  transition: background-color 0.2s ease;
 }
 
 .cw-rail-item.is-active {

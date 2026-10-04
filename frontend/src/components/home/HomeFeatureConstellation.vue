@@ -100,8 +100,8 @@ const CARDS: Record<'client' | 'api', { left: Array<[string, IconName]>; right: 
     left: QUALITY_CARDS,
     right: [
       ['builtinAgent', 'bolt'],
+      ['agentTeams', 'users'],
       ['allAgents', 'link'],
-      ['images', 'sparkles'],
     ],
   },
   api: {

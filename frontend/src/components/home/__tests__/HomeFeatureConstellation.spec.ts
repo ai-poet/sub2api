@@ -32,7 +32,7 @@ describe('HomeFeatureConstellation', () => {
     expect(left.text()).toContain('home.landing.features.columns.quality')
     expect(right.text()).toContain('home.landing.features.columns.client')
     expect(cardKeys(left)).toEqual(['quality', 'probe', 'failover'])
-    expect(cardKeys(right)).toEqual(['builtinAgent', 'allAgents', 'images'])
+    expect(cardKeys(right)).toEqual(['builtinAgent', 'agentTeams', 'allAgents'])
   })
 
   it('keeps relay quality on the left and access on the right without a client', () => {

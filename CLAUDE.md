@@ -138,12 +138,18 @@ The features below are locally maintained customizations of this fork. During up
   (`core/src/lib.rs`, `core/src/bash_classifier.rs`,
   `tools/src/{lib,pty_bash}.rs` — without this the agent could not take
   notes, ask a question, or leave plan mode, and `ls -la | head` was
-  refused), and refusals that carry their reason
+  refused; the classifier parses quoting and redirections and judges each
+  simple command by its own rules — `cd`, `2>&1`, `>/dev/null`, `sed -n`,
+  `awk`, `xargs` over readers, git's listing forms — and in plan mode an
+  "always allow" rule no longer opens the shell or an editing tool,
+  `plan_mode_overrides_allow_rule`), and refusals that carry their reason
   (`tools/src/lib.rs::denial_message` plus the exported
   `PLAN_MODE_DENIAL_SUFFIX` / `KEEP_PLANNING_DENIAL` markers, which
   `waku-core`'s driver matches to say them in the user's language), leaving
   plan mode gated on the user seeing the plan (`tools/src/exit_plan_mode.rs`
-  declares `self_gates` and asks for permission itself, passing the summary),
+  declares `self_gates` and asks for permission itself, passing the plan:
+  the whole plan is its required `plan` parameter, as in Claude Code and
+  ZCode, and a call without one gets `MISSING_PLAN_ERROR` instead of a dialog),
   and a Responses `function_call`'s `arguments` read as the already-parsed
   object a normalizing gateway returns and not only as the string the API
   specifies (`api/src/providers/codex.rs::decode_tool_arguments` — the string
@@ -352,6 +358,52 @@ The features below are locally maintained customizations of this fork. During up
 
 - An "Images" (画图) row under Search in the desktop client's sidebar opens a page in the main column: one field where a prompt alone draws (`/v1/images/generations`) and a prompt plus dropped / pasted / picked pictures edits them (`/v1/images/edits`, multipart `image[]`). Model, group, size (priced from the catalog's `pricing_details.media_tiers`), quality and count sit under the field; pictures go to the user's Pictures folder (`Pictures/CheapRouter/YYYY-MM/`), and the gallery, its history and references live in `~/.cheaprouter/image-studio/`. Files: `client/src/app/image_studio.rs` (state, store, job driver), `client/src/app/image_studio_view.rs`, the shared request layer `client/crates/sub2api/src/images.rs` (also used by the agents' `generate_image` in `client/src/js_repl_image.rs`), `form_text` / `form_file` / `download_to` in `client/crates/sub2api/src/http.rs`, and the hook points listed in `client/docs/FORK.md`.
 - **No backend change.** A job submits to `/v1/images/*/async` and polls `/v1/images/tasks/:id`; when the gateway answers `async image tasks are not enabled` (no object storage configured) it streams the synchronous endpoint instead, one picture per call, relying on the gateway's ten-second SSE keep-alive to get past Cloudflare's first-byte timeout. OpenAI groups default to `allow_image_generation = false` while the model catalog still lists image models under them, so a job walks the candidate groups (`images::image_route_candidates`) past a `403 Image generation is not enabled for this group`, remembers refusals for a day, and records the group that drew in `Credentials::image_groups`; `refresh_model_routes` keeps that group's key and routes the model there, so `gateway_keys.models` sends the agents' image calls to the same group. Keep this feature on upstream merges.
+
+### 智能体团队 AgentTeams (Client agent teams, local implementation)
+
+- **What it is.** A built-in agent session becomes a team's captain:
+  - It drafts members and a task DAG, then waits for approval.
+  - A scheduler then hands each ready task to a member: a persistent sub-agent with its own route, conversation and permission scope.
+  - Members talk to the captain and to each other through mailboxes.
+  - Every task passes the full quality gates.
+- **Origin and licence.** Translated from dsh-agent-teams (`@nanmicoder/dsh-agent-teams` 0.1.22, MIT, licence in `client/NOTICE.md`). Design notes: `client/docs/agent-teams.md`.
+- **Scope.** Built-in agent only, and no wire protocol change.
+- **It replaced Settings → Workflow.** That page and `client/crates/workflow-engine` are deleted. Never let a merge bring them back.
+- **Files.**
+  - `client/crates/agent-teams/**`: pure logic, plus the synchronous runtime behind a `Host` trait.
+  - `client/crates/waku-agent-bridge/src/team/**` (`TeamHost`, `BridgeHost`, `MemberRuntime`, `TeamTool`).
+  - `client/crates/waku-agent-bridge/src/session_team.rs`, mounted in `session.rs` as `team_seam`.
+  - The hooks in the bridge's `session.rs`, `permission.rs` (`MemberScope`, `release_where` / `release_member`), `subagent.rs` and `lib.rs`.
+  - `member_feeds` and the member permission title in `client/crates/waku-core/src/driver/native.rs`; the `/agent-teams` entries in `composer_complete.rs`.
+  - App: `client/src/app/team_panel.rs` (the right-panel Team surface), `client/src/app/agent_teams_settings.rs` (Settings → Agent → Teams), the `RightPanelSurface::Team` arms in `right_panel.rs` / `surface_bar.rs`, the member-permission retains in `streaming.rs` / `runtime.rs` / `sessions.rs`, and `assets/icons/users.svg`.
+  - The `team.*` keys in `client/locales/{app,zh-CN,ja}.yml`.
+- **Where things are stored.**
+  - Team state: `<workspace>/.agent-teams/`.
+  - Configuration: `agent-teams.json`, beside the engine's `settings.json`. Never put it in `settings.json`: the engine's save drops unknown keys.
+- **Rules.**
+  - **Lazy activation.** A session carries neither the team tools nor the captain protocol until a message starts with `/agent-teams`, or until an unarchived team it leads is found on disk. After that, the section is byte-identical on every turn.
+  - **Member permission ids.** A member's permission request uses a `team:<uuid>:<member>` id. The app accepts it with no captain turn running and keeps it across `TurnFinished` and Stop. A captain cancel releases only non-team dialogs.
+  - **Team mail is never steered.** Mail to a running captain is injected silently. It must never go through `push_steer`, which echoes into the transcript as the user's own message.
+  - **Running members in every snapshot.** A running member must appear in every background-work snapshot. Otherwise `reconcile_live` marks it lost.
+  - **Panel controls.** Panel buttons send a `<waku:agent-teams>` control that the bridge intercepts before a turn opens. They never post a chat message.
+- **On upstream merges.** Keep this feature, and resolve conflicts on the paths above in favour of the local version.
+
+### 计划审阅面板 (Client plan review surface, local implementation)
+
+- When Claude Code or the built-in agent finishes planning (`ExitPlanMode`, a permission titled `plan.ready_title`), the plan opens in the right panel's Plan surface (`client/src/app/plan_review.rs`).
+- **What the surface shows.**
+  - The whole plan, rendered and selectable.
+  - Every version the session submitted, with a line diff against the previous one (`similar`).
+  - A multi-line note. "Quote selection" drops the selected plan text into it as a Markdown quote.
+  - Sending the plan back refuses it and steers the note into the turn (`deny_permission_with_note` in `permission_card.rs`).
+- **The card above the composer** keeps one row: the title, "View plan", and the two answers with their digit keys.
+- **The built-in agent's plan text.** The dialog body is exactly `ExitPlanMode`'s required `plan` parameter (`client/crates/waku-agent/tools/src/exit_plan_mode.rs`). Never guess the plan from the model's reply: an earlier version did and showed "Let me present the plan." as the plan.
+- **Hooks.**
+  - `RightPanelSurface::Plan` arms and the `plan_review` field.
+  - `plan_requested` after a permission is queued (`streaming.rs`).
+  - `note_plan_answer` at the top of `respond_permission` (`sessions.rs`).
+  - `plan_selected_text` in the copy chain.
+- **On upstream merges.** Keep this feature, and resolve conflicts in favour of the local version.
 
 ### GitHub OAuth login (local implementation)
 

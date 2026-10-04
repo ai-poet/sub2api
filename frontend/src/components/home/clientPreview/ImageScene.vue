@@ -34,16 +34,18 @@
               <ClientIcon name="x" class="h-3.5 w-3.5" />
             </span>
           </div>
-          <div v-else class="cw-square cw-picture cw-art-cat cw-reveal" data-test="preview-image-done">
-            <span class="cw-cat-glow"></span>
-            <span class="cw-cat-head"></span>
-            <span class="cw-cat-laptop"></span>
-          </div>
+          <DemoPicture
+            v-else
+            class="cw-reveal"
+            image-key="cat"
+            :alt="t('home.clientWorkflow.image.prompt')"
+            data-test="preview-image-done"
+          />
           <Caption :prompt="t('home.clientWorkflow.image.prompt')" :meta="NEW_META" />
         </div>
 
-        <div v-for="picture in GALLERY" :key="picture.key" class="cw-card">
-          <div class="cw-square cw-picture" :class="picture.art"></div>
+        <div v-for="picture in GALLERY" :key="picture.key" class="cw-card" data-test="preview-gallery-card">
+          <DemoPicture :image-key="picture.key" :alt="t(`home.clientWorkflow.image.gallery.${picture.key}`)" />
           <Caption :prompt="t(`home.clientWorkflow.image.gallery.${picture.key}`)" :meta="picture.meta" />
         </div>
       </div>
@@ -76,9 +78,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, h } from 'vue'
+import { computed, defineComponent, h, ref, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ClientIcon from './ClientIcon.vue'
+import { DEMO_IMAGES, type DemoImageKey } from './demoImages'
 import type { PreviewFrame } from './timeline'
 
 const props = defineProps<{
@@ -88,11 +91,11 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-// 图库里已有的作品；图片用 CSS 画，不引入图片资源
-const GALLERY = [
-  { key: 'sunset', art: 'cw-art-sunset', meta: 'gpt-image-2 · 1536×1024 · $0.06' },
-  { key: 'mountain', art: 'cw-art-mountain', meta: 'gpt-image-2 · 1024×1024 · $0.04' },
-  { key: 'city', art: 'cw-art-city', meta: 'grok-imagine-image · 1024×1024' },
+// 图库里已有的作品
+const GALLERY: Array<{ key: Exclude<DemoImageKey, 'cat'>; meta: string }> = [
+  { key: 'sunset', meta: 'gpt-image-2 · 1536×1024 · $0.06' },
+  { key: 'mountain', meta: 'gpt-image-2 · 1024×1024 · $0.04' },
+  { key: 'city', meta: 'grok-imagine-image · 1024×1024' },
 ]
 const NEW_META = 'gpt-image-2 · 1024×1024 · $0.04'
 
@@ -107,6 +110,36 @@ const typedPrompt = computed(() => {
 
 // 客户端的计时格式是 m:ss
 const drawTime = computed(() => `0:${String(props.frame.drawSeconds).padStart(2, '0')}`)
+
+// 一张方图；加载失败时换成中性的底色块，不显示裂图
+const DemoPicture = defineComponent({
+  props: {
+    imageKey: { type: String as PropType<DemoImageKey>, required: true },
+    alt: { type: String, required: true },
+  },
+  setup(pictureProps) {
+    const failed = ref(false)
+    return () =>
+      h('div', { class: 'cw-square cw-picture' }, [
+        failed.value
+          ? h('div', { class: 'cw-picture-fallback', 'data-test': 'preview-picture-fallback' })
+          : h('img', {
+              src: DEMO_IMAGES[pictureProps.imageKey],
+              alt: pictureProps.alt,
+              width: 400,
+              height: 400,
+              decoding: 'async',
+              fetchpriority: 'low',
+              referrerpolicy: 'no-referrer',
+              draggable: false,
+              class: 'h-full w-full object-cover',
+              onError: () => {
+                failed.value = true
+              },
+            }),
+      ])
+  },
+})
 
 const Caption = defineComponent({
   props: {
@@ -137,7 +170,7 @@ const Caption = defineComponent({
   }
 }
 
-.cw-square {
+.cw-card :deep(.cw-square) {
   aspect-ratio: 1 / 1;
   width: 100%;
   overflow: hidden;
@@ -149,10 +182,17 @@ const Caption = defineComponent({
   background: var(--cw-raised);
 }
 
-.cw-picture {
+.cw-card :deep(.cw-picture) {
   position: relative;
   border: 1px solid var(--cw-border);
   background-color: var(--cw-inset);
+}
+
+/* 图片加载失败时的底色块 */
+.cw-card :deep(.cw-picture-fallback) {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(135deg, var(--cw-raised), var(--cw-inset));
 }
 
 .cw-generate {
@@ -168,141 +208,17 @@ const Caption = defineComponent({
   transition: opacity 0.2s ease;
 }
 
-.cw-caret {
-  display: inline-block;
-  width: 1px;
-  height: 16px;
-  margin-left: 1px;
-  vertical-align: -3px;
-  background: var(--cw-accent);
-}
-
-/* ===== CSS 画的作品 ===== */
-
-.cw-art-sunset {
-  background:
-    radial-gradient(circle at 50% 58%, #fff3c4 0 11%, rgba(255, 214, 140, 0.8) 12%, transparent 26%),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 9px) bottom / 100% 40% no-repeat,
-    linear-gradient(180deg, #ffb36b 0%, #ff7a7a 45%, #7a4fd6 62%, #2c2a6e 100%);
-}
-
-.cw-art-mountain {
-  background:
-    radial-gradient(circle at 20% 18%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 70% 12%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 45% 30%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 85% 32%, #fff 0 1px, transparent 2px),
-    radial-gradient(circle at 32% 8%, #fff 0 1px, transparent 2px),
-    linear-gradient(180deg, #0b1633 0%, #1d3766 55%, #3d5f8f 100%);
-}
-
-.cw-art-mountain::before {
-  content: '';
-  position: absolute;
-  inset: 38% 0 0;
-  background: linear-gradient(180deg, #e9eef7 0%, #9fb2cf 45%, #4a5f80 100%);
-  clip-path: polygon(0 70%, 22% 30%, 34% 48%, 55% 0, 76% 42%, 88% 26%, 100% 55%, 100% 100%, 0 100%);
-}
-
-.cw-art-mountain::after {
-  content: '';
-  position: absolute;
-  bottom: 10%;
-  left: 44%;
-  width: 16%;
-  height: 12%;
-  background: #f59e42;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-  box-shadow: 0 0 18px #f59e42;
-}
-
-.cw-art-city {
-  background:
-    linear-gradient(90deg, transparent 0 8%, #2b1f4a 8% 22%, transparent 22% 30%, #3a2a63 30% 46%, transparent 46% 54%, #22183d 54% 72%, transparent 72% 80%, #33245a 80% 94%, transparent 94%) bottom / 100% 70% no-repeat,
-    repeating-linear-gradient(100deg, rgba(160, 200, 255, 0.18) 0 1px, transparent 1px 7px),
-    linear-gradient(180deg, #0d0a1f 0%, #3b1450 55%, #e0418f 100%);
-}
-
-.cw-art-city::after {
-  content: '';
-  position: absolute;
-  inset: auto 12% 30% 12%;
-  height: 6%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #22d3ee, #e0418f);
-  box-shadow: 0 0 14px #e0418f;
-}
-
-.cw-art-cat {
-  background:
-    radial-gradient(circle at 80% 18%, rgba(34, 211, 238, 0.55), transparent 32%),
-    radial-gradient(circle at 18% 22%, rgba(224, 65, 143, 0.55), transparent 36%),
-    linear-gradient(180deg, #120d2b 0%, #24124a 60%, #0c0a1c 100%);
-}
-
-.cw-cat-glow {
-  position: absolute;
-  inset: auto 10% 12% 10%;
-  height: 30%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(34, 211, 238, 0.45), transparent 70%);
-}
-
-.cw-cat-head {
-  position: absolute;
-  left: 30%;
-  top: 26%;
-  width: 40%;
-  height: 34%;
-  border-radius: 48% 48% 44% 44%;
-  background:
-    radial-gradient(circle at 34% 50%, #22d3ee 0 7%, transparent 8%),
-    radial-gradient(circle at 66% 50%, #22d3ee 0 7%, transparent 8%),
-    linear-gradient(180deg, #f8a54b, #e7802c);
-}
-
-.cw-cat-head::before {
-  content: '';
-  position: absolute;
-  left: 2%;
-  right: 2%;
-  top: -26%;
-  height: 34%;
-  background: #f29a41;
-  clip-path: polygon(0 100%, 16% 0, 36% 100%, 64% 100%, 84% 0, 100% 100%);
-}
-
-.cw-cat-laptop {
-  position: absolute;
-  left: 22%;
-  right: 22%;
-  bottom: 16%;
-  height: 20%;
-  border-radius: 4px 4px 2px 2px;
-  background: linear-gradient(180deg, #1f2a44, #0f172a);
-  box-shadow: 0 -2px 16px rgba(34, 211, 238, 0.55);
-}
-
-.cw-cat-laptop::after {
-  content: '';
-  position: absolute;
-  left: 18%;
-  right: 18%;
-  top: 30%;
-  height: 12%;
-  border-radius: 2px;
-  background: repeating-linear-gradient(90deg, #22d3ee 0 6px, transparent 6px 9px);
-  opacity: 0.8;
-}
-
-.cw-reveal {
-  animation: reveal 0.6s ease-out;
+/* 刚画好的图从模糊到清晰 */
+@media (prefers-reduced-motion: no-preference) {
+  .cw-reveal {
+    animation: reveal 0.6s ease-out;
+  }
 }
 
 @keyframes reveal {
   from {
     opacity: 0;
-    filter: blur(6px);
+    filter: blur(8px);
   }
   to {
     opacity: 1;

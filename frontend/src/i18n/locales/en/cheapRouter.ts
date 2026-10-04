@@ -26,7 +26,7 @@ export default {
         "client": {
           "label": "Agent desktop client",
           "title": "Every agent, one workspace, every API.",
-          "subtitle": "A built-in agent with nothing to install, Claude Code, Codex and more in one window — and it draws, too."
+          "subtitle": "Download and go — no Node, no CLI setup. Native Rust, light but complete: plan review, parallel sub-agents, agent teams and image generation, with Claude Code and Codex in the same window."
         },
         "api": {
           "label": "A quality-checked AI relay",
@@ -51,7 +51,7 @@ export default {
         "client": {
           "titleLead": "Agents need a system,",
           "titleTail": "not a pile of config files.",
-          "subtitle": "Sign in once and Claude Code, Codex and Grok are wired up; balance, routes and usage live in the same window."
+          "subtitle": "Sign in once and Claude Code, Codex and the rest are wired up — any already on your own account is asked about first; plans, teams, balance and usage live in the same window."
         },
         "api": {
           "titleLead": "Models under inspection,",
@@ -73,15 +73,15 @@ export default {
           },
           "builtinAgent": {
             "title": "Built-in agent",
-            "body": "Ready as soon as the app is — no Node, no CLI — with Claude, GPT, Grok, DeepSeek, GLM, Kimi and more a click apart"
+            "body": "Ready with the app — no Node, no CLI. It reads and draws pictures, drives the in-app browser on Windows for testing, and runs sub-agents in parallel"
+          },
+          "agentTeams": {
+            "title": "Agent teams · plan review",
+            "body": "/agent-teams turns a goal into a team, each member on its own model and every task checked before it counts; plans arrive in full, compared version by version, and nothing runs until you approve"
           },
           "allAgents": {
             "title": "Every agent, one window",
-            "body": "Claude Code, Codex, Grok, OpenCode and Pi are wired up at sign-in; Amp, Cursor, Kimi Code and more run here too"
-          },
-          "images": {
-            "title": "AI images",
-            "body": "Describe a picture or drop one in to edit it, see the price before it draws, and keep everything in a gallery"
+            "body": "Claude Code, Codex, Grok, OpenCode and Pi are wired up at sign-in; any already on your own account or relay is asked about first and left untouched if you keep it. Amp, Cursor, Kimi Code and more run here too"
           },
           "compatible": {
             "title": "Native protocols",
@@ -105,7 +105,7 @@ export default {
         "overline": "Many models · one switch",
         "titleLead": "Not one model.",
         "titleTail": "The right one for every step.",
-        "clientSubtitle": "Switch between the built-in agent, Claude Code, Codex and Grok inside one client — your project, files and context stay where they are.",
+        "clientSubtitle": "Switch between the built-in agent, Claude Code, Codex and Grok in one client — every model says what it's for and your own endpoints get their own section — while your project, files and context stay put.",
         "apiSubtitle": "Claude, GPT, Grok and Chinese models such as DeepSeek, GLM and Kimi share one key and one balance; changing models means changing one parameter.",
         "cta": "See model pricing"
       },
@@ -198,13 +198,24 @@ export default {
       }
     },
     "clientWorkflow": {
-      "ariaLabel": "{siteName} desktop client demo: the built-in agent works through a coding task, the model picker switches between agents, and the Images page draws a picture",
+      "ariaLabel": "{siteName} desktop client demo in three parts: the built-in agent hands over a plan, then after approval runs two sub-agents in parallel and edits the code; /agent-teams starts a three-member team whose tasks finish in dependency order, each passing a check; finally the Images page draws a picture",
+      "chapters": {
+        "label": "Demo chapters",
+        "plan": "Plan → run",
+        "team": "Agent team",
+        "image": "Images",
+        "pause": "Pause the demo",
+        "play": "Play the demo"
+      },
       "sidebar": {
         "newTask": "New Task",
         "search": "Search",
         "images": "Images",
+        "modelStatus": "Model status",
         "today": "Today",
         "taskTitle": "Return to the page after login",
+        "teamTaskTitle": "Split the settings page",
+        "teamTime": "1h",
         "working": "Working for {seconds}s",
         "justNow": "just now",
         "olderTask": "Add a client download button",
@@ -215,8 +226,11 @@ export default {
         "prompt": "After signing in, send people back to the page they came from instead of the home page",
         "explored": "Explored · 1 search, 2 files",
         "thought": "Thought for 3s",
+        "handedOver": "Handed over the plan",
+        "subagent": "SubAgent",
+        "subagentFind": "Find every route that sends people to sign-in",
+        "subagentGuard": "Read the redirect logic in the route guard",
         "edited": "Edited",
-        "ran": "Ran",
         "running": "Running",
         "working": "Working for {seconds}s",
         "workedFor": "Worked for {seconds}s",
@@ -225,11 +239,21 @@ export default {
         "review": "Review",
         "undo": "Undo"
       },
+      "status": {
+        "tokens": "{count} tokens",
+        "thinking": "Thinking…",
+        "writing": "Writing…",
+        "runningTool": "Running a tool…",
+        "runningTools": "Running {count} tools…",
+        "waitingForModel": "Waiting for the model…",
+        "waitingForYou": "Waiting for you"
+      },
       "composer": {
         "placeholder": "Do anything…",
         "effort": "High",
         "access": "Full access",
-        "build": "Build"
+        "build": "Build",
+        "plan": "Plan"
       },
       "footer": {
         "project": "amadeus-web",
@@ -237,14 +261,80 @@ export default {
       },
       "picker": {
         "search": "Search models…",
-        "builtinAgent": "Built-in agent"
+        "builtinAgent": "Built-in agent",
+        "vendorZhipu": "Zhipu GLM",
+        "ownEndpoint": "My relay",
+        "descriptions": {
+          "claudeSonnet": "Balanced speed and intelligence for everyday agentic coding.",
+          "claudeOpus": "Large hybrid-reasoning model for complex coding and agents.",
+          "claudeFable": "Anthropic's frontier line, for the hardest coding and knowledge work."
+        }
+      },
+      "plan": {
+        "surface": "Plan",
+        "readyTitle": "Finished planning",
+        "cardHint": "Read the whole plan and add notes in the right panel.",
+        "viewInPanel": "View plan",
+        "approve": "Approve plan",
+        "keepPlanning": "Keep planning",
+        "keepPlanningWithNotes": "Keep planning with these notes",
+        "statusPending": "Waiting for your approval",
+        "statusApproved": "Approved",
+        "quote": "Quote selection",
+        "quoteHint": "Select part of the plan, quote it, then write what to change below.",
+        "notesPlaceholder": "What should change? Enter sends the plan back, Shift+Enter starts a new line.",
+        "title": "Return to the page after sign-in",
+        "step1": "Put the current address in a redirect parameter before opening sign-in",
+        "step2": "After sign-in, check redirect and accept only same-site paths",
+        "step3": "Fall back to the dashboard when there is none",
+        "step4": "Add a unit test for the route guard"
+      },
+      "team": {
+        "surface": "Team",
+        "name": "Settings split",
+        "command": "split the settings page into its own module and add tests",
+        "draftReply": "The team plan is ready: 3 members, 4 tasks. Approve it in the Team panel on the right to start.",
+        "doneReply": "All 4 tasks are done and each passed its check; T2 failed the first review and passed after rework.",
+        "phaseReview": "Awaiting review",
+        "phaseRunning": "Running",
+        "phaseDone": "Finished",
+        "stats": "{working} of {members} members working · {done} of {tasks} tasks done · {messages} messages",
+        "approve": "Approve and run",
+        "revise": "Return to chat to revise",
+        "discard": "Discard plan",
+        "stop": "Stop team",
+        "members": "Members",
+        "tasks": "Tasks",
+        "memberWorking": "working",
+        "memberIdle": "idle",
+        "memberWaiting": "not started",
+        "memberTasks": "{done}/{total} tasks",
+        "memberCurrent": "Working on {task}",
+        "taskBlocked": "blocked",
+        "taskOpen": "ready",
+        "taskRunning": "running",
+        "taskCompleted": "done",
+        "taskRound": "round {round}",
+        "effortHigh": "high",
+        "effortMedium": "medium",
+        "memberNames": {
+          "architect": "architect",
+          "builder": "builder",
+          "tester": "tester"
+        },
+        "taskSubjects": {
+          "t1": "Extract the settings module",
+          "t2": "Move the form components",
+          "t3": "Add unit tests",
+          "t4": "Update the routes"
+        }
       },
       "image": {
         "title": "Images",
         "pictureCount": "{count} pictures",
         "openFolder": "Open folder",
         "placeholder": "Describe a picture, or drop and paste images to edit them…",
-        "prompt": "An orange cat coding under neon lights, cyberpunk",
+        "prompt": "An orange kitten napping on a keyboard, warm tones",
         "addImages": "Add images",
         "group": "Group: automatic",
         "quality": "Quality: high",
@@ -255,9 +345,9 @@ export default {
         "drawing": "Drawing · {time}",
         "runningTask": "Runs on the gateway — closing the window loses nothing",
         "gallery": {
-          "sunset": "Sunset over the sea, film look",
+          "sunset": "Beach at sunset, film look",
           "mountain": "A starry camp below snowy peaks",
-          "city": "Neon street on a rainy night, cyberpunk"
+          "city": "Neon street on a rainy night"
         }
       }
     },
@@ -276,7 +366,8 @@ export default {
         "pricing": {
           "feature": "Official accounts + manual config",
           "official": "One account per tool — multiple accounts, multiple configs, multiple bills, and you maintain everything by hand",
-          "us": "One account, both tools configured automatically, settings can be reused, balance shared across tools"
+          "us": "One account and one key: point Claude Code, Codex and other tools at a new base URL, with one balance across them",
+          "usClient": "One account sets up Claude Code, Codex and more at sign-in — any you already run on your own account can stay as it is — with one balance across tools"
         },
         "models": {
           "feature": "Local switcher scripts",
@@ -286,7 +377,8 @@ export default {
         "stability": {
           "feature": "Workflow",
           "official": "Cursor and Windsurf require uploading your code to their servers",
-          "us": "Unlike Cursor or Windsurf, we respect your local Claude Code and Codex workflow — MCP, Skill, and Workflow require no extra configuration"
+          "us": "Your code stays local; Claude Code and Codex keep using your MCP servers and Skills with no extra setup",
+          "usClient": "Your code stays local and Claude Code and Codex keep your MCP servers and Skills; the built-in agent can also run a team with /agent-teams, each task checked before it counts"
         }
       }
     },
