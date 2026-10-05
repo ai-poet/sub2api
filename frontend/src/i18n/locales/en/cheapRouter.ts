@@ -24,7 +24,7 @@ export default {
         "releaseCta": "See what changed",
         "tagline": "Smart models, checked nonstop.",
         "client": {
-          "label": "Agent desktop client",
+          "label": "Our Own Agent desktop client",
           "title": "Every agent, one workspace, every API.",
           "subtitle": "Download and go — no Node, no CLI setup. Native Rust, light but complete: plan review, parallel sub-agents, agent teams and image generation, with Claude Code and Codex in the same window."
         },

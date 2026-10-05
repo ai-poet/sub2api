@@ -24,7 +24,7 @@ export default {
         "releaseCta": "看看更新了什么",
         "tagline": "高智商模型，全程质检。",
         "client": {
-          "label": "Agent 桌面客户端",
+          "label": "Agent 自研桌面客户端",
           "title": "所有 Agent，一个工作区，API 全接入。",
           "subtitle": "下载即用，不装 Node、不配 CLI。Rust 原生，轻巧却不简陋：计划审阅、并行子智能体、智能体团队和画图都在，Claude Code、Codex 也能一起跑。"
         },
