@@ -60,7 +60,7 @@ export default {
         },
         "columns": {
           "quality": "Quality-checked relay",
-          "client": "Agent client"
+          "client": "Our own agent client"
         },
         "cards": {
           "quality": {

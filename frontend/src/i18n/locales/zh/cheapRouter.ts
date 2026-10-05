@@ -60,7 +60,7 @@ export default {
         },
         "columns": {
           "quality": "保质量中转站",
-          "client": "Agent 客户端"
+          "client": "自研Agent 客户端"
         },
         "cards": {
           "quality": {
