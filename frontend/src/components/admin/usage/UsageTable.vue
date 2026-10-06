@@ -214,6 +214,14 @@
                 data-testid="long-context-billing-marker"
                 class="inline-flex items-center rounded px-1 py-px text-[10px] font-semibold leading-tight bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:ring-amber-500/30"
               >x2</span>
+              <!-- fork：扣费失败重试 —— 待补扣 / 扣费失败 / 已补扣 -->
+              <span
+                v-if="row.billing_status"
+                data-testid="billing-status-marker"
+                :title="billingStatusTitle(row)"
+                class="inline-flex items-center rounded px-1 py-px text-[10px] font-semibold leading-tight ring-1 ring-inset"
+                :class="billingStatusClass(row.billing_status)"
+              >{{ t(`usage.billingStatus.${row.billing_status}`) }}</span>
               <!-- Cost Detail Tooltip -->
               <div
                 class="group relative"
@@ -570,6 +578,26 @@ import {
   textInputTokens,
   hasImageInputCost,
 } from '@/utils/imageUsage'
+
+/** fork：扣费失败重试 —— 行上的扣费状态角标样式 */
+function billingStatusClass(status: string): string {
+  switch (status) {
+    case 'pending':
+      return 'bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:ring-amber-500/30'
+    case 'failed':
+      return 'bg-red-100 text-red-700 ring-red-200 dark:bg-red-500/20 dark:text-red-300 dark:ring-red-500/30'
+    default:
+      return 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:ring-emerald-500/30'
+  }
+}
+
+/** fork：扣费失败重试 —— 角标悬浮说明：状态含义 + 重试次数 + 最后一次错误 */
+function billingStatusTitle(row: { billing_status?: string | null; billing_error?: string | null; billing_attempts?: number | null }): string {
+  const parts = [t(`usage.billingStatus.${row.billing_status}Hint`)]
+  if (row.billing_attempts) parts.push(t('usage.billingStatus.attempts', { n: row.billing_attempts }))
+  if (row.billing_error) parts.push(row.billing_error)
+  return parts.join(' · ')
+}
 
 /** Compute the account-billed cost for display: (account_stats_cost ?? total_cost) * rate_multiplier */
 function accountBilled(row: { total_cost?: number | null; account_stats_cost?: number | null; account_rate_multiplier?: number | null }): number {

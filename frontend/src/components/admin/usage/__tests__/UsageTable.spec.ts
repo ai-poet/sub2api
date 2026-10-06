@@ -71,6 +71,11 @@ const messages: Record<string, string> = {
 	'usage.upstreamResponseModel': 'Upstream response',
 	'usage.modelVariant': 'Possible version variant',
 	'usage.modelMismatch': 'Different model',
+	'usage.billingStatus.pending': 'Retrying',
+	'usage.billingStatus.pendingHint': 'Billing failed, retrying',
+	'usage.billingStatus.failed': 'Billing failed',
+	'usage.billingStatus.failedHint': 'Retries exhausted',
+	'usage.billingStatus.attempts': 'attempts',
 }
 
 vi.mock('vue-i18n', async () => {
@@ -173,6 +178,51 @@ describe('admin UsageTable tooltip', () => {
 
     expect(wrapper.findAll('[data-testid="long-context-billing-marker"]')).toHaveLength(1)
     expect(wrapper.get('[data-testid="long-context-billing-marker"]').text()).toBe('x2')
+  })
+
+  // fork：扣费失败重试 —— 只有带 billing_status 的行显示角标，应扣金额照常显示
+  it('marks rows whose billing failed or is still being retried', () => {
+    const wrapper = mount(UsageTable, {
+      props: {
+        data: [
+          {
+            ...baseImageRow,
+            request_id: 'req-billing-pending',
+            actual_cost: 0.0649112,
+            billing_status: 'pending',
+            billing_error: 'api key not found',
+            billing_attempts: 2,
+          },
+          {
+            ...baseImageRow,
+            request_id: 'req-billing-failed',
+            billing_status: 'failed',
+          },
+          {
+            ...baseImageRow,
+            request_id: 'req-billing-ok',
+          },
+        ],
+        loading: false,
+        columns: [],
+      },
+      global: {
+        stubs: {
+          DataTable: DataTableStub,
+          EmptyState: true,
+          Icon: true,
+          Teleport: true,
+        },
+      },
+    })
+
+    const markers = wrapper.findAll('[data-testid="billing-status-marker"]')
+    expect(markers).toHaveLength(2)
+    expect(markers[0].text()).toBe('Retrying')
+    expect(markers[0].attributes('title')).toContain('Billing failed, retrying')
+    expect(markers[0].attributes('title')).toContain('api key not found')
+    expect(markers[1].text()).toBe('Billing failed')
+    expect(wrapper.text()).toContain('$0.064911')
   })
 
   it('keeps the request type badge and adds a separate badge only for native compaction rows', () => {

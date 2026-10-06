@@ -327,7 +327,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewOpsHandler,
 	ProvideSystemHandler,
 	admin.NewSubscriptionHandler,
-	admin.NewUsageHandler,
+	admin.ProvideUsageHandler, // fork：扣费失败重试（替换 NewUsageHandler，挂上扣费状态标注）
 	admin.NewUserAttributeHandler,
 	admin.NewErrorPassthroughHandler,
 	admin.NewReferralHandler,

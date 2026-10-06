@@ -25,6 +25,21 @@ type UsageHandler struct {
 	apiKeyService  *service.APIKeyService
 	adminService   service.AdminService
 	cleanupService *service.UsageCleanupService
+	// fork：扣费失败重试 —— 列表按 (request_id, api_key_id) 标注扣费状态（ProvideUsageHandler 注入）
+	billingRetry usageBillingAnnotator
+}
+
+// usageBillingAnnotator 给使用记录标上扣费失败 / 补扣状态（fork）。
+type usageBillingAnnotator interface {
+	Annotate(ctx context.Context, logs []service.UsageLog)
+}
+
+// SetBillingRetryAnnotator 挂上扣费状态标注（fork）。
+func (h *UsageHandler) SetBillingRetryAnnotator(annotator usageBillingAnnotator) {
+	if h == nil {
+		return
+	}
+	h.billingRetry = annotator
 }
 
 // NewUsageHandler creates a new admin usage handler
@@ -211,6 +226,10 @@ func (h *UsageHandler) List(c *gin.Context) {
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
+	}
+	// fork：扣费失败重试 —— 标注待补扣 / 已放弃 / 已补扣的记录
+	if h.billingRetry != nil {
+		h.billingRetry.Annotate(c.Request.Context(), records)
 	}
 
 	if middleware.IsOperatorRequest(c) {

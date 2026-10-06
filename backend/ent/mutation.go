@@ -51,6 +51,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
+	"github.com/Wei-Shaw/sub2api/ent/usagebillingretry"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -110,6 +111,7 @@ const (
 	TypeSupportTicket              = "SupportTicket"
 	TypeSupportTicketMessage       = "SupportTicketMessage"
 	TypeTLSFingerprintProfile      = "TLSFingerprintProfile"
+	TypeUsageBillingRetry          = "UsageBillingRetry"
 	TypeUsageCleanupTask           = "UsageCleanupTask"
 	TypeUsageLog                   = "UsageLog"
 	TypeUser                       = "User"
@@ -56771,6 +56773,1331 @@ func (m *TLSFingerprintProfileMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TLSFingerprintProfileMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown TLSFingerprintProfile edge %s", name)
+}
+
+// UsageBillingRetryMutation represents an operation that mutates the UsageBillingRetry nodes in the graph.
+type UsageBillingRetryMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int64
+	request_id     *string
+	api_key_id     *int64
+	addapi_key_id  *int64
+	user_id        *int64
+	adduser_id     *int64
+	account_id     *int64
+	addaccount_id  *int64
+	group_id       *int64
+	addgroup_id    *int64
+	platform       *string
+	actual_cost    *float64
+	addactual_cost *float64
+	command        *map[string]interface{}
+	status         *string
+	attempts       *int
+	addattempts    *int
+	last_error     *string
+	next_retry_at  *time.Time
+	settled_at     *time.Time
+	created_at     *time.Time
+	updated_at     *time.Time
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*UsageBillingRetry, error)
+	predicates     []predicate.UsageBillingRetry
+}
+
+var _ ent.Mutation = (*UsageBillingRetryMutation)(nil)
+
+// usagebillingretryOption allows management of the mutation configuration using functional options.
+type usagebillingretryOption func(*UsageBillingRetryMutation)
+
+// newUsageBillingRetryMutation creates new mutation for the UsageBillingRetry entity.
+func newUsageBillingRetryMutation(c config, op Op, opts ...usagebillingretryOption) *UsageBillingRetryMutation {
+	m := &UsageBillingRetryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUsageBillingRetry,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUsageBillingRetryID sets the ID field of the mutation.
+func withUsageBillingRetryID(id int64) usagebillingretryOption {
+	return func(m *UsageBillingRetryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UsageBillingRetry
+		)
+		m.oldValue = func(ctx context.Context) (*UsageBillingRetry, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UsageBillingRetry.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUsageBillingRetry sets the old UsageBillingRetry of the mutation.
+func withUsageBillingRetry(node *UsageBillingRetry) usagebillingretryOption {
+	return func(m *UsageBillingRetryMutation) {
+		m.oldValue = func(context.Context) (*UsageBillingRetry, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UsageBillingRetryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UsageBillingRetryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UsageBillingRetryMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UsageBillingRetryMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UsageBillingRetry.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetRequestID sets the "request_id" field.
+func (m *UsageBillingRetryMutation) SetRequestID(s string) {
+	m.request_id = &s
+}
+
+// RequestID returns the value of the "request_id" field in the mutation.
+func (m *UsageBillingRetryMutation) RequestID() (r string, exists bool) {
+	v := m.request_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestID returns the old "request_id" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldRequestID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
+	}
+	return oldValue.RequestID, nil
+}
+
+// ResetRequestID resets all changes to the "request_id" field.
+func (m *UsageBillingRetryMutation) ResetRequestID() {
+	m.request_id = nil
+}
+
+// SetAPIKeyID sets the "api_key_id" field.
+func (m *UsageBillingRetryMutation) SetAPIKeyID(i int64) {
+	m.api_key_id = &i
+	m.addapi_key_id = nil
+}
+
+// APIKeyID returns the value of the "api_key_id" field in the mutation.
+func (m *UsageBillingRetryMutation) APIKeyID() (r int64, exists bool) {
+	v := m.api_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIKeyID returns the old "api_key_id" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldAPIKeyID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIKeyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIKeyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIKeyID: %w", err)
+	}
+	return oldValue.APIKeyID, nil
+}
+
+// AddAPIKeyID adds i to the "api_key_id" field.
+func (m *UsageBillingRetryMutation) AddAPIKeyID(i int64) {
+	if m.addapi_key_id != nil {
+		*m.addapi_key_id += i
+	} else {
+		m.addapi_key_id = &i
+	}
+}
+
+// AddedAPIKeyID returns the value that was added to the "api_key_id" field in this mutation.
+func (m *UsageBillingRetryMutation) AddedAPIKeyID() (r int64, exists bool) {
+	v := m.addapi_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAPIKeyID resets all changes to the "api_key_id" field.
+func (m *UsageBillingRetryMutation) ResetAPIKeyID() {
+	m.api_key_id = nil
+	m.addapi_key_id = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UsageBillingRetryMutation) SetUserID(i int64) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UsageBillingRetryMutation) UserID() (r int64, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldUserID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *UsageBillingRetryMutation) AddUserID(i int64) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *UsageBillingRetryMutation) AddedUserID() (r int64, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UsageBillingRetryMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetAccountID sets the "account_id" field.
+func (m *UsageBillingRetryMutation) SetAccountID(i int64) {
+	m.account_id = &i
+	m.addaccount_id = nil
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *UsageBillingRetryMutation) AccountID() (r int64, exists bool) {
+	v := m.account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldAccountID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// AddAccountID adds i to the "account_id" field.
+func (m *UsageBillingRetryMutation) AddAccountID(i int64) {
+	if m.addaccount_id != nil {
+		*m.addaccount_id += i
+	} else {
+		m.addaccount_id = &i
+	}
+}
+
+// AddedAccountID returns the value that was added to the "account_id" field in this mutation.
+func (m *UsageBillingRetryMutation) AddedAccountID() (r int64, exists bool) {
+	v := m.addaccount_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *UsageBillingRetryMutation) ResetAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *UsageBillingRetryMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *UsageBillingRetryMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldGroupID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *UsageBillingRetryMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *UsageBillingRetryMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (m *UsageBillingRetryMutation) ClearGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+	m.clearedFields[usagebillingretry.FieldGroupID] = struct{}{}
+}
+
+// GroupIDCleared returns if the "group_id" field was cleared in this mutation.
+func (m *UsageBillingRetryMutation) GroupIDCleared() bool {
+	_, ok := m.clearedFields[usagebillingretry.FieldGroupID]
+	return ok
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *UsageBillingRetryMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+	delete(m.clearedFields, usagebillingretry.FieldGroupID)
+}
+
+// SetPlatform sets the "platform" field.
+func (m *UsageBillingRetryMutation) SetPlatform(s string) {
+	m.platform = &s
+}
+
+// Platform returns the value of the "platform" field in the mutation.
+func (m *UsageBillingRetryMutation) Platform() (r string, exists bool) {
+	v := m.platform
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlatform returns the old "platform" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldPlatform(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlatform requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlatform: %w", err)
+	}
+	return oldValue.Platform, nil
+}
+
+// ResetPlatform resets all changes to the "platform" field.
+func (m *UsageBillingRetryMutation) ResetPlatform() {
+	m.platform = nil
+}
+
+// SetActualCost sets the "actual_cost" field.
+func (m *UsageBillingRetryMutation) SetActualCost(f float64) {
+	m.actual_cost = &f
+	m.addactual_cost = nil
+}
+
+// ActualCost returns the value of the "actual_cost" field in the mutation.
+func (m *UsageBillingRetryMutation) ActualCost() (r float64, exists bool) {
+	v := m.actual_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActualCost returns the old "actual_cost" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldActualCost(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActualCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActualCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActualCost: %w", err)
+	}
+	return oldValue.ActualCost, nil
+}
+
+// AddActualCost adds f to the "actual_cost" field.
+func (m *UsageBillingRetryMutation) AddActualCost(f float64) {
+	if m.addactual_cost != nil {
+		*m.addactual_cost += f
+	} else {
+		m.addactual_cost = &f
+	}
+}
+
+// AddedActualCost returns the value that was added to the "actual_cost" field in this mutation.
+func (m *UsageBillingRetryMutation) AddedActualCost() (r float64, exists bool) {
+	v := m.addactual_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetActualCost resets all changes to the "actual_cost" field.
+func (m *UsageBillingRetryMutation) ResetActualCost() {
+	m.actual_cost = nil
+	m.addactual_cost = nil
+}
+
+// SetCommand sets the "command" field.
+func (m *UsageBillingRetryMutation) SetCommand(value map[string]interface{}) {
+	m.command = &value
+}
+
+// Command returns the value of the "command" field in the mutation.
+func (m *UsageBillingRetryMutation) Command() (r map[string]interface{}, exists bool) {
+	v := m.command
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommand returns the old "command" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldCommand(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommand is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommand requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommand: %w", err)
+	}
+	return oldValue.Command, nil
+}
+
+// ResetCommand resets all changes to the "command" field.
+func (m *UsageBillingRetryMutation) ResetCommand() {
+	m.command = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *UsageBillingRetryMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *UsageBillingRetryMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *UsageBillingRetryMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAttempts sets the "attempts" field.
+func (m *UsageBillingRetryMutation) SetAttempts(i int) {
+	m.attempts = &i
+	m.addattempts = nil
+}
+
+// Attempts returns the value of the "attempts" field in the mutation.
+func (m *UsageBillingRetryMutation) Attempts() (r int, exists bool) {
+	v := m.attempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttempts returns the old "attempts" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldAttempts(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttempts is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttempts requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttempts: %w", err)
+	}
+	return oldValue.Attempts, nil
+}
+
+// AddAttempts adds i to the "attempts" field.
+func (m *UsageBillingRetryMutation) AddAttempts(i int) {
+	if m.addattempts != nil {
+		*m.addattempts += i
+	} else {
+		m.addattempts = &i
+	}
+}
+
+// AddedAttempts returns the value that was added to the "attempts" field in this mutation.
+func (m *UsageBillingRetryMutation) AddedAttempts() (r int, exists bool) {
+	v := m.addattempts
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttempts resets all changes to the "attempts" field.
+func (m *UsageBillingRetryMutation) ResetAttempts() {
+	m.attempts = nil
+	m.addattempts = nil
+}
+
+// SetLastError sets the "last_error" field.
+func (m *UsageBillingRetryMutation) SetLastError(s string) {
+	m.last_error = &s
+}
+
+// LastError returns the value of the "last_error" field in the mutation.
+func (m *UsageBillingRetryMutation) LastError() (r string, exists bool) {
+	v := m.last_error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastError returns the old "last_error" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldLastError(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastError: %w", err)
+	}
+	return oldValue.LastError, nil
+}
+
+// ResetLastError resets all changes to the "last_error" field.
+func (m *UsageBillingRetryMutation) ResetLastError() {
+	m.last_error = nil
+}
+
+// SetNextRetryAt sets the "next_retry_at" field.
+func (m *UsageBillingRetryMutation) SetNextRetryAt(t time.Time) {
+	m.next_retry_at = &t
+}
+
+// NextRetryAt returns the value of the "next_retry_at" field in the mutation.
+func (m *UsageBillingRetryMutation) NextRetryAt() (r time.Time, exists bool) {
+	v := m.next_retry_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextRetryAt returns the old "next_retry_at" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldNextRetryAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextRetryAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextRetryAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextRetryAt: %w", err)
+	}
+	return oldValue.NextRetryAt, nil
+}
+
+// ResetNextRetryAt resets all changes to the "next_retry_at" field.
+func (m *UsageBillingRetryMutation) ResetNextRetryAt() {
+	m.next_retry_at = nil
+}
+
+// SetSettledAt sets the "settled_at" field.
+func (m *UsageBillingRetryMutation) SetSettledAt(t time.Time) {
+	m.settled_at = &t
+}
+
+// SettledAt returns the value of the "settled_at" field in the mutation.
+func (m *UsageBillingRetryMutation) SettledAt() (r time.Time, exists bool) {
+	v := m.settled_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSettledAt returns the old "settled_at" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldSettledAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSettledAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSettledAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSettledAt: %w", err)
+	}
+	return oldValue.SettledAt, nil
+}
+
+// ClearSettledAt clears the value of the "settled_at" field.
+func (m *UsageBillingRetryMutation) ClearSettledAt() {
+	m.settled_at = nil
+	m.clearedFields[usagebillingretry.FieldSettledAt] = struct{}{}
+}
+
+// SettledAtCleared returns if the "settled_at" field was cleared in this mutation.
+func (m *UsageBillingRetryMutation) SettledAtCleared() bool {
+	_, ok := m.clearedFields[usagebillingretry.FieldSettledAt]
+	return ok
+}
+
+// ResetSettledAt resets all changes to the "settled_at" field.
+func (m *UsageBillingRetryMutation) ResetSettledAt() {
+	m.settled_at = nil
+	delete(m.clearedFields, usagebillingretry.FieldSettledAt)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UsageBillingRetryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UsageBillingRetryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UsageBillingRetryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UsageBillingRetryMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UsageBillingRetryMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UsageBillingRetry entity.
+// If the UsageBillingRetry object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageBillingRetryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UsageBillingRetryMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the UsageBillingRetryMutation builder.
+func (m *UsageBillingRetryMutation) Where(ps ...predicate.UsageBillingRetry) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UsageBillingRetryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UsageBillingRetryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UsageBillingRetry, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UsageBillingRetryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UsageBillingRetryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UsageBillingRetry).
+func (m *UsageBillingRetryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UsageBillingRetryMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.request_id != nil {
+		fields = append(fields, usagebillingretry.FieldRequestID)
+	}
+	if m.api_key_id != nil {
+		fields = append(fields, usagebillingretry.FieldAPIKeyID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, usagebillingretry.FieldUserID)
+	}
+	if m.account_id != nil {
+		fields = append(fields, usagebillingretry.FieldAccountID)
+	}
+	if m.group_id != nil {
+		fields = append(fields, usagebillingretry.FieldGroupID)
+	}
+	if m.platform != nil {
+		fields = append(fields, usagebillingretry.FieldPlatform)
+	}
+	if m.actual_cost != nil {
+		fields = append(fields, usagebillingretry.FieldActualCost)
+	}
+	if m.command != nil {
+		fields = append(fields, usagebillingretry.FieldCommand)
+	}
+	if m.status != nil {
+		fields = append(fields, usagebillingretry.FieldStatus)
+	}
+	if m.attempts != nil {
+		fields = append(fields, usagebillingretry.FieldAttempts)
+	}
+	if m.last_error != nil {
+		fields = append(fields, usagebillingretry.FieldLastError)
+	}
+	if m.next_retry_at != nil {
+		fields = append(fields, usagebillingretry.FieldNextRetryAt)
+	}
+	if m.settled_at != nil {
+		fields = append(fields, usagebillingretry.FieldSettledAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, usagebillingretry.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, usagebillingretry.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UsageBillingRetryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case usagebillingretry.FieldRequestID:
+		return m.RequestID()
+	case usagebillingretry.FieldAPIKeyID:
+		return m.APIKeyID()
+	case usagebillingretry.FieldUserID:
+		return m.UserID()
+	case usagebillingretry.FieldAccountID:
+		return m.AccountID()
+	case usagebillingretry.FieldGroupID:
+		return m.GroupID()
+	case usagebillingretry.FieldPlatform:
+		return m.Platform()
+	case usagebillingretry.FieldActualCost:
+		return m.ActualCost()
+	case usagebillingretry.FieldCommand:
+		return m.Command()
+	case usagebillingretry.FieldStatus:
+		return m.Status()
+	case usagebillingretry.FieldAttempts:
+		return m.Attempts()
+	case usagebillingretry.FieldLastError:
+		return m.LastError()
+	case usagebillingretry.FieldNextRetryAt:
+		return m.NextRetryAt()
+	case usagebillingretry.FieldSettledAt:
+		return m.SettledAt()
+	case usagebillingretry.FieldCreatedAt:
+		return m.CreatedAt()
+	case usagebillingretry.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UsageBillingRetryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case usagebillingretry.FieldRequestID:
+		return m.OldRequestID(ctx)
+	case usagebillingretry.FieldAPIKeyID:
+		return m.OldAPIKeyID(ctx)
+	case usagebillingretry.FieldUserID:
+		return m.OldUserID(ctx)
+	case usagebillingretry.FieldAccountID:
+		return m.OldAccountID(ctx)
+	case usagebillingretry.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case usagebillingretry.FieldPlatform:
+		return m.OldPlatform(ctx)
+	case usagebillingretry.FieldActualCost:
+		return m.OldActualCost(ctx)
+	case usagebillingretry.FieldCommand:
+		return m.OldCommand(ctx)
+	case usagebillingretry.FieldStatus:
+		return m.OldStatus(ctx)
+	case usagebillingretry.FieldAttempts:
+		return m.OldAttempts(ctx)
+	case usagebillingretry.FieldLastError:
+		return m.OldLastError(ctx)
+	case usagebillingretry.FieldNextRetryAt:
+		return m.OldNextRetryAt(ctx)
+	case usagebillingretry.FieldSettledAt:
+		return m.OldSettledAt(ctx)
+	case usagebillingretry.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case usagebillingretry.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown UsageBillingRetry field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageBillingRetryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case usagebillingretry.FieldRequestID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestID(v)
+		return nil
+	case usagebillingretry.FieldAPIKeyID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIKeyID(v)
+		return nil
+	case usagebillingretry.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case usagebillingretry.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
+	case usagebillingretry.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case usagebillingretry.FieldPlatform:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlatform(v)
+		return nil
+	case usagebillingretry.FieldActualCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActualCost(v)
+		return nil
+	case usagebillingretry.FieldCommand:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommand(v)
+		return nil
+	case usagebillingretry.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case usagebillingretry.FieldAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttempts(v)
+		return nil
+	case usagebillingretry.FieldLastError:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastError(v)
+		return nil
+	case usagebillingretry.FieldNextRetryAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextRetryAt(v)
+		return nil
+	case usagebillingretry.FieldSettledAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSettledAt(v)
+		return nil
+	case usagebillingretry.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case usagebillingretry.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageBillingRetry field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UsageBillingRetryMutation) AddedFields() []string {
+	var fields []string
+	if m.addapi_key_id != nil {
+		fields = append(fields, usagebillingretry.FieldAPIKeyID)
+	}
+	if m.adduser_id != nil {
+		fields = append(fields, usagebillingretry.FieldUserID)
+	}
+	if m.addaccount_id != nil {
+		fields = append(fields, usagebillingretry.FieldAccountID)
+	}
+	if m.addgroup_id != nil {
+		fields = append(fields, usagebillingretry.FieldGroupID)
+	}
+	if m.addactual_cost != nil {
+		fields = append(fields, usagebillingretry.FieldActualCost)
+	}
+	if m.addattempts != nil {
+		fields = append(fields, usagebillingretry.FieldAttempts)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UsageBillingRetryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case usagebillingretry.FieldAPIKeyID:
+		return m.AddedAPIKeyID()
+	case usagebillingretry.FieldUserID:
+		return m.AddedUserID()
+	case usagebillingretry.FieldAccountID:
+		return m.AddedAccountID()
+	case usagebillingretry.FieldGroupID:
+		return m.AddedGroupID()
+	case usagebillingretry.FieldActualCost:
+		return m.AddedActualCost()
+	case usagebillingretry.FieldAttempts:
+		return m.AddedAttempts()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageBillingRetryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case usagebillingretry.FieldAPIKeyID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAPIKeyID(v)
+		return nil
+	case usagebillingretry.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case usagebillingretry.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAccountID(v)
+		return nil
+	case usagebillingretry.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case usagebillingretry.FieldActualCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActualCost(v)
+		return nil
+	case usagebillingretry.FieldAttempts:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttempts(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageBillingRetry numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UsageBillingRetryMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(usagebillingretry.FieldGroupID) {
+		fields = append(fields, usagebillingretry.FieldGroupID)
+	}
+	if m.FieldCleared(usagebillingretry.FieldSettledAt) {
+		fields = append(fields, usagebillingretry.FieldSettledAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UsageBillingRetryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UsageBillingRetryMutation) ClearField(name string) error {
+	switch name {
+	case usagebillingretry.FieldGroupID:
+		m.ClearGroupID()
+		return nil
+	case usagebillingretry.FieldSettledAt:
+		m.ClearSettledAt()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageBillingRetry nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UsageBillingRetryMutation) ResetField(name string) error {
+	switch name {
+	case usagebillingretry.FieldRequestID:
+		m.ResetRequestID()
+		return nil
+	case usagebillingretry.FieldAPIKeyID:
+		m.ResetAPIKeyID()
+		return nil
+	case usagebillingretry.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case usagebillingretry.FieldAccountID:
+		m.ResetAccountID()
+		return nil
+	case usagebillingretry.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case usagebillingretry.FieldPlatform:
+		m.ResetPlatform()
+		return nil
+	case usagebillingretry.FieldActualCost:
+		m.ResetActualCost()
+		return nil
+	case usagebillingretry.FieldCommand:
+		m.ResetCommand()
+		return nil
+	case usagebillingretry.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case usagebillingretry.FieldAttempts:
+		m.ResetAttempts()
+		return nil
+	case usagebillingretry.FieldLastError:
+		m.ResetLastError()
+		return nil
+	case usagebillingretry.FieldNextRetryAt:
+		m.ResetNextRetryAt()
+		return nil
+	case usagebillingretry.FieldSettledAt:
+		m.ResetSettledAt()
+		return nil
+	case usagebillingretry.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case usagebillingretry.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageBillingRetry field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UsageBillingRetryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UsageBillingRetryMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UsageBillingRetryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UsageBillingRetryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UsageBillingRetryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UsageBillingRetryMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UsageBillingRetryMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown UsageBillingRetry unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UsageBillingRetryMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown UsageBillingRetry edge %s", name)
 }
 
 // UsageCleanupTaskMutation represents an operation that mutates the UsageCleanupTask nodes in the graph.

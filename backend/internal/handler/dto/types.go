@@ -675,6 +675,12 @@ type UsageLog struct {
 type AdminUsageLog struct {
 	UsageLog
 
+	// fork：扣费失败重试 —— pending（待补扣）/ failed（重试放弃）/ settled（重放补扣成功）；
+	// 空值表示写入时已即时扣费。来自 usage_billing_retries，不落 usage_logs。
+	BillingStatus   string `json:"billing_status,omitempty"`
+	BillingError    string `json:"billing_error,omitempty"`
+	BillingAttempts int    `json:"billing_attempts,omitempty"`
+
 	// UpstreamModel is the actual model sent to the upstream provider after mapping.
 	// Omitted when no mapping was applied (requested model was used as-is).
 	UpstreamModel *string `json:"upstream_model,omitempty"`

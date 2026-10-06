@@ -503,7 +503,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		quotaPlatform = PlatformFromAPIKey(apiKey)
 	}
 
-	_, billingErr := applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
+	billingParams := &postUsageBillingParams{
 		Cost:                       cost,
 		User:                       user,
 		APIKey:                     apiKey,
@@ -515,10 +515,12 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		APIKeyService:              input.APIKeyService,
 		Platform:                   quotaPlatform,
 		SimpleModeKeyRateLimitOnly: simpleModeKeyRateLimitOnly,
-	}, s.billingDeps(), s.usageBillingRepo)
+	}
+	_, billingErr := applyUsageBilling(ctx, requestID, usageLog, billingParams, s.billingDeps(), s.usageBillingRepo)
 
 	if billingErr != nil {
-		usageLog.ActualCost = 0
+		// fork：扣费失败重试 —— 同 GatewayService.recordUsageCore：保留应扣金额并入队重放。
+		enqueueBillingRetry(ctx, s.billingRetry, requestID, usageLog, billingParams, billingErr)
 		writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.openai_gateway")
 		return billingErr
 	}

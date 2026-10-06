@@ -50,6 +50,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
+	"github.com/Wei-Shaw/sub2api/ent/usagebillingretry"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -157,6 +158,7 @@ func checkColumn(t, c string) error {
 			supportticket.Table:              supportticket.ValidColumn,
 			supportticketmessage.Table:       supportticketmessage.ValidColumn,
 			tlsfingerprintprofile.Table:      tlsfingerprintprofile.ValidColumn,
+			usagebillingretry.Table:          usagebillingretry.ValidColumn,
 			usagecleanuptask.Table:           usagecleanuptask.ValidColumn,
 			usagelog.Table:                   usagelog.ValidColumn,
 			user.Table:                       user.ValidColumn,

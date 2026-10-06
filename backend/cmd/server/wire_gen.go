@@ -255,7 +255,10 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	adminSubscriptionHandler := admin.NewSubscriptionHandler(subscriptionService)
 	usageCleanupRepository := repository.NewUsageCleanupRepository(client, db)
 	usageCleanupService := service.ProvideUsageCleanupService(usageCleanupRepository, timingWheelService, dashboardAggregationService, configConfig)
-	adminUsageHandler := admin.NewUsageHandler(usageService, apiKeyService, adminService, usageCleanupService)
+	usageBillingRetryRepository := repository.NewUsageBillingRetryRepository(client, db)
+	opsAlertEvaluatorService := service.ProvideOpsAlertEvaluatorService(opsService, opsRepository, emailService, redisClient, configConfig, proxyRepository)
+	usageBillingRetryService := service.ProvideUsageBillingRetryService(usageBillingRetryRepository, usageBillingRepository, billingCacheService, serviceUserPlatformQuotaRepository, settingRepository, timingWheelService, configConfig, gatewayService, openAIGatewayService, opsAlertEvaluatorService)
+	adminUsageHandler := admin.ProvideUsageHandler(usageService, apiKeyService, adminService, usageCleanupService, usageBillingRetryService)
 	userAttributeHandler := admin.NewUserAttributeHandler(userAttributeService)
 	errorPassthroughRepository := repository.NewErrorPassthroughRepository(client)
 	errorPassthroughCache := repository.NewErrorPassthroughCache(redisClient)
@@ -364,7 +367,6 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	httpServer := server.ProvideHTTPServer(configConfig, engine)
 	opsMetricsCollector := service.ProvideOpsMetricsCollector(opsRepository, settingRepository, accountRepository, concurrencyService, db, redisClient, configConfig)
 	opsAggregationService := service.ProvideOpsAggregationService(opsRepository, settingRepository, db, redisClient, configConfig)
-	opsAlertEvaluatorService := service.ProvideOpsAlertEvaluatorService(opsService, opsRepository, emailService, redisClient, configConfig, proxyRepository)
 	opsCleanupService := service.ProvideOpsCleanupService(opsRepository, db, redisClient, configConfig, settingRepository, opsService)
 	opsScheduledReportService := service.ProvideOpsScheduledReportService(opsService, userService, emailService, redisClient, configConfig)
 	opsIngressRejectAggregator := service.ProvideOpsIngressRejectAggregator(opsRepository, opsService)
@@ -379,7 +381,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	groupStatusRunnerService := service.ProvideGroupStatusRunnerService(groupStatusRepository, groupStatusProbeService, configConfig)
 	adminApprovalSweeper := service.ProvideAdminApprovalSweeper(adminApprovalService)
 	userPlatformQuotaUsageFlusher := service.ProvideUserPlatformQuotaUsageFlusher(configConfig, billingCache, serviceUserPlatformQuotaRepository, timingWheelService)
-	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, opsSystemLogSink, opsService, opsIngressRejectAggregator, apiKeyService, authCacheInvalidationWorker, schedulerSnapshotService, tokenRefreshService, accountExpiryService, cnProviderBalanceCheckService, openAICodexVersionSyncService, claudeCodeVersionSyncService, proxyExpiryService, subscriptionExpiryService, usageCleanupService, idempotencyCleanupService, batchImageCleanupService, batchImageWorkerRuntime, pricingService, emailQueueService, billingCacheService, usageRecordWorkerPool, subscriptionService, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService, grokOAuthService, openAIGatewayService, scheduledTestRunnerService, groupStatusRunnerService, contentTranslationService, adminApprovalSweeper, backupService, userPlatformQuotaUsageFlusher, upstreamBillingProbeService, ollamaCloudUsageService, openCodeGoUsageService, auditLogService, openAIQuotaAutoResetService, promptService, pluginManager)
+	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, opsSystemLogSink, opsService, opsIngressRejectAggregator, apiKeyService, authCacheInvalidationWorker, schedulerSnapshotService, tokenRefreshService, accountExpiryService, cnProviderBalanceCheckService, openAICodexVersionSyncService, claudeCodeVersionSyncService, proxyExpiryService, subscriptionExpiryService, usageCleanupService, idempotencyCleanupService, batchImageCleanupService, batchImageWorkerRuntime, pricingService, emailQueueService, billingCacheService, usageRecordWorkerPool, subscriptionService, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService, grokOAuthService, openAIGatewayService, scheduledTestRunnerService, groupStatusRunnerService, contentTranslationService, usageBillingRetryService, adminApprovalSweeper, backupService, userPlatformQuotaUsageFlusher, upstreamBillingProbeService, ollamaCloudUsageService, openCodeGoUsageService, auditLogService, openAIQuotaAutoResetService, promptService, pluginManager)
 	application := &Application{
 		Server:        httpServer,
 		PromptAudit:   promptService,
@@ -455,6 +457,7 @@ func provideCleanup(
 	scheduledTestRunner *service.ScheduledTestRunnerService,
 	groupStatusRunner *service.GroupStatusRunnerService,
 	contentTranslation *service.ContentTranslationService,
+	usageBillingRetry *service.UsageBillingRetryService,
 	approvalSweeper *service.AdminApprovalSweeper,
 	backupSvc *service.BackupService,
 	quotaFlusher *service.UserPlatformQuotaUsageFlusher,
@@ -681,6 +684,12 @@ func provideCleanup(
 			{"ContentTranslationService", func() error {
 				if contentTranslation != nil {
 					contentTranslation.Stop()
+				}
+				return nil
+			}},
+			{"UsageBillingRetryService", func() error {
+				if usageBillingRetry != nil {
+					usageBillingRetry.Stop()
 				}
 				return nil
 			}},

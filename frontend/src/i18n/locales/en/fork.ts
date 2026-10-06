@@ -4,6 +4,17 @@ export default {
   "common": {
     "retry": "Retry"
   },
+  "usage": {
+    "billingStatus": {
+      "pending": "Retrying",
+      "failed": "Billing failed",
+      "settled": "Settled late",
+      "pendingHint": "The billing transaction failed; a background job is retrying with backoff",
+      "failedHint": "Retries exhausted or not retryable; needs manual reconciliation",
+      "settledHint": "The first billing attempt failed and was settled by the background retry",
+      "attempts": "{n} attempts"
+    }
+  },
   "home": {
     "loginConsole": "Sign in to dashboard",
     "headerTagline": "One-click access to Claude Code / Codex",
@@ -587,6 +598,16 @@ export default {
       }
     },
     "ops": {
+      "alertRules": {
+        "metrics": {
+          "billingFailureCount": "Billing failures",
+          "billingUnsettledCount": "Unsettled billings"
+        },
+        "metricDescriptions": {
+          "billingFailureCount": "Requests whose billing transaction failed and entered the retry queue within the window; any value means the usage page needs a look.",
+          "billingUnsettledCount": "Requests currently pending a billing retry plus those whose retries were abandoned (not limited to the window)."
+        }
+      },
       "errorDetail": {
         "pinnedToOriginalAccountId": "Pinned to original account_id",
         "missingUpstreamRequestBody": "Missing upstream request body",
@@ -721,6 +742,10 @@ export default {
         "ticketNotify": {
           "enabled": "Ticket push",
           "enabledHint": "Push a message with a link to the ticket whenever a user opens a ticket or adds a reply (uses the UID / SendKey above); staff replies are not pushed."
+        },
+        "billingFailureNotify": {
+          "enabled": "Billing failure push",
+          "enabledHint": "Push a summary when a request's billing fails and is queued for retry, or when a retry is abandoned (uses the UID / SendKey above); at most one push per 10 minutes per instance."
         },
         "personalToken": {
           "title": "Operator personal tokens",

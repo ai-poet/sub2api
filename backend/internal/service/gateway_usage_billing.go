@@ -903,7 +903,7 @@ func (s *GatewayService) recordUsageCore(ctx context.Context, input *recordUsage
 		}
 	}
 	requestID := usageLog.RequestID
-	_, billingErr := applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
+	billingParams := &postUsageBillingParams{
 		Cost:                       cost,
 		User:                       user,
 		APIKey:                     apiKey,
@@ -915,10 +915,13 @@ func (s *GatewayService) recordUsageCore(ctx context.Context, input *recordUsage
 		APIKeyService:              input.APIKeyService,
 		Platform:                   quotaPlatform,
 		SimpleModeKeyRateLimitOnly: simpleModeKeyRateLimitOnly,
-	}, s.billingDeps(), s.usageBillingRepo)
+	}
+	_, billingErr := applyUsageBilling(ctx, requestID, usageLog, billingParams, s.billingDeps(), s.usageBillingRepo)
 
 	if billingErr != nil {
-		usageLog.ActualCost = 0
+		// fork：扣费失败重试 —— 日志保留应扣金额（不再清零，否则损失在统计里不可见），
+		// 扣费命令入队由 UsageBillingRetryService 重放；去重占位已随事务回滚，重放幂等。
+		enqueueBillingRetry(ctx, s.billingRetry, requestID, usageLog, billingParams, billingErr)
 		writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.gateway")
 		return billingErr
 	}

@@ -4,6 +4,17 @@ export default {
   "common": {
     "retry": "重试"
   },
+  "usage": {
+    "billingStatus": {
+      "pending": "待补扣",
+      "failed": "扣费失败",
+      "settled": "已补扣",
+      "pendingHint": "扣费事务失败，后台正在按退避自动重放",
+      "failedHint": "重试已放弃，需人工核对补扣",
+      "settledHint": "首次扣费失败，已由后台重放补扣",
+      "attempts": "已重试 {n} 次"
+    }
+  },
   "home": {
     "loginConsole": "登录控制台",
     "headerTagline": "Claude Code / Codex 一键接入",
@@ -587,6 +598,16 @@ export default {
       }
     },
     "ops": {
+      "alertRules": {
+        "metrics": {
+          "billingFailureCount": "扣费失败笔数",
+          "billingUnsettledCount": "未结清扣费笔数"
+        },
+        "metricDescriptions": {
+          "billingFailureCount": "统计窗口内扣费事务失败并进入重试队列的请求数；出现即应到使用记录页核对。",
+          "billingUnsettledCount": "当前待补扣 + 重试已放弃的请求数（不受统计窗口限制）。"
+        }
+      },
       "errorDetail": {
         "pinnedToOriginalAccountId": "固定到原 account_id",
         "missingUpstreamRequestBody": "缺少上游请求体",
@@ -721,6 +742,10 @@ export default {
         "ticketNotify": {
           "enabled": "工单推送",
           "enabledHint": "用户提交新工单或追加回复时，推送一条带工单页链接的消息（沿用上方 UID / SendKey）；客服自己的回复不推送。"
+        },
+        "billingFailureNotify": {
+          "enabled": "扣费失败推送",
+          "enabledHint": "有请求扣费失败进入重试队列、或重试放弃时推送一条摘要（沿用上方 UID / SendKey），同一实例至少间隔 10 分钟一条。"
         },
         "personalToken": {
           "title": "运维个人令牌",

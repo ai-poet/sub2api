@@ -53,6 +53,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
+	"github.com/Wei-Shaw/sub2api/ent/usagebillingretry"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -147,6 +148,8 @@ type Client struct {
 	SupportTicketMessage *SupportTicketMessageClient
 	// TLSFingerprintProfile is the client for interacting with the TLSFingerprintProfile builders.
 	TLSFingerprintProfile *TLSFingerprintProfileClient
+	// UsageBillingRetry is the client for interacting with the UsageBillingRetry builders.
+	UsageBillingRetry *UsageBillingRetryClient
 	// UsageCleanupTask is the client for interacting with the UsageCleanupTask builders.
 	UsageCleanupTask *UsageCleanupTaskClient
 	// UsageLog is the client for interacting with the UsageLog builders.
@@ -214,6 +217,7 @@ func (c *Client) init() {
 	c.SupportTicket = NewSupportTicketClient(c.config)
 	c.SupportTicketMessage = NewSupportTicketMessageClient(c.config)
 	c.TLSFingerprintProfile = NewTLSFingerprintProfileClient(c.config)
+	c.UsageBillingRetry = NewUsageBillingRetryClient(c.config)
 	c.UsageCleanupTask = NewUsageCleanupTaskClient(c.config)
 	c.UsageLog = NewUsageLogClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -353,6 +357,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		SupportTicket:              NewSupportTicketClient(cfg),
 		SupportTicketMessage:       NewSupportTicketMessageClient(cfg),
 		TLSFingerprintProfile:      NewTLSFingerprintProfileClient(cfg),
+		UsageBillingRetry:          NewUsageBillingRetryClient(cfg),
 		UsageCleanupTask:           NewUsageCleanupTaskClient(cfg),
 		UsageLog:                   NewUsageLogClient(cfg),
 		User:                       NewUserClient(cfg),
@@ -419,6 +424,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		SupportTicket:              NewSupportTicketClient(cfg),
 		SupportTicketMessage:       NewSupportTicketMessageClient(cfg),
 		TLSFingerprintProfile:      NewTLSFingerprintProfileClient(cfg),
+		UsageBillingRetry:          NewUsageBillingRetryClient(cfg),
 		UsageCleanupTask:           NewUsageCleanupTaskClient(cfg),
 		UsageLog:                   NewUsageLogClient(cfg),
 		User:                       NewUserClient(cfg),
@@ -467,8 +473,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SiteMessage, c.SupportTicket, c.SupportTicketMessage,
-		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
-		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.TLSFingerprintProfile, c.UsageBillingRetry, c.UsageCleanupTask, c.UsageLog,
+		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
 		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Use(hooks...)
@@ -489,8 +495,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.IdentityAdoptionDecision, c.PendingAuthSession, c.PersonalToken, c.PromoCode,
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SiteMessage, c.SupportTicket, c.SupportTicketMessage,
-		c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog, c.User,
-		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.TLSFingerprintProfile, c.UsageBillingRetry, c.UsageCleanupTask, c.UsageLog,
+		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
 		c.UserPlatformQuota, c.UserReferral, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
@@ -576,6 +582,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.SupportTicketMessage.mutate(ctx, m)
 	case *TLSFingerprintProfileMutation:
 		return c.TLSFingerprintProfile.mutate(ctx, m)
+	case *UsageBillingRetryMutation:
+		return c.UsageBillingRetry.mutate(ctx, m)
 	case *UsageCleanupTaskMutation:
 		return c.UsageCleanupTask.mutate(ctx, m)
 	case *UsageLogMutation:
@@ -6238,6 +6246,139 @@ func (c *TLSFingerprintProfileClient) mutate(ctx context.Context, m *TLSFingerpr
 	}
 }
 
+// UsageBillingRetryClient is a client for the UsageBillingRetry schema.
+type UsageBillingRetryClient struct {
+	config
+}
+
+// NewUsageBillingRetryClient returns a client for the UsageBillingRetry from the given config.
+func NewUsageBillingRetryClient(c config) *UsageBillingRetryClient {
+	return &UsageBillingRetryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usagebillingretry.Hooks(f(g(h())))`.
+func (c *UsageBillingRetryClient) Use(hooks ...Hook) {
+	c.hooks.UsageBillingRetry = append(c.hooks.UsageBillingRetry, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usagebillingretry.Intercept(f(g(h())))`.
+func (c *UsageBillingRetryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UsageBillingRetry = append(c.inters.UsageBillingRetry, interceptors...)
+}
+
+// Create returns a builder for creating a UsageBillingRetry entity.
+func (c *UsageBillingRetryClient) Create() *UsageBillingRetryCreate {
+	mutation := newUsageBillingRetryMutation(c.config, OpCreate)
+	return &UsageBillingRetryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UsageBillingRetry entities.
+func (c *UsageBillingRetryClient) CreateBulk(builders ...*UsageBillingRetryCreate) *UsageBillingRetryCreateBulk {
+	return &UsageBillingRetryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UsageBillingRetryClient) MapCreateBulk(slice any, setFunc func(*UsageBillingRetryCreate, int)) *UsageBillingRetryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UsageBillingRetryCreateBulk{err: fmt.Errorf("calling to UsageBillingRetryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UsageBillingRetryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UsageBillingRetryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UsageBillingRetry.
+func (c *UsageBillingRetryClient) Update() *UsageBillingRetryUpdate {
+	mutation := newUsageBillingRetryMutation(c.config, OpUpdate)
+	return &UsageBillingRetryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UsageBillingRetryClient) UpdateOne(_m *UsageBillingRetry) *UsageBillingRetryUpdateOne {
+	mutation := newUsageBillingRetryMutation(c.config, OpUpdateOne, withUsageBillingRetry(_m))
+	return &UsageBillingRetryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UsageBillingRetryClient) UpdateOneID(id int64) *UsageBillingRetryUpdateOne {
+	mutation := newUsageBillingRetryMutation(c.config, OpUpdateOne, withUsageBillingRetryID(id))
+	return &UsageBillingRetryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UsageBillingRetry.
+func (c *UsageBillingRetryClient) Delete() *UsageBillingRetryDelete {
+	mutation := newUsageBillingRetryMutation(c.config, OpDelete)
+	return &UsageBillingRetryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UsageBillingRetryClient) DeleteOne(_m *UsageBillingRetry) *UsageBillingRetryDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UsageBillingRetryClient) DeleteOneID(id int64) *UsageBillingRetryDeleteOne {
+	builder := c.Delete().Where(usagebillingretry.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UsageBillingRetryDeleteOne{builder}
+}
+
+// Query returns a query builder for UsageBillingRetry.
+func (c *UsageBillingRetryClient) Query() *UsageBillingRetryQuery {
+	return &UsageBillingRetryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUsageBillingRetry},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UsageBillingRetry entity by its id.
+func (c *UsageBillingRetryClient) Get(ctx context.Context, id int64) (*UsageBillingRetry, error) {
+	return c.Query().Where(usagebillingretry.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UsageBillingRetryClient) GetX(ctx context.Context, id int64) *UsageBillingRetry {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UsageBillingRetryClient) Hooks() []Hook {
+	return c.hooks.UsageBillingRetry
+}
+
+// Interceptors returns the client interceptors.
+func (c *UsageBillingRetryClient) Interceptors() []Interceptor {
+	return c.inters.UsageBillingRetry
+}
+
+func (c *UsageBillingRetryClient) mutate(ctx context.Context, m *UsageBillingRetryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UsageBillingRetryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UsageBillingRetryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UsageBillingRetryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UsageBillingRetryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UsageBillingRetry mutation op: %q", m.Op())
+	}
+}
+
 // UsageCleanupTaskClient is a client for the UsageCleanupTask schema.
 type UsageCleanupTaskClient struct {
 	config
@@ -7918,9 +8059,10 @@ type (
 		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
 		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
 		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SiteMessage,
-		SupportTicket, SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask,
-		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
-		UserPlatformQuota, UserReferral, UserSubscription []ent.Hook
+		SupportTicket, SupportTicketMessage, TLSFingerprintProfile, UsageBillingRetry,
+		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
+		UserAttributeValue, UserPlatformQuota, UserReferral,
+		UserSubscription []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, AdminApprovalRequest, Announcement,
@@ -7932,9 +8074,10 @@ type (
 		GroupStatusRecord, GroupStatusState, IdempotencyRecord,
 		IdentityAdoptionDecision, PendingAuthSession, PersonalToken, PromoCode,
 		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SiteMessage,
-		SupportTicket, SupportTicketMessage, TLSFingerprintProfile, UsageCleanupTask,
-		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
-		UserPlatformQuota, UserReferral, UserSubscription []ent.Interceptor
+		SupportTicket, SupportTicketMessage, TLSFingerprintProfile, UsageBillingRetry,
+		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
+		UserAttributeValue, UserPlatformQuota, UserReferral,
+		UserSubscription []ent.Interceptor
 	}
 )
 

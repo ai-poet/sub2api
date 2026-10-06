@@ -1824,6 +1824,10 @@ export interface UsageLogAccountSummary {
 }
 
 export interface AdminUsageLog extends UsageLog {
+  // fork：扣费失败重试 —— pending（待补扣）/ failed（重试放弃）/ settled（重放补扣成功）；缺省表示即时扣费成功
+  billing_status?: 'pending' | 'failed' | 'settled' | null
+  billing_error?: string | null
+  billing_attempts?: number | null
   upstream_model?: string | null
   upstream_reasoning_effort?: string | null
   upstream_response_model?: string | null

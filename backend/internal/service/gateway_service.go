@@ -766,6 +766,7 @@ type GatewayService struct {
 	groupRepo             GroupRepository
 	usageLogRepo          UsageLogRepository
 	usageBillingRepo      UsageBillingRepository
+	billingRetry          BillingRetryEnqueuer // fork：扣费失败重试（SetBillingRetryEnqueuer 注入）
 	userRepo              UserRepository
 	userSubRepo           UserSubscriptionRepository
 	userGroupRateRepo     UserGroupRateRepository

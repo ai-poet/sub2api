@@ -561,8 +561,11 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 		}
 	}
 
-	if err := s.checkAPIKeyCreateLimits(ctx, userID); err != nil {
-		return nil, err
+	// fork：admin / operator 豁免创建数量与频率限制（后台脚本、批量迁移）
+	if !IsPrivilegedRole(user.Role) {
+		if err := s.checkAPIKeyCreateLimits(ctx, userID); err != nil {
+			return nil, err
+		}
 	}
 
 	// 创建API Key记录
@@ -954,6 +957,11 @@ func (s *APIKeyService) Delete(ctx context.Context, id int64, userID int64) erro
 	// 验证当前用户是否为该 API Key 的所有者
 	if ownerID != userID {
 		return ErrInsufficientPerms
+	}
+
+	// fork：每小时删除次数上限（admin / operator 豁免）
+	if err := s.checkAPIKeyDeleteLimit(ctx, userID); err != nil {
+		return err
 	}
 
 	// 事务内:写审计 + 软删除(tombstone)。

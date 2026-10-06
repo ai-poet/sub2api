@@ -90,6 +90,8 @@ type Tx struct {
 	SupportTicketMessage *SupportTicketMessageClient
 	// TLSFingerprintProfile is the client for interacting with the TLSFingerprintProfile builders.
 	TLSFingerprintProfile *TLSFingerprintProfileClient
+	// UsageBillingRetry is the client for interacting with the UsageBillingRetry builders.
+	UsageBillingRetry *UsageBillingRetryClient
 	// UsageCleanupTask is the client for interacting with the UsageCleanupTask builders.
 	UsageCleanupTask *UsageCleanupTaskClient
 	// UsageLog is the client for interacting with the UsageLog builders.
@@ -277,6 +279,7 @@ func (tx *Tx) init() {
 	tx.SupportTicket = NewSupportTicketClient(tx.config)
 	tx.SupportTicketMessage = NewSupportTicketMessageClient(tx.config)
 	tx.TLSFingerprintProfile = NewTLSFingerprintProfileClient(tx.config)
+	tx.UsageBillingRetry = NewUsageBillingRetryClient(tx.config)
 	tx.UsageCleanupTask = NewUsageCleanupTaskClient(tx.config)
 	tx.UsageLog = NewUsageLogClient(tx.config)
 	tx.User = NewUserClient(tx.config)

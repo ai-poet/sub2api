@@ -701,7 +701,8 @@ func TestGatewayServiceRecordUsage_BillingErrorWritesUnsettledUsageLog(t *testin
 	require.Greater(t, usageRepo.lastLog.InputCost, 0.0)
 	require.Greater(t, usageRepo.lastLog.OutputCost, 0.0)
 	require.Greater(t, usageRepo.lastLog.TotalCost, 0.0)
-	require.Zero(t, usageRepo.lastLog.ActualCost)
+	// fork：扣费失败重试 —— 上游在这里把 ActualCost 清零；本 fork 保留应扣金额，由重试队列补扣。
+	require.InDelta(t, usageRepo.lastLog.TotalCost*1.1, usageRepo.lastLog.ActualCost, 1e-9)
 }
 
 func TestGatewayServiceRecordUsage_ReasoningEffortPersisted(t *testing.T) {

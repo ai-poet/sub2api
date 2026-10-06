@@ -30,6 +30,26 @@ func apiKeyCreateCountKey(userID int64) string {
 	return fmt.Sprintf("%s%d", apiKeyCreateCountKeyPrefix, userID)
 }
 
+// apiKeyDeleteCountKeyPrefix fork：按用户的 API Key 删除次数计数键（与创建计数同一窗口语义）。
+const apiKeyDeleteCountKeyPrefix = "apikey:delete_count:"
+
+func apiKeyDeleteCountKey(userID int64) string {
+	return fmt.Sprintf("%s%d", apiKeyDeleteCountKeyPrefix, userID)
+}
+
+// IncrementDeleteCount 实现 service.APIKeyDeleteCounter（fork）：与 IncrementCreateCount 同样的
+// 固定窗口计数，INCR 与 ExpireNX 放在同一个 MULTI 里。
+func (c *apiKeyCache) IncrementDeleteCount(ctx context.Context, userID int64, window time.Duration) (int64, error) {
+	key := apiKeyDeleteCountKey(userID)
+	pipe := c.rdb.TxPipeline()
+	incr := pipe.Incr(ctx, key)
+	pipe.ExpireNX(ctx, key, window)
+	if _, err := pipe.Exec(ctx); err != nil {
+		return 0, err
+	}
+	return incr.Val(), nil
+}
+
 func apiKeyAuthCacheKey(key string) string {
 	return fmt.Sprintf("%s%s", apiKeyAuthCachePrefix, key)
 }

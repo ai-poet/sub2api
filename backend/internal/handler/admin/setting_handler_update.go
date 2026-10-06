@@ -23,21 +23,22 @@ import (
 // UpdateSettingsRequest 更新设置请求
 type UpdateSettingsRequest struct {
 	// fork 自有设置
-	PurchaseSubscriptionOpenMode       *string `json:"purchase_subscription_open_mode"`
-	ClientDownloadWindowsURL           *string `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL             *string `json:"client_download_macos_url"`
-	GroupStatusEnabled                 *bool   `json:"group_status_enabled"`
-	GroupStatusNotifyServerChanEnabled *bool   `json:"group_status_notify_serverchan_enabled"`
-	ApprovalNotifyServerChanEnabled    *bool   `json:"approval_notify_serverchan_enabled"`
-	ApprovalPendingLimitPerUser        *int    `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
-	ApprovalBatchLimit                 *int    `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
-	TicketNotifyServerChanEnabled      *bool   `json:"ticket_notify_serverchan_enabled"`
-	PersonalTokenEnabled               *bool   `json:"personal_token_enabled"`
-	GroupStatusNotifyServerChanUID     *string `json:"group_status_notify_serverchan_uid"`
-	GroupStatusNotifyServerChanSendKey *string `json:"group_status_notify_serverchan_sendkey"`
-	CommunityQRCode                    *string `json:"community_qr_code"`
-	CommunityGroupURL                  *string `json:"community_group_url"`
-	ClientChangelogGitHubRepo          *string `json:"client_changelog_github_repo"`
+	PurchaseSubscriptionOpenMode          *string `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL              *string `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL                *string `json:"client_download_macos_url"`
+	GroupStatusEnabled                    *bool   `json:"group_status_enabled"`
+	GroupStatusNotifyServerChanEnabled    *bool   `json:"group_status_notify_serverchan_enabled"`
+	ApprovalNotifyServerChanEnabled       *bool   `json:"approval_notify_serverchan_enabled"`
+	ApprovalPendingLimitPerUser           *int    `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
+	ApprovalBatchLimit                    *int    `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
+	TicketNotifyServerChanEnabled         *bool   `json:"ticket_notify_serverchan_enabled"`
+	BillingFailureNotifyServerChanEnabled *bool   `json:"billing_failure_notify_serverchan_enabled"`
+	PersonalTokenEnabled                  *bool   `json:"personal_token_enabled"`
+	GroupStatusNotifyServerChanUID        *string `json:"group_status_notify_serverchan_uid"`
+	GroupStatusNotifyServerChanSendKey    *string `json:"group_status_notify_serverchan_sendkey"`
+	CommunityQRCode                       *string `json:"community_qr_code"`
+	CommunityGroupURL                     *string `json:"community_group_url"`
+	ClientChangelogGitHubRepo             *string `json:"client_changelog_github_repo"`
 
 	// 注册设置
 	RegistrationEnabled                 bool                         `json:"registration_enabled"`
@@ -2059,6 +2060,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		ApprovalPendingLimitPerUser:                            updatedSettings.ApprovalPendingLimitPerUser,
 		ApprovalBatchLimit:                                     updatedSettings.ApprovalBatchLimit,
 		TicketNotifyServerChanEnabled:                          settings.TicketNotifyServerChanEnabled,
+		BillingFailureNotifyServerChanEnabled:                  settings.BillingFailureNotifyServerChanEnabled,
 		PersonalTokenEnabled:                                   settings.PersonalTokenEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
@@ -2467,6 +2469,11 @@ func applyForkSettingsFromRequest(
 	settings.TicketNotifyServerChanEnabled = previous.TicketNotifyServerChanEnabled
 	if req.TicketNotifyServerChanEnabled != nil {
 		settings.TicketNotifyServerChanEnabled = *req.TicketNotifyServerChanEnabled
+	}
+	// 扣费失败 / 重试放弃 → Server酱³ 推送（复用同一 UID / SendKey）
+	settings.BillingFailureNotifyServerChanEnabled = previous.BillingFailureNotifyServerChanEnabled
+	if req.BillingFailureNotifyServerChanEnabled != nil {
+		settings.BillingFailureNotifyServerChanEnabled = *req.BillingFailureNotifyServerChanEnabled
 	}
 	// 运维管理员个人令牌总开关：关闭后所有令牌立即不可用（不删除）
 	settings.PersonalTokenEnabled = previous.PersonalTokenEnabled

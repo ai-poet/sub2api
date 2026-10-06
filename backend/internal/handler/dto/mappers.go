@@ -742,6 +742,9 @@ func UsageLogFromServiceAdmin(l *service.UsageLog) *AdminUsageLog {
 	usageLog.APIKey = apiKeyWithoutSecret(l.APIKey)
 	return &AdminUsageLog{
 		UsageLog:                usageLog,
+		BillingStatus:           l.BillingStatus,
+		BillingError:            l.BillingError,
+		BillingAttempts:         l.BillingAttempts,
 		UpstreamModel:           l.UpstreamModel,
 		UpstreamReasoningEffort: adminUpstreamReasoningEffort(l),
 		UpstreamResponseModel:   l.UpstreamResponseModel,

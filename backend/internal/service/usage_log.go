@@ -173,6 +173,12 @@ type UsageLog struct {
 	// AccountStatsCost 账号统计定价预计算费用（nil = 使用默认公式 total_cost × account_rate_multiplier）
 	AccountStatsCost *float64
 
+	// fork：扣费失败重试 —— 只在读取时由 UsageBillingRetryService.Annotate 填充，不落库。
+	// pending（待补扣）/ failed（重试放弃）/ settled（重放补扣成功）；空串表示写入时已即时扣费。
+	BillingStatus   string
+	BillingError    string
+	BillingAttempts int
+
 	BillingType        int8
 	RequestType        RequestType
 	Stream             bool

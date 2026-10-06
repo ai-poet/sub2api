@@ -58,6 +58,19 @@
         <Toggle v-model="form.ticket_notify_serverchan_enabled" />
       </div>
 
+      <!-- 扣费失败 / 重试放弃 → Server酱³ 推送（复用同一 UID / SendKey） -->
+      <div class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700">
+        <div>
+          <label class="font-medium text-gray-900 dark:text-white">
+            {{ t('admin.settings.site.billingFailureNotify.enabled') }}
+          </label>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ t('admin.settings.site.billingFailureNotify.enabledHint') }}
+          </p>
+        </div>
+        <Toggle v-model="form.billing_failure_notify_serverchan_enabled" />
+      </div>
+
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
           <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -345,6 +358,8 @@ interface ForkSettingsForm {
   approval_batch_limit: number
   // 工单（新工单 / 用户回复）→ Server酱³ 推送（复用同一 UID / SendKey）
   ticket_notify_serverchan_enabled: boolean
+  // 扣费失败 / 重试放弃 → Server酱³ 推送（复用同一 UID / SendKey）
+  billing_failure_notify_serverchan_enabled: boolean
   // 运维管理员个人令牌总开关（关闭后所有令牌立即不可用，不删除）
   personal_token_enabled: boolean
   purchase_subscription_enabled: boolean

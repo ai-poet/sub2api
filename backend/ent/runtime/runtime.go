@@ -44,6 +44,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
+	"github.com/Wei-Shaw/sub2api/ent/usagebillingretry"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -2299,6 +2300,50 @@ func init() {
 	tlsfingerprintprofileDescEnableGrease := tlsfingerprintprofileFields[2].Descriptor()
 	// tlsfingerprintprofile.DefaultEnableGrease holds the default value on creation for the enable_grease field.
 	tlsfingerprintprofile.DefaultEnableGrease = tlsfingerprintprofileDescEnableGrease.Default.(bool)
+	usagebillingretryFields := schema.UsageBillingRetry{}.Fields()
+	_ = usagebillingretryFields
+	// usagebillingretryDescRequestID is the schema descriptor for request_id field.
+	usagebillingretryDescRequestID := usagebillingretryFields[0].Descriptor()
+	// usagebillingretry.RequestIDValidator is a validator for the "request_id" field. It is called by the builders before save.
+	usagebillingretry.RequestIDValidator = usagebillingretryDescRequestID.Validators[0].(func(string) error)
+	// usagebillingretryDescPlatform is the schema descriptor for platform field.
+	usagebillingretryDescPlatform := usagebillingretryFields[5].Descriptor()
+	// usagebillingretry.DefaultPlatform holds the default value on creation for the platform field.
+	usagebillingretry.DefaultPlatform = usagebillingretryDescPlatform.Default.(string)
+	// usagebillingretry.PlatformValidator is a validator for the "platform" field. It is called by the builders before save.
+	usagebillingretry.PlatformValidator = usagebillingretryDescPlatform.Validators[0].(func(string) error)
+	// usagebillingretryDescActualCost is the schema descriptor for actual_cost field.
+	usagebillingretryDescActualCost := usagebillingretryFields[6].Descriptor()
+	// usagebillingretry.DefaultActualCost holds the default value on creation for the actual_cost field.
+	usagebillingretry.DefaultActualCost = usagebillingretryDescActualCost.Default.(float64)
+	// usagebillingretryDescStatus is the schema descriptor for status field.
+	usagebillingretryDescStatus := usagebillingretryFields[8].Descriptor()
+	// usagebillingretry.DefaultStatus holds the default value on creation for the status field.
+	usagebillingretry.DefaultStatus = usagebillingretryDescStatus.Default.(string)
+	// usagebillingretry.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	usagebillingretry.StatusValidator = usagebillingretryDescStatus.Validators[0].(func(string) error)
+	// usagebillingretryDescAttempts is the schema descriptor for attempts field.
+	usagebillingretryDescAttempts := usagebillingretryFields[9].Descriptor()
+	// usagebillingretry.DefaultAttempts holds the default value on creation for the attempts field.
+	usagebillingretry.DefaultAttempts = usagebillingretryDescAttempts.Default.(int)
+	// usagebillingretryDescLastError is the schema descriptor for last_error field.
+	usagebillingretryDescLastError := usagebillingretryFields[10].Descriptor()
+	// usagebillingretry.DefaultLastError holds the default value on creation for the last_error field.
+	usagebillingretry.DefaultLastError = usagebillingretryDescLastError.Default.(string)
+	// usagebillingretryDescNextRetryAt is the schema descriptor for next_retry_at field.
+	usagebillingretryDescNextRetryAt := usagebillingretryFields[11].Descriptor()
+	// usagebillingretry.DefaultNextRetryAt holds the default value on creation for the next_retry_at field.
+	usagebillingretry.DefaultNextRetryAt = usagebillingretryDescNextRetryAt.Default.(func() time.Time)
+	// usagebillingretryDescCreatedAt is the schema descriptor for created_at field.
+	usagebillingretryDescCreatedAt := usagebillingretryFields[13].Descriptor()
+	// usagebillingretry.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usagebillingretry.DefaultCreatedAt = usagebillingretryDescCreatedAt.Default.(func() time.Time)
+	// usagebillingretryDescUpdatedAt is the schema descriptor for updated_at field.
+	usagebillingretryDescUpdatedAt := usagebillingretryFields[14].Descriptor()
+	// usagebillingretry.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usagebillingretry.DefaultUpdatedAt = usagebillingretryDescUpdatedAt.Default.(func() time.Time)
+	// usagebillingretry.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usagebillingretry.UpdateDefaultUpdatedAt = usagebillingretryDescUpdatedAt.UpdateDefault.(func() time.Time)
 	usagecleanuptaskMixin := schema.UsageCleanupTask{}.Mixin()
 	usagecleanuptaskMixinFields0 := usagecleanuptaskMixin[0].Fields()
 	_ = usagecleanuptaskMixinFields0

@@ -118,6 +118,7 @@ func provideCleanup(
 	scheduledTestRunner *service.ScheduledTestRunnerService,
 	groupStatusRunner *service.GroupStatusRunnerService,
 	contentTranslation *service.ContentTranslationService, // fork：内容自动翻译
+	usageBillingRetry *service.UsageBillingRetryService, // fork：扣费失败重试
 	approvalSweeper *service.AdminApprovalSweeper,
 	backupSvc *service.BackupService,
 	quotaFlusher *service.UserPlatformQuotaUsageFlusher,
@@ -345,6 +346,12 @@ func provideCleanup(
 			{"ContentTranslationService", func() error {
 				if contentTranslation != nil {
 					contentTranslation.Stop()
+				}
+				return nil
+			}},
+			{"UsageBillingRetryService", func() error {
+				if usageBillingRetry != nil {
+					usageBillingRetry.Stop()
 				}
 				return nil
 			}},

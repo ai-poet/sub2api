@@ -177,6 +177,8 @@ type SystemSettings struct {
 	ApprovalBatchLimit          int
 	// 工单（新工单 / 用户回复）→ Server酱³ 推送（fork 自有，复用同一 UID / SendKey）
 	TicketNotifyServerChanEnabled bool
+	// 扣费失败 / 重试放弃 → Server酱³ 推送（fork 自有，复用同一 UID / SendKey）
+	BillingFailureNotifyServerChanEnabled bool
 	// 运维管理员个人令牌总开关（fork 自有，默认关闭）
 	PersonalTokenEnabled                         bool
 	GroupStatusNotifyServerChanUID               string

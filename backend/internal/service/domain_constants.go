@@ -466,6 +466,8 @@ const (
 	SettingKeyApprovalBatchLimit          = "approval_batch_limit"
 	// 工单（新工单 / 用户回复）→ Server酱³ 推送开关（复用上面的 UID / SendKey；本 fork 自有功能）
 	SettingKeyTicketNotifyServerChanEnabled = "ticket_notify_serverchan_enabled"
+	// 扣费失败 / 重试放弃 → Server酱³ 推送开关（fork 自有，复用分组运行状态推送的 UID / SendKey）
+	SettingKeyBillingFailureNotifyServerChanEnabled = "billing_failure_notify_serverchan_enabled"
 	// 运维管理员个人令牌总开关（本 fork 自有功能，默认关闭；见 personal_token.go）
 	SettingKeyPersonalTokenEnabled = "personal_token_enabled"
 

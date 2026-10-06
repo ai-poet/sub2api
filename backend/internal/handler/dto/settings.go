@@ -173,6 +173,7 @@ type SystemSettings struct {
 	ApprovalPendingLimitPerUser                  int              `json:"approval_pending_limit_per_user"`
 	ApprovalBatchLimit                           int              `json:"approval_batch_limit"`
 	TicketNotifyServerChanEnabled                bool             `json:"ticket_notify_serverchan_enabled"`
+	BillingFailureNotifyServerChanEnabled        bool             `json:"billing_failure_notify_serverchan_enabled"`
 	PersonalTokenEnabled                         bool             `json:"personal_token_enabled"`
 	GroupStatusNotifyServerChanUID               string           `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKeyConfigured bool             `json:"group_status_notify_serverchan_sendkey_configured"`

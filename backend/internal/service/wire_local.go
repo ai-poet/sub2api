@@ -156,3 +156,32 @@ func ProvideContentTranslationService(
 	svc.Start()
 	return svc
 }
+
+// ProvideUsageBillingRetryService 构造并启动扣费失败重试服务（fork 本地）：
+// 入队钩子挂到两条网关，失败指标挂到运维告警评估器。
+func ProvideUsageBillingRetryService(
+	repo UsageBillingRetryRepository,
+	billingRepo UsageBillingRepository,
+	billingCache *BillingCacheService,
+	userPlatformQuotaRepo UserPlatformQuotaRepository,
+	settingRepo SettingRepository,
+	timingWheel *TimingWheelService,
+	cfg *config.Config,
+	gatewaySvc *GatewayService,
+	openAIGatewaySvc *OpenAIGatewayService,
+	alertEvaluator *OpsAlertEvaluatorService,
+) *UsageBillingRetryService {
+	svc := NewUsageBillingRetryService(repo, billingRepo, billingCache, userPlatformQuotaRepo, settingRepo, timingWheel, cfg)
+	// 显式判空，避免 nil 指针包进非 nil 接口
+	if gatewaySvc != nil {
+		gatewaySvc.SetBillingRetryEnqueuer(svc)
+	}
+	if openAIGatewaySvc != nil {
+		openAIGatewaySvc.SetBillingRetryEnqueuer(svc)
+	}
+	if alertEvaluator != nil {
+		alertEvaluator.SetBillingFailureSource(svc)
+	}
+	svc.Start()
+	return svc
+}

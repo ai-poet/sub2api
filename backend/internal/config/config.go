@@ -1745,6 +1745,9 @@ type APIKeyCreateConfig struct {
 	MaxActivePerUser int `mapstructure:"max_active_per_user"`
 	// MaxPerUserPerHour 单个用户每小时可创建的 API Key 次数（删除不返还次数）
 	MaxPerUserPerHour int `mapstructure:"max_per_user_per_hour"`
+	// MaxDeletesPerUserPerHour fork：单个用户每小时可删除的 API Key 次数（0 表示不限制）。
+	// 与创建次数一起阻断"建 Key → 发长请求 → 请求中删 Key"的脚本循环；admin / operator 豁免。
+	MaxDeletesPerUserPerHour int `mapstructure:"max_deletes_per_user_per_hour"`
 }
 
 type InvalidAuthAbuseConfig struct {
@@ -2400,8 +2403,10 @@ func setDefaults() {
 	viper.SetDefault("api_key_auth_cache.invalid_abuse.window_seconds", 60)
 	viper.SetDefault("api_key_auth_cache.invalid_abuse.block_seconds", 60)
 	viper.SetDefault("api_key_auth_cache.invalid_abuse.capacity", 16384)
-	viper.SetDefault("api_key_create.max_active_per_user", 200)
-	viper.SetDefault("api_key_create.max_per_user_per_hour", 60)
+	// fork：默认值比上游（200 / 60）更紧——线上普通用户最多 17 个活跃 Key、每小时最多 10 次创建 / 8 次删除
+	viper.SetDefault("api_key_create.max_active_per_user", 50)
+	viper.SetDefault("api_key_create.max_per_user_per_hour", 30)
+	viper.SetDefault("api_key_create.max_deletes_per_user_per_hour", 30)
 
 	// Subscription auth L1 cache
 	viper.SetDefault("subscription_cache.l1_size", 16384)
@@ -2786,6 +2791,9 @@ func (c *Config) Validate() error {
 	}
 	if c.APIKeyCreate.MaxPerUserPerHour < 0 {
 		return fmt.Errorf("api_key_create.max_per_user_per_hour must be non-negative")
+	}
+	if c.APIKeyCreate.MaxDeletesPerUserPerHour < 0 {
+		return fmt.Errorf("api_key_create.max_deletes_per_user_per_hour must be non-negative")
 	}
 	if c.APIKeyAuth.InvalidAbuse.Enabled {
 		if c.APIKeyAuth.InvalidAbuse.Threshold < 10 {

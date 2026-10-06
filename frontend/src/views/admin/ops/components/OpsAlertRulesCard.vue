@@ -135,6 +135,23 @@ const metricDefinitions = computed(() => {
       recommendedThreshold: 1,
       unit: '%'
     },
+    // fork：扣费失败重试
+    {
+      type: 'billing_failure_count',
+      group: 'system',
+      label: t('admin.ops.alertRules.metrics.billingFailureCount'),
+      description: t('admin.ops.alertRules.metricDescriptions.billingFailureCount'),
+      recommendedOperator: '>=',
+      recommendedThreshold: 1
+    },
+    {
+      type: 'billing_unsettled_count',
+      group: 'system',
+      label: t('admin.ops.alertRules.metrics.billingUnsettledCount'),
+      description: t('admin.ops.alertRules.metricDescriptions.billingUnsettledCount'),
+      recommendedOperator: '>',
+      recommendedThreshold: 0
+    },
     {
       type: 'upstream_error_rate',
       group: 'system',

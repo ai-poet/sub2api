@@ -36,6 +36,8 @@ type OpsAlertEvaluatorService struct {
 	opsRepo      OpsRepository
 	emailService *EmailService
 	proxyRepo    ProxyRepository
+	// fork：扣费失败重试 —— billing_failure_count / billing_unsettled_count 指标来源（SetBillingFailureSource 注入）
+	billingFailureSource BillingFailureSource
 
 	redisClient *redis.Client
 	cfg         *config.Config
@@ -445,6 +447,24 @@ func (s *OpsAlertEvaluatorService) computeRuleMetric(
 		return 0, false
 	}
 	switch strings.TrimSpace(rule.MetricType) {
+	case "billing_failure_count": // fork：扣费失败重试 —— 窗口内进入重试队列的扣费失败笔数
+		if s == nil || s.billingFailureSource == nil {
+			return 0, false
+		}
+		n, err := s.billingFailureSource.CountBillingFailures(ctx, start, end)
+		if err != nil {
+			return 0, false
+		}
+		return float64(n), true
+	case "billing_unsettled_count": // fork：扣费失败重试 —— 当前待补扣 + 已放弃的笔数
+		if s == nil || s.billingFailureSource == nil {
+			return 0, false
+		}
+		n, err := s.billingFailureSource.UnsettledBillingCount(ctx)
+		if err != nil {
+			return 0, false
+		}
+		return float64(n), true
 	case "cpu_usage_percent":
 		if systemMetrics != nil && systemMetrics.CPUUsagePercent != nil {
 			return *systemMetrics.CPUUsagePercent, true

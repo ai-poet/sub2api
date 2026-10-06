@@ -1794,6 +1794,53 @@ var (
 		Columns:    TLSFingerprintProfilesColumns,
 		PrimaryKey: []*schema.Column{TLSFingerprintProfilesColumns[0]},
 	}
+	// UsageBillingRetriesColumns holds the columns for the "usage_billing_retries" table.
+	UsageBillingRetriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "request_id", Type: field.TypeString, Size: 255},
+		{Name: "api_key_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "account_id", Type: field.TypeInt64},
+		{Name: "group_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "platform", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "actual_cost", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "numeric(20,8)"}},
+		{Name: "command", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "pending"},
+		{Name: "attempts", Type: field.TypeInt, Default: 0},
+		{Name: "last_error", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "next_retry_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "settled_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// UsageBillingRetriesTable holds the schema information for the "usage_billing_retries" table.
+	UsageBillingRetriesTable = &schema.Table{
+		Name:       "usage_billing_retries",
+		Columns:    UsageBillingRetriesColumns,
+		PrimaryKey: []*schema.Column{UsageBillingRetriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usagebillingretry_request_id_api_key_id",
+				Unique:  true,
+				Columns: []*schema.Column{UsageBillingRetriesColumns[1], UsageBillingRetriesColumns[2]},
+			},
+			{
+				Name:    "usagebillingretry_next_retry_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRetriesColumns[12]},
+			},
+			{
+				Name:    "usagebillingretry_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRetriesColumns[14]},
+			},
+			{
+				Name:    "usagebillingretry_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsageBillingRetriesColumns[3], UsageBillingRetriesColumns[14]},
+			},
+		},
+	}
 	// UsageCleanupTasksColumns holds the columns for the "usage_cleanup_tasks" table.
 	UsageCleanupTasksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -2380,6 +2427,7 @@ var (
 		SupportTicketsTable,
 		SupportTicketMessagesTable,
 		TLSFingerprintProfilesTable,
+		UsageBillingRetriesTable,
 		UsageCleanupTasksTable,
 		UsageLogsTable,
 		UsersTable,
@@ -2525,6 +2573,9 @@ func init() {
 	}
 	TLSFingerprintProfilesTable.Annotation = &entsql.Annotation{
 		Table: "tls_fingerprint_profiles",
+	}
+	UsageBillingRetriesTable.Annotation = &entsql.Annotation{
+		Table: "usage_billing_retries",
 	}
 	UsageCleanupTasksTable.Annotation = &entsql.Annotation{
 		Table: "usage_cleanup_tasks",

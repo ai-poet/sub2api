@@ -465,6 +465,18 @@ func (f TLSFingerprintProfileFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TLSFingerprintProfileMutation", m)
 }
 
+// The UsageBillingRetryFunc type is an adapter to allow the use of ordinary
+// function as UsageBillingRetry mutator.
+type UsageBillingRetryFunc func(context.Context, *ent.UsageBillingRetryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UsageBillingRetryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UsageBillingRetryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UsageBillingRetryMutation", m)
+}
+
 // The UsageCleanupTaskFunc type is an adapter to allow the use of ordinary
 // function as UsageCleanupTask mutator.
 type UsageCleanupTaskFunc func(context.Context, *ent.UsageCleanupTaskMutation) (ent.Value, error)

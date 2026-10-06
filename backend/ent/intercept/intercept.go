@@ -47,6 +47,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/supportticket"
 	"github.com/Wei-Shaw/sub2api/ent/supportticketmessage"
 	"github.com/Wei-Shaw/sub2api/ent/tlsfingerprintprofile"
+	"github.com/Wei-Shaw/sub2api/ent/usagebillingretry"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -1140,6 +1141,33 @@ func (f TraverseTLSFingerprintProfile) Traverse(ctx context.Context, q ent.Query
 	return fmt.Errorf("unexpected query type %T. expect *ent.TLSFingerprintProfileQuery", q)
 }
 
+// The UsageBillingRetryFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UsageBillingRetryFunc func(context.Context, *ent.UsageBillingRetryQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UsageBillingRetryFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UsageBillingRetryQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UsageBillingRetryQuery", q)
+}
+
+// The TraverseUsageBillingRetry type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUsageBillingRetry func(context.Context, *ent.UsageBillingRetryQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUsageBillingRetry) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUsageBillingRetry) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UsageBillingRetryQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UsageBillingRetryQuery", q)
+}
+
 // The UsageCleanupTaskFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UsageCleanupTaskFunc func(context.Context, *ent.UsageCleanupTaskQuery) (ent.Value, error)
 
@@ -1462,6 +1490,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.SupportTicketMessageQuery, predicate.SupportTicketMessage, supportticketmessage.OrderOption]{typ: ent.TypeSupportTicketMessage, tq: q}, nil
 	case *ent.TLSFingerprintProfileQuery:
 		return &query[*ent.TLSFingerprintProfileQuery, predicate.TLSFingerprintProfile, tlsfingerprintprofile.OrderOption]{typ: ent.TypeTLSFingerprintProfile, tq: q}, nil
+	case *ent.UsageBillingRetryQuery:
+		return &query[*ent.UsageBillingRetryQuery, predicate.UsageBillingRetry, usagebillingretry.OrderOption]{typ: ent.TypeUsageBillingRetry, tq: q}, nil
 	case *ent.UsageCleanupTaskQuery:
 		return &query[*ent.UsageCleanupTaskQuery, predicate.UsageCleanupTask, usagecleanuptask.OrderOption]{typ: ent.TypeUsageCleanupTask, tq: q}, nil
 	case *ent.UsageLogQuery:

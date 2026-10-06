@@ -689,6 +689,9 @@ export type MetricType =
   | 'account_error_ratio'
   | 'account_temp_unscheduled_count'
   | 'overload_account_count'
+  // fork：扣费失败重试
+  | 'billing_failure_count'
+  | 'billing_unsettled_count'
 export type Operator = '>' | '>=' | '<' | '<=' | '==' | '!='
 
 export interface AlertRule {
