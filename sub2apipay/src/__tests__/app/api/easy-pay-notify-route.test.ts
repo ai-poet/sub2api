@@ -3,6 +3,11 @@ import { NextRequest } from 'next/server';
 
 const mockHandlePaymentNotify = vi.fn();
 const mockVerifyNotification = vi.fn();
+const mockObserveEasyPayNotify = vi.fn();
+
+vi.mock('@/lib/easy-pay/notify-audit', () => ({
+  observeEasyPayNotify: (...args: unknown[]) => mockObserveEasyPayNotify(...args),
+}));
 
 vi.mock('@/lib/order/service', () => ({
   handlePaymentNotify: (...args: unknown[]) => mockHandlePaymentNotify(...args),
@@ -41,6 +46,29 @@ describe('easy-pay notify route', () => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     mockVerifyNotification.mockResolvedValue(notification);
+    mockObserveEasyPayNotify.mockResolvedValue(undefined);
+  });
+
+  it('验签通过后、入账之前做旁路观测', async () => {
+    mockHandlePaymentNotify.mockResolvedValue(true);
+
+    await GET(notifyRequest('GET'));
+
+    expect(mockObserveEasyPayNotify).toHaveBeenCalledWith(notification, 'easy-pay');
+    expect(mockObserveEasyPayNotify.mock.invocationCallOrder[0]).toBeLessThan(
+      mockHandlePaymentNotify.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('旁路观测出错不影响入账与响应', async () => {
+    mockObserveEasyPayNotify.mockRejectedValue(new Error('db down'));
+    mockHandlePaymentNotify.mockResolvedValue(true);
+
+    const res = await POST(notifyRequest('POST'));
+
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe('success');
+    expect(mockHandlePaymentNotify).toHaveBeenCalledWith(notification, 'easy-pay');
   });
 
   it('处理成功：200 success', async () => {
@@ -71,6 +99,7 @@ describe('easy-pay notify route', () => {
     expect(res.status).toBe(500);
     expect(await res.text()).toBe('fail');
     expect(mockHandlePaymentNotify).not.toHaveBeenCalled();
+    expect(mockObserveEasyPayNotify).not.toHaveBeenCalled();
   });
 
   it('入账阶段抛异常：500 fail 且日志带订单号', async () => {

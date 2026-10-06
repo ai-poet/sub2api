@@ -3,6 +3,7 @@ import { handlePaymentNotify } from '@/lib/order/service';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import type { PaymentType, PaymentProvider, PaymentNotification } from '@/lib/payment';
 import { EasyPayProvider } from '@/lib/easy-pay/provider';
+import { observeEasyPayNotify } from '@/lib/easy-pay/notify-audit';
 import { getInstanceConfig } from '@/lib/payment/load-balancer';
 import { extractHeaders } from '@/lib/utils/api';
 
@@ -44,6 +45,8 @@ async function processNotification(request: NextRequest, rawBody: string) {
     if (!notification) {
       return textResponse('success', 200);
     }
+    // 只记录、不拦截，出错也不影响入账；必须在入账前调用（入账会覆盖订单上的平台交易号）
+    await observeEasyPayNotify(notification, provider.name).catch(() => undefined);
     const success = await handlePaymentNotify(notification, provider.name);
     if (!success) {
       console.error(

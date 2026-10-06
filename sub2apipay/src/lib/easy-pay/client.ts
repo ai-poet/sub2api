@@ -93,7 +93,8 @@ export async function createPayment(
     return_url: opts.returnUrl || returnUrl,
     name: opts.productName,
     money: opts.amount,
-    clientip: opts.clientIp,
+    // 必须非空：回调验签拒绝 cid / clientip 等下单专有参数，前提是下单签名串总以它们开头（见 notify-params.ts）
+    clientip: opts.clientIp || '127.0.0.1',
   };
 
   const cid = resolveCid(opts.paymentType, instanceConfig);

@@ -10,9 +10,8 @@ import type {
 } from '@/lib/payment/types';
 import { createPayment, queryOrder, refund } from './client';
 import { verifySign } from './sign';
+import { EASY_PAY_ROUTING_PARAMS, isAcceptableNotifyParamName } from './notify-params';
 import { getEnv } from '@/lib/config';
-
-const ROUTING_QUERY_KEYS = new Set(['inst']);
 
 export class EasyPayProvider implements PaymentProvider {
   readonly name: string;
@@ -85,6 +84,13 @@ export class EasyPayProvider implements PaymentProvider {
 
     const params: Record<string, string> = {};
     for (const [key, value] of searchParams.entries()) {
+      // 验签之前拦下真实通知不可能带的参数名（非纯标识符、下单专有参数，空值也算），原因见 notify-params.ts
+      if (!isAcceptableNotifyParamName(key)) {
+        const outTradeNo = JSON.stringify(searchParams.get('out_trade_no') ?? '');
+        throw new Error(
+          `EasyPay notification rejected: unexpected param ${JSON.stringify(key)} (out_trade_no=${outTradeNo})`,
+        );
+      }
       params[key] = value;
     }
 
@@ -94,7 +100,7 @@ export class EasyPayProvider implements PaymentProvider {
       if (
         key !== 'sign' &&
         key !== 'sign_type' &&
-        !ROUTING_QUERY_KEYS.has(key) &&
+        !EASY_PAY_ROUTING_PARAMS.has(key) &&
         value !== undefined &&
         value !== null
       ) {

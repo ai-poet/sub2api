@@ -32,6 +32,7 @@ vi.mock('@/lib/easy-pay/sign', () => ({
 }));
 
 import { createPayment, queryOrder } from '@/lib/easy-pay/client';
+import { EASY_PAY_CREATE_ONLY_PARAMS } from '@/lib/easy-pay/notify-params';
 
 describe('EasyPay client', () => {
   beforeEach(() => {
@@ -255,6 +256,68 @@ describe('EasyPay client', () => {
       const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const body = new URLSearchParams(init.body as string);
       expect(body.get('cid')).toBe('100');
+    });
+  });
+
+  // 回调验签拒绝下单专有参数（notify-params.ts），前提是下单签名串排序后总以其中之一开头
+  describe('createPayment invariants relied on by the notify guard', () => {
+    function mockEnv(cid: string | undefined) {
+      mockGetEnv.mockReturnValue({
+        EASY_PAY_PID: '1001',
+        EASY_PAY_PKEY: 'test-merchant-secret-key',
+        EASY_PAY_API_BASE: 'https://pay.example.com',
+        EASY_PAY_NOTIFY_URL: 'https://pay.example.com/api/easy-pay/notify',
+        EASY_PAY_RETURN_URL: 'https://pay.example.com/pay/result',
+        EASY_PAY_CID: cid,
+        EASY_PAY_CID_ALIPAY: undefined,
+        EASY_PAY_CID_WXPAY: undefined,
+      });
+      global.fetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ code: 1, trade_no: 'EP001' }), {
+          headers: { 'content-type': 'application/json' },
+        }),
+      ) as typeof fetch;
+    }
+
+    it('sends a non-empty clientip even when the caller passes none', async () => {
+      mockEnv(undefined);
+
+      await createPayment({
+        outTradeNo: 'order-inv-1',
+        amount: '10.00',
+        paymentType: 'alipay',
+        clientIp: '',
+        productName: 'Product',
+      });
+
+      const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(new URLSearchParams(init.body as string).get('clientip')).toBe('127.0.0.1');
+    });
+
+    it.each([
+      ['without cid, empty client ip', undefined, ''],
+      ['with cid, empty client ip', '200', ''],
+      ['without cid, real client ip', undefined, '203.0.113.7'],
+      ['with cid, real client ip', '200', '203.0.113.7'],
+    ])('the sorted signed params start with a param the notify guard rejects (%s)', async (_label, cid, clientIp) => {
+      mockEnv(cid);
+
+      await createPayment({
+        outTradeNo: 'order-inv-2',
+        amount: '10.00',
+        paymentType: 'alipay',
+        clientIp,
+        productName: 'Product',
+        isMobile: true,
+      });
+
+      const [signParams] = signCallSnapshots[signCallSnapshots.length - 1] as [Record<string, string>, string];
+      // 与 generateSign 相同的过滤与排序
+      const [firstKey] = Object.entries(signParams)
+        .filter(([key, value]) => key !== 'sign' && key !== 'sign_type' && value !== '' && value != null)
+        .map(([key]) => key)
+        .sort((a, b) => a.localeCompare(b));
+      expect(EASY_PAY_CREATE_ONLY_PARAMS.has(firstKey)).toBe(true);
     });
   });
 
