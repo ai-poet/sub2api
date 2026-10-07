@@ -11,6 +11,7 @@ import type {
 import { createPayment, queryOrder, refund } from './client';
 import { verifySign } from './sign';
 import { EASY_PAY_ROUTING_PARAMS, isAcceptableNotifyParamName } from './notify-params';
+import { EasyPayNotifyRejectedError } from './notify-errors';
 import { getEnv } from '@/lib/config';
 
 export class EasyPayProvider implements PaymentProvider {
@@ -86,9 +87,12 @@ export class EasyPayProvider implements PaymentProvider {
     for (const [key, value] of searchParams.entries()) {
       // 验签之前拦下真实通知不可能带的参数名（非纯标识符、下单专有参数，空值也算），原因见 notify-params.ts
       if (!isAcceptableNotifyParamName(key)) {
-        const outTradeNo = JSON.stringify(searchParams.get('out_trade_no') ?? '');
-        throw new Error(
-          `EasyPay notification rejected: unexpected param ${JSON.stringify(key)} (out_trade_no=${outTradeNo})`,
+        const claimedOrderId = searchParams.get('out_trade_no') ?? '';
+        throw new EasyPayNotifyRejectedError(
+          `EasyPay notification rejected: unexpected param ${JSON.stringify(key)} (out_trade_no=${JSON.stringify(claimedOrderId)})`,
+          'unexpected_param',
+          claimedOrderId,
+          key,
         );
       }
       params[key] = value;
@@ -108,24 +112,37 @@ export class EasyPayProvider implements PaymentProvider {
       }
     }
 
+    const outTradeNo = params.out_trade_no || '';
     if (!pkey || !verifySign(paramsForSign, pkey, sign)) {
-      throw new Error('EasyPay notification signature verification failed');
+      throw new EasyPayNotifyRejectedError(
+        'EasyPay notification signature verification failed',
+        'bad_signature',
+        outTradeNo,
+      );
     }
 
     // 校验 pid 与配置一致，防止跨商户回调注入
     if (params.pid && pid && params.pid !== pid) {
-      throw new Error(`EasyPay notification pid mismatch: expected ${pid}, got ${params.pid}`);
+      throw new EasyPayNotifyRejectedError(
+        `EasyPay notification pid mismatch: expected ${pid}, got ${params.pid}`,
+        'pid_mismatch',
+        outTradeNo,
+      );
     }
 
     // 校验金额为有限正数
     const amount = parseFloat(params.money || '0');
     if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Error(`EasyPay notification invalid amount: ${params.money}`);
+      throw new EasyPayNotifyRejectedError(
+        `EasyPay notification invalid amount: ${params.money}`,
+        'invalid_amount',
+        outTradeNo,
+      );
     }
 
     return {
       tradeNo: params.trade_no || '',
-      orderId: params.out_trade_no || '',
+      orderId: outTradeNo,
       amount,
       status: params.trade_status === 'TRADE_SUCCESS' ? 'success' : 'failed',
       rawData: params,

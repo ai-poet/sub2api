@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, after } from 'next/server';
 import { handlePaymentNotify } from '@/lib/order/service';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import type { PaymentType, PaymentProvider, PaymentNotification } from '@/lib/payment';
 import { EasyPayProvider } from '@/lib/easy-pay/provider';
-import { observeEasyPayNotify } from '@/lib/easy-pay/notify-audit';
+import { observeEasyPayNotify, recordBlockedEasyPayNotify } from '@/lib/easy-pay/notify-audit';
+import { verifyEasyPayCreditUpstream } from '@/lib/easy-pay/upstream-verify';
 import { getInstanceConfig } from '@/lib/payment/load-balancer';
 import { extractHeaders } from '@/lib/utils/api';
 
@@ -29,6 +30,19 @@ function textResponse(body: 'success' | 'fail', status: number) {
 }
 
 /**
+ * 响应发出之后再跑的旁路任务（平台复核、记录拦截），出错一律吞掉，绝不影响回调响应。
+ * 不在请求上下文里时（例如单测直接调用路由函数）after 会抛错，此时退回为直接在后台执行。
+ */
+function runAfterResponse(task: () => Promise<void>): void {
+  const guarded = () => task().catch(() => undefined);
+  try {
+    after(guarded);
+  } catch {
+    void guarded();
+  }
+}
+
+/**
  * 易支付异步通知。
  *
  * 处理失败一律回 HTTP 500 + 正文 fail：按正文判定的平台照旧看到 fail，按 HTTP 状态判定的平台
@@ -37,8 +51,10 @@ function textResponse(body: 'success' | 'fail', status: number) {
  */
 async function processNotification(request: NextRequest, rawBody: string) {
   let notification: PaymentNotification | null = null;
+  let providerName = 'easy-pay';
   try {
     const provider = await getProvider(request);
+    providerName = provider.name;
     const headers = extractHeaders(request);
 
     notification = await provider.verifyNotification(rawBody, headers);
@@ -54,10 +70,20 @@ async function processNotification(request: NextRequest, rawBody: string) {
       );
       return textResponse('fail', 500);
     }
+    if (notification.status === 'success') {
+      const credited = notification;
+      // 入账后在后台向平台查单复核，只记录、不拦截（见 upstream-verify.ts）
+      runAfterResponse(() => verifyEasyPayCreditUpstream(credited, provider));
+    }
     return textResponse('success', 200);
   } catch (error) {
     const scope = notification ? ` (order=${notification.orderId} trade=${notification.tradeNo})` : '';
     console.error(`EasyPay notify error${scope}:`, error);
+    if (!notification) {
+      // 验签阶段被拒的回调记到支付风控面板；入账阶段的错误不是可疑回调，recordBlockedEasyPayNotify 会忽略
+      const name = providerName;
+      runAfterResponse(() => recordBlockedEasyPayNotify(error, name));
+    }
     return textResponse('fail', 500);
   }
 }

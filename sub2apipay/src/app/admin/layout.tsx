@@ -5,6 +5,7 @@ import { normalizeBasePath, withPublicBasePath } from '@/lib/public-path';
 const NAV_ITEMS = [
   { path: '/admin', label: { zh: '支付统计', en: 'Overview' } },
   { path: '/admin/orders', label: { zh: '订单管理', en: 'Orders' } },
+  { path: '/admin/risk', label: { zh: '支付风控', en: 'Risk' } },
   { path: '/admin/invoices', label: { zh: '发票管理', en: 'Invoices' } },
   { path: '/admin/promotions', label: { zh: '充值活动', en: 'Promotions' } },
   { path: '/admin/channels', label: { zh: '渠道配置', en: 'Channels' } },

@@ -14,6 +14,7 @@ vi.mock('@/lib/config', () => ({
 import { generateSign } from '@/lib/easy-pay/sign';
 import { EasyPayProvider } from '@/lib/easy-pay/provider';
 import { EASY_PAY_CREATE_ONLY_PARAMS } from '@/lib/easy-pay/notify-params';
+import { EasyPayNotifyRejectedError } from '@/lib/easy-pay/notify-errors';
 
 const PKEY = 'test-merchant-secret-key';
 
@@ -62,6 +63,8 @@ describe('EasyPayProvider.verifyNotification 参数名守卫', () => {
       addtime: '2026-10-06 10:00:00',
       endtime: '2026-10-06 10:01:00',
       api_trade_no: '4200001234',
+      // EPUSDT 的 epay 兼容通知
+      trade_id: 'EPUSDT-0001',
     };
 
     const notification = await provider.verifyNotification(signedBody(fields), {});
@@ -105,5 +108,21 @@ describe('EasyPayProvider.verifyNotification 参数名守卫', () => {
     const body = signedBody({ ...STANDARD_NOTIFY, pid: '2002' });
 
     await expect(provider.verifyNotification(body, {})).rejects.toThrow('pid mismatch');
+  });
+
+  it('各类拒绝都抛出带原因与订单号的 EasyPayNotifyRejectedError，供风控面板记录', async () => {
+    const reject = (body: string) => provider.verifyNotification(body, {}).catch((error: unknown) => error);
+
+    const guard = await reject(signedBody({ ...STANDARD_NOTIFY, clientip: '127.0.0.1' }));
+    expect(guard).toBeInstanceOf(EasyPayNotifyRejectedError);
+    expect(guard).toMatchObject({ reason: 'unexpected_param', outTradeNo: 'order-001', param: 'clientip' });
+
+    const badSign = await reject(
+      new URLSearchParams({ ...STANDARD_NOTIFY, sign: '0'.repeat(32), sign_type: 'MD5' }).toString(),
+    );
+    expect(badSign).toMatchObject({ reason: 'bad_signature', outTradeNo: 'order-001' });
+
+    expect(await reject(signedBody({ ...STANDARD_NOTIFY, pid: '2002' }))).toMatchObject({ reason: 'pid_mismatch' });
+    expect(await reject(signedBody({ ...STANDARD_NOTIFY, money: '0' }))).toMatchObject({ reason: 'invalid_amount' });
   });
 });

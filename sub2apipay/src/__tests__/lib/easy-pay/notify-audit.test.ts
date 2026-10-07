@@ -3,6 +3,7 @@ import type { PaymentNotification } from '@/lib/payment/types';
 
 const mockOrderFindUnique = vi.fn();
 const mockAuditLogCreate = vi.fn();
+const mockAuditLogFindFirst = vi.fn();
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -11,11 +12,18 @@ vi.mock('@/lib/db', () => ({
     },
     auditLog: {
       create: (...args: unknown[]) => mockAuditLogCreate(...args),
+      findFirst: (...args: unknown[]) => mockAuditLogFindFirst(...args),
     },
   },
 }));
 
-import { observeEasyPayNotify, PAYMENT_NOTIFY_ANOMALY } from '@/lib/easy-pay/notify-audit';
+import {
+  observeEasyPayNotify,
+  PAYMENT_NOTIFY_ANOMALY,
+  PAYMENT_NOTIFY_BLOCKED,
+  recordBlockedEasyPayNotify,
+} from '@/lib/easy-pay/notify-audit';
+import { EasyPayNotifyRejectedError } from '@/lib/easy-pay/notify-errors';
 
 const STANDARD_RAW = {
   pid: '1001',
@@ -144,5 +152,89 @@ describe('observeEasyPayNotify', () => {
 
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('buyer,addtime'));
     expect(mockAuditLogCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('recordBlockedEasyPayNotify', () => {
+  const rejected = new EasyPayNotifyRejectedError(
+    'EasyPay notification rejected: unexpected param "clientip" (out_trade_no="order-001")',
+    'unexpected_param',
+    'order-001',
+    'clientip',
+  );
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockOrderFindUnique.mockResolvedValue({ id: 'order-001' });
+    mockAuditLogFindFirst.mockResolvedValue(null);
+    mockAuditLogCreate.mockResolvedValue({});
+  });
+
+  it('验签被拒且订单存在：写一条拦截记录', async () => {
+    await recordBlockedEasyPayNotify(rejected, 'easy-pay:inst-1');
+
+    expect(mockOrderFindUnique).toHaveBeenCalledWith({ where: { id: 'order-001' }, select: { id: true } });
+    expect(mockAuditLogCreate).toHaveBeenCalledTimes(1);
+    const { data } = mockAuditLogCreate.mock.calls[0][0];
+    expect(data).toMatchObject({
+      orderId: 'order-001',
+      action: PAYMENT_NOTIFY_BLOCKED,
+      operator: 'easy-pay:inst-1:notify',
+    });
+    expect(JSON.parse(data.detail)).toEqual({
+      reason: 'unexpected_param',
+      param: 'clientip',
+      message: rejected.message,
+    });
+  });
+
+  it('签名错误没有 param 字段', async () => {
+    await recordBlockedEasyPayNotify(
+      new EasyPayNotifyRejectedError('EasyPay notification signature verification failed', 'bad_signature', 'order-001'),
+      'easy-pay',
+    );
+
+    expect(JSON.parse(mockAuditLogCreate.mock.calls[0][0].data.detail)).toEqual({
+      reason: 'bad_signature',
+      message: 'EasyPay notification signature verification failed',
+    });
+  });
+
+  it('十分钟内已有拦截记录：不重复写', async () => {
+    mockAuditLogFindFirst.mockResolvedValue({ id: 'audit-1' });
+
+    await recordBlockedEasyPayNotify(rejected, 'easy-pay');
+
+    const where = mockAuditLogFindFirst.mock.calls[0][0].where;
+    expect(where).toMatchObject({ orderId: 'order-001', action: PAYMENT_NOTIFY_BLOCKED });
+    expect(Date.now() - where.createdAt.gte.getTime()).toBeGreaterThanOrEqual(10 * 60 * 1000 - 1000);
+    expect(mockAuditLogCreate).not.toHaveBeenCalled();
+  });
+
+  it('不是验签拒绝的错误（如入账时数据库出错）：不记录', async () => {
+    await recordBlockedEasyPayNotify(new Error('db down'), 'easy-pay');
+
+    expect(mockOrderFindUnique).not.toHaveBeenCalled();
+    expect(mockAuditLogCreate).not.toHaveBeenCalled();
+  });
+
+  it('订单号为空、过长或对不上订单：不记录', async () => {
+    await recordBlockedEasyPayNotify(new EasyPayNotifyRejectedError('x', 'bad_signature', ''), 'easy-pay');
+    await recordBlockedEasyPayNotify(new EasyPayNotifyRejectedError('x', 'bad_signature', 'a'.repeat(65)), 'easy-pay');
+    expect(mockOrderFindUnique).not.toHaveBeenCalled();
+
+    mockOrderFindUnique.mockResolvedValue(null);
+    await recordBlockedEasyPayNotify(rejected, 'easy-pay');
+    expect(mockAuditLogCreate).not.toHaveBeenCalled();
+  });
+
+  it('查库或写库出错：吞掉异常', async () => {
+    mockOrderFindUnique.mockRejectedValue(new Error('db down'));
+    await expect(recordBlockedEasyPayNotify(rejected, 'easy-pay')).resolves.toBeUndefined();
+
+    mockOrderFindUnique.mockResolvedValue({ id: 'order-001' });
+    mockAuditLogCreate.mockRejectedValue(new Error('db down'));
+    await expect(recordBlockedEasyPayNotify(rejected, 'easy-pay')).resolves.toBeUndefined();
   });
 });

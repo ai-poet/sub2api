@@ -1,8 +1,15 @@
 import { prisma } from '@/lib/db';
 import type { PaymentNotification } from '@/lib/payment/types';
+import { PAYMENT_NOTIFY_ANOMALY, PAYMENT_NOTIFY_BLOCKED } from '@/lib/payment-risk/shared';
+import { EasyPayNotifyRejectedError } from './notify-errors';
 import { EASY_PAY_NOTIFY_FIELDS, EASY_PAY_ROUTING_PARAMS } from './notify-params';
 
-export const PAYMENT_NOTIFY_ANOMALY = 'PAYMENT_NOTIFY_ANOMALY';
+export { PAYMENT_NOTIFY_ANOMALY, PAYMENT_NOTIFY_BLOCKED };
+
+/** 同一订单的拦截记录在这个时间窗口内只写一条，防止平台重试或刷请求把审计表撑大。 */
+const BLOCKED_DEDUP_WINDOW_MS = 10 * 60 * 1000;
+/** 订单号是 cuid，远短于这个长度；更长的一定是垃圾数据，不值得查库。 */
+const MAX_ORDER_ID_LENGTH = 64;
 
 /**
  * 易支付异步通知的旁路观测：只记录、不拦截，内部吞掉所有异常，绝不改变通知的处理结果。
@@ -69,5 +76,58 @@ export async function observeEasyPayNotify(notification: PaymentNotification, pr
     });
   } catch (error) {
     console.warn(`${providerName}:notify anomaly check failed for order ${JSON.stringify(notification.orderId)}:`, error);
+  }
+}
+
+/**
+ * 把验签阶段被拒的易支付回调记到它声称的订单上，供"支付风控"面板展示伪造尝试或密钥配置错误。
+ *
+ * 只在回调失败的路径上调用，不改变响应，内部吞掉所有异常。只记录 EasyPayNotifyRejectedError：
+ * 入账阶段的数据库错误等不是可疑回调。订单号对不上任何订单时不记（审计表的外键指向订单）。
+ */
+export async function recordBlockedEasyPayNotify(error: unknown, providerName: string): Promise<void> {
+  if (!(error instanceof EasyPayNotifyRejectedError)) {
+    return;
+  }
+  try {
+    const orderId = error.outTradeNo.trim();
+    if (!orderId || orderId.length > MAX_ORDER_ID_LENGTH) {
+      return;
+    }
+
+    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true } });
+    if (!order) {
+      return;
+    }
+
+    const recent = await prisma.auditLog.findFirst({
+      where: {
+        orderId: order.id,
+        action: PAYMENT_NOTIFY_BLOCKED,
+        createdAt: { gte: new Date(Date.now() - BLOCKED_DEDUP_WINDOW_MS) },
+      },
+      select: { id: true },
+    });
+    if (recent) {
+      return;
+    }
+
+    await prisma.auditLog.create({
+      data: {
+        orderId: order.id,
+        action: PAYMENT_NOTIFY_BLOCKED,
+        detail: JSON.stringify({
+          reason: error.reason,
+          ...(error.param !== undefined && { param: error.param.slice(0, 64) }),
+          message: error.message.slice(0, 300),
+        }),
+        operator: `${providerName}:notify`,
+      },
+    });
+  } catch (recordError) {
+    console.warn(
+      `${providerName}:notify failed to record blocked notification for order ${JSON.stringify(error.outTradeNo)}:`,
+      recordError,
+    );
   }
 }
