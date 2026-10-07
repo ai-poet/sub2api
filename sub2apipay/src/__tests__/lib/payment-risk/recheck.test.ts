@@ -4,6 +4,7 @@ const mockAuditCount = vi.fn();
 const mockAuditFindMany = vi.fn();
 const mockAuditFindFirst = vi.fn();
 const mockAuditCreate = vi.fn();
+const mockAuditUpdateMany = vi.fn();
 const mockGetInstanceConfig = vi.fn();
 const mockEasyPayConstructed = vi.fn();
 const mockEasyPayQueryOrder = vi.fn();
@@ -15,9 +16,19 @@ vi.mock('@/lib/db', () => ({
       findMany: (...args: unknown[]) => mockAuditFindMany(...args),
       findFirst: (...args: unknown[]) => mockAuditFindFirst(...args),
       create: (...args: unknown[]) => mockAuditCreate(...args),
+      updateMany: (...args: unknown[]) => mockAuditUpdateMany(...args),
     },
   },
   getConfiguredDatabaseSchema: () => 'public',
+}));
+
+const mockIsGatewayDbConfigured = vi.fn();
+const mockFindGatewayOrder = vi.fn();
+
+vi.mock('@/lib/easy-pay/gateway-db', () => ({
+  isGatewayDbConfigured: () => mockIsGatewayDbConfigured(),
+  findGatewayOrder: (...args: unknown[]) => mockFindGatewayOrder(...args),
+  gatewayMerchantIds: () => new Set(['1001']),
 }));
 
 vi.mock('@/lib/payment/load-balancer', () => ({
@@ -152,6 +163,66 @@ describe('recheckEasyPayOrders', () => {
     mockAuditCount.mockResolvedValue(42);
     mockAuditFindFirst.mockResolvedValue(null);
     mockAuditCreate.mockResolvedValue({});
+    mockAuditUpdateMany.mockResolvedValue({ count: 0 });
+    mockIsGatewayDbConfigured.mockReturnValue(false);
+  });
+
+  it('查实一致的订单撤销它之前的不符记录，并另记一条撤销记录', async () => {
+    mockAuditFindMany.mockResolvedValue([row('a1', 'o1')]);
+    queryOrder.mockResolvedValue(paid('o1'));
+    mockAuditUpdateMany.mockResolvedValue({ count: 2 });
+
+    const batch = await recheckEasyPayOrders({ since: SINCE, cursor: null, batchSize: 10 }, { resolveProvider, sleep });
+
+    expect(batch.results[0]).toMatchObject({ orderId: 'o1', outcome: 'ok', resolved: 2 });
+    expect(mockAuditUpdateMany).toHaveBeenCalledWith({
+      where: { orderId: 'o1', action: 'PAYMENT_UPSTREAM_MISMATCH' },
+      data: { action: 'PAYMENT_UPSTREAM_MISMATCH_RESOLVED' },
+    });
+    expect(mockAuditCreate).toHaveBeenCalledTimes(1);
+    const { data } = mockAuditCreate.mock.calls[0][0];
+    expect(data).toMatchObject({ orderId: 'o1', action: 'PAYMENT_UPSTREAM_RESOLVED', operator: 'easy-pay:inst-1:recheck' });
+    expect(JSON.parse(data.detail)).toMatchObject({ resolved: 2, checkedVia: 'merchant_api', upstreamStatus: 'paid' });
+  });
+
+  it('没有旧的不符记录时不写撤销记录；撤销失败也不改变"一致"的结论', async () => {
+    mockAuditFindMany.mockResolvedValue([row('a1', 'o1'), row('a2', 'o2')]);
+    queryOrder.mockImplementation((orderId: string) => Promise.resolve(paid(orderId)));
+    mockAuditUpdateMany.mockResolvedValueOnce({ count: 0 }).mockRejectedValueOnce(new Error('db down'));
+
+    const batch = await recheckEasyPayOrders({ since: SINCE, cursor: null, batchSize: 10 }, { resolveProvider, sleep });
+
+    expect(batch.results[0]).toEqual(expect.objectContaining({ orderId: 'o1', outcome: 'ok' }));
+    expect(batch.results[0].resolved).toBeUndefined();
+    expect(batch.results[1]).toMatchObject({ orderId: 'o2', outcome: 'ok' });
+    expect(batch.results[1].message).toContain('撤销旧的不符记录失败');
+    expect(mockAuditCreate).not.toHaveBeenCalled();
+  });
+
+  it('配置了网关库：商户换号后查不到的老订单经网关库确认，不再记为不符', async () => {
+    mockIsGatewayDbConfigured.mockReturnValue(true);
+    mockAuditFindMany.mockResolvedValue([row('a1', 'o1'), row('a2', 'o2')]);
+    queryOrder.mockRejectedValue(new Error('EasyPay query order failed: 订单号不存在'));
+    mockFindGatewayOrder.mockImplementation((orderId: string) =>
+      Promise.resolve(
+        orderId === 'o1'
+          ? { outTradeNo: 'o1', tradeNo: 'T-o1', merchantId: '1001', amount: 10, status: '1', paid: true }
+          : null,
+      ),
+    );
+
+    const batch = await recheckEasyPayOrders({ since: SINCE, cursor: null, batchSize: 10 }, { resolveProvider, sleep });
+
+    expect(batch.results.map((item) => [item.orderId, item.outcome, item.reason ?? null])).toEqual([
+      ['o1', 'ok', null],
+      ['o2', 'mismatch', 'upstream_order_not_found'],
+    ]);
+    expect(mockAuditCreate).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(mockAuditCreate.mock.calls[0][0].data.detail)).toMatchObject({
+      reason: 'upstream_order_not_found',
+      checkedVia: 'gateway_db',
+      upstreamMessage: '订单号不存在；网关库中也没有这笔订单',
+    });
   });
 
   it('一批里的各种结果：一致、不符、查无此单、查单失败、实例不存在', async () => {

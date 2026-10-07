@@ -152,6 +152,8 @@ PAYMENT_PROVIDERS=alipay,wxpay,stripe
 | `EASY_PAY_RETURN_URL` | 支付完成跳转地址，填 `${NEXT_PUBLIC_APP_URL}/pay/result`      |
 | `EASY_PAY_CID_ALIPAY` | 支付宝通道 ID（可选）                                         |
 | `EASY_PAY_CID_WXPAY`  | 微信支付通道 ID（可选）                                       |
+| `EASY_PAY_GATEWAY_DB_URL` | 自建易支付网关的只读 MySQL 连接串（可选）。平台复核时商户查单接口回"订单号不存在"，就到网关库 `pay_order` 表按订单号再查一次，避免换过商户号的老订单被误判。建议用只有 SELECT 权限的账号 |
+| `EASY_PAY_GATEWAY_MERCHANT_IDS` | 属于你的易支付商户号，逗号分隔（可选），例如 `1001,1002`。配置后，网关库里订单的商户号必须在列表里才算一致 |
 
 #### 支付宝官方
 

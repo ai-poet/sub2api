@@ -152,6 +152,8 @@ Any payment provider compatible with the **EasyPay protocol** can be used.
 | `EASY_PAY_RETURN_URL` | Redirect URL after payment: `${NEXT_PUBLIC_APP_URL}/pay/result`  |
 | `EASY_PAY_CID_ALIPAY` | Alipay channel ID (optional)                                     |
 | `EASY_PAY_CID_WXPAY`  | WeChat Pay channel ID (optional)                                 |
+| `EASY_PAY_GATEWAY_DB_URL` | Read-only MySQL URL of a self-hosted EasyPay gateway (optional). When the merchant order query answers "order not found" during a platform re-check, the order is looked up by number in the gateway's `pay_order` table, so old orders of a merchant ID that was later changed are not flagged. Use an account with SELECT only |
+| `EASY_PAY_GATEWAY_MERCHANT_IDS` | Your EasyPay merchant IDs, comma-separated (optional), e.g. `1001,1002`. When set, a gateway order counts as matching only if its merchant ID is in the list |
 
 #### Alipay (Official)
 

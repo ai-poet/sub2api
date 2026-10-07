@@ -3,14 +3,26 @@ import type { PaymentNotification, QueryOrderResponse } from '@/lib/payment/type
 
 const mockAuditLogCreate = vi.fn();
 const mockAuditLogFindFirst = vi.fn();
+const mockAuditLogUpdateMany = vi.fn();
 
 vi.mock('@/lib/db', () => ({
   prisma: {
     auditLog: {
       create: (...args: unknown[]) => mockAuditLogCreate(...args),
       findFirst: (...args: unknown[]) => mockAuditLogFindFirst(...args),
+      updateMany: (...args: unknown[]) => mockAuditLogUpdateMany(...args),
     },
   },
+}));
+
+const mockIsGatewayDbConfigured = vi.fn();
+const mockFindGatewayOrder = vi.fn();
+const mockGatewayMerchantIds = vi.fn();
+
+vi.mock('@/lib/easy-pay/gateway-db', () => ({
+  isGatewayDbConfigured: () => mockIsGatewayDbConfigured(),
+  findGatewayOrder: (...args: unknown[]) => mockFindGatewayOrder(...args),
+  gatewayMerchantIds: () => mockGatewayMerchantIds(),
 }));
 
 import {
@@ -19,8 +31,41 @@ import {
   isUpstreamOrderNotFound,
   PAYMENT_UPSTREAM_MISMATCH,
   recordUpstreamMismatch,
+  resolveUpstreamMismatches,
   verifyEasyPayCreditUpstream,
 } from '@/lib/easy-pay/upstream-verify';
+
+describe('resolveUpstreamMismatches', () => {
+  const ok = { kind: 'ok' as const, upstream: { tradeNo: 'EP-001', status: 'paid' as const, amount: 10 }, source: 'gateway_db' as const };
+
+  it('把该订单原来的不符记录改为已撤销，并另记一条撤销记录', async () => {
+    mockAuditLogUpdateMany.mockResolvedValue({ count: 3 });
+    mockAuditLogCreate.mockResolvedValue({});
+
+    expect(await resolveUpstreamMismatches({ orderId: 'order-001', operator: 'easy-pay:recheck', check: ok })).toBe(3);
+
+    expect(mockAuditLogUpdateMany).toHaveBeenCalledWith({
+      where: { orderId: 'order-001', action: PAYMENT_UPSTREAM_MISMATCH },
+      data: { action: 'PAYMENT_UPSTREAM_MISMATCH_RESOLVED' },
+    });
+    const { data } = mockAuditLogCreate.mock.calls[0][0];
+    expect(data).toMatchObject({ orderId: 'order-001', action: 'PAYMENT_UPSTREAM_RESOLVED', operator: 'easy-pay:recheck' });
+    expect(JSON.parse(data.detail)).toEqual({
+      resolved: 3,
+      checkedVia: 'gateway_db',
+      upstreamStatus: 'paid',
+      upstreamAmount: 10,
+      upstreamTradeNo: 'EP-001',
+    });
+  });
+
+  it('没有可撤销的记录时什么都不写', async () => {
+    mockAuditLogUpdateMany.mockResolvedValue({ count: 0 });
+
+    expect(await resolveUpstreamMismatches({ orderId: 'order-001', operator: 'easy-pay:recheck', check: ok })).toBe(0);
+    expect(mockAuditLogCreate).not.toHaveBeenCalled();
+  });
+});
 
 const notification: PaymentNotification = {
   orderId: 'order-001',
@@ -46,6 +91,8 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   mockAuditLogCreate.mockResolvedValue({});
   mockAuditLogFindFirst.mockResolvedValue(null);
+  mockIsGatewayDbConfigured.mockReturnValue(false);
+  mockGatewayMerchantIds.mockReturnValue(null);
 });
 
 describe('compareWithUpstream', () => {
@@ -90,13 +137,18 @@ describe('isUpstreamOrderNotFound', () => {
 describe('checkOrderUpstream', () => {
   it('一致 / 不符 / 查无此单 / 查单出错', async () => {
     mockQueryOrder.mockResolvedValueOnce(paid);
-    expect(await checkOrderUpstream(provider, 'order-001', credited)).toEqual({ kind: 'ok', upstream: paid });
+    expect(await checkOrderUpstream(provider, 'order-001', credited)).toEqual({
+      kind: 'ok',
+      upstream: paid,
+      source: 'merchant_api',
+    });
 
     mockQueryOrder.mockResolvedValueOnce(unpaid);
     expect(await checkOrderUpstream(provider, 'order-001', credited)).toEqual({
       kind: 'mismatch',
       reason: 'upstream_not_paid',
       upstream: unpaid,
+      source: 'merchant_api',
     });
 
     mockQueryOrder.mockRejectedValueOnce(notFound);
@@ -105,16 +157,109 @@ describe('checkOrderUpstream', () => {
       reason: 'upstream_order_not_found',
       upstream: null,
       message: '订单编号不存在',
+      source: 'merchant_api',
     });
 
     const networkError = new Error('fetch failed');
     mockQueryOrder.mockRejectedValueOnce(networkError);
     expect(await checkOrderUpstream(provider, 'order-001', credited)).toEqual({ kind: 'error', error: networkError });
+    // 没配置网关库时不会去查
+    expect(mockFindGatewayOrder).not.toHaveBeenCalled();
+  });
+});
+
+describe('checkOrderUpstream：商户接口查无此单时兜底查网关库', () => {
+  const gatewayOrder = (overrides: Record<string, unknown> = {}) => ({
+    outTradeNo: 'order-001',
+    tradeNo: 'EP-001',
+    merchantId: '1001',
+    amount: 10,
+    status: '1',
+    paid: true,
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    mockIsGatewayDbConfigured.mockReturnValue(true);
+    mockQueryOrder.mockRejectedValue(notFound);
+  });
+
+  it('网关库里已支付、金额交易号一致：判为一致（换过商户号的老订单）', async () => {
+    mockFindGatewayOrder.mockResolvedValue(gatewayOrder());
+
+    expect(await checkOrderUpstream(provider, 'order-001', credited)).toEqual({
+      kind: 'ok',
+      upstream: { tradeNo: 'EP-001', status: 'paid', amount: 10 },
+      source: 'gateway_db',
+    });
+    expect(mockFindGatewayOrder).toHaveBeenCalledWith('order-001');
+  });
+
+  it('配置了商户号列表：订单商户在列表里才算一致', async () => {
+    mockGatewayMerchantIds.mockReturnValue(new Set(['1001', '1002']));
+    mockFindGatewayOrder.mockResolvedValue(gatewayOrder());
+    expect((await checkOrderUpstream(provider, 'order-001', credited)).kind).toBe('ok');
+
+    mockFindGatewayOrder.mockResolvedValue(gatewayOrder({ merchantId: '2001' }));
+    expect(await checkOrderUpstream(provider, 'order-001', credited)).toMatchObject({
+      kind: 'mismatch',
+      reason: 'upstream_merchant_mismatch',
+      message: '网关库中这笔订单属于商户 2001',
+      source: 'gateway_db',
+    });
+  });
+
+  it('网关库里未支付或金额不符：仍判不符', async () => {
+    mockFindGatewayOrder.mockResolvedValue(gatewayOrder({ status: '0', paid: false }));
+    expect(await checkOrderUpstream(provider, 'order-001', credited)).toMatchObject({
+      kind: 'mismatch',
+      reason: 'upstream_not_paid',
+      source: 'gateway_db',
+    });
+
+    mockFindGatewayOrder.mockResolvedValue(gatewayOrder({ amount: 0.01 }));
+    expect(await checkOrderUpstream(provider, 'order-001', credited)).toMatchObject({
+      kind: 'mismatch',
+      reason: 'upstream_amount_mismatch',
+      source: 'gateway_db',
+    });
+  });
+
+  it('网关库里也没有：查无此单，并注明网关库也查过', async () => {
+    mockFindGatewayOrder.mockResolvedValue(null);
+
+    expect(await checkOrderUpstream(provider, 'order-001', credited)).toEqual({
+      kind: 'mismatch',
+      reason: 'upstream_order_not_found',
+      upstream: null,
+      message: '订单编号不存在；网关库中也没有这笔订单',
+      source: 'gateway_db',
+    });
+  });
+
+  it('网关库查询出错：不下结论', async () => {
+    const dbError = new Error('connect ETIMEDOUT');
+    mockFindGatewayOrder.mockRejectedValue(dbError);
+
+    expect(await checkOrderUpstream(provider, 'order-001', credited)).toEqual({ kind: 'error', error: dbError });
+  });
+
+  it('商户接口能查到时不查网关库', async () => {
+    mockQueryOrder.mockResolvedValue(paid);
+
+    await checkOrderUpstream(provider, 'order-001', credited);
+
+    expect(mockFindGatewayOrder).not.toHaveBeenCalled();
   });
 });
 
 describe('recordUpstreamMismatch', () => {
-  const check = { kind: 'mismatch' as const, reason: 'upstream_not_paid' as const, upstream: unpaid };
+  const check = {
+    kind: 'mismatch' as const,
+    reason: 'upstream_not_paid' as const,
+    upstream: unpaid,
+    source: 'merchant_api' as const,
+  };
 
   it('写审计，detail 带来源与平台、入账两侧的数据', async () => {
     const recorded = await recordUpstreamMismatch({
@@ -132,6 +277,7 @@ describe('recordUpstreamMismatch', () => {
     expect(JSON.parse(data.detail)).toEqual({
       reason: 'upstream_not_paid',
       source: 'recheck',
+      checkedVia: 'merchant_api',
       upstreamStatus: 'pending',
       upstreamAmount: 10,
       upstreamTradeNo: 'EP-001',
@@ -144,7 +290,13 @@ describe('recordUpstreamMismatch', () => {
     await recordUpstreamMismatch({
       orderId: 'order-001',
       operator: 'easy-pay:recheck',
-      check: { kind: 'mismatch', reason: 'upstream_order_not_found', upstream: null, message: '订单编号不存在' },
+      check: {
+        kind: 'mismatch',
+        reason: 'upstream_order_not_found',
+        upstream: null,
+        message: '订单编号不存在',
+        source: 'merchant_api',
+      },
       credited,
       source: 'recheck',
     });
@@ -221,6 +373,7 @@ describe('verifyEasyPayCreditUpstream', () => {
     expect(JSON.parse(data.detail)).toEqual({
       reason: 'upstream_not_paid',
       source: 'notify',
+      checkedVia: 'merchant_api',
       upstreamStatus: 'pending',
       upstreamAmount: 10,
       upstreamTradeNo: 'EP-001',

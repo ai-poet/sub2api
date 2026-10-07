@@ -10,6 +10,14 @@ export const PAYMENT_AMOUNT_MISMATCH = 'PAYMENT_AMOUNT_MISMATCH';
 export const PAYMENT_NOTIFY_REJECTED = 'PAYMENT_NOTIFY_REJECTED';
 export const PAYMENT_CONFIRM_FAILED = 'PAYMENT_CONFIRM_FAILED';
 
+/**
+ * 之后的复核确认订单与平台一致时，把该订单原来的 PAYMENT_UPSTREAM_MISMATCH 改成这个动作，
+ * 它不在风控事件里，面板上就不再显示；原记录与详情保留，订单详情里仍可看到。
+ */
+export const PAYMENT_UPSTREAM_MISMATCH_RESOLVED = 'PAYMENT_UPSTREAM_MISMATCH_RESOLVED';
+/** 撤销时另记一条，写明撤销了几条、依据哪个来源确认一致。 */
+export const PAYMENT_UPSTREAM_RESOLVED = 'PAYMENT_UPSTREAM_RESOLVED';
+
 /** 计入支付风控的审计动作，按严重程度从高到低排列。 */
 export const PAYMENT_RISK_ACTIONS = [
   PAYMENT_UPSTREAM_MISMATCH,
@@ -124,6 +132,7 @@ export const PAYMENT_RISK_REASON_LABELS: Record<string, LocalizedText> = {
   trade_no_mismatch: { zh: '交易号不一致', en: 'Trade No. mismatch' },
   upstream_not_paid: { zh: '平台显示未付款', en: 'Platform reports unpaid' },
   upstream_order_not_found: { zh: '平台查无此单', en: 'Order not found on platform' },
+  upstream_merchant_mismatch: { zh: '网关库中订单属于其他商户', en: 'Order belongs to another merchant' },
   upstream_amount_mismatch: { zh: '平台金额不符', en: 'Platform amount differs' },
   upstream_trade_no_mismatch: { zh: '平台交易号不符', en: 'Platform trade No. differs' },
   provider_unavailable: { zh: '支付实例已不存在，无法查单', en: 'Payment instance no longer exists' },
@@ -158,6 +167,8 @@ export interface PaymentRecheckItem {
   message?: string;
   /** mismatch 时是否新写了一条"平台复核不符"（同一订单同一原因只记一次） */
   recorded?: boolean;
+  /** ok 时撤销了几条之前的"平台复核不符" */
+  resolved?: number;
 }
 
 export interface PaymentRecheckBatch {

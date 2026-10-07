@@ -2,7 +2,12 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { EasyPayProvider } from '@/lib/easy-pay/provider';
-import { checkOrderUpstream, recordUpstreamMismatch, type CreditedPayment } from '@/lib/easy-pay/upstream-verify';
+import {
+  checkOrderUpstream,
+  recordUpstreamMismatch,
+  resolveUpstreamMismatches,
+  type CreditedPayment,
+} from '@/lib/easy-pay/upstream-verify';
 import { getInstanceConfig } from '@/lib/payment/load-balancer';
 import type { PaymentProvider } from '@/lib/payment/types';
 import { computeRiskWindowStart } from './overview';
@@ -12,7 +17,8 @@ import type { PaymentRecheckBatch, PaymentRecheckItem } from './shared';
  * 批量复核历史订单：把一段时间里由易支付回调入账的订单逐笔拿到平台上查单，看平台是否真的收到了钱。
  *
  * - 只读订单，不改订单状态；对不上的写一条 PAYMENT_UPSTREAM_MISMATCH（operator 以 `:recheck` 结尾），
- *   同一订单同一原因只写一次，可以放心反复执行。
+ *   同一订单同一原因只写一次；查实一致的订单会撤销它之前的不符记录。所以可以放心反复执行，
+ *   每次执行后面板反映的都是最新结论。
  * - 由管理员在面板上手动触发，按批推进：每次请求最多处理一小批，笔与笔之间留间隔，单次请求有时间上限，
  *   前端拿 nextCursor 续跑。服务端不保存任何任务状态，关掉页面就停。
  */
@@ -167,7 +173,17 @@ async function recheckOne(
 
     const check = await checkOrderUpstream(provider, order.id, credited);
     if (check.kind === 'ok') {
-      return { ...base, outcome: 'ok' };
+      // 这次查实一致：撤销之前留下的"平台复核不符"。撤销失败不影响本次结论
+      try {
+        const resolved = await resolveUpstreamMismatches({
+          orderId: order.id,
+          operator: `${provider.name}:recheck`,
+          check,
+        });
+        return { ...base, outcome: 'ok', ...(resolved > 0 && { resolved }) };
+      } catch (error) {
+        return { ...base, outcome: 'ok', message: `撤销旧的不符记录失败：${describeError(error)}` };
+      }
     }
     if (check.kind === 'error') {
       return { ...base, outcome: 'failed', message: describeError(check.error) };

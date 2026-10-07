@@ -51,6 +51,7 @@ function getText(locale: Locale) {
         outcome: 'Result',
         details: 'Details',
         alreadyRecorded: 'already recorded',
+        resolved: (n: number) => `Cleared ${n} earlier mismatch record(s) for orders now confirmed`,
       }
     : {
         title: '历史订单复核',
@@ -74,6 +75,7 @@ function getText(locale: Locale) {
         outcome: '结果',
         details: '说明',
         alreadyRecorded: '之前已记录',
+        resolved: (n: number) => `已撤销 ${n} 条之前的不符记录，这些订单本次复核一致`,
       };
 }
 
@@ -94,6 +96,7 @@ export default function RiskRecheckPanel({ token, days, locale, dark, onViewDeta
   const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState<OutcomeCounts>(EMPTY_COUNTS);
   const [items, setItems] = useState<PaymentRecheckItem[]>([]);
+  const [resolvedCount, setResolvedCount] = useState(0);
   const [error, setError] = useState('');
   const stopRequested = useRef(false);
   const mounted = useRef(true);
@@ -118,6 +121,7 @@ export default function RiskRecheckPanel({ token, days, locale, dark, onViewDeta
     setTotal(0);
     setCounts(EMPTY_COUNTS);
     setItems([]);
+    setResolvedCount(0);
 
     let windowStart: string | null = null;
     let cursor: string | null = null;
@@ -150,6 +154,8 @@ export default function RiskRecheckPanel({ token, days, locale, dark, onViewDeta
         });
         const notable = batch.results.filter((item) => item.outcome !== 'ok');
         if (notable.length > 0) setItems((prev) => [...prev, ...notable]);
+        const resolvedInBatch = batch.results.reduce((sum, item) => sum + (item.resolved ?? 0), 0);
+        if (resolvedInBatch > 0) setResolvedCount((prev) => prev + resolvedInBatch);
 
         if (batch.done) {
           outcome = 'done';
@@ -242,6 +248,9 @@ export default function RiskRecheckPanel({ token, days, locale, dark, onViewDeta
               ))}
             </div>
             {error && <p className={`text-sm ${dark ? 'text-red-400' : 'text-red-600'}`}>{error}</p>}
+            {resolvedCount > 0 && (
+              <p className={`text-sm ${dark ? 'text-emerald-300' : 'text-emerald-700'}`}>{text.resolved(resolvedCount)}</p>
+            )}
             {state === 'stopped' && <p className={hintCls}>{text.stopped}</p>}
             {state === 'done' && total === 0 && <p className={hintCls}>{text.noCandidates}</p>}
             {state === 'done' && total > 0 && items.length === 0 && (

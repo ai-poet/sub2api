@@ -33,6 +33,7 @@ describe('payment risk shared definitions', () => {
       'trade_no_mismatch',
       'upstream_not_paid',
       'upstream_order_not_found',
+      'upstream_merchant_mismatch',
       'upstream_amount_mismatch',
       'upstream_trade_no_mismatch',
       'provider_unavailable',

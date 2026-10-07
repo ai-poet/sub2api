@@ -35,6 +35,12 @@ const envSchema = z.object({
   EASY_PAY_CID: optionalTrimmedString,
   EASY_PAY_CID_ALIPAY: optionalTrimmedString,
   EASY_PAY_CID_WXPAY: optionalTrimmedString,
+  // 自建易支付网关的只读数据库（可选）。平台复核时商户查单接口回"订单号不存在"，
+  // 就到这里按订单号再查一次，用来兜住"实例换过商户号、老订单查不到"的情况。
+  // 建议用只有 SELECT 权限的账号，例如 mysql://readonly:***@host:3306/epay
+  EASY_PAY_GATEWAY_DB_URL: optionalTrimmedString,
+  // 属于你的商户号，逗号分隔，例如 1001,1002。配置后，网关库里订单的商户号必须在列表里才算一致
+  EASY_PAY_GATEWAY_MERCHANT_IDS: optionalTrimmedString,
 
   // ── 支付宝直连（PAYMENT_PROVIDERS 含 alipay 时必填） ──
   // 支持直接传密钥内容，也支持传文件路径（自动读取）
