@@ -13,7 +13,7 @@
       role="img"
       :aria-label="t('home.clientWorkflow.ariaLabel', { siteName: props.siteName })"
       data-test="preview-window"
-      @pointerenter="onPointerEnter"
+      @pointermove="onPointerMove"
       @pointerleave="onPointerLeave"
     >
       <div class="flex h-[520px] items-stretch sm:h-[560px]">
@@ -328,13 +328,21 @@ const chapterItems = computed(() =>
   CHAPTERS.map((chapter) => ({ id: chapter.id, label: t(`home.clientWorkflow.chapters.${chapter.id}`) })),
 )
 
-// 鼠标停在窗口上时暂停，方便看清；触屏的 pointerenter 不算
-function onPointerEnter(event: PointerEvent) {
+// 鼠标在窗口上移动时暂停，方便看清；触屏不算。
+// 只认真的移动：滚动页面时窗口滑到静止的鼠标下面，浏览器补发的事件没有位移，
+// 以前按 pointerenter 暂停，演示就会一直停着，直到鼠标挪出去（比如挪到进度条上）才接着播。
+function onPointerMove(event: PointerEvent) {
   if (event.pointerType === 'touch') return
+  if (!event.movementX && !event.movementY) return
   setPaused('hover', true)
 }
 
 function onPointerLeave() {
+  setPaused('hover', false)
+}
+
+// 页面在滚动，就不是停下来看演示：松开悬停暂停，窗口滑走后不会还停着
+function onScroll() {
   setPaused('hover', false)
 }
 
@@ -367,6 +375,7 @@ onMounted(() => {
     setPaused('hidden', document.hidden)
     document.addEventListener('visibilitychange', onVisibilityChange)
   }
+  if (typeof window !== 'undefined') window.addEventListener('scroll', onScroll, { passive: true })
   // 滚出视口就停，滚回来从停下的地方接着播
   if (typeof IntersectionObserver === 'function' && root.value) {
     observer = new IntersectionObserver((entries) => {
@@ -383,6 +392,7 @@ onBeforeUnmount(() => {
   observer?.disconnect()
   observer = null
   if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)
+  if (typeof window !== 'undefined') window.removeEventListener('scroll', onScroll)
 })
 </script>
 

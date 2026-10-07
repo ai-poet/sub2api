@@ -213,6 +213,20 @@ describe('HomeAgentWorkflowPreview', () => {
     expect(vi.mocked(preloadDemoImages)).toHaveBeenCalledTimes(1)
   })
 
+  it('opens on the new-task welcome screen with its activity overview until the prompt is sent', async () => {
+    const view = mountPreview()
+
+    expect(view.find('[data-test="preview-welcome"]').exists()).toBe(true)
+    expect(view.find('[data-test="preview-overview"]').exists()).toBe(true)
+    // 26 weeks of days, the last week only up to today.
+    expect(view.findAll('[data-test="preview-heat-grid"] .cw-heat-cell').length).toBe(26 * 7)
+    expect(view.find('[data-test="preview-plan-transcript"]').exists()).toBe(false)
+
+    await advance(MOMENTS.send + 100)
+    expect(view.find('[data-test="preview-welcome"]').exists()).toBe(false)
+    expect(view.find('[data-test="preview-plan-transcript"]').exists()).toBe(true)
+  })
+
   it('hands over the plan in a card and the Plan panel, then runs sub-agents after approval', async () => {
     const view = mountPreview()
 
@@ -251,11 +265,11 @@ describe('HomeAgentWorkflowPreview', () => {
     expect(view.find('[data-test="preview-team-done-reply"]').exists()).toBe(true)
   })
 
-  it('pauses while the pointer rests on the window and carries on from there', async () => {
+  it('pauses while the pointer moves over the window and carries on from there', async () => {
     const view = mountPreview()
     await advance(3000)
 
-    await view.find('[data-test="preview-window"]').trigger('pointerenter', { pointerType: 'mouse' })
+    await view.find('[data-test="preview-window"]').trigger('pointermove', { pointerType: 'mouse', movementX: 4 })
     await nextTick()
     const held = windowHtml(view)
     await advance(3000)
@@ -267,11 +281,39 @@ describe('HomeAgentWorkflowPreview', () => {
     expect(windowHtml(view)).not.toBe(held)
   })
 
+  it('keeps playing when the page scrolls the window under a still pointer', async () => {
+    const view = mountPreview()
+    await advance(1000)
+
+    // What a browser reports when content scrolls under a pointer that did not move.
+    await view.find('[data-test="preview-window"]').trigger('pointermove', { pointerType: 'mouse', movementX: 0, movementY: 0 })
+    await nextTick()
+    const before = windowHtml(view)
+    await advance(2000)
+    expect(windowHtml(view)).not.toBe(before)
+  })
+
+  it('lets go of a hover pause once the page scrolls', async () => {
+    const view = mountPreview()
+    await advance(3000)
+
+    await view.find('[data-test="preview-window"]').trigger('pointermove', { pointerType: 'mouse', movementY: 2 })
+    await nextTick()
+    const held = windowHtml(view)
+    await advance(1500)
+    expect(windowHtml(view)).toBe(held)
+
+    window.dispatchEvent(new Event('scroll'))
+    await nextTick()
+    await advance(1500)
+    expect(windowHtml(view)).not.toBe(held)
+  })
+
   it('ignores touch pointers for pausing', async () => {
     const view = mountPreview()
     await advance(1000)
 
-    await view.find('[data-test="preview-window"]').trigger('pointerenter', { pointerType: 'touch' })
+    await view.find('[data-test="preview-window"]').trigger('pointermove', { pointerType: 'touch', movementX: 4 })
     await nextTick()
     const before = windowHtml(view)
     await advance(2000)

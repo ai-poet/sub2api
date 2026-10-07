@@ -225,6 +225,26 @@ export default {
         "olderTime": "3 小时前",
         "email": "admin{'@'}cheaprouter.cc"
       },
+      "overview": {
+        "headlineLead": "想在 ",
+        "headlineTail": " 中构建什么？",
+        "tabOverview": "概览",
+        "tabModels": "模型",
+        "rangeAll": "全部",
+        "range30d": "30 天",
+        "range7d": "7 天",
+        "sessions": "会话数",
+        "messages": "消息数",
+        "activeDays": "活跃天数",
+        "peakHour": "高峰时段",
+        "peakHourValue": "15 点",
+        "favoriteModel": "最常用模型",
+        "longestStreak": "最长连续",
+        "streakValue": "12 天",
+        "heatCaption": "近半年共 3,642 条消息",
+        "less": "少",
+        "more": "多"
+      },
       "transcript": {
         "prompt": "登录成功后跳回原来的页面，别总是回首页",
         "explored": "查阅 · 1 搜索，2 文件",

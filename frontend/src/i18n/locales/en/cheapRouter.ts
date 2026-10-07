@@ -225,6 +225,26 @@ export default {
         "olderTime": "3h",
         "email": "admin{'@'}cheaprouter.cc"
       },
+      "overview": {
+        "headlineLead": "What should we build in ",
+        "headlineTail": "?",
+        "tabOverview": "Overview",
+        "tabModels": "Models",
+        "rangeAll": "All",
+        "range30d": "30d",
+        "range7d": "7d",
+        "sessions": "Sessions",
+        "messages": "Messages",
+        "activeDays": "Active days",
+        "peakHour": "Peak hour",
+        "peakHourValue": "3 PM",
+        "favoriteModel": "Favorite model",
+        "longestStreak": "Longest streak",
+        "streakValue": "12 days",
+        "heatCaption": "3,642 messages in the last 6 months",
+        "less": "Less",
+        "more": "More"
+      },
       "transcript": {
         "prompt": "After signing in, send people back to the page they came from instead of the home page",
         "explored": "Explored · 1 search, 2 files",

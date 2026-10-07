@@ -1,8 +1,9 @@
 <template>
   <div class="flex h-full flex-col" data-test="preview-agent-scene">
-    <!-- 对话记录：内容最宽 720，和客户端一样居中 -->
+    <!-- 对话记录：内容最宽 720，和客户端一样居中；还没发出第一条消息时是新任务的空白页和活动概览 -->
     <div class="min-h-0 flex-1 overflow-hidden px-4 pt-3 sm:px-5">
-      <div class="mx-auto max-w-[720px]">
+      <WelcomeOverview v-if="frame.chapter === 'plan' && !frame.sent" :site-name="siteName" />
+      <div v-else class="mx-auto max-w-[720px]">
         <TeamTranscript v-if="frame.chapter === 'team'" :frame="frame" />
         <PlanRunTranscript v-else :frame="frame" />
       </div>
@@ -125,6 +126,7 @@ import ClientIcon from './ClientIcon.vue'
 import ModelPicker from './ModelPicker.vue'
 import PlanRunTranscript from './PlanRunTranscript.vue'
 import TeamTranscript from './TeamTranscript.vue'
+import WelcomeOverview from './WelcomeOverview.vue'
 import type { PreviewFrame } from './timeline'
 
 const props = defineProps<{
