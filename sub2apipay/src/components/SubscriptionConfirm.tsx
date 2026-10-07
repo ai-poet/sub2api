@@ -7,7 +7,8 @@ import { pickLocaleText } from '@/lib/locale';
 import { getPaymentTypeLabel, getPaymentIconSrc, PAYMENT_TYPE_META } from '@/lib/pay-utils';
 import type { PlanInfo } from '@/components/SubscriptionPlanCard';
 import { PlanInfoDisplay } from '@/components/SubscriptionPlanCard';
-import { getSettlementDisplay } from '@/lib/currency';
+import { getSettlementDisplay, isStablecoinPaymentType } from '@/lib/currency';
+import StablecoinPaymentNotice from '@/components/StablecoinPaymentNotice';
 
 interface SubscriptionConfirmProps {
   plan: PlanInfo;
@@ -31,9 +32,21 @@ export default function SubscriptionConfirm({
   locale,
 }: SubscriptionConfirmProps) {
   const [selectedPayment, setSelectedPayment] = useState(paymentTypes[0] || '');
+  const [stablecoinNoticeOpen, setStablecoinNoticeOpen] = useState(false);
   const settlementDisplay = getSettlementDisplay(plan.price, selectedPayment, usdExchangeRate);
 
   const handleSubmit = () => {
+    if (!selectedPayment || loading) return;
+    // USDT / USDC 先确认用直接转账和正确网络付款，确认后才下单
+    if (isStablecoinPaymentType(selectedPayment)) {
+      setStablecoinNoticeOpen(true);
+      return;
+    }
+    onSubmit(selectedPayment);
+  };
+
+  const handleStablecoinConfirm = () => {
+    setStablecoinNoticeOpen(false);
     if (selectedPayment && !loading) {
       onSubmit(selectedPayment);
     }
@@ -179,6 +192,16 @@ export default function SubscriptionConfirm({
           ? pickLocaleText(locale, '处理中...', 'Processing...')
           : `${pickLocaleText(locale, '立即购买', 'Buy Now')} ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
       </button>
+
+      {stablecoinNoticeOpen && (
+        <StablecoinPaymentNotice
+          paymentType={selectedPayment}
+          isDark={isDark}
+          locale={locale}
+          onCancel={() => setStablecoinNoticeOpen(false)}
+          onConfirm={handleStablecoinConfirm}
+        />
+      )}
     </div>
   );
 }

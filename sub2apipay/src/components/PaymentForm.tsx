@@ -12,6 +12,7 @@ import {
   type PublicPromotion,
 } from '@/lib/promotion/calc';
 import PromotionBanner from '@/components/PromotionBanner';
+import StablecoinPaymentNotice from '@/components/StablecoinPaymentNotice';
 
 export interface MethodLimitInfo {
   available: boolean;
@@ -75,6 +76,7 @@ export default function PaymentForm({
   const [amount, setAmount] = useState<number | ''>(fixedAmount ?? '');
   const [paymentType, setPaymentType] = useState(enabledPaymentTypes[0] || 'alipay');
   const [customAmount, setCustomAmount] = useState(fixedAmount ? String(fixedAmount) : '');
+  const [stablecoinNoticeOpen, setStablecoinNoticeOpen] = useState(false);
 
   const effectivePaymentType = enabledPaymentTypes.includes(paymentType)
     ? paymentType
@@ -167,6 +169,17 @@ export default function PaymentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValid || loading) return;
+    // USDT / USDC 先确认用直接转账和正确网络付款，确认后才下单
+    if (isStablecoinPaymentType(effectivePaymentType)) {
+      setStablecoinNoticeOpen(true);
+      return;
+    }
+    await onSubmit(selectedAmount, effectivePaymentType);
+  };
+
+  const handleStablecoinConfirm = async () => {
+    setStablecoinNoticeOpen(false);
     if (!isValid || loading) return;
     await onSubmit(selectedAmount, effectivePaymentType);
   };
@@ -533,6 +546,17 @@ export default function PaymentForm({
                 ? `Pay Now ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`
                 : `立即支付 ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
       </button>
+
+      {/* 对话框里的按钮都是 type="button"，放在表单里不会触发提交 */}
+      {stablecoinNoticeOpen && (
+        <StablecoinPaymentNotice
+          paymentType={effectivePaymentType}
+          isDark={dark}
+          locale={locale}
+          onCancel={() => setStablecoinNoticeOpen(false)}
+          onConfirm={handleStablecoinConfirm}
+        />
+      )}
     </form>
   );
 }
