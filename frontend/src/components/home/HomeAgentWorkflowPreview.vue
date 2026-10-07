@@ -45,36 +45,69 @@
             </span>
           </nav>
 
-          <div class="mt-2.5 flex flex-col gap-px px-2.5">
-            <div class="flex h-7 items-center rounded-md px-2 text-[13px] font-medium text-[color:var(--cw-text-secondary)]">
-              <span>{{ t('home.clientWorkflow.sidebar.today') }}</span>
-              <span class="ml-auto flex items-center text-[color:var(--cw-text-tertiary)]">
-                <span class="flex h-5 w-5 items-center justify-center"><ClientIcon name="listFilter" class="h-3 w-3" /></span>
-                <span class="flex h-5 w-5 items-center justify-center"><ClientIcon name="folderNew" class="h-3 w-3" /></span>
+          <!-- 任务列表（sidebar_toolbar.rs / sidebar_sections.rs / task_rows.rs）：
+               工具栏切换「按项目 / 时间线」，项目带展开箭头，任务单行、状态在标题左边 -->
+          <div class="mt-2.5 flex flex-col px-2.5" data-test="preview-task-list">
+            <div class="flex h-9 items-center gap-1 pl-0.5" data-test="preview-sidebar-toolbar">
+              <span class="flex h-7 min-w-0 items-center gap-0.5 rounded-full bg-[color:var(--cw-overlay-strong)] p-0.5">
+                <span class="cw-segment is-active" data-test="preview-view-project">{{ t('home.clientWorkflow.sidebar.viewByProject') }}</span>
+                <span class="cw-segment">{{ t('home.clientWorkflow.sidebar.viewTimeline') }}</span>
+              </span>
+              <span class="cw-tool-button"><ClientIcon name="chevronsDownUp" class="h-3.5 w-3.5" /></span>
+              <span class="ml-auto flex items-center gap-0.5">
+                <span class="cw-tool-button"><ClientIcon name="listFilter" class="h-3.5 w-3.5" /></span>
+                <span class="cw-tool-button"><ClientIcon name="archive" class="h-3.5 w-3.5" /></span>
               </span>
             </div>
 
-            <div
-              v-for="session in sessions"
-              :key="session.key"
-              class="cw-session"
-              :class="session.active ? 'is-active' : ''"
-              :data-test="`preview-session-${session.key}`"
-            >
-              <div class="flex items-center gap-1.5">
-                <span class="min-w-0 flex-1 truncate text-[13.5px] text-[color:var(--cw-text)]">{{ session.title }}</span>
-                <ClientIcon
-                  v-if="session.running"
-                  name="loaderCircle"
-                  class="cw-spin h-3.5 w-3.5 shrink-0 text-[color:var(--cw-accent)]"
-                />
+            <template v-for="row in taskRows" :key="row.key">
+              <div v-if="row.kind === 'section'" class="cw-section-header">
+                <span class="truncate">{{ row.label }}</span>
+                <span
+                  v-if="row.addProject"
+                  class="ml-auto flex h-[22px] w-5 items-center justify-center text-[color:var(--cw-text-secondary)]"
+                >
+                  <ClientIcon name="folderNew" class="h-3.5 w-3.5" />
+                </span>
               </div>
-              <div class="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-[color:var(--cw-text-tertiary)]">
-                <ClientIcon name="folder" class="h-3 w-3 shrink-0" />
-                <span class="min-w-0 truncate">{{ t('home.clientWorkflow.footer.project') }}</span>
-                <span class="ml-auto shrink-0 text-[color:var(--cw-text-ghost)]">{{ session.time }}</span>
+              <div v-else-if="row.kind === 'project'" class="cw-project-row" data-test="preview-project-row">
+                <span class="flex w-3.5 shrink-0 justify-center text-[color:var(--cw-text-tertiary)]">
+                  <ClientIcon name="chevronDown" class="h-3 w-3" />
+                </span>
+                <span class="ml-0.5 flex w-4 shrink-0 justify-center text-[color:var(--cw-text-tertiary)]">
+                  <ClientIcon name="folderOpen" class="h-3.5 w-3.5" />
+                </span>
+                <span class="ml-1.5 min-w-0 truncate text-[13.5px] text-[color:var(--cw-text-secondary)]">{{ row.label }}</span>
               </div>
-            </div>
+              <div v-else-if="row.kind === 'spacer'" class="h-2.5"></div>
+              <div
+                v-else
+                class="cw-task"
+                :class="[row.active ? 'is-active' : '', row.nested ? 'is-nested' : '']"
+                :data-test="`preview-session-${row.key}`"
+              >
+                <span class="flex h-4 w-4 shrink-0 items-center justify-center">
+                  <ClientIcon
+                    v-if="row.running"
+                    name="loaderCircle"
+                    class="cw-spin h-3 w-3 text-[color:var(--cw-accent)]"
+                  />
+                  <i
+                    v-else-if="row.unread"
+                    class="cw-unread-dot"
+                    :data-test="`preview-unread-${row.key}`"
+                  ></i>
+                </span>
+                <span
+                  class="min-w-0 flex-1 truncate text-[13.5px] text-[color:var(--cw-text)]"
+                  :class="row.unread ? 'font-medium' : ''"
+                >{{ row.title }}</span>
+                <span
+                  class="shrink-0 text-[12px]"
+                  :class="row.running ? 'text-[color:var(--cw-text-tertiary)]' : 'text-[color:var(--cw-text-ghost)]'"
+                >{{ row.time }}</span>
+              </div>
+            </template>
           </div>
 
           <div class="mt-auto flex h-10 flex-none items-center gap-1.5 px-2.5">
@@ -229,33 +262,63 @@ const sidebarActions = computed<Array<{ key: string; icon: ClientIconName; label
   { key: 'model-status', icon: 'server', label: t('home.clientWorkflow.sidebar.modelStatus'), active: false },
 ])
 
-const sessions = computed(() => {
+type TaskRow =
+  | { kind: 'section'; key: string; label: string; addProject?: boolean }
+  | { kind: 'project'; key: string; label: string }
+  | { kind: 'spacer'; key: string }
+  | {
+      kind: 'task'
+      key: string
+      title: string
+      time: string
+      active: boolean
+      running: boolean
+      unread: boolean
+      nested: boolean
+    }
+
+// 按项目视图：「项目」下是这个项目和它的任务（缩进到文件夹下），「任务」下是不属于项目的任务。
+// 运行中显示转圈和已运行时长，别处跑完还没看的任务带一个未读点。
+const taskRows = computed<TaskRow[]>(() => {
   const current = frame.value
   const planRunning = current.chapter === 'plan' && current.sent && !current.runDone
   const teamRunning = current.team?.phase === 'running'
   const teamTouched = current.chapter !== 'plan'
   return [
+    { kind: 'section', key: 'projects', label: t('home.clientWorkflow.sidebar.projects'), addProject: true },
+    { kind: 'project', key: 'project', label: t('home.clientWorkflow.footer.project') },
     {
+      kind: 'task',
       key: 'plan',
       title: t('home.clientWorkflow.sidebar.taskTitle'),
       active: current.activeSession === 'plan',
       running: planRunning,
+      unread: false,
+      nested: true,
       time: planRunning
-        ? t('home.clientWorkflow.sidebar.working', { seconds: current.workSeconds })
+        ? t('home.clientWorkflow.sidebar.elapsed', { seconds: current.workSeconds })
         : t('home.clientWorkflow.sidebar.justNow'),
     },
     {
+      kind: 'task',
       key: 'team',
       title: t('home.clientWorkflow.sidebar.teamTaskTitle'),
       active: current.activeSession === 'team',
       running: teamRunning,
+      unread: false,
+      nested: true,
       time: teamTouched ? t('home.clientWorkflow.sidebar.justNow') : t('home.clientWorkflow.sidebar.teamTime'),
     },
+    { kind: 'spacer', key: 'spacer' },
+    { kind: 'section', key: 'tasks', label: t('home.clientWorkflow.sidebar.tasks') },
     {
+      kind: 'task',
       key: 'older',
       title: t('home.clientWorkflow.sidebar.olderTask'),
       active: false,
       running: false,
+      unread: true,
+      nested: false,
       time: t('home.clientWorkflow.sidebar.olderTime'),
     },
   ]
@@ -354,19 +417,93 @@ onBeforeUnmount(() => {
 }
 
 .cw-nav-row.is-active,
-.cw-session.is-active {
+.cw-task.is-active {
   background: var(--cw-sidebar-item);
 }
 
-.cw-session {
+/* 尺寸照客户端：sidebar_rows.rs 的行高与缩进 */
+.cw-segment {
+  display: flex;
+  height: 24px;
+  min-width: 0;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--cw-text-tertiary);
+}
+
+.cw-segment.is-active {
+  border-color: var(--cw-border);
+  background: var(--cw-composer);
+  color: var(--cw-text);
+}
+
+.cw-tool-button {
+  display: flex;
+  height: 24px;
+  width: 24px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--cw-text-secondary);
+}
+
+.cw-section-header {
+  display: flex;
+  height: 28px;
+  margin-bottom: 2px;
+  align-items: center;
+  padding: 0 4px 0 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cw-text-tertiary);
+}
+
+.cw-project-row {
+  display: flex;
+  height: 32px;
+  margin-bottom: 2px;
+  align-items: center;
   border-radius: 7px;
-  padding: 7px 8px;
+  padding: 0 4px;
+}
+
+.cw-task {
+  display: flex;
+  height: 32px;
+  margin-bottom: 2px;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 0 4px 0 10px;
   transition: background-color 0.2s ease;
+}
+
+/* 项目里的任务：状态位对齐文件夹，标题对齐项目名 */
+.cw-task.is-nested {
+  padding-left: 20px;
+}
+
+.cw-unread-dot {
+  display: block;
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: #0ea5e9;
+}
+
+:global(.dark) .cw-unread-dot {
+  background: #38bdf8;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cw-nav-row,
-  .cw-session {
+  .cw-task {
     transition: none;
   }
 }

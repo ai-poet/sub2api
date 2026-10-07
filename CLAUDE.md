@@ -405,6 +405,35 @@ The features below are locally maintained customizations of this fork. During up
   - `plan_selected_text` in the copy chain.
 - **On upstream merges.** Keep this feature, and resolve conflicts in favour of the local version.
 
+### 自动记忆 (Client auto-memory, local implementation)
+
+- **What it is.** Claude Code-style persistent memory for the built-in agent:
+  - One Markdown file per memory, with YAML frontmatter and one of four types (user / feedback / project / reference).
+  - A project scope per workspace and a global user scope.
+  - A derived `MEMORY.md` index per scope, injected into the system prompt within a byte budget together with the plugin's writing policy.
+  - Six tools: `memory_write / read / list / delete / prune / delete_all`.
+  - Optional stale eviction, pinning and `[[name]]` link expansion.
+  - A consolidation pass (on by default) every 12 user messages and when a session closes.
+- **Origin and licence.** Translated from dsh-auto-memory (0.3.0, MIT, AskTheWay; licence in `client/NOTICE.md`). Design notes: `client/docs/auto-memory.md`.
+- **Files.**
+  - `client/crates/auto-memory/**` (pure logic: store, lock, Claude Code mirror, prompt, consolidation parsing, settings).
+  - `client/crates/waku-agent-bridge/src/memory/**` (`MemoryHost`, tools, consolidation pass).
+  - The hooks in the bridge's `session.rs`, `session_team.rs`, `permission.rs`, `oneshot.rs` (`ask_once`) and `lib.rs`.
+  - `client/crates/waku-core/src/driver/memory_titles.rs`, mounted from `native.rs`.
+  - `client/src/app/agent_memory_settings.rs` (Settings → Agent → 记忆), hooked in `agent_page.rs`, `usage_page.rs` and `app.rs`.
+  - The `memory.*` keys in `client/locales/{app,zh-CN,ja}.yml`.
+- **Where things are stored.**
+  - Memories: `<engine config dir>/auto-memory/{user, projects/<key>}/`. Never `<config dir>/memory/`, which the vendored engine's AutoDream claims.
+  - Configuration: `auto-memory.json`, beside the engine's `settings.json`. Never put it in `settings.json`: the engine's save drops unknown keys.
+- **Rules.**
+  - **Root session only.** Sub-agents and team members never get the memory tools. The index section is appended after the sub-agent query is cloned, and it is byte-identical across turns while nothing changes, so the prompt cache holds.
+  - **Bulk deletes always ask a person.** `memory_prune` (when not a dry run) and `memory_delete_all` are prompted by `GuiPermissionHandler::decide` whatever the access mode, and refused to team members. Never let full access or an "always allow" rule approve them.
+  - **Claude Code mirror is one way and marked.**
+    - Project memories (never the user scope) are copied to `$CLAUDE_CONFIG_DIR` or `~/.claude`, under `/projects/<slug>/memory/`, in Claude Code's format with `metadata.origin: cheaprouter`. The index is updated line by line.
+    - Only files carrying that marker are ever overwritten or deleted. Claude Code's own memories and index lines are never touched.
+    - On by default; switch: `mirrorToClaudeCode`.
+- **On upstream merges.** Keep this feature, and resolve conflicts on the paths above in favour of the local version.
+
 ### GitHub OAuth login (local implementation)
 
 - GitHub OAuth is a fork-local feature and must not be changed by upstream syncs: `backend/internal/handler/auth_github_oauth.go` (+ `_test.go`), `backend/internal/handler/auth_email_oauth.go`, `backend/internal/service/github_oauth_fork.go`, `backend/internal/service/setting_oauth.go`, the `github_oauth_*` settings/config in `backend/internal/config/config.go` and `backend/internal/handler/admin/setting_handler_*.go`; frontend `frontend/src/components/auth/EmailOAuthButtons.vue` (+ spec), the GitHub parts of `frontend/src/api/auth.ts`, `frontend/src/views/auth/LoginView.vue` / `RegisterView.vue`, and `frontend/src/components/admin/settings/ForkSettingsSection.vue`.

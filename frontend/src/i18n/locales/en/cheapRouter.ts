@@ -26,7 +26,7 @@ export default {
         "client": {
           "label": "Our Own Agent desktop client",
           "title": "Every agent, one workspace, every API.",
-          "subtitle": "Download and go — no Node, no CLI setup. Native Rust, light but complete: plan review, parallel sub-agents, agent teams and image generation, with Claude Code and Codex in the same window."
+          "subtitle": "Works out of the box — no setup at all, with a built-in agent. Native Rust, light but complete: plan review, parallel sub-agents, agent teams and image generation, with Claude Code and Codex in the same window."
         },
         "api": {
           "label": "A quality-checked AI relay",
@@ -212,11 +212,14 @@ export default {
         "search": "Search",
         "images": "Images",
         "modelStatus": "Model status",
-        "today": "Today",
+        "viewByProject": "By project",
+        "viewTimeline": "Timeline",
+        "projects": "Projects",
+        "tasks": "Tasks",
         "taskTitle": "Return to the page after login",
         "teamTaskTitle": "Split the settings page",
         "teamTime": "1h",
-        "working": "Working for {seconds}s",
+        "elapsed": "{seconds}s",
         "justNow": "just now",
         "olderTask": "Add a client download button",
         "olderTime": "3h",

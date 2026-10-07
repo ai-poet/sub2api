@@ -134,6 +134,21 @@ describe('HomeAgentWorkflowPreview', () => {
     expect(view.find('[data-test="preview-sidebar-model-status"]').text()).toBe('Model status')
   })
 
+  it('lists tasks the way the client does: by project, one line each', () => {
+    const view = mountPreview()
+
+    // The toolbar opens on the project view.
+    expect(view.find('[data-test="preview-view-project"]').classes()).toContain('is-active')
+    // The project's tasks sit inside its group, a project-less one under 「任务」.
+    expect(view.find('[data-test="preview-project-row"]').exists()).toBe(true)
+    expect(view.find('[data-test="preview-session-plan"]').classes()).toContain('is-nested')
+    expect(view.find('[data-test="preview-session-team"]').classes()).toContain('is-nested')
+    expect(view.find('[data-test="preview-session-older"]').classes()).not.toContain('is-nested')
+    // A reply finished elsewhere carries the unread dot.
+    expect(view.find('[data-test="preview-unread-older"]').exists()).toBe(true)
+    expect(view.find('[data-test="preview-unread-plan"]').exists()).toBe(false)
+  })
+
   it('offers every agent in the model picker and describes each model', () => {
     const view = mountPreview()
 

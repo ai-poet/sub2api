@@ -26,7 +26,7 @@ export default {
         "client": {
           "label": "Agent 自研桌面客户端",
           "title": "所有 Agent，一个工作区，API 全接入。",
-          "subtitle": "下载即用，不装 Node、不配 CLI。Rust 原生，轻巧却不简陋：计划审阅、并行子智能体、智能体团队和画图都在，Claude Code、Codex 也能一起跑。"
+          "subtitle": "下载开箱即用，无需任何配置，内置 Agent。Rust 原生，轻巧却不简陋：计划审阅、并行子智能体、智能体团队和画图都在，Claude Code、Codex 也能一起跑。"
         },
         "api": {
           "label": "保质量 AI 中转站",
@@ -212,11 +212,14 @@ export default {
         "search": "搜索",
         "images": "画图",
         "modelStatus": "模型运行状态",
-        "today": "今天",
+        "viewByProject": "按项目",
+        "viewTimeline": "时间线",
+        "projects": "项目",
+        "tasks": "任务",
         "taskTitle": "登录后跳回原页面",
         "teamTaskTitle": "拆分设置页",
         "teamTime": "1 小时前",
-        "working": "工作中 · {seconds} 秒",
+        "elapsed": "{seconds} 秒",
         "justNow": "刚刚",
         "olderTask": "给首页加客户端下载按钮",
         "olderTime": "3 小时前",
