@@ -117,8 +117,8 @@ func buildContentModerationViolationSiteMessage(log *ContentModerationLog, cfg *
 	f := siteMessageModerationFields(log, cfg)
 
 	var zh, en strings.Builder
-	zh.WriteString("您的 API 请求在内容审计中触发了平台风控策略。\n\n")
-	zh.WriteString("| 项目 | 详情 |\n| --- | --- |\n")
+	_, _ = zh.WriteString("您的 API 请求在内容审计中触发了平台风控策略。\n\n")
+	_, _ = zh.WriteString("| 项目 | 详情 |\n| --- | --- |\n")
 	fmt.Fprintf(&zh, "| 触发时间 | %s |\n", f.at)
 	fmt.Fprintf(&zh, "| 所属分组 | %s |\n", f.group)
 	fmt.Fprintf(&zh, "| 命中类别 | %s / %s |\n", f.category, f.score)
@@ -127,8 +127,8 @@ func buildContentModerationViolationSiteMessage(log *ContentModerationLog, cfg *
 		fmt.Fprintf(&zh, "| 请求 ID | %s |\n", f.requestID)
 	}
 
-	en.WriteString("Your API request triggered the platform's risk-control policy during content audit.\n\n")
-	en.WriteString("| Item | Details |\n| --- | --- |\n")
+	_, _ = en.WriteString("Your API request triggered the platform's risk-control policy during content audit.\n\n")
+	_, _ = en.WriteString("| Item | Details |\n| --- | --- |\n")
 	fmt.Fprintf(&en, "| Triggered at | %s |\n", f.at)
 	fmt.Fprintf(&en, "| Group | %s |\n", f.group)
 	fmt.Fprintf(&en, "| Category | %s / %s |\n", f.category, f.score)
@@ -139,14 +139,14 @@ func buildContentModerationViolationSiteMessage(log *ContentModerationLog, cfg *
 
 	switch {
 	case log != nil && log.AutoBanned:
-		zh.WriteString("\n" + siteMessageBannedBannerZH + "\n\n" + siteMessageAppealHintZH)
-		en.WriteString("\n" + siteMessageBannedBannerEN + "\n\n" + siteMessageAppealHintEN)
+		_, _ = zh.WriteString("\n" + siteMessageBannedBannerZH + "\n\n" + siteMessageAppealHintZH)
+		_, _ = en.WriteString("\n" + siteMessageBannedBannerEN + "\n\n" + siteMessageAppealHintEN)
 	case cfg != nil && cfg.AutoBanEnabled:
-		zh.WriteString("\n多次触发将导致账户被自动禁用，请调整请求内容。")
-		en.WriteString("\nRepeated violations will disable the account automatically. Please adjust your requests.")
+		_, _ = zh.WriteString("\n多次触发将导致账户被自动禁用，请调整请求内容。")
+		_, _ = en.WriteString("\nRepeated violations will disable the account automatically. Please adjust your requests.")
 	default:
-		zh.WriteString("\n请调整请求内容。")
-		en.WriteString("\nPlease adjust your requests.")
+		_, _ = zh.WriteString("\n请调整请求内容。")
+		_, _ = en.WriteString("\nPlease adjust your requests.")
 	}
 	return title, strings.TrimSpace(zh.String()) + siteMessageBilingualDivider + strings.TrimSpace(en.String())
 }
@@ -156,21 +156,21 @@ func buildContentModerationDisabledSiteMessage(log *ContentModerationLog, cfg *C
 	f := siteMessageModerationFields(log, cfg)
 
 	var zh, en strings.Builder
-	zh.WriteString("您的账户在计数周期内多次触发平台风控策略，系统已自动禁用该账户。\n\n")
-	zh.WriteString("| 项目 | 详情 |\n| --- | --- |\n")
+	_, _ = zh.WriteString("您的账户在计数周期内多次触发平台风控策略，系统已自动禁用该账户。\n\n")
+	_, _ = zh.WriteString("| 项目 | 详情 |\n| --- | --- |\n")
 	fmt.Fprintf(&zh, "| 封禁时间 | %s |\n", f.at)
 	fmt.Fprintf(&zh, "| 所属分组 | %s |\n", f.group)
 	fmt.Fprintf(&zh, "| 命中类别 | %s / %s |\n", f.category, f.score)
 	fmt.Fprintf(&zh, "| 累计触发次数 | %s |\n", f.countZH)
-	zh.WriteString("\n" + siteMessageBannedBannerZH + "\n\n" + siteMessageAppealHintZH)
+	_, _ = zh.WriteString("\n" + siteMessageBannedBannerZH + "\n\n" + siteMessageAppealHintZH)
 
-	en.WriteString("Your account triggered the platform's risk-control policy repeatedly within the counting window and has been disabled automatically.\n\n")
-	en.WriteString("| Item | Details |\n| --- | --- |\n")
+	_, _ = en.WriteString("Your account triggered the platform's risk-control policy repeatedly within the counting window and has been disabled automatically.\n\n")
+	_, _ = en.WriteString("| Item | Details |\n| --- | --- |\n")
 	fmt.Fprintf(&en, "| Disabled at | %s |\n", f.at)
 	fmt.Fprintf(&en, "| Group | %s |\n", f.group)
 	fmt.Fprintf(&en, "| Category | %s / %s |\n", f.category, f.score)
 	fmt.Fprintf(&en, "| Violations | %s |\n", f.countEN)
-	en.WriteString("\n" + siteMessageBannedBannerEN + "\n\n" + siteMessageAppealHintEN)
+	_, _ = en.WriteString("\n" + siteMessageBannedBannerEN + "\n\n" + siteMessageAppealHintEN)
 
 	return title, strings.TrimSpace(zh.String()) + siteMessageBilingualDivider + strings.TrimSpace(en.String())
 }
@@ -189,8 +189,8 @@ func buildCyberPolicySiteMessage(log *ContentModerationLog) (string, string) {
 	}
 
 	var zh, en strings.Builder
-	zh.WriteString("您的请求被网络安全策略（cyber policy）拦截。\n\n")
-	zh.WriteString("| 项目 | 详情 |\n| --- | --- |\n")
+	_, _ = zh.WriteString("您的请求被网络安全策略（cyber policy）拦截。\n\n")
+	_, _ = zh.WriteString("| 项目 | 详情 |\n| --- | --- |\n")
 	fmt.Fprintf(&zh, "| 触发时间 | %s |\n", at)
 	fmt.Fprintf(&zh, "| 模型 | %s |\n", model)
 	fmt.Fprintf(&zh, "| 所属分组 | %s |\n", group)
@@ -198,12 +198,12 @@ func buildCyberPolicySiteMessage(log *ContentModerationLog) (string, string) {
 		fmt.Fprintf(&zh, "| 请求 ID | %s |\n", requestID)
 	}
 	if detail != "" {
-		zh.WriteString("\n拦截说明：\n\n" + siteMessageCodeBlock(detail) + "\n")
+		_, _ = zh.WriteString("\n拦截说明：\n\n" + siteMessageCodeBlock(detail) + "\n")
 	}
-	zh.WriteString("\n请勿发送涉及网络攻击、恶意代码等违反安全策略的内容，多次触发可能导致账户被禁用。")
+	_, _ = zh.WriteString("\n请勿发送涉及网络攻击、恶意代码等违反安全策略的内容，多次触发可能导致账户被禁用。")
 
-	en.WriteString("Your request was blocked by the cyber-security policy.\n\n")
-	en.WriteString("| Item | Details |\n| --- | --- |\n")
+	_, _ = en.WriteString("Your request was blocked by the cyber-security policy.\n\n")
+	_, _ = en.WriteString("| Item | Details |\n| --- | --- |\n")
 	fmt.Fprintf(&en, "| Triggered at | %s |\n", at)
 	fmt.Fprintf(&en, "| Model | %s |\n", model)
 	fmt.Fprintf(&en, "| Group | %s |\n", group)
@@ -211,9 +211,9 @@ func buildCyberPolicySiteMessage(log *ContentModerationLog) (string, string) {
 		fmt.Fprintf(&en, "| Request ID | %s |\n", requestID)
 	}
 	if detail != "" {
-		en.WriteString("\nDetails:\n\n" + siteMessageCodeBlock(detail) + "\n")
+		_, _ = en.WriteString("\nDetails:\n\n" + siteMessageCodeBlock(detail) + "\n")
 	}
-	en.WriteString("\nDo not send content that violates the security policy, such as cyber attacks or malicious code. Repeated violations may disable the account.")
+	_, _ = en.WriteString("\nDo not send content that violates the security policy, such as cyber attacks or malicious code. Repeated violations may disable the account.")
 
 	return title, strings.TrimSpace(zh.String()) + siteMessageBilingualDivider + strings.TrimSpace(en.String())
 }
@@ -280,9 +280,9 @@ func siteMessageMarkdownEscape(v string) string {
 	for _, r := range v {
 		switch r {
 		case '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '<', '>', '~':
-			b.WriteByte('\\')
+			_ = b.WriteByte('\\')
 		}
-		b.WriteRune(r)
+		_, _ = b.WriteRune(r)
 	}
 	return b.String()
 }

@@ -241,7 +241,8 @@ type astraGroupProgress struct {
 
 func (s *GroupStatusProbeService) groupAstraProgress(groupID int64) *astraGroupProgress {
 	v, _ := s.astraProgress.LoadOrStore(groupID, &astraGroupProgress{trackers: make(map[string]*astraProgressTracker)})
-	return v.(*astraGroupProgress)
+	group, _ := v.(*astraGroupProgress) // 只存这一种类型
+	return group
 }
 
 // beginAstraProgress 为某个模型开始一轮新的进度（同一模型的复测会替换上一轮）。
@@ -265,7 +266,10 @@ func (s *GroupStatusProbeService) endAstraProgress(groupID int64, expectedModel 
 	if !ok {
 		return
 	}
-	group := v.(*astraGroupProgress)
+	group, ok := v.(*astraGroupProgress)
+	if !ok {
+		return
+	}
 	group.mu.Lock()
 	delete(group.trackers, expectedModel)
 	group.mu.Unlock()
@@ -287,7 +291,10 @@ func (s *GroupStatusProbeService) AstraCheckProgresses(groupID int64) []AstraChe
 	if !ok {
 		return out
 	}
-	group := v.(*astraGroupProgress)
+	group, ok := v.(*astraGroupProgress)
+	if !ok {
+		return out
+	}
 	group.mu.Lock()
 	trackers := make([]*astraProgressTracker, 0, len(group.trackers))
 	for _, tracker := range group.trackers {

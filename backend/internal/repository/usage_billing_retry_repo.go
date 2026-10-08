@@ -106,7 +106,7 @@ func (r *usageBillingRetryRepository) ClaimDue(ctx context.Context, now time.Tim
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanUsageBillingRetries(rows)
 }
 
@@ -177,7 +177,7 @@ func (r *usageBillingRetryRepository) ListByKeys(ctx context.Context, keys []ser
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	items, err := scanUsageBillingRetries(rows)
 	if err != nil {
 		return nil, err
@@ -216,7 +216,7 @@ func (r *usageBillingRetryRepository) Summary(ctx context.Context) (*service.Usa
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	summary := &service.UsageBillingRetrySummary{}
 	for rows.Next() {
 		var status string

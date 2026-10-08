@@ -78,33 +78,33 @@ func mutateModelTraceBank(t *testing.T, mutate func(doc map[string]any)) []byte 
 }
 
 func TestParseModelTraceBank_RejectsBrokenBanks(t *testing.T) {
-	robust := func(doc map[string]any) map[string]any { return doc["robust"].(map[string]any) }
+	robust := func(doc map[string]any) map[string]any { return jsonMap(t, doc["robust"]) }
 	cases := map[string]func(doc map[string]any){
 		"schema": func(doc map[string]any) { doc["schema"] = "something-else" },
 		"range": func(doc map[string]any) {
-			doc["method"].(map[string]any)["range"] = []any{1, 100}
+			jsonMap(t, doc["method"])["range"] = []any{1, 100}
 		},
 		"model order": func(doc map[string]any) {
-			order := robust(doc)["model_order"].([]any)
+			order := jsonSlice(t, robust(doc)["model_order"])
 			order[0], order[1] = order[1], order[0]
 		},
 		"centroid rows": func(doc map[string]any) {
-			hell := robust(doc)["hellinger"].(map[string]any)
-			hell["centroids"] = hell["centroids"].([]any)[:3]
+			hell := jsonMap(t, robust(doc)["hellinger"])
+			hell["centroids"] = jsonSlice(t, hell["centroids"])[:3]
 		},
 		"feature dimension": func(doc map[string]any) {
-			hell := robust(doc)["hellinger"].(map[string]any)
-			hell["feature_mean"] = hell["feature_mean"].([]any)[:10]
+			hell := jsonMap(t, robust(doc)["hellinger"])
+			hell["feature_mean"] = jsonSlice(t, hell["feature_mean"])[:10]
 		},
 		"zero scale": func(doc map[string]any) {
-			ob := robust(doc)["ordered_blocks"].(map[string]any)
-			ob["feature_scale"].([]any)[3] = 0
+			ob := jsonMap(t, robust(doc)["ordered_blocks"])
+			jsonSlice(t, ob["feature_scale"])[3] = 0
 		},
 		"missing calibration": func(doc map[string]any) {
-			delete(doc["calibration"].(map[string]any), "3")
+			delete(jsonMap(t, doc["calibration"]), "3")
 		},
 		"bad beta": func(doc map[string]any) {
-			doc["calibration"].(map[string]any)["2"].(map[string]any)["beta"] = -1
+			jsonMap(t, jsonMap(t, doc["calibration"])["2"])["beta"] = -1
 		},
 	}
 	for name, mutate := range cases {
@@ -343,9 +343,9 @@ func TestModelTraceProbe_OpusMatch(t *testing.T) {
 	for _, key := range []string{"system", "temperature", "thinking", "metadata", "output_config"} {
 		require.NotContains(t, payload, key)
 	}
-	messages := payload["messages"].([]any)
+	messages := jsonSlice(t, payload["messages"])
 	require.Len(t, messages, 1)
-	require.Equal(t, "challenge 1: 300 个 1 到 355（含端点）的整数", messages[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
+	require.Equal(t, "challenge 1: 300 个 1 到 355（含端点）的整数", jsonMap(t, jsonSlice(t, jsonMap(t, messages[0])["content"])[0])["text"])
 }
 
 func TestModelTraceProbe_Opus5Match(t *testing.T) {
@@ -448,10 +448,10 @@ func TestModelTraceProbe_OAuthCarriesClaudeCodeIdentity(t *testing.T) {
 	require.Equal(t, "Bearer oauth-token", req.Header.Get("Authorization"))
 	require.Contains(t, req.Header.Get("anthropic-beta"), claude.BetaOAuth)
 	payload := decodeProbeRequestBody(t, req)
-	system := payload["system"].([]any)
+	system := jsonSlice(t, payload["system"])
 	require.Len(t, system, 1)
-	require.Equal(t, claudeCodeSystemPrompt, system[0].(map[string]any)["text"])
-	require.NotEmpty(t, payload["metadata"].(map[string]any)["user_id"])
+	require.Equal(t, claudeCodeSystemPrompt, jsonMap(t, system[0])["text"])
+	require.NotEmpty(t, jsonMap(t, payload["metadata"])["user_id"])
 	require.NotContains(t, payload, "thinking")
 }
 
@@ -545,11 +545,11 @@ func TestModelTraceProbe_GPT61SolMatchesWhenAttributedToAstra(t *testing.T) {
 	for _, key := range []string{"temperature", "include", "tools"} {
 		require.NotContains(t, payload, key)
 	}
-	input := payload["input"].([]any)
+	input := jsonSlice(t, payload["input"])
 	require.Len(t, input, 1)
-	message := input[0].(map[string]any)
+	message := jsonMap(t, input[0])
 	require.Equal(t, "user", message["role"])
-	require.Equal(t, "challenge 1: 300 个 1 到 355（含端点）的整数", message["content"].([]any)[0].(map[string]any)["text"])
+	require.Equal(t, "challenge 1: 300 个 1 到 355（含端点）的整数", jsonMap(t, jsonSlice(t, message["content"])[0])["text"])
 }
 
 func TestModelTraceProbe_GPT61SolMismatchOnAnotherModel(t *testing.T) {

@@ -297,7 +297,7 @@ func parseContentChatCompletion(raw []byte) (string, error) {
 		}
 		var b strings.Builder
 		for _, part := range parts {
-			b.WriteString(part.Text)
+			_, _ = b.WriteString(part.Text)
 		}
 		return b.String(), nil
 	}

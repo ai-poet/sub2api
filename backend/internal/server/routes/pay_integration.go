@@ -90,8 +90,10 @@ func registerPayProxyRoutes(r *gin.Engine) {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(target)
-	originalDirector := proxy.Director
-	proxy.Director = func(req *http.Request) {
+	// 支付服务的线上代理链路沿用 Director：换成 Rewrite 会改变 X-Forwarded-* 的处理方式（入站
+	// X-Forwarded-For 被丢弃、需显式 SetXForwarded），影响支付回调与下单的来源判定，不在 lint 修复里改。
+	originalDirector := proxy.Director         //nolint:staticcheck // SA1019：见上
+	proxy.Director = func(req *http.Request) { //nolint:staticcheck // SA1019：见上
 		originalHost := req.Host
 		originalPath := req.URL.Path
 		originalQuery := req.URL.RawQuery

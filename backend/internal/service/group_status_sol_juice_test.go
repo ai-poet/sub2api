@@ -113,9 +113,9 @@ func TestSolJuiceProbe_PassWithHighReasoning(t *testing.T) {
 	require.Equal(t, map[string]any{"effort": "high"}, payload["reasoning"])
 	require.NotContains(t, payload, "max_output_tokens")
 	require.NotContains(t, payload, "instructions")
-	input := payload["input"].([]any)
+	input := jsonSlice(t, payload["input"])
 	require.Len(t, input, 1)
-	require.Equal(t, solJuicePromptText, input[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
+	require.Equal(t, solJuicePromptText, jsonMap(t, jsonSlice(t, jsonMap(t, input[0])["content"])[0])["text"])
 }
 
 func TestSolJuiceProbe_OtherFingerprintConfirmedOnSameAccount(t *testing.T) {

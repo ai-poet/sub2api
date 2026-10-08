@@ -37,7 +37,7 @@ func TestGroupStatusProbe_AnthropicLivenessRequestUnchanged(t *testing.T) {
 	require.Equal(t, float64(64), payload["max_tokens"])
 	require.Equal(t, float64(0), payload["temperature"])
 	require.Equal(t, true, payload["stream"])
-	system := payload["system"].([]any)[0].(map[string]any)
+	system := jsonMap(t, jsonSlice(t, payload["system"])[0])
 	require.Equal(t, claudeCodeSystemPrompt, system["text"])
 	require.Equal(t, map[string]any{"type": "ephemeral"}, system["cache_control"])
 }

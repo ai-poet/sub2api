@@ -98,11 +98,11 @@ func TestAdminUsageCharts_AdminKeepsAccountCostAndPassesFilters(t *testing.T) {
 	require.Equal(t, repo.trendFilters, repo.groupFilters, "趋势与分组应使用同一组筛选")
 
 	require.Equal(t, "hour", data["granularity"])
-	trend := data["trend"].([]any)
+	trend := jsonSlice(t, data["trend"])
 	require.Len(t, trend, 1)
-	groups := data["groups"].([]any)
+	groups := jsonSlice(t, data["groups"])
 	require.Len(t, groups, 1)
-	require.InDelta(t, 0.3, groups[0].(map[string]any)["account_cost"], 1e-9, "管理员保留账号成本")
+	require.InDelta(t, 0.3, jsonMap(t, groups[0])["account_cost"], 1e-9, "管理员保留账号成本")
 }
 
 func TestAdminUsageCharts_OperatorStripsAccountCost(t *testing.T) {
@@ -113,13 +113,13 @@ func TestAdminUsageCharts_OperatorStripsAccountCost(t *testing.T) {
 	require.Equal(t, http.StatusOK, code)
 
 	require.Equal(t, "day", repo.trendGranularity)
-	groups := data["groups"].([]any)
+	groups := jsonSlice(t, data["groups"])
 	require.Len(t, groups, 1)
-	group := groups[0].(map[string]any)
+	group := jsonMap(t, groups[0])
 	require.InDelta(t, 0, group["account_cost"], 1e-9, "operator 不应看到账号成本")
 	require.InDelta(t, 0.5, group["actual_cost"], 1e-9, "其余字段保持不变")
 	require.Equal(t, "g1", group["group_name"])
-	require.Len(t, data["trend"].([]any), 1)
+	require.Len(t, jsonSlice(t, data["trend"]), 1)
 }
 
 func TestAdminUsageCharts_RejectsBadInput(t *testing.T) {
@@ -150,16 +150,16 @@ func TestAdminUsageModelStats_SourceAndOperatorProjection(t *testing.T) {
 	require.Equal(t, "upstream", data["model_source"])
 	require.Equal(t, int64(4), repo.modelFilters.GroupID)
 	require.Empty(t, repo.modelFilters.Model, "与 dashboard 一致：model 筛选不作用于模型分布本身")
-	models := data["models"].([]any)
+	models := jsonSlice(t, data["models"])
 	require.Len(t, models, 1)
-	require.InDelta(t, 0, models[0].(map[string]any)["account_cost"], 1e-9, "operator 不应看到账号成本")
-	require.Equal(t, "gpt-5.6", models[0].(map[string]any)["model"])
+	require.InDelta(t, 0, jsonMap(t, models[0])["account_cost"], 1e-9, "operator 不应看到账号成本")
+	require.Equal(t, "gpt-5.6", jsonMap(t, models[0])["model"])
 
 	adminRouter := newUsageChartsTestRouter(&usageChartsRepoStub{}, service.RoleAdmin)
 	code, data = getUsageChartsJSON(t, adminRouter, "/admin/usage/model-stats?timezone=UTC")
 	require.Equal(t, http.StatusOK, code)
 	require.Equal(t, usagestats.ModelSourceRequested, data["model_source"])
-	require.InDelta(t, 0.3, data["models"].([]any)[0].(map[string]any)["account_cost"], 1e-9, "管理员保留账号成本")
+	require.InDelta(t, 0.3, jsonMap(t, jsonSlice(t, data["models"])[0])["account_cost"], 1e-9, "管理员保留账号成本")
 }
 
 func TestAdminUsageStats_OperatorHidesTotalAccountCost(t *testing.T) {

@@ -77,10 +77,10 @@ func validatePersonalTokenForAdmin(
 // abortPersonalTokenError 认证失败统一 401（沿用服务层的错误码与文案）；非 4xx 的内部错误不泄露细节。
 func abortPersonalTokenError(c *gin.Context, err error) {
 	status := infraerrors.Code(err)
-	switch {
-	case status == http.StatusUnauthorized:
+	switch status {
+	case http.StatusUnauthorized:
 		AbortWithError(c, status, infraerrors.Reason(err), infraerrors.Message(err))
-	case status == http.StatusServiceUnavailable:
+	case http.StatusServiceUnavailable:
 		AbortWithError(c, status, "PERSONAL_TOKEN_UNAVAILABLE", "Personal token service is not available")
 	default:
 		AbortWithError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to verify token")

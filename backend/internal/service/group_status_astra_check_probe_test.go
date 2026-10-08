@@ -266,12 +266,12 @@ func TestAstraCheckProbe_RunsEveryConfiguredModel(t *testing.T) {
 	require.Equal(t, false, payload["store"])
 	require.Equal(t, true, payload["stream"])
 	require.NotContains(t, payload, "instructions")
-	input := payload["input"].([]any)
+	input := jsonSlice(t, payload["input"])
 	require.Len(t, input, 2)
-	require.Equal(t, "system", input[0].(map[string]any)["role"])
-	require.Equal(t, ".", input[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
-	require.Equal(t, "prompt c1", input[1].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
-	require.Equal(t, "prompt c2", decodeProbeRequestBody(t, f.upstream.requests[1])["input"].([]any)[1].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
+	require.Equal(t, "system", jsonMap(t, input[0])["role"])
+	require.Equal(t, ".", jsonMap(t, jsonSlice(t, jsonMap(t, input[0])["content"])[0])["text"])
+	require.Equal(t, "prompt c1", jsonMap(t, jsonSlice(t, jsonMap(t, input[1])["content"])[0])["text"])
+	require.Equal(t, "prompt c2", jsonMap(t, jsonSlice(t, jsonMap(t, jsonSlice(t, decodeProbeRequestBody(t, f.upstream.requests[1])["input"])[1])["content"])[0])["text"])
 	require.Equal(t, "gpt-6-astra", decodeProbeRequestBody(t, f.upstream.requests[4])["model"])
 }
 
@@ -476,9 +476,9 @@ func TestAstraCheckProbe_AnthropicAPIKeyUsesClaudeCodeContract(t *testing.T) {
 	require.Equal(t, map[string]any{"effort": "low"}, payload["output_config"])
 	require.NotContains(t, payload, "metadata")
 	require.NotContains(t, payload, "temperature")
-	messages := payload["messages"].([]any)
+	messages := jsonSlice(t, payload["messages"])
 	require.Len(t, messages, 1)
-	require.Equal(t, "prompt c1", messages[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
+	require.Equal(t, "prompt c1", jsonMap(t, jsonSlice(t, jsonMap(t, messages[0])["content"])[0])["text"])
 }
 
 func TestAstraCheckProbe_AnthropicOAuthRequest(t *testing.T) {
@@ -496,11 +496,11 @@ func TestAstraCheckProbe_AnthropicOAuthRequest(t *testing.T) {
 	require.Equal(t, claude.DefaultBetaHeader, req.Header.Get("anthropic-beta"))
 
 	payload := decodeProbeRequestBody(t, req)
-	system := payload["system"].([]any)
+	system := jsonSlice(t, payload["system"])
 	require.Len(t, system, 2)
-	require.Equal(t, claudeCodeSystemPrompt, system[0].(map[string]any)["text"])
-	require.Equal(t, ".", system[1].(map[string]any)["text"])
-	require.NotEmpty(t, payload["metadata"].(map[string]any)["user_id"])
+	require.Equal(t, claudeCodeSystemPrompt, jsonMap(t, system[0])["text"])
+	require.Equal(t, ".", jsonMap(t, system[1])["text"])
+	require.NotEmpty(t, jsonMap(t, payload["metadata"])["user_id"])
 	require.Equal(t, map[string]any{"type": "adaptive"}, payload["thinking"])
 
 	// 非 claude-code 契约的题不带 thinking / output_config
@@ -597,13 +597,16 @@ func TestCreateOpenAIAstraCheckPayload_OAuthUsesInstructions(t *testing.T) {
 	payload := createOpenAIAstraCheckPayload("gpt-6-astra", cell, true)
 	require.Equal(t, ".", payload["instructions"])
 	require.Equal(t, []string{"reasoning.encrypted_content"}, payload["include"])
-	input := payload["input"].([]map[string]any)
+	input, ok := payload["input"].([]map[string]any)
+	require.True(t, ok)
 	require.Len(t, input, 1)
 	require.Equal(t, "user", input[0]["role"])
 
 	apiKey := createOpenAIAstraCheckPayload("gpt-6-astra", cell, false)
 	require.NotContains(t, apiKey, "instructions")
-	require.Len(t, apiKey["input"].([]map[string]any), 2)
+	apiKeyInput, ok := apiKey["input"].([]map[string]any)
+	require.True(t, ok)
+	require.Len(t, apiKeyInput, 2)
 
 	// 缺省字段回退：空 system → "."，空 effort → low，0 上限 → 128
 	bare := createOpenAIAstraCheckPayload("gpt-6-astra", &AstraBenchmarkCell{ID: "x", Prompt: "hi"}, true)

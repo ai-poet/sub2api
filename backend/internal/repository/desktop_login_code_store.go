@@ -137,7 +137,7 @@ func normalizeDesktopLoginCode(code string) (string, bool) {
 			c -= 'a' - 'A'
 		}
 		if (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') {
-			b.WriteByte(c)
+			_ = b.WriteByte(c)
 		}
 	}
 	normalized := b.String()

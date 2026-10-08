@@ -115,6 +115,7 @@ func TestUsageLogFromServiceAdmin_ListDoesNotCarryPlaintextKey(t *testing.T) {
 	require.Nil(t, apiKey["user"])
 	// 管理员仍然看到完整 IP 与用户余额（未变更的既有行为）。
 	require.Equal(t, "203.0.113.42", out["ip_address"])
-	user := out["user"].(map[string]any)
+	user, ok := out["user"].(map[string]any)
+	require.True(t, ok)
 	require.Equal(t, 123.45, user["balance"])
 }

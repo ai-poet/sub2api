@@ -15,12 +15,12 @@ import (
 func responsesSSEBody(answer string, reasoning int64) string {
 	var b strings.Builder
 	if answer != "" {
-		b.WriteString(fmt.Sprintf("data: {\"type\":\"response.output_text.delta\",\"delta\":%q}\n\n", answer))
+		fmt.Fprintf(&b, "data: {\"type\":\"response.output_text.delta\",\"delta\":%q}\n\n", answer)
 	}
-	b.WriteString(fmt.Sprintf(
+	fmt.Fprintf(&b,
 		"data: {\"type\":\"response.completed\",\"response\":{\"usage\":{\"input_tokens\":52,\"output_tokens\":%d,\"output_tokens_details\":{\"reasoning_tokens\":%d}}}}\n\n",
 		reasoning+3, reasoning,
-	))
+	)
 	return b.String()
 }
 

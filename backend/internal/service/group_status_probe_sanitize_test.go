@@ -81,7 +81,7 @@ func TestRedactProbeUpstreamAddresses(t *testing.T) {
 	require.Equal(t, "no url here", redactProbeUpstreamAddresses("no url here"))
 	require.Equal(
 		t,
-		`Post "[upstream]: context deadline exceeded`,
+		`Post "[upstream]": context deadline exceeded`,
 		redactProbeUpstreamAddresses(`Post "https://host.example.com/v1/responses": context deadline exceeded`),
 	)
 }

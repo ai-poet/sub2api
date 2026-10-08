@@ -399,6 +399,8 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 // Payment retries must not be blocked by, or contribute to, a user's public
 // redeem failure counter. All code validation and transactional updates remain
 // identical to the public redemption path.
+//
+//nolint:unused // 上游支付履约的入口；本 fork 的支付服务独立部署、不调用它，保留以减少上游合并冲突
 func (s *RedeemService) redeemForPaymentFulfillment(ctx context.Context, userID int64, code string) (*RedeemCode, error) {
 	return s.redeem(ContextSkipRedeemAffiliate(ctx), userID, code, bypassRedeemRateLimit)
 }

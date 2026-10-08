@@ -631,7 +631,7 @@ func (s *AdminApprovalService) replay(ctx context.Context, req *AdminApprovalReq
 				w.wrote = true
 				w.statusCode = http.StatusInternalServerError
 				w.body.Reset()
-				w.body.WriteString(`{"code":500,"message":"replay panicked"}`)
+				_, _ = w.body.WriteString(`{"code":500,"message":"replay panicked"}`)
 			}
 		}()
 		dispatcher.ServeHTTP(w, httpReq)
@@ -735,7 +735,7 @@ func (w *approvalReplayWriter) Write(p []byte) (int, error) {
 	}
 	// 只保留入库上限附近的内容，避免异常响应撑爆内存。
 	if w.body.Len() < AdminApprovalResultBodyMaxBytes*2 {
-		w.body.Write(p)
+		_, _ = w.body.Write(p)
 	}
 	return len(p), nil
 }

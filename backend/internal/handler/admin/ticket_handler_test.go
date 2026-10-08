@@ -286,35 +286,35 @@ func TestAdminTicketHandler_OperatorSeesAllAndRepliesDirectly(t *testing.T) {
 
 	rec := doTicket(router, http.MethodGet, "/admin/tickets", nil)
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-	data := decodeTicketJSON(t, rec)["data"].(map[string]any)
+	data := jsonMap(t, decodeTicketJSON(t, rec)["data"])
 	require.EqualValues(t, 2, data["total"])
-	items := data["items"].([]any)
-	first := items[0].(map[string]any)
-	require.Equal(t, "bob@example.com", first["user"].(map[string]any)["email"], "客服视图带发起人")
+	items := jsonSlice(t, data["items"])
+	first := jsonMap(t, items[0])
+	require.Equal(t, "bob@example.com", jsonMap(t, first["user"])["email"], "客服视图带发起人")
 
 	rec = doTicket(router, http.MethodGet, "/admin/tickets/open-count", nil)
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.EqualValues(t, 2, decodeTicketJSON(t, rec)["data"].(map[string]any)["count"])
+	require.EqualValues(t, 2, jsonMap(t, decodeTicketJSON(t, rec)["data"])["count"])
 
 	rec = doTicket(router, http.MethodPost, "/admin/tickets/"+itoa(second.ID)+"/messages", map[string]any{"body": "we are looking into it"})
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-	reply := decodeTicketJSON(t, rec)["data"].(map[string]any)
-	require.Equal(t, service.TicketStatusReplied, reply["ticket"].(map[string]any)["status"])
-	require.Equal(t, true, reply["ticket"].(map[string]any)["user_unread"])
-	msg := reply["message"].(map[string]any)
+	reply := jsonMap(t, decodeTicketJSON(t, rec)["data"])
+	require.Equal(t, service.TicketStatusReplied, jsonMap(t, reply["ticket"])["status"])
+	require.Equal(t, true, jsonMap(t, reply["ticket"])["user_unread"])
+	msg := jsonMap(t, reply["message"])
 	require.Equal(t, service.RoleOperator, msg["author_role"])
 	require.Equal(t, "ops@example.com", msg["author_email"])
 
 	rec = doTicket(router, http.MethodGet, "/admin/tickets/"+itoa(second.ID), nil)
 	require.Equal(t, http.StatusOK, rec.Code)
-	detail := decodeTicketJSON(t, rec)["data"].(map[string]any)
-	msgs := detail["messages"].([]any)
+	detail := jsonMap(t, decodeTicketJSON(t, rec)["data"])
+	msgs := jsonSlice(t, detail["messages"])
 	require.Len(t, msgs, 2)
-	require.Equal(t, service.RoleUser, msgs[0].(map[string]any)["author_role"])
-	require.Equal(t, "bob@example.com", detail["ticket"].(map[string]any)["user"].(map[string]any)["email"], "detail belongs to bob")
+	require.Equal(t, service.RoleUser, jsonMap(t, msgs[0])["author_role"])
+	require.Equal(t, "bob@example.com", jsonMap(t, jsonMap(t, detail["ticket"])["user"])["email"], "detail belongs to bob")
 
 	rec = doTicket(router, http.MethodGet, "/admin/tickets/open-count", nil)
-	require.EqualValues(t, 1, decodeTicketJSON(t, rec)["data"].(map[string]any)["count"], "回复后待处理数减一")
+	require.EqualValues(t, 1, jsonMap(t, decodeTicketJSON(t, rec)["data"])["count"], "回复后待处理数减一")
 }
 
 func TestAdminTicketHandler_CloseReopenAndConflicts(t *testing.T) {
@@ -325,7 +325,7 @@ func TestAdminTicketHandler_CloseReopenAndConflicts(t *testing.T) {
 
 	rec := doTicket(router, http.MethodPost, base+"/close", nil)
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-	closed := decodeTicketJSON(t, rec)["data"].(map[string]any)
+	closed := jsonMap(t, decodeTicketJSON(t, rec)["data"])
 	require.Equal(t, service.TicketStatusClosed, closed["status"])
 	require.Equal(t, service.RoleAdmin, closed["closed_by_role"])
 
@@ -338,7 +338,7 @@ func TestAdminTicketHandler_CloseReopenAndConflicts(t *testing.T) {
 
 	rec = doTicket(router, http.MethodPost, base+"/reopen", nil)
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.Equal(t, service.TicketStatusOpen, decodeTicketJSON(t, rec)["data"].(map[string]any)["status"])
+	require.Equal(t, service.TicketStatusOpen, jsonMap(t, decodeTicketJSON(t, rec)["data"])["status"])
 
 	rec = doTicket(router, http.MethodPost, base+"/reopen", nil)
 	require.Equal(t, http.StatusConflict, rec.Code)

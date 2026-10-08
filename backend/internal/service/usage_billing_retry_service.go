@@ -473,7 +473,7 @@ func buildBillingFailureNotifyMessage(siteName, frontendURL string, newFailures,
 	if base := strings.TrimRight(strings.TrimSpace(frontendURL), "/"); base != "" {
 		fmt.Fprintf(&b, "- 使用记录：%s/admin/usage\n", base)
 	}
-	b.WriteString("\n失败原因见系统日志 gateway.record_usage_failed / openai.record_usage_failed；后台每 30 秒按退避自动重放，放弃的笔数需人工核对补扣。")
+	_, _ = b.WriteString("\n失败原因见系统日志 gateway.record_usage_failed / openai.record_usage_failed；后台每 30 秒按退避自动重放，放弃的笔数需人工核对补扣。")
 	return title, b.String()
 }
 

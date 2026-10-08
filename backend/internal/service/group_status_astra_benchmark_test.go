@@ -92,27 +92,27 @@ func mutateEmbeddedAstraPackage(t *testing.T, mutate func(pkg map[string]any)) [
 }
 
 func TestParseAstraBenchmark_RejectsBrokenPackages(t *testing.T) {
-	fitted := func(pkg map[string]any) map[string]any { return pkg["fitted"].(map[string]any) }
+	fitted := func(pkg map[string]any) map[string]any { return jsonMap(t, pkg["fitted"]) }
 	firstCell := func(pkg map[string]any) map[string]any {
-		for _, cell := range fitted(pkg)["cells"].(map[string]any) {
-			return cell.(map[string]any)
+		for _, cell := range jsonMap(t, fitted(pkg)["cells"]) {
+			return jsonMap(t, cell)
 		}
 		return nil
 	}
 	cases := map[string]func(pkg map[string]any){
-		"scoring version": func(pkg map[string]any) { pkg["engine"].(map[string]any)["scoring_version"] = "meow-fingerprint-v2" },
+		"scoring version": func(pkg map[string]any) { jsonMap(t, pkg["engine"])["scoring_version"] = "meow-fingerprint-v2" },
 		"mode":            func(pkg map[string]any) { pkg["mode"] = "chat" },
 		"aggregation":     func(pkg map[string]any) { fitted(pkg)["aggregation"] = "mixture" },
 		"model order": func(pkg map[string]any) {
-			models := fitted(pkg)["models"].([]any)
+			models := jsonSlice(t, fitted(pkg)["models"])
 			models[0], models[1] = models[1], models[0]
 		},
 		"missing alpha": func(pkg map[string]any) {
-			delete(firstCell(pkg)["alpha"].(map[string]any), "gpt-6-sol")
+			delete(jsonMap(t, firstCell(pkg)["alpha"]), "gpt-6-sol")
 		},
 		"unseen category": func(pkg map[string]any) {
 			cell := firstCell(pkg)
-			categories := cell["categories"].([]any)
+			categories := jsonSlice(t, cell["categories"])
 			for i, category := range categories {
 				if category == astraBenchmarkUnseenCategory {
 					categories[i] = "zzz"
@@ -120,13 +120,13 @@ func TestParseAstraBenchmark_RejectsBrokenPackages(t *testing.T) {
 			}
 		},
 		"non-positive alpha": func(pkg map[string]any) {
-			alpha := firstCell(pkg)["alpha"].(map[string]any)["gpt-6-astra"].([]any)
+			alpha := jsonSlice(t, jsonMap(t, firstCell(pkg)["alpha"])["gpt-6-astra"])
 			alpha[0] = 0.0
 		},
 		"missing threshold": func(pkg map[string]any) {
-			delete(pkg["tiers"].(map[string]any)["low"].(map[string]any)["thresholds"].(map[string]any), "gpt-6-sol")
+			delete(jsonMap(t, jsonMap(t, jsonMap(t, pkg["tiers"])["low"])["thresholds"]), "gpt-6-sol")
 		},
-		"completion ratio": func(pkg map[string]any) { pkg["engine"].(map[string]any)["completion_ratio"] = 0.0 },
+		"completion ratio": func(pkg map[string]any) { jsonMap(t, pkg["engine"])["completion_ratio"] = 0.0 },
 		"reference sources": func(pkg map[string]any) {
 			fitted(pkg)["reference_sources"] = []any{}
 		},

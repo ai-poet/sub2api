@@ -49,13 +49,7 @@ func UsageLogFromServiceOperator(l *service.UsageLog) *OperatorUsageLog {
 	out := &OperatorUsageLog{AdminUsageLog: *base}
 
 	// 嵌入层清空：余额（User）、明文 key（APIKey）、完整 IP、会话标识、账号侧成本结构。
-	out.AdminUsageLog.UsageLog.User = nil
-	out.AdminUsageLog.UsageLog.APIKey = nil
-	out.AdminUsageLog.UsageLog.IPAddress = nil
-	out.AdminUsageLog.UsageLog.SessionID = nil
-	out.AdminUsageLog.IPAddress = nil
-	out.AdminUsageLog.AccountStatsCost = nil
-	out.AdminUsageLog.AccountRateMultiplier = nil
+	clearOperatorHiddenAdminUsageFields(&out.AdminUsageLog)
 
 	out.IPAddress = maskedIPPtr(l.IPAddress)
 	if l.User != nil {
@@ -78,6 +72,22 @@ func UsageLogFromServiceOperator(l *service.UsageLog) *OperatorUsageLog {
 		}
 	}
 	return out
+}
+
+// clearOperatorHiddenAdminUsageFields 清空 AdminUsageLog 自身与其嵌入 UsageLog 上 operator 不可见的字段。
+// 按层接收具体类型，避免 OperatorUsageLog 上的同名字段（User / APIKey / IPAddress）遮蔽嵌入层。
+func clearOperatorHiddenAdminUsageFields(a *AdminUsageLog) {
+	clearOperatorHiddenUsageFields(&a.UsageLog)
+	a.IPAddress = nil
+	a.AccountStatsCost = nil
+	a.AccountRateMultiplier = nil
+}
+
+func clearOperatorHiddenUsageFields(u *UsageLog) {
+	u.User = nil
+	u.APIKey = nil
+	u.IPAddress = nil
+	u.SessionID = nil
 }
 
 // maskedIPPtr 返回掩码后的 IP 指针；无法解析或为空时返回 nil（宁可不显示）。
