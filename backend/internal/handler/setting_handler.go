@@ -123,6 +123,8 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		RiskControlEnabled: settings.RiskControlEnabled,
 
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
+		SessionHandoffLoginOrigin:  settings.SessionHandoffLoginOrigin,  // fork：多域名登录交接
+		SessionHandoffAliasOrigins: settings.SessionHandoffAliasOrigins, // fork：多域名登录交接
 		CommunityQRCode:            settings.CommunityQRCode,
 		CommunityGroupURL:          settings.CommunityGroupURL,
 	})

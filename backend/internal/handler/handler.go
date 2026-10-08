@@ -79,6 +79,7 @@ type Handlers struct {
 	TicketAttachment *TicketAttachmentHandler
 	PersonalToken    *PersonalTokenHandler
 	DesktopLogin     *DesktopLoginHandler
+	SessionHandoff   *SessionHandoffHandler // fork：多域名登录交接
 	SiteMessage      *SiteMessageHandler
 	Appeal           *AppealHandler
 

@@ -243,6 +243,10 @@ export interface PublicSettings {
   hide_ccs_import_button: boolean
   payment_enabled: boolean
   risk_control_enabled: boolean
+  /** fork：多域名登录交接——第三方登录回调所在的域名（未配置时为空） */
+  session_handoff_login_origin?: string
+  /** fork：多域名登录交接——允许接收会话的别名域名 */
+  session_handoff_alias_origins?: string[] | null
   table_default_page_size: number
   table_page_size_options: number[]
   custom_menu_items: CustomMenuItem[]

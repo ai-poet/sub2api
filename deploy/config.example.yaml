@@ -89,6 +89,27 @@ webauthn:
   rp_origins: []
 
 # =============================================================================
+# Multi-domain Sign-in Handoff (fork)
+# 多域名登录交接（fork 本地功能）
+# =============================================================================
+# When the same deployment is served on several domains (e.g. a main domain plus
+# a CDN alias), third-party OAuth callbacks are registered on login_origin only.
+# Third-party sign-in / account binding started on an alias domain runs on
+# login_origin, and the session is handed back to the alias with a one-time,
+# PKCE-bound code; each domain gets its own token family. Password sign-in stays
+# on the domain the user is on. Leave both empty to disable.
+# Env: SESSION_HANDOFF_LOGIN_ORIGIN, SESSION_HANDOFF_ALIAS_ORIGINS (comma separated).
+# 同一套服务挂在多个域名（例如主域名 + CDN 加速域名）时，第三方 OAuth 回调只登记在
+# login_origin 上：在别名域名上发起的第三方登录 / 账号绑定会转到 login_origin 完成，
+# 再用绑定 PKCE 的一次性交接码把会话带回别名域名，每个域名各拿一套独立 token。
+# 密码登录仍在当前域名完成。两项都留空即关闭。
+session_handoff:
+  # Example / 示例: "https://example.com"
+  login_origin: ""
+  # Example / 示例: ["https://cdn.example.com"]
+  alias_origins: []
+
+# =============================================================================
 # Run Mode Configuration
 # 运行模式配置
 # =============================================================================

@@ -399,6 +399,7 @@ import {
   loadAffiliateReferralCode,
   resolveAffiliateReferralCodeFromQuery
 } from '@/utils/oauthAffiliate'
+import { startOAuthOnLoginOrigin } from '@/utils/sessionHandoff'
 import type { LoginAgreementDocument } from '@/types'
 
 const { t, locale } = useI18n()
@@ -863,6 +864,8 @@ async function acquireActionProof(): Promise<boolean> {
 
 async function handleOAuthStart(request: OAuthLoginStart): Promise<void> {
   if (registrationActionDisabled.value) return
+  // fork：多域名登录交接——别名域名上的第三方注册转到登录主域名发起
+  if (await startOAuthOnLoginOrigin(appStore.cachedPublicSettings, request)) return
 
   if (!actionCaptchaEnabled.value) {
     window.location.href = buildOAuthLoginStartURL(request)

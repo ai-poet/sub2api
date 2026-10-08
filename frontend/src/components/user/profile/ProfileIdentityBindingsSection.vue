@@ -212,6 +212,7 @@ import {
 } from '@/api/user'
 import Icon from '@/components/icons/Icon.vue'
 import { useAppStore, useAuthStore } from '@/stores'
+import { startBindingOnLoginOrigin } from '@/utils/sessionHandoff'
 import type { User, UserAuthBindingStatus, UserAuthProvider } from '@/types'
 
 type BindableProvider = Exclude<UserAuthProvider, 'email'>
@@ -564,6 +565,10 @@ function toggleEmailForm(): void {
 
 function startBinding(provider: UserAuthProvider): void {
   if (provider === 'email') {
+    return
+  }
+  // fork：多域名登录交接——别名域名上先把会话交给登录主域名，到那边的资料页再绑定
+  if (startBindingOnLoginOrigin(appStore.cachedPublicSettings, route.fullPath || '/profile')) {
     return
   }
   startOAuthBinding(provider, {

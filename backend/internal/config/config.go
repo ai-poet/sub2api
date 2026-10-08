@@ -78,6 +78,7 @@ type Config struct {
 	JWT                     JWTConfig                     `mapstructure:"jwt"`
 	Totp                    TotpConfig                    `mapstructure:"totp"`
 	WebAuthn                WebAuthnConfig                `mapstructure:"webauthn"`
+	SessionHandoff          SessionHandoffConfig          `mapstructure:"session_handoff"` // fork：多域名登录交接
 	LinuxDo                 LinuxDoConnectConfig          `mapstructure:"linuxdo_connect"`
 	WeChat                  WeChatConnectConfig           `mapstructure:"wechat_connect"`
 	OIDC                    OIDCConnectConfig             `mapstructure:"oidc_connect"`
@@ -2068,6 +2069,8 @@ func setDefaults() {
 	viper.SetDefault("server.mode", "release")
 	viper.SetDefault("server.enable_server_timing", false)
 	viper.SetDefault("server.frontend_url", "")
+	// fork：多域名登录交接
+	setSessionHandoffDefaults()
 	viper.SetDefault("server.read_header_timeout", 10) // 10秒读取请求头
 	viper.SetDefault("server.max_header_bytes", 64*1024)
 	viper.SetDefault("server.idle_timeout", 120) // 120秒空闲超时
@@ -3814,6 +3817,9 @@ func (c *Config) Validate() error {
 	}
 	if err := ValidateDingTalkConfig(c.DingTalk); err != nil {
 		return fmt.Errorf("dingtalk_connect: %w", err)
+	}
+	if err := normalizeSessionHandoffConfig(&c.SessionHandoff); err != nil { // fork：多域名登录交接
+		return fmt.Errorf("session_handoff: %w", err)
 	}
 	return nil
 }

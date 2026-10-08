@@ -188,6 +188,9 @@ var auditBodyOmittedRoutes = map[string]struct{}{
 	// fork：客户端登录码。申请体带网关 API Key 与 PKCE challenge，兑换体带一次性码与 verifier，都不入库
 	"POST /api/v1/auth/desktop-session/code":     {},
 	"POST /api/v1/auth/desktop-session/exchange": {},
+	// fork：多域名登录交接。申请体带 PKCE challenge，兑换体带一次性码与 verifier，都不入库
+	"POST /api/v1/auth/session-handoff/code":     {},
+	"POST /api/v1/auth/session-handoff/exchange": {},
 }
 
 // NewAuditLogMiddleware 创建审计中间件。

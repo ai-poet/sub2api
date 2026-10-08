@@ -58,6 +58,10 @@ func RegisterAuthRoutes(
 		auth.POST("/desktop-session/exchange", rateLimiter.LimitWithOptions("desktop-login-exchange", 20, time.Minute, middleware.RateLimitOptions{
 			FailureMode: middleware.RateLimitFailClose,
 		}), h.DesktopLogin.Exchange)
+		// fork：多域名登录交接兑换（公开）：交接码 + PKCE verifier 换一套独立 token（Redis 故障时 fail-close）
+		auth.POST("/session-handoff/exchange", rateLimiter.LimitWithOptions("session-handoff-exchange", 20, time.Minute, middleware.RateLimitOptions{
+			FailureMode: middleware.RateLimitFailClose,
+		}), h.SessionHandoff.Exchange)
 		// 登出接口（公开，允许未认证用户调用以撤销Refresh Token）
 		auth.POST("/logout", h.Auth.Logout)
 		// 优惠码验证接口添加速率限制：每分钟最多 10 次（Redis 故障时 fail-close）
@@ -276,6 +280,10 @@ func RegisterAuthRoutes(
 		authenticated.POST("/auth/desktop-session/code", rateLimiter.LimitWithOptions("desktop-login-code", 10, time.Minute, middleware.RateLimitOptions{
 			FailureMode: middleware.RateLimitFailClose,
 		}), h.DesktopLogin.CreateCode)
+		// fork：多域名登录交接：为另一个已配置域名签发绑定 PKCE challenge 的一次性交接码（Redis 故障时 fail-close）
+		authenticated.POST("/auth/session-handoff/code", rateLimiter.LimitWithOptions("session-handoff-code", 10, time.Minute, middleware.RateLimitOptions{
+			FailureMode: middleware.RateLimitFailClose,
+		}), h.SessionHandoff.CreateCode)
 		// 撤销所有会话（需要认证）
 		authenticated.POST("/auth/revoke-all-sessions", h.Auth.RevokeAllSessions)
 		authenticated.POST("/auth/oauth/bind-token", h.Auth.PrepareOAuthBindAccessTokenCookie)

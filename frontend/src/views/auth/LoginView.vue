@@ -253,6 +253,7 @@ import type {
 import { extractI18nErrorMessage } from '@/utils/apiError'
 import { captureAppealToken, consumeAppealLoginNotice } from '@/utils/appeal'
 import { clearAllAffiliateReferralCodes } from '@/utils/oauthAffiliate'
+import { startOAuthOnLoginOrigin } from '@/utils/sessionHandoff'
 
 const { t } = useI18n()
 const LOGIN_AGREEMENT_STORAGE_KEY = 'sub2api_login_agreement_consent'
@@ -681,6 +682,8 @@ async function handlePasskeyLogin(): Promise<void> {
 
 async function handleOAuthStart(request: OAuthLoginStart): Promise<void> {
   if (authActionDisabled.value) return
+  // fork：多域名登录交接——别名域名上的第三方登录转到登录主域名发起
+  if (await startOAuthOnLoginOrigin(appStore.cachedPublicSettings, request)) return
 
   if (!actionCaptchaEnabled.value) {
     window.location.href = buildOAuthLoginStartURL(request)

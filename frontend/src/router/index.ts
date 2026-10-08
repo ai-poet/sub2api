@@ -12,6 +12,7 @@ import { useNavigationLoadingState } from '@/composables/useNavigationLoading'
 import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
 import { getSetupStatus } from '@/api/setup'
 import { resolveAffiliateReferralCodeFromQuery } from '@/utils/oauthAffiliate'
+import { SESSION_HANDOFF_GIVE_PATH, hasPendingGive } from '@/utils/sessionHandoff'
 import { resolveCompletedSetupRedirectPath } from './setupRedirect'
 import { resolveRouteDocumentTitle } from './title'
 
@@ -38,6 +39,25 @@ const routes: RouteRecordRaw[] = [
       title: 'Desktop Sign-in',
       titleKey: 'auth.desktopBridge.pageTitle'
     }
+  },
+  // fork：多域名登录交接（登录主域名 ↔ 别名域名），三种模式共用一个页面
+  {
+    path: '/auth/handoff',
+    name: 'SessionHandoffGive',
+    component: () => import('@/views/auth/SessionHandoffView.vue'),
+    meta: { requiresAuth: false, title: 'Signing in', titleKey: 'auth.sessionHandoff.pageTitle', handoffMode: 'give' }
+  },
+  {
+    path: '/auth/handoff/complete',
+    name: 'SessionHandoffComplete',
+    component: () => import('@/views/auth/SessionHandoffView.vue'),
+    meta: { requiresAuth: false, title: 'Signing in', titleKey: 'auth.sessionHandoff.pageTitle', handoffMode: 'complete' }
+  },
+  {
+    path: '/auth/handoff/pull',
+    name: 'SessionHandoffPull',
+    component: () => import('@/views/auth/SessionHandoffView.vue'),
+    meta: { requiresAuth: false, title: 'Signing in', titleKey: 'auth.sessionHandoff.pageTitle', handoffMode: 'pull' }
   },
   {
     path: '/privacy',
@@ -730,7 +750,8 @@ let authInitialized = false
 const navigationLoading = useNavigationLoadingState()
 // 延迟初始化预加载，传入 router 实例
 let routePrefetch: ReturnType<typeof useRoutePrefetch> | null = null
-const BACKEND_MODE_ALLOWED_PATHS = ['/login', '/key-usage', '/setup', '/legal']
+// fork：/auth/handoff（多域名登录交接）——别名域名在登录前就要能打开交接落地页
+const BACKEND_MODE_ALLOWED_PATHS = ['/login', '/key-usage', '/setup', '/legal', '/auth/handoff']
 const BACKEND_MODE_CALLBACK_PATHS = [
   '/auth/callback',
   '/auth/linuxdo/callback',
@@ -767,6 +788,13 @@ router.beforeEach(async (to, _from, next) => {
   if (!authInitialized) {
     authStore.checkAuth()
     authInitialized = true
+  }
+
+  // fork：多域名登录交接——为别的域名登录时，有的登录流程（如第三方新用户建号）不带回
+  // redirect；登录完成后只要还有一轮没交出去的会话，就回到交接页把它交出去。
+  if (authStore.isAuthenticated && !to.path.startsWith(SESSION_HANDOFF_GIVE_PATH) && hasPendingGive()) {
+    next(SESSION_HANDOFF_GIVE_PATH)
+    return
   }
 
   // Set page title

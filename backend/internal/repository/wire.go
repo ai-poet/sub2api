@@ -98,8 +98,9 @@ var ProviderSet = wire.NewSet(
 	NewAuditLogRepository,
 	NewPasskeyRepository,
 	NewPasskeySessionStore,
-	NewDesktopLoginCodeStore, // fork：客户端一次性登录码
-	NewAppealSessionStore,    // fork：封禁申诉会话
+	NewDesktopLoginCodeStore,   // fork：客户端一次性登录码
+	NewSessionHandoffCodeStore, // fork：多域名登录交接
+	NewAppealSessionStore,      // fork：封禁申诉会话
 	NewUserSubscriptionRepository,
 	NewUserAttributeDefinitionRepository,
 	NewUserAttributeValueRepository,

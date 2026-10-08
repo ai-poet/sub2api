@@ -1000,6 +1000,7 @@ var ProviderSet = wire.NewSet(
 	ProvideAppealService,
 	ProvidePersonalTokenService,
 	NewDesktopLoginService,
+	NewSessionHandoffService, // fork：多域名登录交接
 	ProvideReferralRewardRecordRepository,
 	NewReferralService,
 	wire.Bind(new(modelCatalogAccessService), new(*APIKeyService)),

@@ -425,6 +425,10 @@ type PublicSettings struct {
 	// 允许终端用户在用量页查看自己的失败请求
 	AllowUserViewErrorRequests bool `json:"allow_user_view_error_requests"`
 
+	// fork：多域名登录交接（来自 config.session_handoff；未配置时为空）
+	SessionHandoffLoginOrigin  string   `json:"session_handoff_login_origin"`
+	SessionHandoffAliasOrigins []string `json:"session_handoff_alias_origins"`
+
 	TableDefaultPageSize int
 	TablePageSizeOptions []int
 

@@ -313,6 +313,19 @@ export default {
       "completing": "正在完成注册...",
       "completeRegistrationFailed": "注册失败，请检查邀请码后重试。"
     },
+    "sessionHandoff": {
+      "pageTitle": "登录跳转",
+      "giving": "正在把登录状态带回 {origin}…",
+      "receiving": "正在完成登录…",
+      "redirecting": "正在跳转到登录页…",
+      "disabled": "当前站点没有开启多域名登录，请直接在本页登录。",
+      "invalidRequest": "登录跳转链接无效或已过期，请回到原来的页面重新登录。",
+      "originNotAllowed": "目标域名不在允许的列表里，已停止跳转。",
+      "expired": "登录跳转已过期，请重新登录。",
+      "failed": "登录跳转失败，请重新登录。",
+      "backToLogin": "重新登录",
+      "backHome": "返回首页"
+    },
     "desktopBridge": {
       "pageTitle": "客户端登录",
       "title": "正在连接桌面客户端",

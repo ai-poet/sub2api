@@ -313,6 +313,19 @@ export default {
       "completing": "Completing registration…",
       "completeRegistrationFailed": "Registration failed. Please check your invitation code and try again."
     },
+    "sessionHandoff": {
+      "pageTitle": "Signing in",
+      "giving": "Taking your sign-in back to {origin}…",
+      "receiving": "Finishing sign-in…",
+      "redirecting": "Redirecting to the sign-in page…",
+      "disabled": "Multi-domain sign-in is not enabled on this site. Please sign in on this page.",
+      "invalidRequest": "This sign-in link is invalid or has expired. Go back to the page you came from and sign in again.",
+      "originNotAllowed": "The target domain is not on the allowed list, so the redirect was stopped.",
+      "expired": "The sign-in redirect has expired. Please sign in again.",
+      "failed": "Sign-in redirect failed. Please sign in again.",
+      "backToLogin": "Sign in again",
+      "backHome": "Back to home"
+    },
     "desktopBridge": {
       "pageTitle": "Desktop Sign-in",
       "title": "Connecting the desktop app",

@@ -60,6 +60,9 @@ func TestAuthRoutesRateLimitFailCloseWhenRedisUnavailable(t *testing.T) {
 		// fork：客户端登录码的申请与兑换
 		"/api/v1/auth/desktop-session/code",
 		"/api/v1/auth/desktop-session/exchange",
+		// fork：多域名登录交接的申请与兑换
+		"/api/v1/auth/session-handoff/code",
+		"/api/v1/auth/session-handoff/exchange",
 	}
 
 	for _, path := range paths {

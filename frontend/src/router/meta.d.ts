@@ -27,6 +27,11 @@ declare module 'vue-router' {
     operatorAllowed?: boolean
 
     /**
+     * fork：多域名登录交接页的模式（见 views/auth/SessionHandoffView.vue）
+     */
+    handoffMode?: 'give' | 'complete' | 'pull'
+
+    /**
      * Page title for this route
      */
     title?: string

@@ -232,6 +232,7 @@ func ProvideHandlers(
 	ticketAttachmentHandler *TicketAttachmentHandler,
 	personalTokenHandler *PersonalTokenHandler,
 	desktopLoginHandler *DesktopLoginHandler,
+	sessionHandoffHandler *SessionHandoffHandler,
 	siteMessageHandler *SiteMessageHandler,
 	appealHandler *AppealHandler,
 	contentTranslationHandler *ContentTranslationHandler,
@@ -266,6 +267,7 @@ func ProvideHandlers(
 		TicketAttachment: ticketAttachmentHandler,
 		PersonalToken:    personalTokenHandler,
 		DesktopLogin:     desktopLoginHandler,
+		SessionHandoff:   sessionHandoffHandler,
 		SiteMessage:      siteMessageHandler,
 		Appeal:           appealHandler,
 
@@ -302,6 +304,7 @@ var ProviderSet = wire.NewSet(
 	NewTicketAttachmentHandler,
 	NewPersonalTokenHandler,
 	NewDesktopLoginHandler,
+	NewSessionHandoffHandler, // fork：多域名登录交接
 	NewSiteMessageHandler,
 	NewAppealHandler,
 	NewContentTranslationHandler, // fork：内容自动翻译

@@ -379,6 +379,10 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 
 		AllowUserViewErrorRequests: settings[SettingKeyAllowUserViewErrorRequests] == "true",
 
+		// fork：多域名登录交接
+		SessionHandoffLoginOrigin:  sessionHandoffLoginOrigin(s.cfg),
+		SessionHandoffAliasOrigins: sessionHandoffAliasOrigins(s.cfg),
+
 		// 渠道监控公开开关，语义与 GetChannelMonitorRuntime 保持一致
 		//（enabled / hide_throughput 为 opt-out：缺省视为开启）。
 		ChannelMonitorEnabled:                !isFalseSettingValue(settings[SettingKeyChannelMonitorEnabled]),
@@ -650,6 +654,10 @@ type PublicSettingsInjectionPayload struct {
 	ChannelMonitorHideUserRanking        bool   `json:"channel_monitor_hide_user_ranking"`
 	PluginManagementEnabled              bool   `json:"plugin_management_enabled"`
 
+	// fork：多域名登录交接。别名域名首屏就要据此把登录页转到主域名，必须随 HTML 注入。
+	SessionHandoffLoginOrigin  string   `json:"session_handoff_login_origin"`
+	SessionHandoffAliasOrigins []string `json:"session_handoff_alias_origins"`
+
 	// DeferredFields 列出因体积原因未随 HTML 注入、需等待异步公开设置接口的字段名
 	// （如超过 maxInjectedSiteLogoBytes 的 site_logo）。
 	DeferredFields []string `json:"deferred_fields,omitempty"`
@@ -749,6 +757,9 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ChannelMonitorShowQuota:              settings.ChannelMonitorShowQuota,
 		ChannelMonitorHideUserRanking:        settings.ChannelMonitorHideUserRanking,
 		PluginManagementEnabled:              settings.PluginManagementEnabled,
+
+		SessionHandoffLoginOrigin:  settings.SessionHandoffLoginOrigin,
+		SessionHandoffAliasOrigins: settings.SessionHandoffAliasOrigins,
 
 		DeferredFields: deferredFields,
 	}, nil
