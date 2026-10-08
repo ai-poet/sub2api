@@ -654,6 +654,8 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
+      // fork：运维管理员只读查看内容审计（后端只放开 config / status / logs 三个 GET）
+      operatorAllowed: true,
       title: 'Risk Control',
       titleKey: 'admin.riskControl.title',
       descriptionKey: 'admin.riskControl.description',

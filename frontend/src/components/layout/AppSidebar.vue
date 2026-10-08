@@ -785,12 +785,13 @@ const customMenuItemsForAdmin = computed(() => {
     .sort((a, b) => a.sort_order - b.sort_order)
 })
 
-// 运维管理员（operator）只看得到后端白名单覆盖的页面：运维监控、调用日志，
+// 运维管理员（operator）只看得到后端白名单覆盖的页面：运维监控、调用日志、只读的内容审计，
 // 以及走审批的用户管理 / 订阅管理和自己的审批申请。与 router 的 operatorAllowed 标记一致；
 // 不含自定义菜单与系统设置。
 const operatorNavItems = computed((): NavItem[] => applyFeatureFlags([
   { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring },
   { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
+  { path: '/admin/risk-control', label: t('nav.contentModeration'), icon: ShieldIcon, featureFlag: flagRiskControl },
   { path: '/admin/users', label: t('nav.users'), icon: UsersIcon },
   { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, featureFlag: flagSubscription },
   { path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, badge: approvalBadge },

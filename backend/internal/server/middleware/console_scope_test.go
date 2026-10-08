@@ -163,3 +163,28 @@ func TestOperatorSiteMessageScope(t *testing.T) {
 	require.False(t, OperatorScopeAllows(http.MethodPost, "/api/v1/admin/users/:id/site-messages"), "send must never bypass approval")
 	require.False(t, OperatorActionRefused(http.MethodPost, "/api/v1/admin/users/:id/site-messages"))
 }
+
+// 内容审计：operator 只读配置、状态与记录；任何写操作既不直通也不入审批队列。
+func TestOperatorContentModerationScopeIsReadOnly(t *testing.T) {
+	t.Parallel()
+
+	for _, path := range []string{
+		"/api/v1/admin/risk-control/config",
+		"/api/v1/admin/risk-control/status",
+		"/api/v1/admin/risk-control/logs",
+	} {
+		require.Truef(t, OperatorScopeAllows(http.MethodGet, path), "GET %s", path)
+	}
+
+	writes := []struct{ method, path string }{
+		{http.MethodPut, "/api/v1/admin/risk-control/config"},
+		{http.MethodPost, "/api/v1/admin/risk-control/api-keys/test"},
+		{http.MethodPost, "/api/v1/admin/risk-control/users/:user_id/unban"},
+		{http.MethodDelete, "/api/v1/admin/risk-control/hashes"},
+		{http.MethodDelete, "/api/v1/admin/risk-control/hashes/all"},
+	}
+	for _, w := range writes {
+		require.Falsef(t, OperatorScopeAllows(w.method, w.path), "%s %s must stay denied", w.method, w.path)
+		require.Falsef(t, OperatorApprovalRequired(w.method, w.path), "%s %s must not be queued for approval", w.method, w.path)
+	}
+}

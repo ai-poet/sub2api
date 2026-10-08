@@ -426,7 +426,9 @@ export default {
     },
     "riskControl": {
       "siteMessageOnHit": "Send site message on hit",
-      "siteMessageOnHitHint": "Send the user a site message (shown as a popup) when a request hits a risk rule, the account is auto-disabled, or the cyber-security policy blocks a request. Works without email settings. When off, content audit sends no site messages at all, including disable notices."
+      "siteMessageOnHitHint": "Send the user a site message (shown as a popup) when a request hits a risk rule, the account is auto-disabled, or the cyber-security policy blocks a request. Works without email settings. When off, content audit sends no site messages at all, including disable notices.",
+      "viewSettings": "View settings",
+      "readonlyNotice": "Operator read-only: you can view the content audit settings, runtime status and audit records. Changing settings, testing keys, unbanning users and clearing flagged hashes are left to the admin. Audit engine keys are not shown to operators."
     },
     "groups": {
       "columns": {

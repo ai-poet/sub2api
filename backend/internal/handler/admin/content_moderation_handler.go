@@ -82,7 +82,7 @@ func (h *ContentModerationHandler) GetConfig(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, cfg)
+	response.Success(c, contentModerationConfigForViewer(c, cfg)) // fork：运维只读投影
 }
 
 func (h *ContentModerationHandler) UpdateConfig(c *gin.Context) {
@@ -163,7 +163,7 @@ func (h *ContentModerationHandler) GetStatus(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, status)
+	response.Success(c, contentModerationStatusForViewer(c, status)) // fork：运维只读投影
 }
 
 func (h *ContentModerationHandler) ListLogs(c *gin.Context) {

@@ -16,12 +16,16 @@
               <Icon name="refresh" size="sm" :class="statusLoading ? 'animate-spin' : ''" />
               {{ t('admin.riskControl.refreshStatus') }}
             </button>
-            <button type="button" class="btn btn-primary inline-flex items-center gap-2" @click="openSettings">
-              <Icon name="cog" size="sm" />
-              {{ t('admin.riskControl.openSettings') }}
+            <button type="button" class="btn btn-primary inline-flex items-center gap-2" data-test="open-settings" @click="openSettings">
+              <Icon :name="readonly ? 'eye' : 'cog'" size="sm" />
+              {{ readonly ? t('admin.riskControl.viewSettings') : t('admin.riskControl.openSettings') }}
             </button>
           </div>
         </div>
+
+        <p v-if="readonly" class="rounded-lg border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-800 dark:border-sky-900/50 dark:bg-sky-900/20 dark:text-sky-200" data-test="readonly-notice" role="note">
+          {{ t('admin.riskControl.readonlyNotice') }}
+        </p>
 
         <p class="text-sm text-gray-600 dark:text-gray-300" data-test="active-audit-engine">
           {{ t('admin.riskControl.activeEngine', { engine: engineLabel(status?.engine ?? savedEngine) }) }}
@@ -120,7 +124,7 @@
                     <div class="min-w-0">
                       <div class="flex min-w-0 items-center gap-2">
                         <span class="font-mono text-sm font-semibold text-gray-900 dark:text-white">#{{ item.index + 1 }}</span>
-                        <span class="truncate font-mono text-sm text-gray-700 dark:text-gray-200">{{ item.masked || '-' }}</span>
+                        <span v-if="item.masked || !readonly" class="truncate font-mono text-sm text-gray-700 dark:text-gray-200">{{ item.masked || '-' }}</span>
                         <span class="h-2 w-2 flex-shrink-0 rounded-full" :class="apiKeyStatusDotClass(item.status)"></span>
                       </div>
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -394,6 +398,8 @@
             </button>
           </div>
 
+          <!-- fork：operator 只读——整块表单禁用，写入口另行收起 -->
+          <fieldset :disabled="readonly" class="m-0 min-w-0 border-0 p-0" data-test="settings-fieldset">
           <div v-if="activeSettingsTab === 'basic'" class="space-y-5">
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <div class="flex items-center justify-between rounded-lg border border-gray-100 p-4 dark:border-dark-700">
@@ -458,7 +464,7 @@
                     </p>
                   </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
+                <div v-if="!readonly" class="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     class="btn btn-secondary inline-flex items-center gap-2"
@@ -489,8 +495,8 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]">
-                <div class="space-y-3">
+              <div class="grid grid-cols-1 gap-4 p-4" :class="readonly ? '' : 'xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]'">
+                <div v-if="!readonly" class="space-y-3">
                   <div class="flex flex-col gap-2 rounded-lg border border-gray-100 bg-gray-50 p-2 dark:border-dark-700 dark:bg-dark-900/30 sm:flex-row sm:items-center sm:justify-between">
                     <div class="text-xs leading-5 text-gray-500 dark:text-gray-400">
                       <span class="font-medium text-gray-700 dark:text-gray-200">{{ t('admin.riskControl.apiKeysWriteMode') }}</span>
@@ -629,7 +635,7 @@
                         <div class="flex items-start justify-between gap-2">
                           <div class="min-w-0">
                             <div class="flex min-w-0 flex-wrap items-center gap-2">
-                              <span class="truncate font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ row.masked || '-' }}</span>
+                              <span class="truncate font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ row.masked || (readonly ? `#${row.index + 1}` : '-') }}</span>
                               <span
                                 class="inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-medium"
                                 :class="row.configured ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'"
@@ -645,7 +651,7 @@
                               {{ apiKeyStatusLabel(row.status) }}
                             </span>
                             <button
-                              v-if="row.configured && !configForm.clear_api_key"
+                              v-if="row.configured && !configForm.clear_api_key && !readonly"
                               type="button"
                               class="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-700 dark:hover:text-gray-200"
                               :title="isStoredApiKeyPendingDelete(row) ? t('admin.riskControl.undoDeleteApiKey') : t('admin.riskControl.deleteApiKey')"
@@ -853,6 +859,7 @@
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.flaggedHashHint') }}</p>
                   </div>
                   <button
+                    v-if="!readonly"
                     type="button"
                     class="btn btn-secondary inline-flex items-center justify-center gap-2 text-red-600 hover:text-red-700 dark:text-red-300"
                     :disabled="hashActionLoading || (status?.flagged_hash_count ?? 0) === 0"
@@ -862,7 +869,7 @@
                     {{ t('admin.riskControl.clearFlaggedHashes') }}
                   </button>
                 </div>
-                <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                <div v-if="!readonly" class="mt-3 flex flex-col gap-2 sm:flex-row">
                   <input
                     v-model.trim="flaggedHashInput"
                     type="text"
@@ -1072,12 +1079,13 @@
               </div>
             </div>
           </div>
+          </fieldset>
         </div>
 
         <template #footer>
           <div class="flex justify-end gap-2">
-            <button type="button" class="btn btn-secondary" @click="settingsOpen = false">{{ t('common.cancel') }}</button>
-            <button type="button" class="btn btn-primary inline-flex items-center gap-2" :disabled="saving" @click="saveConfig">
+            <button type="button" class="btn btn-secondary" @click="settingsOpen = false">{{ readonly ? t('common.close') : t('common.cancel') }}</button>
+            <button v-if="!readonly" type="button" class="btn btn-primary inline-flex items-center gap-2" :disabled="saving" @click="saveConfig">
               <Icon v-if="saving" name="refresh" size="sm" class="animate-spin" />
               <Icon v-else name="check" size="sm" />
               {{ saving ? t('common.saving') : t('admin.riskControl.saveConfig') }}
@@ -1183,6 +1191,7 @@ import type {
 } from '@/api/admin/riskControl'
 import type { AdminGroup, Proxy, SelectOption } from '@/types'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import { formatDateTime as formatDateTimeValue } from '@/utils/format'
 
@@ -1235,6 +1244,9 @@ const riskThresholdCategories = Object.keys(riskThresholdDefaults)
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const authStore = useAuthStore()
+// fork：运维管理员（operator）只读查看；写接口后端本就拒绝，这里只收起入口。
+const readonly = computed(() => !authStore.isAdmin)
 const defaultBlockMessage = () => t('admin.riskControl.defaultBlockMessage')
 
 const loading = ref(true)
@@ -1248,7 +1260,9 @@ const settingsOpen = ref(false)
 const activeSettingsTab = ref<SettingsTab>('basic')
 const groupSearch = ref('')
 const flaggedHashInput = ref('')
-const groups = ref<AdminGroup[]>([])
+// 只用到 id / name / platform：operator 无权访问 /admin/groups，改用调用日志的分组筛选项。
+type GroupOption = Pick<AdminGroup, 'id' | 'name'> & { platform: string }
+const groups = ref<GroupOption[]>([])
 const proxies = ref<Proxy[]>([])
 const logs = ref<ContentModerationLog[]>([])
 const status = ref<ContentModerationRuntimeStatus | null>(null)
@@ -1573,13 +1587,14 @@ const apiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => [
 ])
 
 const visibleApiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => {
-  if (apiKeyRowsExpanded.value) return apiKeyRows.value
+  // 只读弹窗里的按钮都被 fieldset 禁用，展开开关点不了，直接全部列出
+  if (apiKeyRowsExpanded.value || readonly.value) return apiKeyRows.value
   return apiKeyRows.value.slice(0, maxVisibleApiKeyRows)
 })
 
 const hiddenApiKeyRowCount = computed<number>(() => Math.max(0, apiKeyRows.value.length - visibleApiKeyRows.value.length))
 
-const canToggleApiKeyRows = computed<boolean>(() => apiKeyRows.value.length > maxVisibleApiKeyRows)
+const canToggleApiKeyRows = computed<boolean>(() => !readonly.value && apiKeyRows.value.length > maxVisibleApiKeyRows)
 
 const activeSavedApiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => (
   savedApiKeyRows.value.filter((row) => !isStoredApiKeyPendingDelete(row))
@@ -1846,10 +1861,10 @@ async function loadAll() {
   try {
     const [config, groupItems, runtimeStatus, proxyItems] = await Promise.all([
       adminAPI.riskControl.getConfig(),
-      adminAPI.groups.getAll(),
+      readonly.value ? adminAPI.usage.listFilterGroups() : adminAPI.groups.getAll(),
       adminAPI.riskControl.getStatus(),
-      // 代理列表加载失败不阻塞风控页面（仅影响下拉可选项）
-      adminAPI.proxies.getAll().catch(() => [] as Proxy[]),
+      // 代理列表加载失败不阻塞风控页面（仅影响下拉可选项）；operator 无权读代理，直接跳过
+      readonly.value ? Promise.resolve([] as Proxy[]) : adminAPI.proxies.getAll().catch(() => [] as Proxy[]),
     ])
     applyConfig(config)
     groups.value = groupItems
@@ -1981,7 +1996,7 @@ async function loadLogs() {
 }
 
 function canUnbanRow(row: ContentModerationLog): boolean {
-  return Boolean(row.auto_banned && row.user_id && row.user_status === 'disabled')
+  return !readonly.value && Boolean(row.auto_banned && row.user_id && row.user_status === 'disabled')
 }
 
 function inputSummaryText(row: ContentModerationLog): string {

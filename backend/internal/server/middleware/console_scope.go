@@ -101,6 +101,13 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/tickets/:id":        {},
 	// 工单图片附件的同源回传：handler 按附件前缀做授权边界，响应只有图片字节
 	"GET /api/v1/admin/tickets/attachments/content": {},
+
+	// 内容审计（风控中心）只读：配置、运行状态与审核记录。审核引擎 Key 的掩码与哈希在 handler 层
+	// 对 operator 抹掉（content_moderation_operator_redact.go）；记录只含用户邮箱、Key 名称、分组与
+	// 输入摘要，无 IP / 余额。保存配置、测试 Key、解封、删除命中哈希一律不放开。
+	"GET /api/v1/admin/risk-control/config": {},
+	"GET /api/v1/admin/risk-control/status": {},
+	"GET /api/v1/admin/risk-control/logs":   {},
 }
 
 // operatorWriteScope 允许 operator 直接调用（不经审批）的非 GET 条目。只放三类：

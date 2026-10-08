@@ -14,8 +14,11 @@ const {
   getGroups,
   getProxies,
   testAPIKeys,
+  listFilterGroups,
+  unbanUser,
   showError,
   showSuccess,
+  authState,
 } = vi.hoisted(() => ({
   getConfig: vi.fn(),
   updateConfig: vi.fn(),
@@ -24,8 +27,11 @@ const {
   getGroups: vi.fn(),
   getProxies: vi.fn(),
   testAPIKeys: vi.fn(),
+  listFilterGroups: vi.fn(),
+  unbanUser: vi.fn(),
   showError: vi.fn(),
   showSuccess: vi.fn(),
+  authState: { isAdmin: true },
 }))
 
 vi.mock('@/api/admin', () => ({
@@ -38,10 +44,13 @@ vi.mock('@/api/admin', () => ({
       testAPIKeys,
       deleteFlaggedHash: vi.fn(),
       clearFlaggedHashes: vi.fn(),
-      unbanUser: vi.fn(),
+      unbanUser,
     },
     groups: {
       getAll: getGroups,
+    },
+    usage: {
+      listFilterGroups,
     },
     proxies: {
       getAll: getProxies,
@@ -54,6 +63,10 @@ vi.mock('@/stores/app', () => ({
     showError,
     showSuccess,
   }),
+}))
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => authState,
 }))
 
 vi.mock('@/utils/apiError', () => ({
@@ -199,9 +212,13 @@ describe('admin RiskControlView', () => {
     getStatus.mockReset()
     listLogs.mockReset()
     getGroups.mockReset()
+    getProxies.mockReset()
     showError.mockReset()
     showSuccess.mockReset()
     testAPIKeys.mockReset()
+    listFilterGroups.mockReset()
+    unbanUser.mockReset()
+    authState.isAdmin = true
 
     getConfig.mockResolvedValue(baseConfig())
     getStatus.mockResolvedValue(runtimeStatus())
@@ -534,5 +551,58 @@ describe('admin RiskControlView', () => {
       'max-h-[280px]',
       'overflow-y-auto',
     ]))
+  })
+
+  it('lets operators view content audit read-only without admin-only lookups or write controls', async () => {
+    authState.isAdmin = false
+    const savedKey: ContentModerationAPIKeyStatus = {
+      index: 0, key_hash: '', masked: '', status: 'ok',
+      failure_count: 0, success_count: 3, last_error: '', last_latency_ms: 80,
+      last_http_status: 200, last_tested: false, configured: true,
+    }
+    getConfig.mockResolvedValue({ ...baseConfig(), api_key_configured: true, api_key_count: 1, api_key_statuses: [savedKey] })
+    getStatus.mockResolvedValue({ ...runtimeStatus(), api_key_statuses: [savedKey], flagged_hash_count: 4 })
+    listFilterGroups.mockResolvedValue([{ id: 7, name: 'vip', platform: 'openai', status: 'active', subscription_type: 'standard' }])
+    listLogs.mockResolvedValue({
+      items: [{
+        id: 1, request_id: 'req-1', user_id: 9, user_email: 'banned@example.com', api_key_id: 3, api_key_name: 'k',
+        group_id: 7, group_name: 'vip', endpoint: '/v1/messages', provider: 'openai', model: 'gpt-5.6', mode: 'pre_block',
+        action: 'block', flagged: true, highest_category: 'violence', highest_score: 0.99, matched_keyword: '',
+        category_scores: {}, threshold_snapshot: {}, input_excerpt: 'bad input', upstream_latency_ms: 10, error: '',
+        violation_count: 10, auto_banned: true, email_sent: false, user_status: 'disabled', queue_delay_ms: null,
+        created_at: '2026-10-08T00:00:00Z',
+      }],
+      total: 1, page: 1, page_size: 20, pages: 1,
+    })
+
+    const wrapper = mount(RiskControlView, { global: { stubs: { AppLayout: AppLayoutStub, BaseDialog: BaseDialogStub, Icon: true, Select: true, Toggle: true, Pagination: true, ModelWhitelistSelector: ModelWhitelistSelectorStub, ProxySelector: true } } })
+    await flushPromises()
+
+    expect(listFilterGroups).toHaveBeenCalledTimes(1)
+    expect(getGroups).not.toHaveBeenCalled()
+    expect(getProxies).not.toHaveBeenCalled()
+    expect(showError).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-test="readonly-notice"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('banned@example.com')
+    expect(wrapper.text()).toContain('bad input')
+    expect(wrapper.text()).not.toContain('admin.riskControl.unbanUser')
+
+    await wrapper.get('[data-test="open-settings"]').trigger('click')
+    expect(wrapper.get('[data-test="open-settings"]').text()).toContain('admin.riskControl.viewSettings')
+    expect(wrapper.get('[data-test="settings-fieldset"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('#1')
+    expect(wrapper.text()).not.toContain('admin.riskControl.saveConfig')
+    expect(wrapper.text()).not.toContain('admin.riskControl.testInputApiKeys')
+    expect(wrapper.find('textarea[autocomplete="new-password"]').exists()).toBe(false)
+    expect(findButtonByText(wrapper, 'common.close').exists()).toBe(true)
+
+    await findButtonByText(wrapper, 'admin.riskControl.tabs.runtime').trigger('click')
+    expect(wrapper.text()).toContain('admin.riskControl.flaggedHashCount')
+    expect(wrapper.text()).not.toContain('admin.riskControl.clearFlaggedHashes')
+    expect(wrapper.text()).not.toContain('admin.riskControl.deleteFlaggedHash')
+
+    expect(updateConfig).not.toHaveBeenCalled()
+    expect(unbanUser).not.toHaveBeenCalled()
+    wrapper.unmount()
   })
 })

@@ -101,6 +101,14 @@ describe('AppSidebar operator (read-only ops role)', () => {
     expect(componentSource).toContain('if (isOperator.value) {\n    return operatorNavItems.value\n  }')
   })
 
+  it('gives operators a read-only content audit entry behind the risk-control flag', () => {
+    const start = componentSource.indexOf('const operatorNavItems = computed(')
+    const block = componentSource.slice(start, componentSource.indexOf('// Admin navigation items', start))
+    expect(block).toContain("{ path: '/admin/risk-control', label: t('nav.contentModeration'), icon: ShieldIcon, featureFlag: flagRiskControl }")
+    // 提示词审计不对 operator 开放
+    expect(block).not.toContain("path: '/admin/prompt-audit'")
+  })
+
   it('shows the pending approvals badge on the approvals entry for admins too', () => {
     expect(componentSource).toContain("{ path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, hideInSimpleMode: true, badge: approvalBadge }")
     expect(componentSource).toContain('v-if="item.badge && (item.badge() ?? 0) > 0"')
