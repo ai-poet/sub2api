@@ -180,6 +180,26 @@ The features below are locally maintained customizations of this fork. During up
   (`query/src/{lib,compact}.rs` — only the Messages route used to compact,
   so Responses and Chat sessions overflowed), the Responses usage no longer
   counting cached tokens twice (`api/src/providers/codex.rs::responses_usage`),
+  the session id sent as `prompt_cache_key` on the Responses route
+  (`query/src/runner/provider_options.rs::with_prompt_cache_key`, wrapped
+  around `build_provider_options` in `query/src/lib.rs` — as Codex sends its
+  conversation id; without it the gateway's sticky routing hashed the system
+  prompt and tools, so a mid-session prompt change moved the conversation to
+  another upstream account and GPT stopped hitting its cache),
+  the todo nudge and the goal addendum sent as a `<system-reminder>` on the
+  request's last message instead of in the system prompt
+  (`query/src/runner/step_reminder.rs`, used in `query/src/lib.rs` — the
+  nudge's count changed with every finished todo, and each change missed the
+  cache for the whole conversation on every route; never put per-step text
+  back into the system prompt), the Responses route sending the system prompt
+  once, as `instructions`, without the leading `system` input item
+  (`api/src/providers/codex.rs::build_responses_body` — it went out twice, and
+  three times behind the gateway's ChatGPT-account transform), the Responses
+  stream taking a call's complete arguments from
+  `response.function_call_arguments.done` / `output_item.done` and sending on
+  what the deltas did not deliver (`codex.rs::arguments_remainder` — an
+  upstream that streams no argument deltas, as GPT currently does through the
+  gateway, made every tool call run with `{}` and fail with "missing field"),
   and the keyword effort / persona read from the last message a person wrote
   (`query/src/lib.rs::last_written_user_message`), and prompt-cache
   breakpoints on every Messages request, placed where Claude Code places
@@ -265,7 +285,15 @@ The features below are locally maintained customizations of this fork. During up
   does): the engine polls a message's calls on the parent's one task, so a
   child waiting on an approval dialog or a synchronous tool froze its
   siblings; the call's drop guard cancels the child's token so it cannot
-  outlive the call.
+  outlive the call. A child that fails or is stopped answers with a bounded
+  digest of what it got done — files changed, each tool call and its
+  outcome, its last text (`waku-agent-bridge/src/subagent_progress.rs`,
+  recorded from the events `SubagentHost::emit` relays) — so "continue" picks
+  it up instead of redoing it. A stopped turn makes the engine answer every
+  call of the abandoned batch "cancelled", so on a cancel `run_turn` calls
+  `SubagentHost::restore_answers` to put back the reports of children that
+  had finished and the progress of those still running. Never drop either:
+  without them a failed or stopped child's work is invisible to the parent.
 - Context windows: the gateway catalog's `context_window` (and windows a user
   declared on their own endpoint) are written as
   `provider_configs.*.options.context_windows` in the engine's
@@ -356,7 +384,7 @@ The features below are locally maintained customizations of this fork. During up
 
 ### 画图页 (Client image studio, local implementation)
 
-- An "Images" (画图) row under Search in the desktop client's sidebar opens a page in the main column: one field where a prompt alone draws (`/v1/images/generations`) and a prompt plus dropped / pasted / picked pictures edits them (`/v1/images/edits`, multipart `image[]`). Model, group, size (priced from the catalog's `pricing_details.media_tiers`), quality and count sit under the field; pictures go to the user's Pictures folder (`Pictures/CheapRouter/YYYY-MM/`), and the gallery, its history and references live in `~/.cheaprouter/image-studio/`. Files: `client/src/app/image_studio.rs` (state, store, job driver), `client/src/app/image_studio_view.rs`, the shared request layer `client/crates/sub2api/src/images.rs` (also used by the agents' `generate_image` in `client/src/js_repl_image.rs`), `form_text` / `form_file` / `download_to` in `client/crates/sub2api/src/http.rs`, and the hook points listed in `client/docs/FORK.md`.
+- An "Images" (画图) row under Search in the desktop client's sidebar opens a page in the main column: one field where a prompt alone draws (`/v1/images/generations`) and a prompt plus dropped / pasted / picked pictures edits them (`/v1/images/edits`, multipart `image[]`). Model, group, size (priced from the catalog's `pricing_details.media_tiers`), quality and count sit under the field; pictures go to the user's Pictures folder (`Pictures/CheapRouter/YYYY-MM/`), and the gallery, its history and references live in `~/.cheaprouter/image-studio/`. Files: `client/src/app/image_studio.rs` (state, store, job driver), `client/src/app/image_studio_view.rs`, the shared request layer `client/crates/sub2api/src/images.rs` (also used by the agents' `generate_image` in `client/src/js_repl_image.rs`), `form_text` / `form_file` / `download_to` in `client/crates/sub2api/src/http.rs`, and the hook points listed in `client/docs/FORK.md`. The model picker lists the image models of the model catalog (`model_plaza.items`); until that catalog has loaded it shows "loading" or the failure with a retry (`ModelPlazaState::status`, `CatalogStatus`) and drawing waits — never show the `gpt-image-2` fallback while the catalog is unknown (that is what made the list look like gpt-image-2 alone). A failed catalog fetch backs off 5 s → 15 s → 30 s → 60 s instead of holding the empty list for a minute.
 - **No backend change.** A job submits to `/v1/images/*/async` and polls `/v1/images/tasks/:id`; when the gateway answers `async image tasks are not enabled` (no object storage configured) it streams the synchronous endpoint instead, one picture per call, relying on the gateway's ten-second SSE keep-alive to get past Cloudflare's first-byte timeout. OpenAI groups default to `allow_image_generation = false` while the model catalog still lists image models under them, so a job walks the candidate groups (`images::image_route_candidates`) past a `403 Image generation is not enabled for this group`, remembers refusals for a day, and records the group that drew in `Credentials::image_groups`; `refresh_model_routes` keeps that group's key and routes the model there, so `gateway_keys.models` sends the agents' image calls to the same group. Keep this feature on upstream merges.
 
 ### 智能体团队 AgentTeams (Client agent teams, local implementation)
@@ -426,7 +454,7 @@ The features below are locally maintained customizations of this fork. During up
   - Memories: `<engine config dir>/auto-memory/{user, projects/<key>}/`. Never `<config dir>/memory/`, which the vendored engine's AutoDream claims.
   - Configuration: `auto-memory.json`, beside the engine's `settings.json`. Never put it in `settings.json`: the engine's save drops unknown keys.
 - **Rules.**
-  - **Root session only.** Sub-agents and team members never get the memory tools. The index section is appended after the sub-agent query is cloned, and it is byte-identical across turns while nothing changes, so the prompt cache holds.
+  - **Root session only.** Sub-agents and team members never get the memory tools. The index section is appended after the sub-agent query is cloned, and it is read **once per session** (on the first turn) and sent byte-identical on every turn after, so the prompt cache holds; a memory written mid-session is already in the conversation and reaches the prompt in the next session. Never go back to re-reading it per turn: each mid-session write then changed the system prompt, which missed GPT's cache and moved the gateway's sticky routing.
   - **Bulk deletes always ask a person.** `memory_prune` (when not a dry run) and `memory_delete_all` are prompted by `GuiPermissionHandler::decide` whatever the access mode, and refused to team members. Never let full access or an "always allow" rule approve them.
   - **Claude Code mirror is one way and marked.**
     - Project memories (never the user scope) are copied to `$CLAUDE_CONFIG_DIR` or `~/.claude`, under `/projects/<slug>/memory/`, in Claude Code's format with `metadata.origin: cheaprouter`. The index is updated line by line.
