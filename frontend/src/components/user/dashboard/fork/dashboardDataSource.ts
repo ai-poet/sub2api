@@ -25,6 +25,10 @@ export interface DashboardLiveStats {
   today_actual_cost: number
 }
 
+// 管理员接口不支持的筛选项：趋势接口不认 billing_mode，模型统计不认 native_compaction_v2，
+// 显示出来会让趋势和模型排行的口径不一致，所以管理员口径不显示这两项。
+export type DashboardOptionalFilter = 'billing_mode' | 'native_compaction_v2'
+
 export interface DashboardOption {
   id: number
   name: string
@@ -41,6 +45,8 @@ export interface DashboardDataSource {
   loadGroups: () => Promise<DashboardOption[]>
   // 模型排行「查看全部」跳到的使用记录页
   usagePath: string
+  // 接口不支持、工具栏不显示的筛选项
+  unsupportedFilters?: readonly DashboardOptionalFilter[]
 }
 
 // 密钥候选最多翻这么多页（每页 100 个），与使用记录页的上限相当。
@@ -74,6 +80,7 @@ export const adminDashboardDataSource: DashboardDataSource = {
   getLiveStats: () => getStats(),
   loadGroups: async () => (await getAllAdminGroups() || []).map((group) => ({ id: group.id, name: group.name })),
   usagePath: '/admin/usage',
+  unsupportedFilters: ['billing_mode', 'native_compaction_v2'],
 }
 
 const DASHBOARD_DATA_SOURCE_KEY: InjectionKey<DashboardDataSource> = Symbol('forkDashboardDataSource')

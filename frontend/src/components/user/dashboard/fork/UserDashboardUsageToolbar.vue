@@ -40,6 +40,7 @@
         <Select v-model="filters.billing_type" :options="billingTypeOptions" data-testid="usage-filter-billing-type" @change="applyFilters" />
       </UserDashboardFilterField>
       <UserDashboardFilterField
+        v-if="supportsFilter('billing_mode')"
         :label="t('admin.usage.billingMode')"
         :value-text="chipText(filters.billing_mode, billingModeOptions)"
         @clear="clearFilter('billing_mode')"
@@ -47,6 +48,7 @@
         <Select v-model="filters.billing_mode" :options="billingModeOptions" data-testid="usage-filter-billing-mode" @change="applyFilters" />
       </UserDashboardFilterField>
       <UserDashboardFilterField
+        v-if="supportsFilter('native_compaction_v2')"
         :label="t('usage.compactionFilter')"
         :value-text="chipText(filters.native_compaction_v2, compactionOptions)"
         @clear="clearFilter('native_compaction_v2')"
@@ -104,6 +106,7 @@ const {
 const {
   filters,
   hasApiKeyFilter,
+  supportsFilter,
   activeCount,
   apiKeyOptions,
   modelOptions,

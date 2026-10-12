@@ -5,6 +5,7 @@ import { defineComponent, h, onMounted } from 'vue'
 import UserDashboardUsageToolbar from '../UserDashboardUsageToolbar.vue'
 import UserDashboardFilterDropdown from '../UserDashboardFilterDropdown.vue'
 import DashboardDateRangePicker from '../DashboardDateRangePicker.vue'
+import { provideDashboardDataSource, type DashboardDataSource } from '../dashboardDataSource'
 import { provideUsageChartState } from '../usageChartState'
 import { formatDayKey } from '../usageChartData'
 import Select from '@/components/common/Select.vue'
@@ -127,6 +128,44 @@ describe('UserDashboardUsageToolbar', () => {
       'admin.usage.billingMode',
       'usage.compactionFilter',
     ])
+  })
+
+  it('管理员口径（全站）没有密钥筛选，也不显示管理员接口不支持的计费模式和请求类别', async () => {
+    const adminSource: DashboardDataSource = {
+      scope: 'admin',
+      getTrend: vi.fn().mockResolvedValue([]),
+      getModels: vi.fn().mockResolvedValue([]),
+      getLiveStats: vi.fn(),
+      loadGroups: vi.fn().mockResolvedValue([{ id: 3, name: 'vip' }]),
+      usagePath: '/admin/usage',
+      unsupportedFilters: ['billing_mode', 'native_compaction_v2'],
+    }
+    const AdminHarness = defineComponent({
+      setup() {
+        const state = provideUsageChartState(provideDashboardDataSource(adminSource))
+        onMounted(() => {
+          void state.load()
+          void state.loadFilterOptions()
+        })
+        return () => h(UserDashboardUsageToolbar)
+      },
+    })
+    const wrapper = mount(AdminHarness, {
+      attachTo: document.body,
+      global: { stubs: { Icon: true, Select: true, DashboardDateRangePicker: true, MotionTransition: { template: '<div><slot /></div>' } } },
+    })
+    await flushPromises()
+
+    await openFilters(wrapper)
+    expect(wrapper.findAll('label.filter-field-label').map((label) => label.text())).toEqual([
+      'usage.model',
+      'admin.usage.group',
+      'usage.type',
+      'admin.usage.billingType',
+    ])
+    expect(adminSource.getTrend).toHaveBeenCalled()
+    expect(adminSource.loadGroups).toHaveBeenCalledTimes(1)
+    expect(usageAPI.getDashboardTrend).not.toHaveBeenCalled()
   })
 
   it('订阅功能关闭时隐藏计费类型', async () => {
