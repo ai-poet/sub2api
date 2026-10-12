@@ -416,6 +416,13 @@ export default {
     "ruleRefereeReward": "Referee reward"
   },
   "admin": {
+    "dashboard": {
+      "fork": {
+        "actualDescription": "Actual: what users paid after group multipliers",
+        "accountCostDescription": "Cost: upstream account cost after account multipliers",
+        "standardDescription": "Standard: priced at official rates"
+      }
+    },
     "users": {
       "typeReferralReward": "Balance (Referral Reward)",
       "siteMessage": {

@@ -13,8 +13,30 @@ export const CHART_SERIES_COLORS = {
   cacheHitRate: '#8b5cf6',
 } as const
 
+/** 分布图（圆环）的 12 色调色板，按排名依次取色；管理员仪表盘的分布图和用户趋势共用。 */
+export const CHART_PALETTE = [
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#ec4899',
+  '#14b8a6',
+  '#f97316',
+  '#6366f1',
+  '#84cc16',
+  '#06b6d4',
+  '#a855f7',
+] as const
+
+/** 分布图「其他」聚合扇区的固定灰。 */
+export const CHART_OTHER_COLOR = '#94a3b8'
+
 /** 坐标刻度字号。 */
 export const CHART_TICK_FONT_SIZE = 10
+
+/** 图例字号。 */
+export const CHART_LEGEND_FONT_SIZE = 11
 
 const readDark = (): boolean =>
   typeof document !== 'undefined' && document.documentElement.classList.contains('dark')

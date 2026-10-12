@@ -126,8 +126,8 @@ describe('admin DashboardView', () => {
     const wrapper = mount(DashboardView, {
       global: { stubs: {
         AppLayout: { template: '<div><slot /></div>' }, LoadingSpinner: true,
-        Icon: true, DateRangePicker: true, Select: true, ModelDistributionChart: true,
-        TokenUsageTrend: true
+        Icon: true, DateRangePicker: true, Select: true, AdminModelDistribution: true,
+        AdminTokenTrend: true
       } }
     })
     await flushPromises()
@@ -152,8 +152,8 @@ describe('admin DashboardView', () => {
           Icon: true,
           DateRangePicker: true,
           Select: true,
-          ModelDistributionChart: true,
-          TokenUsageTrend: true,
+          AdminModelDistribution: true,
+          AdminTokenTrend: true,
           Line: true
         }
       }

@@ -416,6 +416,13 @@ export default {
     "ruleRefereeReward": "被推荐人奖励"
   },
   "admin": {
+    "dashboard": {
+      "fork": {
+        "actualDescription": "实际扣费：用户按分组倍率实际支付的金额",
+        "accountCostDescription": "成本：上游账号按账号倍率计算的成本",
+        "standardDescription": "标准：按官方价格计算的金额"
+      }
+    },
     "users": {
       "typeReferralReward": "余额（推荐奖励）",
       "siteMessage": {
