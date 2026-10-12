@@ -160,11 +160,13 @@ describe('AdminDashboardPage', () => {
     const wrapper = mountPage()
     await flushPromises()
     vi.clearAllMocks()
-    getSnapshotV2.mockResolvedValue({ stats: stats({ total_api_keys: 90 }), trend: [], models: [] })
+    let resolve!: (value: unknown) => void
+    getSnapshotV2.mockImplementationOnce(() => new Promise((r) => { resolve = r }))
 
     const button = wrapper.get('[data-testid="admin-dashboard-refresh"]')
     await button.trigger('click')
     expect(button.attributes('disabled')).toBeDefined()
+    resolve({ stats: stats({ total_api_keys: 90 }), trend: [], models: [] })
     await flushPromises()
 
     expect(getSnapshotV2).toHaveBeenCalledWith(expect.objectContaining({ include_stats: true }))
