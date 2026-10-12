@@ -189,6 +189,7 @@ interface ConfigFieldDef {
   label: { en: string; zh: string };
   sensitive: boolean;
   optional?: boolean;
+  hint?: { en: string; zh: string };
 }
 
 const PROVIDER_CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
@@ -197,8 +198,26 @@ const PROVIDER_CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
     { key: 'pkey', label: { en: 'PKey (Secret)', zh: 'PKey（密钥）' }, sensitive: true },
     { key: 'cid', label: { en: 'Default Channel ID', zh: '默认渠道 ID' }, sensitive: false, optional: true },
     { key: 'apiBase', label: { en: 'API Base URL', zh: 'API 基础地址' }, sensitive: false, optional: true },
-    { key: 'notifyUrl', label: { en: 'Notify URL', zh: '异步通知地址' }, sensitive: false, optional: true },
-    { key: 'returnUrl', label: { en: 'Return URL', zh: '同步跳转地址' }, sensitive: false, optional: true },
+    {
+      key: 'notifyUrl',
+      label: { en: 'Notify URL', zh: '异步通知地址' },
+      sensitive: false,
+      optional: true,
+      hint: {
+        en: 'Leave empty to build it from the visited domain. An https address (the domain alone is enough, e.g. https://example.com) is used for orders on this instance; required by channels that only accept HTTPS callbacks.',
+        zh: '留空则按访问的域名自动生成。填写 https 地址（只填域名即可，如 https://example.com）后，本实例下单改用它；只接受 HTTPS 回调的渠道需要填写。',
+      },
+    },
+    {
+      key: 'returnUrl',
+      label: { en: 'Return URL', zh: '同步跳转地址' },
+      sensitive: false,
+      optional: true,
+      hint: {
+        en: 'Only used when an https notify URL is set: its domain becomes the post-payment return page domain (defaults to the notify URL domain).',
+        zh: '仅在填写了 https 异步通知地址时生效：支付后跳回页面使用这里的域名（默认用异步通知地址的域名）。',
+      },
+    },
   ],
   alipay: [
     { key: 'appId', label: { en: 'App ID', zh: 'App ID' }, sensitive: false },
@@ -1332,6 +1351,11 @@ function PaymentConfigContent() {
                         className={inputCls}
                         autoComplete="off"
                       />
+                      {field.hint && (
+                        <p className={`mt-1 text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {field.hint[locale]}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>

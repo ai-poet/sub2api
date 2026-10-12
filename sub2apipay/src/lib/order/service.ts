@@ -30,6 +30,7 @@ import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, resolv
 import { applyRefundToInvoice } from '@/lib/invoice/service';
 import { resolvePromotionForOrder } from '@/lib/promotion/service';
 import { describePaymentGatewayError } from '@/lib/order/gateway-error';
+import { resolveEasyPayCallbackUrls } from '@/lib/order/callback-urls';
 
 const DEFAULT_MAX_PENDING_ORDERS = 3;
 /**
@@ -641,11 +642,20 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     const statusAccessToken = createOrderStatusAccessToken(order.id, input.userId);
     const orderResultUrl = buildOrderResultUrl(appUrl, order.id, input.userId);
 
-    // 同源模式下，回调地址统一按当前请求 origin 生成。
+    // 同源模式下，回调地址统一按当前请求 origin 生成；
+    // 易支付实例配置了 https 的异步通知地址时改用它（见 resolveEasyPayCallbackUrls）。
     let notifyUrl: string | undefined;
-    const returnUrl: string | undefined = orderResultUrl;
+    let returnUrl: string | undefined = orderResultUrl;
     if (actualProvider.providerKey === 'easypay') {
-      notifyUrl = `${appUrl}/api/easy-pay/notify${selectedInstanceId ? `?inst=${selectedInstanceId}` : ''}`;
+      const callbacks = resolveEasyPayCallbackUrls({
+        appUrl,
+        instanceConfig: instanceResult?.config,
+        instanceId: selectedInstanceId,
+        orderId: order.id,
+        userId: input.userId,
+      });
+      notifyUrl = callbacks.notifyUrl;
+      returnUrl = callbacks.returnUrl;
     } else if (actualProvider.providerKey === 'alipay') {
       notifyUrl = `${appUrl}/api/alipay/notify${selectedInstanceId ? `?inst=${selectedInstanceId}` : ''}`;
     } else if (actualProvider.providerKey === 'wxpay') {
