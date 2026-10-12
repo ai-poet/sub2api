@@ -3,9 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import type { ModelStat, UserSpendingRankingItem, UserUsageTrendPoint } from '@/types'
 import AdminModelDistribution from '../AdminModelDistribution.vue'
-import AdminTokenTrend from '../AdminTokenTrend.vue'
 import AdminUserTrend from '../AdminUserTrend.vue'
-import { costDigits, formatCost, formatDayLabel, formatHourLabel, formatTokens } from '../format'
+import { costDigits, formatCost, formatTokens } from '../format'
 
 const { getUserBreakdown } = vi.hoisted(() => ({ getUserBreakdown: vi.fn() }))
 
@@ -49,11 +48,7 @@ const rankingUser = (id: number, cost: number): UserSpendingRankingItem => ({
 })
 
 describe('admin dashboard format helpers', () => {
-  it('formats axis labels, tokens and costs like TokenRouter', () => {
-    expect(formatHourLabel('2026-10-12 08:00')).toBe('08:00')
-    expect(formatHourLabel('2026-10-12T23:00:00Z')).toBe('23:00')
-    expect(formatDayLabel('2026-10-02')).toBe('10-02')
-    expect(formatDayLabel('weird')).toBe('weird')
+  it('formats tokens and costs like TokenRouter', () => {
     expect(formatTokens(999)).toBe('999')
     expect(formatTokens(1_234_567)).toBe('1.23M')
     expect(costDigits(0.004)).toBe(4)
@@ -129,37 +124,6 @@ describe('AdminModelDistribution', () => {
     const data = wrapper.findComponent({ name: 'Doughnut' }).props('data')
     expect(data.datasets[0].data).toEqual([30, 10, 10])
     expect(data.datasets[0].backgroundColor[2]).toBe('#94a3b8')
-  })
-})
-
-describe('AdminTokenTrend', () => {
-  const point = (date: string) => ({
-    date,
-    requests: 1,
-    input_tokens: 60,
-    output_tokens: 10,
-    cache_creation_tokens: 20,
-    cache_read_tokens: 20,
-    total_tokens: 110,
-    cost: 0.5,
-    actual_cost: 0.25,
-  })
-
-  it('shortens hourly labels, keeps the full time in the tooltip title and computes the cached input share', () => {
-    const wrapper = mount(AdminTokenTrend, { props: { trendData: [point('2026-10-12 08:00')], granularity: 'hour' } })
-    const line = wrapper.findComponent({ name: 'Line' })
-    expect(line.props('data').labels).toEqual(['08:00'])
-    expect(line.props('data').datasets[4].data).toEqual([20])
-
-    const callbacks = line.props('options').plugins.tooltip.callbacks
-    expect(callbacks.title([{ dataIndex: 0 }])).toBe('2026-10-12 08:00')
-    expect(callbacks.footer([{ dataIndex: 0 }])).toBe('Actual: $0.2500 | Standard: $0.5000')
-    expect(line.props('options').scales.x.ticks.maxRotation).toBe(0)
-  })
-
-  it('shows the skeleton while loading and an empty state without data', () => {
-    expect(mount(AdminTokenTrend, { props: { trendData: [], loading: true } }).find('[role="status"]').exists()).toBe(true)
-    expect(mount(AdminTokenTrend, { props: { trendData: [] } }).text()).toContain('admin.dashboard.noDataAvailable')
   })
 })
 

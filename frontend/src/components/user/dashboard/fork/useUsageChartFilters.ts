@@ -4,7 +4,7 @@ import type { TrendParams } from '@/api/usage'
 import type { SelectOption } from '@/components/common/Select.vue'
 import type { ModelStat, UsageRequestType } from '@/types'
 import { requestTypeToLegacyStream } from '@/utils/usageRequestType'
-import { useDashboardDataSource } from './dashboardDataSource'
+import { useDashboardDataSource, type DashboardDataSource } from './dashboardDataSource'
 import { queryDates, type UsageRange } from './usageChartData'
 
 // fork：仪表盘用量图的筛选条件（移植自 TokenRouter useUsageChartFilters.ts）。
@@ -34,9 +34,8 @@ const emptyFilters = (): UsageChartFilters => ({
 })
 
 // useUsageChartFilters 管理用量图的筛选条件和候选项。
-export function useUsageChartFilters() {
+export function useUsageChartFilters(source: DashboardDataSource = useDashboardDataSource()) {
   const { t } = useI18n()
-  const source = useDashboardDataSource()
   // 管理员口径看全站，没有「我的密钥」可选，工具栏不显示密钥筛选
   const hasApiKeyFilter = Boolean(source.loadApiKeys)
   const filters = ref<UsageChartFilters>(emptyFilters())

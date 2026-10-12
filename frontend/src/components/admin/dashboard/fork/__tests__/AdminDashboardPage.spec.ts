@@ -4,201 +4,219 @@ import { defineComponent, h } from 'vue'
 
 import type { DashboardStats } from '@/types'
 import AdminDashboardPage from '../AdminDashboardPage.vue'
+import { useDashboardDataSource } from '@/components/user/dashboard/fork/dashboardDataSource'
+import { injectUsageChartState } from '@/components/user/dashboard/fork/usageChartState'
+import { formatDayKey } from '@/components/user/dashboard/fork/usageChartData'
 
-const { getSnapshotV2, getUserUsageTrend, getUserSpendingRanking, showError, push } = vi.hoisted(() => ({
-  getSnapshotV2: vi.fn(),
-  getUserUsageTrend: vi.fn(),
+const {
+  getUsageTrend, getModelStats, getStats, getUserSpendingRanking, getUserUsageTrend, getAllGroups,
+  push, heatmapReload, liveReload,
+} = vi.hoisted(() => ({
+  getUsageTrend: vi.fn(),
+  getModelStats: vi.fn(),
+  getStats: vi.fn(),
   getUserSpendingRanking: vi.fn(),
-  showError: vi.fn(),
+  getUserUsageTrend: vi.fn(),
+  getAllGroups: vi.fn(),
   push: vi.fn(),
+  heatmapReload: vi.fn(),
+  liveReload: vi.fn(),
 }))
 
-vi.mock('@/api/admin', () => ({
-  adminAPI: { dashboard: { getSnapshotV2, getUserUsageTrend, getUserSpendingRanking } },
-}))
-
-vi.mock('@/stores/app', () => ({ useAppStore: () => ({ showError }) }))
+vi.mock('@/api/admin/dashboard', () => {
+  const api = { getUsageTrend, getModelStats, getStats, getUserSpendingRanking, getUserUsageTrend }
+  return { ...api, default: api }
+})
+vi.mock('@/api/admin/groups', () => ({ getAll: getAllGroups, default: { getAll: getAllGroups } }))
+vi.mock('@/api/usage', () => ({ usageAPI: { getDashboardTrend: vi.fn(), getDashboardModels: vi.fn(), getDashboardStats: vi.fn() } }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
-
 vi.mock('vue-i18n', async () => {
   const actual = await vi.importActual<typeof import('vue-i18n')>('vue-i18n')
-  return { ...actual, useI18n: () => ({ t: (key: string) => key }) }
+  return { ...actual, useI18n: () => ({ t: (key: string) => key, locale: { value: 'zh' } }) }
 })
 
-const stats = (overrides: Partial<DashboardStats> = {}): DashboardStats => ({
-  total_users: 1200,
-  today_new_users: 7,
-  active_users: 35,
-  hourly_active_users: 4,
-  stats_updated_at: '',
-  stats_stale: false,
-  total_api_keys: 88,
-  active_api_keys: 60,
-  total_accounts: 12,
-  normal_accounts: 10,
-  error_accounts: 2,
-  ratelimit_accounts: 0,
-  overload_accounts: 0,
-  total_requests: 123456,
-  total_input_tokens: 0,
-  total_output_tokens: 0,
-  total_cache_creation_tokens: 0,
-  total_cache_read_tokens: 0,
-  total_tokens: 2_500_000_000,
-  total_cost: 5000,
-  total_actual_cost: 1234.5,
-  total_account_cost: 800,
-  today_requests: 4321,
-  today_input_tokens: 0,
-  today_output_tokens: 0,
-  today_cache_creation_tokens: 0,
-  today_cache_read_tokens: 0,
-  today_tokens: 3_450_000,
-  today_cost: 12,
-  today_actual_cost: 3.5,
-  today_account_cost: 0.05,
-  average_duration_ms: 1530,
-  uptime: 0,
-  rpm: 42,
-  tpm: 12_500,
-  ...overrides,
-}) as DashboardStats
+const daysAgo = (days: number): string => {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  return formatDayKey(date)
+}
 
-const passthrough = (name: string, props: string[] = []) => defineComponent({
+// 子组件替身：记录页面提供的数据源口径，带 reload 的暴露给刷新按钮
+const seenScopes: string[] = []
+const LiveStatsStub = defineComponent({
+  name: 'UserDashboardLiveStats',
+  emits: ['update'],
+  setup(_, { expose }) {
+    seenScopes.push(useDashboardDataSource().scope)
+    expose({ reload: liveReload })
+    return () => h('div', { 'data-stub': 'UserDashboardLiveStats' })
+  },
+})
+const HeatmapStub = defineComponent({
+  name: 'UserDashboardHeatmap',
+  emits: ['select-day'],
+  setup(_, { expose }) {
+    expose({ reload: heatmapReload })
+    return () => h('div', { 'data-stub': 'UserDashboardHeatmap' })
+  },
+})
+// 工具栏替身：点击切到近 30 天，事件 refresh 触发整页刷新
+const ToolbarStub = defineComponent({
+  name: 'UserDashboardUsageToolbar',
+  props: ['refreshing'],
+  emits: ['refresh'],
+  setup(_, { emit }) {
+    const state = injectUsageChartState()
+    return () => h('div', { 'data-stub': 'UserDashboardUsageToolbar' }, [
+      h('button', { 'data-testid': 'pick-30d', onClick: () => state.selectPreset('30d') }),
+      h('button', { 'data-testid': 'refresh', onClick: () => emit('refresh') }),
+    ])
+  },
+})
+const passthrough = (name: string, props: string[] = [], emits: string[] = []) => defineComponent({
   name,
   props,
-  emits: ['update:metric', 'ranking-click'],
+  emits,
   setup: () => () => h('div', { 'data-stub': name }),
 })
-
-const ModelDistributionStub = passthrough('AdminModelDistribution', ['modelStats', 'loading', 'startDate', 'endDate', 'rankingItems'])
-const TokenTrendStub = passthrough('AdminTokenTrend', ['trendData', 'loading', 'granularity'])
+const OverviewStub = passthrough('AdminOverviewCards', ['stats'])
+const DistributionStub = passthrough('AdminModelDistribution', ['modelStats', 'loading', 'rankingItems', 'startDate', 'endDate'], ['ranking-click'])
 const UserTrendStub = defineComponent({
   name: 'AdminUserTrend',
-  props: ['trend', 'metric', 'loading', 'granularity'],
+  props: ['trend', 'metric', 'loading'],
   emits: ['update:metric'],
   setup: (_, { attrs }) => () => h('div', { ...attrs, 'data-stub': 'AdminUserTrend' }),
 })
-const DateRangePickerStub = defineComponent({
-  name: 'DateRangePicker',
-  emits: ['change', 'update:startDate', 'update:endDate'],
-  setup: () => () => h('div', { 'data-stub': 'DateRangePicker' }),
-})
 
-const mountPage = () =>
-  mount(AdminDashboardPage, {
+const mountPage = async () => {
+  const wrapper = mount(AdminDashboardPage, {
     global: {
       stubs: {
-        Icon: true,
-        Select: true,
-        AdminQuickActions: true,
-        DateRangePicker: DateRangePickerStub,
-        AdminModelDistribution: ModelDistributionStub,
-        AdminTokenTrend: TokenTrendStub,
+        UserDashboardLiveStats: LiveStatsStub,
+        UserDashboardHeatmap: HeatmapStub,
+        UserDashboardUsageToolbar: ToolbarStub,
+        UserDashboardUsageChart: { template: '<div data-stub="UserDashboardUsageChart" />' },
+        AdminOverviewCards: OverviewStub,
+        AdminModelDistribution: DistributionStub,
+        AdminQuickActions: { template: '<div data-stub="AdminQuickActions" />' },
         AdminUserTrend: UserTrendStub,
       },
     },
   })
+  await flushPromises()
+  return wrapper
+}
 
 describe('AdminDashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    getSnapshotV2.mockResolvedValue({ stats: stats(), trend: [], models: [] })
-    getUserUsageTrend.mockResolvedValue({ trend: [] })
+    localStorage.clear()
+    seenScopes.length = 0
+    getUsageTrend.mockResolvedValue({ trend: [] })
+    getModelStats.mockResolvedValue({ models: [{ model: 'gpt-5', requests: 1, total_tokens: 10 }] })
     getUserSpendingRanking.mockResolvedValue({ ranking: [], total_actual_cost: 0, total_requests: 0, total_tokens: 0 })
+    getUserUsageTrend.mockResolvedValue({ trend: [] })
+    getAllGroups.mockResolvedValue([{ id: 3, name: 'vip' }])
   })
 
-  it('shows the skeleton until the first snapshot arrives', async () => {
-    let resolve!: (value: unknown) => void
-    getSnapshotV2.mockImplementationOnce(() => new Promise((r) => { resolve = r }))
-    const wrapper = mountPage()
-    await flushPromises()
-    expect(wrapper.find('[data-testid="dashboard-skeleton"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="stat-api-keys"]').exists()).toBe(false)
+  it('用户仪表盘的同一套区块按全站口径取数，下面接管理员特有的区块', async () => {
+    const wrapper = await mountPage()
+    expect(wrapper.findAll('[data-stub]').map((node) => node.attributes('data-stub'))).toEqual([
+      'UserDashboardLiveStats',
+      'UserDashboardUsageToolbar',
+      'UserDashboardUsageChart',
+      'AdminOverviewCards',
+      'UserDashboardHeatmap',
+      'AdminModelDistribution',
+      'AdminQuickActions',
+      'AdminUserTrend',
+    ])
+    expect(wrapper.get('h1').text()).toBe('admin.dashboard.title')
+    expect(seenScopes).toEqual(['admin'])
 
-    resolve({ stats: stats(), trend: [], models: [] })
-    await flushPromises()
-    expect(wrapper.find('[data-testid="dashboard-skeleton"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="stat-api-keys"]').exists()).toBe(true)
+    // 用量区：本期、上一周期两次趋势 + 模型统计，都走管理员接口；默认近 7 天
+    expect(getUsageTrend).toHaveBeenCalledTimes(2)
+    expect(getUsageTrend).toHaveBeenCalledWith(expect.objectContaining({ start_date: daysAgo(6), end_date: daysAgo(0), granularity: 'day' }))
+    expect(getModelStats).toHaveBeenCalledTimes(1)
+    expect(getAllGroups).toHaveBeenCalledTimes(1)
+    expect(wrapper.findComponent(DistributionStub).props('modelStats')).toEqual([{ model: 'gpt-5', requests: 1, total_tokens: 10 }])
+    expect(wrapper.findComponent(DistributionStub).props('startDate')).toBe(daysAgo(6))
+
+    // 消费榜和用户趋势跟着工具栏的时间范围
+    expect(getUserSpendingRanking).toHaveBeenCalledWith({ start_date: daysAgo(6), end_date: daysAgo(0), limit: 12 })
+    expect(getUserUsageTrend).toHaveBeenCalledWith(expect.objectContaining({
+      start_date: daysAgo(6), end_date: daysAgo(0), granularity: 'day', limit: 12, metric: 'tokens',
+    }))
   })
 
-  it('renders the TokenRouter stat rows with actual / account cost / standard spend', async () => {
-    const wrapper = mountPage()
+  it('实时状态条的统计交给概览卡，失败的轮询不清掉上一次结果', async () => {
+    const wrapper = await mountPage()
+    const stats = { total_users: 9, rpm: 1, tpm: 2, average_duration_ms: 3, today_actual_cost: 4 } as unknown as DashboardStats
+    wrapper.findComponent(LiveStatsStub).vm.$emit('update', stats)
     await flushPromises()
+    expect(wrapper.findComponent(OverviewStub).props('stats')).toEqual(stats)
 
-    expect(wrapper.get('[data-testid="stat-api-keys"]').text()).toContain('88')
-    expect(wrapper.get('[data-testid="stat-accounts"]').text()).toContain('2 common.error')
-    expect(wrapper.get('[data-testid="stat-today-requests"]').text()).toContain('common.total: 123,456')
-    expect(wrapper.get('[data-testid="stat-users"]').text()).toContain('+7')
-    expect(wrapper.get('[data-testid="stat-today-tokens"]').text()).toContain('3.45M')
-    expect(wrapper.get('[data-testid="stat-total-tokens"]').text()).toContain('2.50B')
-    expect(wrapper.get('[data-testid="stat-performance"]').text()).toContain('12.50K')
-    expect(wrapper.get('[data-testid="stat-avg-response"]').text()).toContain('1.53s')
-
-    const today = wrapper.get('[data-testid="today-costs"]').findAll('span').map((span) => span.text())
-    expect(today).toEqual(['$3.50', '/', '$0.050', '/', '$12.00'])
-    const total = wrapper.get('[data-testid="total-costs"]').findAll('span').map((span) => span.text())
-    expect(total).toEqual(['$1,234.50', '/', '$800.00', '/', '$5,000.00'])
+    wrapper.findComponent(LiveStatsStub).vm.$emit('update', null)
+    await flushPromises()
+    expect(wrapper.findComponent(OverviewStub).props('stats')).toEqual(stats)
   })
 
-  it('loads the last 24 hours by hour, and switches to days for longer ranges without reloading stats', async () => {
-    const wrapper = mountPage()
-    await flushPromises()
-    expect(getSnapshotV2).toHaveBeenCalledWith(expect.objectContaining({ granularity: 'hour', include_stats: true }))
-    expect(wrapper.findComponent(TokenTrendStub).props('granularity')).toBe('hour')
-
-    wrapper.findComponent(DateRangePickerStub).vm.$emit('change', { startDate: '2026-10-01', endDate: '2026-10-12', preset: null })
-    await flushPromises()
-    expect(getSnapshotV2).toHaveBeenLastCalledWith(expect.objectContaining({ granularity: 'day', include_stats: false }))
-    expect(getUserUsageTrend).toHaveBeenLastCalledWith(expect.objectContaining({ granularity: 'day' }))
-    expect(getUserSpendingRanking).toHaveBeenCalledTimes(2)
-    expect(wrapper.findComponent(TokenTrendStub).props('granularity')).toBe('day')
-  })
-
-  it('the heading refresh button reloads stats and every chart, and is disabled meanwhile', async () => {
-    const wrapper = mountPage()
-    await flushPromises()
+  it('工具栏换时间范围后，消费榜和用户趋势按新范围重新取数', async () => {
+    const wrapper = await mountPage()
     vi.clearAllMocks()
-    let resolve!: (value: unknown) => void
-    getSnapshotV2.mockImplementationOnce(() => new Promise((r) => { resolve = r }))
+    getUsageTrend.mockResolvedValue({ trend: [] })
+    getModelStats.mockResolvedValue({ models: [] })
+    getUserSpendingRanking.mockResolvedValue({ ranking: [] })
+    getUserUsageTrend.mockResolvedValue({ trend: [] })
 
-    const button = wrapper.get('[data-testid="admin-dashboard-refresh"]')
-    await button.trigger('click')
-    expect(button.attributes('disabled')).toBeDefined()
-    resolve({ stats: stats({ total_api_keys: 90 }), trend: [], models: [] })
+    await wrapper.get('[data-testid="pick-30d"]').trigger('click')
     await flushPromises()
-
-    expect(getSnapshotV2).toHaveBeenCalledWith(expect.objectContaining({ include_stats: true }))
-    expect(getUserUsageTrend).toHaveBeenCalledTimes(1)
     expect(getUserSpendingRanking).toHaveBeenCalledTimes(1)
-    expect(button.attributes('disabled')).toBeUndefined()
-    expect(wrapper.get('[data-testid="stat-api-keys"]').text()).toContain('90')
+    expect(getUserSpendingRanking).toHaveBeenCalledWith({ start_date: daysAgo(29), end_date: daysAgo(0), limit: 12 })
+    expect(getUserUsageTrend).toHaveBeenCalledTimes(1)
   })
 
-  it('switches the user trend metric and opens a ranking user in the usage page', async () => {
-    const wrapper = mountPage()
+  it('刷新按钮刷新整页：用量区、热力图、实时状态、消费榜和用户趋势', async () => {
+    const wrapper = await mountPage()
+    vi.clearAllMocks()
+    getUsageTrend.mockResolvedValue({ trend: [] })
+    getModelStats.mockResolvedValue({ models: [] })
+    getUserSpendingRanking.mockResolvedValue({ ranking: [] })
+    getUserUsageTrend.mockResolvedValue({ trend: [] })
+
+    await wrapper.get('[data-testid="refresh"]').trigger('click')
+    expect(wrapper.findComponent(ToolbarStub).props('refreshing')).toBe(true)
     await flushPromises()
 
+    expect(getUsageTrend).toHaveBeenCalledTimes(2)
+    expect(heatmapReload).toHaveBeenCalledTimes(1)
+    expect(liveReload).toHaveBeenCalledTimes(1)
+    expect(getUserSpendingRanking).toHaveBeenCalledTimes(1)
+    expect(getUserUsageTrend).toHaveBeenCalledTimes(1)
+    expect(wrapper.findComponent(ToolbarStub).props('refreshing')).toBe(false)
+  })
+
+  it('用户趋势可切到按实际消费，消费榜点击进入该用户的使用记录', async () => {
+    const wrapper = await mountPage()
     wrapper.findComponent(UserTrendStub).vm.$emit('update:metric', 'actual_cost')
     await flushPromises()
     expect(getUserUsageTrend).toHaveBeenLastCalledWith(expect.objectContaining({ metric: 'actual_cost', limit: 12 }))
     expect(wrapper.findComponent(UserTrendStub).props('metric')).toBe('actual_cost')
 
-    wrapper.findComponent(ModelDistributionStub).vm.$emit('ranking-click', { user_id: 9, email: '', username: 'u', actual_cost: 1, requests: 1, tokens: 1 })
-    expect(push).toHaveBeenCalledWith(expect.objectContaining({ path: '/admin/usage', query: expect.objectContaining({ user_id: '9' }) }))
+    wrapper.findComponent(DistributionStub).vm.$emit('ranking-click', { user_id: 9 })
+    expect(push).toHaveBeenCalledWith({
+      path: '/admin/usage',
+      query: { user_id: '9', start_date: daysAgo(6), end_date: daysAgo(0) },
+    })
   })
 
-  it('reports a failed snapshot', async () => {
-    getSnapshotV2.mockRejectedValueOnce(new Error('boom'))
-    mountPage()
-    await flushPromises()
-    expect(showError).toHaveBeenCalledWith('admin.dashboard.failedToLoad')
-  })
-
-  it('keeps the quick actions as the last block, after the TokenRouter sections', async () => {
-    const wrapper = mountPage()
-    await flushPromises()
-    const html = wrapper.html()
-    expect(html.indexOf('data-stub="AdminUserTrend"')).toBeLessThan(html.indexOf('admin-quick-actions-stub'))
+  it('入场动画只播放一次：最后一块播放完后移除入场类', async () => {
+    const wrapper = await mountPage()
+    const root = wrapper.get('[data-testid="admin-dashboard-root"]')
+    expect(root.classes()).toContain('dash-rise')
+    await wrapper.get('[data-stub="UserDashboardHeatmap"]').trigger('animationend')
+    expect(root.classes()).toContain('dash-rise')
+    await wrapper.get('[data-rise-last="true"]').trigger('animationend')
+    expect(root.classes()).not.toContain('dash-rise')
   })
 })

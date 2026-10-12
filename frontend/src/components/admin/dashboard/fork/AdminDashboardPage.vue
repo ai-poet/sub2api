@@ -100,9 +100,10 @@ import AdminUserTrend from './AdminUserTrend.vue'
 const { t } = useI18n()
 const router = useRouter()
 
-// 先指定全站口径，再创建用量状态：状态、工具栏、热力图和实时状态条都按这个口径取数。
-provideDashboardDataSource(adminDashboardDataSource)
-const usageState = provideUsageChartState()
+// 全站口径：子组件（工具栏、热力图、实时状态条、模型排行）通过 inject 拿到；
+// 本组件 inject 不到自己 provide 的值，所以用量状态直接传入数据源。
+const source = provideDashboardDataSource(adminDashboardDataSource)
+const usageState = provideUsageChartState(source)
 
 const heatmapRef = ref<InstanceType<typeof UserDashboardHeatmap> | null>(null)
 const liveStatsRef = ref<InstanceType<typeof UserDashboardLiveStats> | null>(null)

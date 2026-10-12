@@ -13,7 +13,7 @@ import {
   type UsageRangePreset,
   type UsageTotals,
 } from './usageChartData'
-import { useDashboardDataSource } from './dashboardDataSource'
+import { useDashboardDataSource, type DashboardDataSource } from './dashboardDataSource'
 import { useUsageChartFilters } from './useUsageChartFilters'
 
 // fork：仪表盘用量区的共享状态（移植自 TokenRouter usageChartState.ts）。
@@ -53,7 +53,8 @@ const readSavedState = (): { metric: UsageMetric; range: PresetRange } => {
 }
 
 // createUsageChartState 创建仪表盘用量区的共享状态。
-export function createUsageChartState() {
+// source 是取数口径；页面自己 provide 的数据源在本组件里 inject 不到，所以由页面直接传入。
+export function createUsageChartState(source: DashboardDataSource = useDashboardDataSource()) {
   const saved = readSavedState()
   const metric = ref<UsageMetric>(saved.metric)
   const rangePreset = ref<UsageRangePreset>(saved.range)
@@ -71,9 +72,7 @@ export function createUsageChartState() {
   const modelsLoaded = ref(false)
   const totals = computed(() => summarizeTrend(current.value))
 
-  // 取数口径由页面指定：用户仪表盘看自己，管理员仪表盘看全站
-  const source = useDashboardDataSource()
-  const filterState = useUsageChartFilters()
+  const filterState = useUsageChartFilters(source)
 
   // 日期选择器显示当前窗口覆盖的日期，结束时间是排他边界，所以回退一毫秒。
   const pickerStart = computed(() => formatDayKey(activeRange.value.startAt))
@@ -238,8 +237,8 @@ export type UsageChartState = ReturnType<typeof createUsageChartState>
 const USAGE_CHART_STATE_KEY: InjectionKey<UsageChartState> = Symbol('forkUsageChartState')
 
 // provideUsageChartState 在页面上创建共享状态，供标题行的工具栏和正文里的图表共同使用。
-export const provideUsageChartState = (): UsageChartState => {
-  const state = createUsageChartState()
+export const provideUsageChartState = (source?: DashboardDataSource): UsageChartState => {
+  const state = createUsageChartState(source)
   provide(USAGE_CHART_STATE_KEY, state)
   return state
 }
