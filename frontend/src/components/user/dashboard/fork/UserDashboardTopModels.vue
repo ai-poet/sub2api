@@ -9,7 +9,7 @@
         <span class="truncate text-xs text-gray-500 dark:text-dark-400" data-testid="top-models-subtitle">{{ subtitle }}</span>
       </div>
       <router-link
-        to="/usage"
+        :to="source.usagePath"
         class="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400"
         data-testid="top-models-view-all"
       >
@@ -102,6 +102,7 @@ import type { ModelStat } from '@/types'
 import { TOP_MODEL_BAR_STEP_MS } from './dashboardMotion'
 import { formatUsd } from './format'
 import { cacheHitRateOf } from './usageChartData'
+import { useDashboardDataSource } from './dashboardDataSource'
 import { injectUsageChartState } from './usageChartState'
 import { rankModels } from './topModels'
 
@@ -110,6 +111,8 @@ const TOP_COUNT = 5
 
 const { t } = useI18n()
 const { metric, models, modelsLoaded, filterState, applyModelFilter } = injectUsageChartState()
+// 「查看全部」跳到当前口径的使用记录页（用户 /usage，管理员 /admin/usage）
+const source = useDashboardDataSource()
 
 // 每次取到新数据时递增，用作行的 key，让占比条重新伸展。
 const version = ref(0)

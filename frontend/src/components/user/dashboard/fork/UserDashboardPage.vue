@@ -69,6 +69,7 @@ import UserDashboardPlatforms from './UserDashboardPlatforms.vue'
 import UserDashboardQuickActions from './UserDashboardQuickActions.vue'
 import UserDashboardUsageChart from './UserDashboardUsageChart.vue'
 import UserDashboardUsageToolbar from './UserDashboardUsageToolbar.vue'
+import type { DashboardLiveStats } from './dashboardDataSource'
 import { dashboardMotionVars } from './dashboardMotion'
 import { provideUsageChartState } from './usageChartState'
 
@@ -90,8 +91,9 @@ const stats = ref<UserDashboardStats | null>(null)
 const platformQuotas = ref<PlatformQuotaItem[] | null>(null)
 
 // 取数失败时保留上一次的统计，平台卡片不会在一次失败的轮询后消失。
-const onStats = (value: UserDashboardStats | null) => {
-  if (value) stats.value = value
+// 本页没有指定数据源，按用户口径取数，状态条给出的就是完整的 UserDashboardStats。
+const onStats = (value: DashboardLiveStats | null) => {
+  if (value) stats.value = value as UserDashboardStats
 }
 
 const loadPlatformQuotas = async () => {

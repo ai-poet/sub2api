@@ -420,7 +420,11 @@ export default {
       "fork": {
         "actualDescription": "The amount actually charged to the user. Calculated with the group multiplier and any user-specific multiplier, and used to deduct user balance or subscription quota.",
         "accountCostDescription": "The upstream account cost. Calculated from the account-side cost and the account billing multiplier, used for account cost analysis, and does not affect the user’s actual charge.",
-        "standardDescription": "The standard billed cost. Calculated from the current model base pricing, and is not affected by group multipliers, user-specific multipliers, or account billing multipliers."
+        "standardDescription": "The standard billed cost. Calculated from the current model base pricing, and is not affected by group multipliers, user-specific multipliers, or account billing multipliers.",
+        "rateLimited": "rate limited",
+        "newToday": "new today",
+        "total": "Total",
+        "today": "Today"
       }
     },
     "users": {

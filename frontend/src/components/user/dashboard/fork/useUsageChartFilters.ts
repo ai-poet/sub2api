@@ -1,15 +1,14 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { keysAPI } from '@/api/keys'
-import { userGroupsAPI } from '@/api/groups'
-import { usageAPI, type TrendParams } from '@/api/usage'
+import type { TrendParams } from '@/api/usage'
 import type { SelectOption } from '@/components/common/Select.vue'
 import type { ModelStat, UsageRequestType } from '@/types'
 import { requestTypeToLegacyStream } from '@/utils/usageRequestType'
+import { useDashboardDataSource } from './dashboardDataSource'
 import { queryDates, type UsageRange } from './usageChartData'
 
 // fork：仪表盘用量图的筛选条件（移植自 TokenRouter useUsageChartFilters.ts）。
-// 本项目没有团队密钥，候选项来源与使用记录页（views/user/UsageView.vue）一致：个人密钥 + 可用分组。
+// 本项目没有团队密钥，候选项来源与使用记录页一致：用户口径是个人密钥 + 可用分组，管理员口径是全部分组（没有密钥筛选）。
 
 // UsageChartFilters 与使用记录页的筛选条件一一对应，null 表示不限。
 export interface UsageChartFilters {
@@ -24,9 +23,6 @@ export interface UsageChartFilters {
 
 type NamedOption = { id: number; name: string }
 
-// 密钥候选最多翻这么多页（每页 100 个），与使用记录页的上限相当。
-const MAX_KEY_PAGES = 10
-
 const emptyFilters = (): UsageChartFilters => ({
   api_key_id: null,
   model: null,
@@ -40,6 +36,9 @@ const emptyFilters = (): UsageChartFilters => ({
 // useUsageChartFilters 管理用量图的筛选条件和候选项。
 export function useUsageChartFilters() {
   const { t } = useI18n()
+  const source = useDashboardDataSource()
+  // 管理员口径看全站，没有「我的密钥」可选，工具栏不显示密钥筛选
+  const hasApiKeyFilter = Boolean(source.loadApiKeys)
   const filters = ref<UsageChartFilters>(emptyFilters())
   const apiKeys = ref<NamedOption[]>([])
   const groups = ref<NamedOption[]>([])
@@ -103,23 +102,15 @@ export function useUsageChartFilters() {
     { value: false, label: t('dashboard.fork.filters.legacyCompaction') },
   ])
 
-  // loadKeyAndGroupOptions 读取自己的全部密钥和可用分组。
+  // loadKeyAndGroupOptions 读取密钥（仅用户口径）和分组候选。
   const loadKeyAndGroupOptions = async () => {
     try {
-      const loadKeys = async () => {
-        const first = await keysAPI.list(1, 100)
-        const keys = [...(first.items || [])]
-        const pages = Math.min(first.pages || 1, MAX_KEY_PAGES)
-        for (let page = 2; page <= pages; page++) {
-          const next = await keysAPI.list(page, 100)
-          if (!next.items?.length) break
-          keys.push(...next.items)
-        }
-        return keys
-      }
-      const [keys, availableGroups] = await Promise.all([loadKeys(), userGroupsAPI.getAvailable()])
-      apiKeys.value = keys.map((key) => ({ id: key.id, name: key.name }))
-      groups.value = (availableGroups || []).map((group) => ({ id: group.id, name: group.name }))
+      const [keys, availableGroups] = await Promise.all([
+        source.loadApiKeys ? source.loadApiKeys() : Promise.resolve([]),
+        source.loadGroups(),
+      ])
+      apiKeys.value = keys
+      groups.value = availableGroups
     } catch (error) {
       console.error('Failed to load usage filter options:', error)
     }
@@ -139,9 +130,9 @@ export function useUsageChartFilters() {
   const loadModelOptions = async (range: UsageRange) => {
     const seq = ++modelSeq
     try {
-      const response = await usageAPI.getDashboardModels(queryDates(range))
+      const models = await source.getModels(queryDates(range))
       if (seq !== modelSeq) return
-      setModelOptions(response.models || [])
+      setModelOptions(models)
     } catch (error) {
       console.error('Failed to load usage model options:', error)
     }
@@ -153,6 +144,7 @@ export function useUsageChartFilters() {
 
   return {
     filters,
+    hasApiKeyFilter,
     activeCount,
     queryParams,
     apiKeyOptions,

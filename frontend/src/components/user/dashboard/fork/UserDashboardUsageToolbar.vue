@@ -3,6 +3,7 @@
   <div class="flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-2 md:max-w-[calc(100vw-3rem)]" data-testid="usage-toolbar">
     <UserDashboardFilterDropdown :active-count="activeCount" :columns="3" @reset="resetFilters">
       <UserDashboardFilterField
+        v-if="hasApiKeyFilter"
         :label="t('usage.apiKeyFilter')"
         :value-text="chipText(filters.api_key_id, apiKeyOptions)"
         @clear="clearFilter('api_key_id')"
@@ -102,6 +103,7 @@ const {
 } = injectUsageChartState()
 const {
   filters,
+  hasApiKeyFilter,
   activeCount,
   apiKeyOptions,
   modelOptions,

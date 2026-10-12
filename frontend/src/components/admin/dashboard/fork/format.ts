@@ -1,6 +1,5 @@
 // fork：管理员仪表盘的数字格式，取值规则与 TokenRouter 相同
-// （views/admin/DashboardView.vue 的 formatNumber / costDigits / formatDuration，utils/format.ts 的 formatTokens，
-// components/charts/TokenUsageTrend.vue 的横轴标签）。金额以美元显示。
+// （views/admin/DashboardView.vue 的 formatNumber / costDigits，utils/format.ts 的 formatTokens）。金额以美元显示。
 import { getLocale } from '@/i18n'
 import { formatUsd } from '@/components/user/dashboard/fork/format'
 
@@ -35,20 +34,4 @@ export const costDigits = (value: number | null | undefined): number => {
 export const formatCost = (value: number | null | undefined): string => {
   const safeValue = toFiniteNumber(value)
   return formatUsd(safeValue, costDigits(safeValue))
-}
-
-/** 小时粒度的横轴只显示时分（2026-10-12 08:00 → 08:00），完整时间留在提示标题里。 */
-export const formatHourLabel = (value: string): string => value.match(/(?:T|\s)(\d{2}:\d{2})/)?.[1] || value
-
-/** 日粒度的横轴显示月-日（2026-10-12 → 10-12）。 */
-export const formatDayLabel = (value: string): string => {
-  const match = value.match(/^(?:\d{4}[-/])?(\d{1,2})[-/](\d{1,2})/)
-  if (!match) return value
-  return `${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`
-}
-
-/** 耗时：1 秒以上显示两位小数的秒，否则显示毫秒。 */
-export const formatDuration = (ms: number): string => {
-  if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`
-  return `${Math.round(ms)}ms`
 }

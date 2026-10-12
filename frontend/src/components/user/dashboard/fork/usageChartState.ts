@@ -1,5 +1,4 @@
 import { computed, inject, provide, ref, type InjectionKey } from 'vue'
-import { usageAPI } from '@/api/usage'
 import type { ModelStat, TrendDataPoint } from '@/types'
 import {
   bucketKeys,
@@ -14,6 +13,7 @@ import {
   type UsageRangePreset,
   type UsageTotals,
 } from './usageChartData'
+import { useDashboardDataSource } from './dashboardDataSource'
 import { useUsageChartFilters } from './useUsageChartFilters'
 
 // fork：仪表盘用量区的共享状态（移植自 TokenRouter usageChartState.ts）。
@@ -71,6 +71,8 @@ export function createUsageChartState() {
   const modelsLoaded = ref(false)
   const totals = computed(() => summarizeTrend(current.value))
 
+  // 取数口径由页面指定：用户仪表盘看自己，管理员仪表盘看全站
+  const source = useDashboardDataSource()
   const filterState = useUsageChartFilters()
 
   // 日期选择器显示当前窗口覆盖的日期，结束时间是排他边界，所以回退一毫秒。
@@ -91,14 +93,14 @@ export function createUsageChartState() {
   let requestSeq = 0
 
   // fetchRange 拉取一个窗口的趋势数据，带上当前的筛选条件。
-  const fetchRange = (range: UsageRange) => usageAPI.getDashboardTrend({
+  const fetchRange = (range: UsageRange) => source.getTrend({
     ...queryDates(range),
     granularity: range.granularity,
     ...filterState.queryParams.value,
   })
 
   // fetchModels 拉取一个窗口内的模型用量，带上当前的筛选条件。
-  const fetchModels = (range: UsageRange) => usageAPI.getDashboardModels({
+  const fetchModels = (range: UsageRange) => source.getModels({
     ...queryDates(range),
     ...filterState.queryParams.value,
   })
@@ -117,21 +119,21 @@ export function createUsageChartState() {
     ])
     if (seq !== requestSeq) return
     if (currentResult.status === 'fulfilled') {
-      current.value = fillTrendBuckets(currentResult.value.trend || [], bucketKeys(range))
+      current.value = fillTrendBuckets(currentResult.value, bucketKeys(range))
     } else {
       console.error('Failed to load usage trend:', currentResult.reason)
       current.value = fillTrendBuckets([], bucketKeys(range))
     }
     if (previousResult.status === 'fulfilled') {
       // 查询按整天覆盖窗口，按小时的窗口要裁回窗口内的时段再汇总。
-      previous.value = fillTrendBuckets(previousResult.value.trend || [], bucketKeys(prevRange))
+      previous.value = fillTrendBuckets(previousResult.value, bucketKeys(prevRange))
       previousTotals.value = summarizeTrend(previous.value)
     } else {
       previous.value = []
       previousTotals.value = null
     }
     if (modelsResult.status === 'fulfilled') {
-      models.value = modelsResult.value.models || []
+      models.value = modelsResult.value
       if (unfiltered) filterState.setModelOptions(models.value)
     } else {
       console.error('Failed to load usage models:', modelsResult.reason)

@@ -420,7 +420,11 @@ export default {
       "fork": {
         "actualDescription": "用户实际消耗的费用。按分组倍率和用户专属倍率计算，用于扣减用户余额或订阅配额。",
         "accountCostDescription": "上游账号口径的成本。按账号侧费用与账号计费倍率计算，用于账号成本分析，不影响用户实际扣费。",
-        "standardDescription": "标准计费费用。按当前模型的基础定价计算，不受分组倍率、用户专属倍率和账号计费倍率影响。"
+        "standardDescription": "标准计费费用。按当前模型的基础定价计算，不受分组倍率、用户专属倍率和账号计费倍率影响。",
+        "rateLimited": "限流",
+        "newToday": "今日新增",
+        "total": "累计",
+        "today": "今日"
       }
     },
     "users": {

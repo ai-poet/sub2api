@@ -29,12 +29,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Skeleton from '@/components/common/Skeleton.vue'
-import { usageAPI, type UserDashboardStats } from '@/api/usage'
 import { useCountUp } from '@/composables/useCountUp'
 import { COUNT_UP_MS } from '@/constants/motion'
 import { formatNumberLocaleString as formatNumber, formatTokensK } from '@/utils/format'
 import { formatUsd } from './format'
 import DashboardIcon from './DashboardIcon.vue'
+import { useDashboardDataSource, type DashboardLiveStats } from './dashboardDataSource'
 import type { DashboardIconName, IconName } from './iconName'
 import { METRIC_TONES, type MetricTone } from './metricTones'
 
@@ -43,12 +43,14 @@ const POLL_INTERVAL_MS = 60 * 1000
 
 const emit = defineEmits<{
   // 每次取数结束后通知页面，失败时为 null
-  (event: 'update', stats: UserDashboardStats | null): void
+  // 用户口径是 UserDashboardStats，管理员口径是 DashboardStats，页面按自己的口径使用
+  (event: 'update', stats: DashboardLiveStats | null): void
 }>()
 
 const { t } = useI18n()
 
-const stats = ref<UserDashboardStats | null>(null)
+const source = useDashboardDataSource()
+const stats = ref<DashboardLiveStats | null>(null)
 const loaded = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
 // 用递增序号丢弃过期响应，手动刷新和轮询同时进行时只保留最后一次结果。
@@ -118,7 +120,7 @@ const items = computed(() => {
 const load = async () => {
   const seq = ++requestSeq
   try {
-    const result = await usageAPI.getDashboardStats()
+    const result = await source.getLiveStats()
     if (seq !== requestSeq) return
     stats.value = result
     emit('update', result)

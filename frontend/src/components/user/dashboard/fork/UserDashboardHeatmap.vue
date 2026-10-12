@@ -126,7 +126,7 @@
 // usage_logs 默认只保留 90 天，更早的日期接口不返回，按无用量显示。
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usageAPI } from '@/api/usage'
+import { useDashboardDataSource } from './dashboardDataSource'
 import { formatDateLocalInput, formatNumberLocaleString as formatNumber, formatTokensK as formatTokens } from '@/utils/format'
 import { HEATMAP_WAVE_MAX_MS, HEATMAP_WAVE_STEP_MS } from './dashboardMotion'
 import { formatUsd } from './format'
@@ -169,6 +169,8 @@ const emit = defineEmits<{
 }>()
 
 const { t, locale } = useI18n()
+// 取数口径由页面指定：用户看自己，管理员看全站（不带筛选时后端走预聚合表）
+const source = useDashboardDataSource()
 const { selectDay, selectedDay } = injectUsageChartState()
 
 const loading = ref(true)
@@ -221,14 +223,14 @@ const load = async () => {
   todayKey.value = formatDateLocalInput(new Date())
   try {
     const { start, end } = buildDateRange()
-    const res = await usageAPI.getDashboardTrend({
+    const trend = await source.getTrend({
       start_date: formatDateLocalInput(start),
       end_date: formatDateLocalInput(end),
       granularity: 'day',
     })
     // 趋势接口只返回有用量的日期，按日期建索引后补零
-    const byDate = new Map((res.trend || []).map((p) => [p.date, p]))
-    const sortedNonZero = (res.trend || [])
+    const byDate = new Map(trend.map((p) => [p.date, p]))
+    const sortedNonZero = trend
       .map((p) => p.total_tokens)
       .filter((v) => v > 0)
       .sort((a, b) => a - b)
