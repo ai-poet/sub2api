@@ -3,6 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import checker from 'vite-plugin-checker'
 import { resolve } from 'path'
 
+// fork：motion-v 及其依赖只服务侧栏动态图标，单独分包懒加载（见 manualChunks）
+const FORK_MOTION_ICON_PACKAGES = ['motion-v', 'framer-motion', 'motion-dom', 'motion-utils', 'hey-listen']
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => ({
     '&': '&amp;',
@@ -114,6 +117,22 @@ export default defineConfig(({ mode }) => {
            */
           manualChunks(id: string) {
             const normalizedId = id.split('\\').join('/')
+
+            // fork：侧栏动态图标连同 motion-v 单独分包，由 SidebarNavIcon 懒加载，不进首屏
+            if (
+              FORK_MOTION_ICON_PACKAGES.some((pkg) => normalizedId.includes(`/node_modules/${pkg}/`)) ||
+              normalizedId.includes('/src/components/motion-icons/')
+            ) {
+              return 'feature-motion-icons'
+            }
+
+            // fork：排行榜页面单独分包，路由懒加载时才下载
+            if (
+              normalizedId.includes('/src/views/user/LeaderboardView.vue') ||
+              normalizedId.includes('/src/components/leaderboard/')
+            ) {
+              return 'feature-leaderboard'
+            }
 
             if (id.includes('node_modules')) {
               // Vue 核心库

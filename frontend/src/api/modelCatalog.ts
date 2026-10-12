@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import type { PublicPricing, PublicPricingItem } from './pricing'
 
 export type ModelCatalogBillingMode = 'token' | 'per_request' | 'image' | 'video'
 export type ModelCatalogSortKey = 'effective_price_asc' | 'model_asc'
@@ -97,6 +98,8 @@ export interface ModelCatalogItem {
   comparison: ModelCatalogComparison
   pricing_details: ModelCatalogPricingDetails
   other_groups: ModelCatalogGroupCompanion[]
+  /** 上下文窗口（token）；来源未知时缺省，不会是 0。 */
+  context_window?: number
 }
 
 export interface ModelCatalogResponse {
@@ -120,6 +123,80 @@ export interface PaymentConfigResult {
 export async function getCatalog(): Promise<ModelCatalogResponse> {
   const { data } = await apiClient.get<ModelCatalogResponse>('/models/catalog')
   return data
+}
+
+const EMPTY_PRICING_DETAILS: ModelCatalogPricingDetails = {
+  supports_prompt_caching: false,
+  has_long_context_multiplier: false,
+  long_context_input_threshold: 0,
+  intervals: [],
+  media_tiers: [],
+  media_unit: '',
+}
+
+function fromPublicPricing(pricing: PublicPricing, source: string): ModelCatalogPricing {
+  return {
+    input_per_mtok_usd: pricing.input_per_mtok_usd,
+    output_per_mtok_usd: pricing.output_per_mtok_usd,
+    cache_write_per_mtok_usd: pricing.cache_write_per_mtok_usd,
+    cache_read_per_mtok_usd: pricing.cache_read_per_mtok_usd,
+    per_request_usd: pricing.per_request_usd,
+    per_image_usd: pricing.per_image_usd,
+    per_second_usd: pricing.per_second_usd ?? null,
+    source,
+    has_reference: pricing.has_reference,
+  }
+}
+
+/**
+ * fork：把匿名定价条目映射成模型广场的条目，匿名视图与登录视图共用同一套卡片。
+ *
+ * 公开接口不下发分组 ID，这里按分组名首次出现的顺序编号，只在本次结果内用作
+ * 分组页签和卡片 key；其他分组、用户专属倍率在匿名视图里本来就不存在。
+ */
+export function mapPublicPricingToCatalogItems(items: PublicPricingItem[]): ModelCatalogItem[] {
+  const groupIds = new Map<string, number>()
+  return items.map((item) => {
+    let groupId = groupIds.get(item.group.name)
+    if (groupId == null) {
+      groupId = groupIds.size + 1
+      groupIds.set(item.group.name, groupId)
+    }
+    // 公开接口不下发参考价来源，source 留空，卡片据此不显示来源徽标。
+    const official = fromPublicPricing(item.official_pricing, '')
+    return {
+      model: item.model,
+      display_name: item.display_name || item.model,
+      platform: item.platform,
+      billing_mode: (item.billing_mode || 'token') as ModelCatalogBillingMode,
+      best_group: {
+        id: groupId,
+        name: item.group.name,
+        rate_multiplier: item.group.rate_multiplier,
+        rate_source: 'group_default',
+      },
+      available_group_count: item.available_group_count,
+      official_pricing: official,
+      effective_pricing_usd: fromPublicPricing(item.effective_pricing_usd, 'effective'),
+      comparison: {
+        savings_percent: item.comparison.savings_percent,
+        is_cheaper_than_official: item.comparison.is_cheaper_than_official,
+        delta_input_per_mtok_usd: null,
+        delta_output_per_mtok_usd: null,
+        delta_per_request_usd: null,
+        delta_per_image_usd: null,
+        delta_per_second_usd: null,
+      },
+      pricing_details: {
+        ...EMPTY_PRICING_DETAILS,
+        ...(item.pricing_details ?? {}),
+        intervals: item.pricing_details?.intervals ?? [],
+        media_tiers: item.pricing_details?.media_tiers ?? [],
+      },
+      other_groups: [],
+      context_window: item.context_window,
+    }
+  })
 }
 
 export function getCatalogItemKey(item: ModelCatalogItem): string {

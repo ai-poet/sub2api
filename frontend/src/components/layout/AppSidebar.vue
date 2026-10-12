@@ -48,7 +48,7 @@
                 :title="sidebarCollapsed ? item.label : undefined"
                 @click="handleGroupClick(item)"
               >
-                <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+                <SidebarNavIcon :path="item.path" :fallback="item.icon" class="h-5 w-5 flex-shrink-0" />
                 <span
                   class="sidebar-label sidebar-label-flex"
                   :class="{ 'sidebar-label-collapsed': sidebarCollapsed }"
@@ -71,7 +71,7 @@
                   :class="{ 'sidebar-link-active': route.path === child.path }"
                   @click="handleMenuItemClick(child.path)"
                 >
-                  <component :is="child.icon" class="h-4 w-4 flex-shrink-0" />
+                  <SidebarNavIcon :path="child.path" :fallback="child.icon" class="h-4 w-4 flex-shrink-0" />
                   <span>{{ child.label }}</span>
                 </router-link>
               </div>
@@ -95,7 +95,7 @@
               @click="handleMenuItemClick(item.path)"
             >
               <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
-              <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+              <SidebarNavIcon v-else :path="item.path" :fallback="item.icon" class="h-5 w-5 flex-shrink-0" />
               <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{ item.label }}</span>
               <span
                 v-if="item.badge && (item.badge() ?? 0) > 0"
@@ -126,7 +126,7 @@
             @click="handleMenuItemClick(item.path)"
           >
             <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
-            <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+            <SidebarNavIcon v-else :path="item.path" :fallback="item.icon" class="h-5 w-5 flex-shrink-0" />
             <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{ item.label }}</span>
           </router-link>
         </div>
@@ -146,7 +146,7 @@
             @click="handleMenuItemClick(item.path)"
           >
             <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
-            <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+            <SidebarNavIcon v-else :path="item.path" :fallback="item.icon" class="h-5 w-5 flex-shrink-0" />
             <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{ item.label }}</span>
             <span
               v-if="item.badge && (item.badge() ?? 0) > 0"
@@ -168,8 +168,8 @@
         :class="{ 'sidebar-link-collapsed': sidebarCollapsed }"
         :title="sidebarCollapsed ? (isDark ? t('nav.lightMode') : t('nav.darkMode')) : undefined"
       >
-        <SunIcon v-if="isDark" class="h-5 w-5 flex-shrink-0 text-amber-500" />
-        <MoonIcon v-else class="h-5 w-5 flex-shrink-0" />
+        <SidebarNavIcon v-if="isDark" path="theme:sun" :fallback="SunIcon" class="h-5 w-5 flex-shrink-0 text-amber-500" />
+        <SidebarNavIcon v-else path="theme:moon" :fallback="MoonIcon" class="h-5 w-5 flex-shrink-0" />
         <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{
           isDark ? t('nav.lightMode') : t('nav.darkMode')
         }}</span>
@@ -212,6 +212,10 @@ import { FeatureFlags, makeSidebarFlag } from '@/utils/featureFlags'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
 import { useBatchImageAccess } from '@/composables/useBatchImageAccess'
 import { useContentTranslation } from '@/composables/useContentTranslation'
+import { applyDarkClass } from '@/utils/themeSwitch' // fork：主题切换冻结过渡
+import SidebarNavIcon from './SidebarNavIcon.vue' // fork：侧栏图标悬停动画
+import { TrophyIcon } from './sidebarForkIcons' // fork：排行榜入口图标
+import { isLeaderboardEnabled } from '@/utils/forkFeatureFlags' // fork：排行榜开关
 
 interface NavItem {
   path: string
@@ -717,6 +721,7 @@ const forkPublicSettings = () => appStore.cachedPublicSettings
 const flagForkPurchase = () => forkPublicSettings()?.purchase_subscription_enabled === true
 const flagForkGroupStatus = () => forkPublicSettings()?.group_status_enabled === true
 const flagForkReferral = () => forkPublicSettings()?.referral_enabled === true
+const flagLeaderboard = () => isLeaderboardEnabled(forkPublicSettings()) // fork：排行榜（模型榜或用户榜任一开启）
 const flagBatchImageAccess = () => canUseBatchImage.value
 // 工单：用户侧入口只给普通用户；admin / operator 走控制台的「工单管理」，不在"我的账户"区重复出现
 const flagUserTickets = () => !authStore.hasConsoleAccess
@@ -742,6 +747,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/integration-guide', label: t('nav.integrationGuide'), icon: GuideIcon },
     { path: '/tickets', label: t('nav.tickets'), icon: SupportIcon, badge: ticketUnreadBadge, featureFlag: flagUserTickets },
     { path: '/models', label: t('nav.modelCatalog'), icon: ChartIcon },
+    { path: '/leaderboard', label: t('nav.leaderboard'), icon: TrophyIcon, hideInSimpleMode: true, featureFlag: flagLeaderboard }, // fork：排行榜
     { path: '/model-status', label: t('nav.modelStatus'), icon: ServerIcon, featureFlag: flagForkGroupStatus },
     { path: '/referral', label: t('nav.referral'), icon: UsersIcon, hideInSimpleMode: true, featureFlag: flagForkReferral },
 
@@ -867,7 +873,7 @@ function toggleSidebar() {
 
 function toggleTheme() {
   isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
+  applyDarkClass(isDark.value) // fork：主题切换冻结过渡
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 

@@ -14,6 +14,7 @@ import { getSetupStatus } from '@/api/setup'
 import { resolveAffiliateReferralCodeFromQuery } from '@/utils/oauthAffiliate'
 import { SESSION_HANDOFF_GIVE_PATH, hasPendingGive } from '@/utils/sessionHandoff'
 import { resolveCompletedSetupRedirectPath } from './setupRedirect'
+import { allowAnonymousCatalog } from './publicCatalog' // fork：模型广场匿名可见
 import { resolveRouteDocumentTitle } from './title'
 
 /**
@@ -105,10 +106,24 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/user/ModelCatalogView.vue'),
     meta: {
       requiresAuth: true,
+      publicCatalog: true, // fork：公开定价开启时匿名可见（router/publicCatalog.ts）
       requiresAdmin: false,
       title: 'Model Catalog',
       titleKey: 'modelCatalog.title',
       descriptionKey: 'modelCatalog.description'
+    }
+  },
+  {
+    // fork：排行榜（模型榜 + 用户榜，开关在后台 insights_config）
+    path: '/leaderboard',
+    name: 'Leaderboard',
+    component: () => import('@/views/user/LeaderboardView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Leaderboard',
+      titleKey: 'leaderboard.title',
+      descriptionKey: 'leaderboard.description'
     }
   },
   {
@@ -855,6 +870,11 @@ router.beforeEach(async (to, _from, next) => {
 
   // Route requires authentication
   if (!authStore.isAuthenticated) {
+    // fork：模型广场对匿名访客开放（公开定价开启时）
+    if (await allowAnonymousCatalog(to, appStore)) {
+      next()
+      return
+    }
     // Not authenticated, redirect to login
     next({
       path: '/login',

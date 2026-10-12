@@ -10,6 +10,7 @@
  */
 
 import { apiClient } from './client'
+import type { ModelCatalogPricingDetails } from './modelCatalog'
 
 /** 价格字段，单位均为 USD。null 表示该维度不适用或未配置。 */
 export interface PublicPricing {
@@ -19,6 +20,8 @@ export interface PublicPricing {
   cache_read_per_mtok_usd: number | null
   per_request_usd: number | null
   per_image_usd: number | null
+  /** fork：视频按秒计费的单价（旧后端不下发）。 */
+  per_second_usd?: number | null
   /** 是否存在官方参考价。为 false 时不应展示「比官方省 X%」。 */
   has_reference: boolean
 }
@@ -50,6 +53,9 @@ export interface PublicPricingItem {
   official_pricing: PublicPricing
   effective_pricing_usd: PublicPricing
   comparison: PublicPricingComparison
+  /** fork：模型广场匿名视图用的定价明细与上下文窗口（旧后端不下发）。 */
+  pricing_details?: ModelCatalogPricingDetails
+  context_window?: number
 }
 
 export interface PublicPricingSummary {

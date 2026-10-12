@@ -16,7 +16,7 @@ export default {
     "heroSubtitle": "一键接入、按量充值、用量看得见",
     "heroDescription": "Claude Code 和 Codex 用同一个账户跑，开通快、价格友好、出错有解释。",
     "navModels": "模型",
-    "navPricing": "价格",
+    "navPricing": "模型价格",
     "navChangelog": "更新日志",
     "landing": {
       "hero": {

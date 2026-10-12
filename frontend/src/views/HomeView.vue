@@ -40,6 +40,9 @@
         :latest-version="latestVersion"
       />
 
+      <!-- fork：首页公开统计放在第二屏，不挤占首屏的客户端演示；后台开关关闭时不渲染 -->
+      <HomeLiveStats />
+
       <HomeReveal>
         <HomeFeatureConstellation :mode="homeMode" :site-name="siteName" :site-logo="siteLogo" />
       </HomeReveal>
@@ -83,11 +86,13 @@ import HomeFeatureConstellation from '@/components/home/HomeFeatureConstellation
 import HomeFooter from '@/components/home/HomeFooter.vue'
 import HomeHeader from '@/components/home/HomeHeader.vue'
 import HomeHero from '@/components/home/HomeHero.vue'
+import HomeLiveStats from '@/components/home/HomeLiveStats.vue' // fork：首页公开统计（第二屏）
 import HomeModelOrbit from '@/components/home/HomeModelOrbit.vue'
 import HomePricingSection from '@/components/home/HomePricingSection.vue'
 import HomeReveal from '@/components/home/HomeReveal.vue'
 import { useClientChangelog } from '@/composables/useClientChangelog'
 import { detectPreferredClientPlatform, getClientDownloadOptions } from '@/utils/clientDownloads'
+import { applyDarkClass } from '@/utils/themeSwitch' // fork：主题切换冻结过渡
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
@@ -165,7 +170,7 @@ function syncThemeState() {
 
 function toggleTheme() {
   isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
+  applyDarkClass(isDark.value) // fork：主题切换冻结过渡
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 

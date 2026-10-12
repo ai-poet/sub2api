@@ -56,7 +56,20 @@ type publicPricing struct {
 	CacheReadPerMTokUSD  *float64 `json:"cache_read_per_mtok_usd"`
 	PerRequestUSD        *float64 `json:"per_request_usd"`
 	PerImageUSD          *float64 `json:"per_image_usd"`
-	HasReference         bool     `json:"has_reference"`
+	// PerSecondUSD 是视频按秒计费的单价；模型广场的匿名视图要用它显示视频模型的主价。
+	PerSecondUSD *float64 `json:"per_second_usd"`
+	HasReference bool     `json:"has_reference"`
+}
+
+// publicPricingDetails 是匿名可见的定价明细：上下文区间与分辨率档位的价格、是否支持缓存。
+// 都是价格信息，不含分组结构；模型广场匿名视图靠它展开「详细定价」。
+type publicPricingDetails struct {
+	SupportsPromptCaching     bool                                `json:"supports_prompt_caching"`
+	HasLongContextMultiplier  bool                                `json:"has_long_context_multiplier"`
+	LongContextInputThreshold int                                 `json:"long_context_input_threshold"`
+	Intervals                 []service.ModelCatalogPriceInterval `json:"intervals"`
+	MediaTiers                []service.ModelCatalogMediaTier     `json:"media_tiers"`
+	MediaUnit                 string                              `json:"media_unit"`
 }
 
 // publicPricingComparison 与官方参考价的对比。
@@ -79,6 +92,9 @@ type publicPricingItem struct {
 	OfficialPricing     publicPricing           `json:"official_pricing"`
 	EffectivePricingUSD publicPricing           `json:"effective_pricing_usd"`
 	Comparison          publicPricingComparison `json:"comparison"`
+	PricingDetails      publicPricingDetails    `json:"pricing_details"`
+	// ContextWindow 与登录态目录一致：来源未知时整个缺省，不写 0。
+	ContextWindow *int `json:"context_window,omitempty"`
 }
 
 // publicPricingSummary 汇总信息，供落地页做「最高省 X%」这类标题展示。
@@ -160,6 +176,28 @@ func toPublicPricingItem(src service.ModelCatalogItem) publicPricingItem {
 		OfficialPricing:     official,
 		EffectivePricingUSD: toPublicPricing(src.EffectivePricingUSD),
 		Comparison:          comparison,
+		PricingDetails:      toPublicPricingDetails(src.PricingDetails),
+		ContextWindow:       src.ContextWindow,
+	}
+}
+
+// toPublicPricingDetails 复制定价明细；切片恒为非 nil，前端可直接判断 length。
+func toPublicPricingDetails(src service.ModelCatalogPricingDetails) publicPricingDetails {
+	intervals := src.Intervals
+	if intervals == nil {
+		intervals = []service.ModelCatalogPriceInterval{}
+	}
+	mediaTiers := src.MediaTiers
+	if mediaTiers == nil {
+		mediaTiers = []service.ModelCatalogMediaTier{}
+	}
+	return publicPricingDetails{
+		SupportsPromptCaching:     src.SupportsPromptCaching,
+		HasLongContextMultiplier:  src.HasLongContextMultiplier,
+		LongContextInputThreshold: src.LongContextInputThreshold,
+		Intervals:                 intervals,
+		MediaTiers:                mediaTiers,
+		MediaUnit:                 src.MediaUnit,
 	}
 }
 
@@ -172,6 +210,7 @@ func toPublicPricing(src service.ModelCatalogPricing) publicPricing {
 		CacheReadPerMTokUSD:  src.CacheReadPerMTokUSD,
 		PerRequestUSD:        src.PerRequestUSD,
 		PerImageUSD:          src.PerImageUSD,
+		PerSecondUSD:         src.PerSecondUSD,
 		HasReference:         src.HasReference,
 	}
 }

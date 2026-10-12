@@ -26,9 +26,10 @@
               </a>
             </li>
             <li>
-              <a href="#pricing" :class="linkClass" @click.prevent="goToSection('pricing')">
+              <!-- fork：价格直接打开模型广场 -->
+              <router-link to="/models" data-test="footer-pricing" :class="linkClass">
                 {{ t('home.landing.footer.pricing') }}
-              </a>
+              </router-link>
             </li>
             <li v-if="hasClientDownloads">
               <router-link to="/changelog" data-test="footer-changelog" :class="linkClass">

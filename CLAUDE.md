@@ -87,6 +87,9 @@ The features below are locally maintained customizations of this fork. During up
 
 - Local implementation lives at the `/models` route: `frontend/src/views/user/ModelCatalogView.vue`, `frontend/src/api/modelCatalog.ts` (+ spec), `frontend/src/api/pricing.ts`, the `modelCatalog` i18n keys in `frontend/src/i18n/locales/{zh,en}/fork.ts`, the sidebar entry in `frontend/src/components/layout/AppSidebar.vue`; backend `backend/internal/service/model_catalog_service.go` (+ test), `backend/internal/handler/model_catalog_handler.go`, `backend/internal/handler/public_pricing_handler.go` (+ test), the routes in `backend/internal/server/routes/user.go`, and their wiring in `backend/internal/handler/wire.go`, `backend/internal/handler/handler.go`, `backend/internal/service/wire.go`, `backend/cmd/server/wire_gen.go`.
 - Upstream ships its own "model plaza" (`backend/internal/handler/model_plaza_*`, `backend/internal/service/model_plaza_*`, `frontend/src/api/modelPlaza.ts`, `frontend/src/components/modelPlaza/**`, plus plaza entries in `frontend/src/views/HomeView.vue` and `frontend/src/utils/featureFlags.ts`). It was intentionally removed from this fork. Keep it removed: resolve modify/delete conflicts on those paths by deleting, drop new upstream files under those paths, and do not re-add plaza wiring or routes.
+- **Body and polish** (ported from TokenRouter, LGPL-3.0): the page body lives in `frontend/src/components/modelCatalog/ModelCatalogBody.vue`; the view only picks the data source and shell. Cards carry the vendor logo (`ModelIcon`), copy-ID (`ModelIdLabel.vue`), input → output modality icons (`ModelModalityIcons.vue` + `utils/modelCapabilities.ts`, billing mode before model-id regexes), the context window, a hover lift, a staggered entrance, a `Collapse` for detailed pricing, a segmented billing-mode filter (`vSegmented`) and a skeleton (`ModelCatalogSkeleton.vue`).
+- **Availability bars**: signed-in cards show the best group's last 24 h from one batch request, `GET /api/v1/group-status/history?period=24h|7d` (`handler/group_status_histories_handler.go`, `service/group_status_histories.go`, `repository/group_status_repo_histories.go`, one line in `routes/user.go`; same visibility as `ListUserStatuses`). It is requested only when `group_status_enabled`, never per group. Bar: `GroupAvailabilityBar.vue`.
+- **Anonymous access**: `/models` keeps `requiresAuth` but carries `meta.publicCatalog`; `router/publicCatalog.ts` (one hook in the guard) lets visitors in while `public_pricing_enabled` is on and backend mode is off. They get `PublicCatalogShell.vue` (home header / footer) and `/pricing/public` data mapped by `mapPublicPricingToCatalogItems`. `public_pricing_handler.go` additionally sends `context_window`, `per_second_usd` and a `pricing_details` subset; it still never sends group IDs, `other_groups` or the price source. The home page's 「价格」 link (`HomeHeader.vue`, `HomeFooter.vue`) opens `/models` instead of the `#pricing` anchor, and `HomePricingSection.vue` ends with a 「查看全部模型与价格」 link.
 
 ### 分组运行状态 Server酱³ 推送 (Group status ServerChan notify, local implementation)
 
@@ -124,7 +127,8 @@ The features below are locally maintained customizations of this fork. During up
   re-routes `grok-*` to xai and `gemini-*` to google, neither configured
   here), a stream's first `error` event kept and used to end the turn
   (`api/src/lib.rs` + `query/src/lib.rs` — it used to be logged and dropped,
-  surfacing as a turn that finished with nothing to say), and
+  surfacing as a turn that finished with nothing to say; it now goes through
+  the retry policy described below), and
   `attribution_text` naming the product instead of claiming to be Anthropic's
   official CLI (`core/src/system_prompt.rs`, brand from
   `SUB2API_BRAND_NAME`), the Grok family and every GPT generation from 5 on
@@ -253,6 +257,43 @@ The features below are locally maintained customizations of this fork. During up
   keep the calls' order, and a cancel abandons the batch in flight
   (`query/src/lib.rs` provider branch — sub-agents asked for together ran back
   to back on every GPT, Grok and Chinese model).
+  And one retry policy for model requests on all three routes, after ZCode's
+  model runner (design only, Apache-2.0, no ZCode code):
+  `api/src/retry_policy.rs` classifies every failure (`ModelFailure`,
+  `ProviderError::Classified`; status, the server's own message, `Retry-After`
+  as ms / seconds / HTTP date, `x-should-retry`), with backoff from 2 s to 60 s
+  jittered to 50–100 %, server waits honoured up to 300 s (longer fails at
+  once), budgets (`RetryBudget::{Default, Unbounded, Light, SingleAttempt}`)
+  and a product override hook; the adapters make single attempts
+  (`AnthropicClient::create_message_stream_once`; `send_with_retry` keeps a
+  light loop for compaction and side requests) and the query loop retries
+  (`query/src/runner/retry_loop.rs`, `QueryConfig.retry_budget`,
+  `QueryEvent::Retry`): ten retries per request instead of two stall retries
+  per prompt, cancellable waits, a stream that breaks off, carries an
+  `error` event or ends without `message_stop` / `response.completed` /
+  `[DONE]` / a finish reason is a failure — its partial answer never enters
+  the conversation and is asked again (the earlier "first `error` event ends
+  the turn" departure is now this) — `response.incomplete` handled, an
+  in-band `{"error"}` chunk a failure, a context overflow compacted once and
+  sent again (`compact_for_overflow`), an empty answer retried once and no
+  longer padded with "(no response …)", output-limit continuation on the
+  provider branch, opening a stream and compaction raced against cancel, the
+  45 s parsed-event stall timer replaced by a 20-minute backstop behind
+  connect / read timeouts every byte resets (no more 600 s total deadline;
+  `set_network_timeouts`), the provider adapter built once per run, and a
+  compaction summary accepted only from a finished stream. The bridge
+  installs the gateway's verdicts (`waku-agent-bridge/src/retry_rules.rs`:
+  balance, quota, subscription and content-policy messages never retry; its
+  RPM and "temporarily unavailable" answers do), reads `options.network`,
+  gives AgentTeams members the unbounded budget, one-shot prompts the light
+  one and memory consolidation one attempt, and resumes an active goal on
+  its own after a transient failure (`session_goal_resume.rs`, 30 → 300 s,
+  five at most); the desktop shows `DriverEvent::ModelRetry` as
+  "Reconnecting (2/10, 8 s)", takes back a discarded half answer
+  (`src/app/model_retry.rs`), and offers "Continue" on a failed turn that
+  got work done. Never put per-attempt text into the system prompt or the
+  history: a retry resends the same bytes, which is what keeps the prompt
+  cache and the gateway's sticky routing.
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
@@ -521,6 +562,13 @@ The features below are locally maintained customizations of this fork. During up
 - **Frontend.** Only third-party sign-in and binding move; password sign-in stays on the alias (the alias may be the only domain some users reach quickly). `utils/sessionHandoff.ts` (+ spec), `api/sessionHandoff.ts`, `views/auth/SessionHandoffView.vue` (+ spec) on `/auth/handoff` (give: issue a code, or sign in first — auto-starting the chosen provider once unless an action captcha is on, then `/login?redirect=/auth/handoff`), `/auth/handoff/complete` (receive) and `/auth/handoff/pull` (the login origin pulls a session from an alias before binding). One-line hooks: `startOAuthOnLoginOrigin` at the top of `handleOAuthStart` in `LoginView.vue` / `RegisterView.vue`, `startBindingOnLoginOrigin` in `ProfileIdentityBindingsSection.vue`'s `startBinding`, the three routes + `/auth/handoff` in `BACKEND_MODE_ALLOWED_PATHS` + the pending-give fallback at the top of `router.beforeEach` (flows that drop `redirect`, such as new-user OAuth, still come back to `/auth/handoff`), `handoffMode` in `router/meta.d.ts`, keys `auth.sessionHandoff.*` in `fork.ts`, both specs in the Makefile's critical vitest list.
 - Keep this feature on upstream merges; never let the target origin come from anything but the configured list, and never put a handoff code or token in a query string.
 
+### 云端 API 节点 (Client cloud API nodes / CDN node, local implementation)
+
+- Settings → Cloud Account in the desktop client lists the gateway nodes a signed-in user can route through: the main site (default), the built-in CDN node `https://cdn.cheaprouter.cc` (`client/crates/sub2api/src/brand.rs::MANAGED_SERVICE_CDN_URL`, build env `SUB2API_MANAGED_SERVICE_CDN_URL`, labelled 「CDN 加速节点 — 中国及亚太地区可尝试」), every bare HTTPS origin in the admin's public `custom_endpoints` (Settings → Site → 自定义端点; `Client::public_custom_endpoints`, cached as `server_nodes` in `~/.cheaprouter/gateway-origin.json`, 6 h TTL, names / descriptions through content translation), then the user's own. Files: `client/crates/sub2api/src/gateway_origin.rs`, `client/src/app/cloud_origins.rs`, `cloud.origin_*` / `cloud.node_*` keys in `client/locales/{app,zh-CN,ja}.yml`.
+- Quick switching: a node chip in the status strip above the composer (beside the balance, `render_gateway_node_chip`, only while routing is on and there is more than one node) and a submenu of the sidebar account menu, both built from `NodeMenu` in `cloud_origins.rs` (latency of the last test, "Test all", "Manage nodes…").
+- **Only gateway traffic moves** (CLI configs, the built-in agent, image generation). Sign-in, token refresh, `/api/v1` account calls and payments stay on `Credentials.endpoint`. An automatic fallback records `fallback_from` and returns once that node answers, so the default stays the main site; switching re-applies open built-in agent sessions.
+- **No backend code.** Tokens are not bound to a domain. The edge setup for the alias (own listener with trusted proxies, stripped `CF-Connecting-IP`, CDN timeouts, `session_handoff`, `webauthn.rp_origins`) is in `deploy/EDGE_SECURITY.md` § "Second CDN domain on the same origin". Keep this feature on upstream merges.
+
 ### 站内信 (Site messages, local implementation)
 
 - Point-to-point messages to exactly one account (user / operator / admin) — modelled on announcements but never broadcast or targeted. Named "site message" on purpose: `UserMessageQueueService` already exists upstream and `/v1/messages` is the gateway path. Three sources: `security` (content-moderation notices), `admin` (written in user management), `system` (e.g. "账户已恢复 / Account restored" from the appeal flow). Unread messages **pop up by default** (`components/common/SiteMessagePopup.vue`, after any announcement popup, never on `/appeal`): on login and whenever the 60 s unread-count poll grows, the store queues up to 10 unread messages oldest-first, remembers popped ids per session (`sub2api_site_msg_popped:<uid>` in sessionStorage) and "知道了" marks read. Header envelope with a numeric badge + list / Markdown detail (`components/common/SiteMessageInbox.vue`, `MarkdownRenderer`).
@@ -570,6 +618,72 @@ The features below are locally maintained customizations of this fork. During up
   - Delete rate limit: `api_key_create.max_deletes_per_user_per_hour` (fork field on `APIKeyCreateConfig`), `IncrementDeleteCount` in `repository/api_key_cache.go` (+ miniredis test), `service/api_key_service_limits.go` (`APIKeyDeleteCounter`, `ErrAPIKeyDeleteLimited`, `checkAPIKeyDeleteLimit`, + `_delete_limit_test.go`), the check in `APIKeyService.Delete`, and admin / operator exemption from all three limits (the `IsPrivilegedRole` wrapper around upstream's `checkAPIKeyCreateLimits` in `Create`). Fork defaults are tighter than upstream: 50 active keys, 30 creates/h, 30 deletes/h (legit maximum observed: 17 keys, 10 creates/h, 8 deletes/h); documented in `deploy/config.example.yaml`.
   - Frontend: `billing_status` on `AdminUsageLog` (`types/index.ts`), the badge in `components/admin/usage/UsageTable.vue` (+ spec), the two metrics in `views/admin/ops/components/OpsAlertRulesCard.vue` + `api/admin/ops.ts`, the toggle in `ForkSettingsSection.vue` + `SettingsView.vue` + `api/admin/settings.ts`, keys `usage.billingStatus.*`, `admin.ops.alertRules.metrics.billing*`, `admin.settings.site.billingFailureNotify.*` in `i18n/locales/{zh,en}/fork.ts`.
 - Keep on upstream merges: never reintroduce `usageLog.ActualCost = 0` in the failure branches, keep the enqueue hook next to `applyUsageBilling`, and keep the dedup key `(request_id, api_key_id)` shared between `usage_billing_dedup` and `usage_billing_retries` (that is what makes replay idempotent).
+
+### 动效基础与侧栏动态图标 (Motion foundation + animated sidebar icons, local implementation)
+
+- **Origin**: ported from TokenRouter's frontend (LGPL-3.0, its `docs/architecture/frontend_ui_conventions.md` §ui_motion). Kept in fork-only files so upstream `style.css`, `components/icons/Icon.vue` and `featureFlags.ts` stay untouched.
+- **Motion tokens and transitions**: `frontend/src/styles/fork-motion.css`, imported once in `main.ts`, defines:
+  - `--motion-*` variables;
+  - global `fade` / `dropdown-fade` / `pop-float` / `motion-list` / `collapse` transitions;
+  - `.segmented`;
+  - `.fork-content-reveal` (main fades in per route; fill mode `backwards` only, so `<main>` never stays a stacking context);
+  - the sidebar active-indicator bar and the dashboard rise;
+  - one reduced-motion block.
+- **Tailwind**: `frontend/tailwind.fork-preset.js` adds `duration-fast/normal/layout` and `ease-standard/exit`, and never changes Tailwind's defaults.
+- **Components and helpers**:
+  - `components/motion/{MotionTransition,Collapse,AnimatedNumber}.vue` + `RetainedContent.ts`
+  - `utils/leavingElement.ts`
+  - `composables/useCountUp.ts` (quartic ease-out, from the previous value, or from `initial`)
+  - `directives/segmented.ts`
+  - `utils/themeSwitch.ts`: `applyDarkClass` freezes transitions for two frames. Every theme toggle should use it; the sidebar and home already do.
+  - `constants/motion.ts`
+  - `utils/compactNumber.ts`: locks the unit to the target, so 1.2B counts 0.0B → 1.2B.
+  - Test helper `src/__tests__/helpers/motion.ts`. The global setup's `matchMedia` reports reduced motion for every query, so specs that test animation override it.
+- **Animated sidebar icons**:
+  - `components/motion-icons/` holds `AnimatedIcon.vue`, `useIconAnimation.ts`, the ~30 needed `artwork/*.ts`, the Lucide / Lucide Animated licences and `README.md`.
+  - They run on `motion-v`, pinned at **2.5.1**.
+  - `components/layout/SidebarNavIcon.vue` + `sidebarAnimatedIcon.ts` lazy-load them; the path → icon map is in `sidebarIconMap.ts`. `SidebarNavIcon.spec.ts` fails when an `AppSidebar` path has no entry.
+  - The static icon shows until the chunk loads, and stays if it fails.
+  - `vite.config.ts` puts `motion-v`, `framer-motion`, `motion-dom`, `motion-utils`, `hey-listen` and `src/components/motion-icons/` into the lazy `feature-motion-icons` chunk. Never import `motion-icons` statically from shared code, or `motion-v` lands in the entry chunk for every page.
+  - The ignored `frontend/vite.config.js` is regenerated by `vue-tsc -b` at the start of `pnpm build`. A bare `vite build` uses whatever stale copy is there.
+- **Dashboard motion**:
+  - `UserDashboardStats.vue` headline numbers use `AnimatedNumber`.
+  - `components/user/dashboard/fork/UserDashboardHeatmap.vue`: 13 weeks, column wave capped at 480 ms.
+  - `components/user/dashboard/fork/UserDashboardTopModels.vue`: reuses `modelStats`, bars grow in sequence.
+  - `views/user/DashboardView.vue` adds the heatmap / top-models row and the `fork-dash-rise` wrapper.
+- **Upstream files touched**: `AppLayout.vue` (main class), `AppSidebar.vue` (`SidebarNavIcon` at the icon render sites, `applyDarkClass`, leaderboard entry), `HomeView.vue` (`applyDarkClass`), `tailwind.config.js` (`presets`), `main.ts`, `vite.config.ts`, `router/index.ts` (leaderboard route + `publicCatalog` hook), `UserDashboardStats.vue`, `DashboardView.vue`. Every edit is tagged `fork：`.
+- Keep on upstream merges.
+
+### 排行榜与首页公开统计 (Leaderboard + home public stats, local implementation)
+
+- **Configuration**: one JSON setting, `insights_config` (`service/insights.go`):
+  - `model_ranking_enabled` (default **on**), `usage_ranking_enabled` (default **off**), `usage_ranking_limit` (3..50, default 20), `usage_ranking_show_cost` (default off), `public_stats_enabled` (default **off**).
+  - `UpdateInsightsConfig` saves it and calls `onUpdate` so the injected HTML refreshes.
+  - The three booleans are public settings (`setting_public.go` key list, `PublicSettings` and injection payload, `settings_view.go`, `dto/settings.go`, `handler/setting_handler.go`; the drift test pins them).
+  - Admin API: `GET/PUT /api/v1/admin/insights/config`, `AdminOnly` and not on the operator allowlist. UI: `components/admin/settings/InsightsSettingsCard.vue`, saves on each change, mounted in `ForkSettingsSection.vue`.
+- **Endpoints** (`server/routes/insights.go`; one line each in `routes/user.go`, `routes/admin.go`, `server/router.go`; one `InsightsHandler`, `InsightsService` and `InsightsRepository` wired in `handler.go`, `handler/wire.go`, `service/wire.go`, `repository/wire.go`, `cmd/server/wire_gen.go`):
+  - `GET /api/v1/leaderboard/models?window=24h|7d|30d` (signed in).
+  - `GET /api/v1/leaderboard/users?window=…&metric=tokens|requests|cost` (signed in; `cost` only while show_cost is on).
+  - `GET /api/v1/stats/public`: anonymous, `PublicIP` limit, never 401 / 5xx, `Cache-Control: public, max-age=60`.
+- **Data and caching**:
+  - Rankings scan `usage_logs` over fixed windows; there is no per-model or per-user rollup. If the 30d query gets slow on production data, add daily rollup tables.
+  - Cache (`service/insights_service.go`) TTLs: 5 min for 24h, 15 min for 7d, 60 min for 30d. Past the TTL it serves stale data for up to 3×TTL while one background refresh runs; failures back off for 1 min; queries time out after 30 s.
+  - The model board keeps only models in `GetPublicCatalog`, so exclusive-group models never appear; the rest folds into 「其他」.
+  - Public stats read only `usage_dashboard_daily`. They report unavailable when dashboard aggregation is off or the watermark is more than 2 h behind, and never fall back to `usage_logs`.
+- **Privacy rules (do not weaken)**:
+  - The user board ranks only `role='user' AND status='active' AND deleted_at IS NULL`.
+  - Responses never carry user IDs, emails or raw usernames: `display_name` is masked (first + `***` + last, the email domain dropped), and `avatar_seed` is an HMAC of the user ID under a key derived from the JWT secret.
+  - Spend is left out unless the admin turns it on.
+  - With fewer than 5 participants the response is `insufficient_data` and lists nobody.
+  - Public stats never include user counts.
+- **Frontend**:
+  - `views/user/LeaderboardView.vue` on `/leaderboard` is its own lazy `feature-leaderboard` chunk. Components in `components/leaderboard/`: `ModelRankingList.vue` (bars, total count-up, link to `/models?q=`), `UserPodium.vue` (#1 centred and taller, rising 2 → 1 → 3), `UserRankingList.vue`, `IdenticonAvatar.vue` + `utils/identicon.ts`, `leaderboardFormat.ts`.
+  - API wrappers: `api/leaderboard.ts`, `api/publicStats.ts`, `api/admin/insights.ts`.
+  - Flags: `utils/forkFeatureFlags.ts`; the sidebar entry uses `flagLeaderboard` with `TrophyIcon` from `components/layout/sidebarForkIcons.ts`.
+  - Home counters: `components/home/HomeLiveStats.vue`, a section of its own placed in `HomeView.vue` right after `HomeHero`, i.e. on the second screen. Never put it inside the hero: the first screen belongs to the client showcase. Nothing is requested while the switch is off; the cards rise and the numbers count up only once the section scrolls into view (3.2 s, unit locked).
+  - i18n keys in `fork.ts`: `leaderboard.*`, `nav.leaderboard`, `home.liveStats.*`, `dashboard.fork.*`, `admin.settings.site.insights.*`.
+- **Tests**: `service/insights_test.go`, `repository/insights_repo_test.go`, `handler/insights_handler_test.go`, `views/user/__tests__/LeaderboardView.spec.ts`, `components/home/__tests__/HomeLiveStats.spec.ts`.
+- Keep on upstream merges; never add user identifiers to the ranking responses or widen the public stats.
 
 ## Working Boundary
 

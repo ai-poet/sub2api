@@ -112,3 +112,52 @@ func TestPublicPricing_SavingsSuppressedWithoutOfficialReference(t *testing.T) {
 	})
 	require.Nil(t, withoutRef.Comparison.SavingsPercent)
 }
+
+// 模型广场的匿名视图要展开详细定价：上下文窗口、区间价、分辨率档位都要下发，
+// 但其中不得夹带分组 ID 或内部来源标记。
+func TestPublicPricing_CarriesCatalogDetailsWithoutInternals(t *testing.T) {
+	window := 200000
+	maxTokens := 200000
+	perSecond := 0.12
+	input := 3.0
+	item := toPublicPricingItem(service.ModelCatalogItem{
+		Model:       "claude-sonnet-4-6",
+		BillingMode: "token",
+		BestGroup:   service.ModelCatalogGroupRef{ID: 7, Name: "public-group"},
+		EffectivePricingUSD: service.ModelCatalogPricing{
+			PerSecondUSD: &perSecond,
+			Source:       "litellm",
+		},
+		PricingDetails: service.ModelCatalogPricingDetails{
+			SupportsPromptCaching:     true,
+			HasLongContextMultiplier:  true,
+			LongContextInputThreshold: 200000,
+			Intervals: []service.ModelCatalogPriceInterval{
+				{MinTokens: 0, MaxTokens: &maxTokens, InputPerMTokUSD: &input},
+			},
+		},
+		ContextWindow: &window,
+	})
+
+	raw, err := json.Marshal(item)
+	require.NoError(t, err)
+	s := string(raw)
+
+	require.Contains(t, s, `"context_window":200000`)
+	require.Contains(t, s, `"per_second_usd":0.12`)
+	require.Contains(t, s, `"supports_prompt_caching":true`)
+	require.Contains(t, s, `"long_context_input_threshold":200000`)
+	require.Contains(t, s, `"input_per_mtok_usd":3`)
+	// 没有分辨率档位时序列化为 [] 而不是 null
+	require.Contains(t, s, `"media_tiers":[]`)
+	require.NotContains(t, s, `"id"`)
+	require.NotContains(t, s, `"source"`)
+}
+
+// 来源不知道上下文窗口时整个缺省，不能写成 0。
+func TestPublicPricing_ContextWindowOmittedWhenUnknown(t *testing.T) {
+	raw, err := json.Marshal(toPublicPricingItem(service.ModelCatalogItem{Model: "m"}))
+	require.NoError(t, err)
+	require.NotContains(t, string(raw), "context_window")
+	require.Contains(t, string(raw), `"intervals":[]`)
+}

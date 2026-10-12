@@ -197,6 +197,9 @@
     <!-- 内容自动翻译：独立加载 / 保存，不走上面的大表单 -->
     <ContentTranslationSettingsCard />
 
+    <!-- fork：排行榜 / 首页公开统计 -->
+    <InsightsSettingsCard />
+
     <!-- 购买订阅（sub2apipay 集成） -->
     <div class="space-y-4 rounded-lg border border-gray-200 p-4 dark:border-dark-600">
       <div class="flex items-center justify-between">
@@ -338,6 +341,7 @@ import ImageUpload from '@/components/common/ImageUpload.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import PersonalTokensPanel from '@/components/admin/settings/PersonalTokensPanel.vue'
 import ContentTranslationSettingsCard from '@/components/admin/settings/ContentTranslationSettingsCard.vue'
+import InsightsSettingsCard from '@/components/admin/settings/InsightsSettingsCard.vue'
 import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores'
 import { extractApiErrorMessage } from '@/utils/apiError'

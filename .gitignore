@@ -159,6 +159,9 @@ issues/
 
 # Paseo 客户端（本地克隆，不作为子模块跟踪）
 client/
+metapi/
+upstream-ops/
+TokenRouter/
 
 # Vitest / Vite cache at repo root
 .vite/

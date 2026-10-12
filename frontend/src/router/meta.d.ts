@@ -32,6 +32,11 @@ declare module 'vue-router' {
     handoffMode?: 'give' | 'complete' | 'pull'
 
     /**
+     * fork：未登录时，公开定价开启则放行（见 router/publicCatalog.ts），页面渲染匿名视图
+     */
+    publicCatalog?: boolean
+
+    /**
      * Page title for this route
      */
     title?: string

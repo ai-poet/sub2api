@@ -246,12 +246,14 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyPluginManagementEnabled,
 		SettingKeyRiskControlEnabled,
 		SettingKeyAllowUserViewErrorRequests,
+		SettingKeyInsightsConfig, // fork：排行榜 / 首页公开统计
 	}
 
 	settings, err := s.settingRepo.GetMultiple(ctx, keys)
 	if err != nil {
 		return nil, fmt.Errorf("get public settings: %w", err)
 	}
+	insightsConfig := ParseInsightsConfig(settings[SettingKeyInsightsConfig]) // fork：排行榜 / 首页公开统计
 
 	linuxDoEnabled := false
 	if raw, ok := settings[SettingKeyLinuxDoConnectEnabled]; ok {
@@ -382,6 +384,11 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		// fork：多域名登录交接
 		SessionHandoffLoginOrigin:  sessionHandoffLoginOrigin(s.cfg),
 		SessionHandoffAliasOrigins: sessionHandoffAliasOrigins(s.cfg),
+
+		// fork：排行榜 / 首页公开统计
+		ModelRankingEnabled: insightsConfig.ModelRankingEnabled,
+		UsageRankingEnabled: insightsConfig.UsageRankingEnabled,
+		PublicStatsEnabled:  insightsConfig.PublicStatsEnabled,
 
 		// 渠道监控公开开关，语义与 GetChannelMonitorRuntime 保持一致
 		//（enabled / hide_throughput 为 opt-out：缺省视为开启）。
@@ -658,6 +665,11 @@ type PublicSettingsInjectionPayload struct {
 	SessionHandoffLoginOrigin  string   `json:"session_handoff_login_origin"`
 	SessionHandoffAliasOrigins []string `json:"session_handoff_alias_origins"`
 
+	// fork：排行榜 / 首页公开统计。开关随 HTML 注入，侧栏入口和首页计数首屏就能判断，不会闪。
+	ModelRankingEnabled bool `json:"model_ranking_enabled"`
+	UsageRankingEnabled bool `json:"usage_ranking_enabled"`
+	PublicStatsEnabled  bool `json:"public_stats_enabled"`
+
 	// DeferredFields 列出因体积原因未随 HTML 注入、需等待异步公开设置接口的字段名
 	// （如超过 maxInjectedSiteLogoBytes 的 site_logo）。
 	DeferredFields []string `json:"deferred_fields,omitempty"`
@@ -760,6 +772,11 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 
 		SessionHandoffLoginOrigin:  settings.SessionHandoffLoginOrigin,
 		SessionHandoffAliasOrigins: settings.SessionHandoffAliasOrigins,
+
+		// fork：排行榜 / 首页公开统计
+		ModelRankingEnabled: settings.ModelRankingEnabled,
+		UsageRankingEnabled: settings.UsageRankingEnabled,
+		PublicStatsEnabled:  settings.PublicStatsEnabled,
 
 		DeferredFields: deferredFields,
 	}, nil

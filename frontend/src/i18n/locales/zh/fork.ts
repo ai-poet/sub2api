@@ -19,7 +19,7 @@ export default {
     "loginConsole": "登录控制台",
     "headerTagline": "Claude Code / Codex 一键接入",
     "navModels": "模型",
-    "navPricing": "价格",
+    "navPricing": "模型价格",
     "navChangelog": "更新日志",
     "hero": {
       "badge": "Claude Code / Codex 一键接入",
@@ -110,7 +110,18 @@ export default {
     "comparison": {
       "overline": "换个角度看",
     },
+    "liveStats": {
+      "label": "全站实时用量",
+      "overline": "实时数据",
+      "title": "全站实时用量",
+      "description": "所有用户在本站累计处理的 Token 与请求。",
+      "total": "累计处理 Token",
+      "today": "今日 Token",
+      "requests": "累计请求",
+      "asOf": "数据更新于 {time}"
+    },
     "pricingTable": {
+      "viewAll": "查看全部模型与价格",
       "overline": "价格优势",
       "title": "主流编码模型，价格比官方友好得多",
       "description": "Claude Code、Codex、GPT-5.5 等主流编码模型，比官方 API 便宜很多。一个账户、一份余额，用多少扣多少，余额长期有效。",
@@ -287,6 +298,7 @@ export default {
     "referral": "推荐邀请",
     "modelMirror": "模型照妖镜",
     "modelCatalog": "模型广场",
+    "leaderboard": "排行榜",
     "modelStatus": "模型运行状态",
     "sora": "Sora 创作",
     "communityGroup": "加入交流群",
@@ -788,6 +800,23 @@ export default {
             "user_missing": "已失效（账号不存在）"
           }
         },
+        "insights": {
+          "title": "排行榜与首页公开统计",
+          "description": "排行榜对登录用户开放；首页公开统计对所有访客可见。改一项就保存，侧栏入口和首页随即更新。",
+          "modelRanking": "模型热度榜",
+          "modelRankingHint": "按 Token 用量给公开分组里的模型排名，显示全站用量。",
+          "usageRanking": "用户用量榜",
+          "usageRankingHint": "按用量给普通用户排名，名字脱敏、头像随机；参与人数少于 5 人时不公布。",
+          "usageRankingShowCost": "用户榜显示花费",
+          "usageRankingShowCostHint": "开启后用户榜多一列花费，并可以按花费排序。",
+          "usageRankingLimit": "用户榜条数",
+          "usageRankingLimitHint": "3 到 50。",
+          "publicStats": "首页公开统计",
+          "publicStatsHint": "在首页展示累计 Token、今日 Token 和累计请求数的滚动数字，访客无需登录即可看到。需要开启仪表盘预聚合。",
+          "saved": "已保存",
+          "saveFailed": "保存失败",
+          "loadFailed": "配置加载失败，请刷新重试。"
+        },
         "contentTranslation": {
           "title": "内容自动翻译",
           "description": "用你自己的 API Key 调一个便宜模型，把管理员手写的文案（分组名称 / 描述、公告、站点副标题、联系方式、渠道描述、自定义菜单与端点、登录协议、支付套餐）翻译成所选语言并永久缓存。只替换用户看到的文字，接口返回与分流逻辑不变；管理后台始终显示原文。开关一改就保存；其它字段点「保存翻译设置」或页面底部的「保存设置」。",
@@ -905,8 +934,92 @@ export default {
       }
     }
   },
+  "dashboard": {
+    "fork": {
+      "heatmap": {
+        "title": "用量热力图",
+        "summary": "最近 13 周有 {days} 天在用，共 {tokens} Token",
+        "less": "少",
+        "more": "多",
+        "cell": "{date}：{tokens} Token，{requests} 次请求",
+        "noUsage": "{date}：没有用量"
+      },
+      "topModels": {
+        "title": "用量最多的模型",
+        "byTokens": "按 Token",
+        "empty": "所选时间段还没有用量"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "description": "看看大家都在用哪些模型",
+    "caption": "用量排行",
+    "intro": "按固定时间窗统计，数据有几分钟到一小时的缓存。用户榜只显示脱敏后的名字和随机头像。",
+    "tabsLabel": "榜单",
+    "tabs": {
+      "models": "模型榜",
+      "users": "用户榜"
+    },
+    "windowLabel": "时间范围",
+    "windows": {
+      "24h": "24 小时",
+      "7d": "7 天",
+      "30d": "30 天"
+    },
+    "metricLabel": "排序指标",
+    "metrics": {
+      "tokens": "Token",
+      "requests": "请求数",
+      "cost": "花费"
+    },
+    "generatedAt": "统计于 {time}",
+    "disabled": "排行榜暂未开放。",
+    "empty": "这个时间段还没有数据。",
+    "loadFailed": "排行榜加载失败，请稍后再试。",
+    "models": {
+      "title": "模型热度榜",
+      "description": "按 Token 用量排名，只列出公开分组里的模型",
+      "totalTokens": "全站 Token",
+      "requests": "{count} 次请求",
+      "others": "其他模型",
+      "viewInCatalog": "在模型广场查看"
+    },
+    "users": {
+      "rankLabel": "第 {rank} 名",
+      "you": "你",
+      "anonymous": "用户",
+      "listTitle": "完整榜单",
+      "privacyNote": "名字已脱敏，头像随机生成",
+      "insufficient": "参与的用户还太少，暂不公布榜单。"
+    }
+  },
   "modelCatalog": {
     "title": "模型广场",
+    "public": {
+      "intro": "每张卡代表一个公开分组下的模型，页面聚焦官方参考价与本站价格的直观对比，默认按价格从低到高排列。",
+      "subtitle": "{siteName} 支持的全部模型与价格，无需登录即可查看。",
+      "loginTitle": "登录后查看你的专属价格",
+      "loginDescription": "这里展示的是公开分组的默认价格；登录后可以看到你可用的全部分组、专属倍率和实时可用率。",
+      "loginAction": "登录 / 注册",
+      "disabled": "公开价格暂未开放，请登录后查看模型广场。"
+    },
+    "modalities": {
+      "text": "文本",
+      "image": "图片",
+      "audio": "音频",
+      "video": "视频",
+      "input": "输入：{modality}",
+      "output": "输出：{modality}"
+    },
+    "availability": {
+      "title": "近 24 小时可用率",
+      "label": "近 24 小时可用率 {rate}",
+      "noData": "暂无数据"
+    },
+    "contextWindow": "上下文 {size}",
+    "copyModelId": "复制模型 ID",
+    "copiedModelId": "已复制模型 ID",
     "description": "查看你当前真实可调用的分组模型卡片、官方参考价与实际扣费价对比",
     "caption": "分组 x 模型定价卡",
     "intro": "每张卡代表一个你当前可用的“分组 + 模型”。页面聚焦官方参考价与当前展示价的直观对比，默认按展示价从低到高排列。",
@@ -921,7 +1034,8 @@ export default {
       "allPlatforms": "全部平台",
       "billingMode": "计费模式",
       "allBillingModes": "全部模式",
-      "sortBy": "排序"
+      "sortBy": "排序",
+      "reset": "清除筛选"
     },
     "sorting": {
       "effectivePriceAsc": "按展示价升序",

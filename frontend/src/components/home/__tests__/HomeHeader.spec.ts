@@ -74,3 +74,15 @@ describe('HomeHeader', () => {
     expect(wrapper.text()).not.toContain('Changelog')
   })
 })
+
+describe('HomeHeader pricing entry (fork)', () => {
+  it('opens the model catalog instead of jumping to an anchor', () => {
+    const wrapper = mountHeader()
+
+    const pricingLink = wrapper.find('[data-test="nav-pricing"]')
+    expect(pricingLink.exists()).toBe(true)
+    expect(pricingLink.attributes('href')).toBe('/models')
+    expect(pricingLink.text()).toBe('Pricing')
+    expect(wrapper.html()).not.toContain('#pricing')
+  })
+})

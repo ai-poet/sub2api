@@ -170,9 +170,12 @@ func RegisterUserRoutes(
 		groupStatus := authenticated.Group("/group-status")
 		{
 			groupStatus.GET("", h.GroupStatus.List)
+			groupStatus.GET("/history", h.GroupStatus.Histories) // fork：模型广场可用率条（批量）
 			groupStatus.GET("/:groupId/history", h.GroupStatus.History)
 			groupStatus.GET("/:groupId/records", h.GroupStatus.Records)
 			groupStatus.GET("/:groupId/events", h.GroupStatus.Events)
 		}
+
+		registerInsightsUserRoutes(authenticated, h) // fork：排行榜
 	}
 }

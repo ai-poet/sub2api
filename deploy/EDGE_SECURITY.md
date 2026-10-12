@@ -200,6 +200,100 @@ and per-IP/ASN rates before traffic reaches the origin. Allow origin ingress
 only from CDN egress CIDRs or a private load balancer. Keep the application port
 off the public Internet.
 
+## Second CDN domain on the same origin
+
+A deployment may serve the same Sub2API instance on its main domain (for
+example `https://api.example.com`) and on an alias domain fronted by another
+CDN (for example `https://cdn.example.com`, aimed at users for whom the main
+domain is slow). Both domains reach the same process, database and Redis.
+Tokens, API keys and desktop login codes are not bound to a domain, so nothing
+in the application has to change; the work is in the edge configuration.
+
+**Separate listener for the alias's origin pulls.** Caddy's trusted-proxy
+policy is per listener address, not per site, so the alias CDN should pull from
+its own port (for example `:8443`), firewalled to that CDN's published egress
+ranges. The main listener keeps its own policy:
+
+```caddyfile
+{
+	servers :443 {
+		# direct clients, or the main domain's CDN as described above
+	}
+	servers :8443 {
+		trusted_proxies static 198.51.100.0/24 2001:db8:5678::/48
+		trusted_proxies_strict
+		client_ip_headers X-Forwarded-For
+	}
+}
+
+https://cdn.example.com:8443 {
+	reverse_proxy 127.0.0.1:8080 {
+		header_up X-Real-IP {client_ip}
+		header_up X-Forwarded-For {client_ip}
+		header_up -CF-Connecting-IP
+	}
+}
+```
+
+Replace the documentation ranges with the CDN's egress ranges, and use the
+header in which that CDN reports the visitor's address (many CDNs append it to
+`X-Forwarded-For`; some send a vendor-specific header, which then goes first in
+`client_ip_headers`). Strip `CF-Connecting-IP` on every listener that is not
+behind Cloudflare: in compatibility mode the application reads it before
+`X-Real-IP`, so a visitor could otherwise forge it through the alias CDN. Keep
+`security.forwarded_client_ip_headers` empty and let Caddy's rewritten
+`X-Real-IP` / `X-Forwarded-For` carry the address.
+
+Without this, every visitor of the alias appears as a CDN egress address:
+rate limits, the invalid-credential limiter, API-key IP allowlists and session
+binding (`session_binding_enabled`) would all act on unrelated users at once.
+Check after the switch that the usage log shows real client addresses for
+requests made through the alias.
+
+**CDN settings for streaming APIs.**
+
+- First-byte (origin response) timeout of at least 120–300 seconds. Before the
+  upstream model answers, the gateway sends nothing except SSE pings while a
+  request waits for a concurrency slot (up to 30 seconds), and account
+  failover happens in that window too.
+- Between-bytes (read) timeout of at least 60 seconds. Streams carry a
+  keep-alive every `gateway.stream_keepalive_interval` seconds (default 10)
+  once the upstream has answered; keep it enabled.
+- Response buffering off, no compression of `text/event-stream`, and no caching
+  of anything but static assets. A cached `/v1/models` would also break the
+  desktop client's node test, which probes that listing with the user's key.
+- Request body limit at least the largest image upload you accept.
+- Pass `Authorization`, `x-api-key`, `anthropic-*`, `openai-*` and
+  `Idempotency-Key` request headers through unchanged.
+- Non-streaming image generation sends nothing until the image is ready; if
+  third-party clients will use the alias for it, set
+  `gateway.image_nonstream_keepalive_interval: 10`.
+- The application sends no WebSocket ping to clients between Codex WebSocket
+  turns, so a CDN idle timeout shorter than
+  `gateway.openai_ws.ingress_inter_turn_idle_timeout_seconds` can close idle
+  sessions. The desktop client configures Codex over HTTP SSE and is not
+  affected.
+
+**Web sign-in on the alias.** Third-party OAuth callbacks are registered on the
+main domain. Configure the session handoff so OAuth started on the alias
+completes there and hands the session back:
+
+```yaml
+session_handoff:
+  login_origin: "https://api.example.com"
+  alias_origins:
+    - "https://cdn.example.com"
+```
+
+Passkey sign-in on the alias additionally needs the alias in
+`webauthn.rp_origins`.
+
+**Desktop client nodes.** The desktop client ships the CDN domain as a built-in
+"CDN node" and also offers every bare HTTPS origin listed under Settings → Site
+→ Custom endpoints (the list the API Keys page shows), with the name and
+description written there. Only gateway traffic follows the node a user picks;
+the client's sign-in, account API and payments stay on the main domain.
+
 ## DDoS boundary
 
 Application checks reduce amplification after a connection reaches Go. They

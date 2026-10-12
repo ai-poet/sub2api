@@ -85,6 +85,9 @@ type Handlers struct {
 
 	// fork：内容自动翻译
 	ContentTranslation *ContentTranslationHandler
+
+	// fork：排行榜 / 首页公开统计
+	Insights *InsightsHandler
 }
 
 // BuildInfo contains build-time information

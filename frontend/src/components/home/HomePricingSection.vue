@@ -96,14 +96,25 @@
           </div>
         </div>
 
-        <button
-          v-if="canExpand"
-          type="button"
-          class="mt-2 rounded-full border border-black/10 px-4 py-2 text-sm text-gray-700 transition hover:bg-black/5 dark:border-white/15 dark:text-white/75 dark:hover:bg-white/5"
-          @click="expanded = !expanded"
-        >
-          {{ expanded ? t('home.pricingTable.table.collapse') : t('home.pricingTable.table.expand', { count: hiddenCount }) }}
-        </button>
+        <div class="mt-2 flex flex-wrap items-center gap-3">
+          <button
+            v-if="canExpand"
+            type="button"
+            class="rounded-full border border-black/10 px-4 py-2 text-sm text-gray-700 transition hover:bg-black/5 dark:border-white/15 dark:text-white/75 dark:hover:bg-white/5"
+            @click="expanded = !expanded"
+          >
+            {{ expanded ? t('home.pricingTable.table.collapse') : t('home.pricingTable.table.expand', { count: hiddenCount }) }}
+          </button>
+          <!-- fork：完整价格在模型广场（匿名可见） -->
+          <router-link
+            to="/models"
+            data-test="pricing-view-all"
+            class="group inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+          >
+            {{ t('home.pricingTable.viewAll') }}
+            <Icon name="arrowRight" size="sm" class="transition-transform duration-normal ease-standard group-hover:translate-x-0.5" />
+          </router-link>
+        </div>
       </div>
 
       <!-- Fallback: static copy cards (loading, request failure, feature off, or no data) -->
@@ -160,6 +171,7 @@ import { fetchPublicCurrencyRates, getPublicPricing, type PublicPricingItem } fr
 import { useAppStore } from '@/stores/app'
 import { formatScaled } from '@/utils/pricing'
 import { useContentTranslation } from '@/composables/useContentTranslation'
+import Icon from '@/components/icons/Icon.vue'
 
 const props = withDefaults(defineProps<{
   siteName: string

@@ -429,6 +429,11 @@ type PublicSettings struct {
 	SessionHandoffLoginOrigin  string   `json:"session_handoff_login_origin"`
 	SessionHandoffAliasOrigins []string `json:"session_handoff_alias_origins"`
 
+	// fork：排行榜 / 首页公开统计（来自 insights_config）
+	ModelRankingEnabled bool `json:"model_ranking_enabled"`
+	UsageRankingEnabled bool `json:"usage_ranking_enabled"`
+	PublicStatsEnabled  bool `json:"public_stats_enabled"`
+
 	TableDefaultPageSize int
 	TablePageSizeOptions []int
 

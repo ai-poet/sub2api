@@ -18,12 +18,10 @@
 
       <!-- Nav links (desktop) -->
       <div class="hidden items-center gap-1 lg:flex">
-        <router-link to="/models" :class="navLinkClass">
-          {{ t('home.navModels') }}
-        </router-link>
-        <a href="#pricing" :class="navLinkClass" @click.prevent="goToSection('pricing')">
+        <!-- fork：「模型」和「价格」合并为一个入口，直接打开模型广场（匿名可见），不再锚点跳转 -->
+        <router-link to="/models" data-test="nav-pricing" :class="navLinkClass">
           {{ t('home.navPricing') }}
-        </a>
+        </router-link>
         <router-link v-if="showChangelog" to="/changelog" data-test="nav-changelog" :class="navLinkClass">
           {{ t('home.navChangelog') }}
         </router-link>
@@ -69,7 +67,6 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import HomeBrandMark from '@/components/home/HomeBrandMark.vue'
-import { useHomeSectionNav } from '@/components/home/useHomeSectionNav'
 import Icon from '@/components/icons/Icon.vue'
 
 withDefaults(
@@ -94,7 +91,6 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { goToSection } = useHomeSectionNav()
 
 const navLinkClass =
   'rounded-lg px-3.5 py-2 text-[14px] font-semibold text-gray-700 transition hover:bg-black/5 hover:text-gray-900 dark:text-white/65 dark:hover:bg-white/10 dark:hover:text-white'

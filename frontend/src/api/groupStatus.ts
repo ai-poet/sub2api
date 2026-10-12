@@ -58,6 +58,25 @@ export async function getHistory(
   return ensureArray(data)
 }
 
+/** fork：单个分组在一个时段内的可用率与分桶（模型广场可用率条）。 */
+export interface GroupStatusHistoryOverview {
+  group_id: number
+  /** 0-100；total_count 为 0 时没有意义 */
+  availability: number
+  total_count: number
+  buckets: GroupStatusHistoryBucket[]
+}
+
+/** fork：一次取回用户可见分组的可用率分桶，替代逐组调用 getHistory。 */
+export async function getHistories(
+  period: '24h' | '7d' = '24h'
+): Promise<GroupStatusHistoryOverview[]> {
+  const { data } = await apiClient.get<GroupStatusHistoryOverview[]>('/group-status/history', {
+    params: { period }
+  })
+  return ensureArray(data).map((item) => ({ ...item, buckets: ensureArray(item.buckets) }))
+}
+
 export async function getEvents(
   groupId: number,
   limit: number = 20
@@ -81,6 +100,7 @@ export async function getRecentRecords(
 export const groupStatusAPI = {
   listStatuses,
   getHistory,
+  getHistories,
   getEvents,
   getRecentRecords
 }

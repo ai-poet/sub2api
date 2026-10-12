@@ -40,6 +40,7 @@ func RegisterAdminRoutes(
 		registerPersonalTokenRoutes(admin, h)
 		registerUserSiteMessageRoutes(admin, h)
 		registerContentTranslationAdminRoutes(admin, h) // fork：内容自动翻译
+		registerInsightsAdminRoutes(admin, h)           // fork：排行榜 / 首页公开统计
 
 		// 仪表盘
 		registerDashboardRoutes(admin, h)

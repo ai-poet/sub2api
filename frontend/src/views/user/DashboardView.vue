@@ -1,10 +1,16 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
+    <!-- fork：fork-dash-rise 各区块依次上浮入场（styles/fork-motion.css） -->
+    <div class="space-y-6 fork-dash-rise">
       <div v-if="loading" class="flex items-center justify-center py-12"><LoadingSpinner /></div>
       <template v-else-if="stats">
         <UserDashboardStats :stats="stats" :balance="user?.balance || 0" :is-simple="authStore.isSimpleMode" :platform-quotas="platformQuotas" />
         <UserDashboardCharts v-model:startDate="startDate" v-model:endDate="endDate" v-model:granularity="granularity" :loading="loadingCharts" :trend="trendData" :models="modelStats" @dateRangeChange="loadCharts" @granularityChange="loadCharts" @refresh="refreshAll" />
+        <!-- fork：用量热力图 + 用量最多的模型 -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div class="min-w-0 lg:col-span-2"><UserDashboardHeatmap /></div>
+          <div class="lg:col-span-1"><UserDashboardTopModels :models="modelStats" /></div>
+        </div>
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div class="lg:col-span-2"><UserDashboardRecentUsage :data="recentUsage" :loading="loadingUsage" /></div>
           <div class="lg:col-span-1"><UserDashboardQuickActions /></div>
@@ -22,6 +28,8 @@ import UserDashboardRecentUsage from '@/components/user/dashboard/UserDashboardR
 import type { UsageLog, TrendDataPoint, ModelStat, PlatformQuotaItem } from '@/types'
 import { getMyPlatformQuotas } from '@/api/user'
 import { formatDateLocalInput } from '@/utils/format'
+import UserDashboardHeatmap from '@/components/user/dashboard/fork/UserDashboardHeatmap.vue' // fork：用量热力图
+import UserDashboardTopModels from '@/components/user/dashboard/fork/UserDashboardTopModels.vue' // fork：用量最多的模型
 
 const authStore = useAuthStore(); const user = computed(() => authStore.user)
 const stats = ref<UserStatsType | null>(null); const loading = ref(false); const loadingUsage = ref(false); const loadingCharts = ref(false)

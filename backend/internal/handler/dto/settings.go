@@ -417,6 +417,11 @@ type PublicSettings struct {
 	SessionHandoffLoginOrigin  string   `json:"session_handoff_login_origin"`
 	SessionHandoffAliasOrigins []string `json:"session_handoff_alias_origins"`
 
+	// fork：排行榜 / 首页公开统计
+	ModelRankingEnabled bool `json:"model_ranking_enabled"`
+	UsageRankingEnabled bool `json:"usage_ranking_enabled"`
+	PublicStatsEnabled  bool `json:"public_stats_enabled"`
+
 	// fork 自有的公开设置
 	PurchaseSubscriptionOpenMode string `json:"purchase_subscription_open_mode"` // iframe or new_window
 	ClientDownloadWindowsURL     string `json:"client_download_windows_url"`

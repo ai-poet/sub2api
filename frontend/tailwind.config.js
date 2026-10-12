@@ -16,8 +16,12 @@ const neutral = {
   950: '#0a0a0a'
 }
 
+// fork：动效档位预设（duration-fast/normal/layout、ease-standard/exit）
+import forkMotionPreset from './tailwind.fork-preset.js'
+
 /** @type {import('tailwindcss').Config} */
 export default {
+  presets: [forkMotionPreset],
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {

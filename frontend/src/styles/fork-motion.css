@@ -1,0 +1,271 @@
+/*
+ * fork：动效基础（移植自 TokenRouter style.css 的 ui_motion 部分，LGPL-3.0）。
+ *
+ * 普通交互统一引用这里的时长和缓动变量；tailwind.fork-preset.js 把
+ * duration-fast / normal / layout 与 ease-standard / exit 指向同一组变量。
+ * Vue 在运行时才添加过渡类，所以这些样式不放进 Tailwind 的 @layer，以免被裁掉。
+ * 上游 style.css 自带的 .modal-* 过渡保持原样，这里不覆盖。
+ */
+
+:root {
+  --motion-fast: 150ms;
+  --motion-normal: 200ms;
+  --motion-layout: 220ms;
+  --motion-exit: var(--motion-fast);
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-shift: 4px;
+}
+
+/* 切换主题时暂停所有过渡，背景、卡片和文字同一帧换色（见 utils/themeSwitch.ts）。 */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+/* ============ 显隐过渡 ============ */
+.fade-enter-active,
+.fade-slow-enter-active {
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.fade-leave-active,
+.fade-slow-leave-active {
+  transition: opacity var(--motion-exit) var(--motion-ease-exit);
+  pointer-events: none;
+}
+
+.fade-enter-from,
+.fade-leave-to,
+.fade-slow-enter-from,
+.fade-slow-leave-to {
+  opacity: 0;
+}
+
+/* 浮层位置即时跟随锚点，只有透明度和短距离位移参与动画。 */
+.dropdown-fade-enter-active,
+.pop-float-enter-active,
+.motion-list-enter-active {
+  transition:
+    opacity var(--motion-normal) var(--motion-ease),
+    transform var(--motion-normal) var(--motion-ease);
+}
+
+.dropdown-fade-leave-active,
+.pop-float-leave-active,
+.motion-list-leave-active {
+  transition:
+    opacity var(--motion-exit) var(--motion-ease-exit),
+    transform var(--motion-exit) var(--motion-ease-exit);
+  pointer-events: none;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(var(--dropdown-shift, calc(-1 * var(--motion-shift))));
+}
+
+.pop-float-enter-from,
+.pop-float-leave-to {
+  opacity: 0;
+  transform: translateY(var(--pop-shift, var(--motion-shift)));
+}
+
+.motion-list-enter-from,
+.motion-list-leave-to {
+  opacity: 0;
+  transform: translateY(var(--motion-shift));
+}
+
+.motion-list-move {
+  transition: transform var(--motion-normal) var(--motion-ease);
+}
+
+.motion-list-leave-active {
+  position: absolute;
+  width: var(--motion-list-width);
+}
+
+/* ============ 纵向折叠（components/motion/Collapse.vue） ============ */
+.motion-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-width: 0;
+}
+
+.motion-collapse-inner {
+  min-height: 0;
+  min-width: 0;
+}
+
+.motion-collapse-moving > .motion-collapse-inner {
+  overflow: hidden;
+}
+
+.collapse-enter-active,
+.collapse-leave-active {
+  transition:
+    grid-template-rows var(--motion-layout) var(--motion-ease),
+    opacity var(--motion-layout) var(--motion-ease);
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+/* 退出节点保留供绘制，但不再接收鼠标；键盘隔离由组件设置 inert 完成。 */
+.collapse-leave-active,
+.motion-list-leave-active * {
+  pointer-events: none;
+}
+
+/* ============ 页面内容淡入 ============ */
+/* AppLayout 随路由整体重挂载，给 main 加这个类即可在每次换页时淡入，无需指令。
+   填充模式只用 backwards：动画结束后不再作用于元素，main 不会长期保持层叠上下文，
+   未 Teleport 的 fixed 弹窗仍能盖住吸顶的顶栏。 */
+@keyframes fork-content-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fork-content-reveal {
+  animation: fork-content-reveal var(--motion-fast) var(--motion-ease) backwards;
+}
+
+/* ============ 侧栏 ============ */
+/* 选中项左侧的强调条。侧栏随页面重挂载，换页时新选中项的强调条从中间向两端长出；
+   悬停时图标自己的动画见 components/layout/SidebarNavIcon.vue。 */
+.sidebar-link {
+  position: relative;
+}
+
+.sidebar-link-active::before {
+  content: '';
+  position: absolute;
+  left: 0.3125rem;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 9999px;
+  @apply bg-primary-500 dark:bg-primary-400;
+  animation: fork-sidebar-indicator var(--motion-layout) var(--motion-ease) both;
+}
+
+@keyframes fork-sidebar-indicator {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.sidebar-link:active {
+  transform: scale(0.98);
+}
+
+/* ============ 用户仪表盘 ============ */
+/* 各区块依次上浮淡入（views/user/DashboardView.vue），相邻错开 60ms；结束后不保留 transform。 */
+@keyframes fork-dash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.fork-dash-rise > * {
+  animation: fork-dash-rise 420ms var(--motion-ease) backwards;
+}
+
+.fork-dash-rise > :nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.fork-dash-rise > :nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.fork-dash-rise > :nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.fork-dash-rise > :nth-child(n + 5) {
+  animation-delay: 240ms;
+}
+
+/* ============ 分段切换（directives/segmented.ts） ============ */
+/* 中性底色的分段控件；选中背景由 vSegmented 定位，尺寸由调用方用工具类决定。 */
+.segmented {
+  @apply relative inline-flex rounded-xl border border-gray-200 bg-gray-50 p-0.5;
+  @apply dark:border-dark-600 dark:bg-dark-800;
+  /* 选项距轨道外缘 3px（1px 边框加 2px 内边距），圆角同步减去，内外弧线才同心。 */
+  --segmented-item-radius: calc(0.75rem - 3px);
+}
+
+.segmented-item {
+  @apply relative font-medium transition-colors duration-150;
+  @apply text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200;
+  border-radius: var(--segmented-item-radius);
+}
+
+.segmented-item-active {
+  @apply bg-white text-gray-900 shadow-sm ring-1 ring-gray-300;
+  @apply hover:text-gray-900 dark:bg-dark-700 dark:text-white dark:ring-dark-600 dark:hover:text-white;
+}
+
+/* 共用一块背景，切换时连续移动；首次显示直接落在选中项，不从原点滑入。 */
+.segmented[data-segmented-ready]::before {
+  content: '';
+  @apply pointer-events-none absolute left-0 top-0 bg-white shadow-sm ring-1 ring-gray-300;
+  @apply dark:bg-dark-700 dark:ring-dark-600;
+  border-radius: var(--segmented-item-radius);
+  width: var(--segmented-width);
+  height: var(--segmented-height);
+  transform: translate(var(--segmented-x), var(--segmented-y));
+  transition:
+    transform var(--motion-normal) var(--motion-ease),
+    width var(--motion-normal) var(--motion-ease),
+    height var(--motion-normal) var(--motion-ease);
+}
+
+.segmented[data-segmented-ready] > .segmented-item-active {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* ============ 减少动态效果 ============ */
+/* 普通过渡缩到 1ms、位移归零；各专用动画在自己的样式里显示最终状态。 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-normal: 1ms;
+    --motion-layout: 1ms;
+    --motion-shift: 0px;
+  }
+
+  .pop-float-enter-from,
+  .pop-float-leave-to {
+    transform: none;
+  }
+
+  .fork-content-reveal,
+  .fork-dash-rise > *,
+  .sidebar-link-active::before {
+    animation: none;
+  }
+
+  .sidebar-link:active {
+    transform: none;
+  }
+}

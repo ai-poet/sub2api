@@ -125,6 +125,9 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		AllowUserViewErrorRequests: settings.AllowUserViewErrorRequests,
 		SessionHandoffLoginOrigin:  settings.SessionHandoffLoginOrigin,  // fork：多域名登录交接
 		SessionHandoffAliasOrigins: settings.SessionHandoffAliasOrigins, // fork：多域名登录交接
+		ModelRankingEnabled:        settings.ModelRankingEnabled,        // fork：排行榜
+		UsageRankingEnabled:        settings.UsageRankingEnabled,        // fork：排行榜
+		PublicStatsEnabled:         settings.PublicStatsEnabled,         // fork：首页公开统计
 		CommunityQRCode:            settings.CommunityQRCode,
 		CommunityGroupURL:          settings.CommunityGroupURL,
 	})

@@ -15,7 +15,8 @@
       <AppHeader />
 
       <!-- Main Content：合规声明未确认前不挂载页面内容，避免首屏一批管理接口同时 423 刷出成串错误提示 -->
-      <main class="p-4 md:p-6 lg:p-8">
+      <!-- fork：fork-content-reveal 换页时内容淡入（styles/fork-motion.css） -->
+      <main class="fork-content-reveal p-4 md:p-6 lg:p-8">
         <slot v-if="!complianceBlocking" />
         <div v-else class="flex min-h-[40vh] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
           {{ t('legal.adminCompliance') }}

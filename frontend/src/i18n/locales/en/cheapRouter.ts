@@ -16,7 +16,7 @@ export default {
     "heroSubtitle": "One-click setup, pay-as-you-go top-up, visible usage",
     "heroDescription": "Run Claude Code and Codex on the same account — fast onboarding, friendly pricing, and clear failure reasons.",
     "navModels": "Models",
-    "navPricing": "Pricing",
+    "navPricing": "Models & pricing",
     "navChangelog": "Changelog",
     "landing": {
       "hero": {

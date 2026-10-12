@@ -19,7 +19,7 @@ export default {
     "loginConsole": "Sign in to dashboard",
     "headerTagline": "One-click access to Claude Code / Codex",
     "navModels": "Models",
-    "navPricing": "Pricing",
+    "navPricing": "Models & pricing",
     "navChangelog": "Changelog",
     "hero": {
       "badge": "One-click access to Claude Code / Codex",
@@ -110,7 +110,18 @@ export default {
     "comparison": {
       "overline": "A different angle",
     },
+    "liveStats": {
+      "label": "Live usage across the site",
+      "overline": "Live data",
+      "title": "Live usage across the site",
+      "description": "Tokens and requests this site has served for all of its users.",
+      "total": "Tokens processed",
+      "today": "Tokens today",
+      "requests": "Requests served",
+      "asOf": "Updated {time}"
+    },
     "pricingTable": {
+      "viewAll": "See all models and prices",
       "overline": "Pricing edge",
       "title": "Friendlier prices than the official APIs for mainstream coding models",
       "description": "Claude Code, Codex, GPT-5.5, and other mainstream coding models — far cheaper than official APIs. One account, one balance, pay only for what you use, balance never expires.",
@@ -287,6 +298,7 @@ export default {
     "referral": "Referral",
     "modelMirror": "Claude Relay Inspector",
     "modelCatalog": "Model Catalog",
+    "leaderboard": "Leaderboard",
     "modelStatus": "Model Status",
     "sora": "Sora Studio",
     "communityGroup": "Join Community",
@@ -788,6 +800,23 @@ export default {
             "user_missing": "Invalid (account missing)"
           }
         },
+        "insights": {
+          "title": "Leaderboard and public stats",
+          "description": "The leaderboard is open to signed-in users; the public stats on the home page are visible to every visitor. Each change saves at once, and the sidebar entry and home page follow.",
+          "modelRanking": "Model rankings",
+          "modelRankingHint": "Ranks the models in public groups by token usage and shows site-wide usage.",
+          "usageRanking": "User rankings",
+          "usageRankingHint": "Ranks regular users by usage with masked names and generated avatars. Not published while fewer than 5 users take part.",
+          "usageRankingShowCost": "Show spend on user rankings",
+          "usageRankingShowCostHint": "Adds a spend column to the user rankings and lets users rank by spend.",
+          "usageRankingLimit": "User ranking size",
+          "usageRankingLimitHint": "3 to 50.",
+          "publicStats": "Public stats on the home page",
+          "publicStatsHint": "Shows rolling counters for total tokens, today's tokens and total requests on the home page, without sign-in. Needs dashboard pre-aggregation.",
+          "saved": "Saved",
+          "saveFailed": "Could not save",
+          "loadFailed": "Could not load the settings. Refresh and try again."
+        },
         "contentTranslation": {
           "title": "Content auto-translation",
           "description": "Uses one of your own API keys and a cheap model to translate admin-written copy (group names and descriptions, announcements, site subtitle, contact info, channel descriptions, custom menus and endpoints, login agreements, payment plans) into the selected languages, cached permanently. Only the text users see is replaced; API responses and routing stay unchanged, and the admin console always shows the original. The switch saves as soon as you flip it; the other fields save with “Save translation settings” or the Save button at the bottom of the page.",
@@ -905,8 +934,92 @@ export default {
       }
     }
   },
+  "dashboard": {
+    "fork": {
+      "heatmap": {
+        "title": "Usage heatmap",
+        "summary": "Active on {days} days in the last 13 weeks, {tokens} tokens in total",
+        "less": "Less",
+        "more": "More",
+        "cell": "{date}: {tokens} tokens, {requests} requests",
+        "noUsage": "{date}: no usage"
+      },
+      "topModels": {
+        "title": "Most used models",
+        "byTokens": "By tokens",
+        "empty": "No usage in the selected range yet"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "description": "See which models everyone is using",
+    "caption": "Usage rankings",
+    "intro": "Counted over fixed time ranges and cached for a few minutes up to an hour. The user board shows only masked names and generated avatars.",
+    "tabsLabel": "Board",
+    "tabs": {
+      "models": "Models",
+      "users": "Users"
+    },
+    "windowLabel": "Time range",
+    "windows": {
+      "24h": "24 hours",
+      "7d": "7 days",
+      "30d": "30 days"
+    },
+    "metricLabel": "Rank by",
+    "metrics": {
+      "tokens": "Tokens",
+      "requests": "Requests",
+      "cost": "Spend"
+    },
+    "generatedAt": "As of {time}",
+    "disabled": "The leaderboard is not open yet.",
+    "empty": "No data for this time range yet.",
+    "loadFailed": "Could not load the leaderboard. Try again later.",
+    "models": {
+      "title": "Model rankings",
+      "description": "Ranked by token usage. Only models in public groups are listed.",
+      "totalTokens": "Site-wide tokens",
+      "requests": "{count} requests",
+      "others": "Other models",
+      "viewInCatalog": "Open in the model catalog"
+    },
+    "users": {
+      "rankLabel": "#{rank}",
+      "you": "You",
+      "anonymous": "User",
+      "listTitle": "Full ranking",
+      "privacyNote": "Names are masked and avatars are generated",
+      "insufficient": "Too few users have taken part to publish a ranking yet."
+    }
+  },
   "modelCatalog": {
     "title": "Model Catalog",
+    "public": {
+      "intro": "Each card is a model in a public group. The page compares the official reference price with our price and lists the cheapest first.",
+      "subtitle": "Every model {siteName} supports and what it costs. No sign-in needed.",
+      "loginTitle": "Sign in to see your own prices",
+      "loginDescription": "These are the default prices of the public groups. Signed in, you see every group available to you, your own rates and live availability.",
+      "loginAction": "Sign in / Sign up",
+      "disabled": "Public pricing is not available yet. Sign in to open the model catalog."
+    },
+    "modalities": {
+      "text": "Text",
+      "image": "Image",
+      "audio": "Audio",
+      "video": "Video",
+      "input": "Input: {modality}",
+      "output": "Output: {modality}"
+    },
+    "availability": {
+      "title": "Availability, last 24 hours",
+      "label": "Availability over the last 24 hours: {rate}",
+      "noData": "No data"
+    },
+    "contextWindow": "{size} context",
+    "copyModelId": "Copy model ID",
+    "copiedModelId": "Model ID copied",
     "description": "Compare the official reference price with your actual group-level charge for models you can truly access.",
     "caption": "Group x Model Price Cards",
     "intro": "Each card represents one accessible \"group + model\" combination. The page focuses on a direct official-vs-displayed-price comparison and defaults to the lowest displayed price first.",
@@ -921,7 +1034,8 @@ export default {
       "allPlatforms": "All platforms",
       "billingMode": "Billing mode",
       "allBillingModes": "All billing modes",
-      "sortBy": "Sort by"
+      "sortBy": "Sort by",
+      "reset": "Clear filters"
     },
     "sorting": {
       "effectivePriceAsc": "Lowest displayed price",

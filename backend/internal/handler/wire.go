@@ -236,6 +236,7 @@ func ProvideHandlers(
 	siteMessageHandler *SiteMessageHandler,
 	appealHandler *AppealHandler,
 	contentTranslationHandler *ContentTranslationHandler,
+	insightsHandler *InsightsHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 	_ *service.OpenAIQuotaAutoResetService,
@@ -273,6 +274,9 @@ func ProvideHandlers(
 
 		// fork：内容自动翻译
 		ContentTranslation: contentTranslationHandler,
+
+		// fork：排行榜 / 首页公开统计
+		Insights: insightsHandler,
 	}
 }
 
@@ -308,6 +312,7 @@ var ProviderSet = wire.NewSet(
 	NewSiteMessageHandler,
 	NewAppealHandler,
 	NewContentTranslationHandler, // fork：内容自动翻译
+	NewInsightsHandler,           // fork：排行榜 / 首页公开统计
 
 	// Admin handlers
 	admin.NewDashboardHandler,
