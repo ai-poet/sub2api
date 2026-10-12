@@ -2,7 +2,8 @@
 // 单独成文件：同步上游 locale 模块时不会与之冲突，index.ts 里深合并生效。
 export default {
   "common": {
-    "retry": "Retry"
+    "retry": "Retry",
+    "rightsReserved": "All rights reserved."
   },
   "usage": {
     "billingStatus": {

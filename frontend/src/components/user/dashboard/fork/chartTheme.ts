@@ -1,7 +1,8 @@
-import { computed, onScopeDispose, ref } from 'vue'
+import { computed } from 'vue'
+import { useIsDark } from '@/composables/useIsDark'
 
 // fork：仪表盘图表主题（参考 TokenRouter composables/useChartTheme.ts）。
-// 本项目没有响应式的主题 composable，这里监听 <html> 的 dark 类，切换主题后图表配置随之重算。
+// 深色模式状态来自 useIsDark（监听 <html> 的 dark 类），切换主题后图表配置随之重算。
 // 颜色取值与 TokenRouter 一致：刻度/网格走 zinc 三档（text / muted / grid），序列色与 12 色调色板逐项相同。
 // 唯一例外是深色网格：TokenRouter 的深色卡片是 #0F0F10，网格 #27272A；本项目深色卡片是 #262626，
 // 照搬会看不见网格，这里取与卡片同样反差的 #3d3d3d。
@@ -40,19 +41,8 @@ export const CHART_TICK_FONT_SIZE = 10
 /** 图例字号。 */
 export const CHART_LEGEND_FONT_SIZE = 11
 
-const readDark = (): boolean =>
-  typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
-
 export function useChartTheme() {
-  const isDark = ref(readDark())
-  let observer: MutationObserver | null = null
-  if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
-    observer = new MutationObserver(() => {
-      isDark.value = readDark()
-    })
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-  }
-  onScopeDispose(() => observer?.disconnect())
+  const isDark = useIsDark()
 
   const colors = computed(() =>
     isDark.value

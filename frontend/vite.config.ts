@@ -126,6 +126,18 @@ export default defineConfig(({ mode }) => {
               return 'feature-motion-icons'
             }
 
+            // fork：认证页背景动画（components/auth/fork/AuthBackground.vue 动态导入）：播放器和两份动画数据各自分包，
+            // 只有打开登录 / 注册页时才下载，并且只下载当前主题用到的那份
+            if (normalizedId.includes('/node_modules/lottie-web/')) {
+              return 'feature-auth-lottie'
+            }
+            if (normalizedId.includes('/src/assets/lottie/auth-bg-light.json')) {
+              return 'feature-auth-bg-light'
+            }
+            if (normalizedId.includes('/src/assets/lottie/auth-bg-dark.json')) {
+              return 'feature-auth-bg-dark'
+            }
+
             // fork：排行榜页面单独分包，路由懒加载时才下载
             if (
               normalizedId.includes('/src/views/user/LeaderboardView.vue') ||

@@ -81,8 +81,8 @@
               @click="showPassword = !showPassword"
               class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
             >
-              <Icon v-if="showPassword" name="eyeOff" size="md" />
-              <Icon v-else name="eye" size="md" />
+              <Icon v-if="showPassword" name="eyeOff" size="sm" />
+              <Icon v-else name="eye" size="sm" />
             </button>
           </div>
           <p class="input-hint">
@@ -116,8 +116,8 @@
               @click="showConfirmPassword = !showConfirmPassword"
               class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
             >
-              <Icon v-if="showConfirmPassword" name="eyeOff" size="md" />
-              <Icon v-else name="eye" size="md" />
+              <Icon v-if="showConfirmPassword" name="eyeOff" size="sm" />
+              <Icon v-else name="eye" size="sm" />
             </button>
           </div>
         </div>
