@@ -37,6 +37,11 @@ declare module 'vue-router' {
     publicCatalog?: boolean
 
     /**
+     * fork：页面自己在正文里显示大标题（TokenRouter 的仪表盘布局），顶栏不再重复显示标题和说明
+     */
+    pageHeadingInBody?: boolean
+
+    /**
      * Page title for this route
      */
     title?: string

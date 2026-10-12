@@ -175,8 +175,8 @@ describe('AdminUserTrend', () => {
     expect(line.props('data').labels).toEqual(['2026-10-12 00:00', '2026-10-12 01:00'])
     expect(line.props('data').datasets.map((set: { data: number[] }) => set.data)).toEqual([[0, 1000], [500, 0]])
     expect(line.props('options').scales.y.ticks.callback(1500)).toBe('1.50K')
-    expect(line.props('options').scales.x.ticks.color).toBe('#2D4F68')
-    expect(line.props('options').scales.x.grid.color).toBe('#DDF4FC')
+    expect(line.props('options').scales.x.ticks.color).toBe('#134e4a')
+    expect(line.props('options').scales.x.grid.color).toBe('#ccfbf1')
 
     await wrapper.setProps({ metric: 'actual_cost' })
     expect(wrapper.findComponent({ name: 'Line' }).props('options').scales.y.ticks.callback(5)).toBe('$5.00')

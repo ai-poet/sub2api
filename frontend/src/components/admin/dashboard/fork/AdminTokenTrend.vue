@@ -40,7 +40,7 @@ import {
 } from '@/components/user/dashboard/fork/chartTheme'
 import { externalTooltipHandler, hideExternalTooltip } from '@/components/user/dashboard/fork/chartExternalTooltip'
 import { formatUsd } from '@/components/user/dashboard/fork/format'
-import DashboardChartSkeleton from './DashboardChartSkeleton.vue'
+import DashboardChartSkeleton from '@/components/user/dashboard/fork/DashboardChartSkeleton.vue'
 import { formatDayLabel, formatHourLabel, formatTokens } from './format'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)

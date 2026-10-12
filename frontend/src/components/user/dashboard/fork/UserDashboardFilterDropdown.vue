@@ -9,11 +9,10 @@
       :title="t('common.filter')"
       :aria-expanded="open"
       aria-haspopup="dialog"
-      data-testid="usage-filter-trigger"
       @click="toggle"
     >
       <Icon name="filter" size="sm" />
-      <span v-if="activeCount" class="filter-trigger-count" data-testid="usage-filter-count">{{ activeCount }}</span>
+      <span v-if="activeCount" class="filter-trigger-count">{{ activeCount }}</span>
     </button>
 
     <MotionTransition name="dropdown-fade">
@@ -23,18 +22,19 @@
         :style="panelStyle"
         role="dialog"
         :aria-label="t('common.filter')"
-        data-testid="usage-filter-panel"
         @click.stop
       >
-        <div class="flex items-center justify-between gap-3 px-4 pb-2 pt-4">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-gray-900 dark:text-dark-50">{{ t('common.filter') }}</span>
-            <span v-if="activeCount" class="filter-panel-count">{{ activeCount }}</span>
+        <div class="filter-panel-header">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-gray-900 dark:text-dark-50">{{ t('common.filter') }}</span>
+              <span v-if="activeCount" class="filter-panel-count">{{ activeCount }}</span>
+            </div>
           </div>
           <button
             type="button"
             class="filter-panel-reset"
-            data-testid="usage-filter-reset"
+            data-testid="filter-reset"
             :disabled="!activeCount"
             @click="emit('reset')"
           >
@@ -42,7 +42,21 @@
             {{ t('common.reset') }}
           </button>
         </div>
-        <div class="grid grid-cols-1 gap-3 overflow-y-auto px-4 pb-4 pt-1 sm:grid-cols-2">
+        <div v-if="chips.length" class="filter-panel-chips" data-testid="filter-chips">
+          <span v-for="(chip, index) in chips" :key="`${chip.label}-${index}`" class="filter-chip">
+            <span v-if="chip.label" class="shrink-0 text-gray-500 dark:text-dark-400">{{ chip.label }}</span>
+            <span class="min-w-0 truncate font-medium text-gray-900 dark:text-dark-50" :title="chip.text">{{ chip.text }}</span>
+            <button
+              type="button"
+              class="filter-chip-remove"
+              :aria-label="`${t('common.remove')} ${chip.label}`"
+              @click="chip.clear()"
+            >
+              <Icon name="x" size="xs" />
+            </button>
+          </span>
+        </div>
+        <div class="filter-panel-body" :class="COLUMN_CLASSES[columns]">
           <slot />
         </div>
       </div>
@@ -51,35 +65,71 @@
 </template>
 
 <script setup lang="ts">
-// fork：仪表盘工具栏的筛选面板（参考 TokenRouter components/common/FilterDropdown.vue，只保留仪表盘用到的部分）。
-// 本项目没有通用的筛选面板组件，所以放在仪表盘的 fork 目录里。
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+// fork：仪表盘工具栏的筛选面板（移植自 TokenRouter components/common/FilterDropdown.vue）。
+// 本项目没有通用的筛选面板组件，所以放在仪表盘的 fork 目录里；只保留仪表盘用到的 activeCount / columns。
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowReactive, type ComputedRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import MotionTransition from '@/components/motion/MotionTransition.vue'
+import { getAlignedPanelPosition } from './alignedPanelPosition'
+import { FILTER_PANEL_KEY, type FilterChip } from './filterPanel'
 
-defineProps<{ activeCount: number }>()
+type FilterColumns = 1 | 2 | 3
+
+const props = withDefaults(defineProps<{
+  activeCount: number
+  // columns 决定面板宽度和栅格列数，条件越多列数越多。
+  columns?: FilterColumns
+}>(), {
+  columns: 1,
+})
 const emit = defineEmits<{ (event: 'reset'): void }>()
 const { t } = useI18n()
 
-// 面板宽度（rem）与距视口边缘的最小距离（px）。
-const PANEL_WIDTH_REM = 34
-const VIEWPORT_GAP_PX = 16
+// 各列数对应的面板宽度（rem）和栅格配方；窄屏统一退回单列。
+const PANEL_WIDTH_REM: Record<FilterColumns, number> = { 1: 18, 2: 34, 3: 48 }
+const COLUMN_CLASSES: Record<FilterColumns, string> = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-1 sm:grid-cols-2',
+  3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+}
 
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
 const panelStyle = ref<Record<string, string>>({})
 
-// 面板默认左缘对齐触发器，右侧放不下时向左平移，窄屏时收窄到视口宽度。
+// 各字段登记自己的已选条件，面板顶部按字段在面板里的先后顺序展示。
+const registeredChips = shallowReactive(new Set<ComputedRef<FilterChip | null>>())
+provide(FILTER_PANEL_KEY, {
+  register: (chip) => {
+    registeredChips.add(chip)
+    return () => registeredChips.delete(chip)
+  },
+})
+const chips = computed(() => Array.from(registeredChips)
+  .map((chip) => chip.value)
+  .filter((chip): chip is FilterChip => chip !== null)
+  .sort((a, b) => {
+    if (!a.el || !b.el) return 0
+    return a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+  }))
+
+// 面板默认左缘对齐触发器，右侧放不下时向左平移，水平夹取规则与 TokenRouter 的公共浮层定位一致。
 function updatePosition() {
   const rect = rootRef.value?.getBoundingClientRect()
   if (!rect) return
   const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
   const viewportWidth = document.documentElement.clientWidth || window.innerWidth
-  const width = Math.min(PANEL_WIDTH_REM * rem, Math.max(0, viewportWidth - VIEWPORT_GAP_PX * 2))
-  const left = Math.min(Math.max(rect.left, VIEWPORT_GAP_PX), viewportWidth - width - VIEWPORT_GAP_PX)
-  panelStyle.value = { width: `${width}px`, left: `${left - rect.left}px` }
+  const position = getAlignedPanelPosition(rect, viewportWidth, window.innerHeight, {
+    maxWidth: PANEL_WIDTH_REM[props.columns] * rem,
+    align: 'left',
+    viewportPadding: rem,
+  })
+  panelStyle.value = {
+    width: `${position.width}px`,
+    left: `${position.left - rect.left}px`,
+  }
 }
 
 function toggle() {
@@ -119,33 +169,60 @@ defineExpose({ close: () => { open.value = false } })
 </script>
 
 <style scoped>
-/* 有生效条件时按钮描边和图标换成主色，右上角再挂数量角标。 */
+/* 有生效条件时按钮描边和图标换成品牌色，右上角再挂数量角标。 */
 .filter-trigger-active {
   @apply border-primary-300 text-primary-700 dark:border-primary-500/40 dark:text-primary-400;
 }
 
 .filter-trigger-count {
-  @apply pointer-events-none absolute -right-1.5 -top-1.5 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1;
-  @apply bg-primary-600 text-[10px] font-semibold leading-none text-white;
+  @apply pointer-events-none absolute -right-1.5 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1;
+  @apply bg-primary-600 text-xs font-semibold leading-none text-white;
   @apply ring-2 ring-white dark:ring-dark-950;
 }
 
-/* 面板外观与日期范围选择器一致：大圆角、淡描边、柔和阴影。 */
+/* 面板外观与日期范围选择器一致：surface 圆角、淡描边、柔和阴影。 */
 .filter-panel {
-  @apply absolute top-full z-20 mt-2 flex max-h-[min(70vh,42rem)] flex-col overflow-hidden;
-  @apply rounded-xl border border-gray-200 bg-white shadow-lg shadow-black/10;
-  @apply dark:border-dark-600 dark:bg-dark-800 dark:shadow-black/30;
+  @apply absolute top-full z-[60] mt-2 flex flex-col overflow-hidden;
+  @apply max-h-[min(70vh,42rem)];
+  @apply bg-white dark:bg-dark-800;
+  @apply rounded-xl border border-primary-900/10 dark:border-dark-600;
+  @apply shadow-lg shadow-black/10 dark:shadow-black/30;
+}
+
+/* 头部、已选条件和字段区之间不画分割线，只靠留白区分层次。 */
+.filter-panel-header {
+  @apply flex shrink-0 items-center justify-between gap-3 px-4 pb-1 pt-3;
 }
 
 .filter-panel-count {
-  @apply inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5;
-  @apply bg-primary-500/10 text-xs font-semibold text-primary-700 dark:text-primary-300;
+  @apply inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5;
+  @apply bg-primary-50 text-xs font-medium text-primary-700 dark:bg-primary-500/10 dark:text-primary-400;
 }
 
 .filter-panel-reset {
-  @apply inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-gray-500;
-  @apply transition-colors duration-fast hover:bg-gray-100 hover:text-gray-700;
-  @apply disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent;
-  @apply dark:text-dark-400 dark:hover:bg-dark-700 dark:hover:text-dark-200;
+  @apply inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium;
+  @apply text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700 dark:hover:text-dark-50;
+  @apply transition-colors duration-fast;
+  @apply disabled:pointer-events-none disabled:opacity-40;
+}
+
+.filter-panel-chips {
+  @apply flex shrink-0 flex-wrap gap-1.5 px-4 pt-2;
+}
+
+/* 已选条件标签：中性灰底，标签名弱化、取值加重，过长的取值截断并用 title 展示全文。 */
+.filter-chip {
+  @apply inline-flex max-w-full items-center gap-1 rounded-md py-0.5 pl-2 pr-0.5 text-xs;
+  @apply bg-gray-100 dark:bg-dark-700;
+}
+
+.filter-chip-remove {
+  @apply inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md;
+  @apply text-gray-400 hover:bg-gray-200 hover:text-gray-700 dark:text-dark-400 dark:hover:bg-dark-600 dark:hover:text-dark-100;
+  @apply transition-colors duration-fast;
+}
+
+.filter-panel-body {
+  @apply grid min-h-0 gap-x-3 gap-y-4 overflow-y-auto p-4;
 }
 </style>

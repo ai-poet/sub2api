@@ -958,6 +958,14 @@ export default {
         "latency": "Avg latency",
         "todayCost": "Spent today"
       },
+      "filters": {
+        "legacyCompaction": "Legacy Compaction"
+      },
+      "datePicker": {
+        "selectEndDate": "Select an end date",
+        "previousMonth": "Previous month",
+        "nextMonth": "Next month"
+      },
       "usageChart": {
         "metricsLabel": "Usage metrics",
         "metrics": {
@@ -993,14 +1001,7 @@ export default {
         "requests": "Requests",
         "tokens": "Tokens",
         "cost": "Cost",
-        "selectDay": "Click to see hourly usage for this day",
-        "summary": {
-          "activeDays": "Active days",
-          "tokens": "Tokens",
-          "busiest": "Busiest day",
-          "streak": "Current streak",
-          "days": "{count} day | {count} days"
-        }
+        "selectDay": "Click to see hourly usage for this day"
       },
       "topModels": {
         "title": "Top Models",
@@ -1032,7 +1033,6 @@ export default {
         "noSummary": "No summary available"
       },
       "quickActions": {
-        "keyCount": "{active} of {total} keys active",
         "purchaseDesc": "Purchase a plan or add balance"
       }
     }

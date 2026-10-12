@@ -1,46 +1,51 @@
 <template>
-  <!-- 首次进入时各区块按 --rise-i 依次上移淡入，最后一块播放完后移除入场类 -->
-  <div
-    class="space-y-4"
-    :class="{ 'dash-rise': entering }"
-    :style="dashboardMotionVars"
-    data-testid="dashboard-root"
-    @animationend="onRiseEnd"
-  >
+  <div>
     <!--
-      标题行：左侧标题、说明和实时状态条，右侧筛选 / 刷新 / 时间范围。
-      宽屏时顶栏已经显示页面标题和说明，这里只在窄屏显示，避免重复。
+      标题行：TokenRouter 放在 AppLayout 的 page-heading 插槽里（左侧标题、说明和实时状态，右侧工具栏），
+      本项目的 AppLayout 没有这个插槽，所以照同样的类名写在正文第一行；顶栏按路由的 pageHeadingInBody 不再重复标题。
     -->
-    <div class="dash-rise-item relative z-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3" :style="{ '--rise-i': 0 }">
-      <div class="min-w-0 space-y-1">
-        <h2 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white lg:hidden">{{ t('dashboard.title') }}</h2>
-        <p class="text-sm text-gray-500 dark:text-dark-400 lg:hidden">{{ t('dashboard.welcomeMessage') }}</p>
-        <UserDashboardLiveStats ref="liveStatsRef" @update="onStats" />
+    <div class="mb-4 flex flex-shrink-0 flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('dashboard.title') }}</h1>
+        <p class="mt-1 text-sm text-primary-900/90 dark:text-dark-300">{{ t('dashboard.welcomeMessage') }}</p>
+        <!-- 标题说明下方的补充信息：实时状态 -->
+        <div class="mt-2">
+          <UserDashboardLiveStats ref="liveStatsRef" @update="onStats" />
+        </div>
       </div>
-      <UserDashboardUsageToolbar :refreshing="refreshing" @refresh="refreshAll" />
+      <div class="shrink-0">
+        <UserDashboardUsageToolbar :refreshing="refreshing" @refresh="refreshAll" />
+      </div>
     </div>
 
-    <UserDashboardUsageChart ref="usageChartRef" />
-
-    <!-- 累计用量（本项目保留）：累计请求、累计 Token、标准价与实付价对比 -->
-    <UserDashboardLifetime class="dash-rise-item" :style="{ '--rise-i': 3 }" :stats="stats" />
-
-    <div class="dash-rise-item" :style="{ '--rise-i': 4 }">
-      <UserDashboardHeatmap ref="heatmapRef" @select-day="revealChart" />
-    </div>
-
-    <!-- 按平台拆分与平台配额（本项目特有）；没有用量也没有限额时整块不渲染 -->
-    <UserDashboardPlatforms
-      class="dash-rise-item"
-      :style="{ '--rise-i': 5 }"
-      :stats="stats"
-      :platform-quotas="platformQuotas"
-      :is-simple="authStore.isSimpleMode"
-    />
-
-    <div class="dash-rise-item grid grid-cols-1 gap-4 lg:grid-cols-3" :style="{ '--rise-i': 6 }" data-rise-last="true">
-      <div class="min-w-0 lg:col-span-2"><UserDashboardAnnouncements /></div>
-      <div class="min-w-0 lg:col-span-1"><UserDashboardQuickActions :api-keys="apiKeys" /></div>
+    <!-- 首次进入时各区块按 --rise-i 依次上移淡入，最后一块播放完后移除入场类 -->
+    <div
+      class="space-y-4"
+      :class="{ 'dash-rise': entering }"
+      :style="dashboardMotionVars"
+      data-testid="dashboard-root"
+      @animationend="onRiseEnd"
+    >
+      <UserDashboardUsageChart ref="usageChartRef" />
+      <div class="dash-rise-item" :style="{ '--rise-i': 2 }">
+        <UserDashboardHeatmap ref="heatmapRef" @select-day="revealChart" />
+      </div>
+      <div class="dash-rise-item grid grid-cols-1 gap-4 lg:grid-cols-3" :style="{ '--rise-i': 3 }">
+        <div class="lg:col-span-2"><UserDashboardAnnouncements /></div>
+        <div class="lg:col-span-1"><UserDashboardQuickActions /></div>
+      </div>
+      <!--
+        本项目保留、TokenRouter 没有的两块，放在 TokenRouter 的区块之后：
+        累计用量（累计请求、累计 Token、标准价与实付价对比），按平台拆分与平台配额（没有用量也没有限额时不渲染）
+      -->
+      <div class="dash-rise-item space-y-4" :style="{ '--rise-i': 4 }" data-rise-last="true">
+        <UserDashboardLifetime :stats="stats" />
+        <UserDashboardPlatforms
+          :stats="stats"
+          :platform-quotas="platformQuotas"
+          :is-simple="authStore.isSimpleMode"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -48,8 +53,8 @@
 <script setup lang="ts">
 // fork：用户仪表盘整页（布局与交互移植自 TokenRouter views/user/DashboardView.vue）。
 // 上游的 views/user/DashboardView.vue 只负责套 AppLayout 并挂载本组件；
-// 本项目的 AppLayout 没有标题行插槽，所以标题行（实时状态条 + 工具栏）放在正文第一行。
-import { computed, onMounted, ref } from 'vue'
+// 本项目的 AppLayout 没有标题行插槽，所以标题行（标题、说明、实时状态条 + 工具栏）放在正文第一行。
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getMyPlatformQuotas } from '@/api/user'
 import type { UserDashboardStats } from '@/api/usage'
@@ -80,13 +85,9 @@ const refreshing = ref(false)
 // 入场动画只在首次挂载时播放
 const entering = ref(true)
 
-// 实时统计由状态条轮询，平台拆分和密钥数量复用同一份结果。
+// 实时统计由状态条轮询，累计用量和平台拆分复用同一份结果。
 const stats = ref<UserDashboardStats | null>(null)
 const platformQuotas = ref<PlatformQuotaItem[] | null>(null)
-
-const apiKeys = computed(() => (
-  stats.value ? { total: stats.value.total_api_keys, active: stats.value.active_api_keys } : null
-))
 
 // 取数失败时保留上一次的统计，平台卡片不会在一次失败的轮询后消失。
 const onStats = (value: UserDashboardStats | null) => {

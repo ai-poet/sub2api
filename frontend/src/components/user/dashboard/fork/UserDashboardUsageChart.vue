@@ -3,7 +3,7 @@
     <!-- 指标卡展示所选范围的合计与环比，点击后在下方折线图中查看该指标 -->
     <div
       class="dash-rise-item grid grid-cols-2 gap-4 lg:grid-cols-4"
-      :style="{ '--rise-i': 1 }"
+      :style="{ '--rise-i': 0 }"
       role="tablist"
       :aria-label="t('dashboard.fork.usageChart.metricsLabel')"
     >
@@ -16,8 +16,8 @@
         :aria-selected="metric === item.key"
         class="metric-card card flex min-w-0 flex-col gap-3 overflow-hidden p-4 text-left transition-colors duration-fast"
         :class="metric === item.key
-          ? 'border-primary-500 dark:border-primary-500/70'
-          : 'hover:border-gray-300 dark:hover:border-dark-500'"
+          ? 'border-primary-600 dark:border-primary-500/70'
+          : 'hover:border-black/20 dark:hover:border-dark-500'"
         @click="selectMetric(item.key)"
       >
         <div class="flex min-w-0 items-center gap-2">
@@ -25,7 +25,7 @@
             class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
             :class="[METRIC_TONES[item.key].tile, METRIC_TONES[item.key].icon]"
           >
-            <Icon :name="item.icon" size="sm" />
+            <DashboardIcon :name="item.icon" size="sm" />
           </span>
           <span class="truncate text-xs font-medium text-gray-500 dark:text-dark-400">{{ item.label }}</span>
         </div>
@@ -36,11 +36,11 @@
             <span aria-hidden="true">{{ item.animatedValue }}</span>
             <span class="sr-only">{{ item.value }}</span>
           </span>
-          <!-- 只画走势线，选中的指标用主色 -->
+          <!-- 只画走势线，选中的指标用品牌色 -->
           <UsageSparkline
             v-if="loaded"
             class="metric-sparkline h-8 w-20 shrink-0"
-            :class="metric === item.key ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-dark-500'"
+            :class="metric === item.key ? 'text-primary-600 dark:text-primary-500' : 'text-gray-400 dark:text-dark-500'"
             :values="item.series"
             :data-testid="`usage-sparkline-${item.key}`"
           />
@@ -52,10 +52,7 @@
               class="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-medium tabular-nums"
               :class="deltaToneClasses[item.delta.tone]"
             >
-              <Icon v-if="item.delta.tone === 'up'" name="trendingUp" size="xs" />
-              <!-- 图标库没有下降趋势，把上升趋势上下翻转 -->
-              <Icon v-else-if="item.delta.tone === 'down'" name="trendingUp" size="xs" class="-scale-y-100" />
-              <span v-else class="h-0.5 w-2.5 rounded-full bg-current" aria-hidden="true"></span>
+              <DashboardIcon :name="deltaIcons[item.delta.tone]" size="xs" />
               {{ item.delta.text }}
             </span>
             <span class="metric-delta-label truncate">{{ t('dashboard.fork.usageChart.vsPrevious') }}</span>
@@ -66,7 +63,7 @@
     </div>
 
     <!-- 折线图与模型排行并排，窄于 xl 时排行排到图表下方 -->
-    <div class="dash-rise-item grid grid-cols-1 gap-4 xl:grid-cols-3" :style="{ '--rise-i': 2 }">
+    <div class="dash-rise-item grid grid-cols-1 gap-4 xl:grid-cols-3" :style="{ '--rise-i': 1 }">
       <div ref="chartCardRef" class="card flex min-w-0 flex-col p-4 xl:col-span-2" data-testid="usage-chart-card">
         <div class="mb-4 flex min-h-7 flex-wrap items-center justify-between gap-2">
           <div class="flex items-baseline gap-2">
@@ -115,10 +112,7 @@
         </div>
 
         <div class="relative h-64 sm:h-80">
-          <!-- 首次取数时用网格线和波浪占位 -->
-          <div v-if="!loaded" class="flex h-full flex-col justify-between py-2" aria-hidden="true" data-testid="usage-chart-skeleton">
-            <div v-for="row in 5" :key="row" class="h-px w-full animate-pulse bg-gray-200 dark:bg-dark-700 motion-reduce:animate-none"></div>
-          </div>
+          <DashboardChartSkeleton v-if="!loaded" variant="plot" height="100%" data-testid="usage-chart-skeleton" />
           <div
             v-else-if="!hasUsage"
             data-testid="usage-chart-empty"
@@ -138,7 +132,7 @@
               :style="{ left: `${livePoint.x}px`, top: `${livePoint.y}px`, color: mainColor }"
               aria-hidden="true"
             >
-              <span class="absolute -left-1.5 -top-1.5 h-3 w-3 animate-ping rounded-full bg-current opacity-60 motion-reduce:animate-none"></span>
+              <span class="live-point-ping absolute -left-1.5 -top-1.5 h-3 w-3 animate-ping rounded-full bg-current opacity-60 motion-reduce:animate-none"></span>
               <span class="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-current ring-2 ring-white dark:ring-dark-800"></span>
             </span>
           </template>
@@ -183,7 +177,9 @@ import { useChartTheme, CHART_SERIES_COLORS, CHART_TICK_FONT_SIZE } from './char
 import { externalTooltipHandler, hideExternalTooltip } from './chartExternalTooltip'
 import { CHART_REVEAL_MS } from './dashboardMotion'
 import { formatUsd } from './format'
-import type { IconName } from './iconName'
+import DashboardChartSkeleton from './DashboardChartSkeleton.vue'
+import DashboardIcon from './DashboardIcon.vue'
+import type { DashboardIconName, IconName } from './iconName'
 import { METRIC_TONES } from './metricTones'
 import { cacheHitRateOf } from './usageChartData'
 import { injectUsageChartState, type UsageMetric } from './usageChartState'
@@ -244,6 +240,12 @@ const deltaToneClasses = {
   flat: 'bg-gray-100 text-gray-500 dark:bg-dark-700 dark:text-dark-300',
 }
 
+const deltaIcons: Record<keyof typeof deltaToneClasses, DashboardIconName> = {
+  up: 'trendingUp',
+  down: 'trendingDown',
+  flat: 'minus',
+}
+
 type Delta = { text: string; tone: keyof typeof deltaToneClasses }
 
 // percentDelta 计算环比百分比；上一周期为 0 时无法比较。
@@ -265,8 +267,8 @@ const pointDelta = (currentValue: number | null, previousValue: number | null | 
 
 const formatPercent = (value: number | null): string => (value === null ? '—' : `${value.toFixed(1)}%`)
 
-// 小额消费显示 4 位小数；滚动过程按最终值的位数显示，避免位数来回跳。
-const costDigits = (value: number): number => (value >= 1 ? 2 : 4)
+// 小额消费显示 4 位小数。
+const formatCostTotal = (value: number): string => formatUsd(value, value >= 1 ? 2 : 4)
 
 // metricValueOf 取某个时段在指定指标下的值，命中率没有输入时为 null。
 const metricValueOf = (point: TrendDataPoint, key: UsageMetric): number | null => {
@@ -298,7 +300,7 @@ const metricTabs = computed(() => {
     },
     {
       key: 'tokens' as const,
-      icon: 'cube' as IconName,
+      icon: 'layers' as DashboardIconName,
       label: metricLabel('tokens'),
       value: formatTokensK(now.tokens),
       animatedValue: formatTokensK(Math.round(animatedTokens.value)),
@@ -309,8 +311,8 @@ const metricTabs = computed(() => {
       key: 'cost' as const,
       icon: 'dollar' as IconName,
       label: metricLabel('cost'),
-      value: formatUsd(now.cost, costDigits(now.cost)),
-      animatedValue: formatUsd(animatedCost.value, costDigits(now.cost)),
+      value: formatCostTotal(now.cost),
+      animatedValue: formatCostTotal(animatedCost.value),
       delta: percentDelta(now.cost, prev?.cost),
       series: seriesOf('cost'),
     },

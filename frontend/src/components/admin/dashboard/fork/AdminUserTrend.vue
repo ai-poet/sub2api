@@ -58,7 +58,7 @@ import {
   useChartTheme,
 } from '@/components/user/dashboard/fork/chartTheme'
 import { externalTooltipHandler, hideExternalTooltip } from '@/components/user/dashboard/fork/chartExternalTooltip'
-import DashboardChartSkeleton from './DashboardChartSkeleton.vue'
+import DashboardChartSkeleton from '@/components/user/dashboard/fork/DashboardChartSkeleton.vue'
 import { formatTokens } from './format'
 
 // Register Chart.js components
@@ -83,11 +83,12 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// 与 TokenRouter 相同：刻度/网格用品牌色系的字面值，不走 zinc 档位；主题切换即刻重绘。
+// 与 TokenRouter 相同：浅色时刻度/网格用品牌色系（TokenRouter 的 primary-900 / primary-100），
+// 这里换成本项目同档位的 primary-900 / primary-100；深色网格按卡片底色取同样反差的 #3d3d3d。主题切换即刻重绘。
 const { isDark } = useChartTheme()
 const chartColors = computed(() => ({
-  text: isDark.value ? '#D4D4D8' : '#2D4F68',
-  grid: isDark.value ? '#27272A' : '#DDF4FC',
+  text: isDark.value ? '#D4D4D8' : '#134e4a',
+  grid: isDark.value ? '#3d3d3d' : '#ccfbf1',
 }))
 
 // 按实际消费时沿用原页面的金额格式：$ + 两到四位小数，千以上缩写 K

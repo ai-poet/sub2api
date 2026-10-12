@@ -1,25 +1,26 @@
 <template>
   <div class="space-y-4">
     <!--
-      TokenRouter 把刷新按钮放在 AppLayout 的 page-heading-actions 插槽（标题右侧）。
-      本项目的 AppLayout 没有标题行插槽，宽屏时顶栏已显示标题和说明，
-      这里只在窄屏显示文字，刷新按钮始终靠右。
+      标题行：TokenRouter 放在 AppLayout 的 page-heading 插槽里（左侧标题和说明，右侧刷新按钮，底部对齐）。
+      本项目的 AppLayout 没有这个插槽，所以照同样的类名写在正文第一行；顶栏按路由的 pageHeadingInBody 不再重复标题。
     -->
-    <div class="flex flex-wrap items-end justify-between gap-3">
-      <div class="lg:hidden">
-        <h2 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">{{ t('admin.dashboard.title') }}</h2>
-        <p class="text-sm text-gray-500 dark:text-dark-400">{{ t('admin.dashboard.description') }}</p>
+    <div class="flex flex-shrink-0 flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('admin.dashboard.title') }}</h1>
+        <p class="mt-1 text-sm text-primary-900/90 dark:text-dark-300">{{ t('admin.dashboard.description') }}</p>
       </div>
-      <button
-        type="button"
-        class="btn btn-secondary ml-auto shrink-0 btn-icon"
-        :disabled="chartsLoading"
-        :title="t('common.refresh')"
-        data-testid="admin-dashboard-refresh"
-        @click="loadDashboardStats"
-      >
-        <Icon name="refresh" size="sm" :class="chartsLoading ? 'animate-spin' : ''" />
-      </button>
+      <div class="shrink-0">
+        <button
+          type="button"
+          class="btn btn-secondary shrink-0 btn-icon"
+          :disabled="chartsLoading"
+          :title="t('common.refresh')"
+          data-testid="admin-dashboard-refresh"
+          @click="loadDashboardStats"
+        >
+          <Icon name="refresh" size="sm" :class="chartsLoading ? 'animate-spin' : ''" />
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->

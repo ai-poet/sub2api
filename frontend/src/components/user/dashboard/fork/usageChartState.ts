@@ -35,6 +35,7 @@ export const DEFAULT_METRIC: UsageMetric = 'tokens'
 export const USAGE_CHART_STORAGE_KEY = 'dashboard-usage-chart'
 // 日期选择器的快捷项能换算成快捷范围时按快捷范围处理，记住选择并按整点或整天对齐。
 // 选择器的近 24 小时只给出日期，不映射会被当成两整天。
+// 其余快捷项（今天、昨天、近 14 天、本月、上月）本来就是整天区间，按自定义范围查询，与 TokenRouter 一致。
 const PICKER_PRESET_MAP: Record<string, PresetRange> = { last24Hours: '24h', '7days': '7d', '30days': '30d' }
 
 // readSavedState 读取上次选择的指标与快捷范围，存储不可用时使用默认值。

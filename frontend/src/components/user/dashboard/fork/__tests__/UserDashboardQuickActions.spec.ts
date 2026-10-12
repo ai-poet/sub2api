@@ -62,13 +62,9 @@ describe('UserDashboardQuickActions', () => {
     wrapper.unmount()
   })
 
-  it('创建密钥一行显示密钥数量，没有统计时显示默认说明', async () => {
+  it('创建密钥一行与 TokenRouter 相同，显示固定说明', async () => {
     const wrapper = mount(UserDashboardQuickActions)
     expect(wrapper.get('[data-testid="api-key-quick-action-desc"]').text()).toBe('dashboard.generateNewKey')
-
-    await wrapper.setProps({ apiKeys: { total: 5, active: 3 } })
-    expect(wrapper.get('[data-testid="api-key-quick-action-desc"]').text())
-      .toBe('dashboard.fork.quickActions.keyCount:{"active":3,"total":5}')
 
     await wrapper.get('[data-testid="api-key-quick-action"]').trigger('click')
     expect(routerPush).toHaveBeenCalledWith('/keys')

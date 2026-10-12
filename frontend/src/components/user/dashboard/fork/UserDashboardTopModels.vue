@@ -3,14 +3,14 @@
     <div class="mb-4 flex min-h-7 items-center justify-between gap-2">
       <div class="flex min-w-0 items-baseline gap-2">
         <h3 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-dark-50">
-          <Icon name="chartBar" size="sm" class="text-primary-600 dark:text-primary-400" />
+          <Icon name="chartBar" size="sm" class="text-primary-600 dark:text-primary-500" />
           {{ t('dashboard.fork.topModels.title') }}
         </h3>
         <span class="truncate text-xs text-gray-500 dark:text-dark-400" data-testid="top-models-subtitle">{{ subtitle }}</span>
       </div>
       <router-link
         to="/usage"
-        class="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+        class="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400"
         data-testid="top-models-view-all"
       >
         {{ t('dashboard.fork.topModels.viewAll') }}
@@ -45,8 +45,8 @@
           type="button"
           class="group w-full rounded-lg px-2 py-2 text-left transition-colors duration-fast"
           :class="row.active
-            ? 'bg-primary-500/10 ring-1 ring-primary-500/20'
-            : 'hover:bg-gray-50 dark:hover:bg-dark-700/60'"
+            ? 'bg-primary-500/[0.08] ring-1 ring-primary-500/15'
+            : 'hover:bg-gray-50 dark:hover:bg-dark-700'"
           :aria-pressed="row.active"
           :title="row.active ? t('dashboard.fork.topModels.clearFilter') : t('dashboard.fork.topModels.filterHint')"
           :data-testid="`top-model-${row.model}`"
@@ -55,12 +55,12 @@
           <div class="flex min-w-0 items-center gap-2">
             <span
               class="w-4 shrink-0 text-center text-xs font-semibold tabular-nums"
-              :class="index === 0 ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-dark-500'"
+              :class="index === 0 ? 'text-primary-600 dark:text-primary-500' : 'text-gray-400 dark:text-dark-500'"
             >{{ index + 1 }}</span>
             <ModelIcon :model="row.model" size="16px" class="shrink-0" />
             <span
               class="min-w-0 flex-1 truncate text-sm"
-              :class="row.active ? 'font-medium text-primary-700 dark:text-primary-300' : 'text-gray-800 dark:text-dark-100'"
+              :class="row.active ? 'font-medium text-primary-700 dark:text-primary-400' : 'text-gray-800 dark:text-dark-100'"
             >{{ row.model }}</span>
             <span class="shrink-0 text-sm font-medium tabular-nums text-gray-900 dark:text-dark-50">{{ row.value }}</span>
           </div>
@@ -163,12 +163,12 @@ const barOpacity = (index: number): number => 1 - index * 0.15
 /* 占比条从 0 伸展到目标宽度，前一行先动；行 key 变化时重新播放。 */
 .top-model-bar {
   width: var(--bar-w);
-  background-color: theme('colors.primary.500');
+  background-color: theme('colors.primary.600');
   animation: top-model-bar var(--dash-top-model-bar-ms, 600ms) var(--motion-ease) var(--bar-delay) both;
 }
 
 :global(.dark) .top-model-bar {
-  background-color: theme('colors.primary.400');
+  background-color: theme('colors.primary.500');
 }
 
 @keyframes top-model-bar {

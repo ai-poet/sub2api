@@ -188,7 +188,7 @@ import { getUserBreakdown } from '@/api/admin/dashboard'
 import type { ModelStat, UserBreakdownItem, UserSpendingRankingItem } from '@/types'
 import { CHART_OTHER_COLOR, CHART_PALETTE } from '@/components/user/dashboard/fork/chartTheme'
 import { externalTooltipHandler, hideExternalTooltip } from '@/components/user/dashboard/fork/chartExternalTooltip'
-import DashboardChartSkeleton from './DashboardChartSkeleton.vue'
+import DashboardChartSkeleton from '@/components/user/dashboard/fork/DashboardChartSkeleton.vue'
 import { formatNumber, formatTokens, toFiniteNumber } from './format'
 
 ChartJS.register(ArcElement, Tooltip, Legend)

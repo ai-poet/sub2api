@@ -11,7 +11,7 @@
           <Icon name="menu" size="md" />
         </button>
 
-        <div class="hidden lg:block">
+        <div v-if="!route.meta.pageHeadingInBody" class="hidden lg:block"><!-- fork：仪表盘的标题在正文里 -->
           <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
             {{ pageTitle }}
           </h1>

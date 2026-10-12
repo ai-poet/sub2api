@@ -1,112 +1,95 @@
 <template>
-  <div ref="cardRef" class="card relative p-4" :aria-busy="loading" data-testid="usage-heatmap">
+  <div ref="cardRef" class="card relative p-4" :aria-busy="loading">
+    <!-- 数据未返回时直接用日期格子占位，保留自适应网格和月份标签。 -->
+
     <div class="mb-4 flex items-center justify-between gap-2">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-dark-50">{{ t('dashboard.fork.heatmap.title') }}</h3>
       <!-- 色阶图例 -->
-      <div class="flex shrink-0 items-center gap-1 text-xs text-gray-500 dark:text-dark-400" aria-hidden="true">
+      <div class="flex shrink-0 items-center gap-1 text-xs text-gray-500 dark:text-dark-400">
         <span>{{ t('dashboard.fork.heatmap.less') }}</span>
         <span v-for="level in 5" :key="level" class="heatmap-cell h-3 w-3" :class="levelClass(level - 1)" />
         <span>{{ t('dashboard.fork.heatmap.more') }}</span>
       </div>
     </div>
 
-    <!-- 宽屏时网格在左、本段汇总在右；放不下时汇总换到网格下方 -->
-    <div ref="bodyRef" class="flex flex-wrap items-stretch gap-x-6 gap-y-4" data-testid="heatmap-body">
+    <!--
+      格子固定 12px、间距 3px，周列数随容器宽度自适应（宽屏显示更多历史周），
+      justify-between 把不足一格的零头均摊到列间隙，保证左右贴齐。
+    -->
+    <div
+      ref="gridWrapRef"
+      data-testid="heatmap-grid-wrap"
+      @mouseleave="hoveredDay = null"
+      @focusout="onGridFocusOut"
+      @keydown="onGridKeydown"
+      @animationend="onWaveEnd"
+    >
       <!--
-        格子边长随宽度在 12-18px 之间变化、间距 3px，周列数随容器宽度自适应，最多 26 周。
+        统一网格：第 1 列是星期标签，第 1 行是月份标签，其余为日期格子。
+        格子显式指定 gridColumn/gridRow，保证标签与格子严格对齐。
       -->
       <div
-        ref="gridWrapRef"
-        class="min-w-0"
-        data-testid="heatmap-grid-wrap"
-        @mouseleave="hoveredDay = null"
-        @focusout="onGridFocusOut"
-        @keydown="onGridKeydown"
-        @animationend="onWaveEnd"
+        class="grid justify-between"
+        :style="{
+          gridTemplateColumns: `auto repeat(${visibleWeeks}, ${CELL_SIZE})`,
+          gap: CELL_GAP,
+        }"
       >
+        <!-- 首次取数还没有日期数据，也要按当前可见周数填满占位格。 -->
+        <template v-if="loading && days.length === 0">
+          <div
+            aria-hidden="true"
+            class="h-4 w-8 animate-pulse rounded-md bg-gray-200 dark:bg-dark-600 motion-reduce:animate-none"
+            :style="{ gridColumn: 2, gridRow: 1 }"
+          ></div>
+          <div
+            v-for="cell in visibleWeeks * 7"
+            :key="`loading-${cell}`"
+            data-testid="heatmap-skeleton-cell"
+            aria-hidden="true"
+            class="heatmap-cell h-3 w-3 animate-pulse bg-gray-200 dark:bg-dark-600 motion-reduce:animate-none"
+            :style="{ gridColumn: Math.floor((cell - 1) / 7) + 2, gridRow: ((cell - 1) % 7) + 2 }"
+          ></div>
+        </template>
+        <!-- 月份标签：本周首格月份与上一列不同才显示 -->
+        <div
+          v-for="m in monthItems"
+          :key="`m-${m.weekIndex}`"
+          class="overflow-visible whitespace-nowrap text-xs leading-4 text-gray-400 dark:text-gray-500"
+          :style="{ gridColumn: m.weekIndex + 2, gridRow: 1 }"
+        >{{ m.label }}</div>
+
+        <!-- 星期标签：只标周一/周三/周五 -->
+        <div
+          v-for="w in weekdayLabels"
+          :key="`w-${w.row}`"
+          class="flex items-center pr-1 text-xs leading-none text-gray-400 dark:text-gray-500"
+          :style="{ gridColumn: 1, gridRow: w.row + 2 }"
+        >{{ w.label }}</div>
+
+        <!-- 日期格子 -->
         <!--
-          统一网格：第 1 列是星期标签，第 1 行是月份标签，其余为日期格子。
-          格子显式指定 gridColumn/gridRow，保证标签与格子严格对齐。
+          格子可点击查看当天按小时的用量。键盘使用漫游焦点：只有一个格子可 Tab 进入，
+          方向键在日期间移动，Enter / Space 选中。
         -->
         <div
-          class="grid w-max"
-          :style="{
-            gridTemplateColumns: `auto repeat(${visibleWeeks}, ${cellPx}px)`,
-            gridTemplateRows: `16px repeat(7, ${cellPx}px)`,
-            gap: `${GAP_PX}px`,
-            '--cell-size': `${cellPx}px`,
-          }"
-        >
-          <!-- 首次取数还没有日期数据，也要按当前可见周数填满占位格。 -->
-          <template v-if="loading && days.length === 0">
-            <div
-              aria-hidden="true"
-              class="h-4 w-8 animate-pulse rounded-md bg-gray-200 dark:bg-dark-700 motion-reduce:animate-none"
-              :style="{ gridColumn: 2, gridRow: 1 }"
-            ></div>
-            <div
-              v-for="cell in visibleWeeks * 7"
-              :key="`loading-${cell}`"
-              data-testid="heatmap-skeleton-cell"
-              aria-hidden="true"
-              class="heatmap-cell animate-pulse bg-gray-200 dark:bg-dark-700 motion-reduce:animate-none"
-              :style="{ gridColumn: Math.floor((cell - 1) / 7) + 2, gridRow: ((cell - 1) % 7) + 2 }"
-            ></div>
-          </template>
-          <!-- 月份标签：本周首格月份与上一列不同才显示 -->
-          <div
-            v-for="m in monthItems"
-            :key="`m-${m.weekIndex}`"
-            class="overflow-visible whitespace-nowrap text-xs leading-4 text-gray-400 dark:text-gray-500"
-            :style="{ gridColumn: m.weekIndex + 2, gridRow: 1 }"
-          >{{ m.label }}</div>
-
-          <!-- 星期标签：只标周一/周三/周五 -->
-          <div
-            v-for="w in weekdayLabels"
-            :key="`w-${w.row}`"
-            class="flex items-center pr-1 text-xs leading-none text-gray-400 dark:text-gray-500"
-            :style="{ gridColumn: 1, gridRow: w.row + 2 }"
-          >{{ w.label }}</div>
-
-          <!--
-            格子可点击查看当天按小时的用量。键盘使用漫游焦点：只有一个格子可 Tab 进入，
-            方向键在日期间移动，Enter / Space 选中。
-          -->
-          <div
-            v-for="day in visibleDays"
-            :key="day.date"
-            data-testid="heatmap-cell"
-            :data-date="day.date"
-            :data-level="day.future ? undefined : day.level"
-            :data-wave-last="day.weekIndex === visibleWeeks - 1 ? 'true' : undefined"
-            class="heatmap-cell"
-            :class="cellClasses(day)"
-            :style="{ gridColumn: day.weekIndex + 2, gridRow: day.dayOfWeek + 2, '--wave-delay': waveDelay(day.weekIndex) }"
-            :role="day.future ? undefined : 'button'"
-            :tabindex="day.future ? undefined : day.date === focusDate ? 0 : -1"
-            :aria-label="day.future ? undefined : cellLabel(day)"
-            :aria-pressed="day.future ? undefined : day.date === selectedDay"
-            @mouseenter="!loading && onCellHover(day, $event)"
-            @focus="!loading && onCellHover(day, $event)"
-            @click="selectCell(day)"
-          />
-        </div>
+          v-for="day in visibleDays"
+          :key="day.date"
+          data-testid="heatmap-cell"
+          :data-date="day.date"
+          :data-wave-last="day.weekIndex === visibleWeeks - 1 ? 'true' : undefined"
+          class="heatmap-cell h-3 w-3"
+          :class="cellClasses(day)"
+          :style="{ gridColumn: day.weekIndex + 2, gridRow: day.dayOfWeek + 2, '--wave-delay': waveDelay(day.weekIndex) }"
+          :role="day.future ? undefined : 'button'"
+          :tabindex="day.future ? undefined : day.date === focusDate ? 0 : -1"
+          :aria-label="day.future ? undefined : cellLabel(day)"
+          :aria-pressed="day.future ? undefined : day.date === selectedDay"
+          @mouseenter="!loading && onCellHover(day, $event)"
+          @focus="!loading && onCellHover(day, $event)"
+          @click="selectCell(day)"
+        />
       </div>
-
-      <!-- 本段汇总：只统计网格里可见的日期 -->
-      <dl
-        class="grid min-w-[13rem] flex-1 grid-cols-2 content-center gap-3"
-        data-testid="heatmap-summary"
-      >
-        <div v-for="item in summaryItems" :key="item.key" class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-dark-700/50">
-          <dt class="truncate text-xs text-gray-500 dark:text-dark-400">{{ item.label }}</dt>
-          <dd class="mt-0.5 truncate text-sm font-semibold tabular-nums text-gray-900 dark:text-dark-50" :data-testid="`heatmap-summary-${item.key}`">
-            <Skeleton v-if="loading && days.length === 0" :width="56" :height="16" />
-            <template v-else>{{ item.value }}</template>
-          </dd>
-        </div>
-      </dl>
     </div>
 
     <!--
@@ -136,37 +119,34 @@
 </template>
 
 <script setup lang="ts">
-// fork：用量热力图（移植自 TokenRouter UserDashboardHeatmap.vue）。
-// 与 TokenRouter 的差别：usage_logs 默认只保留 90 天，所以最多显示 26 周（TokenRouter 取三年）；
-// 宽屏时格子放大到 18px，并在网格右侧放一块本段汇总，避免满宽卡片大片留白。
-// 颜色按非零日用量的四分位分档；首次取数后格子按列错峰入场，最晚一列不超过 480ms。
+// fork：用量热力图（移植自 TokenRouter components/user/dashboard/UserDashboardHeatmap.vue，结构与行为保持一致）。
+// 与 TokenRouter 的差别只有：文案键在 dashboard.fork.heatmap.* 下；花费用本目录 format.ts 的 formatUsd 显示美元；
+// 提示框用等价的工具类代替 tooltip-panel；本项目卡片暗色底是 dark-800（TokenRouter 为 dark-900），
+// 空格子和占位格的暗色中性填充相应调亮一档（dark-700 → dark-600）。
+// usage_logs 默认只保留 90 天，更早的日期接口不返回，按无用量显示。
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Skeleton from '@/components/common/Skeleton.vue'
 import { usageAPI } from '@/api/usage'
 import { formatDateLocalInput, formatNumberLocaleString as formatNumber, formatTokensK as formatTokens } from '@/utils/format'
 import { HEATMAP_WAVE_MAX_MS, HEATMAP_WAVE_STEP_MS } from './dashboardMotion'
 import { formatUsd } from './format'
 import { injectUsageChartState } from './usageChartState'
 
-// 最多显示的周数；测不出宽度（如测试环境）时也按这个数渲染。
-const MAX_WEEKS = 26
-// 拉取范围：今天往前 MAX_WEEKS - 1 周，再对齐到周日，正好 MAX_WEEKS 整列。
-const FETCH_DAYS = (MAX_WEEKS - 1) * 7
-// 格子边长范围、间距，以及星期标签列的近似宽度（px）。
-const MIN_CELL_PX = 12
-const MAX_CELL_PX = 18
+const CELL_SIZE = '12px'
+const CELL_GAP = '3px'
+// 自适应列数计算用的像素常量；LABEL_COL_PX 是星期标签列的近似宽度
+const CELL_PX = 12
 const GAP_PX = 3
 const LABEL_COL_PX = 24
-// 汇总区放在右侧时至少占的宽度，以及与网格的间距（px）。
-const SUMMARY_MIN_PX = 208
-const SUMMARY_GAP_PX = 24
+// 拉取近三年的按日数据，宽屏时可以显示更多历史周；测不出宽度时回退到 53 周（近一年）
+const FETCH_DAYS = 3 * 364
+const FALLBACK_WEEKS = 53
 // 格子分档色：0 为无用量，1-4 按用量分位递增
 const LEVEL_CLASSES = [
-  'bg-gray-100 dark:bg-dark-700',
-  'bg-green-200 dark:bg-green-900',
-  'bg-green-300 dark:bg-green-700',
-  'bg-green-500 dark:bg-green-500',
+  'bg-gray-100 dark:bg-dark-600',
+  'bg-green-200 dark:bg-green-800',
+  'bg-green-300 dark:bg-green-600',
+  'bg-green-500 dark:bg-green-400',
   'bg-green-700 dark:bg-green-300',
 ]
 // 方向键在日期间移动的步长：上下为前后一天，左右为前后一周
@@ -195,7 +175,6 @@ const loading = ref(true)
 const days = ref<HeatmapDay[]>([])
 const hoveredDay = ref<HeatmapDay | null>(null)
 const cardRef = ref<HTMLElement | null>(null)
-const bodyRef = ref<HTMLElement | null>(null)
 const gridWrapRef = ref<HTMLElement | null>(null)
 const tooltipContentRef = ref<HTMLElement | null>(null)
 // 悬停格子中心相对卡片左上角的坐标，用于 tooltip 定位
@@ -203,8 +182,8 @@ const hoverPos = ref({ left: 0, top: 0 })
 // 记录 tooltip 上一次弹出方向，离开格子时仍保留位置以完成淡出动画。
 const tooltipAbove = ref(false)
 const tooltipSize = ref({ width: 0, height: 0 })
-// 卡片内容区宽度，驱动格子尺寸和可见周数
-const bodyWidth = ref(0)
+// 网格容器宽度，驱动可见周数自适应
+const gridWidth = ref(0)
 let resizeObserver: ResizeObserver | null = null
 // 今天的日期键，每次取数时更新，跨午夜后刷新即可对上
 const todayKey = ref(formatDateLocalInput(new Date()))
@@ -215,7 +194,7 @@ const focusOverride = ref<string | null>(null)
 
 const levelClass = (level: number) => LEVEL_CLASSES[level] ?? LEVEL_CLASSES[0]
 
-// 拉取范围：向前对齐到周日，保证整周列
+// 拉取范围：近三年，向前对齐到周日，保证整周列
 // start 从 end 克隆，保证两者时分秒一致，最后一天比较不会出现毫秒级漂移
 const buildDateRange = () => {
   const end = new Date()
@@ -296,29 +275,12 @@ const load = async () => {
 // 数据覆盖的总周数（含占位格）
 const totalWeeks = computed(() => Math.ceil(days.value.length / 7))
 
-// 汇总区能否放在网格右侧：最小格子排满 MAX_WEEKS 周后还剩得下汇总区
-const summaryBeside = computed(() => (
-  bodyWidth.value >= LABEL_COL_PX + MAX_WEEKS * (MIN_CELL_PX + GAP_PX) + SUMMARY_MIN_PX + SUMMARY_GAP_PX
-))
-
-// 留给网格的宽度
-const gridAvailable = computed(() => (
-  summaryBeside.value ? bodyWidth.value - SUMMARY_MIN_PX - SUMMARY_GAP_PX : bodyWidth.value
-))
-
-// 格子边长：宽度富余时放大，最大 18px；测不出宽度时用最小值
-const cellPx = computed(() => {
-  if (gridAvailable.value <= 0) return MIN_CELL_PX
-  const fit = Math.floor((gridAvailable.value - LABEL_COL_PX + GAP_PX) / MAX_WEEKS) - GAP_PX
-  return Math.min(MAX_CELL_PX, Math.max(MIN_CELL_PX, fit))
-})
-
-// 可见周数随容器宽度自适应，最多 MAX_WEEKS；测不出宽度（如测试环境）时按 MAX_WEEKS 渲染
+// 可见周数随容器宽度自适应；测不出宽度（如测试环境）时回退 53 周
 const visibleWeeks = computed(() => {
-  const limit = Math.min(MAX_WEEKS, totalWeeks.value || MAX_WEEKS)
-  if (gridAvailable.value <= 0) return limit
-  const fit = Math.floor((gridAvailable.value - LABEL_COL_PX + GAP_PX) / (cellPx.value + GAP_PX))
-  return Math.max(4, Math.min(fit, limit))
+  const total = totalWeeks.value
+  if (gridWidth.value <= 0) return total > 0 ? Math.min(FALLBACK_WEEKS, total) : FALLBACK_WEEKS
+  const fit = Math.floor((gridWidth.value - LABEL_COL_PX + GAP_PX) / (CELL_PX + GAP_PX))
+  return Math.max(4, Math.min(fit, total || fit))
 })
 
 // 只渲染最近 visibleWeeks 周，weekIndex 重新从 0 编排
@@ -365,31 +327,6 @@ const formatMonth = (date: string) =>
 const formatDayLabel = (date: string) =>
   new Date(`${date}T00:00:00`).toLocaleDateString(locale.value, { year: 'numeric', month: 'short', day: 'numeric' })
 
-const formatShortDay = (date: string) =>
-  new Date(`${date}T00:00:00`).toLocaleDateString(locale.value, { month: 'short', day: 'numeric' })
-
-// 本段汇总：活跃天数、Token 合计、用量最多的一天、截至今天的连续使用天数
-const summaryItems = computed(() => {
-  const shown = visibleDays.value.filter((day) => !day.future)
-  const active = shown.filter((day) => day.requests > 0 || day.tokens > 0)
-  const tokens = shown.reduce((sum, day) => sum + day.tokens, 0)
-  const busiest = active.reduce<HeatmapDay | null>((best, day) => (!best || day.tokens > best.tokens ? day : best), null)
-  // 今天还没用时从昨天开始数，避免一早打开时连续天数被清零
-  let streak = 0
-  const ordered = [...shown].reverse()
-  const startIndex = ordered[0] && ordered[0].requests === 0 && ordered[0].tokens === 0 ? 1 : 0
-  for (let i = startIndex; i < ordered.length; i++) {
-    if (ordered[i].requests === 0 && ordered[i].tokens === 0) break
-    streak++
-  }
-  return [
-    { key: 'activeDays', label: t('dashboard.fork.heatmap.summary.activeDays'), value: t('dashboard.fork.heatmap.summary.days', { count: active.length }, active.length) },
-    { key: 'tokens', label: t('dashboard.fork.heatmap.summary.tokens'), value: formatTokens(tokens) },
-    { key: 'busiest', label: t('dashboard.fork.heatmap.summary.busiest'), value: busiest ? `${formatShortDay(busiest.date)} · ${formatTokens(busiest.tokens)}` : '—' },
-    { key: 'streak', label: t('dashboard.fork.heatmap.summary.streak'), value: t('dashboard.fork.heatmap.summary.days', { count: streak }, streak) },
-  ]
-})
-
 // 漫游焦点所在的日期：优先手动移动到的日期，其次是选中日，最后是今天
 const focusDate = computed(() => {
   const visible = new Set(visibleDays.value.filter((day) => !day.future).map((day) => day.date))
@@ -407,7 +344,7 @@ const waveDelay = (weekIndex: number): string => {
 
 const cellClasses = (day: HeatmapDay) => {
   if (day.future) return 'invisible'
-  if (loading.value) return 'animate-pulse bg-gray-200 dark:bg-dark-700 motion-reduce:animate-none'
+  if (loading.value) return 'animate-pulse bg-gray-200 dark:bg-dark-600 motion-reduce:animate-none'
   return [
     levelClass(day.level),
     'heatmap-cell-interactive',
@@ -503,7 +440,7 @@ const tooltipStyle = computed(() => {
   const above = tooltipAbove.value
   return {
     left: `${tooltipLeft.value}px`,
-    top: above ? `${hoverPos.value.top - 6}px` : `${hoverPos.value.top + cellPx.value + 6}px`,
+    top: above ? `${hoverPos.value.top - 6}px` : `${hoverPos.value.top + 18}px`,
     transform: above ? 'translate(-50%, -100%)' : 'translateX(-50%)',
     width: tooltipSize.value.width > 0 ? `${tooltipSize.value.width}px` : '0px',
     height: tooltipSize.value.height > 0 ? `${tooltipSize.value.height}px` : '0px',
@@ -531,13 +468,13 @@ const updateTooltipSize = async () => {
 }
 
 onMounted(() => {
-  // 监听内容区宽度变化，窗口缩放时实时调整格子尺寸和可见周数
-  if (bodyRef.value && typeof ResizeObserver !== 'undefined') {
-    bodyWidth.value = bodyRef.value.clientWidth
+  // 监听容器宽度变化，窗口缩放时实时调整可见周数
+  if (gridWrapRef.value && typeof ResizeObserver !== 'undefined') {
+    gridWidth.value = gridWrapRef.value.clientWidth
     resizeObserver = new ResizeObserver((entries) => {
-      bodyWidth.value = entries[0]?.contentRect.width ?? 0
+      gridWidth.value = entries[0]?.contentRect.width ?? 0
     })
-    resizeObserver.observe(bodyRef.value)
+    resizeObserver.observe(gridWrapRef.value)
   }
   void load()
 })
@@ -551,11 +488,11 @@ defineExpose({ reload: load })
 </script>
 
 <style scoped>
-/* 格子边长由网格的 --cell-size 决定；圆角保持 4px，避免小格子看起来像圆点。 */
+/* 格子只有 12px,全局最小圆角档(rounded-md,6px)已达边长一半、近似椭圆;
+   保持迁移前 sm 尺度的 4px,用组件级局部变量承载,不占用全局档位。 */
 .heatmap-cell {
-  width: var(--cell-size, 12px);
-  height: var(--cell-size, 12px);
-  border-radius: 4px;
+  --radius-cell: 4px;
+  border-radius: var(--radius-cell);
 }
 
 /* 可点击的格子：悬停或键盘聚焦时放大并加外环 */

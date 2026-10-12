@@ -1,5 +1,5 @@
 <template>
-  <div class="card h-full overflow-hidden" data-testid="dashboard-announcements">
+  <div class="card overflow-hidden" data-testid="dashboard-announcements">
     <div class="flex min-h-[61px] items-center justify-between gap-3 border-b border-gray-100 px-6 py-4 dark:border-dark-700">
       <div class="flex min-w-0 items-center gap-2.5">
         <Icon name="bell" size="md" class="shrink-0 text-primary-600 dark:text-primary-400" />
@@ -26,7 +26,7 @@
 
     <div class="p-6">
       <div
-        v-if="loading && timelineItems.length === 0"
+        v-if="loading"
         data-testid="announcement-timeline-loading"
         class="space-y-5 py-4"
         role="status"
@@ -82,7 +82,7 @@
             type="button"
             data-testid="announcement-timeline-item"
             :data-announcement-id="item.announcement.id"
-            class="group flex min-h-[88px] w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-fast hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 dark:hover:bg-dark-700/60"
+            class="group flex min-h-[88px] w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 dark:hover:bg-dark-700/60 dark:focus-visible:ring-primary-400/70"
             @click="openAnnouncement(item.announcement)"
           >
             <div class="min-w-0 flex-1">
@@ -107,7 +107,7 @@
             <Icon
               name="chevronRight"
               size="sm"
-              class="mt-1 shrink-0 text-gray-400 transition-transform duration-fast group-hover:translate-x-0.5 group-hover:text-primary-500 dark:text-dark-500 dark:group-hover:text-primary-400"
+              class="mt-1 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-500 dark:text-dark-500 dark:group-hover:text-primary-400"
             />
           </button>
         </li>

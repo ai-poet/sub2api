@@ -19,6 +19,7 @@ export interface UsageChartFilters {
   request_type: UsageRequestType | null
   billing_type: number | null
   billing_mode: string | null
+  native_compaction_v2: boolean | null
 }
 
 type NamedOption = { id: number; name: string }
@@ -33,6 +34,7 @@ const emptyFilters = (): UsageChartFilters => ({
   request_type: null,
   billing_type: null,
   billing_mode: null,
+  native_compaction_v2: null,
 })
 
 // useUsageChartFilters 管理用量图的筛选条件和候选项。
@@ -59,6 +61,7 @@ export function useUsageChartFilters() {
     }
     if (current.billing_type !== null) params.billing_type = current.billing_type
     if (current.billing_mode) params.billing_mode = current.billing_mode
+    if (current.native_compaction_v2 !== null) params.native_compaction_v2 = current.native_compaction_v2
     return params
   })
 
@@ -92,6 +95,12 @@ export function useUsageChartFilters() {
     { value: 'per_request', label: t('admin.usage.billingModePerRequest') },
     { value: 'image', label: t('admin.usage.billingModeImage') },
     { value: 'video', label: t('admin.usage.billingModeVideo') },
+  ])
+  // 请求类别的前两项沿用使用记录页的文案；第三项（native_compaction_v2=false）本项目没有现成文案，用 TokenRouter 的措辞补上。
+  const compactionOptions = computed<SelectOption[]>(() => [
+    { value: null, label: t('usage.allCompactionTypes') },
+    { value: true, label: t('usage.compactionOnly') },
+    { value: false, label: t('dashboard.fork.filters.legacyCompaction') },
   ])
 
   // loadKeyAndGroupOptions 读取自己的全部密钥和可用分组。
@@ -152,6 +161,7 @@ export function useUsageChartFilters() {
     requestTypeOptions,
     billingTypeOptions,
     billingModeOptions,
+    compactionOptions,
     loadKeyAndGroupOptions,
     setModelOptions,
     loadModelOptions,

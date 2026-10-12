@@ -11,7 +11,7 @@
       :title="item.hint"
       :data-testid="`live-stat-${item.key}`"
     >
-      <Icon :name="item.icon" size="xs" :class="METRIC_TONES[item.tone].icon" />
+      <DashboardIcon :name="item.icon" size="xs" :class="METRIC_TONES[item.tone].icon" />
       <span>{{ item.label }}</span>
       <Skeleton v-if="!loaded" :width="40" :height="12" />
       <span v-else class="font-medium tabular-nums text-gray-900 dark:text-dark-100">
@@ -29,13 +29,13 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Skeleton from '@/components/common/Skeleton.vue'
-import Icon from '@/components/icons/Icon.vue'
 import { usageAPI, type UserDashboardStats } from '@/api/usage'
 import { useCountUp } from '@/composables/useCountUp'
 import { COUNT_UP_MS } from '@/constants/motion'
 import { formatNumberLocaleString as formatNumber, formatTokensK } from '@/utils/format'
 import { formatUsd } from './format'
-import type { IconName } from './iconName'
+import DashboardIcon from './DashboardIcon.vue'
+import type { DashboardIconName, IconName } from './iconName'
 import { METRIC_TONES, type MetricTone } from './metricTones'
 
 // 页面可见时的轮询间隔；接口统计的是近 5 分钟均值，一分钟刷新一次足够。
@@ -62,6 +62,9 @@ const animatedTodayCost = useCountUp(() => stats.value?.today_actual_cost ?? 0, 
 // formatLatency 不足 1 秒显示毫秒，否则显示秒。
 const formatLatency = (ms: number): string => (ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(2)}s`)
 
+// formatCost 将小额消费显示为 4 位小数。
+const formatCost = (value: number): string => formatUsd(value, value >= 1 ? 2 : 4)
+
 const formatRpm = (value: number): string => formatNumber(Math.round(value * 10) / 10)
 
 // 取数失败时数值显示破折号，不弹出错误。
@@ -83,7 +86,7 @@ const items = computed(() => {
     },
     {
       key: 'tpm',
-      icon: 'cube' as IconName,
+      icon: 'layers' as DashboardIconName,
       tone: 'tokens' as MetricTone,
       label: t('dashboard.fork.live.tpm'),
       hint: t('dashboard.fork.live.tpmHint'),
@@ -105,11 +108,8 @@ const items = computed(() => {
       tone: 'cost' as MetricTone,
       label: t('dashboard.fork.live.todayCost'),
       hint: undefined,
-      value: display((value) => formatUsd(value), current?.today_actual_cost),
-      animated: display(
-        (value) => formatUsd(value, (current?.today_actual_cost ?? 0) >= 1 ? 2 : 4),
-        current ? animatedTodayCost.value : undefined,
-      ),
+      value: display(formatCost, current?.today_actual_cost),
+      animated: display(formatCost, current ? animatedTodayCost.value : undefined),
     },
   ]
 })

@@ -6,7 +6,7 @@ import UserDashboardUsageChart from '../UserDashboardUsageChart.vue'
 import UserDashboardUsageToolbar from '../UserDashboardUsageToolbar.vue'
 import { provideUsageChartState, USAGE_CHART_STORAGE_KEY } from '../usageChartState'
 import Select from '@/components/common/Select.vue'
-import DateRangePicker from '@/components/common/DateRangePicker.vue'
+import DateRangePicker from '../DashboardDateRangePicker.vue'
 import { Line } from 'vue-chartjs'
 import { usageAPI } from '@/api/usage'
 import { formatDayKey } from '../usageChartData'
@@ -94,7 +94,7 @@ const mountChart = async () => {
     global: {
       stubs: {
         Line: true,
-        DateRangePicker: true,
+        DashboardDateRangePicker: true,
         Select: true,
         // 直接渲染筛选面板内容，便于断言各个筛选框
         UserDashboardFilterDropdown: { template: '<div><slot /></div>' },
@@ -129,25 +129,25 @@ describe('UserDashboardUsageChart', () => {
     localStorage.clear()
   })
 
-  it('默认拉取近 30 天和上一周期，并在指标卡上显示合计与环比', async () => {
+  it('默认拉取近 7 天（与 TokenRouter 相同）和上一周期，并在指标卡上显示合计与环比', async () => {
     const today = formatDayKey(new Date())
     vi.mocked(usageAPI.getDashboardTrend)
       .mockResolvedValueOnce(trendOf([{ date: today, requests: 30 }]) as any)
-      .mockResolvedValueOnce(trendOf([{ date: daysAgo(40), requests: 20 }]) as any)
+      .mockResolvedValueOnce(trendOf([{ date: daysAgo(10), requests: 20 }]) as any)
 
     const wrapper = await mountChart()
 
     expect(usageAPI.getDashboardTrend).toHaveBeenCalledTimes(2)
-    // 后端只接受日期，本期与上一周期各 30 个日历日，首尾相接
+    // 后端只接受日期，本期与上一周期各 7 个日历日，首尾相接
     const [currentCall, previousCall] = vi.mocked(usageAPI.getDashboardTrend).mock.calls.map((call) => call[0])
-    expect(currentCall).toMatchObject({ granularity: 'day', start_date: daysAgo(29), end_date: today })
-    expect(previousCall).toMatchObject({ granularity: 'day', start_date: daysAgo(59), end_date: daysAgo(30) })
+    expect(currentCall).toMatchObject({ granularity: 'day', start_date: daysAgo(6), end_date: today })
+    expect(previousCall).toMatchObject({ granularity: 'day', start_date: daysAgo(13), end_date: daysAgo(7) })
     expect(wrapper.get('[data-testid="usage-metric-requests"]').text()).toContain('30')
     expect(wrapper.get('[data-testid="usage-delta-requests"]').text()).toContain('+50%')
     expect(wrapper.get('[data-testid="usage-delta-cost"]').text()).toContain('dashboard.fork.usageChart.noPrevious')
-    // 范围只由日期选择器表达，默认 30 天覆盖今天在内的 30 个日历日
+    // 范围只由日期选择器表达，默认 7 天覆盖今天在内的 7 个日历日
     const picker = wrapper.findComponent(DateRangePicker)
-    expect(picker.props('startDate')).toBe(daysAgo(29))
+    expect(picker.props('startDate')).toBe(daysAgo(6))
     expect(picker.props('endDate')).toBe(today)
   })
 
@@ -203,8 +203,8 @@ describe('UserDashboardUsageChart', () => {
     const wrapper = await mountChart()
 
     const selects = wrapper.findAllComponents(Select)
-    // API 密钥、模型、分组、请求类型、计费类型（订阅开启时）、计费方式
-    expect(selects).toHaveLength(6)
+    // API 密钥、模型、分组、请求类型、计费类型（订阅开启时）、计费方式、请求类别
+    expect(selects).toHaveLength(7)
     const [keySelect, modelSelect, groupSelect, typeSelect] = selects
     expect(keySelect.props('options')).toEqual([
       { value: null, label: 'usage.allApiKeys' },
@@ -344,7 +344,7 @@ describe('UserDashboardUsageChart', () => {
       global: {
         stubs: {
           Line: true,
-          DateRangePicker: true,
+          DashboardDateRangePicker: true,
           Select: true,
           UserDashboardFilterDropdown: { template: '<div><slot /></div>' },
           RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },

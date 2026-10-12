@@ -958,6 +958,14 @@ export default {
         "latency": "平均耗时",
         "todayCost": "今日消费"
       },
+      "filters": {
+        "legacyCompaction": "旧版 Compaction"
+      },
+      "datePicker": {
+        "selectEndDate": "请选择结束日期",
+        "previousMonth": "上个月",
+        "nextMonth": "下个月"
+      },
       "usageChart": {
         "metricsLabel": "用量指标",
         "metrics": {
@@ -993,14 +1001,7 @@ export default {
         "requests": "请求",
         "tokens": "Token",
         "cost": "消费",
-        "selectDay": "点击查看当天按小时用量",
-        "summary": {
-          "activeDays": "活跃天数",
-          "tokens": "Token 合计",
-          "busiest": "用量最多的一天",
-          "streak": "连续使用",
-          "days": "{count} 天"
-        }
+        "selectDay": "点击查看当天按小时用量"
       },
       "topModels": {
         "title": "模型排行",
@@ -1032,7 +1033,6 @@ export default {
         "noSummary": "暂无摘要"
       },
       "quickActions": {
-        "keyCount": "{total} 个密钥，{active} 个在用",
         "purchaseDesc": "购买套餐或充值余额"
       }
     }

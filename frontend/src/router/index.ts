@@ -371,7 +371,8 @@ const routes: RouteRecordRaw[] = [
       requiresAdmin: false,
       title: 'Dashboard',
       titleKey: 'dashboard.title',
-      descriptionKey: 'dashboard.welcomeMessage'
+      descriptionKey: 'dashboard.welcomeMessage',
+      pageHeadingInBody: true // fork：标题在仪表盘正文里（TokenRouter 布局）
     }
   },
   {
@@ -486,7 +487,8 @@ const routes: RouteRecordRaw[] = [
       requiresAdmin: true,
       title: 'Admin Dashboard',
       titleKey: 'admin.dashboard.title',
-      descriptionKey: 'admin.dashboard.description'
+      descriptionKey: 'admin.dashboard.description',
+      pageHeadingInBody: true // fork：标题在仪表盘正文里（TokenRouter 布局）
     }
   },
   {

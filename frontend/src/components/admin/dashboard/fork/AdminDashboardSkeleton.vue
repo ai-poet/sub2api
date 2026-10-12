@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // fork：管理员仪表盘首屏骨架（移植自 TokenRouter components/common/DashboardSkeleton.vue）。
 import { useI18n } from 'vue-i18n'
-import SkeletonBlock from './SkeletonBlock.vue'
-import DashboardChartSkeleton from './DashboardChartSkeleton.vue'
+import SkeletonBlock from '@/components/user/dashboard/fork/SkeletonBlock.vue'
+import DashboardChartSkeleton from '@/components/user/dashboard/fork/DashboardChartSkeleton.vue'
 
 const { t } = useI18n()
 </script>

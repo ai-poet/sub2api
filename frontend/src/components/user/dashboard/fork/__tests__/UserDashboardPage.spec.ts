@@ -73,7 +73,6 @@ const LifetimeStub = defineComponent({
 
 const QuickActionsStub = defineComponent({
   name: 'UserDashboardQuickActions',
-  props: ['apiKeys'],
   setup: () => () => h('div', { 'data-stub': 'UserDashboardQuickActions' }),
 })
 
@@ -112,36 +111,37 @@ describe('UserDashboardPage', () => {
     vi.mocked(usageAPI.getDashboardModels).mockResolvedValue({ models: [], start_date: '', end_date: '' })
   })
 
-  it('按 TokenRouter 的顺序排布：标题行、用量区、热力图、平台拆分、公告与快捷操作', async () => {
+  it('按 TokenRouter 的顺序排布：标题行、用量区、热力图、公告与快捷操作，之后是本项目的累计用量和平台拆分', async () => {
     const wrapper = await mountPage()
     const order = wrapper.findAll('[data-stub]').map((node) => node.attributes('data-stub'))
     expect(order).toEqual([
       'UserDashboardLiveStats',
       'UserDashboardUsageToolbar',
       'UserDashboardUsageChart',
-      'UserDashboardLifetime',
       'UserDashboardHeatmap',
-      'UserDashboardPlatforms',
       'UserDashboardAnnouncements',
       'UserDashboardQuickActions',
+      'UserDashboardLifetime',
+      'UserDashboardPlatforms',
     ])
+    // 标题行照 TokenRouter：大标题和说明在正文里
+    expect(wrapper.get('h1').text()).toBe('dashboard.title')
     expect(refreshUser).toHaveBeenCalledTimes(1)
     expect(usageAPI.getDashboardTrend).toHaveBeenCalledTimes(2)
     expect(wrapper.findComponent(PlatformsStub).props('platformQuotas')).toEqual([{ platform: 'openai', daily_limit_usd: 5 }])
   })
 
-  it('实时统计交给平台拆分和快捷操作，失败的轮询不清掉上一次结果', async () => {
+  it('实时统计交给累计用量和平台拆分，失败的轮询不清掉上一次结果', async () => {
     const wrapper = await mountPage()
     const stats = { total_api_keys: 4, active_api_keys: 2, by_platform: [] }
     wrapper.findComponent(LiveStatsStub).vm.$emit('update', stats)
     await flushPromises()
     expect(wrapper.findComponent(PlatformsStub).props('stats')).toEqual(stats)
     expect(wrapper.findComponent(LifetimeStub).props('stats')).toEqual(stats)
-    expect(wrapper.findComponent(QuickActionsStub).props('apiKeys')).toEqual({ total: 4, active: 2 })
 
     wrapper.findComponent(LiveStatsStub).vm.$emit('update', null)
     await flushPromises()
-    expect(wrapper.findComponent(QuickActionsStub).props('apiKeys')).toEqual({ total: 4, active: 2 })
+    expect(wrapper.findComponent(PlatformsStub).props('stats')).toEqual(stats)
   })
 
   it('刷新按钮刷新整页：账户、用量区、热力图、实时统计、平台配额和公告', async () => {
