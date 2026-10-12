@@ -126,7 +126,6 @@ describe('AdminDashboardPage', () => {
     const wrapper = mountPage()
     await flushPromises()
 
-    // 测试环境默认「减少动态效果」，滚动数字直接显示终值
     expect(wrapper.get('[data-testid="stat-api-keys"]').text()).toContain('88')
     expect(wrapper.get('[data-testid="stat-accounts"]').text()).toContain('2 common.error')
     expect(wrapper.get('[data-testid="stat-today-requests"]').text()).toContain('common.total: 123,456')
@@ -189,20 +188,17 @@ describe('AdminDashboardPage', () => {
     expect(push).toHaveBeenCalledWith(expect.objectContaining({ path: '/admin/usage', query: expect.objectContaining({ user_id: '9' }) }))
   })
 
-  it('reports a failed snapshot and keeps the entrance class until the last block finishes', async () => {
+  it('reports a failed snapshot', async () => {
     getSnapshotV2.mockRejectedValueOnce(new Error('boom'))
-    const failed = mountPage()
+    mountPage()
     await flushPromises()
     expect(showError).toHaveBeenCalledWith('admin.dashboard.failedToLoad')
-    failed.unmount()
+  })
 
+  it('keeps the quick actions as the last block, after the TokenRouter sections', async () => {
     const wrapper = mountPage()
     await flushPromises()
-    const root = wrapper.get('[data-testid="admin-dashboard-root"]')
-    expect(root.classes()).toContain('dash-rise')
-    await wrapper.get('[data-testid="stat-api-keys"]').trigger('animationend')
-    expect(root.classes()).toContain('dash-rise')
-    await wrapper.get('[data-rise-last="true"]').trigger('animationend')
-    expect(root.classes()).not.toContain('dash-rise')
+    const html = wrapper.html()
+    expect(html.indexOf('data-stub="AdminUserTrend"')).toBeLessThan(html.indexOf('admin-quick-actions-stub'))
   })
 })

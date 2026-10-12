@@ -1,11 +1,12 @@
 <template>
+  <!-- User Usage Trend (Full Width) -->
   <div class="card p-4" data-testid="admin-user-trend">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <!-- 本项目保留：标题右侧可切换按 Token / 按实际消费排出前 12 名 -->
+    <div class="mb-4 flex items-center justify-between gap-3">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
         {{ t('admin.dashboard.recentUsage') }} (Top 12)
       </h3>
-      <!-- 本项目保留：按 Token 或按实际消费排出前 12 名 -->
-      <div v-segmented class="segmented" role="group" :aria-label="t('admin.dashboard.recentUsage')">
+      <div v-segmented class="segmented">
         <button
           v-for="option in METRICS"
           :key="option"
@@ -19,8 +20,11 @@
     </div>
     <div class="h-64">
       <DashboardChartSkeleton v-if="loading" height="100%" />
-      <Line v-else-if="chartData" :data="chartData" :options="lineOptions" />
-      <div v-else class="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+      <Line v-else-if="userTrendChartData" :data="userTrendChartData" :options="lineOptions" />
+      <div
+        v-else
+        class="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400"
+      >
         {{ t('admin.dashboard.noDataAvailable') }}
       </div>
     </div>
@@ -28,8 +32,9 @@
 </template>
 
 <script setup lang="ts">
-// fork：管理员仪表盘的用户使用趋势（Top 12），图表样式移植自 TokenRouter views/admin/DashboardView.vue：
-// 加载骨架、随主题切换的刻度色、外置提示（按数值从大到小排序）。数据由页面加载，这里只负责展示。
+// fork：管理员仪表盘的用户使用趋势（Top 12），图表逐项移植自 TokenRouter views/admin/DashboardView.vue 的
+// lineOptions / userTrendChartData（品牌色刻度与网格、外置提示按数值从大到小排序）。
+// 本项目保留按 Token / 实际消费切换；数据由页面加载，这里只负责展示。
 import { computed, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -41,7 +46,7 @@ import {
   Tooltip,
   Legend,
   Filler,
-  type TooltipItem as ChartTooltipItem,
+  type TooltipItem,
 } from 'chart.js'
 import { Line } from 'vue-chartjs'
 import { vSegmented } from '@/directives/segmented'
@@ -54,9 +59,11 @@ import {
 } from '@/components/user/dashboard/fork/chartTheme'
 import { externalTooltipHandler, hideExternalTooltip } from '@/components/user/dashboard/fork/chartExternalTooltip'
 import DashboardChartSkeleton from './DashboardChartSkeleton.vue'
-import { formatCost, formatDayLabel, formatHourLabel, formatTokens, toFiniteNumber } from './format'
+import { formatTokens } from './format'
 
+// Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
+
 onBeforeUnmount(hideExternalTooltip)
 
 type UserTrendMetric = 'tokens' | 'actual_cost'
@@ -66,10 +73,8 @@ const props = withDefaults(defineProps<{
   trend: UserUsageTrendPoint[]
   metric: UserTrendMetric
   loading?: boolean
-  granularity?: 'day' | 'hour'
 }>(), {
   loading: false,
-  granularity: 'hour',
 })
 
 const emit = defineEmits<{
@@ -77,94 +82,132 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { colors: themeColors } = useChartTheme()
 
-const formatValue = (value: number): string =>
+// 与 TokenRouter 相同：刻度/网格用品牌色系的字面值，不走 zinc 档位；主题切换即刻重绘。
+const { isDark } = useChartTheme()
+const chartColors = computed(() => ({
+  text: isDark.value ? '#D4D4D8' : '#2D4F68',
+  grid: isDark.value ? '#27272A' : '#DDF4FC',
+}))
+
+// 按实际消费时沿用原页面的金额格式：$ + 两到四位小数，千以上缩写 K
+const formatCost = (value: number): string => {
+  if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`
+  if (value >= 1) return `$${value.toFixed(2)}`
+  if (value >= 0.01) return `$${value.toFixed(3)}`
+  return `$${value.toFixed(4)}`
+}
+
+const formatUserTrendValue = (value: number): string =>
   props.metric === 'tokens' ? formatTokens(value) : formatCost(value)
 
-const displayName = (point: UserUsageTrendPoint): string =>
-  point.username?.trim() || point.email?.trim() || t('admin.redeem.userPrefix', { id: point.user_id })
+const tooltipValue = (item: TooltipItem<'line'>): number =>
+  typeof item?.raw === 'number' ? item.raw : Number(item?.parsed?.y ?? 0)
 
-const sortedDates = computed(() => Array.from(new Set(props.trend.map((point) => point.date))).sort())
-
-const chartData = computed(() => {
-  if (!props.trend?.length) return null
-
-  // 按 user_id 分组，同名用户不会被合并
-  const groups = new Map<number, { name: string; data: Map<string, number> }>()
-  for (const point of props.trend) {
-    let group = groups.get(point.user_id)
-    if (!group) {
-      group = { name: displayName(point), data: new Map() }
-      groups.set(point.user_id, group)
-    }
-    group.data.set(point.date, toFiniteNumber(props.metric === 'tokens' ? point.tokens : point.actual_cost))
-  }
-
-  return {
-    labels: sortedDates.value.map((date) => (props.granularity === 'hour' ? formatHourLabel(date) : formatDayLabel(date))),
-    datasets: Array.from(groups.values()).map((group, index) => {
-      const color = CHART_PALETTE[index % CHART_PALETTE.length]
-      return {
-        label: group.name,
-        data: sortedDates.value.map((date) => group.data.get(date) || 0),
-        borderColor: color,
-        backgroundColor: `${color}20`,
-        fill: false,
-        tension: 0.3,
-      }
-    }),
-  }
-})
-
-type TooltipItem = ChartTooltipItem<'line'>
-const itemValue = (item: TooltipItem): number =>
-  typeof item.raw === 'number' ? item.raw : Number(item.parsed?.y ?? 0)
-
+// Line chart options (for user trend chart)
 const lineOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-  interaction: { intersect: false, mode: 'index' as const },
+  interaction: {
+    intersect: false,
+    mode: 'index' as const
+  },
   plugins: {
     legend: {
       position: 'top' as const,
       labels: {
-        color: themeColors.value.text,
+        color: chartColors.value.text,
         usePointStyle: true,
         pointStyle: 'circle',
         padding: 15,
-        font: { size: CHART_LEGEND_FONT_SIZE },
-      },
+        font: {
+          size: CHART_LEGEND_FONT_SIZE
+        }
+      }
     },
     tooltip: {
       enabled: false,
       external: externalTooltipHandler,
-      itemSort: (a: TooltipItem, b: TooltipItem) => itemValue(b) - itemValue(a),
+      itemSort: (a: TooltipItem<'line'>, b: TooltipItem<'line'>) => tooltipValue(b) - tooltipValue(a),
       callbacks: {
-        title: (items: TooltipItem[]) => sortedDates.value[items[0]?.dataIndex ?? -1] || '',
-        label: (context: TooltipItem) => `${context.dataset.label}: ${formatValue(Number(context.raw))}`,
-      },
-    },
+        label: (context: TooltipItem<'line'>) => {
+          return `${context.dataset.label}: ${formatUserTrendValue(Number(context.raw))}`
+        }
+      }
+    }
   },
   scales: {
     x: {
-      grid: { color: themeColors.value.grid },
-      ticks: {
-        color: themeColors.value.text,
-        autoSkip: true,
-        maxRotation: props.granularity === 'hour' ? 0 : 50,
-        minRotation: 0,
-        font: { size: CHART_TICK_FONT_SIZE },
+      grid: {
+        color: chartColors.value.grid
       },
+      ticks: {
+        color: chartColors.value.text,
+        font: {
+          size: CHART_TICK_FONT_SIZE
+        }
+      }
     },
     y: {
-      grid: { color: themeColors.value.grid },
-      ticks: {
-        color: themeColors.value.text,
-        font: { size: CHART_TICK_FONT_SIZE },
-        callback: (value: string | number) => formatValue(Number(value)),
+      grid: {
+        color: chartColors.value.grid
       },
-    },
-  },
+      ticks: {
+        color: chartColors.value.text,
+        font: {
+          size: CHART_TICK_FONT_SIZE
+        },
+        callback: (value: string | number) => formatUserTrendValue(Number(value))
+      }
+    }
+  }
 }))
+
+// User trend chart data
+const userTrendChartData = computed(() => {
+  if (!props.trend?.length) return null
+
+  const getDisplayName = (point: UserUsageTrendPoint): string => {
+    const username = point.username?.trim()
+    if (username) {
+      return username
+    }
+
+    const email = point.email?.trim()
+    if (email) {
+      return email
+    }
+
+    return t('admin.redeem.userPrefix', { id: point.user_id })
+  }
+
+  // Group by user_id to avoid merging different users with the same display name
+  const userGroups = new Map<number, { name: string; data: Map<string, number> }>()
+  const allDates = new Set<string>()
+
+  props.trend.forEach((point) => {
+    allDates.add(point.date)
+    const key = point.user_id
+    if (!userGroups.has(key)) {
+      userGroups.set(key, { name: getDisplayName(point), data: new Map() })
+    }
+    userGroups.get(key)!.data.set(point.date, props.metric === 'tokens' ? point.tokens : point.actual_cost)
+  })
+
+  const sortedDates = Array.from(allDates).sort()
+
+  const datasets = Array.from(userGroups.values()).map((group, idx) => ({
+    label: group.name,
+    data: sortedDates.map((date) => group.data.get(date) || 0),
+    borderColor: CHART_PALETTE[idx % CHART_PALETTE.length],
+    backgroundColor: `${CHART_PALETTE[idx % CHART_PALETTE.length]}20`,
+    fill: false,
+    tension: 0.3
+  }))
+
+  return {
+    labels: sortedDates,
+    datasets
+  }
+})
 </script>

@@ -28,8 +28,8 @@ export type PresetRange = Exclude<UsageRangePreset, 'custom'>
 export const USAGE_METRICS: UsageMetric[] = ['requests', 'tokens', 'cost', 'cacheHitRate']
 export const USAGE_RANGE_PRESETS: PresetRange[] = ['24h', '7d', '30d']
 
-// 首次打开默认看近 30 天，与 TokenRouter 截图一致；之后记住上次的选择。
-export const DEFAULT_RANGE: PresetRange = '30d'
+// 首次打开默认看近 7 天（与 TokenRouter 代码一致）；之后记住上次的选择。
+export const DEFAULT_RANGE: PresetRange = '7d'
 export const DEFAULT_METRIC: UsageMetric = 'tokens'
 
 export const USAGE_CHART_STORAGE_KEY = 'dashboard-usage-chart'

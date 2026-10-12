@@ -418,9 +418,9 @@ export default {
   "admin": {
     "dashboard": {
       "fork": {
-        "actualDescription": "实际扣费：用户按分组倍率实际支付的金额",
-        "accountCostDescription": "成本：上游账号按账号倍率计算的成本",
-        "standardDescription": "标准：按官方价格计算的金额"
+        "actualDescription": "用户实际消耗的费用。按分组倍率和用户专属倍率计算，用于扣减用户余额或订阅配额。",
+        "accountCostDescription": "上游账号口径的成本。按账号侧费用与账号计费倍率计算，用于账号成本分析，不影响用户实际扣费。",
+        "standardDescription": "标准计费费用。按当前模型的基础定价计算，不受分组倍率、用户专属倍率和账号计费倍率影响。"
       }
     },
     "users": {
@@ -979,21 +979,21 @@ export default {
         "peak": "峰值",
         "average": "均值",
         "vsPrevious": "较上一周期",
-        "noPrevious": "上一周期没有数据",
+        "noPrevious": "上一周期无数据",
         "byHour": "按小时",
         "byDay": "按天",
         "trendTitle": "用量趋势 · {metric}",
-        "empty": "所选时间段没有用量"
+        "empty": "所选时间范围内暂无用量"
       },
       "heatmap": {
         "title": "用量热力图",
         "less": "少",
         "more": "多",
-        "noUsage": "没有用量",
+        "noUsage": "无用量",
         "requests": "请求",
         "tokens": "Token",
         "cost": "消费",
-        "selectDay": "点击按小时查看这一天",
+        "selectDay": "点击查看当天按小时用量",
         "summary": {
           "activeDays": "活跃天数",
           "tokens": "Token 合计",
@@ -1007,9 +1007,9 @@ export default {
         "subtitle": "按{metric}",
         "others": "其他模型（{count}）",
         "viewAll": "查看全部",
-        "empty": "所选时间段没有模型用量",
-        "filterHint": "点击只看这个模型",
-        "clearFilter": "再点一次取消筛选",
+        "empty": "所选范围内暂无模型用量",
+        "filterHint": "点击按此模型筛选",
+        "clearFilter": "再次点击取消筛选",
         "hitRate": "命中率 {rate}"
       },
       "platforms": {
@@ -1029,7 +1029,7 @@ export default {
       "announcements": {
         "title": "最近公告",
         "unread": "{count} 条未读",
-        "noSummary": "没有摘要"
+        "noSummary": "暂无摘要"
       },
       "quickActions": {
         "keyCount": "{total} 个密钥，{active} 个在用",

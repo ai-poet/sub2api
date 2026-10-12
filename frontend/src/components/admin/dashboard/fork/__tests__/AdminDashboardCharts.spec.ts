@@ -172,10 +172,11 @@ describe('AdminUserTrend', () => {
   it('keeps users with the same name apart and formats by the selected metric', async () => {
     const wrapper = mount(AdminUserTrend, { props: { trend, metric: 'tokens' } })
     const line = wrapper.findComponent({ name: 'Line' })
-    expect(line.props('data').labels).toEqual(['00:00', '01:00'])
+    expect(line.props('data').labels).toEqual(['2026-10-12 00:00', '2026-10-12 01:00'])
     expect(line.props('data').datasets.map((set: { data: number[] }) => set.data)).toEqual([[0, 1000], [500, 0]])
     expect(line.props('options').scales.y.ticks.callback(1500)).toBe('1.50K')
-    expect(line.props('options').plugins.tooltip.callbacks.title([{ dataIndex: 1 }])).toBe('2026-10-12 01:00')
+    expect(line.props('options').scales.x.ticks.color).toBe('#2D4F68')
+    expect(line.props('options').scales.x.grid.color).toBe('#DDF4FC')
 
     await wrapper.setProps({ metric: 'actual_cost' })
     expect(wrapper.findComponent({ name: 'Line' }).props('options').scales.y.ticks.callback(5)).toBe('$5.00')

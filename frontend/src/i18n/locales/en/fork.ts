@@ -418,9 +418,9 @@ export default {
   "admin": {
     "dashboard": {
       "fork": {
-        "actualDescription": "Actual: what users paid after group multipliers",
-        "accountCostDescription": "Cost: upstream account cost after account multipliers",
-        "standardDescription": "Standard: priced at official rates"
+        "actualDescription": "The amount actually charged to the user. Calculated with the group multiplier and any user-specific multiplier, and used to deduct user balance or subscription quota.",
+        "accountCostDescription": "The upstream account cost. Calculated from the account-side cost and the account billing multiplier, used for account cost analysis, and does not affect the user’s actual charge.",
+        "standardDescription": "The standard billed cost. Calculated from the current model base pricing, and is not affected by group multipliers, user-specific multipliers, or account billing multipliers."
       }
     },
     "users": {
@@ -979,21 +979,21 @@ export default {
         "peak": "Peak",
         "average": "Avg",
         "vsPrevious": "vs previous period",
-        "noPrevious": "No data for the previous period",
+        "noPrevious": "No data for previous period",
         "byHour": "Hourly",
         "byDay": "Daily",
         "trendTitle": "Usage trend · {metric}",
         "empty": "No usage in the selected range"
       },
       "heatmap": {
-        "title": "Usage activity",
+        "title": "Usage Activity",
         "less": "Less",
         "more": "More",
         "noUsage": "No usage",
         "requests": "Requests",
         "tokens": "Tokens",
         "cost": "Cost",
-        "selectDay": "Click to see this day by the hour",
+        "selectDay": "Click to see hourly usage for this day",
         "summary": {
           "activeDays": "Active days",
           "tokens": "Tokens",
@@ -1003,7 +1003,7 @@ export default {
         }
       },
       "topModels": {
-        "title": "Top models",
+        "title": "Top Models",
         "subtitle": "By {metric}",
         "others": "Other models ({count})",
         "viewAll": "View all",
@@ -1027,13 +1027,13 @@ export default {
         "barHint": "The full bar is the standard price; the filled part is what you were actually charged"
       },
       "announcements": {
-        "title": "Recent announcements",
+        "title": "Recent Announcements",
         "unread": "{count} unread",
-        "noSummary": "No summary"
+        "noSummary": "No summary available"
       },
       "quickActions": {
         "keyCount": "{active} of {total} keys active",
-        "purchaseDesc": "Buy a plan or add balance"
+        "purchaseDesc": "Purchase a plan or add balance"
       }
     }
   },

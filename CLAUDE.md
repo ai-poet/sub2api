@@ -640,7 +640,7 @@ The features below are locally maintained customizations of this fork. During up
   - one reduced-motion block.
 - **Tailwind**: `frontend/tailwind.fork-preset.js` adds `duration-fast/normal/layout` and `ease-standard/exit`, and never changes Tailwind's defaults.
 - **Components and helpers**:
-  - `components/motion/{MotionTransition,Collapse,AnimatedNumber}.vue` + `RetainedContent.ts`
+  - `components/motion/{MotionTransition,Collapse,AnimatedNumber,ExpandableTableRow}.vue` + `RetainedContent.ts`
   - `utils/leavingElement.ts`
   - `composables/useCountUp.ts` (quartic ease-out, from the previous value, or from `initial`)
   - `directives/segmented.ts`
@@ -662,7 +662,21 @@ The features below are locally maintained customizations of this fork. During up
   - **Below**: `UserDashboardHeatmap.vue` (up to 26 weeks, column wave, keyboard navigation; clicking a day zooms the chart to that day), `UserDashboardPlatforms.vue` (the per-platform breakdown and platform quotas kept from the old dashboard), then `UserDashboardAnnouncements.vue` + `UserDashboardQuickActions.vue`.
   - **State**: shared by `usageChartState.ts`. Helpers: `usageChartData.ts`, `useUsageChartFilters.ts`, `topModels.ts`, `metricTones.ts`, `dashboardMotion.ts` (one source for JS and CSS timings), `chartTheme.ts`, `chartExternalTooltip.ts`.
   - i18n keys live under `dashboard.fork.*`.
-- **Upstream files touched**: `AppLayout.vue` (main class), `AppSidebar.vue` (`SidebarNavIcon` at the icon render sites, `applyDarkClass`, leaderboard entry), `HomeView.vue` (`applyDarkClass`, `HomeLiveStats`), `tailwind.config.js` (`presets`), `main.ts`, `vite.config.ts`, `router/index.ts` (leaderboard route + `publicCatalog` hook), `DashboardView.vue`. Every edit is tagged `fork：`.
+- **Admin dashboard** (ported from TokenRouter's admin dashboard): `views/admin/DashboardView.vue` only wraps `components/admin/dashboard/fork/AdminDashboardPage.vue` in AppLayout. Endpoints and loading rules are unchanged: snapshot v2, user trend and spending ranking, each guarded by its own sequence number.
+  - **Template**: copied element for element from TokenRouter's `views/admin/DashboardView.vue`, so a plain `diff` against it only shows data names (accounts instead of providers, account cost instead of provider cost, USD formatting) and test ids. Keep it that way: port later TokenRouter changes by diffing, and do not add effects TokenRouter's page does not have.
+  - **Layout, top to bottom**:
+    - A row with the refresh button on the right. TokenRouter puts it in AppLayout's `page-heading-actions` slot, which ours lacks; the title shows there only on narrow screens.
+    - `AdminDashboardSkeleton.vue` until the first snapshot arrives (`SkeletonBlock.vue` / `DashboardChartSkeleton.vue` copy TokenRouter's Skeleton and ChartSkeleton).
+    - Two rows of stat cards. The token cards show actual / account cost / standard spend in green / orange / grey, with TokenRouter's descriptions in tooltips (`admin.dashboard.fork.*`).
+    - The time range / granularity card (`.time-controls` container query hides the labels below 460 px), the charts, then the Top 12 user trend.
+    - Our quick actions (`AdminQuickActions.vue`: batch image, group pricing, original markup) come last; TokenRouter has none.
+  - **Charts**:
+    - `AdminModelDistribution.vue`: TokenRouter's ModelDistributionChart as the dashboard uses it — `vSegmented` switch, skeleton, per-user breakdown in an animated `ExpandableTableRow`, body-level tooltip; our account cost column.
+    - `AdminTokenTrend.vue`: TokenRouter's TokenUsageTrend — HH:mm hour labels, the full time in the tooltip title, "Cached Input %".
+    - `AdminUserTrend.vue`: TokenRouter's user trend chart (brand tick / grid colours `#2D4F68` / `#DDF4FC`), plus our tokens / actual spend switch.
+    - Tooltip and palette come from `components/user/dashboard/fork/{chartExternalTooltip,chartTheme}.ts`, whose colours equal TokenRouter's `useChartTheme.ts`; number formatting is in `format.ts`.
+  - The upstream `components/charts/ModelDistributionChart.vue` / `TokenUsageTrend.vue` are untouched and still serve the usage pages. Never point the dashboard back at them in a merge.
+- **Upstream files touched**: `AppLayout.vue` (main class), `AppSidebar.vue` (`SidebarNavIcon` at the icon render sites, `applyDarkClass`, leaderboard entry), `HomeView.vue` (`applyDarkClass`, `HomeLiveStats`), `tailwind.config.js` (`presets`), `main.ts`, `vite.config.ts`, `router/index.ts` (leaderboard route + `publicCatalog` hook), `views/user/DashboardView.vue`, `views/admin/DashboardView.vue` (and the stub names in its spec). Every edit is tagged `fork：`.
 - Keep on upstream merges.
 
 ### 排行榜与首页公开统计 (Leaderboard + home public stats, local implementation)
