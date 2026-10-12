@@ -17,6 +17,9 @@ export interface ModelCatalogGroupRef {
   name: string
   rate_multiplier: number
   rate_source: 'group_default' | 'user_override'
+  /** fork：分组描述与排序值，模型广场按分组分区时用（旧后端不下发） */
+  description?: string
+  sort_order?: number
 }
 
 export interface ModelCatalogPricing {
@@ -174,6 +177,8 @@ export function mapPublicPricingToCatalogItems(items: PublicPricingItem[]): Mode
         name: item.group.name,
         rate_multiplier: item.group.rate_multiplier,
         rate_source: 'group_default',
+        description: item.group.description,
+        sort_order: item.group.sort_order,
       },
       available_group_count: item.available_group_count,
       official_pricing: official,
@@ -392,7 +397,11 @@ export function buildPaymentCenterUserApiUrl(input: {
     const apiUrl = new URL(baseUrl.origin)
     apiUrl.pathname = apiPath
     apiUrl.searchParams.set('user_id', String(input.userId))
-    apiUrl.searchParams.set('token', input.token)
+    // fork：同源（默认 /pay 反代）时 token 由 fetchBalanceCreditCnyPerUsd 放进 Authorization 头，
+    // 不进地址；跨域仍放 query，免得触发 CORS 预检。
+    if (apiUrl.origin !== new URL(fallbackOrigin).origin) {
+      apiUrl.searchParams.set('token', input.token)
+    }
 
     return apiUrl.toString()
   } catch {
@@ -417,9 +426,12 @@ export async function fetchBalanceCreditCnyPerUsd(input: {
   }
 
   try {
+    // fork：地址里没带 token（同源）就走 Authorization 头。
+    const tokenInUrl = new URL(url).searchParams.has('token')
     const response = await fetch(url, {
       method: 'GET',
       mode: 'cors',
+      ...(tokenInUrl ? {} : { headers: { Authorization: `Bearer ${input.token}` } }),
     })
 
     if (!response.ok) {

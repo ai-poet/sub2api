@@ -42,15 +42,36 @@
         @change="saveLimit"
       />
     </div>
+
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <label class="text-sm font-medium text-gray-800 dark:text-gray-200" for="insights-sort-by">
+          {{ t('admin.settings.site.insights.usageRankingSortBy') }}
+        </label>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.settings.site.insights.usageRankingSortByHint') }}</p>
+      </div>
+      <div class="w-36 shrink-0">
+        <Select
+          id="insights-sort-by"
+          :model-value="form.usage_ranking_sort_by"
+          :options="sortByOptions"
+          :disabled="loading || saving || !form.usage_ranking_enabled"
+          :aria-label="t('admin.settings.site.insights.usageRankingSortBy')"
+          data-test="insights-sort-by"
+          @update:model-value="(value) => saveSortBy(value as InsightsSortBy)"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 // fork：排行榜 / 首页公开统计的后台开关。保存后刷新公开设置，侧栏入口和首页计数立即跟着变。
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Toggle from '@/components/common/Toggle.vue'
-import { insightsAPI, type InsightsConfig } from '@/api/admin/insights'
+import Select from '@/components/common/Select.vue'
+import { insightsAPI, type InsightsConfig, type InsightsSortBy } from '@/api/admin/insights'
 import { useAppStore } from '@/stores'
 import { extractApiErrorMessage } from '@/utils/apiError'
 
@@ -71,8 +92,18 @@ const form = reactive<InsightsConfig>({
   usage_ranking_enabled: false,
   usage_ranking_limit: 20,
   usage_ranking_show_cost: false,
+  usage_ranking_sort_by: 'tokens',
   public_stats_enabled: false,
 })
+
+// 花费只有在「用户榜显示花费」打开时才能作为排名指标
+const sortByOptions = computed(() =>
+  (['tokens', 'requests', 'cost'] as const).map(value => ({
+    value,
+    label: t(`admin.settings.site.insights.sortByOptions.${value}`),
+    disabled: value === 'cost' && !form.usage_ranking_show_cost,
+  })),
+)
 const loading = ref(true)
 const saving = ref(false)
 const loadFailed = ref(false)
@@ -110,6 +141,16 @@ async function saveLimit() {
   if (loading.value || saving.value) return
   const limit = Math.min(50, Math.max(3, Math.round(Number(form.usage_ranking_limit) || 20)))
   await save({ ...form, usage_ranking_limit: limit })
+}
+
+/** 排名指标一改就保存，失败时弹回原值 */
+async function saveSortBy(value: InsightsSortBy) {
+  if (loading.value || saving.value || value === form.usage_ranking_sort_by) return
+  const previous = form.usage_ranking_sort_by
+  form.usage_ranking_sort_by = value
+  if (!(await save({ ...form }))) {
+    form.usage_ranking_sort_by = previous
+  }
 }
 
 onMounted(async () => {

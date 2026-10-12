@@ -78,6 +78,9 @@ type ModelCatalogGroupRef struct {
 	Name           string  `json:"name"`
 	RateMultiplier float64 `json:"rate_multiplier"`
 	RateSource     string  `json:"rate_source"`
+	// Description / SortOrder 供模型广场按分组分区展示：分组头部显示描述，分区按排序值排列。
+	Description string `json:"description,omitempty"`
+	SortOrder   int    `json:"sort_order"`
 }
 
 type ModelCatalogPricing struct {
@@ -318,6 +321,8 @@ func (s *ModelCatalogService) buildEntry(
 			Name:           group.Name,
 			RateMultiplier: rateMultiplier,
 			RateSource:     rateSource,
+			Description:    strings.TrimSpace(group.Description),
+			SortOrder:      group.SortOrder,
 		},
 		AvailableGroupCount: 1,
 		OfficialPricing:     officialPricing.withSource(officialSource),

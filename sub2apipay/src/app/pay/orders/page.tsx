@@ -16,6 +16,8 @@ import { getOrdersAccessHint, getOrdersSessionExpiredHint } from '@/lib/branding
 import { applyLocaleToSearchParams, pickLocaleText, resolveLocale } from '@/lib/locale';
 import { detectDeviceIsMobile, type UserInfo, type MyOrder, type OrderStatusFilter } from '@/lib/pay-utils';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
+import { downloadWithAuth } from '@/lib/authorized-file';
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
 
@@ -28,7 +30,7 @@ interface Summary {
 
 function OrdersContent() {
   const searchParams = useSearchParams();
-  const token = (searchParams.get('token') || '').trim();
+  const { token, urlToken, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const srcHost = searchParams.get('src_host') || '';
@@ -146,13 +148,14 @@ function OrdersContent() {
   useEffect(() => {
     if (!isMobile || isEmbedded || typeof window === 'undefined') return;
     const params = new URLSearchParams();
-    if (token) params.set('token', token);
+    // 只延续地址里本来就有的 token；从主站登录态读到的 token 绝不写进地址。
+    if (urlToken) params.set('token', urlToken);
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
     params.set('tab', 'orders');
     applyLocaleToSearchParams(params, locale);
     window.location.replace(`/pay?${params.toString()}`);
-  }, [isMobile, isEmbedded, token, theme, uiMode, locale]);
+  }, [isMobile, isEmbedded, urlToken, theme, uiMode, locale]);
 
   const loadOrders = async (targetPage = page, targetPageSize = pageSize) => {
     setLoading(true);
@@ -165,11 +168,10 @@ function OrdersContent() {
       }
 
       const params = new URLSearchParams({
-        token,
         page: String(targetPage),
         page_size: String(targetPageSize),
       });
-      const res = await fetch(buildAppApiPath(`/api/orders/my?${params}`));
+      const res = await fetch(buildAppApiPath(`/api/orders/my?${params}`), { headers: authHeaders() });
       if (!res.ok) {
         setError(res.status === 401 ? text.sessionExpired : text.loadFailed);
         setOrders([]);
@@ -224,9 +226,9 @@ function OrdersContent() {
 
   const loadQuickPreview = async () => {
     try {
-      const params = new URLSearchParams({ token });
+      const params = new URLSearchParams();
       applyLocaleToSearchParams(params, locale);
-      const res = await fetch(buildAppApiPath(`/api/invoices/quick?${params}`));
+      const res = await fetch(buildAppApiPath(`/api/invoices/quick?${params}`), { headers: authHeaders() });
       if (!res.ok) return;
       const data = await res.json();
       setQuickPreview({
@@ -242,9 +244,10 @@ function OrdersContent() {
   };
 
   useEffect(() => {
+    if (!sessionReady) return;
     if (isMobile && !isEmbedded) return;
     loadOrders(1, pageSize);
-  }, [token, isMobile, isEmbedded]);
+  }, [token, sessionReady, isMobile, isEmbedded]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -258,11 +261,11 @@ function OrdersContent() {
   };
 
   const handleRefundRequest = async (orderId: string, amount: number, reason: string) => {
-    const params = new URLSearchParams({ token });
+    const params = new URLSearchParams();
     applyLocaleToSearchParams(params, locale);
     const res = await fetch(buildAppApiPath(`/api/orders/${orderId}/refund-request?${params.toString()}`), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ amount, reason }),
     });
 
@@ -276,9 +279,9 @@ function OrdersContent() {
 
   const fetchSavedTitles = async (): Promise<SavedInvoiceTitleOption[]> => {
     try {
-      const params = new URLSearchParams({ token, page: '1', page_size: '20' });
+      const params = new URLSearchParams({ page: '1', page_size: '20' });
       applyLocaleToSearchParams(params, locale);
-      const res = await fetch(buildAppApiPath(`/api/invoices/my?${params}`));
+      const res = await fetch(buildAppApiPath(`/api/invoices/my?${params}`), { headers: authHeaders() });
       if (!res.ok) return [];
       const data = await res.json();
       return Array.isArray(data.titles) ? data.titles : [];
@@ -314,11 +317,11 @@ function OrdersContent() {
     path: string,
     body: Record<string, unknown>,
   ): Promise<{ error: string | null; data: { count?: number; amount?: number } }> => {
-    const params = new URLSearchParams({ token });
+    const params = new URLSearchParams();
     applyLocaleToSearchParams(params, locale);
     const res = await fetch(buildAppApiPath(`${path}?${params}`), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
@@ -424,11 +427,16 @@ function OrdersContent() {
     });
   };
 
-  const handleInvoiceDownload = (invoiceId: string) => {
-    const params = new URLSearchParams({ token });
+  const handleInvoiceDownload = async (invoiceId: string) => {
+    const params = new URLSearchParams();
     applyLocaleToSearchParams(params, locale);
-    // 后端 302 到预签名链接，且响应头带 attachment disposition，同页导航即触发下载。
-    window.location.href = buildAppApiPath(`/api/invoices/${invoiceId}/download?${params}`);
+    // 整页导航带不了 Authorization 头，取回文件再交给浏览器保存，token 不进地址。
+    const ok = await downloadWithAuth(
+      buildAppApiPath(`/api/invoices/${invoiceId}/download?${params}`),
+      authHeaders(),
+      `invoice-${invoiceId}`,
+    );
+    if (!ok) setQuickInvoiceError(text.invoiceDownloadFailed);
   };
 
   const filteredOrders = activeFilter === 'ALL' ? orders : orders.filter((o) => o.status === activeFilter);
@@ -477,6 +485,9 @@ function OrdersContent() {
     );
   }
 
+  // 首帧还没读主站登录态，先不判「缺少认证信息」。
+  if (!sessionReady) return null;
+
   if (!hasToken && !resolvedUserId) {
     return (
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
@@ -490,7 +501,7 @@ function OrdersContent() {
 
   const buildScopedUrl = (path: string) => {
     const params = new URLSearchParams();
-    if (token) params.set('token', token);
+    if (urlToken) params.set('token', urlToken);
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
     if (srcHost) params.set('src_host', srcHost);

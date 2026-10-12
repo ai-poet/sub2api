@@ -258,6 +258,17 @@ export const PAYMENT_TYPE_META: Record<string, PaymentTypeMeta> = {
     chartBar: { light: 'bg-amber-500', dark: 'bg-amber-400' },
     buttonClass: 'bg-[#D4A574] hover:bg-[#c49a6c] active:bg-[#b48b60]',
   },
+  [PAYMENT_TYPE.PAYNOW]: {
+    label: 'PayNow',
+    provider: '易支付',
+    color: '#7B2C83',
+    selectedBorder: 'border-fuchsia-600',
+    selectedBg: 'bg-fuchsia-50',
+    selectedBgDark: 'bg-fuchsia-950',
+    iconBg: 'bg-[#7B2C83]',
+    chartBar: { light: 'bg-fuchsia-600', dark: 'bg-fuchsia-400' },
+    buttonClass: 'bg-[#7B2C83] hover:bg-[#6a2571] active:bg-[#591f5f]',
+  },
 };
 
 const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider: string; sublabel?: string }>> = {
@@ -271,6 +282,7 @@ const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider:
     [PAYMENT_TYPE.USDC_SOLANA]: { label: 'USDC', provider: '易支付', sublabel: 'Solana' },
     [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
     [PAYMENT_TYPE.BANK]: { label: '银行卡转账', provider: 'Bank Transfer' },
+    [PAYMENT_TYPE.PAYNOW]: { label: 'PayNow', provider: '易支付' },
   },
   en: {
     [PAYMENT_TYPE.ALIPAY]: { label: 'Alipay', provider: 'EasyPay' },
@@ -282,6 +294,7 @@ const PAYMENT_TEXT_MAP: Record<Locale, Record<string, { label: string; provider:
     [PAYMENT_TYPE.USDC_SOLANA]: { label: 'USDC', provider: 'EasyPay', sublabel: 'Solana' },
     [PAYMENT_TYPE.STRIPE]: { label: 'Stripe', provider: 'Stripe' },
     [PAYMENT_TYPE.BANK]: { label: 'Bank Transfer', provider: 'Bank Transfer' },
+    [PAYMENT_TYPE.PAYNOW]: { label: 'PayNow', provider: 'EasyPay' },
   },
 };
 
@@ -323,6 +336,7 @@ export function getPaymentIconType(type: string): string {
   if (type.startsWith(PAYMENT_PREFIX.USDC)) return PAYMENT_PREFIX.USDC;
   if (type.startsWith(PAYMENT_PREFIX.STRIPE)) return PAYMENT_PREFIX.STRIPE;
   if (type.startsWith(PAYMENT_PREFIX.BANK)) return PAYMENT_PREFIX.BANK;
+  if (type.startsWith(PAYMENT_PREFIX.PAYNOW)) return PAYMENT_PREFIX.PAYNOW;
   return type;
 }
 

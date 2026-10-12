@@ -515,4 +515,17 @@ describe('GET /api/invoices/[id]/download', () => {
     expect(res.status).toBe(401);
     expect(mockFetchAttachment).not.toHaveBeenCalled();
   });
+
+  // 支付页改为带 Authorization 头下载，登录 token 不再出现在地址里（访问日志、浏览器历史）。
+  it('accepts the token from the Authorization header alone', async () => {
+    mockInvoiceFindFirst.mockResolvedValue(null);
+    const res = await downloadInvoiceRoute(
+      new NextRequest('https://pay.example.com/api/invoices/inv-1/download', {
+        headers: { Authorization: 'Bearer header-tok' },
+      }),
+      { params },
+    );
+    expect(res.status).toBe(404);
+    expect(mockGetCurrentUserByToken).toHaveBeenCalledWith('header-tok');
+  });
 });

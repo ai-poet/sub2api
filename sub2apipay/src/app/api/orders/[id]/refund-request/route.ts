@@ -4,6 +4,7 @@ import { getCurrentUserByToken } from '@/lib/sub2api/client';
 import { requestRefund } from '@/lib/order/service';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
+import { readUserToken } from '@/lib/utils/request-token';
 
 const refundRequestSchema = z.object({
   amount: z.number().positive(),
@@ -12,7 +13,7 @@ const refundRequestSchema = z.object({
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang'));
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: locale === 'en' ? 'Missing token parameter' : '缺少 token 参数' }, { status: 401 });
   }

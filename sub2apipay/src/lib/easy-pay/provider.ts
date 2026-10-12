@@ -17,7 +17,16 @@ import { getEnv } from '@/lib/config';
 export class EasyPayProvider implements PaymentProvider {
   readonly name: string;
   readonly providerKey = 'easypay';
-  readonly supportedTypes: PaymentType[] = ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana', 'bank'];
+  // paynow 原样作为易支付请求的 type 发出；它是必须显式启用的方式（见 OPT_IN_PAYMENT_TYPES）
+  readonly supportedTypes: PaymentType[] = [
+    'alipay',
+    'wxpay',
+    'usdt.plasma',
+    'usdt.polygon',
+    'usdc.solana',
+    'bank',
+    'paynow',
+  ];
   readonly defaultLimits = {
     alipay: { singleMax: 1000, dailyMax: 10000 },
     wxpay: { singleMax: 1000, dailyMax: 10000 },
@@ -25,6 +34,7 @@ export class EasyPayProvider implements PaymentProvider {
     'usdt.polygon': { singleMax: 1000, dailyMax: 10000 },
     'usdc.solana': { singleMax: 1000, dailyMax: 10000 },
     bank: { singleMax: 1000, dailyMax: 10000 },
+    paynow: { singleMax: 1000, dailyMax: 10000 },
   };
   readonly instanceId?: string;
   private instanceConfig?: Record<string, string>;

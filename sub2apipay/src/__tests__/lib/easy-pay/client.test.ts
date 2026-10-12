@@ -33,6 +33,7 @@ vi.mock('@/lib/easy-pay/sign', () => ({
 
 import { createPayment, queryOrder } from '@/lib/easy-pay/client';
 import { EASY_PAY_CREATE_ONLY_PARAMS } from '@/lib/easy-pay/notify-params';
+import { PaymentGatewayResponseError } from '@/lib/order/gateway-error';
 
 describe('EasyPay client', () => {
   beforeEach(() => {
@@ -141,6 +142,25 @@ describe('EasyPay client', () => {
           productName: 'Product',
         }),
       ).rejects.toThrow('EasyPay create payment failed: unknown error');
+    });
+
+    it('reports the HTTP status when the channel answers with a non-JSON page', async () => {
+      global.fetch = vi.fn().mockResolvedValue(
+        new Response('<html><body>502 Bad Gateway</body></html>', {
+          status: 502,
+          headers: { 'content-type': 'text/html' },
+        }),
+      ) as typeof fetch;
+
+      const attempt = createPayment({
+        outTradeNo: 'order-005',
+        amount: '10.00',
+        paymentType: 'alipay',
+        clientIp: '127.0.0.1',
+        productName: 'Product',
+      });
+      await expect(attempt).rejects.toBeInstanceOf(PaymentGatewayResponseError);
+      await expect(attempt).rejects.toMatchObject({ status: 502 });
     });
 
     it('should not include cid when no CID env vars are set', async () => {

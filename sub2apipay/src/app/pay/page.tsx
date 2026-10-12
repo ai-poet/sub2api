@@ -25,11 +25,14 @@ import { notifyParentPaymentSuccess } from '@/lib/embed-bridge';
 import type { PublicOrderStatusSnapshot } from '@/lib/order/status';
 import { buildAppApiPath } from '@/lib/public-path';
 import { useContentTranslations, type Translate } from '@/lib/use-content-translations';
+import { usePaySession } from '@/lib/use-pay-session';
+import { downloadWithAuth } from '@/lib/authorized-file';
 import type { MethodLimitInfo } from '@/components/PaymentForm';
 import type { ChannelInfo } from '@/components/ChannelGrid';
 import type { PlanInfo } from '@/components/SubscriptionPlanCard';
 import type { UserSub } from '@/components/UserSubscriptions';
 import type { PublicPromotion } from '@/lib/promotion/calc';
+import { describeHttpFailure, describeNetworkFailure, readJsonBody } from '@/lib/api-response';
 
 interface OrderResult {
   orderId: string;
@@ -47,6 +50,16 @@ interface OrderResult {
   bonusAmount?: number;
   promotionName?: string | null;
 }
+
+/** POST /api/orders 的应答：成功时是订单，失败时是 { error, code, data }。 */
+type CreateOrderResponse = Omit<OrderResult, 'orderType' | 'paymentType' | 'bonusAmount' | 'promotionName'> & {
+  paymentType?: string;
+  bonusAmount?: unknown;
+  promotionName?: unknown;
+  error?: string;
+  code?: string;
+  data?: Record<string, unknown>;
+};
 
 interface AppConfig {
   enabledPaymentTypes: string[];
@@ -94,7 +107,7 @@ function translatePromotion(promotion: PublicPromotion, tx: Translate): PublicPr
 
 function PayContent() {
   const searchParams = useSearchParams();
-  const token = (searchParams.get('token') || '').trim();
+  const { token, urlToken, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const tab = searchParams.get('tab');
@@ -285,7 +298,7 @@ function PayContent() {
     if (!token) return;
     setUserNotFound(false);
     try {
-      const meRes = await fetch(buildAppApiPath(`/api/orders/my?token=${encodeURIComponent(token)}`));
+      const meRes = await fetch(buildAppApiPath('/api/orders/my'), { headers: authHeaders() });
       if (!meRes.ok) {
         setUserNotFound(true);
         return;
@@ -324,10 +337,9 @@ function PayContent() {
 
       const cfgParams = new URLSearchParams({
         user_id: String(meId),
-        token,
         lang: locale,
       });
-      const cfgRes = await fetch(buildAppApiPath(`/api/user?${cfgParams.toString()}`));
+      const cfgRes = await fetch(buildAppApiPath(`/api/user?${cfgParams.toString()}`), { headers: authHeaders() });
       if (cfgRes.ok) {
         const cfgData = await cfgRes.json();
         if (cfgData.config) {
@@ -355,16 +367,16 @@ function PayContent() {
     } finally {
       setUserLoaded(true);
     }
-  }, [token, locale]);
+  }, [token, locale, authHeaders]);
 
   // 加载渠道和订阅套餐
   const loadChannelsAndPlans = useCallback(async () => {
     if (!token) return;
     try {
       const [chRes, plRes, subRes] = await Promise.all([
-        fetch(buildAppApiPath(`/api/channels?token=${encodeURIComponent(token)}`)),
-        fetch(buildAppApiPath(`/api/subscription-plans?token=${encodeURIComponent(token)}`)),
-        fetch(buildAppApiPath(`/api/subscriptions/my?token=${encodeURIComponent(token)}`)),
+        fetch(buildAppApiPath('/api/channels'), { headers: authHeaders() }),
+        fetch(buildAppApiPath('/api/subscription-plans'), { headers: authHeaders() }),
+        fetch(buildAppApiPath('/api/subscriptions/my'), { headers: authHeaders() }),
       ]);
 
       if (chRes.ok) {
@@ -383,16 +395,16 @@ function PayContent() {
     } finally {
       setChannelsLoaded(true);
     }
-  }, [token]);
+  }, [token, authHeaders]);
 
   const loadMoreOrders = async () => {
     if (!token || ordersLoadingMore || !ordersHasMore) return;
     const nextPage = ordersPage + 1;
     setOrdersLoadingMore(true);
     try {
-      const res = await fetch(
-        buildAppApiPath(`/api/orders/my?token=${encodeURIComponent(token)}&page=${nextPage}&page_size=20`),
-      );
+      const res = await fetch(buildAppApiPath(`/api/orders/my?page=${nextPage}&page_size=20`), {
+        headers: authHeaders(),
+      });
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data.orders) && data.orders.length > 0) {
@@ -413,9 +425,9 @@ function PayContent() {
     setInvoiceError('');
     let titles: SavedInvoiceTitleOption[] = [];
     try {
-      const params = new URLSearchParams({ token, page: '1', page_size: '20' });
+      const params = new URLSearchParams({ page: '1', page_size: '20' });
       applyLocaleToSearchParams(params, locale);
-      const res = await fetch(buildAppApiPath(`/api/invoices/my?${params}`));
+      const res = await fetch(buildAppApiPath(`/api/invoices/my?${params}`), { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         titles = Array.isArray(data.titles) ? data.titles : [];
@@ -432,11 +444,11 @@ function PayContent() {
     setInvoiceSubmitting(true);
     setInvoiceError('');
     try {
-      const params = new URLSearchParams({ token });
+      const params = new URLSearchParams();
       applyLocaleToSearchParams(params, locale);
       const res = await fetch(buildAppApiPath(`/api/orders/${invoiceOrder.id}/invoice-request?${params}`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           title_name: payload.titleName,
           tax_no: payload.taxNo,
@@ -458,11 +470,16 @@ function PayContent() {
     }
   };
 
-  const handleInvoiceDownload = (invoiceId: string) => {
-    const params = new URLSearchParams({ token });
+  const handleInvoiceDownload = async (invoiceId: string) => {
+    const params = new URLSearchParams();
     applyLocaleToSearchParams(params, locale);
-    // 后端 302 到预签名链接，响应头带 attachment disposition，同页导航即触发下载。
-    window.location.href = buildAppApiPath(`/api/invoices/${invoiceId}/download?${params}`);
+    // 整页导航带不了 Authorization 头，取回文件再交给浏览器保存，token 不进地址。
+    const ok = await downloadWithAuth(
+      buildAppApiPath(`/api/invoices/${invoiceId}/download?${params}`),
+      authHeaders(),
+      `invoice-${invoiceId}`,
+    );
+    if (!ok) setError(pickLocaleText(locale, '发票下载失败，请稍后重试。', 'Invoice download failed. Please try again later.'));
   };
 
   useEffect(() => {
@@ -502,6 +519,9 @@ function PayContent() {
     }
   }, [step, finalOrderState, locale]);
 
+  // 首帧还没读主站登录态，先不判「缺少认证信息」。
+  if (!sessionReady) return null;
+
   if (!hasToken) {
     return (
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
@@ -534,7 +554,8 @@ function PayContent() {
 
   const buildScopedUrl = (path: string, forceOrdersTab = false) => {
     const params = new URLSearchParams();
-    if (token) params.set('token', token);
+    // 只延续地址里本来就有的 token；从主站登录态读到的 token 绝不写进地址。
+    if (urlToken) params.set('token', urlToken);
     params.set('theme', theme);
     params.set('ui_mode', uiMode);
     if (forceOrdersTab) params.set('tab', 'orders');
@@ -567,9 +588,8 @@ function PayContent() {
     try {
       const res = await fetch(buildAppApiPath('/api/orders'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
-          token,
           amount,
           payment_type: paymentType,
           is_mobile: isMobile,
@@ -578,7 +598,11 @@ function PayContent() {
         }),
       });
 
-      const data = await res.json();
+      const data = (await readJsonBody(res)) as CreateOrderResponse | null;
+      if (!data) {
+        setError(describeHttpFailure(res.status, locale));
+        return;
+      }
 
       if (!res.ok) {
         // 取消频率限制：根据后端返回的结构化数据构造国际化提示
@@ -611,7 +635,7 @@ function PayContent() {
           return;
         }
 
-        const codeMessages: Record<string, string> = {
+        const codeMessages: Record<string, string | undefined> = {
           INVALID_TOKEN: pickLocaleText(locale, '认证已失效，请重新从平台进入充值页面', 'Authentication expired'),
           USER_INACTIVE: pickLocaleText(locale, '账户已被禁用，无法充值', 'Account is disabled'),
           TOO_MANY_PENDING: pickLocaleText(locale, '待支付订单过多，请先处理', 'Too many pending orders'),
@@ -626,7 +650,9 @@ function PayContent() {
           PAYMENT_GATEWAY_ERROR: data.error,
         };
         setError(
-          codeMessages[data.code] || data.error || pickLocaleText(locale, '创建订单失败', 'Failed to create order'),
+          (data.code && codeMessages[data.code]) ||
+            data.error ||
+            pickLocaleText(locale, `创建订单失败（HTTP ${res.status}）`, `Failed to create order (HTTP ${res.status})`),
         );
         return;
       }
@@ -647,8 +673,8 @@ function PayContent() {
         statusAccessToken: data.statusAccessToken,
       });
       setStep('paying');
-    } catch {
-      setError(pickLocaleText(locale, '网络错误，请稍后重试', 'Network error'));
+    } catch (error) {
+      setError(describeNetworkFailure(error, locale));
     } finally {
       setLoading(false);
     }
@@ -663,9 +689,8 @@ function PayContent() {
     try {
       const res = await fetch(buildAppApiPath('/api/orders'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
-          token,
           amount: selectedPlan.price,
           payment_type: paymentType,
           is_mobile: isMobile,
@@ -676,9 +701,20 @@ function PayContent() {
         }),
       });
 
-      const data = await res.json();
+      const data = (await readJsonBody(res)) as CreateOrderResponse | null;
+      if (!data) {
+        setError(describeHttpFailure(res.status, locale));
+        return;
+      }
       if (!res.ok) {
-        setError(data.error || pickLocaleText(locale, '创建订阅订单失败', 'Failed to create subscription order'));
+        setError(
+          data.error ||
+            pickLocaleText(
+              locale,
+              `创建订阅订单失败（HTTP ${res.status}）`,
+              `Failed to create subscription order (HTTP ${res.status})`,
+            ),
+        );
         return;
       }
 
@@ -696,8 +732,8 @@ function PayContent() {
         statusAccessToken: data.statusAccessToken,
       });
       setStep('paying');
-    } catch {
-      setError(pickLocaleText(locale, '网络错误，请稍后重试', 'Network error'));
+    } catch (error) {
+      setError(describeNetworkFailure(error, locale));
     } finally {
       setLoading(false);
     }

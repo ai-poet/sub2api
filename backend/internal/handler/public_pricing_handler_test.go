@@ -161,3 +161,22 @@ func TestPublicPricing_ContextWindowOmittedWhenUnknown(t *testing.T) {
 	require.NotContains(t, string(raw), "context_window")
 	require.Contains(t, string(raw), `"intervals":[]`)
 }
+
+// 模型广场按分组分区：匿名视图也要拿到分组描述和排序值，但仍然没有分组 ID。
+func TestPublicPricing_GroupDescriptionAndOrderWithoutID(t *testing.T) {
+	item := toPublicPricingItem(service.ModelCatalogItem{
+		Model: "m",
+		BestGroup: service.ModelCatalogGroupRef{
+			ID:          42,
+			Name:        "Claude Max",
+			Description: "高性价比 Claude",
+			SortOrder:   3,
+		},
+	})
+	raw, err := json.Marshal(item)
+	require.NoError(t, err)
+	s := string(raw)
+	require.Contains(t, s, `"description":"高性价比 Claude"`)
+	require.Contains(t, s, `"sort_order":3`)
+	require.NotContains(t, s, `"id"`)
+}

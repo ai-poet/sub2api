@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
+	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -46,15 +48,58 @@ func TestInsightsUserLeaderboard_RequiresAuthSubject(t *testing.T) {
 	require.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
-func TestInsightsModelLeaderboard_RejectsUnknownWindow(t *testing.T) {
+// 没传日期时取服务器时区的今天，并把实际范围、排名指标和条数回给前端；用户榜默认关闭时不查库。
+func TestInsightsUserLeaderboard_DefaultsToTodayAndEchoesTheRange(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	svc := service.NewInsightsService(nil, nil, nil, &config.Config{})
 	h := NewInsightsHandler(svc, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/leaderboard/models?window=1y", nil)
-	h.ModelLeaderboard(c)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/leaderboard/users?metric=cost", nil)
+	c.Set(string(middleware2.ContextKeyUser), middleware2.AuthSubject{UserID: 7})
+	h.UserLeaderboard(c)
 
-	require.Equal(t, http.StatusBadRequest, w.Code)
+	require.Equal(t, http.StatusOK, w.Code)
+	var body struct {
+		Data map[string]any `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	today := timezone.Now().Format("2006-01-02")
+	require.Equal(t, false, body.Data["enabled"])
+	require.Equal(t, today, body.Data["start_date"])
+	require.Equal(t, today, body.Data["end_date"])
+	require.Equal(t, "tokens", body.Data["sort_by"], "the metric query parameter is ignored")
+	require.Equal(t, false, body.Data["show_cost"])
+	require.EqualValues(t, 20, body.Data["limit"])
+	require.NotContains(t, body.Data, "metric")
+	require.NotContains(t, body.Data, "window")
+}
+
+func TestInsightsLeaderboards_RejectBadDateRanges(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := service.NewInsightsService(nil, nil, nil, &config.Config{})
+	h := NewInsightsHandler(svc, nil)
+
+	cases := map[string]string{
+		"bad format":     "start_date=2026-13-01&end_date=2026-10-12",
+		"reversed":       "start_date=2026-10-12&end_date=2026-10-01",
+		"over 90 days":   "start_date=2026-01-01&end_date=2026-10-12",
+		"not a date":     "start_date=today",
+		"slashed format": "start_date=2026/10/01&end_date=2026/10/02",
+	}
+	for name, query := range cases {
+		for _, endpoint := range []string{"models", "users"} {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/leaderboard/"+endpoint+"?"+query, nil)
+			c.Set(string(middleware2.ContextKeyUser), middleware2.AuthSubject{UserID: 7})
+			if endpoint == "models" {
+				h.ModelLeaderboard(c)
+			} else {
+				h.UserLeaderboard(c)
+			}
+			require.Equal(t, http.StatusBadRequest, w.Code, "%s %s", endpoint, name)
+		}
+	}
 }

@@ -1,6 +1,7 @@
 import { getEnv } from '@/lib/config';
 import { generateSign } from './sign';
 import type { EasyPayCreateResponse, EasyPayQueryResponse, EasyPayRefundResponse } from './types';
+import { PaymentGatewayResponseError } from '@/lib/order/gateway-error';
 
 export interface CreatePaymentOptions {
   outTradeNo: string;
@@ -118,7 +119,14 @@ export async function createPayment(
     signal: AbortSignal.timeout(10_000),
   });
 
-  const data = (await response.json()) as EasyPayCreateResponse;
+  // 渠道偶尔回 HTML 报错页（网关故障、PHP 报错）：说清楚 HTTP 状态，而不是抛出看不懂的 JSON 解析错误
+  const body = await response.text();
+  let data: EasyPayCreateResponse;
+  try {
+    data = JSON.parse(body) as EasyPayCreateResponse;
+  } catch {
+    throw new PaymentGatewayResponseError(response.status);
+  }
   if (data.code !== 1) {
     throw new Error(`EasyPay create payment failed: ${data.msg || 'unknown error'}`);
   }

@@ -1,33 +1,31 @@
 <template>
-  <!-- 首次加载的骨架：和卡片网格同样的断点与结构，数据到达时不跳版。 -->
-  <section class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3" aria-busy="true" data-testid="model-catalog-skeleton">
-    <div
-      v-for="index in count"
-      :key="index"
-      class="rounded-3xl border border-gray-200/80 bg-white/90 p-5 dark:border-dark-700 dark:bg-dark-900/80"
-    >
-      <div class="flex items-center gap-2">
-        <span class="skeleton-block h-6 w-20 rounded-full"></span>
-        <span class="skeleton-block h-6 w-16 rounded-full"></span>
-        <span class="ml-auto skeleton-block h-5 w-16 rounded-md"></span>
-      </div>
-      <div class="mt-5 flex items-center gap-3">
-        <span class="skeleton-block h-10 w-10 rounded-xl"></span>
-        <div class="flex-1 space-y-2">
-          <span class="skeleton-block block h-5 w-1/2 rounded-md"></span>
-          <span class="skeleton-block block h-3 w-1/3 rounded-md"></span>
+  <!-- 首次加载的骨架：与分组分区、模型卡片网格同样的结构和断点，数据到达时不跳版 -->
+  <div class="space-y-4" aria-busy="true" data-testid="model-catalog-skeleton">
+    <section v-for="group in 2" :key="group" class="card overflow-hidden" aria-hidden="true">
+      <div class="space-y-3 border-b border-gray-100 px-4 py-4 dark:border-dark-700 md:px-5">
+        <div class="flex gap-2">
+          <span class="skeleton-block h-6 w-24 rounded-full"></span>
+          <span class="skeleton-block h-6 w-20 rounded-full"></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="skeleton-block h-12 w-12 rounded-xl"></span>
+          <div class="space-y-2">
+            <span class="skeleton-block block h-5 w-40 rounded-md"></span>
+            <span class="skeleton-block block h-3 w-56 rounded-md"></span>
+          </div>
         </div>
       </div>
-      <div class="mt-5 space-y-3">
-        <span v-for="row in 2" :key="row" class="skeleton-block block h-16 rounded-2xl"></span>
+      <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 md:p-5 lg:grid-cols-3">
+        <div v-for="card in 3" :key="card" class="rounded-xl border border-gray-100 p-4 dark:border-dark-700">
+          <span class="skeleton-block block h-5 w-2/3 rounded-md"></span>
+          <span class="skeleton-block mt-2 block h-3 w-2/5 rounded-md"></span>
+          <span class="skeleton-block mt-4 block h-9 rounded-md"></span>
+          <span class="skeleton-block mt-4 block h-3 w-1/2 rounded-md"></span>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
-
-<script setup lang="ts">
-withDefaults(defineProps<{ count?: number }>(), { count: 6 })
-</script>
 
 <style scoped>
 .skeleton-block {

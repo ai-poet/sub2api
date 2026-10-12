@@ -135,6 +135,26 @@ describe('load-balancer', () => {
       expect(result!.instanceId).toBe('a');
     });
 
+    it('routes opt-in PayNow only to instances that list it explicitly', async () => {
+      const { selectInstance } = await import('@/lib/payment/load-balancer');
+      mockFindMany.mockResolvedValue([
+        makeInstance('a', 0, null), // wildcard does not cover PayNow
+        makeInstance('b', 1, ''),
+        makeInstance('c', 2, 'alipay,paynow'),
+      ]);
+
+      const result = await selectInstance('easypay', 'round-robin', 'paynow');
+      expect(result!.instanceId).toBe('c');
+    });
+
+    it('returns null for PayNow when no instance lists it', async () => {
+      const { selectInstance } = await import('@/lib/payment/load-balancer');
+      mockFindMany.mockResolvedValue([makeInstance('a', 0, null), makeInstance('b', 1, 'alipay,wxpay')]);
+
+      const result = await selectInstance('easypay', 'round-robin', 'paynow');
+      expect(result).toBeNull();
+    });
+
     it('returns null when no instances match paymentType', async () => {
       const { selectInstance } = await import('@/lib/payment/load-balancer');
       mockFindMany.mockResolvedValue([makeInstance('a', 0, 'stripe'), makeInstance('b', 1, 'wxpay')]);

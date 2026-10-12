@@ -46,6 +46,9 @@ type publicPricingGroupRef struct {
 	Name           string  `json:"name"`
 	RateMultiplier float64 `json:"rate_multiplier"`
 	RateSource     string  `json:"rate_source"`
+	// Description / SortOrder：模型广场匿名视图按分组分区，分组头部显示描述（与登录态目录一致，都是公开展示的文案）。
+	Description string `json:"description,omitempty"`
+	SortOrder   int    `json:"sort_order"`
 }
 
 // publicPricing 公开可见的价格字段。字段与登录态目录一致，单位均为 USD。
@@ -171,6 +174,8 @@ func toPublicPricingItem(src service.ModelCatalogItem) publicPricingItem {
 			Name:           src.BestGroup.Name,
 			RateMultiplier: src.BestGroup.RateMultiplier,
 			RateSource:     src.BestGroup.RateSource,
+			Description:    src.BestGroup.Description,
+			SortOrder:      src.BestGroup.SortOrder,
 		},
 		AvailableGroupCount: src.AvailableGroupCount,
 		OfficialPricing:     official,

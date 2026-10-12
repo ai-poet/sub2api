@@ -8,6 +8,8 @@ const mockPlanFindUnique = vi.fn();
 const mockOrderFindFirst = vi.fn();
 const mockAuditLogCreate = vi.fn();
 const mockTransaction = vi.fn();
+const mockOrderDelete = vi.fn();
+const mockInstanceCount = vi.fn();
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -16,6 +18,10 @@ vi.mock('@/lib/db', () => ({
     },
     order: {
       findFirst: (...args: unknown[]) => mockOrderFindFirst(...args),
+      delete: (...args: unknown[]) => mockOrderDelete(...args),
+    },
+    paymentProviderInstance: {
+      count: (...args: unknown[]) => mockInstanceCount(...args),
     },
     auditLog: {
       create: (...args: unknown[]) => mockAuditLogCreate(...args),
@@ -65,7 +71,9 @@ vi.mock('@/lib/system-config', () => ({
   getSystemConfigs: vi.fn().mockResolvedValue({}),
 }));
 
-import { createOrder } from '@/lib/order/service';
+import { createOrder, OrderError, PAYMENT_GATEWAY_ERROR_STATUS } from '@/lib/order/service';
+import { paymentRegistry } from '@/lib/payment';
+import { selectInstance } from '@/lib/payment/load-balancer';
 import { verifyOrderStatusAccessToken } from '@/lib/order/status-access';
 
 const TX_REACHED = new Error('transaction reached');
@@ -159,5 +167,63 @@ describe('createOrder — pending subscription order reuse', () => {
       status: ORDER_STATUS.PENDING,
       qrCode: { not: null },
     });
+  });
+});
+
+describe('createOrder — payment channel failures', () => {
+  const createPayment = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPlanFindUnique.mockResolvedValue({
+      id: 'plan-1',
+      groupId: 7,
+      price: new Prisma.Decimal('29.90'),
+      validityDays: 1,
+      validityUnit: 'month',
+      name: 'Pro',
+      productName: null,
+      forSale: true,
+    });
+    mockGetGroup.mockResolvedValue({ id: 7, name: 'Pro', status: 'active', subscription_type: 'subscription' });
+    mockGetUser.mockResolvedValue({ id: 42, status: 'active', username: 'u', email: 'u@example.com', balance: 3 });
+    mockOrderFindFirst.mockResolvedValue(null);
+    mockTransaction.mockResolvedValue({ id: 'order-gw-1', rechargeCode: 'RC', promotion: null });
+    mockInstanceCount.mockResolvedValue(0);
+    vi.mocked(selectInstance).mockResolvedValue(null);
+    vi.mocked(paymentRegistry.getProvider).mockReturnValue({
+      providerKey: 'easypay',
+      createPayment,
+    } as unknown as ReturnType<typeof paymentRegistry.getProvider>);
+  });
+
+  async function failure(): Promise<OrderError> {
+    const error = await createOrder(input({ paymentType: 'paynow' }) as Parameters<typeof createOrder>[0]).catch(
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(OrderError);
+    return error as OrderError;
+  }
+
+  it('returns the channel reason with a reference instead of a bare 502', async () => {
+    createPayment.mockRejectedValue(new Error('EasyPay create payment failed: 该商户未开通此支付方式'));
+
+    const error = await failure();
+    expect(error.code).toBe('PAYMENT_GATEWAY_ERROR');
+    expect(error.statusCode).toBe(PAYMENT_GATEWAY_ERROR_STATUS);
+    expect(error.statusCode).not.toBe(502);
+    expect(error.message).toContain('该商户未开通此支付方式');
+    expect(error.message).toContain('order-gw-1');
+    expect(error.data).toEqual({ reference: 'order-gw-1', detail: '该商户未开通此支付方式' });
+    expect(mockOrderDelete).toHaveBeenCalledWith({ where: { id: 'order-gw-1' } });
+  });
+
+  it('keeps the not-configured message, now with a reference and a non-5xx status', async () => {
+    createPayment.mockRejectedValue(new Error('EasyPay environment variables are required'));
+
+    const error = await failure();
+    expect(error.statusCode).toBe(PAYMENT_GATEWAY_ERROR_STATUS);
+    expect(error.message).toContain('暂未配置');
+    expect(error.data).toEqual({ reference: 'order-gw-1' });
   });
 });

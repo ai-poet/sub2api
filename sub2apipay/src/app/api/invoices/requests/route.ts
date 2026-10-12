@@ -6,6 +6,7 @@ import { invoiceInvalidParamsMessage, invoiceMessage } from '@/lib/invoice/types
 import { invoiceTitleFieldsSchema } from '@/lib/invoice/request-schema';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
+import { readUserToken } from '@/lib/utils/request-token';
 
 /**
  * 合并开票入口：一次提交多张订单，开出一张发票。
@@ -22,7 +23,7 @@ const mergedInvoiceRequestSchema = invoiceTitleFieldsSchema.extend({
 
 export async function POST(request: NextRequest) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang'));
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: locale === 'en' ? 'Missing token' : '缺少 token 参数' }, { status: 401 });
   }

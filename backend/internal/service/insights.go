@@ -12,6 +12,7 @@ import (
 	"time"
 
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
 )
 
 // fork：排行榜与首页公开统计（「洞察」）。设计见 CLAUDE.md「排行榜 / 首页公开统计」。
@@ -19,19 +20,15 @@ import (
 // SettingKeyInsightsConfig 是排行榜与公开统计的后台配置（JSON），三个开关同时进公开设置。
 const SettingKeyInsightsConfig = "insights_config"
 
-// 排行榜时间窗只有固定档位，结果才能按档位缓存。
-const (
-	InsightsWindow24h = "24h"
-	InsightsWindow7d  = "7d"
-	InsightsWindow30d = "30d"
-)
-
-// 用户榜排序指标。cost 只在后台允许显示花费时可用。
+// 用户榜排名指标。cost 只在后台允许显示花费时生效，否则回落到 tokens。
 const (
 	InsightsMetricTokens   = "tokens"
 	InsightsMetricRequests = "requests"
 	InsightsMetricCost     = "cost"
 )
+
+// insightsDateLayout 是排行榜日期参数的格式（按服务器时区解释）。
+const insightsDateLayout = "2006-01-02"
 
 const (
 	insightsDefaultUserLimit = 20
@@ -43,10 +40,14 @@ const (
 	insightsMaxModelItems = 50
 	// insightsModelQueryLimit 是模型榜 SQL 取回的行数上限；过滤掉不公开的模型后再截到 insightsMaxModelItems。
 	insightsModelQueryLimit = 200
+	// insightsMaxRangeDays 是排行榜日期范围的最长天数（含首尾），等于 usage_logs 的保留天数。
+	insightsMaxRangeDays = 90
 )
 
 var (
-	ErrInsightsInvalidWindow = infraerrors.BadRequest("INSIGHTS_INVALID_WINDOW", "window must be one of 24h, 7d, 30d")
+	ErrInsightsInvalidDate   = infraerrors.BadRequest("INSIGHTS_INVALID_DATE", "start_date and end_date must use YYYY-MM-DD")
+	ErrInsightsInvalidRange  = infraerrors.BadRequest("INSIGHTS_INVALID_RANGE", "end_date must not be earlier than start_date")
+	ErrInsightsRangeTooLong  = infraerrors.BadRequest("INSIGHTS_RANGE_TOO_LONG", "the date range can span at most 90 days")
 	ErrInsightsInvalidMetric = infraerrors.BadRequest("INSIGHTS_INVALID_METRIC", "metric must be one of tokens, requests, cost")
 )
 
@@ -58,8 +59,11 @@ type InsightsConfig struct {
 	UsageRankingEnabled bool `json:"usage_ranking_enabled"`
 	// UsageRankingLimit 用户榜条数，3..50。
 	UsageRankingLimit int `json:"usage_ranking_limit"`
-	// UsageRankingShowCost 用户榜是否显示花费并允许按花费排序，默认关闭。
+	// UsageRankingShowCost 用户榜是否显示花费并允许按花费排名，默认关闭。
 	UsageRankingShowCost bool `json:"usage_ranking_show_cost"`
+	// UsageRankingSortBy 用户榜排名指标：tokens / requests / cost，默认 tokens。
+	// cost 只在 UsageRankingShowCost 打开时生效，否则按 tokens 排（存的值保留，重新打开花费后恢复）。
+	UsageRankingSortBy string `json:"usage_ranking_sort_by"`
 	// PublicStatsEnabled 首页公开统计（累计 / 今日 token、累计请求数），默认关闭。
 	PublicStatsEnabled bool `json:"public_stats_enabled"`
 }
@@ -69,6 +73,7 @@ func DefaultInsightsConfig() InsightsConfig {
 	return InsightsConfig{
 		ModelRankingEnabled: true,
 		UsageRankingLimit:   insightsDefaultUserLimit,
+		UsageRankingSortBy:  InsightsMetricTokens,
 	}
 }
 
@@ -93,7 +98,26 @@ func normalizeInsightsConfig(cfg InsightsConfig) InsightsConfig {
 	case cfg.UsageRankingLimit > insightsMaxUserLimit:
 		cfg.UsageRankingLimit = insightsMaxUserLimit
 	}
+	switch sortBy := strings.TrimSpace(cfg.UsageRankingSortBy); sortBy {
+	case InsightsMetricRequests, InsightsMetricCost:
+		cfg.UsageRankingSortBy = sortBy
+	default:
+		cfg.UsageRankingSortBy = InsightsMetricTokens
+	}
 	return cfg
+}
+
+// EffectiveUsageRankingSortBy 返回用户榜实际使用的排名指标：不显示花费时 cost 回落到 tokens。
+func (cfg InsightsConfig) EffectiveUsageRankingSortBy() string {
+	switch cfg.UsageRankingSortBy {
+	case InsightsMetricRequests:
+		return InsightsMetricRequests
+	case InsightsMetricCost:
+		if cfg.UsageRankingShowCost {
+			return InsightsMetricCost
+		}
+	}
+	return InsightsMetricTokens
 }
 
 // GetInsightsConfig 读取配置；读不到时按默认值处理。
@@ -127,29 +151,68 @@ func (s *SettingService) UpdateInsightsConfig(ctx context.Context, cfg InsightsC
 	return cfg, nil
 }
 
-// insightsWindowRange 把档位换算成 [start, end)。
-func insightsWindowRange(window string, now time.Time) (time.Time, time.Time, error) {
-	switch window {
-	case InsightsWindow24h:
-		return now.Add(-24 * time.Hour), now, nil
-	case InsightsWindow7d:
-		return now.Add(-7 * 24 * time.Hour), now, nil
-	case InsightsWindow30d:
-		return now.Add(-30 * 24 * time.Hour), now, nil
-	default:
-		return time.Time{}, time.Time{}, ErrInsightsInvalidWindow
-	}
+// InsightsDateRange 是排行榜的日期范围：[Start, End)，日期按服务器时区解释，结束日期包含在内。
+type InsightsDateRange struct {
+	StartDate string
+	EndDate   string
+	Start     time.Time
+	End       time.Time
 }
 
-// insightsCacheTTL 是各档位的缓存时长：窗口越长，结果变化越慢，扫表越贵。
-func insightsCacheTTL(window string) time.Duration {
-	switch window {
-	case InsightsWindow7d:
-		return 15 * time.Minute
-	case InsightsWindow30d:
-		return time.Hour
-	default:
-		return 5 * time.Minute
+// ParseInsightsDateRange 解析 start_date / end_date（YYYY-MM-DD，服务器时区，与用户侧用量统计同一种解释）。
+// 两个都不传时取今天；只传一个时按单日处理。结束日期早于开始日期、或跨度超过 90 天时报错。
+func ParseInsightsDateRange(startDate, endDate string, now time.Time) (InsightsDateRange, error) {
+	startDate = strings.TrimSpace(startDate)
+	endDate = strings.TrimSpace(endDate)
+	switch {
+	case startDate == "" && endDate == "":
+		startDate = timezone.StartOfDay(now).Format(insightsDateLayout)
+		endDate = startDate
+	case startDate == "":
+		startDate = endDate
+	case endDate == "":
+		endDate = startDate
+	}
+	start, err := timezone.ParseInLocation(insightsDateLayout, startDate)
+	if err != nil {
+		return InsightsDateRange{}, ErrInsightsInvalidDate
+	}
+	endDay, err := timezone.ParseInLocation(insightsDateLayout, endDate)
+	if err != nil {
+		return InsightsDateRange{}, ErrInsightsInvalidDate
+	}
+	if endDay.Before(start) {
+		return InsightsDateRange{}, ErrInsightsInvalidRange
+	}
+	// 按日历日计算跨度，不受夏令时 23 / 25 小时的一天影响。
+	startUTC := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.UTC)
+	endUTC := time.Date(endDay.Year(), endDay.Month(), endDay.Day(), 0, 0, 0, 0, time.UTC)
+	if int(endUTC.Sub(startUTC).Hours()/24)+1 > insightsMaxRangeDays {
+		return InsightsDateRange{}, ErrInsightsRangeTooLong
+	}
+	return InsightsDateRange{
+		StartDate: start.Format(insightsDateLayout),
+		EndDate:   endDay.Format(insightsDateLayout),
+		Start:     start,
+		End:       endDay.AddDate(0, 0, 1),
+	}, nil
+}
+
+const (
+	// insightsOpenRangeTTL 是还没结束的范围（含今天或未来）的缓存时长。
+	insightsOpenRangeTTL = 5 * time.Minute
+	// insightsClosedRangeTTL 是已经结束的范围的缓存时长，这些数据不会再变。
+	insightsClosedRangeTTL = time.Hour
+)
+
+// insightsRangeCacheTTL 按取数时间决定缓存时长：取数时范围还没结束就是 5 分钟，结束后才取的数据缓存 60 分钟。
+// 零点前取的「今天」到了第二天仍按 5 分钟过期，不会把缺了最后几分钟的数据留一小时。
+func insightsRangeCacheTTL(r InsightsDateRange) func(fetchedAt time.Time) time.Duration {
+	return func(fetchedAt time.Time) time.Duration {
+		if fetchedAt.Before(r.End) {
+			return insightsOpenRangeTTL
+		}
+		return insightsClosedRangeTTL
 	}
 }
 
@@ -177,7 +240,7 @@ func maskLeaderboardName(username, email string) string {
 }
 
 // leaderboardAvatarSeed 生成头像种子：HMAC 后取前 16 个十六进制字符。
-// 同一用户在各档位得到同一个种子（稳定的化名），但从种子反推不出用户 ID。
+// 同一用户在各日期范围得到同一个种子（稳定的化名），但从种子反推不出用户 ID。
 func leaderboardAvatarSeed(key []byte, userID int64) string {
 	mac := hmac.New(sha256.New, key)
 	_, _ = mac.Write([]byte("leaderboard-avatar:v1:" + strconv.FormatInt(userID, 10)))

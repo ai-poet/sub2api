@@ -49,6 +49,9 @@ const messages: Record<string, string> = {
   'modelCatalog.priceColumns.balance': 'Balance',
   'modelCatalog.defaultTierHint': 'Billed at this tier when no size is given',
   'modelCatalog.intervalDefaultLabel': 'Default tier',
+  'modelCatalog.card.perImage': '/ image',
+  'modelCatalog.card.perSecond': '/ sec',
+  'modelCatalog.card.perMTok': '/ 1M tokens',
 }
 
 vi.mock('@/api/modelCatalog', async () => {
@@ -240,7 +243,7 @@ describe('ModelCatalogView image pricing', () => {
     const wrapper = await mountView()
     const text = wrapper.text()
 
-    expect(text).toContain('Per image')
+    expect(text).toContain('$0.2010 / image')
     expect(text).toContain('$0.2010')
     expect(text).not.toContain('Billed at this tier when no size is given')
   })
@@ -301,10 +304,10 @@ describe('ModelCatalogView image pricing', () => {
     expect(text).toContain('480p')
     expect(text).toContain('720p')
     expect(text).toContain('1080p')
-    expect(text).toContain('Per second of video')
+    expect(text).toContain('/ sec')
     expect(text).toContain('$0.2500')
     // 视频模型不应再落进 token 分支显示每百万 Tokens。
-    expect(text).not.toContain('Per 1M tokens')
+    expect(text).not.toContain('/ 1M tokens')
   })
 })
 
@@ -374,8 +377,12 @@ describe('ModelCatalogView polish (fork)', () => {
 
     expect(getHistories).toHaveBeenCalledTimes(1)
     expect(getHistory).not.toHaveBeenCalled()
+    // 两个模型同在分组 7：一个分区、一条可用率条，挂在分组头部
+    const sections = wrapper.findAll('[data-testid="catalog-group-section"]')
+    expect(sections).toHaveLength(1)
+    expect(sections[0].findAll('[data-testid="catalog-model-card"]')).toHaveLength(2)
     const bars = wrapper.findAll('[data-testid="group-availability-bar"]')
-    expect(bars).toHaveLength(2)
+    expect(bars).toHaveLength(1)
     expect(bars[0].text()).toContain('99.50%')
   })
 
@@ -392,7 +399,10 @@ describe('ModelCatalogView polish (fork)', () => {
 
     expect(wrapper.find('[data-modality="input-image"]').exists()).toBe(true)
     expect(wrapper.find('[data-modality="output-text"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('modelCatalog.contextWindow:200K')
+    // 标题排版成 Claude Sonnet 4.6，原始 ID 在下一行；上下文长度在标题旁的信息浮层里（Teleport 到 body）
+    expect(wrapper.text()).toContain('Claude Sonnet 4.6')
+    expect(wrapper.find('[data-testid="model-info-trigger"]').exists()).toBe(true)
+    expect(document.body.innerHTML).toContain('200K')
 
     await wrapper.get('[data-testid="model-id-copy"]').trigger('click')
     await flushPromises()
@@ -403,15 +413,88 @@ describe('ModelCatalogView polish (fork)', () => {
     getCatalog.mockResolvedValue(catalogResponse([tokenItem()]))
     const wrapper = await mountView()
 
-    const toggle = wrapper.get('button[aria-expanded]')
+    const toggle = wrapper.get('[data-testid="model-pricing-toggle"]')
     expect(toggle.attributes('aria-expanded')).toBe('false')
-    expect(wrapper.text()).not.toContain('modelCatalog.intervalSectionTitle')
+    expect(toggle.text()).toContain('modelCatalog.card.viewPricing')
 
     await toggle.trigger('click')
     await flushPromises()
-    expect(wrapper.get('button[aria-expanded]').attributes('aria-expanded')).toBe('true')
+    expect(wrapper.get('[data-testid="model-pricing-toggle"]').attributes('aria-expanded')).toBe('true')
+    expect(wrapper.get('[data-testid="model-pricing-toggle"]').text()).toContain('modelCatalog.card.collapsePricing')
     expect(wrapper.find('.motion-collapse').exists()).toBe(true)
-    expect(wrapper.text()).toContain('modelCatalog.intervalSectionTitle')
+    // 一档上下文分档：预览行显示区间，展开后是该档的输入 / 输出价
+    expect(wrapper.text()).toContain('0-200K')
+    expect(wrapper.get('[data-testid="model-pricing-panel"]').text()).toContain('$1.5000 / 1M tokens')
+  })
+
+  it('splits the catalog into group sections ordered by sort order, with savings and multiplier pills', async () => {
+    const official = {
+      input_per_mtok_usd: 3,
+      output_per_mtok_usd: 15,
+      cache_write_per_mtok_usd: null,
+      cache_read_per_mtok_usd: null,
+      per_request_usd: null,
+      per_image_usd: null,
+      per_second_usd: null,
+      source: 'litellm',
+      has_reference: true,
+    }
+    getCatalog.mockResolvedValue(catalogResponse([
+      tokenItem({
+        best_group: { id: 9, name: 'Codex', rate_multiplier: 0.3, rate_source: 'group_default', sort_order: 5 },
+        model: 'gpt-5.5',
+        display_name: 'gpt-5.5',
+        platform: 'openai',
+      }),
+      tokenItem({
+        best_group: { id: 7, name: 'Claude Max', rate_multiplier: 0.05, rate_source: 'group_default', sort_order: 1, description: 'Cheap Claude' },
+        official_pricing: official,
+        comparison: { ...createItem().comparison, savings_percent: 0.95, is_cheaper_than_official: true },
+      }),
+    ]))
+    const wrapper = await mountView()
+
+    const sections = wrapper.findAll('[data-testid="catalog-group-section"]')
+    expect(sections.map(section => section.attributes('data-group'))).toEqual(['Claude Max', 'Codex'])
+    expect(sections[0].text()).toContain('Cheap Claude')
+    expect(sections[0].get('[data-testid="group-max-savings"]').text()).toContain('modelCatalog.group.maxSavings:95')
+    expect(sections[0].get('[data-testid="group-rate"]').text()).toContain('modelCatalog.group.rate:x0.05')
+    expect(sections[1].find('[data-testid="group-max-savings"]').exists()).toBe(false)
+  })
+
+  it('filters by search across groups and models', async () => {
+    getCatalog.mockResolvedValue(catalogResponse([
+      tokenItem(),
+      tokenItem({
+        best_group: { id: 9, name: 'Codex', rate_multiplier: 0.3, rate_source: 'group_default' },
+        model: 'gpt-5.5',
+        display_name: 'gpt-5.5',
+        platform: 'openai',
+      }),
+    ]))
+    const wrapper = await mount(ModelCatalogView, {
+      global: {
+        stubs: {
+          AppLayout: AppLayoutStub,
+          SearchInput: { props: ['modelValue'], emits: ['update:modelValue'], template: '<input data-test="search" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />' },
+          PlatformIcon: PassthroughStub,
+          ModelIcon: PassthroughStub,
+          Icon: PassthroughStub,
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="catalog-group-section"]')).toHaveLength(2)
+
+    await wrapper.get('[data-test="search"]').setValue('gpt')
+    expect(wrapper.findAll('[data-testid="catalog-group-section"]')).toHaveLength(1)
+    expect(wrapper.find('[data-model="gpt-5.5"]').exists()).toBe(true)
+
+    await wrapper.get('[data-test="search"]').setValue('no-such-model')
+    expect(wrapper.find('[data-testid="model-catalog-empty"]').exists()).toBe(true)
+    await wrapper.get('[data-testid="model-catalog-reset-filters"]').trigger('click')
+    expect(wrapper.findAll('[data-testid="catalog-group-section"]')).toHaveLength(2)
   })
 
   it('renders the anonymous catalog from the public pricing endpoint', async () => {

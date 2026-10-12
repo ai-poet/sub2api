@@ -16,13 +16,18 @@ import (
 
 // fork：排行榜与首页公开统计的服务。
 //
-// 排行榜没有预聚合表可用，只能在固定时间窗内扫 usage_logs，所以结果按档位缓存：
+// 排行榜没有预聚合表可用，只能在所选日期范围内扫 usage_logs，所以结果按「榜单 + 起止日期 + 指标 + 条数」缓存：
 // 新鲜期内直接返回；过期后先返回旧值、后台单飞刷新；没有旧值或旧值太老才同步查询。
+// 日期范围由用户选，缓存条目数有上限（按最近使用淘汰），同时进行的查询数也有上限。
 // 公开统计只读 usage_dashboard_daily，聚合作业没开或落后太多时宁可不显示，也不回退去扫明细表。
 
 const (
-	// insightsQueryTimeout 是单次排行榜查询的上限；后台刷新与同步加载都用它。
+	// insightsQueryTimeout 是单次排行榜查询的上限（含排队等查询名额的时间）；后台刷新与同步加载都用它。
 	insightsQueryTimeout = 30 * time.Second
+	// insightsMaxCacheEntries 是缓存的最多条目数，超出时淘汰最久没用过的条目。
+	insightsMaxCacheEntries = 200
+	// insightsMaxConcurrentLoads 是同时进行的排行榜 / 统计查询上限，不同日期范围的冷查询不会一起压到数据库上。
+	insightsMaxConcurrentLoads = 4
 	// insightsFailureBackoff 是刷新失败后到下次后台刷新的最短间隔。
 	insightsFailureBackoff = time.Minute
 	// insightsConfigTTL 是配置的内存缓存时长，公开统计接口不必每次都读设置表。
@@ -91,8 +96,10 @@ type LeaderboardModelItem struct {
 
 // LeaderboardModelsResult 是模型榜接口的响应。
 type LeaderboardModelsResult struct {
-	Enabled     bool       `json:"enabled"`
-	Window      string     `json:"window"`
+	Enabled bool `json:"enabled"`
+	// StartDate / EndDate 是本次统计的日期范围（YYYY-MM-DD，含首尾，服务器时区）。
+	StartDate   string     `json:"start_date"`
+	EndDate     string     `json:"end_date"`
 	GeneratedAt *time.Time `json:"generated_at,omitempty"`
 	TotalTokens int64      `json:"total_tokens"`
 	// OtherSharePercent 是榜单之外（含不公开的模型）的 token 占比。
@@ -115,10 +122,15 @@ type LeaderboardUserItem struct {
 
 // LeaderboardUsersResult 是用户榜接口的响应。
 type LeaderboardUsersResult struct {
-	Enabled     bool       `json:"enabled"`
-	Window      string     `json:"window"`
-	Metric      string     `json:"metric"`
-	ShowCost    bool       `json:"show_cost"`
+	Enabled bool `json:"enabled"`
+	// StartDate / EndDate 是本次统计的日期范围（YYYY-MM-DD，含首尾，服务器时区）。
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+	// SortBy 是后台设定的排名指标（tokens / requests / cost），前端把它当主指标显示。
+	SortBy   string `json:"sort_by"`
+	ShowCost bool   `json:"show_cost"`
+	// Limit 是后台设定的榜单条数。
+	Limit       int        `json:"limit"`
 	GeneratedAt *time.Time `json:"generated_at,omitempty"`
 	// InsufficientData 为 true 时参与人数太少，不公布榜单。
 	InsufficientData bool                  `json:"insufficient_data"`
@@ -218,15 +230,23 @@ func (s *InsightsService) InvalidateConfig() {
 }
 
 // ModelRanking 返回模型榜。只列公开目录里的模型，专属分组的模型不会出现。
-func (s *InsightsService) ModelRanking(ctx context.Context, window string) (*LeaderboardModelsResult, error) {
-	if _, _, err := insightsWindowRange(window, s.now()); err != nil {
+// startDate / endDate 是 YYYY-MM-DD（服务器时区，含首尾），都不传时取今天。
+func (s *InsightsService) ModelRanking(ctx context.Context, startDate, endDate string) (*LeaderboardModelsResult, error) {
+	dateRange, err := ParseInsightsDateRange(startDate, endDate, s.now())
+	if err != nil {
 		return nil, err
 	}
 	if !s.Config(ctx).ModelRankingEnabled {
-		return &LeaderboardModelsResult{Enabled: false, Window: window, Items: []LeaderboardModelItem{}}, nil
+		return &LeaderboardModelsResult{
+			Enabled:   false,
+			StartDate: dateRange.StartDate,
+			EndDate:   dateRange.EndDate,
+			Items:     []LeaderboardModelItem{},
+		}, nil
 	}
-	value, err := s.cache.get(ctx, "models:"+window, insightsCacheTTL(window), func(ctx context.Context) (any, error) {
-		return s.loadModelRanking(ctx, window)
+	key := "models:" + dateRange.StartDate + ":" + dateRange.EndDate
+	value, err := s.cache.get(ctx, key, insightsRangeCacheTTL(dateRange), func(ctx context.Context) (any, error) {
+		return s.loadModelRanking(ctx, dateRange)
 	})
 	if err != nil {
 		return nil, err
@@ -240,12 +260,8 @@ func (s *InsightsService) ModelRanking(ctx context.Context, window string) (*Lea
 	return &result, nil
 }
 
-func (s *InsightsService) loadModelRanking(ctx context.Context, window string) (*LeaderboardModelsResult, error) {
-	start, end, err := insightsWindowRange(window, s.now())
-	if err != nil {
-		return nil, err
-	}
-	usage, err := s.repo.ModelUsageRanking(ctx, start, end, insightsModelQueryLimit)
+func (s *InsightsService) loadModelRanking(ctx context.Context, dateRange InsightsDateRange) (*LeaderboardModelsResult, error) {
+	usage, err := s.repo.ModelUsageRanking(ctx, dateRange.Start, dateRange.End, insightsModelQueryLimit)
 	if err != nil {
 		return nil, fmt.Errorf("model usage ranking: %w", err)
 	}
@@ -283,10 +299,11 @@ func (s *InsightsService) loadModelRanking(ctx context.Context, window string) (
 	if usage.TotalTokens > 0 && listedShare < 100 {
 		other = 100 - listedShare
 	}
-	generatedAt := end
+	generatedAt := s.now()
 	return &LeaderboardModelsResult{
 		Enabled:           true,
-		Window:            window,
+		StartDate:         dateRange.StartDate,
+		EndDate:           dateRange.EndDate,
 		GeneratedAt:       &generatedAt,
 		TotalTokens:       usage.TotalTokens,
 		OtherSharePercent: other,
@@ -328,29 +345,32 @@ type cachedUserRanking struct {
 	generatedAt  time.Time
 }
 
-// UserRanking 返回用户榜。viewerID 只用来标记「你」，不影响缓存的榜单。
-func (s *InsightsService) UserRanking(ctx context.Context, window, metric string, viewerID int64) (*LeaderboardUsersResult, error) {
-	if _, _, err := insightsWindowRange(window, s.now()); err != nil {
+// UserRanking 返回用户榜。排名指标和条数来自后台设置（用户不能切换）；viewerID 只用来标记「你」，不影响缓存的榜单。
+// startDate / endDate 是 YYYY-MM-DD（服务器时区，含首尾），都不传时取今天。
+func (s *InsightsService) UserRanking(ctx context.Context, startDate, endDate string, viewerID int64) (*LeaderboardUsersResult, error) {
+	dateRange, err := ParseInsightsDateRange(startDate, endDate, s.now())
+	if err != nil {
 		return nil, err
 	}
 	cfg := s.Config(ctx)
-	if metric == "" {
-		metric = InsightsMetricTokens
-	}
-	if metric != InsightsMetricTokens && metric != InsightsMetricRequests && metric != InsightsMetricCost {
-		return nil, ErrInsightsInvalidMetric
+	sortBy := cfg.EffectiveUsageRankingSortBy()
+	limit := cfg.UsageRankingLimit
+	result := &LeaderboardUsersResult{
+		Enabled:   cfg.UsageRankingEnabled,
+		StartDate: dateRange.StartDate,
+		EndDate:   dateRange.EndDate,
+		SortBy:    sortBy,
+		ShowCost:  cfg.UsageRankingShowCost,
+		Limit:     limit,
+		Items:     []LeaderboardUserItem{},
 	}
 	if !cfg.UsageRankingEnabled {
-		return &LeaderboardUsersResult{Enabled: false, Window: window, Metric: metric, Items: []LeaderboardUserItem{}}, nil
-	}
-	if metric == InsightsMetricCost && !cfg.UsageRankingShowCost {
-		return nil, ErrInsightsInvalidMetric
+		return result, nil
 	}
 
-	limit := cfg.UsageRankingLimit
-	key := fmt.Sprintf("users:%s:%s:%d", window, metric, limit)
-	value, err := s.cache.get(ctx, key, insightsCacheTTL(window), func(ctx context.Context) (any, error) {
-		return s.loadUserRanking(ctx, window, metric, limit)
+	key := fmt.Sprintf("users:%s:%s:%s:%d", dateRange.StartDate, dateRange.EndDate, sortBy, limit)
+	value, err := s.cache.get(ctx, key, insightsRangeCacheTTL(dateRange), func(ctx context.Context) (any, error) {
+		return s.loadUserRanking(ctx, dateRange, sortBy, limit)
 	})
 	if err != nil {
 		return nil, err
@@ -361,14 +381,7 @@ func (s *InsightsService) UserRanking(ctx context.Context, window, metric string
 	}
 
 	generatedAt := cached.generatedAt
-	result := &LeaderboardUsersResult{
-		Enabled:     true,
-		Window:      window,
-		Metric:      metric,
-		ShowCost:    cfg.UsageRankingShowCost,
-		GeneratedAt: &generatedAt,
-		Items:       []LeaderboardUserItem{},
-	}
+	result.GeneratedAt = &generatedAt
 	if cached.participants < insightsMinParticipants {
 		result.InsufficientData = true
 		return result, nil
@@ -391,12 +404,8 @@ func (s *InsightsService) UserRanking(ctx context.Context, window, metric string
 	return result, nil
 }
 
-func (s *InsightsService) loadUserRanking(ctx context.Context, window, metric string, limit int) (*cachedUserRanking, error) {
-	start, end, err := insightsWindowRange(window, s.now())
-	if err != nil {
-		return nil, err
-	}
-	usage, err := s.repo.UserUsageRanking(ctx, start, end, metric, limit)
+func (s *InsightsService) loadUserRanking(ctx context.Context, dateRange InsightsDateRange, sortBy string, limit int) (*cachedUserRanking, error) {
+	usage, err := s.repo.UserUsageRanking(ctx, dateRange.Start, dateRange.End, sortBy, limit)
 	if err != nil {
 		return nil, fmt.Errorf("user usage ranking: %w", err)
 	}
@@ -411,7 +420,7 @@ func (s *InsightsService) loadUserRanking(ctx context.Context, window, metric st
 			actualCost:  row.ActualCost,
 		})
 	}
-	return &cachedUserRanking{rows: rows, participants: usage.Participants, generatedAt: end}, nil
+	return &cachedUserRanking{rows: rows, participants: usage.Participants, generatedAt: s.now()}, nil
 }
 
 // PublicStats 返回首页公开统计。匿名接口用，任何错误都折算成 Available=false，从不返回错误。
@@ -422,7 +431,7 @@ func (s *InsightsService) PublicStats(ctx context.Context) *PublicStatsResult {
 	if !s.dashboardAggEnabled {
 		return &PublicStatsResult{Enabled: true, Available: false}
 	}
-	value, err := s.cache.get(ctx, "public-stats", insightsPublicStatsTTL, func(ctx context.Context) (any, error) {
+	value, err := s.cache.get(ctx, "public-stats", insightsFixedTTL(insightsPublicStatsTTL), func(ctx context.Context) (any, error) {
 		return s.loadPublicStats(ctx)
 	})
 	if err != nil {
@@ -460,12 +469,20 @@ func (s *InsightsService) loadPublicStats(ctx context.Context) (*PublicStatsResu
 	}, nil
 }
 
+// insightsFixedTTL 返回与取数时间无关的固定缓存时长。
+func insightsFixedTTL(ttl time.Duration) func(time.Time) time.Duration {
+	return func(time.Time) time.Duration { return ttl }
+}
+
 // insightsCache 是按 key 缓存、过期后先返回旧值再后台刷新的小缓存。
+// 条目数超过 maxEntries 时淘汰最久没用过的条目；同时进行的加载不超过 loadSlots 的容量。
 type insightsCache struct {
-	mu      sync.Mutex
-	entries map[string]*insightsCacheEntry
-	group   singleflight.Group
-	now     func() time.Time
+	mu         sync.Mutex
+	entries    map[string]*insightsCacheEntry
+	maxEntries int
+	loadSlots  chan struct{}
+	group      singleflight.Group
+	now        func() time.Time
 	// refreshWG 让测试能等后台刷新结束。
 	refreshWG sync.WaitGroup
 }
@@ -474,37 +491,47 @@ type insightsCacheEntry struct {
 	value      any
 	fetchedAt  time.Time
 	failedAt   time.Time
+	lastUsed   time.Time
 	refreshing bool
 }
 
 func newInsightsCache(now func() time.Time) *insightsCache {
-	return &insightsCache{entries: map[string]*insightsCacheEntry{}, now: now}
+	return &insightsCache{
+		entries:    map[string]*insightsCacheEntry{},
+		maxEntries: insightsMaxCacheEntries,
+		loadSlots:  make(chan struct{}, insightsMaxConcurrentLoads),
+		now:        now,
+	}
 }
 
 // get 返回 key 的值：新鲜直接返回；过期但不超过 3×ttl 时先返回旧值并在后台刷新；
-// 没有值或值太老就同步加载。同一 key 的并发加载只查一次。
-func (c *insightsCache) get(ctx context.Context, key string, ttl time.Duration, load func(context.Context) (any, error)) (any, error) {
+// 没有值或值太老就同步加载。同一 key 的并发加载只查一次。ttlFor 按条目的取数时间给出缓存时长。
+func (c *insightsCache) get(ctx context.Context, key string, ttlFor func(fetchedAt time.Time) time.Duration, load func(context.Context) (any, error)) (any, error) {
 	now := c.now()
 	c.mu.Lock()
-	if entry := c.entries[key]; entry != nil && entry.value != nil {
-		age := now.Sub(entry.fetchedAt)
-		if age < ttl {
-			value := entry.value
-			c.mu.Unlock()
-			return value, nil
-		}
-		if age < 3*ttl {
-			value := entry.value
-			startRefresh := !entry.refreshing && now.Sub(entry.failedAt) >= insightsFailureBackoff
-			if startRefresh {
-				entry.refreshing = true
-				c.refreshWG.Add(1)
+	if entry := c.entries[key]; entry != nil {
+		entry.lastUsed = now
+		if entry.value != nil {
+			ttl := ttlFor(entry.fetchedAt)
+			age := now.Sub(entry.fetchedAt)
+			if age < ttl {
+				value := entry.value
+				c.mu.Unlock()
+				return value, nil
 			}
-			c.mu.Unlock()
-			if startRefresh {
-				go c.refresh(key, load)
+			if age < 3*ttl {
+				value := entry.value
+				startRefresh := !entry.refreshing && now.Sub(entry.failedAt) >= insightsFailureBackoff
+				if startRefresh {
+					entry.refreshing = true
+					c.refreshWG.Add(1)
+				}
+				c.mu.Unlock()
+				if startRefresh {
+					go c.refresh(key, load)
+				}
+				return value, nil
 			}
-			return value, nil
 		}
 	}
 	c.mu.Unlock()
@@ -532,13 +559,14 @@ func (c *insightsCache) refresh(key string, load func(context.Context) (any, err
 func (c *insightsCache) loadAndStore(ctx context.Context, key string, load func(context.Context) (any, error)) (any, error) {
 	ctx, cancel := context.WithTimeout(ctx, insightsQueryTimeout)
 	defer cancel()
-	value, err := load(ctx)
+	value, err := c.runLoad(ctx, load)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	entry := c.entries[key]
 	if entry == nil {
-		entry = &insightsCacheEntry{}
+		c.evictLocked()
+		entry = &insightsCacheEntry{lastUsed: c.now()}
 		c.entries[key] = entry
 	}
 	if err != nil {
@@ -549,4 +577,40 @@ func (c *insightsCache) loadAndStore(ctx context.Context, key string, load func(
 	entry.fetchedAt = c.now()
 	entry.failedAt = time.Time{}
 	return value, nil
+}
+
+// runLoad 占一个查询名额再加载；等名额的时间也算在 ctx 的超时里。
+func (c *insightsCache) runLoad(ctx context.Context, load func(context.Context) (any, error)) (any, error) {
+	if c.loadSlots != nil {
+		select {
+		case c.loadSlots <- struct{}{}:
+			defer func() { <-c.loadSlots }()
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	return load(ctx)
+}
+
+// evictLocked 为新条目腾位置：条目数到上限时淘汰最久没用过的条目（正在后台刷新的跳过）。调用方持有 c.mu。
+func (c *insightsCache) evictLocked() {
+	if c.maxEntries <= 0 {
+		return
+	}
+	for len(c.entries) >= c.maxEntries {
+		oldestKey := ""
+		var oldest time.Time
+		for key, entry := range c.entries {
+			if entry.refreshing {
+				continue
+			}
+			if oldestKey == "" || entry.lastUsed.Before(oldest) {
+				oldestKey, oldest = key, entry.lastUsed
+			}
+		}
+		if oldestKey == "" {
+			return
+		}
+		delete(c.entries, oldestKey)
+	}
 }

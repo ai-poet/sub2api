@@ -47,6 +47,7 @@ export const PAYMENT_TYPE = {
   USDC_SOLANA: 'usdc.solana',
   STRIPE: 'stripe',
   BANK: 'bank',
+  PAYNOW: 'paynow',
 } as const;
 
 /** 支付方式前缀（用于 startsWith 判断） */
@@ -57,7 +58,15 @@ export const PAYMENT_PREFIX = {
   USDC: 'usdc',
   STRIPE: 'stripe',
   BANK: 'bank',
+  PAYNOW: 'paynow',
 } as const;
+
+/**
+ * 必须显式启用的支付方式：不参与「留空 = 全部」的默认。
+ * 服务商实例的「支持方式」留空、全局「启用的支付方式」留空时都不会带上它们，
+ * 只有在后台明确勾选才会出现在付款页——新加的方式因此不会在商户开通前就展示给用户。
+ */
+export const OPT_IN_PAYMENT_TYPES: ReadonlySet<string> = new Set([PAYMENT_TYPE.PAYNOW]);
 
 /** 需要页面跳转（而非二维码）的支付方式 */
 export const REDIRECT_PAYMENT_TYPES = new Set<string>([

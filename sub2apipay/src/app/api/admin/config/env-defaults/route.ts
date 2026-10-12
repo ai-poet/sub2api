@@ -4,7 +4,7 @@ import { getEnv } from '@/lib/config';
 import { DEFAULT_BALANCE_CREDIT_CNY_PER_USD, DEFAULT_USD_EXCHANGE_RATE, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
 
 const ALL_PROVIDERS = [
-  { key: 'easypay', types: ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana'] },
+  { key: 'easypay', types: ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana', 'bank', 'paynow'] },
   { key: 'alipay', types: ['alipay_direct'] },
   { key: 'wxpay', types: ['wxpay_direct'] },
   { key: 'stripe', types: ['stripe'] },

@@ -1,10 +1,16 @@
-// fork：排行榜（登录可见）。后端按固定时间窗缓存，用户榜不含用户 ID、邮箱和原始用户名。
+// fork：用量排行（登录可见）。按日期范围查询（YYYY-MM-DD，服务器时区，含首尾，最长 90 天），后端按范围缓存；
+// 用户榜不含用户 ID、邮箱和原始用户名，排名指标与条数由后台设置决定。
 import { apiClient } from './client'
 
-export type LeaderboardWindow = '24h' | '7d' | '30d'
 export type LeaderboardMetric = 'tokens' | 'requests' | 'cost'
 
-export const LEADERBOARD_WINDOWS: LeaderboardWindow[] = ['24h', '7d', '30d']
+/** 日期范围最长天数（含首尾），与后端 insightsMaxRangeDays 一致。 */
+export const LEADERBOARD_MAX_RANGE_DAYS = 90
+
+export interface LeaderboardRange {
+  start_date: string
+  end_date: string
+}
 
 export interface LeaderboardModelItem {
   rank: number
@@ -17,7 +23,8 @@ export interface LeaderboardModelItem {
 
 export interface LeaderboardModelsResponse {
   enabled: boolean
-  window: LeaderboardWindow
+  start_date: string
+  end_date: string
   generated_at?: string
   total_tokens: number
   /** 榜单之外（含不公开的模型）的 token 占比 */
@@ -39,25 +46,26 @@ export interface LeaderboardUserItem {
 
 export interface LeaderboardUsersResponse {
   enabled: boolean
-  window: LeaderboardWindow
-  metric: LeaderboardMetric
+  start_date: string
+  end_date: string
+  /** 后台设定的排名指标，前端当主指标显示 */
+  sort_by: LeaderboardMetric
   show_cost: boolean
+  /** 后台设定的榜单条数 */
+  limit: number
   generated_at?: string
   /** 参与人数太少时不公布榜单 */
   insufficient_data: boolean
   items: LeaderboardUserItem[]
 }
 
-export async function getModelLeaderboard(window: LeaderboardWindow): Promise<LeaderboardModelsResponse> {
-  const { data } = await apiClient.get<LeaderboardModelsResponse>('/leaderboard/models', { params: { window } })
+export async function getModelLeaderboard(range: LeaderboardRange): Promise<LeaderboardModelsResponse> {
+  const { data } = await apiClient.get<LeaderboardModelsResponse>('/leaderboard/models', { params: range })
   return { ...data, items: Array.isArray(data?.items) ? data.items : [] }
 }
 
-export async function getUserLeaderboard(
-  window: LeaderboardWindow,
-  metric: LeaderboardMetric = 'tokens',
-): Promise<LeaderboardUsersResponse> {
-  const { data } = await apiClient.get<LeaderboardUsersResponse>('/leaderboard/users', { params: { window, metric } })
+export async function getUserLeaderboard(range: LeaderboardRange): Promise<LeaderboardUsersResponse> {
+  const { data } = await apiClient.get<LeaderboardUsersResponse>('/leaderboard/users', { params: range })
   return { ...data, items: Array.isArray(data?.items) ? data.items : [] }
 }
 

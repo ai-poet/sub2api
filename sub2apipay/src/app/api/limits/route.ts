@@ -3,6 +3,7 @@ import { queryMethodLimits } from '@/lib/order/limits';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import { getNextBizDayStartUTC } from '@/lib/time/biz-day';
 import { getCurrentUserByToken } from '@/lib/sub2api/client';
+import { readUserToken } from '@/lib/utils/request-token';
 
 /**
  * GET /api/limits?token=xxx
@@ -19,7 +20,7 @@ import { getCurrentUserByToken } from '@/lib/sub2api/client';
  * }
  */
 export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: 'token is required' }, { status: 400 });
   }

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import { getSystemConfig } from '@/lib/system-config';
 import { resolveEnabledPaymentTypes } from '@/lib/payment/resolve-enabled-types';
+import { instanceSupportsPaymentType, isOptInPaymentType, parsePaymentTypeList } from '@/lib/payment/opt-in-types';
 
 function getProviderKeyForType(type: string): string | undefined {
   const registry = paymentRegistry as {
@@ -46,16 +47,11 @@ export async function getVisiblePaymentTypes(): Promise<string[]> {
 
     const providerInstances = activeInstances.filter((instance) => instance.providerKey === providerKey);
     if (providerInstances.length === 0) {
-      return true;
+      // 没有数据库实例（仅环境变量配置）：必须显式启用的方式只认全局列表里明确写出的
+      return !isOptInPaymentType(type) || parsePaymentTypeList(configuredTypes).includes(type);
     }
 
-    return providerInstances.some((instance) => {
-      const supportedTypes = instance.supportedTypes
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
-      return supportedTypes.length === 0 || supportedTypes.includes(type);
-    });
+    return providerInstances.some((instance) => instanceSupportsPaymentType(instance.supportedTypes, type));
   });
 
   return visible;

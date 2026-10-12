@@ -41,6 +41,9 @@ export interface PublicPricingGroupRef {
   name: string
   rate_multiplier: number
   rate_source: string
+  /** fork：分组描述与排序值（模型广场按分组分区；旧后端不下发） */
+  description?: string
+  sort_order?: number
 }
 
 export interface PublicPricingItem {

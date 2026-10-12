@@ -87,9 +87,18 @@ The features below are locally maintained customizations of this fork. During up
 
 - Local implementation lives at the `/models` route: `frontend/src/views/user/ModelCatalogView.vue`, `frontend/src/api/modelCatalog.ts` (+ spec), `frontend/src/api/pricing.ts`, the `modelCatalog` i18n keys in `frontend/src/i18n/locales/{zh,en}/fork.ts`, the sidebar entry in `frontend/src/components/layout/AppSidebar.vue`; backend `backend/internal/service/model_catalog_service.go` (+ test), `backend/internal/handler/model_catalog_handler.go`, `backend/internal/handler/public_pricing_handler.go` (+ test), the routes in `backend/internal/server/routes/user.go`, and their wiring in `backend/internal/handler/wire.go`, `backend/internal/handler/handler.go`, `backend/internal/service/wire.go`, `backend/cmd/server/wire_gen.go`.
 - Upstream ships its own "model plaza" (`backend/internal/handler/model_plaza_*`, `backend/internal/service/model_plaza_*`, `frontend/src/api/modelPlaza.ts`, `frontend/src/components/modelPlaza/**`, plus plaza entries in `frontend/src/views/HomeView.vue` and `frontend/src/utils/featureFlags.ts`). It was intentionally removed from this fork. Keep it removed: resolve modify/delete conflicts on those paths by deleting, drop new upstream files under those paths, and do not re-add plaza wiring or routes.
-- **Body and polish** (ported from TokenRouter, LGPL-3.0): the page body lives in `frontend/src/components/modelCatalog/ModelCatalogBody.vue`; the view only picks the data source and shell. Cards carry the vendor logo (`ModelIcon`), copy-ID (`ModelIdLabel.vue`), input → output modality icons (`ModelModalityIcons.vue` + `utils/modelCapabilities.ts`, billing mode before model-id regexes), the context window, a hover lift, a staggered entrance, a `Collapse` for detailed pricing, a segmented billing-mode filter (`vSegmented`) and a skeleton (`ModelCatalogSkeleton.vue`).
-- **Availability bars**: signed-in cards show the best group's last 24 h from one batch request, `GET /api/v1/group-status/history?period=24h|7d` (`handler/group_status_histories_handler.go`, `service/group_status_histories.go`, `repository/group_status_repo_histories.go`, one line in `routes/user.go`; same visibility as `ListUserStatuses`). It is requested only when `group_status_enabled`, never per group. Bar: `GroupAvailabilityBar.vue`.
-- **Anonymous access**: `/models` keeps `requiresAuth` but carries `meta.publicCatalog`; `router/publicCatalog.ts` (one hook in the guard) lets visitors in while `public_pricing_enabled` is on and backend mode is off. They get `PublicCatalogShell.vue` (home header / footer) and `/pricing/public` data mapped by `mapPublicPricingToCatalogItems`. `public_pricing_handler.go` additionally sends `context_window`, `per_second_usd` and a `pricing_details` subset; it still never sends group IDs, `other_groups` or the price source. The home page's 「价格」 link (`HomeHeader.vue`, `HomeFooter.vue`) opens `/models` instead of the `#pricing` anchor, and `HomePricingSection.vue` ends with a 「查看全部模型与价格」 link.
+- **Layout** (ported from TokenRouter's model marketplace, LGPL-3.0): the page is split into group sections. `components/modelCatalog/ModelCatalogBody.vue` holds the body; the view only picks the data source and the shell.
+  - Toolbar: summary line, search, and `CatalogFilterDropdown.vue` (brand / pricing type / group, count badge, removable chips, reset).
+  - Group header: brand pill, 「最高省 X%」, 「分组倍率」 or 「专属倍率」 (with tooltips), platform logo, translated name and description, and a large availability bar.
+  - Under each header, a grid of `CatalogModelCard.vue` cards:
+    - title from `prettifyModelName` (claude-opus-4-6 → Claude Opus 4.6), info tooltip, modality icons and the copy-ID row;
+    - an input / output price preview (one row per context tier, or per media tier);
+    - 「查看详细定价」 opens a `Collapse` with every price, the official price struck through, a tier switch (`vSegmented`) and badges.
+  - Grouping, filtering and formatting: `catalogGroups.ts` and `catalogPricing.ts`.
+  - The catalog API already returns one item per (group, model) with that group's own prices. `ModelCatalogGroupRef` and the public group ref carry `description` and `sort_order` (fork fields in `model_catalog_service.go` and `public_pricing_handler.go`).
+  - Display prices keep the old rule: CNY cash price when the payment config loads, converted back to USD for English, otherwise the USD balance price.
+- **Availability bars**: signed-in group headers show the group's last 24 h from one batch request, `GET /api/v1/group-status/history?period=24h|7d` (`handler/group_status_histories_handler.go`, `service/group_status_histories.go`, `repository/group_status_repo_histories.go`, one line in `routes/user.go`; same visibility as `ListUserStatuses`). It is requested only when `group_status_enabled`, never per group. Bar: `GroupAvailabilityBar.vue`.
+- **Anonymous access**: `/models` keeps `requiresAuth` but carries `meta.publicCatalog`; `router/publicCatalog.ts` (one hook in the guard) lets visitors in while `public_pricing_enabled` is on and backend mode is off. They get `PublicCatalogShell.vue` (home header / footer; content in the same `max-w-[1200px]` column as the home header, so wide screens keep side margins) and `/pricing/public` data mapped by `mapPublicPricingToCatalogItems`. `public_pricing_handler.go` additionally sends `context_window`, `per_second_usd` and a `pricing_details` subset; it still never sends group IDs, `other_groups` or the price source. The home page's 「价格」 link (`HomeHeader.vue`, `HomeFooter.vue`) opens `/models` instead of the `#pricing` anchor, and `HomePricingSection.vue` ends with a 「查看全部模型与价格」 link.
 
 ### 分组运行状态 Server酱³ 推送 (Group status ServerChan notify, local implementation)
 
@@ -646,28 +655,35 @@ The features below are locally maintained customizations of this fork. During up
   - The static icon shows until the chunk loads, and stays if it fails.
   - `vite.config.ts` puts `motion-v`, `framer-motion`, `motion-dom`, `motion-utils`, `hey-listen` and `src/components/motion-icons/` into the lazy `feature-motion-icons` chunk. Never import `motion-icons` statically from shared code, or `motion-v` lands in the entry chunk for every page.
   - The ignored `frontend/vite.config.js` is regenerated by `vue-tsc -b` at the start of `pnpm build`. A bare `vite build` uses whatever stale copy is there.
-- **Dashboard motion**:
-  - `UserDashboardStats.vue` headline numbers use `AnimatedNumber`.
-  - `components/user/dashboard/fork/UserDashboardHeatmap.vue`: 13 weeks, column wave capped at 480 ms.
-  - `components/user/dashboard/fork/UserDashboardTopModels.vue`: reuses `modelStats`, bars grow in sequence.
-  - `views/user/DashboardView.vue` adds the heatmap / top-models row and the `fork-dash-rise` wrapper.
-- **Upstream files touched**: `AppLayout.vue` (main class), `AppSidebar.vue` (`SidebarNavIcon` at the icon render sites, `applyDarkClass`, leaderboard entry), `HomeView.vue` (`applyDarkClass`), `tailwind.config.js` (`presets`), `main.ts`, `vite.config.ts`, `router/index.ts` (leaderboard route + `publicCatalog` hook), `UserDashboardStats.vue`, `DashboardView.vue`. Every edit is tagged `fork：`.
+- **User dashboard** (ported from TokenRouter's user dashboard): `views/user/DashboardView.vue` only wraps `components/user/dashboard/fork/UserDashboardPage.vue` in AppLayout. The upstream `UserDashboardStats` / `UserDashboardCharts` / `UserDashboardRecentUsage` / `UserDashboardQuickActions` stay in the tree but are no longer mounted; never re-mount them in a merge.
+  - **Heading row**: `UserDashboardLiveStats.vue` (RPM / TPM / average latency / today's spend, count-up, polled every 60 s while visible) and `UserDashboardUsageToolbar.vue` (filters, refresh, date range defaulting to 30 days).
+  - **Usage area**: `UserDashboardUsageChart.vue` holds the four stat cards (sparklines `UsageSparkline.vue`, "vs previous period" pills; clicking a card switches the metric) and the chart (left-to-right reveal, previous-period line, live dot), next to `UserDashboardTopModels.vue` (clicking a model filters the area).
+  - **All-time card**: `UserDashboardLifetime.vue` sits right under the usage area and keeps the old dashboard's totals: all-time requests, all-time tokens with the input / output / cache split, and actual vs standard spend (savings pill and an actual-of-standard bar), each with today's figure. Fed by the live-stats poll; keep it on merges.
+  - **Below**: `UserDashboardHeatmap.vue` (up to 26 weeks, column wave, keyboard navigation; clicking a day zooms the chart to that day), `UserDashboardPlatforms.vue` (the per-platform breakdown and platform quotas kept from the old dashboard), then `UserDashboardAnnouncements.vue` + `UserDashboardQuickActions.vue`.
+  - **State**: shared by `usageChartState.ts`. Helpers: `usageChartData.ts`, `useUsageChartFilters.ts`, `topModels.ts`, `metricTones.ts`, `dashboardMotion.ts` (one source for JS and CSS timings), `chartTheme.ts`, `chartExternalTooltip.ts`.
+  - i18n keys live under `dashboard.fork.*`.
+- **Upstream files touched**: `AppLayout.vue` (main class), `AppSidebar.vue` (`SidebarNavIcon` at the icon render sites, `applyDarkClass`, leaderboard entry), `HomeView.vue` (`applyDarkClass`, `HomeLiveStats`), `tailwind.config.js` (`presets`), `main.ts`, `vite.config.ts`, `router/index.ts` (leaderboard route + `publicCatalog` hook), `DashboardView.vue`. Every edit is tagged `fork：`.
 - Keep on upstream merges.
 
 ### 排行榜与首页公开统计 (Leaderboard + home public stats, local implementation)
 
 - **Configuration**: one JSON setting, `insights_config` (`service/insights.go`):
-  - `model_ranking_enabled` (default **on**), `usage_ranking_enabled` (default **off**), `usage_ranking_limit` (3..50, default 20), `usage_ranking_show_cost` (default off), `public_stats_enabled` (default **off**).
+  - `model_ranking_enabled` (default **on**), `usage_ranking_enabled` (default **off**), `usage_ranking_limit` (3..50, default 20), `usage_ranking_show_cost` (default off), `usage_ranking_sort_by` (tokens / requests / cost, default tokens; cost falls back to tokens while show_cost is off, without overwriting the stored value), `public_stats_enabled` (default **off**).
   - `UpdateInsightsConfig` saves it and calls `onUpdate` so the injected HTML refreshes.
   - The three booleans are public settings (`setting_public.go` key list, `PublicSettings` and injection payload, `settings_view.go`, `dto/settings.go`, `handler/setting_handler.go`; the drift test pins them).
   - Admin API: `GET/PUT /api/v1/admin/insights/config`, `AdminOnly` and not on the operator allowlist. UI: `components/admin/settings/InsightsSettingsCard.vue`, saves on each change, mounted in `ForkSettingsSection.vue`.
 - **Endpoints** (`server/routes/insights.go`; one line each in `routes/user.go`, `routes/admin.go`, `server/router.go`; one `InsightsHandler`, `InsightsService` and `InsightsRepository` wired in `handler.go`, `handler/wire.go`, `service/wire.go`, `repository/wire.go`, `cmd/server/wire_gen.go`):
-  - `GET /api/v1/leaderboard/models?window=24h|7d|30d` (signed in).
-  - `GET /api/v1/leaderboard/users?window=…&metric=tokens|requests|cost` (signed in; `cost` only while show_cost is on).
+  - `GET /api/v1/leaderboard/users?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD` (signed in). The admin's `sort_by` is the primary metric, so there is no metric parameter. The response echoes the dates and includes `sort_by`, `show_cost` and `limit`.
+  - `GET /api/v1/leaderboard/models?start_date=…&end_date=…` (signed in).
+  - Date rules for both: dates are in the server timezone and the end date is inclusive. No dates means today; a span over 90 days (log retention), a reversed range or a bad format is a 400.
   - `GET /api/v1/stats/public`: anonymous, `PublicIP` limit, never 401 / 5xx, `Cache-Control: public, max-age=60`.
 - **Data and caching**:
-  - Rankings scan `usage_logs` over fixed windows; there is no per-model or per-user rollup. If the 30d query gets slow on production data, add daily rollup tables.
-  - Cache (`service/insights_service.go`) TTLs: 5 min for 24h, 15 min for 7d, 60 min for 30d. Past the TTL it serves stale data for up to 3×TTL while one background refresh runs; failures back off for 1 min; queries time out after 30 s.
+  - Rankings scan `usage_logs` over the requested range; there is no per-model or per-user rollup. If long ranges get slow on production data, add daily rollup tables.
+  - Cache (`service/insights_service.go`):
+    - Keys are `models:<start>:<end>` and `users:<start>:<end>:<sort_by>:<limit>`. The viewer is never part of a key; `is_self` is computed per request.
+    - TTL is 5 min while the range is still open (includes today) and 60 min once it has closed. Past the TTL it serves stale data for up to 3×TTL while one background refresh runs.
+    - At most 200 entries (LRU) and at most 4 concurrent loads, because ranges are user-chosen.
+    - Failures back off for 1 min; queries time out after 30 s.
   - The model board keeps only models in `GetPublicCatalog`, so exclusive-group models never appear; the rest folds into 「其他」.
   - Public stats read only `usage_dashboard_daily`. They report unavailable when dashboard aggregation is off or the watermark is more than 2 h behind, and never fall back to `usage_logs`.
 - **Privacy rules (do not weaken)**:
@@ -677,13 +693,41 @@ The features below are locally maintained customizations of this fork. During up
   - With fewer than 5 participants the response is `insufficient_data` and lists nobody.
   - Public stats never include user counts.
 - **Frontend**:
-  - `views/user/LeaderboardView.vue` on `/leaderboard` is its own lazy `feature-leaderboard` chunk. Components in `components/leaderboard/`: `ModelRankingList.vue` (bars, total count-up, link to `/models?q=`), `UserPodium.vue` (#1 centred and taller, rising 2 → 1 → 3), `UserRankingList.vue`, `IdenticonAvatar.vue` + `utils/identicon.ts`, `leaderboardFormat.ts`.
+  - `views/user/LeaderboardView.vue` on `/leaderboard` (sidebar label 「用量排行」) is its own lazy `feature-leaderboard` chunk. It is laid out like TokenRouter's UsageRankingView:
+    - user ranking first;
+    - heading row with title, a `DateRangePicker` defaulting to today and a refresh button;
+    - a 「用户 / 模型」 switch only when both boards are on.
+  - Components in `components/leaderboard/`:
+    - `UserPodium.vue`: TokenRouter's TopRankCard. Amber / rose / sky themes, #1 centred and taller, rising 2 → 1 → 3, primary metric counts up.
+    - `UserRankingList.vue`: RankingRow, with `#n` badges, fixed-width metric columns and tinted top-3 rows.
+    - `ModelRankingList.vue`: the same row style with `ModelIcon`, a share bar and a link to `/models?q=`.
+    - `IdenticonAvatar.vue` + `utils/identicon.ts`.
+    - `leaderboardFormat.ts`: `rankTheme` and the metric helpers.
+  - The viewer's own card and row get a 「你」 pill.
   - API wrappers: `api/leaderboard.ts`, `api/publicStats.ts`, `api/admin/insights.ts`.
   - Flags: `utils/forkFeatureFlags.ts`; the sidebar entry uses `flagLeaderboard` with `TrophyIcon` from `components/layout/sidebarForkIcons.ts`.
   - Home counters: `components/home/HomeLiveStats.vue`, a section of its own placed in `HomeView.vue` right after `HomeHero`, i.e. on the second screen. Never put it inside the hero: the first screen belongs to the client showcase. Nothing is requested while the switch is off; the cards rise and the numbers count up only once the section scrolls into view (3.2 s, unit locked).
   - i18n keys in `fork.ts`: `leaderboard.*`, `nav.leaderboard`, `home.liveStats.*`, `dashboard.fork.*`, `admin.settings.site.insights.*`.
 - **Tests**: `service/insights_test.go`, `repository/insights_repo_test.go`, `handler/insights_handler_test.go`, `views/user/__tests__/LeaderboardView.spec.ts`, `components/home/__tests__/HomeLiveStats.spec.ts`.
 - Keep on upstream merges; never add user identifiers to the ranking responses or widen the public stats.
+
+### 支付页登录态不进地址 (Pay pages keep the login token out of URLs, local implementation)
+
+- **Why.** The embedded pay pages used to get the main site's JWT as `?token=`; an admin's is a full admin session. The edge proxy logged it in the request line and in the Referer of every asset, and it sat in browser history and screenshots.
+- **Main site.** `shouldCarryAuthToken` in `frontend/src/utils/embedded-url.ts` leaves the token out when the target page is same-origin (the default `/pay` proxy) and keeps it for cross-origin pages, which cannot read this site's storage. `fetchBalanceCreditCnyPerUsd` in `api/modelCatalog.ts` sends a same-origin `/pay/api/user` with `Authorization: Bearer`.
+- **Pay service.**
+  - `src/lib/session-token.ts`: `readMainSiteToken` (localStorage `auth_token`), `tokenUserId`, `freshSessionToken`, `requestToken`, `bearerHeaders`.
+  - `src/lib/use-pay-session.ts`: `usePaySession` takes the URL token if present, else the main site token read once per document via `useSyncExternalStore`.
+  - `src/lib/authorized-file.ts`: invoice download and the admin preview fetch a blob instead of navigating with the token.
+  - `app/pay/page.tsx`, `app/pay/orders/page.tsx`, `components/PaymentQRCode.tsx` and the ten admin pages send the header. Their in-page links carry only `urlToken`.
+  - The user API routes read the token through `readUserToken` (header, then query, then body).
+- **Rules.**
+  - Never write a token read from storage into a URL.
+  - Use a URL token exactly as given. The desktop client's pay center opens `/pay?token=` in a system browser that may still hold an expired web session of the same account.
+  - A storage token follows rotation only within the same `user_id`, so an open page never switches accounts.
+  - Keep `?token=` and body tokens accepted server-side for released desktop clients (`client/crates/sub2api/src/pay.rs`) and cross-origin deployments.
+- **Tests.** `src/__tests__/lib/session-token.test.ts`, `authorized-file.test.ts` and the header case in `invoice-routes.test.ts`; frontend `utils/__tests__/embedded-url.spec.ts` and `api/modelCatalog.spec.ts`. Log redaction for the remaining cross-origin and legacy URLs is in `deploy/EDGE_SECURITY.md` § Nginx baseline.
+- Keep on upstream merges.
 
 ## Working Boundary
 

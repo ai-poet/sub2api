@@ -1,48 +1,12 @@
 <template>
   <AppLayout>
-    <!-- fork：fork-dash-rise 各区块依次上浮入场（styles/fork-motion.css） -->
-    <div class="space-y-6 fork-dash-rise">
-      <div v-if="loading" class="flex items-center justify-center py-12"><LoadingSpinner /></div>
-      <template v-else-if="stats">
-        <UserDashboardStats :stats="stats" :balance="user?.balance || 0" :is-simple="authStore.isSimpleMode" :platform-quotas="platformQuotas" />
-        <UserDashboardCharts v-model:startDate="startDate" v-model:endDate="endDate" v-model:granularity="granularity" :loading="loadingCharts" :trend="trendData" :models="modelStats" @dateRangeChange="loadCharts" @granularityChange="loadCharts" @refresh="refreshAll" />
-        <!-- fork：用量热力图 + 用量最多的模型 -->
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div class="min-w-0 lg:col-span-2"><UserDashboardHeatmap /></div>
-          <div class="lg:col-span-1"><UserDashboardTopModels :models="modelStats" /></div>
-        </div>
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div class="lg:col-span-2"><UserDashboardRecentUsage :data="recentUsage" :loading="loadingUsage" /></div>
-          <div class="lg:col-span-1"><UserDashboardQuickActions /></div>
-        </div>
-      </template>
-    </div>
+    <!-- fork：仪表盘整页换成 TokenRouter 的布局（components/user/dashboard/fork/UserDashboardPage.vue）；
+         上游的 UserDashboardStats / Charts / RecentUsage 不再挂载，平台拆分与配额搬到 fork 的 UserDashboardPlatforms -->
+    <UserDashboardPage />
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'; import { useAuthStore } from '@/stores/auth'; import { usageAPI, type UserDashboardStats as UserStatsType } from '@/api/usage'
-import AppLayout from '@/components/layout/AppLayout.vue'; import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import UserDashboardStats from '@/components/user/dashboard/UserDashboardStats.vue'; import UserDashboardCharts from '@/components/user/dashboard/UserDashboardCharts.vue'
-import UserDashboardRecentUsage from '@/components/user/dashboard/UserDashboardRecentUsage.vue'; import UserDashboardQuickActions from '@/components/user/dashboard/UserDashboardQuickActions.vue'
-import type { UsageLog, TrendDataPoint, ModelStat, PlatformQuotaItem } from '@/types'
-import { getMyPlatformQuotas } from '@/api/user'
-import { formatDateLocalInput } from '@/utils/format'
-import UserDashboardHeatmap from '@/components/user/dashboard/fork/UserDashboardHeatmap.vue' // fork：用量热力图
-import UserDashboardTopModels from '@/components/user/dashboard/fork/UserDashboardTopModels.vue' // fork：用量最多的模型
-
-const authStore = useAuthStore(); const user = computed(() => authStore.user)
-const stats = ref<UserStatsType | null>(null); const loading = ref(false); const loadingUsage = ref(false); const loadingCharts = ref(false)
-const trendData = ref<TrendDataPoint[]>([]); const modelStats = ref<ModelStat[]>([]); const recentUsage = ref<UsageLog[]>([])
-const platformQuotas = ref<PlatformQuotaItem[] | null>(null)
-
-const startDate = ref(formatDateLocalInput(new Date(Date.now() - 6 * 86400000))); const endDate = ref(formatDateLocalInput(new Date())); const granularity = ref('day')
-
-const loadStats = async () => { loading.value = true; try { await authStore.refreshUser(); stats.value = await usageAPI.getDashboardStats() } catch (error) { console.error('Failed to load dashboard stats:', error) } finally { loading.value = false } }
-const loadCharts = async () => { loadingCharts.value = true; try { const res = await Promise.all([usageAPI.getDashboardTrend({ start_date: startDate.value, end_date: endDate.value, granularity: granularity.value as any }), usageAPI.getDashboardModels({ start_date: startDate.value, end_date: endDate.value })]); trendData.value = res[0].trend || []; modelStats.value = res[1].models || [] } catch (error) { console.error('Failed to load charts:', error) } finally { loadingCharts.value = false } }
-const loadRecent = async () => { loadingUsage.value = true; try { const res = await usageAPI.getByDateRange(startDate.value, endDate.value); recentUsage.value = res.items.slice(0, 5) } catch (error) { console.error('Failed to load recent usage:', error) } finally { loadingUsage.value = false } }
-const loadPlatformQuotas = async () => { try { const data = await getMyPlatformQuotas(); platformQuotas.value = data.platform_quotas ?? [] } catch (error) { console.warn('Failed to load platform quotas:', error); platformQuotas.value = [] } }
-const refreshAll = () => { loadStats(); loadCharts(); loadRecent(); loadPlatformQuotas() }
-
-onMounted(() => { refreshAll() })
+import AppLayout from '@/components/layout/AppLayout.vue'
+import UserDashboardPage from '@/components/user/dashboard/fork/UserDashboardPage.vue' // fork：TokenRouter 风格仪表盘
 </script>

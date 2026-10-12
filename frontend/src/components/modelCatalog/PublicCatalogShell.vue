@@ -13,16 +13,19 @@
       @toggle-theme="toggleTheme"
     />
 
+    <!-- 内容与首页顶栏同宽（max-w-[1200px]，左右 px-4 / md:px-6），宽屏下两侧留白，不再铺满整屏 -->
     <main class="fork-content-reveal relative z-10 px-4 pb-20 pt-8 md:px-6 md:pt-12">
-      <div class="mx-auto mb-8 max-w-[1600px]">
-        <h1 class="text-3xl font-extrabold tracking-[-0.03em] text-gray-900 dark:text-white md:text-4xl">
-          {{ t('modelCatalog.title') }}
-        </h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          {{ t('modelCatalog.public.subtitle', { siteName }) }}
-        </p>
+      <div class="mx-auto w-full max-w-[1200px]" data-test="public-catalog-container">
+        <div class="mb-6">
+          <h1 class="text-3xl font-extrabold tracking-[-0.03em] text-gray-900 dark:text-white md:text-4xl">
+            {{ t('modelCatalog.title') }}
+          </h1>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            {{ t('modelCatalog.public.subtitle', { siteName }) }}
+          </p>
+        </div>
+        <slot />
       </div>
-      <slot />
     </main>
 
     <HomeFooter

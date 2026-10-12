@@ -3,9 +3,7 @@
     <ModelCatalogBody
       :items="allItems"
       :loading="loading"
-      :refreshing="refreshing"
       :load-error="loadError"
-      :last-updated-at="lastUpdatedAt"
       :balance-credit-cny-per-usd="balanceCreditCnyPerUsd"
       :usd-exchange-rate="usdExchangeRate"
       :payment-config-notice="paymentConfigNotice"
@@ -20,9 +18,7 @@
       public-mode
       :items="allItems"
       :loading="loading"
-      :refreshing="refreshing"
       :load-error="loadError"
-      :last-updated-at="lastUpdatedAt"
       :balance-credit-cny-per-usd="balanceCreditCnyPerUsd"
       :usd-exchange-rate="usdExchangeRate"
       :initial-search="initialSearch"
@@ -66,7 +62,6 @@ const loadError = ref('')
 const balanceCreditCnyPerUsd = ref<number | null>(null)
 const usdExchangeRate = ref<number | null>(null)
 const paymentConfigError = ref<string | null>(null)
-const lastUpdatedAt = ref<Date | null>(null)
 const availability = ref<Record<number, GroupStatusHistoryOverview>>({})
 
 const paymentConfigNotice = computed(() => {
@@ -100,7 +95,6 @@ async function loadCatalog(options: { refresh?: boolean } = {}) {
     if (isAuthenticated.value) {
       const response = await modelCatalogAPI.getCatalog()
       allItems.value = response.items || []
-      lastUpdatedAt.value = new Date()
       void loadAvailability()
       await loadPaymentConfig()
     } else {
@@ -123,7 +117,6 @@ async function loadPublicCatalog() {
     return
   }
   allItems.value = mapPublicPricingToCatalogItems(response.items || [])
-  lastUpdatedAt.value = new Date()
   const rates = await fetchPublicCurrencyRates({
     purchaseSubscriptionUrl: appStore.cachedPublicSettings?.purchase_subscription_url,
   })

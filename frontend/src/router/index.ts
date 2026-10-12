@@ -121,7 +121,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       requiresAdmin: false,
-      title: 'Leaderboard',
+      title: 'Usage Ranking',
       titleKey: 'leaderboard.title',
       descriptionKey: 'leaderboard.description'
     }

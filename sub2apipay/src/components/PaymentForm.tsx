@@ -244,6 +244,13 @@ export default function PaymentForm({
         </span>
       );
     }
+    if (iconType === 'paynow') {
+      return (
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7B2C83] text-[11px] font-bold leading-none text-white">
+          PN
+        </span>
+      );
+    }
     return null;
   };
 
@@ -388,7 +395,8 @@ export default function PaymentForm({
           <label className={['mb-2 block text-sm font-medium', dark ? 'text-slate-200' : 'text-gray-700'].join(' ')}>
             {locale === 'en' ? 'Payment Method' : '支付方式'}
           </label>
-          <div className="grid grid-cols-2 gap-3 sm:flex">
+          {/* 支付方式多时自动换行：窄屏两列，宽屏按卡片最小宽度排满每行 */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
             {enabledPaymentTypes.map((type) => {
               const meta = PAYMENT_TYPE_META[type];
               const displayInfo = getPaymentDisplayInfo(type, locale);
@@ -410,7 +418,7 @@ export default function PaymentForm({
                       : undefined
                   }
                   className={[
-                    'relative flex h-[58px] flex-col items-center justify-center rounded-lg border px-3 transition-all sm:flex-1',
+                    'relative flex h-[58px] min-w-0 flex-col items-center justify-center rounded-lg border px-3 transition-all',
                     isUnavailable
                       ? dark
                         ? 'cursor-not-allowed border-slate-700 bg-slate-800/50 opacity-50'
@@ -422,10 +430,15 @@ export default function PaymentForm({
                           : 'border-gray-300 bg-white text-slate-700 hover:border-gray-400',
                   ].join(' ')}
                 >
-                  <span className="flex items-center gap-2">
-                    {renderPaymentIcon(type)}
-                    <span className="flex flex-col items-start leading-none">
-                      <span className="text-xl font-semibold tracking-tight">{displayInfo.channel || type}</span>
+                  <span className="flex max-w-full min-w-0 items-center gap-2">
+                    <span className="shrink-0">{renderPaymentIcon(type)}</span>
+                    <span className="flex min-w-0 flex-col items-start leading-none">
+                      <span
+                        className="max-w-full truncate text-xl font-semibold tracking-tight"
+                        title={displayInfo.channel || type}
+                      >
+                        {displayInfo.channel || type}
+                      </span>
                       {isUnavailable ? (
                         <span className="text-[10px] tracking-wide text-red-400">
                           {locale === 'en' ? 'Daily limit reached' : '今日额度已满'}

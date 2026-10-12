@@ -298,7 +298,7 @@ export default {
     "referral": "Referral",
     "modelMirror": "Claude Relay Inspector",
     "modelCatalog": "Model Catalog",
-    "leaderboard": "Leaderboard",
+    "leaderboard": "Usage Ranking",
     "modelStatus": "Model Status",
     "sora": "Sora Studio",
     "communityGroup": "Join Community",
@@ -808,9 +808,16 @@ export default {
           "usageRanking": "User rankings",
           "usageRankingHint": "Ranks regular users by usage with masked names and generated avatars. Not published while fewer than 5 users take part.",
           "usageRankingShowCost": "Show spend on user rankings",
-          "usageRankingShowCostHint": "Adds a spend column to the user rankings and lets users rank by spend.",
+          "usageRankingShowCostHint": "Shows spend on the user rankings and allows ranking by spend.",
           "usageRankingLimit": "User ranking size",
           "usageRankingLimitHint": "3 to 50.",
+          "usageRankingSortBy": "Rank users by",
+          "usageRankingSortByHint": "The user rankings are ordered by this metric and show it first; users cannot switch it. Ranking by spend needs \"Show spend on user rankings\", otherwise total tokens are used.",
+          "sortByOptions": {
+            "tokens": "Total Tokens",
+            "requests": "Requests",
+            "cost": "Spend"
+          },
           "publicStats": "Public stats on the home page",
           "publicStatsHint": "Shows rolling counters for total tokens, today's tokens and total requests on the home page, without sign-in. Needs dashboard pre-aggregation.",
           "saved": "Saved",
@@ -936,62 +943,129 @@ export default {
   },
   "dashboard": {
     "fork": {
+      "live": {
+        "rpm": "RPM",
+        "tpm": "TPM",
+        "rpmHint": "Average requests per minute over the last 5 minutes",
+        "tpmHint": "Average tokens per minute over the last 5 minutes",
+        "latency": "Avg latency",
+        "todayCost": "Spent today"
+      },
+      "usageChart": {
+        "metricsLabel": "Usage metrics",
+        "metrics": {
+          "requests": "Requests",
+          "tokens": "Tokens",
+          "cost": "Cost",
+          "cacheHitRate": "Cache hit rate"
+        },
+        "series": {
+          "input": "Input",
+          "output": "Output",
+          "cacheCreation": "Cache creation",
+          "cacheRead": "Cache read",
+          "actualCost": "Charged",
+          "total": "Total"
+        },
+        "currentPeriod": "This period",
+        "previousPeriod": "Previous period",
+        "peak": "Peak",
+        "average": "Avg",
+        "vsPrevious": "vs previous period",
+        "noPrevious": "No data for the previous period",
+        "byHour": "Hourly",
+        "byDay": "Daily",
+        "trendTitle": "Usage trend · {metric}",
+        "empty": "No usage in the selected range"
+      },
       "heatmap": {
-        "title": "Usage heatmap",
-        "summary": "Active on {days} days in the last 13 weeks, {tokens} tokens in total",
+        "title": "Usage activity",
         "less": "Less",
         "more": "More",
-        "cell": "{date}: {tokens} tokens, {requests} requests",
-        "noUsage": "{date}: no usage"
+        "noUsage": "No usage",
+        "requests": "Requests",
+        "tokens": "Tokens",
+        "cost": "Cost",
+        "selectDay": "Click to see this day by the hour",
+        "summary": {
+          "activeDays": "Active days",
+          "tokens": "Tokens",
+          "busiest": "Busiest day",
+          "streak": "Current streak",
+          "days": "{count} day | {count} days"
+        }
       },
       "topModels": {
-        "title": "Most used models",
-        "byTokens": "By tokens",
-        "empty": "No usage in the selected range yet"
+        "title": "Top models",
+        "subtitle": "By {metric}",
+        "others": "Other models ({count})",
+        "viewAll": "View all",
+        "empty": "No model usage in the selected range",
+        "filterHint": "Click to filter by this model",
+        "clearFilter": "Click again to clear the filter",
+        "hitRate": "{rate} hit rate"
+      },
+      "platforms": {
+        "subtitle": "All-time usage and today's spend"
+      },
+      "lifetime": {
+        "title": "All-time usage",
+        "subtitle": "Everything since your account was created",
+        "requests": "Total requests",
+        "tokens": "Total tokens",
+        "cost": "Total spend",
+        "today": "Today {value}",
+        "todayCost": "Today: {actual} charged / {standard} standard",
+        "saved": "Saved {amount} ({percent}%)",
+        "barHint": "The full bar is the standard price; the filled part is what you were actually charged"
+      },
+      "announcements": {
+        "title": "Recent announcements",
+        "unread": "{count} unread",
+        "noSummary": "No summary"
+      },
+      "quickActions": {
+        "keyCount": "{active} of {total} keys active",
+        "purchaseDesc": "Buy a plan or add balance"
       }
     }
   },
   "leaderboard": {
-    "title": "Leaderboard",
-    "description": "See which models everyone is using",
-    "caption": "Usage rankings",
-    "intro": "Counted over fixed time ranges and cached for a few minutes up to an hour. The user board shows only masked names and generated avatars.",
-    "tabsLabel": "Board",
-    "tabs": {
-      "models": "Models",
-      "users": "Users"
+    "title": "Usage Ranking",
+    "description": "See who has been using the most tokens lately",
+    "boardsLabel": "Board",
+    "boards": {
+      "users": "Users",
+      "models": "Models"
     },
-    "windowLabel": "Time range",
-    "windows": {
-      "24h": "24 hours",
-      "7d": "7 days",
-      "30d": "30 days"
-    },
-    "metricLabel": "Rank by",
     "metrics": {
-      "tokens": "Tokens",
+      "tokens": "Total Tokens",
       "requests": "Requests",
       "cost": "Spend"
     },
-    "generatedAt": "As of {time}",
-    "disabled": "The leaderboard is not open yet.",
-    "empty": "No data for this time range yet.",
-    "loadFailed": "Could not load the leaderboard. Try again later.",
+    "listTitle": "Ranking List",
+    "limitHint": "Showing top {limit}",
+    "disabled": "Usage ranking is not open yet",
+    "emptyTitle": "No ranking data in this range",
+    "emptyDescription": "The usage ranking will appear once there is usage in the selected range.",
+    "rangeTooLong": "The date range can span at most {days} days. Pick a shorter one.",
+    "loadFailed": "Could not load the usage ranking. Try again later.",
     "models": {
       "title": "Model rankings",
+      "pageDescription": "See which models everyone has been using lately",
       "description": "Ranked by token usage. Only models in public groups are listed.",
       "totalTokens": "Site-wide tokens",
-      "requests": "{count} requests",
+      "share": "Share",
       "others": "Other models",
-      "viewInCatalog": "Open in the model catalog"
+      "viewInCatalog": "Open in the model catalog",
+      "emptyDescription": "Model rankings will appear once there is usage in the selected range."
     },
     "users": {
-      "rankLabel": "#{rank}",
       "you": "You",
       "anonymous": "User",
-      "listTitle": "Full ranking",
       "privacyNote": "Names are masked and avatars are generated",
-      "insufficient": "Too few users have taken part to publish a ranking yet."
+      "insufficientTitle": "Too few users yet",
+      "insufficient": "The ranking is published once at least 5 users have usage. Try a longer date range."
     }
   },
   "modelCatalog": {
@@ -1020,6 +1094,32 @@ export default {
     "contextWindow": "{size} context",
     "copyModelId": "Copy model ID",
     "copiedModelId": "Model ID copied",
+    "summary": "{groups} groups · {models} models",
+    "group": {
+      "maxSavings": "Up to {percent}% off",
+      "maxSavingsHint": "The largest saving against the official reference price among this group's models.",
+      "rate": "Group multiplier {rate}",
+      "userRate": "Your multiplier {rate}",
+      "rateHint": "Usage is billed at the official price times this multiplier. Image and video models may have their own multiplier.",
+      "userRateHint": "A multiplier the admin set for you. It takes precedence over the group default.",
+      "modelCount": "{count} models"
+    },
+    "card": {
+      "pricingUnavailable": "No pricing to show yet",
+      "viewPricing": "View detailed pricing",
+      "collapsePricing": "Hide detailed pricing",
+      "perMTok": "/ 1M tokens",
+      "perImage": "/ image",
+      "perSecond": "/ sec",
+      "perRequest": "/ request",
+      "perRequestLabel": "Per request",
+      "official": "Official {price}",
+      "savings": "{percent}% below official",
+      "contextWindow": "Context length",
+      "longContextFrom": "Long-context pricing from",
+      "promptCaching": "Prompt caching",
+      "reference": "Reference price"
+    },
     "description": "Compare the official reference price with your actual group-level charge for models you can truly access.",
     "caption": "Group x Model Price Cards",
     "intro": "Each card represents one accessible \"group + model\" combination. The page focuses on a direct official-vs-displayed-price comparison and defaults to the lowest displayed price first.",
@@ -1035,7 +1135,13 @@ export default {
       "billingMode": "Billing mode",
       "allBillingModes": "All billing modes",
       "sortBy": "Sort by",
-      "reset": "Clear filters"
+      "reset": "Clear filters",
+      "title": "Filters",
+      "brand": "Brand",
+      "allBrands": "All brands",
+      "pricingType": "Pricing type",
+      "group": "Group",
+      "remove": "Remove {label}"
     },
     "sorting": {
       "effectivePriceAsc": "Lowest displayed price",

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserByToken, getUserSubscriptions, getAllGroups } from '@/lib/sub2api/client';
+import { readUserToken } from '@/lib/utils/request-token';
 
 export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: '缺少 token' }, { status: 401 });
   }

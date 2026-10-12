@@ -9,12 +9,14 @@ import InvoiceTable, { type AdminInvoice } from '@/components/admin/InvoiceTable
 import { getAdminAccessHint } from '@/lib/branding';
 import { pickLocaleText, resolveLocale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
+import { openWithAuth } from '@/lib/authorized-file';
 
 const STATUS_FILTERS = ['', 'PENDING', 'ISSUED', 'REJECTED', 'CANCELLED'] as const;
 
 function AdminInvoicesContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const { token, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
@@ -92,11 +94,6 @@ function AdminInvoicesContent() {
   const [cfgDailyLimit, setCfgDailyLimit] = useState('20');
   const [cfgMinAmount, setCfgMinAmount] = useState('100');
   const [savingSettings, setSavingSettings] = useState(false);
-
-  const authHeaders = useCallback(
-    (extra?: Record<string, string>) => ({ Authorization: `Bearer ${token ?? ''}`, ...extra }),
-    [token],
-  );
 
   const fetchInvoices = useCallback(async () => {
     if (!token) return;
@@ -184,6 +181,8 @@ function AdminInvoicesContent() {
     }
   };
 
+  if (!sessionReady) return null;
+
   if (!token) {
     return (
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
@@ -265,11 +264,14 @@ function AdminInvoicesContent() {
     }
   };
 
-  const handleDownload = (invoice: AdminInvoice) => {
-    // 管理员预览：后端 302 到预签名链接。token 走 query，因为这是整页导航。
-    const params = new URLSearchParams({ token });
-    if (locale === 'en') params.set('lang', 'en');
-    window.open(buildAppApiPath(`/api/admin/invoices/${invoice.id}/download?${params}`), '_blank');
+  const handleDownload = async (invoice: AdminInvoice) => {
+    // 管理员预览：整页导航带不了 Authorization 头，取回文件后在新标签页打开，token 不进地址。
+    const ok = await openWithAuth(
+      buildAppApiPath(`/api/admin/invoices/${invoice.id}/download${langQuery}`),
+      authHeaders(),
+      `invoice-${invoice.id}`,
+    );
+    if (!ok) setError(text.actionFailed);
   };
 
   const filterBtnClass = (active: boolean) =>

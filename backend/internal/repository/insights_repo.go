@@ -10,8 +10,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/service"
 )
 
-// fork：排行榜与首页公开统计的查询。排行榜按固定时间窗扫 usage_logs（走 created_at 索引），
-// 结果由 service 层按档位缓存；公开统计只读预聚合日表。
+// fork：排行榜与首页公开统计的查询。排行榜按所选日期范围扫 usage_logs（走 created_at 索引），
+// 结果由 service 层按日期范围缓存；公开统计只读预聚合日表。
 
 type insightsRepository struct {
 	db *sql.DB

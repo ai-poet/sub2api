@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strings"
+
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -8,9 +10,6 @@ import (
 )
 
 // fork：排行榜、首页公开统计与它们的后台配置（路由见 server/routes/insights.go）。
-
-// insightsDefaultWindow 是排行榜不传 window 时的档位。
-const insightsDefaultWindow = service.InsightsWindow7d
 
 type InsightsHandler struct {
 	insights *service.InsightsService
@@ -21,11 +20,16 @@ func NewInsightsHandler(insights *service.InsightsService, settings *service.Set
 	return &InsightsHandler{insights: insights, settings: settings}
 }
 
+// insightsDateQuery 读取日期范围参数（YYYY-MM-DD，服务器时区，含首尾）；都不传时由服务层取今天。
+func insightsDateQuery(c *gin.Context) (string, string) {
+	return strings.TrimSpace(c.Query("start_date")), strings.TrimSpace(c.Query("end_date"))
+}
+
 // ModelLeaderboard 模型热度榜。
-// GET /api/v1/leaderboard/models?window=24h|7d|30d
+// GET /api/v1/leaderboard/models?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
 func (h *InsightsHandler) ModelLeaderboard(c *gin.Context) {
-	window := c.DefaultQuery("window", insightsDefaultWindow)
-	result, err := h.insights.ModelRanking(c.Request.Context(), window)
+	startDate, endDate := insightsDateQuery(c)
+	result, err := h.insights.ModelRanking(c.Request.Context(), startDate, endDate)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -33,17 +37,16 @@ func (h *InsightsHandler) ModelLeaderboard(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// UserLeaderboard 用户用量榜（名字脱敏，不含用户 ID 与邮箱）。
-// GET /api/v1/leaderboard/users?window=24h|7d|30d&metric=tokens|requests|cost
+// UserLeaderboard 用户用量榜（名字脱敏，不含用户 ID 与邮箱）。排名指标与条数由后台设置决定。
+// GET /api/v1/leaderboard/users?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
 func (h *InsightsHandler) UserLeaderboard(c *gin.Context) {
 	subject, ok := middleware2.GetAuthSubjectFromContext(c)
 	if !ok {
 		response.Unauthorized(c, "Unauthorized")
 		return
 	}
-	window := c.DefaultQuery("window", insightsDefaultWindow)
-	metric := c.DefaultQuery("metric", service.InsightsMetricTokens)
-	result, err := h.insights.UserRanking(c.Request.Context(), window, metric, subject.UserID)
+	startDate, endDate := insightsDateQuery(c)
+	result, err := h.insights.UserRanking(c.Request.Context(), startDate, endDate, subject.UserID)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return

@@ -6,6 +6,7 @@ import { getMethodFeeRate, getMaxSettlementAmountForPayLimit, getMinSettlementAm
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import { getSystemConfig } from '@/lib/system-config';
 import { convertCnySettlementToUsdBalance, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
+import { instanceSupportsPaymentType } from '@/lib/payment/opt-in-types';
 
 /**
  * 获取指定支付渠道的每日全平台限额（0 = 不限制）。
@@ -147,14 +148,8 @@ async function aggregateInstanceLimits(paymentTypes: string[]): Promise<
   const usageMap = new Map(usageRows.map((r) => [r.providerInstanceId, Number(r._sum.payAmount ?? 0)]));
 
   for (const type of paymentTypes) {
-    const supporting = allInstances.filter((inst) => {
-      if (!inst.supportedTypes) return true;
-      const types = inst.supportedTypes
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      return types.length === 0 || types.includes(type);
-    });
+    // 留空 = 支持全部；必须显式启用的方式（PayNow）只算明确勾选的实例，与下单时的实例选择一致
+    const supporting = allInstances.filter((inst) => instanceSupportsPaymentType(inst.supportedTypes, type));
 
     if (supporting.length === 0) {
       result[type] = {

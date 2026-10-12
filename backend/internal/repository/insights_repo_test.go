@@ -64,6 +64,32 @@ func TestInsightsRepo_ModelRankingUsesRequestedModelAndTotal(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
+// 日期范围按服务器时区解析成 [当天零点, 结束日次日零点)，查询时统一换成 UTC，结束边界不含。
+func TestInsightsRepo_DateRangeBoundsAreSentInUTC(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
+
+	loc := time.FixedZone("UTC+8", 8*3600)
+	start := time.Date(2026, 10, 6, 0, 0, 0, 0, loc)
+	end := time.Date(2026, 10, 13, 0, 0, 0, 0, loc)
+	mock.ExpectQuery(`(?s)WHERE u\.created_at >= \$1 AND u\.created_at < \$2`).
+		WithArgs(time.Date(2026, 10, 5, 16, 0, 0, 0, time.UTC), time.Date(2026, 10, 12, 16, 0, 0, 0, time.UTC), 200).
+		WillReturnRows(sqlmock.NewRows([]string{"model", "requests", "tokens", "total_tokens"}))
+	mock.ExpectQuery(`(?s)WHERE u\.created_at >= \$1 AND u\.created_at < \$2.*ROW_NUMBER\(\) OVER \(ORDER BY tokens DESC, requests DESC, user_id ASC\)`).
+		WithArgs(time.Date(2026, 10, 5, 16, 0, 0, 0, time.UTC), time.Date(2026, 10, 12, 16, 0, 0, 0, time.UTC), 20, service.RoleUser, service.StatusActive).
+		WillReturnRows(sqlmock.NewRows([]string{"user_id", "username", "email", "tokens", "requests", "actual_cost", "participants"}))
+
+	repo := &insightsRepository{db: db}
+	models, err := repo.ModelUsageRanking(context.Background(), start, end, 200)
+	require.NoError(t, err)
+	require.Empty(t, models.Rows)
+	users, err := repo.UserUsageRanking(context.Background(), start, end, service.InsightsMetricTokens, 20)
+	require.NoError(t, err)
+	require.Empty(t, users.Rows)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestInsightsRepo_PublicTotalsReadOnlyTheDailyAggregate(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)

@@ -6,11 +6,13 @@ import PayPageLayout from '@/components/PayPageLayout';
 import { DEFAULT_PRODUCT_NAME_PREFIX, DEFAULT_PRODUCT_NAME_SUFFIX, getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
 import {
   DEFAULT_BALANCE_CREDIT_CNY_PER_USD,
   DEFAULT_USD_EXCHANGE_RATE,
   legacyBalanceCreditUsdPerCnyToCnyPerUsd,
 } from '@/lib/currency';
+import { isOptInPaymentType, withoutOptInPaymentTypes } from '@/lib/payment/opt-in-types';
 
 // ── i18n ──
 
@@ -66,6 +68,7 @@ function getTexts(locale: Locale) {
         instanceConfig: 'Credentials',
         supportedChannels: 'Supported Channels',
         supportedChannelsHint: 'Select which payment channels this instance supports',
+        optInChannelHint: 'Shown only when ticked here, and only if your merchant account has it enabled',
         loadBalanceStrategy: 'Load Balance',
         strategyRoundRobin: 'Round Robin',
         strategyLeastAmount: 'Least Daily Amount',
@@ -131,6 +134,7 @@ function getTexts(locale: Locale) {
         instanceConfig: '凭证配置',
         supportedChannels: '支持渠道',
         supportedChannelsHint: '选择此实例支持的支付渠道',
+        optInChannelHint: '需在此明确勾选才会展示，且需商户已开通该方式',
         loadBalanceStrategy: '负载策略',
         strategyRoundRobin: '轮询',
         strategyLeastAmount: '基于已支付金额',
@@ -163,6 +167,7 @@ const PAYMENT_TYPE_LABELS: Record<string, { zh: string; en: string }> = {
   'usdc.solana': { zh: 'USDC (Solana)', en: 'USDC (Solana)' },
   stripe: { zh: 'Stripe', en: 'Stripe' },
   bank: { zh: '银行卡转账', en: 'Bank Transfer' },
+  paynow: { zh: 'PayNow', en: 'PayNow' },
 };
 
 const PROVIDER_LABELS: Record<string, { zh: string; en: string }> = {
@@ -173,7 +178,7 @@ const PROVIDER_LABELS: Record<string, { zh: string; en: string }> = {
 };
 
 const PROVIDER_SUPPORTED_TYPES: Record<string, string[]> = {
-  easypay: ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana', 'bank'],
+  easypay: ['alipay', 'wxpay', 'usdt.plasma', 'usdt.polygon', 'usdc.solana', 'bank', 'paynow'],
   alipay: ['alipay_direct'],
   wxpay: ['wxpay_direct'],
   stripe: ['stripe'],
@@ -257,7 +262,7 @@ interface InstanceFormData {
 
 function PaymentConfigContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const { token, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
@@ -332,7 +337,7 @@ function PaymentConfigContent() {
   const fetchConfig = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(buildAppApiPath(`/api/admin/config?token=${encodeURIComponent(token)}`));
+      const res = await fetch(buildAppApiPath('/api/admin/config'), { headers: authHeaders() });
       if (!res.ok) return;
       const data = await res.json();
       const configs: { key: string; value: string }[] = data.configs ?? [];
@@ -371,12 +376,12 @@ function PaymentConfigContent() {
     } catch {
       /* ignore */
     }
-  }, [token]);
+  }, [token, authHeaders]);
 
   const fetchInstances = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(buildAppApiPath(`/api/admin/provider-instances?token=${encodeURIComponent(token)}`));
+      const res = await fetch(buildAppApiPath('/api/admin/provider-instances'), { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setInstances(data.instances ?? []);
@@ -384,7 +389,7 @@ function PaymentConfigContent() {
     } catch {
       /* ignore */
     }
-  }, [token]);
+  }, [token, authHeaders]);
 
   useEffect(() => {
     fetchConfig();
@@ -417,7 +422,7 @@ function PaymentConfigContent() {
     // Auto-derive enabled payment types
     const derivedTypes = new Set<string>();
     for (const pk of next) {
-      for (const pt of PROVIDER_SUPPORTED_TYPES[pk] || []) derivedTypes.add(pt);
+      for (const pt of withoutOptInPaymentTypes(PROVIDER_SUPPORTED_TYPES[pk] || [])) derivedTypes.add(pt);
     }
     setRcEnabledPaymentTypes(Array.from(derivedTypes).join(','));
   };
@@ -503,7 +508,7 @@ function PaymentConfigContent() {
       enabled: true,
       sortOrder: 0,
       config: {},
-      supportedTypes: PROVIDER_SUPPORTED_TYPES[key] || [],
+      supportedTypes: withoutOptInPaymentTypes(PROVIDER_SUPPORTED_TYPES[key] || []),
       limits: {},
       refundEnabled: false,
     });
@@ -634,6 +639,8 @@ function PaymentConfigContent() {
   };
 
   // ── Missing token ──
+  if (!sessionReady) return null;
+
   if (!token) {
     return (
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
@@ -1159,7 +1166,7 @@ function PaymentConfigContent() {
                         ...instanceForm,
                         providerKey: e.target.value,
                         config: {},
-                        supportedTypes: PROVIDER_SUPPORTED_TYPES[e.target.value] || [],
+                        supportedTypes: withoutOptInPaymentTypes(PROVIDER_SUPPORTED_TYPES[e.target.value] || []),
                         limits: {},
                       })
                     }
@@ -1282,6 +1289,11 @@ function PaymentConfigContent() {
                               className={[inputCls, 'flex-1'].join(' ')}
                               placeholder={cidLabel}
                             />
+                          )}
+                          {isOptInPaymentType(type) && (
+                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                              {t.optInChannelHint}
+                            </span>
                           )}
                         </div>
                       );

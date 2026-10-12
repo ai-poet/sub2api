@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildEmbeddedUrl, detectTheme } from '../embedded-url'
+import { buildEmbeddedUrl, buildStandaloneUrl, detectTheme } from '../embedded-url'
 
 describe('embedded-url', () => {
   const originalLocation = window.location
@@ -43,6 +43,27 @@ describe('embedded-url', () => {
     expect(url.searchParams.get('ui_mode')).toBe('embedded')
     expect(url.searchParams.get('src_host')).toBe('https://app.example.com')
     expect(url.searchParams.get('src_url')).toBe('https://app.example.com/user/purchase')
+  })
+
+  // fork：同源支付页直接读本站登录态，token 不进地址（访问日志、浏览器历史、截图）
+  it('never puts the token into a same-origin url', () => {
+    for (const base of ['/pay', '/pay/admin', 'https://app.example.com/pay?x=1']) {
+      const url = new URL(buildEmbeddedUrl(base, 42, 'token-123', 'dark', 'zh-CN'))
+      expect(url.searchParams.has('token')).toBe(false)
+      expect(url.searchParams.get('user_id')).toBe('42')
+      expect(url.searchParams.get('ui_mode')).toBe('embedded')
+    }
+    expect(new URL(buildStandaloneUrl('/pay', 'token-123')).searchParams.has('token')).toBe(false)
+  })
+
+  it('keeps the token for a cross-origin page, which cannot read this site storage', () => {
+    expect(new URL(buildStandaloneUrl('https://pay.example.com/pay', 'token-123')).searchParams.get('token')).toBe(
+      'token-123',
+    )
+    // 同一主域的另一个子域（例如 CDN 别名）也是跨域
+    expect(
+      new URL(buildEmbeddedUrl('https://cdn.app.example.com/pay', 1, 'token-123')).searchParams.get('token'),
+    ).toBe('token-123')
   })
 
   it('omits optional params when they are empty', () => {

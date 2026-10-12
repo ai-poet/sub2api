@@ -3,10 +3,11 @@ import { getCurrentUserByToken } from '@/lib/sub2api/client';
 import { openUserInvoiceFile } from '@/lib/invoice/service';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
+import { readUserToken } from '@/lib/utils/request-token';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang'));
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: locale === 'en' ? 'Missing token' : '缺少 token 参数' }, { status: 401 });
   }

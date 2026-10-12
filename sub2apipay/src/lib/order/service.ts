@@ -29,8 +29,14 @@ import { createProviderFromInstance } from '@/lib/payment/provider-factory';
 import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
 import { applyRefundToInvoice } from '@/lib/invoice/service';
 import { resolvePromotionForOrder } from '@/lib/promotion/service';
+import { describePaymentGatewayError } from '@/lib/order/gateway-error';
 
 const DEFAULT_MAX_PENDING_ORDERS = 3;
+/**
+ * 下单时支付网关失败的状态码。不用 502/503：CDN / 反向代理会把源站的 5xx 网关错误
+ * 换成自己的 HTML 错误页，前端读不到 JSON 里的原因。
+ */
+export const PAYMENT_GATEWAY_ERROR_STATUS = 424;
 /** Decimal(10,2) 允许的最大金额 */
 export const MAX_AMOUNT = 99999999.99;
 
@@ -735,28 +741,34 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     // 已经是业务错误，直接向上抛
     if (error instanceof OrderError) throw error;
 
-    // 支付网关配置缺失或调用失败，转成友好错误
+    // 支付网关配置缺失或调用失败，转成带具体原因的错误。
+    // 状态码用 424 而不是 502/503：CDN / 反代会把 5xx 网关错误换成自己的 HTML 页，前端就只剩「网络错误」。
+    // 参考号是这笔（已删除）订单的 id，与下面的日志行对应。
     const msg = error instanceof Error ? error.message : String(error);
-    console.error(`Payment gateway error (${input.paymentType}):`, error);
+    const reference = order.id;
+    console.error(`Payment gateway error (${input.paymentType}) ref=${reference}:`, error);
     if (msg.includes('environment variables') || msg.includes('not configured') || msg.includes('not found')) {
       throw new OrderError(
         'PAYMENT_GATEWAY_ERROR',
         message(
           locale,
-          `支付渠道（${input.paymentType}）暂未配置，请联系管理员`,
-          `Payment method (${input.paymentType}) is not configured. Please contact the administrator`,
+          `支付渠道（${input.paymentType}）暂未配置，请联系管理员（参考号 ${reference}）`,
+          `Payment method (${input.paymentType}) is not configured. Please contact the administrator (reference ${reference})`,
         ),
-        503,
+        PAYMENT_GATEWAY_ERROR_STATUS,
+        { reference },
       );
     }
+    const detail = describePaymentGatewayError(error, locale);
     throw new OrderError(
       'PAYMENT_GATEWAY_ERROR',
       message(
         locale,
-        '支付渠道暂时不可用，请稍后重试或更换支付方式',
-        'Payment method is temporarily unavailable. Please try again later or use another payment method',
+        `支付渠道下单失败：${detail}。请稍后重试或更换支付方式（参考号 ${reference}）`,
+        `The payment channel could not create the payment: ${detail}. Please try again later or use another payment method (reference ${reference})`,
       ),
-      502,
+      PAYMENT_GATEWAY_ERROR_STATUS,
+      { reference, detail },
     );
   }
 }

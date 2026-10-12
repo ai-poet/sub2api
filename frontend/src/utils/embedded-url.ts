@@ -13,6 +13,15 @@ const EMBEDDED_UI_MODE_VALUE = 'embedded'
 const EMBEDDED_SRC_HOST_QUERY_KEY = 'src_host'
 const EMBEDDED_SRC_QUERY_KEY = 'src_url'
 
+/**
+ * fork：同源页面（默认部署下网关反代在 /pay 的支付服务）直接读本站 localStorage 的登录态，
+ * 不再把 token 拼进地址——地址会进反代访问日志、浏览器历史和截图。跨域页面拿不到本站存储，
+ * 仍按原样带 token。
+ */
+function shouldCarryAuthToken(url: URL): boolean {
+  return typeof window === 'undefined' || url.origin !== window.location.origin
+}
+
 export function buildEmbeddedUrl(
   baseUrl: string,
   userId?: number,
@@ -29,7 +38,7 @@ export function buildEmbeddedUrl(
     if (userId) {
       url.searchParams.set(EMBEDDED_USER_ID_QUERY_KEY, String(userId))
     }
-    if (authToken) {
+    if (authToken && shouldCarryAuthToken(url)) {
       url.searchParams.set(EMBEDDED_AUTH_TOKEN_QUERY_KEY, authToken)
     }
     url.searchParams.set(EMBEDDED_THEME_QUERY_KEY, theme)
@@ -60,7 +69,7 @@ export function buildStandaloneUrl(
       typeof window !== 'undefined'
         ? new URL(baseUrl, window.location.origin)
         : new URL(baseUrl)
-    if (authToken) {
+    if (authToken && shouldCarryAuthToken(url)) {
       url.searchParams.set(EMBEDDED_AUTH_TOKEN_QUERY_KEY, authToken)
     }
     url.searchParams.set(EMBEDDED_THEME_QUERY_KEY, theme)

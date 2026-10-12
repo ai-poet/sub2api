@@ -5,6 +5,7 @@ import { invoiceInvalidParamsMessage, invoiceMessage } from '@/lib/invoice/types
 import { invoiceTitleFieldsSchema } from '@/lib/invoice/request-schema';
 import { resolveLocale } from '@/lib/locale';
 import { handleApiError } from '@/lib/utils/api';
+import { readUserToken } from '@/lib/utils/request-token';
 
 function missingToken(locale: ReturnType<typeof resolveLocale>) {
   return NextResponse.json({ error: locale === 'en' ? 'Missing token' : '缺少 token 参数' }, { status: 401 });
@@ -15,7 +16,7 @@ function missingToken(locale: ReturnType<typeof resolveLocale>) {
  */
 export async function GET(request: NextRequest) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang'));
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) return missingToken(locale);
 
   try {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   const locale = resolveLocale(request.nextUrl.searchParams.get('lang'));
-  const token = request.nextUrl.searchParams.get('token')?.trim();
+  const token = readUserToken(request);
   if (!token) return missingToken(locale);
 
   try {

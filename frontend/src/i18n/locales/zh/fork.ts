@@ -298,7 +298,7 @@ export default {
     "referral": "推荐邀请",
     "modelMirror": "模型照妖镜",
     "modelCatalog": "模型广场",
-    "leaderboard": "排行榜",
+    "leaderboard": "用量排行",
     "modelStatus": "模型运行状态",
     "sora": "Sora 创作",
     "communityGroup": "加入交流群",
@@ -808,9 +808,16 @@ export default {
           "usageRanking": "用户用量榜",
           "usageRankingHint": "按用量给普通用户排名，名字脱敏、头像随机；参与人数少于 5 人时不公布。",
           "usageRankingShowCost": "用户榜显示花费",
-          "usageRankingShowCostHint": "开启后用户榜多一列花费，并可以按花费排序。",
+          "usageRankingShowCostHint": "开启后用户榜多显示花费，排名指标也可以选花费。",
           "usageRankingLimit": "用户榜条数",
           "usageRankingLimitHint": "3 到 50。",
+          "usageRankingSortBy": "用户榜排名指标",
+          "usageRankingSortByHint": "用户榜按这个指标排名，并把它作为主指标显示；用户不能自行切换。按花费排名需要先开启「用户榜显示花费」，否则按总 Token 排名。",
+          "sortByOptions": {
+            "tokens": "总 Token",
+            "requests": "请求数",
+            "cost": "花费"
+          },
           "publicStats": "首页公开统计",
           "publicStatsHint": "在首页展示累计 Token、今日 Token 和累计请求数的滚动数字，访客无需登录即可看到。需要开启仪表盘预聚合。",
           "saved": "已保存",
@@ -936,62 +943,129 @@ export default {
   },
   "dashboard": {
     "fork": {
+      "live": {
+        "rpm": "RPM",
+        "tpm": "TPM",
+        "rpmHint": "近 5 分钟平均每分钟请求数",
+        "tpmHint": "近 5 分钟平均每分钟 Token 数",
+        "latency": "平均耗时",
+        "todayCost": "今日消费"
+      },
+      "usageChart": {
+        "metricsLabel": "用量指标",
+        "metrics": {
+          "requests": "请求数",
+          "tokens": "Token",
+          "cost": "消费",
+          "cacheHitRate": "缓存命中率"
+        },
+        "series": {
+          "input": "输入",
+          "output": "输出",
+          "cacheCreation": "缓存创建",
+          "cacheRead": "缓存读取",
+          "actualCost": "实际扣费",
+          "total": "合计"
+        },
+        "currentPeriod": "本期",
+        "previousPeriod": "上一周期",
+        "peak": "峰值",
+        "average": "均值",
+        "vsPrevious": "较上一周期",
+        "noPrevious": "上一周期没有数据",
+        "byHour": "按小时",
+        "byDay": "按天",
+        "trendTitle": "用量趋势 · {metric}",
+        "empty": "所选时间段没有用量"
+      },
       "heatmap": {
         "title": "用量热力图",
-        "summary": "最近 13 周有 {days} 天在用，共 {tokens} Token",
         "less": "少",
         "more": "多",
-        "cell": "{date}：{tokens} Token，{requests} 次请求",
-        "noUsage": "{date}：没有用量"
+        "noUsage": "没有用量",
+        "requests": "请求",
+        "tokens": "Token",
+        "cost": "消费",
+        "selectDay": "点击按小时查看这一天",
+        "summary": {
+          "activeDays": "活跃天数",
+          "tokens": "Token 合计",
+          "busiest": "用量最多的一天",
+          "streak": "连续使用",
+          "days": "{count} 天"
+        }
       },
       "topModels": {
-        "title": "用量最多的模型",
-        "byTokens": "按 Token",
-        "empty": "所选时间段还没有用量"
+        "title": "模型排行",
+        "subtitle": "按{metric}",
+        "others": "其他模型（{count}）",
+        "viewAll": "查看全部",
+        "empty": "所选时间段没有模型用量",
+        "filterHint": "点击只看这个模型",
+        "clearFilter": "再点一次取消筛选",
+        "hitRate": "命中率 {rate}"
+      },
+      "platforms": {
+        "subtitle": "累计用量与今日消费"
+      },
+      "lifetime": {
+        "title": "累计用量",
+        "subtitle": "开户至今的全部用量",
+        "requests": "累计请求",
+        "tokens": "累计 Token",
+        "cost": "累计花费",
+        "today": "今日 {value}",
+        "todayCost": "今日 实付 {actual} / 标准 {standard}",
+        "saved": "省 {amount}（{percent}%）",
+        "barHint": "整条是按标准价计算的金额，填充部分是实际扣除的金额"
+      },
+      "announcements": {
+        "title": "最近公告",
+        "unread": "{count} 条未读",
+        "noSummary": "没有摘要"
+      },
+      "quickActions": {
+        "keyCount": "{total} 个密钥，{active} 个在用",
+        "purchaseDesc": "购买套餐或充值余额"
       }
     }
   },
   "leaderboard": {
-    "title": "排行榜",
-    "description": "看看大家都在用哪些模型",
-    "caption": "用量排行",
-    "intro": "按固定时间窗统计，数据有几分钟到一小时的缓存。用户榜只显示脱敏后的名字和随机头像。",
-    "tabsLabel": "榜单",
-    "tabs": {
-      "models": "模型榜",
-      "users": "用户榜"
+    "title": "用量排行",
+    "description": "看看这段时间谁用得最猛",
+    "boardsLabel": "榜单",
+    "boards": {
+      "users": "用户",
+      "models": "模型"
     },
-    "windowLabel": "时间范围",
-    "windows": {
-      "24h": "24 小时",
-      "7d": "7 天",
-      "30d": "30 天"
-    },
-    "metricLabel": "排序指标",
     "metrics": {
-      "tokens": "Token",
+      "tokens": "总 Token",
       "requests": "请求数",
       "cost": "花费"
     },
-    "generatedAt": "统计于 {time}",
-    "disabled": "排行榜暂未开放。",
-    "empty": "这个时间段还没有数据。",
-    "loadFailed": "排行榜加载失败，请稍后再试。",
+    "listTitle": "排行榜",
+    "limitHint": "当前显示前 {limit} 名",
+    "disabled": "用量排行暂未开放",
+    "emptyTitle": "当前范围暂无排行数据",
+    "emptyDescription": "所选时间范围产生用量后，这里会展示用量排行。",
+    "rangeTooLong": "时间范围最长 {days} 天，请缩短后再试。",
+    "loadFailed": "用量排行加载失败，请稍后再试。",
     "models": {
       "title": "模型热度榜",
+      "pageDescription": "看看这段时间大家都在用哪些模型",
       "description": "按 Token 用量排名，只列出公开分组里的模型",
       "totalTokens": "全站 Token",
-      "requests": "{count} 次请求",
+      "share": "占比",
       "others": "其他模型",
-      "viewInCatalog": "在模型广场查看"
+      "viewInCatalog": "在模型广场查看",
+      "emptyDescription": "所选时间范围产生用量后，这里会展示模型热度排行。"
     },
     "users": {
-      "rankLabel": "第 {rank} 名",
       "you": "你",
       "anonymous": "用户",
-      "listTitle": "完整榜单",
       "privacyNote": "名字已脱敏，头像随机生成",
-      "insufficient": "参与的用户还太少，暂不公布榜单。"
+      "insufficientTitle": "参与的用户还太少",
+      "insufficient": "至少 5 位用户产生用量后才会公布榜单，可以换个更长的时间范围看看。"
     }
   },
   "modelCatalog": {
@@ -1020,6 +1094,32 @@ export default {
     "contextWindow": "上下文 {size}",
     "copyModelId": "复制模型 ID",
     "copiedModelId": "已复制模型 ID",
+    "summary": "{groups} 个分组 · {models} 个模型",
+    "group": {
+      "maxSavings": "最高省 {percent}%",
+      "maxSavingsHint": "这个分组里相对官方参考价节省最多的模型能省下的比例。",
+      "rate": "分组倍率 {rate}",
+      "userRate": "专属倍率 {rate}",
+      "rateHint": "按官方价乘以这个倍率扣费；图片、视频模型可能有单独的倍率。",
+      "userRateHint": "管理员为你单独设置的倍率，比分组默认倍率优先。",
+      "modelCount": "{count} 个模型"
+    },
+    "card": {
+      "pricingUnavailable": "暂未找到可展示的定价信息",
+      "viewPricing": "查看详细定价",
+      "collapsePricing": "收起详细定价",
+      "perMTok": "/ 1M tokens",
+      "perImage": "/ 张",
+      "perSecond": "/ 秒",
+      "perRequest": "/ 次",
+      "perRequestLabel": "每次请求",
+      "official": "官方 {price}",
+      "savings": "比官方省 {percent}%",
+      "contextWindow": "上下文长度",
+      "longContextFrom": "长上下文计价起点",
+      "promptCaching": "支持缓存",
+      "reference": "参考价来源"
+    },
     "description": "查看你当前真实可调用的分组模型卡片、官方参考价与实际扣费价对比",
     "caption": "分组 x 模型定价卡",
     "intro": "每张卡代表一个你当前可用的“分组 + 模型”。页面聚焦官方参考价与当前展示价的直观对比，默认按展示价从低到高排列。",
@@ -1035,7 +1135,13 @@ export default {
       "billingMode": "计费模式",
       "allBillingModes": "全部模式",
       "sortBy": "排序",
-      "reset": "清除筛选"
+      "reset": "清除筛选",
+      "title": "筛选",
+      "brand": "品牌",
+      "allBrands": "全部品牌",
+      "pricingType": "计费类型",
+      "group": "分组",
+      "remove": "移除「{label}」"
     },
     "sorting": {
       "effectivePriceAsc": "按展示价升序",

@@ -10,6 +10,7 @@ import PaymentMethodChart from '@/components/admin/PaymentMethodChart';
 import { getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
 
 interface DashboardData {
   summary: {
@@ -36,7 +37,7 @@ const DAYS_OPTIONS = [7, 30, 90] as const;
 
 function DashboardContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const { token, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
@@ -80,7 +81,7 @@ function DashboardContent() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(buildAppApiPath(`/api/admin/dashboard?token=${encodeURIComponent(token)}&days=${days}`));
+      const res = await fetch(buildAppApiPath(`/api/admin/dashboard?days=${days}`), { headers: authHeaders() });
       if (!res.ok) {
         if (res.status === 401) {
           setError(text.invalidToken);
@@ -94,11 +95,13 @@ function DashboardContent() {
     } finally {
       setLoading(false);
     }
-  }, [token, days]);
+  }, [token, days, authHeaders]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  if (!sessionReady) return null;
 
   if (!token) {
     return (

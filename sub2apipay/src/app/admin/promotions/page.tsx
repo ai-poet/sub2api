@@ -6,6 +6,7 @@ import PayPageLayout from '@/components/PayPageLayout';
 import { getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
 import { describePromotion, formatAmount, type BonusType, type PromotionRule } from '@/lib/promotion/calc';
 
 // ── Types ──
@@ -260,7 +261,7 @@ function formToRule(form: PromotionFormData): PromotionRule {
 
 function PromotionsContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const { token, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
@@ -276,14 +277,6 @@ function PromotionsContent() {
   const [editing, setEditing] = useState<Promotion | null>(null);
   const [form, setForm] = useState<PromotionFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
-
-  const authHeaders = useCallback(
-    (extra?: Record<string, string>): Record<string, string> => ({
-      Authorization: `Bearer ${token}`,
-      ...(extra ?? {}),
-    }),
-    [token],
-  );
 
   const langQuery = locale === 'en' ? '?lang=en' : '';
 
@@ -440,6 +433,8 @@ function PromotionsContent() {
   };
 
   // ── Missing token ──
+
+  if (!sessionReady) return null;
 
   if (!token) {
     return (

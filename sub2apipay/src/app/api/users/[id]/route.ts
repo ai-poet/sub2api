@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getUser, getCurrentUserByToken } from '@/lib/sub2api/client';
+import { readUserToken } from '@/lib/utils/request-token';
 
 // 仅返回用户是否存在，不暴露私隐信息（用户名/邮箱/余额需 token 验证）
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { searchParams } = new URL(request.url);
-  const token = searchParams.get('token')?.trim();
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const token = readUserToken(request);
   if (!token) {
     return NextResponse.json({ error: 'token is required' }, { status: 400 });
   }

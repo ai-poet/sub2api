@@ -90,14 +90,42 @@ map $http_upgrade $connection_upgrade {
     ''      close;
 }
 
+# Credentials in query strings must never reach the access log. The embedded
+# pay pages carry the signed-in user's JWT as ?token= (for an admin that is a
+# full admin session), and Gemini clients send their API key as ?key=. The
+# stock "combined" / "main" formats log both the request line and the Referer,
+# and the Referer of every asset a pay page loads repeats its ?token=. When a
+# sensitive parameter is present the whole query is replaced.
+map $request_uri $sub2api_log_uri {
+    default $request_uri;
+    "~*^(?<sub2api_log_path>[^?]*)\?(?:[^#]*&)?(?:token|key|api_key|apikey|access_token|refresh_token|secret)=" "${sub2api_log_path}?[REDACTED]";
+}
+map $http_referer $sub2api_log_referer {
+    default $http_referer;
+    "~*^(?<sub2api_log_ref>[^?]*)\?(?:[^#]*&)?(?:token|key|api_key|apikey|access_token|refresh_token|secret)=" "${sub2api_log_ref}?[REDACTED]";
+}
+log_format sub2api_safe '$remote_addr - $remote_user [$time_local] '
+                        '"$request_method $sub2api_log_uri $server_protocol" '
+                        '$status $body_bytes_sent "$sub2api_log_referer" '
+                        '"$http_user_agent" $request_time';
+
 server {
     listen 443 ssl http2;
     server_name api.example.com;
+
+    # Replaces every access_log inherited from the http block for this server.
+    access_log /var/log/nginx/sub2api.access.log sub2api_safe;
 
     client_header_timeout 10s;
     client_max_body_size 256m;
     large_client_header_buffers 4 16k;
     limit_conn sub2api_conn 40;
+
+    # The pay service reaches these routes over loopback (127.0.0.1:8080),
+    # never through Nginx. Their token acts as the first admin.
+    location ^~ /api/internal/ {
+        return 404;
+    }
 
     location ~ ^/(auth|api/auth)/ {
         limit_req zone=sub2api_auth burst=10 nodelay;
@@ -127,6 +155,27 @@ server {
     }
 }
 ```
+
+Keep credentials out of every Nginx log:
+
+- Any `access_log` set inside a `location` replaces the server-level one, so
+  give it the `sub2api_safe` format too. Never add `$request`, `$args`,
+  `$query_string`, `$http_referer`, `$http_authorization`, `$http_x_api_key`,
+  `$http_x_sub2api_pay_token` or `$http_sec_websocket_protocol` to a format;
+  the ops WebSocket carries the admin JWT in that last header.
+- `error_log` has no format. When Nginx itself fails a request, for example
+  a 502 while the backend restarts or a body over `client_max_body_size`, it
+  writes the raw request line and Referer, including `?token=`. Treat the
+  error log as sensitive until the pay pages stop putting the token in the URL.
+- The `/api/internal/` block assumes the pay service calls the backend over
+  loopback. That is the default `SUB2API_INTERNAL_BASE_URL` of the bundled
+  image. If a separate pay deployment points it at the public domain, allow
+  only that host's address here instead of returning 404.
+- Access logs written before this format was in place still hold tokens.
+  Delete or restrict them. A logged access token keeps working until it
+  expires (`jwt.expire_hour`, 24 h by default); revoking sessions only
+  clears refresh tokens, while changing the admin's password invalidates
+  every access token issued before it.
 
 If Nginx gzip is enabled in the `http` block, keep `text/event-stream` out of
 `gzip_types` and do not use `gzip_types *` for Sub2API. The

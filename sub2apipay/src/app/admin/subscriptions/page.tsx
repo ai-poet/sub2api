@@ -13,6 +13,7 @@ import {
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { PlatformBadge } from '@/lib/platform-style';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
 
 /* ---------- types ---------- */
 
@@ -321,7 +322,7 @@ function UsageBar({
 
 function SubscriptionsContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const { token, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const locale = resolveLocale(searchParams.get('lang'));
   const isDark = theme === 'dark';
@@ -373,7 +374,7 @@ function SubscriptionsContent() {
     if (!token) return;
     setPlansLoading(true);
     try {
-      const res = await fetch(buildAppApiPath(`/api/admin/subscription-plans?token=${encodeURIComponent(token)}`));
+      const res = await fetch(buildAppApiPath('/api/admin/subscription-plans'), { headers: authHeaders() });
       if (!res.ok) {
         if (res.status === 401) {
           setError(t.invalidToken);
@@ -388,13 +389,13 @@ function SubscriptionsContent() {
     } finally {
       setPlansLoading(false);
     }
-  }, [token]);
+  }, [token, authHeaders]);
 
   /* --- fetch groups --- */
   const fetchGroups = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(buildAppApiPath(`/api/admin/sub2api/groups?token=${encodeURIComponent(token)}`));
+      const res = await fetch(buildAppApiPath('/api/admin/sub2api/groups'), { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         setGroups(Array.isArray(data) ? data : (data.groups ?? []));
@@ -402,7 +403,7 @@ function SubscriptionsContent() {
     } catch {
       /* ignore */
     }
-  }, [token]);
+  }, [token, authHeaders]);
 
   useEffect(() => {
     fetchPlans();
@@ -552,8 +553,9 @@ function SubscriptionsContent() {
       try {
         const res = await fetch(
           buildAppApiPath(
-            `/api/admin/sub2api/search-users?token=${encodeURIComponent(token)}&keyword=${encodeURIComponent(value.trim())}`,
+            `/api/admin/sub2api/search-users?keyword=${encodeURIComponent(value.trim())}`,
           ),
+          { headers: authHeaders() },
         );
         if (res.ok) {
           const data = await res.json();
@@ -581,9 +583,9 @@ function SubscriptionsContent() {
     setSubsSearched(true);
     setSubsUser(null);
     try {
-      const qs = new URLSearchParams({ token });
+      const qs = new URLSearchParams();
       if (subsUserId.trim()) qs.set('user_id', subsUserId.trim());
-      const res = await fetch(buildAppApiPath(`/api/admin/subscriptions?${qs}`));
+      const res = await fetch(buildAppApiPath(`/api/admin/subscriptions?${qs}`), { headers: authHeaders() });
       if (!res.ok) {
         if (res.status === 401) {
           setError(t.invalidToken);
@@ -602,6 +604,8 @@ function SubscriptionsContent() {
   };
 
   /* --- no token guard --- */
+  if (!sessionReady) return null;
+
   if (!token) {
     return (
       <div className={`flex min-h-screen items-center justify-center p-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>

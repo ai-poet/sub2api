@@ -1,78 +1,182 @@
 <template>
-  <section class="card p-5" data-testid="top-models">
-    <div class="mb-4 flex items-center justify-between gap-2">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('dashboard.fork.topModels.title') }}</h3>
-      <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('dashboard.fork.topModels.byTokens') }}</span>
+  <div class="card flex min-w-0 flex-col p-4" data-testid="top-models" :aria-busy="!modelsLoaded">
+    <div class="mb-4 flex min-h-7 items-center justify-between gap-2">
+      <div class="flex min-w-0 items-baseline gap-2">
+        <h3 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-dark-50">
+          <Icon name="chartBar" size="sm" class="text-primary-600 dark:text-primary-400" />
+          {{ t('dashboard.fork.topModels.title') }}
+        </h3>
+        <span class="truncate text-xs text-gray-500 dark:text-dark-400" data-testid="top-models-subtitle">{{ subtitle }}</span>
+      </div>
+      <router-link
+        to="/usage"
+        class="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+        data-testid="top-models-view-all"
+      >
+        {{ t('dashboard.fork.topModels.viewAll') }}
+        <Icon name="chevronRight" size="xs" />
+      </router-link>
     </div>
 
-    <ol v-if="rows.length" class="space-y-3">
-      <li
-        v-for="(row, index) in rows"
-        :key="`${version}-${row.model}`"
-        class="top-model-row"
-        :style="{ '--i': index, '--bar-w': `${row.percent}%` }"
-      >
+    <!-- 首次取数时按排行行数占位 -->
+    <div v-if="!modelsLoaded" class="space-y-4" aria-hidden="true">
+      <div v-for="row in TOP_COUNT" :key="row" class="space-y-2 px-2">
         <div class="flex items-center gap-2">
-          <span class="w-4 shrink-0 text-xs font-semibold tabular-nums text-gray-400">{{ index + 1 }}</span>
-          <ModelIcon :model="row.model" size="16px" />
-          <span class="min-w-0 flex-1 truncate text-sm text-gray-800 dark:text-gray-100" :title="row.model">{{ row.model }}</span>
-          <span class="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-white">{{ formatCompact(row.tokens) }}</span>
+          <Skeleton :width="16" :height="16" />
+          <Skeleton width="55%" :height="16" />
+          <Skeleton :width="48" :height="16" class="ml-auto" />
         </div>
-        <div class="ml-6 mt-1.5 flex items-center gap-2">
-          <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-800">
-            <div class="top-model-bar h-full rounded-full bg-primary-500 dark:bg-primary-400"></div>
+        <Skeleton width="100%" :height="4" />
+      </div>
+    </div>
+
+    <div
+      v-else-if="rows.length === 0"
+      data-testid="top-models-empty"
+      class="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-sm text-gray-500 dark:text-dark-400"
+    >
+      <Icon name="cube" size="lg" class="text-gray-300 dark:text-dark-600" />
+      {{ t('dashboard.fork.topModels.empty') }}
+    </div>
+
+    <ol v-else class="flex flex-1 flex-col gap-1">
+      <li v-for="(row, index) in rows" :key="`${row.model}-${version}`">
+        <button
+          type="button"
+          class="group w-full rounded-lg px-2 py-2 text-left transition-colors duration-fast"
+          :class="row.active
+            ? 'bg-primary-500/10 ring-1 ring-primary-500/20'
+            : 'hover:bg-gray-50 dark:hover:bg-dark-700/60'"
+          :aria-pressed="row.active"
+          :title="row.active ? t('dashboard.fork.topModels.clearFilter') : t('dashboard.fork.topModels.filterHint')"
+          :data-testid="`top-model-${row.model}`"
+          @click="applyModelFilter(row.active ? null : row.model)"
+        >
+          <div class="flex min-w-0 items-center gap-2">
+            <span
+              class="w-4 shrink-0 text-center text-xs font-semibold tabular-nums"
+              :class="index === 0 ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-dark-500'"
+            >{{ index + 1 }}</span>
+            <ModelIcon :model="row.model" size="16px" class="shrink-0" />
+            <span
+              class="min-w-0 flex-1 truncate text-sm"
+              :class="row.active ? 'font-medium text-primary-700 dark:text-primary-300' : 'text-gray-800 dark:text-dark-100'"
+            >{{ row.model }}</span>
+            <span class="shrink-0 text-sm font-medium tabular-nums text-gray-900 dark:text-dark-50">{{ row.value }}</span>
           </div>
-          <span class="w-9 shrink-0 text-right text-[11px] tabular-nums text-gray-500 dark:text-gray-400">{{ row.percent.toFixed(0) }}%</span>
-        </div>
+          <div class="mt-2 flex items-center gap-2 pl-6">
+            <div class="h-1 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
+              <div
+                class="top-model-bar h-full rounded-full"
+                :style="{ '--bar-w': `${row.share}%`, '--bar-delay': `${index * TOP_MODEL_BAR_STEP_MS}ms`, opacity: barOpacity(index) }"
+              ></div>
+            </div>
+            <span class="w-12 shrink-0 text-right text-xs tabular-nums text-gray-500 dark:text-dark-400">{{ row.shareText }}</span>
+          </div>
+        </button>
+      </li>
+      <!-- 排行之外的模型合并成一行，只展示占比 -->
+      <li
+        v-if="others"
+        class="mt-auto flex items-center justify-between gap-2 px-2 pt-2 text-xs text-gray-500 dark:text-dark-400"
+        data-testid="top-models-others"
+      >
+        <span class="truncate">{{ t('dashboard.fork.topModels.others', { count: others.count }) }}</span>
+        <span class="shrink-0 tabular-nums">{{ others.value }} · {{ others.shareText }}</span>
       </li>
     </ol>
-    <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.fork.topModels.empty') }}</p>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-// fork：用量最多的模型（参考 TokenRouter UserDashboardTopModels）。复用仪表盘已经取到的模型统计，
-// 不另发请求。占比条从 0 依次伸展、越往后越淡；数据变化时按版本号重挂载行，动画重放。
+// fork：模型排行（移植自 TokenRouter UserDashboardTopModels.vue）。
+// 复用用量区已经取到的模型统计，按当前指标取前 5 名；点击一行按该模型筛选整个用量区，再点一次取消。
+// 占比条从 0 依次伸展、越往后越淡；数据或指标变化时按版本号重挂载行，动画重放。
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ModelIcon from '@/components/common/ModelIcon.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
+import Icon from '@/components/icons/Icon.vue'
+import { formatNumberLocaleString as formatNumber, formatTokensK } from '@/utils/format'
 import type { ModelStat } from '@/types'
-import { formatCompact } from '@/utils/compactNumber'
+import { TOP_MODEL_BAR_STEP_MS } from './dashboardMotion'
+import { formatUsd } from './format'
+import { cacheHitRateOf } from './usageChartData'
+import { injectUsageChartState } from './usageChartState'
+import { rankModels } from './topModels'
 
-const props = withDefaults(defineProps<{ models: ModelStat[]; limit?: number }>(), { limit: 5 })
+// 排行展示的模型数量。
+const TOP_COUNT = 5
 
 const { t } = useI18n()
+const { metric, models, modelsLoaded, filterState, applyModelFilter } = injectUsageChartState()
+
+// 每次取到新数据时递增，用作行的 key，让占比条重新伸展。
 const version = ref(0)
-
-const rows = computed(() => {
-  const sorted = [...(props.models ?? [])].sort((a, b) => b.total_tokens - a.total_tokens)
-  const total = sorted.reduce((sum, model) => sum + model.total_tokens, 0)
-  return sorted.slice(0, props.limit).map(model => ({
-    model: model.model,
-    tokens: model.total_tokens,
-    percent: total > 0 ? (model.total_tokens / total) * 100 : 0,
-  }))
+watch([models, metric], () => {
+  version.value += 1
 })
 
-watch(() => props.models, () => {
-  version.value++
+const subtitle = computed(() => t('dashboard.fork.topModels.subtitle', {
+  metric: t(`dashboard.fork.usageChart.metrics.${metric.value}`),
+}))
+
+// formatModelValue 按当前指标格式化一个模型的数值；命中率指标显示该模型自己的命中率。
+const formatModelValue = (model: ModelStat): string => {
+  if (metric.value === 'requests') return formatNumber(model.requests)
+  if (metric.value === 'cost') return formatUsd(model.actual_cost)
+  if (metric.value === 'cacheHitRate') {
+    const rate = cacheHitRateOf(model.input_tokens, model.cache_creation_tokens, model.cache_read_tokens)
+    return rate === null ? '—' : t('dashboard.fork.topModels.hitRate', { rate: `${rate.toFixed(1)}%` })
+  }
+  return formatTokensK(model.total_tokens)
+}
+
+const formatShare = (share: number): string => `${share < 10 ? share.toFixed(1) : Math.round(share)}%`
+
+const ranking = computed(() => rankModels(models.value, metric.value, TOP_COUNT))
+
+const rows = computed(() => ranking.value.top.map(({ model, share }) => ({
+  model: model.model,
+  value: formatModelValue(model),
+  share,
+  shareText: formatShare(share),
+  active: filterState.filters.value.model === model.model,
+})))
+
+const others = computed(() => {
+  const rest = ranking.value.others
+  if (!rest) return null
+  const value = metric.value === 'requests'
+    ? formatNumber(rest.amount)
+    : metric.value === 'cost'
+      ? formatUsd(rest.amount)
+      : formatTokensK(rest.amount)
+  return { count: rest.count, value, shareText: formatShare(rest.share) }
 })
+
+// 名次越靠后，占比条越淡。
+const barOpacity = (index: number): number => 1 - index * 0.15
 </script>
 
 <style scoped>
-.top-model-row {
-  opacity: calc(1 - var(--i, 0) * 0.12);
-}
-
+/* 占比条从 0 伸展到目标宽度，前一行先动；行 key 变化时重新播放。 */
 .top-model-bar {
   width: var(--bar-w);
-  animation: top-model-bar 600ms var(--motion-ease) backwards;
-  animation-delay: calc(var(--i, 0) * 60ms);
+  background-color: theme('colors.primary.500');
+  animation: top-model-bar var(--dash-top-model-bar-ms, 600ms) var(--motion-ease) var(--bar-delay) both;
+}
+
+:global(.dark) .top-model-bar {
+  background-color: theme('colors.primary.400');
 }
 
 @keyframes top-model-bar {
   from {
     width: 0;
+  }
+  to {
+    width: var(--bar-w);
   }
 }
 

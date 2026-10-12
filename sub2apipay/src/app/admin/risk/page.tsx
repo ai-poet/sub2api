@@ -11,6 +11,7 @@ import { getAdminAccessHint } from '@/lib/branding';
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { formatCreatedAt, formatStatus, getPaymentDisplayInfo, getStatusBadgeClass } from '@/lib/pay-utils';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
 import {
   DUPLICATE_TRADE_NO_META,
   PAID_WITHOUT_TRADE_NO_META,
@@ -212,7 +213,7 @@ function SummaryCard({
 
 function RiskContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const { token, ready: sessionReady } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
@@ -284,6 +285,8 @@ function RiskContent() {
     setAction(next);
     setPage(1);
   };
+
+  if (!sessionReady) return null;
 
   if (!token) {
     return (

@@ -14,6 +14,7 @@ import {
 import { resolveLocale, type Locale } from '@/lib/locale';
 import { PlatformBadge, getPlatformStyle } from '@/lib/platform-style';
 import { buildAppApiPath } from '@/lib/public-path';
+import { usePaySession } from '@/lib/use-pay-session';
 
 // ── Types ──
 
@@ -213,7 +214,7 @@ const emptyForm: ChannelFormData = {
 
 function ChannelsContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const { token, ready: sessionReady, authHeaders } = usePaySession(searchParams);
   const theme = searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const uiMode = searchParams.get('ui_mode') || 'standalone';
   const locale = resolveLocale(searchParams.get('lang'));
@@ -244,7 +245,7 @@ function ChannelsContent() {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch(buildAppApiPath(`/api/admin/channels?token=${encodeURIComponent(token)}`));
+      const res = await fetch(buildAppApiPath('/api/admin/channels'), { headers: authHeaders() });
       if (!res.ok) {
         if (res.status === 401) {
           setError(t.invalidToken);
@@ -259,13 +260,15 @@ function ChannelsContent() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, authHeaders]);
 
   useEffect(() => {
     fetchChannels();
   }, [fetchChannels]);
 
   // ── Missing token ──
+
+  if (!sessionReady) return null;
 
   if (!token) {
     return (
@@ -403,7 +406,7 @@ function ChannelsContent() {
     setSyncLoading(true);
     setSyncSelected(new Set());
     try {
-      const res = await fetch(buildAppApiPath(`/api/admin/sub2api/groups?token=${encodeURIComponent(token)}`));
+      const res = await fetch(buildAppApiPath('/api/admin/sub2api/groups'), { headers: authHeaders() });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setSyncGroups(data.groups ?? []);

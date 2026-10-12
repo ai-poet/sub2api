@@ -314,12 +314,19 @@ describe('modelCatalog helpers', () => {
       userId: 42,
       token: 'token-123',
     })).toBe('https://pay.example.com/api/user?user_id=42&token=token-123')
+    // 同源（默认 /pay 反代）：token 不进地址，由请求头携带
     expect(buildPaymentCenterUserApiUrl({
       purchaseSubscriptionUrl: '',
       userId: 42,
       token: 'token-123',
       baseOrigin: 'https://sub2api.example.com',
-    })).toBe('https://sub2api.example.com/pay/api/user?user_id=42&token=token-123')
+    })).toBe('https://sub2api.example.com/pay/api/user?user_id=42')
+    expect(buildPaymentCenterUserApiUrl({
+      purchaseSubscriptionUrl: '/pay',
+      userId: 42,
+      token: 'token-123',
+      baseOrigin: 'https://sub2api.example.com',
+    })).toBe('https://sub2api.example.com/pay/api/user?user_id=42')
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -363,6 +370,26 @@ describe('modelCatalog helpers', () => {
       usdExchangeRate: null,
       error: 'request_failed',
     })
+  })
+
+  it('sends the token in the Authorization header for a same-origin payment center', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ config: { balanceCreditCnyPerUsd: 7.2, usdExchangeRate: 6.9 } }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchBalanceCreditCnyPerUsd({
+      purchaseSubscriptionUrl: '/pay',
+      userId: 42,
+      token: 'token-123',
+      baseOrigin: 'https://sub2api.example.com',
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://sub2api.example.com/pay/api/user?user_id=42',
+      expect.objectContaining({ headers: { Authorization: 'Bearer token-123' } }),
+    )
   })
 
   it('converts usd/cny amounts only when both values are valid', () => {
