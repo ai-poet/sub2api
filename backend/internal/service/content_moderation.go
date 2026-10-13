@@ -58,8 +58,8 @@ const (
 
 	defaultContentModerationBaseURL   = "https://api.openai.com"
 	defaultContentModerationModel     = "deepseek-v4.1-flash" // fork：对话模型审计
-	defaultContentModerationTimeoutMS = 15000                 // fork：对话模型审计
-	maxContentModerationTimeoutMS     = 30000
+	defaultContentModerationTimeoutMS = 60000                 // fork：对话模型审计，LLM 判定默认 60 秒
+	maxContentModerationTimeoutMS     = 120000                // fork：对话模型审计，给 LLM 判定留出余量
 	maxModerationInputRunes           = 12000
 	maxModerationExcerptRunes         = 240
 

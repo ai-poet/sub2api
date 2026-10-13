@@ -22,10 +22,11 @@ import (
 const (
 	// ChatModerationRulesVersion 对话模型审计提示词的版本，随日志 engine_meta 记录。
 	ChatModerationRulesVersion = "chat-audit-13-zh-v1"
-	// 旧 /v1/moderations 时代的默认超时；对话模型普遍要数秒，加载配置时换成新默认值。
-	legacyModerationTimeoutMS = 3000
-	typeSafeDefaultTimeoutMS  = 3000
-	chatModerationMaxErrBody  = 512
+	// 旧默认超时：/v1/moderations 时代的 3 秒、对话模型初版的 15 秒，加载配置时换成新默认值。
+	legacyModerationTimeoutMS     = 3000
+	legacyChatModerationTimeoutMS = 15000
+	typeSafeDefaultTimeoutMS      = 3000
+	chatModerationMaxErrBody      = 512
 )
 
 var versionedAPIBase = regexp.MustCompile(`/v\d+[a-z0-9]*$`)
@@ -50,7 +51,7 @@ func (cfg *ContentModerationConfig) migrateLegacyChatModeration() {
 	if isModerationOnlyModel(cfg.Model) {
 		cfg.Model = defaultContentModerationModel
 	}
-	if cfg.TimeoutMS == legacyModerationTimeoutMS {
+	if cfg.TimeoutMS == legacyModerationTimeoutMS || cfg.TimeoutMS == legacyChatModerationTimeoutMS {
 		cfg.TimeoutMS = defaultContentModerationTimeoutMS
 	}
 }

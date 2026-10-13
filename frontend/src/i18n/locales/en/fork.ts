@@ -469,7 +469,7 @@ export default {
       "pipelineTwoStage": "Audit flow: TypeSafe AI screens, an LLM verifies (any OpenAI-compatible chat model). Only verified hits count as violations, warn the user and block; cleared or failed verifications are only recorded.",
       "verifierUnavailable": "The LLM verifier has no usable endpoint: no keys of its own and none to borrow from content translation. TypeSafe hits are only recorded as unconfirmed, with no count, warning or block.",
       "verifierUsesTranslation": "The LLM verifier has no keys of its own and is borrowing the content translation endpoint and key; model, timeout and thresholds still come from here.",
-      "enginePipelineHint": "Both engines are active: TypeSafe screens and an LLM verifies its hits through OpenAI-compatible /chat/completions (e.g. DeepSeek), returning JSON scores per category. Without keys it borrows the content translation endpoint and key. Pick which engine's settings to edit here.",
+      "enginePipelineHint": "Both engines are active: TypeSafe screens and an LLM verifies its hits through OpenAI-compatible /chat/completions (e.g. DeepSeek), returning JSON scores per category, 60 s timeout by default. Without keys the LLM borrows the content translation endpoint and key. Both engines are configured below and saved together.",
       "engineRole": {
         "primary": "screening",
         "verifier": "verification"

@@ -422,314 +422,326 @@
                 <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ modeDescription(configForm.mode) }}</p>
               </div>
               <div>
-                <label class="input-label">{{ t('admin.riskControl.engine') }}</label>
-                <Select data-test="audit-engine-select" :model-value="configForm.engine" :options="engineOptions" :disabled="apiKeyTesting || saving" @update:model-value="switchEngine" />
-                <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.enginePipelineHint') }}</p>
-              </div>
-              <div v-if="configForm.engine === 'typesafe'" class="lg:col-span-2 text-sm text-amber-700 dark:text-amber-300" role="status">
-                {{ t('admin.riskControl.typeSafeNotice') }}
-              </div>
-              <div>
-                <label class="input-label">{{ t('admin.riskControl.baseUrl') }}</label>
-                <input v-model.trim="configForm.base_url" data-test="audit-base-url" type="url" class="input" :placeholder="configForm.engine === 'typesafe' ? 'https://api.typesafe.ai' : 'https://api.openai.com'" />
-              </div>
-              <div>
-                <label class="input-label">{{ t('admin.riskControl.model') }}</label>
-                <input v-model.trim="configForm.model" data-test="audit-model" type="text" class="input" :placeholder="configForm.engine === 'typesafe' ? 'jev-latest' : 'deepseek-v4.1-flash'" />
-              </div>
-              <div>
-                <label class="input-label">{{ t('admin.riskControl.timeoutMs') }}</label>
-                <input v-model.number="configForm.timeout_ms" type="number" min="500" max="30000" class="input" />
-              </div>
-              <div>
-                <label class="input-label">{{ t('admin.riskControl.retryCount') }}</label>
-                <input v-model.number="configForm.retry_count" type="number" min="0" max="5" class="input" />
-              </div>
-              <div>
                 <label class="input-label">{{ t('admin.riskControl.sampleRate') }}</label>
                 <div class="relative">
                   <input v-model.number="configForm.sample_rate" type="number" min="0" max="100" step="1" class="input pr-8" />
                   <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
                 </div>
               </div>
-              <div>
-                <label class="input-label">{{ t('admin.riskControl.proxy') }}</label>
-                <ProxySelector v-model="configForm.proxy_id" :proxies="proxies" />
-                <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.proxyHint') }}</p>
+            </div>
+
+            <!-- fork：两级审计 —— TypeSafe 初审与 LLM 复核同时生效，两套配置一起展示 -->
+            <p class="text-xs leading-5 text-gray-500 dark:text-gray-400" data-test="engine-pipeline-hint">{{ t('admin.riskControl.enginePipelineHint') }}</p>
+
+            <div v-if="!readonly">
+              <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-900/30" @paste="handleModerationImagePaste">
+                <div class="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.auditTestInput') }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.auditTestInputHint') }}</p>
+                  </div>
+                  <button
+                    v-if="moderationTestPrompt || moderationTestImages.length > 0 || hasModerationTestResult"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-white hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-800 dark:hover:text-white"
+                    @click="clearModerationTestInput"
+                  >
+                    <Icon name="x" size="xs" />
+                    {{ t('admin.riskControl.clearAuditTest') }}
+                  </button>
+                </div>
+                <textarea
+                  v-model="moderationTestPrompt"
+                  class="input min-h-24 resize-y text-sm"
+                  :placeholder="t('admin.riskControl.auditTestPromptPlaceholder')"
+                ></textarea>
+                <div
+                  class="mt-3 rounded-lg border border-dashed border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-800"
+                  @dragover.prevent
+                  @drop.prevent="handleModerationImageDrop"
+                >
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-start gap-2">
+                      <Icon name="upload" size="md" class="mt-0.5 text-gray-400" />
+                      <div>
+                        <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ t('admin.riskControl.auditTestImages') }}</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.auditTestImagesHint') }}</p>
+                      </div>
+                    </div>
+                    <label class="btn btn-secondary inline-flex cursor-pointer items-center gap-2">
+                      <Icon name="plus" size="sm" />
+                      {{ t('admin.riskControl.addAuditTestImage') }}
+                      <input type="file" accept="image/*" multiple class="sr-only" @change="handleModerationImageUpload" />
+                    </label>
+                  </div>
+                  <div v-if="moderationTestImages.length > 0" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div
+                      v-for="(image, index) in moderationTestImages"
+                      :key="image.slice(0, 64) + index"
+                      class="group relative aspect-square overflow-hidden rounded-lg border border-gray-100 bg-gray-100 dark:border-dark-700 dark:bg-dark-700"
+                    >
+                      <img :src="image" alt="" class="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        class="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                        @click="removeModerationTestImage(index)"
+                      >
+                        <Icon name="x" size="xs" :stroke-width="2" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-800">
-              <div class="flex flex-col gap-4 border-b border-gray-100 bg-gray-50 px-4 py-4 dark:border-dark-700 dark:bg-dark-800/60 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex items-start gap-3">
-                  <span class="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
-                    <Icon name="key" size="md" />
-                  </span>
-                  <div>
-                    <label class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.apiKeys') }}</label>
-                    <p class="mt-1 max-w-3xl text-xs leading-5 text-gray-500 dark:text-gray-400">
-                      {{ t('admin.riskControl.apiKeysHint', { count: configForm.api_key_count }) }}
-                    </p>
-                  </div>
+            <section
+              v-for="engine in moderationEngines"
+              :key="engine"
+              class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-dark-600"
+              :data-test="`engine-section-${engine}`"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex rounded-md bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{{ engineRoleLabel(engine) }}</span>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ engineLabel(engine) }}</h3>
+              </div>
+              <p v-if="engine === 'typesafe'" class="text-sm text-amber-700 dark:text-amber-300" role="status">{{ t('admin.riskControl.typeSafeNotice') }}</p>
+              <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div>
+                  <label class="input-label">{{ t('admin.riskControl.baseUrl') }}</label>
+                  <input v-model.trim="engineDrafts[engine].base_url" :data-test="`audit-base-url-${engine}`" type="url" class="input" :placeholder="engine === 'typesafe' ? 'https://api.typesafe.ai' : 'https://api.openai.com'" />
                 </div>
-                <div v-if="!readonly" class="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    class="btn btn-secondary inline-flex items-center gap-2"
-                    :disabled="apiKeyTesting || inputApiKeyCount === 0 || configForm.clear_api_key"
-                    @click="testApiKeys(true)"
-                  >
-                    <Icon name="beaker" size="sm" :class="apiKeyTesting ? 'animate-pulse' : ''" />
-                    {{ apiKeyTesting ? t('admin.riskControl.testingApiKeys') : t('admin.riskControl.testInputApiKeys') }}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-secondary inline-flex items-center gap-2"
-                    :disabled="apiKeyTesting || effectiveStoredApiKeyCount === 0 || pendingDeletedApiKeyCount > 0 || configForm.clear_api_key || configForm.api_keys_mode === 'replace'"
-                    @click="testApiKeys(false)"
-                  >
-                    <Icon name="shield" size="sm" />
-                    {{ storedApiKeyTestButtonText }}
-                  </button>
-                  <button
-                    v-if="configForm.api_key_configured"
-                    type="button"
-                    class="btn btn-secondary inline-flex items-center gap-2"
-                    @click="toggleClearApiKey"
-                  >
-                    <Icon :name="configForm.clear_api_key ? 'x' : 'trash'" size="sm" />
-                    {{ configForm.clear_api_key ? t('admin.riskControl.keepApiKey') : t('admin.riskControl.clearApiKey') }}
-                  </button>
+                <div>
+                  <label class="input-label">{{ t('admin.riskControl.model') }}</label>
+                  <input v-model.trim="engineDrafts[engine].model" :data-test="`audit-model-${engine}`" type="text" class="input" :placeholder="engine === 'typesafe' ? 'jev-latest' : 'deepseek-v4.1-flash'" />
+                </div>
+                <div>
+                  <label class="input-label">{{ t('admin.riskControl.timeoutMs') }}</label>
+                  <input v-model.number="engineDrafts[engine].timeout_ms" :data-test="`audit-timeout-${engine}`" type="number" min="500" max="120000" class="input" />
+                </div>
+                <div>
+                  <label class="input-label">{{ t('admin.riskControl.retryCount') }}</label>
+                  <input v-model.number="engineDrafts[engine].retry_count" type="number" min="0" max="5" class="input" />
+                </div>
+                <div>
+                  <label class="input-label">{{ t('admin.riskControl.proxy') }}</label>
+                  <ProxySelector v-model="engineDrafts[engine].proxy_id" :proxies="proxies" />
+                  <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.proxyHint') }}</p>
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 gap-4 p-4" :class="readonly ? '' : 'xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]'">
-                <div v-if="!readonly" class="space-y-3">
-                  <div class="flex flex-col gap-2 rounded-lg border border-gray-100 bg-gray-50 p-2 dark:border-dark-700 dark:bg-dark-900/30 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-xs leading-5 text-gray-500 dark:text-gray-400">
-                      <span class="font-medium text-gray-700 dark:text-gray-200">{{ t('admin.riskControl.apiKeysWriteMode') }}</span>
-                      <span class="ml-2">{{ apiKeysModeHint }}</span>
-                    </div>
-                    <div class="inline-flex rounded-lg bg-white p-1 shadow-sm dark:bg-dark-800">
-                      <button
-                        type="button"
-                        class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
-                        :class="configForm.api_keys_mode === 'append' ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-700'"
-                        :disabled="configForm.clear_api_key"
-                        @click="setAPIKeysMode('append')"
-                      >
-                        {{ t('admin.riskControl.apiKeysModeAppend') }}
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
-                        :class="configForm.api_keys_mode === 'replace' ? 'bg-amber-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-700'"
-                        :disabled="configForm.clear_api_key"
-                        @click="setAPIKeysMode('replace')"
-                      >
-                        {{ t('admin.riskControl.apiKeysModeReplace') }}
-                      </button>
+              <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-800">
+                <div class="flex flex-col gap-4 border-b border-gray-100 bg-gray-50 px-4 py-4 dark:border-dark-700 dark:bg-dark-800/60 lg:flex-row lg:items-center lg:justify-between">
+                  <div class="flex items-start gap-3">
+                    <span class="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
+                      <Icon name="key" size="md" />
+                    </span>
+                    <div>
+                      <label class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.apiKeys') }}</label>
+                      <p class="mt-1 max-w-3xl text-xs leading-5 text-gray-500 dark:text-gray-400">
+                        {{ t('admin.riskControl.apiKeysHint', { count: engineDrafts[engine].api_key_count }) }}
+                      </p>
                     </div>
                   </div>
-                  <textarea
-                    v-model="configForm.api_keys_text"
-                    class="input min-h-44 resize-y font-mono text-sm"
-                    :placeholder="apiKeysPlaceholder"
-                    autocomplete="new-password"
-                    :disabled="configForm.clear_api_key"
-                  ></textarea>
-                  <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span class="inline-flex rounded-md bg-gray-100 px-2 py-1 dark:bg-dark-700">
-                      {{ t('admin.riskControl.inputApiKeyCount', { count: inputApiKeyCount }) }}
-                    </span>
-                    <span v-if="configForm.api_key_configured" class="inline-flex rounded-md bg-gray-100 px-2 py-1 dark:bg-dark-700">
-                      {{ t('admin.riskControl.storedApiKeyCount', { count: configForm.api_key_count }) }}
-                    </span>
-                    <span v-if="configForm.clear_api_key" class="inline-flex rounded-md bg-red-50 px-2 py-1 text-red-700 dark:bg-red-900/20 dark:text-red-300">
-                      {{ t('admin.riskControl.apiKeyWillClear') }}
-                    </span>
-                    <span v-else-if="pendingDeletedApiKeyCount > 0" class="inline-flex rounded-md bg-amber-50 px-2 py-1 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-                      {{ t('admin.riskControl.apiKeyPendingDeleteCount', { count: pendingDeletedApiKeyCount }) }}
-                    </span>
-                    <span v-if="configForm.api_keys_mode === 'replace'" class="inline-flex rounded-md bg-amber-50 px-2 py-1 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-                      {{ t('admin.riskControl.apiKeysReplaceWarning') }}
-                    </span>
+                  <div v-if="!readonly" class="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      class="btn btn-secondary inline-flex items-center gap-2"
+                      :disabled="apiKeyTesting || inputApiKeyCount(engine) === 0 || engineDrafts[engine].clear_api_key"
+                      @click="testApiKeys(engine, true)"
+                    >
+                      <Icon name="beaker" size="sm" :class="apiKeyTesting ? 'animate-pulse' : ''" />
+                      {{ testingEngine === engine ? t('admin.riskControl.testingApiKeys') : t('admin.riskControl.testInputApiKeys') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary inline-flex items-center gap-2"
+                      :disabled="apiKeyTesting || effectiveStoredApiKeyCount(engine) === 0 || pendingDeletedApiKeyCount(engine) > 0 || engineDrafts[engine].clear_api_key || engineDrafts[engine].api_keys_mode === 'replace'"
+                      @click="testApiKeys(engine, false)"
+                    >
+                      <Icon name="shield" size="sm" />
+                      {{ storedApiKeyTestButtonText(engine) }}
+                    </button>
+                    <button
+                      v-if="engineDrafts[engine].api_key_configured"
+                      type="button"
+                      class="btn btn-secondary inline-flex items-center gap-2"
+                      @click="toggleClearApiKey(engine)"
+                    >
+                      <Icon :name="engineDrafts[engine].clear_api_key ? 'x' : 'trash'" size="sm" />
+                      {{ engineDrafts[engine].clear_api_key ? t('admin.riskControl.keepApiKey') : t('admin.riskControl.clearApiKey') }}
+                    </button>
                   </div>
+                </div>
 
-                  <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-900/30" @paste="handleModerationImagePaste">
-                    <div class="mb-3 flex items-center justify-between gap-3">
-                      <div>
-                        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.auditTestInput') }}</p>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.auditTestInputHint') }}</p>
+                <div class="grid grid-cols-1 gap-4 p-4" :class="readonly ? '' : 'xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]'">
+                  <div v-if="!readonly" class="space-y-3">
+                    <div class="flex flex-col gap-2 rounded-lg border border-gray-100 bg-gray-50 p-2 dark:border-dark-700 dark:bg-dark-900/30 sm:flex-row sm:items-center sm:justify-between">
+                      <div class="text-xs leading-5 text-gray-500 dark:text-gray-400">
+                        <span class="font-medium text-gray-700 dark:text-gray-200">{{ t('admin.riskControl.apiKeysWriteMode') }}</span>
+                        <span class="ml-2">{{ apiKeysModeHint(engine) }}</span>
                       </div>
-                      <button
-                        v-if="moderationTestPrompt || moderationTestImages.length > 0 || moderationTestResult"
-                        type="button"
-                        class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-white hover:text-gray-900 dark:text-gray-400 dark:hover:bg-dark-800 dark:hover:text-white"
-                        @click="clearModerationTestInput"
-                      >
-                        <Icon name="x" size="xs" />
-                        {{ t('admin.riskControl.clearAuditTest') }}
-                      </button>
+                      <div class="inline-flex rounded-lg bg-white p-1 shadow-sm dark:bg-dark-800">
+                        <button
+                          type="button"
+                          class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+                          :class="engineDrafts[engine].api_keys_mode === 'append' ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-700'"
+                          :disabled="engineDrafts[engine].clear_api_key"
+                          @click="setAPIKeysMode(engine, 'append')"
+                        >
+                          {{ t('admin.riskControl.apiKeysModeAppend') }}
+                        </button>
+                        <button
+                          type="button"
+                          class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+                          :class="engineDrafts[engine].api_keys_mode === 'replace' ? 'bg-amber-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-700'"
+                          :disabled="engineDrafts[engine].clear_api_key"
+                          @click="setAPIKeysMode(engine, 'replace')"
+                        >
+                          {{ t('admin.riskControl.apiKeysModeReplace') }}
+                        </button>
+                      </div>
                     </div>
                     <textarea
-                      v-model="moderationTestPrompt"
-                      class="input min-h-24 resize-y text-sm"
-                      :placeholder="t('admin.riskControl.auditTestPromptPlaceholder')"
+                      v-model="engineDrafts[engine].api_keys_text"
+                      class="input min-h-44 resize-y font-mono text-sm"
+                      :placeholder="apiKeysPlaceholder(engine)"
+                      autocomplete="new-password"
+                      :disabled="engineDrafts[engine].clear_api_key"
                     ></textarea>
-                    <div
-                      class="mt-3 rounded-lg border border-dashed border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-800"
-                      @dragover.prevent
-                      @drop.prevent="handleModerationImageDrop"
-                    >
-                      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="flex items-start gap-2">
-                          <Icon name="upload" size="md" class="mt-0.5 text-gray-400" />
-                          <div>
-                            <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ t('admin.riskControl.auditTestImages') }}</p>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.auditTestImagesHint') }}</p>
-                          </div>
-                        </div>
-                        <label class="btn btn-secondary inline-flex cursor-pointer items-center gap-2">
-                          <Icon name="plus" size="sm" />
-                          {{ t('admin.riskControl.addAuditTestImage') }}
-                          <input type="file" accept="image/*" multiple class="sr-only" @change="handleModerationImageUpload" />
-                        </label>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <span class="inline-flex rounded-md bg-gray-100 px-2 py-1 dark:bg-dark-700">
+                        {{ t('admin.riskControl.inputApiKeyCount(engine)', { count: inputApiKeyCount(engine) }) }}
+                      </span>
+                      <span v-if="engineDrafts[engine].api_key_configured" class="inline-flex rounded-md bg-gray-100 px-2 py-1 dark:bg-dark-700">
+                        {{ t('admin.riskControl.storedApiKeyCount', { count: engineDrafts[engine].api_key_count }) }}
+                      </span>
+                      <span v-if="engineDrafts[engine].clear_api_key" class="inline-flex rounded-md bg-red-50 px-2 py-1 text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                        {{ t('admin.riskControl.apiKeyWillClear') }}
+                      </span>
+                      <span v-else-if="pendingDeletedApiKeyCount(engine) > 0" class="inline-flex rounded-md bg-amber-50 px-2 py-1 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                        {{ t('admin.riskControl.apiKeyPendingDeleteCount', { count: pendingDeletedApiKeyCount(engine) }) }}
+                      </span>
+                      <span v-if="engineDrafts[engine].api_keys_mode === 'replace'" class="inline-flex rounded-md bg-amber-50 px-2 py-1 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                        {{ t('admin.riskControl.apiKeysReplaceWarning') }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div :data-test="`audit-key-statuses-${engine}`" class="rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-900/30">
+                    <div class="mb-3 flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.apiKeyHealth') }}</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.apiKeyFreezeRule') }}</p>
                       </div>
-                      <div v-if="moderationTestImages.length > 0" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <span class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[11px] font-medium leading-5 text-gray-600 shadow-sm dark:bg-dark-800 dark:text-gray-300">
+                        {{ t('admin.riskControl.apiKeyRows', { count: apiKeyRows(engine).length }) }}
+                      </span>
+                    </div>
+
+                    <div v-if="apiKeyRows(engine).length === 0" class="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-4 py-6 text-center dark:border-dark-700 dark:bg-dark-800">
+                      <Icon name="infoCircle" size="lg" class="text-gray-300 dark:text-dark-500" />
+                      <p class="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">{{ t('admin.riskControl.apiKeyHealthEmpty') }}</p>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.apiKeyHealthEmptyHint') }}</p>
+                    </div>
+                    <div v-else class="space-y-2">
+                      <div class="space-y-2" :class="apiKeyRowsExpanded[engine] ? 'max-h-72 overflow-y-auto pr-1' : ''">
                         <div
-                          v-for="(image, index) in moderationTestImages"
-                          :key="image.slice(0, 64) + index"
-                          class="group relative aspect-square overflow-hidden rounded-lg border border-gray-100 bg-gray-100 dark:border-dark-700 dark:bg-dark-700"
+                          v-for="(row, index) in visibleApiKeyRows(engine)"
+                          :key="apiKeyRowKey(row, index)"
+                          class="rounded-lg border bg-white p-2.5 shadow-sm dark:bg-dark-800"
+                          :class="isStoredApiKeyPendingDelete(engine, row) ? 'border-amber-200 opacity-70 dark:border-amber-800/60' : 'border-gray-100 dark:border-dark-700'"
                         >
-                          <img :src="image" alt="" class="h-full w-full object-cover" />
-                          <button
-                            type="button"
-                            class="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                            @click="removeModerationTestImage(index)"
-                          >
-                            <Icon name="x" size="xs" :stroke-width="2" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div data-test="audit-key-statuses" class="rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-900/30">
-                  <div class="mb-3 flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.apiKeyHealth') }}</p>
-                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.apiKeyFreezeRule') }}</p>
-                    </div>
-                    <span class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[11px] font-medium leading-5 text-gray-600 shadow-sm dark:bg-dark-800 dark:text-gray-300">
-                      {{ t('admin.riskControl.apiKeyRows', { count: apiKeyRows.length }) }}
-                    </span>
-                  </div>
-
-                  <div v-if="apiKeyRows.length === 0" class="flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-4 py-6 text-center dark:border-dark-700 dark:bg-dark-800">
-                    <Icon name="infoCircle" size="lg" class="text-gray-300 dark:text-dark-500" />
-                    <p class="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">{{ t('admin.riskControl.apiKeyHealthEmpty') }}</p>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.apiKeyHealthEmptyHint') }}</p>
-                  </div>
-                  <div v-else class="space-y-2">
-                    <div class="space-y-2" :class="apiKeyRowsExpanded ? 'max-h-72 overflow-y-auto pr-1' : ''">
-                      <div
-                        v-for="(row, index) in visibleApiKeyRows"
-                        :key="apiKeyRowKey(row, index)"
-                        class="rounded-lg border bg-white p-2.5 shadow-sm dark:bg-dark-800"
-                        :class="isStoredApiKeyPendingDelete(row) ? 'border-amber-200 opacity-70 dark:border-amber-800/60' : 'border-gray-100 dark:border-dark-700'"
-                      >
-                        <div class="flex items-start justify-between gap-2">
-                          <div class="min-w-0">
-                            <div class="flex min-w-0 flex-wrap items-center gap-2">
-                              <span class="truncate font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ row.masked || (readonly ? `#${row.index + 1}` : '-') }}</span>
-                              <span
-                                class="inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-medium"
-                                :class="row.configured ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'"
-                              >
-                                {{ isStoredApiKeyPendingDelete(row) ? t('admin.riskControl.apiKeyPendingDelete') : row.configured ? t('admin.riskControl.apiKeyConfigured') : t('admin.riskControl.apiKeyTemporary') }}
-                              </span>
+                          <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                              <div class="flex min-w-0 flex-wrap items-center gap-2">
+                                <span class="truncate font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ row.masked || (readonly ? `#${row.index + 1}` : '-') }}</span>
+                                <span
+                                  class="inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-medium"
+                                  :class="row.configured ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'"
+                                >
+                                  {{ isStoredApiKeyPendingDelete(engine, row) ? t('admin.riskControl.apiKeyPendingDelete') : row.configured ? t('admin.riskControl.apiKeyConfigured') : t('admin.riskControl.apiKeyTemporary') }}
+                                </span>
+                              </div>
+                              <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ apiKeyStatusMeta(row) }}</p>
                             </div>
-                            <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ apiKeyStatusMeta(row) }}</p>
+                            <div class="flex flex-shrink-0 items-center gap-1.5">
+                              <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium" :class="apiKeyStatusBadgeClass(row.status)">
+                                <span class="h-1.5 w-1.5 rounded-full" :class="apiKeyStatusDotClass(row.status)"></span>
+                                {{ apiKeyStatusLabel(row.status) }}
+                              </span>
+                              <button
+                                v-if="row.configured && !engineDrafts[engine].clear_api_key && !readonly"
+                                type="button"
+                                class="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-700 dark:hover:text-gray-200"
+                                :title="isStoredApiKeyPendingDelete(engine, row) ? t('admin.riskControl.undoDeleteApiKey') : t('admin.riskControl.deleteApiKey')"
+                                @click="toggleDeleteStoredApiKey(engine, row)"
+                              >
+                                <Icon :name="isStoredApiKeyPendingDelete(engine, row) ? 'refresh' : 'trash'" size="xs" />
+                              </button>
+                            </div>
                           </div>
-                          <div class="flex flex-shrink-0 items-center gap-1.5">
-                            <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium" :class="apiKeyStatusBadgeClass(row.status)">
-                              <span class="h-1.5 w-1.5 rounded-full" :class="apiKeyStatusDotClass(row.status)"></span>
-                              {{ apiKeyStatusLabel(row.status) }}
-                            </span>
-                            <button
-                              v-if="row.configured && !configForm.clear_api_key && !readonly"
-                              type="button"
-                              class="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-700 dark:hover:text-gray-200"
-                              :title="isStoredApiKeyPendingDelete(row) ? t('admin.riskControl.undoDeleteApiKey') : t('admin.riskControl.deleteApiKey')"
-                              @click="toggleDeleteStoredApiKey(row)"
-                            >
-                              <Icon :name="isStoredApiKeyPendingDelete(row) ? 'refresh' : 'trash'" size="xs" />
-                            </button>
-                          </div>
+                          <p v-if="row.last_error" class="mt-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs leading-5 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                            {{ row.last_error }}
+                          </p>
                         </div>
-                        <p v-if="row.last_error" class="mt-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-xs leading-5 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-                          {{ row.last_error }}
-                        </p>
+                      </div>
+
+                      <div v-if="canToggleApiKeyRows(engine)" class="flex items-center justify-between gap-3 rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-xs text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400">
+                        <span class="min-w-0 truncate">
+                          {{ apiKeyRowsExpanded[engine] ? t('admin.riskControl.apiKeyRowsExpanded[engine]', { count: apiKeyRows(engine).length }) : t('admin.riskControl.apiKeyRowsCollapsed', { count: hiddenApiKeyRowCount(engine) }) }}
+                        </span>
+                        <button
+                          type="button"
+                          class="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-medium text-primary-600 transition-colors hover:bg-primary-50 hover:text-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/20"
+                          @click="apiKeyRowsExpanded[engine] = !apiKeyRowsExpanded[engine]"
+                        >
+                          <Icon :name="apiKeyRowsExpanded[engine] ? 'chevronUp' : 'chevronDown'" size="xs" />
+                          {{ apiKeyRowsExpanded[engine] ? t('admin.riskControl.collapseApiKeyRows') : t('admin.riskControl.expandApiKeyRows') }}
+                        </button>
                       </div>
                     </div>
 
-                    <div v-if="canToggleApiKeyRows" class="flex items-center justify-between gap-3 rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-xs text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400">
-                      <span class="min-w-0 truncate">
-                        {{ apiKeyRowsExpanded ? t('admin.riskControl.apiKeyRowsExpanded', { count: apiKeyRows.length }) : t('admin.riskControl.apiKeyRowsCollapsed', { count: hiddenApiKeyRowCount }) }}
-                      </span>
-                      <button
-                        type="button"
-                        class="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-medium text-primary-600 transition-colors hover:bg-primary-50 hover:text-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/20"
-                        @click="apiKeyRowsExpanded = !apiKeyRowsExpanded"
-                      >
-                        <Icon :name="apiKeyRowsExpanded ? 'chevronUp' : 'chevronDown'" size="xs" />
-                        {{ apiKeyRowsExpanded ? t('admin.riskControl.collapseApiKeyRows') : t('admin.riskControl.expandApiKeyRows') }}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div v-if="moderationTestResult" class="mt-4 rounded-lg border border-gray-100 bg-white p-3 dark:border-dark-700 dark:bg-dark-800">
-                    <p v-if="moderationTestResult.engine_meta" class="mb-2 break-words text-xs text-gray-500">
-                      {{ engineLabel(moderationTestResult.engine_meta.engine) }} · {{ moderationTestResult.engine_meta.model }} · {{ moderationTestResult.engine_meta.rules_version }}
-                      <span v-if="moderationTestResult.engine_meta.skipped_images"> · {{ t('admin.riskControl.skippedImages', { count: moderationTestResult.engine_meta.skipped_images }) }}</span>
-                    </p>
-                    <div class="flex items-start justify-between gap-3">
-                      <div>
-                        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.auditTestResult') }}</p>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          {{ t('admin.riskControl.auditTestHighest', { category: moderationTestResult.highest_category || '-', score: percent(moderationTestResult.highest_score) }) }}
-                        </p>
-                      </div>
-                      <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium" :class="moderationTestResult.flagged ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'">
-                        {{ moderationTestResult.flagged ? t('admin.riskControl.auditTestFlagged') : t('admin.riskControl.auditTestPassed') }}
-                      </span>
-                    </div>
-                    <div class="mt-3">
-                      <div class="mb-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                        <span>{{ t('admin.riskControl.auditTestComposite') }}</span>
-                        <span class="font-semibold text-gray-900 dark:text-white">{{ percent(moderationTestResult.composite_score) }}</span>
-                      </div>
-                      <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
-                        <div class="h-full rounded-full" :class="moderationTestResult.flagged ? 'bg-red-500' : 'bg-emerald-500'" :style="{ width: percentWidth(moderationTestResult.composite_score) }"></div>
-                      </div>
-                    </div>
-                    <div class="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
-                      <div v-for="score in moderationScoreRows" :key="score.category">
-                        <div class="mb-1 flex items-center justify-between gap-3 text-xs">
-                          <span class="truncate text-gray-600 dark:text-gray-300">{{ score.category }}</span>
-                          <span class="font-mono text-gray-500 dark:text-gray-400">{{ percent(score.score) }} / {{ percent(score.threshold) }}</span>
+                    <div v-if="moderationTestResults[engine]" class="mt-4 rounded-lg border border-gray-100 bg-white p-3 dark:border-dark-700 dark:bg-dark-800">
+                      <p v-if="moderationTestResults[engine].engine_meta" class="mb-2 break-words text-xs text-gray-500">
+                        {{ engineLabel(moderationTestResults[engine].engine_meta.engine) }} · {{ moderationTestResults[engine].engine_meta.model }} · {{ moderationTestResults[engine].engine_meta.rules_version }}
+                        <span v-if="moderationTestResults[engine].engine_meta.skipped_images"> · {{ t('admin.riskControl.skippedImages', { count: moderationTestResults[engine].engine_meta.skipped_images }) }}</span>
+                      </p>
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.auditTestResult') }}</p>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {{ t('admin.riskControl.auditTestHighest', { category: moderationTestResults[engine].highest_category || '-', score: percent(moderationTestResults[engine].highest_score) }) }}
+                          </p>
                         </div>
-                        <div class="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
-                          <div class="h-full rounded-full" :class="score.hit ? 'bg-red-500' : 'bg-primary-500'" :style="{ width: percentWidth(score.score) }"></div>
+                        <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium" :class="moderationTestResults[engine].flagged ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'">
+                          {{ moderationTestResults[engine].flagged ? t('admin.riskControl.auditTestFlagged') : t('admin.riskControl.auditTestPassed') }}
+                        </span>
+                      </div>
+                      <div class="mt-3">
+                        <div class="mb-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                          <span>{{ t('admin.riskControl.auditTestComposite') }}</span>
+                          <span class="font-semibold text-gray-900 dark:text-white">{{ percent(moderationTestResults[engine].composite_score) }}</span>
+                        </div>
+                        <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
+                          <div class="h-full rounded-full" :class="moderationTestResults[engine].flagged ? 'bg-red-500' : 'bg-emerald-500'" :style="{ width: percentWidth(moderationTestResults[engine].composite_score) }"></div>
+                        </div>
+                      </div>
+                      <div class="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
+                        <div v-for="score in moderationScoreRows(engine)" :key="score.category">
+                          <div class="mb-1 flex items-center justify-between gap-3 text-xs">
+                            <span class="truncate text-gray-600 dark:text-gray-300">{{ score.category }}</span>
+                            <span class="font-mono text-gray-500 dark:text-gray-400">{{ percent(score.score) }} / {{ percent(score.threshold) }}</span>
+                          </div>
+                          <div class="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
+                            <div class="h-full rounded-full" :class="score.hit ? 'bg-red-500' : 'bg-primary-500'" :style="{ width: percentWidth(score.score) }"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
           </div>
 
           <div v-else-if="activeSettingsTab === 'scope'" class="space-y-5">
@@ -949,8 +961,7 @@
           </div>
 
           <div v-else-if="activeSettingsTab === 'riskThresholds'" class="space-y-5">
-            <p class="text-sm font-medium">{{ engineLabel(configForm.engine) }}</p>
-            <p v-if="configForm.engine === 'typesafe'" class="text-sm text-amber-700 dark:text-amber-300">{{ t('admin.riskControl.typeSafeThresholds') }}</p>
+            <p class="text-sm text-amber-700 dark:text-amber-300">{{ t('admin.riskControl.typeSafeThresholds') }}</p>
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ t('admin.riskControl.riskThresholds') }}</h3>
@@ -972,35 +983,27 @@
                 :key="row.category"
                 class="rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-dark-700 dark:bg-dark-900/30"
               >
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <label class="block truncate text-sm font-semibold text-gray-900 dark:text-white" :for="`risk-threshold-${row.category}`">
-                      {{ row.category }}
-                    </label>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('admin.riskControl.riskThresholdDefault', { value: formatThresholdPercent(row.defaultValue) }) }}
-                    </p>
-                  </div>
-                  <span class="inline-flex shrink-0 rounded-md bg-white px-2 py-1 font-mono text-xs font-medium text-gray-600 shadow-sm dark:bg-dark-800 dark:text-gray-300">
-                    {{ formatThresholdPercent(row.value) }}
-                  </span>
-                </div>
-                <div class="mt-3">
-                  <label class="sr-only" :for="`risk-threshold-${row.category}`">
-                    {{ t('admin.riskControl.riskThresholdPercent') }}
-                  </label>
-                  <div class="relative">
-                    <input
-                      :id="`risk-threshold-${row.category}`"
-                      v-model.number="configForm.thresholds[row.category]"
-                      :data-test="`risk-threshold-${row.category}`"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      class="input pr-8 font-mono"
-                    />
-                    <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                <p class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ row.category }}</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.riskControl.riskThresholdDefault', { value: formatThresholdPercent(row.defaultValue) }) }}
+                </p>
+                <!-- fork：两级审计 —— 初审与复核的阈值各填一列 -->
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                  <div v-for="engine in moderationEngines" :key="engine">
+                    <label class="mb-1 block truncate text-xs text-gray-500 dark:text-gray-400" :for="`risk-threshold-${engine}-${row.category}`">{{ engineLabel(engine) }}</label>
+                    <div class="relative">
+                      <input
+                        :id="`risk-threshold-${engine}-${row.category}`"
+                        v-model.number="engineDrafts[engine].thresholds[row.category]"
+                        :data-test="`risk-threshold-${engine}-${row.category}`"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        class="input pr-8 font-mono"
+                      />
+                      <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1182,7 +1185,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, toRaw } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -1272,7 +1275,9 @@ const loading = ref(true)
 const saving = ref(false)
 const logsLoading = ref(false)
 const statusLoading = ref(false)
-const apiKeyTesting = ref(false)
+// fork：两级审计 —— 正在测试 Key 的引擎（同一时间只测一个）
+const testingEngine = ref<ModerationEngine | null>(null)
+const apiKeyTesting = computed(() => testingEngine.value !== null)
 const hashActionLoading = ref(false)
 const unbanningUserID = ref<number | null>(null)
 const settingsOpen = ref(false)
@@ -1285,19 +1290,17 @@ const groups = ref<GroupOption[]>([])
 const proxies = ref<Proxy[]>([])
 const logs = ref<ContentModerationLog[]>([])
 const status = ref<ContentModerationRuntimeStatus | null>(null)
-const testedApiKeyStatuses = ref<ContentModerationAPIKeyStatus[]>([])
-const pendingDeleteApiKeyHashes = ref<string[]>([])
-const apiKeyRowsExpanded = ref<boolean>(false)
+const testedApiKeyStatuses = reactive<Record<ModerationEngine, ContentModerationAPIKeyStatus[]>>({ typesafe: [], openai: [] })
+const apiKeyRowsExpanded = reactive<Record<ModerationEngine, boolean>>({ typesafe: false, openai: false })
 const moderationTestPrompt = ref('')
 const moderationTestImages = ref<string[]>([])
-const moderationTestResult = ref<ContentModerationTestAuditResult | null>(null)
+const moderationTestResults = reactive<Record<ModerationEngine, ContentModerationTestAuditResult | null>>({ typesafe: null, openai: null })
 const inputDetailRow = ref<ContentModerationLog | null>(null)
 const savedEngine = ref<ModerationEngine>('openai')
-// fork：两级审计 —— 两个引擎同时生效（TypeSafe 初审、LLM 复核），这里只选要编辑哪一个的配置
-const engineOptions = computed<SelectOption[]>(() => [
-  { value: 'typesafe', label: `TypeSafe AI · ${t('admin.riskControl.engineRole.primary')}` },
-  { value: 'openai', label: `LLM · ${t('admin.riskControl.engineRole.verifier')}` },
-])
+// fork：两级审计 —— TypeSafe 初审、LLM 复核同时生效，两套配置在表单里一起展示
+const moderationEngines: ModerationEngine[] = ['typesafe', 'openai']
+const engineRoleLabel = (engine: ModerationEngine) => t(`admin.riskControl.engineRole.${engine === 'typesafe' ? 'primary' : 'verifier'}`)
+const hasModerationTestResult = computed(() => moderationEngines.some(engine => moderationTestResults[engine] !== null))
 const verifierUnavailable = computed(() => {
   const current = status.value
   if (!current?.verifier_engine || !current.enabled || !current.risk_control_enabled || current.mode === 'off') return false
@@ -1308,22 +1311,8 @@ const engineLabel = (engine: ModerationEngine) => engine === 'typesafe' ? 'TypeS
 let statusTimer: number | null = null
 
 const configForm = reactive({
-  engine: 'openai' as ModerationEngine,
   enabled: false,
   mode: 'pre_block' as ModerationMode,
-  base_url: 'https://api.openai.com',
-  model: 'deepseek-v4.1-flash', // fork：对话模型审计
-  proxy_id: null as number | null,
-  api_keys_text: '',
-  api_key_configured: false,
-  api_key_masked: '',
-  api_key_count: 0,
-  api_key_masks: [] as string[],
-  api_key_statuses: [] as ContentModerationAPIKeyStatus[],
-  api_keys_mode: 'append' as APIKeysWriteMode,
-  clear_api_key: false,
-  timeout_ms: 15000,
-  retry_count: 2,
   sample_rate: 100,
   all_groups: true,
   group_ids: [] as number[],
@@ -1341,34 +1330,34 @@ const configForm = reactive({
   hit_retention_days: 180,
   non_hit_retention_days: 3,
   pre_hash_check_enabled: false,
-  thresholds: { ...riskThresholdDefaults } as Record<string, number>,
   blocked_keywords_text: '',
   keyword_blocking_mode: 'keyword_and_api' as KeywordBlockingMode,
   model_filter_type: 'all' as ContentModerationModelFilterType,
   model_filter_models: [] as string[],
 })
 
-const engineFields = ['base_url', 'model', 'proxy_id', 'api_keys_text', 'api_key_configured', 'api_key_masked', 'api_key_count', 'api_key_masks', 'api_key_statuses', 'api_keys_mode', 'clear_api_key', 'timeout_ms', 'retry_count', 'thresholds'] as const
-type EngineDraft = Pick<typeof configForm, typeof engineFields[number]> & { pendingDeletes: string[] }
-const engineDrafts = ref<Partial<Record<ModerationEngine, EngineDraft>>>({})
-
-function captureEngineDraft(): EngineDraft {
-  return structuredClone({ ...Object.fromEntries(engineFields.map(key => [key, toRaw(configForm)[key]])), pendingDeletes: [...pendingDeleteApiKeyHashes.value] }) as EngineDraft
+interface EngineDraft {
+  base_url: string
+  model: string
+  proxy_id: number | null
+  api_keys_text: string
+  api_key_configured: boolean
+  api_key_masked: string
+  api_key_count: number
+  api_key_masks: string[]
+  api_key_statuses: ContentModerationAPIKeyStatus[]
+  api_keys_mode: APIKeysWriteMode
+  clear_api_key: boolean
+  timeout_ms: number
+  retry_count: number
+  thresholds: Record<string, number>
+  pendingDeletes: string[]
 }
-
-function switchEngine(value: string | number | boolean | null) {
-  if ((value !== 'openai' && value !== 'typesafe') || apiKeyTesting.value || saving.value) return
-  engineDrafts.value[configForm.engine] = captureEngineDraft()
-  configForm.engine = value
-  const draft = engineDrafts.value[value]
-  if (draft) {
-    const { pendingDeletes, ...fields } = structuredClone(toRaw(draft))
-    Object.assign(configForm, fields)
-    pendingDeleteApiKeyHashes.value = pendingDeletes
-  }
-  testedApiKeyStatuses.value = []
-  moderationTestResult.value = null
-}
+// 每个引擎一份草稿，表单直接编辑草稿；保存时两份都放进 engine_configs
+const engineDrafts = reactive<Record<ModerationEngine, EngineDraft>>({
+  typesafe: engineDraftFromConfig(undefined, 'typesafe'),
+  openai: engineDraftFromConfig(undefined, 'openai'),
+})
 
 function engineDraftFromConfig(config: ContentModerationConfig | undefined, engine: ModerationEngine): EngineDraft {
   return {
@@ -1378,20 +1367,21 @@ function engineDraftFromConfig(config: ContentModerationConfig | undefined, engi
     api_key_masked: config?.api_key_masked ?? '', api_key_count: config?.api_key_count ?? 0,
     api_key_masks: [...(config?.api_key_masks ?? [])], api_key_statuses: [...(config?.api_key_statuses ?? [])],
     api_keys_mode: 'append', clear_api_key: false, pendingDeletes: [],
-    timeout_ms: config?.timeout_ms ?? (engine === 'typesafe' ? 3000 : 15000), retry_count: config?.retry_count ?? 2,
+    timeout_ms: config?.timeout_ms ?? (engine === 'typesafe' ? 3000 : 60000), retry_count: config?.retry_count ?? 2,
     thresholds: riskThresholdsFromConfig(config?.thresholds),
   }
 }
 
-function engineDraftPayload(draft: EngineDraft): UpdateModerationEngineConfig {
+function engineDraftPayload(engine: ModerationEngine, draft: EngineDraft): UpdateModerationEngineConfig {
   const keys = parseApiKeys(draft.api_keys_text)
   if (!draft.clear_api_key && draft.api_keys_mode === 'replace' && keys.length === 0) throw new Error('empty replacement keys')
   return {
     base_url: draft.base_url, model: draft.model, proxy_id: draft.proxy_id ?? 0,
-    timeout_ms: draft.timeout_ms, retry_count: draft.retry_count,
-    thresholds: Object.fromEntries(riskThresholdCategories.map(k => [k, clampPercent(draft.thresholds[k]) / 100])),
-    clear_api_key: draft.clear_api_key, api_keys: keys.length ? keys : undefined,
-    api_keys_mode: draft.api_keys_mode, delete_api_key_hashes: draft.pendingDeletes,
+    timeout_ms: Number(draft.timeout_ms) || (engine === 'typesafe' ? 3000 : 60000), retry_count: Number(draft.retry_count) || 0,
+    thresholds: buildRiskThresholdPayload(draft),
+    clear_api_key: keys.length ? false : draft.clear_api_key, api_keys: keys.length ? keys : undefined,
+    api_keys_mode: draft.api_keys_mode,
+    delete_api_key_hashes: draft.clear_api_key || draft.api_keys_mode === 'replace' ? [] : [...draft.pendingDeletes],
   }
 }
 
@@ -1570,27 +1560,27 @@ const filteredGroups = computed(() => {
   })
 })
 
-const inputApiKeyCount = computed(() => parseApiKeys(configForm.api_keys_text).length)
+const inputApiKeyCount = (engine: ModerationEngine) => parseApiKeys(engineDrafts[engine].api_keys_text).length
 
 const blockedKeywordList = computed(() => parseBlockedKeywords(configForm.blocked_keywords_text))
 
 const blockedKeywordCount = computed(() => blockedKeywordList.value.length)
 
-const pendingDeletedApiKeyCount = computed(() => pendingDeleteApiKeyHashes.value.length)
+const pendingDeletedApiKeyCount = (engine: ModerationEngine) => engineDrafts[engine].pendingDeletes.length
 
-const effectiveStoredApiKeyCount = computed(() => Math.max(0, configForm.api_key_count - pendingDeletedApiKeyCount.value))
+const effectiveStoredApiKeyCount = (engine: ModerationEngine) => Math.max(0, engineDrafts[engine].api_key_count - pendingDeletedApiKeyCount(engine))
 
-const apiKeysPlaceholder = computed(() => (
-  configForm.api_keys_mode === 'replace'
+const apiKeysPlaceholder = (engine: ModerationEngine) => (
+  engineDrafts[engine].api_keys_mode === 'replace'
     ? t('admin.riskControl.apiKeysPlaceholderReplace')
     : t('admin.riskControl.apiKeysPlaceholder')
-))
+)
 
-const apiKeysModeHint = computed(() => (
-  configForm.api_keys_mode === 'replace'
+const apiKeysModeHint = (engine: ModerationEngine) => (
+  engineDrafts[engine].api_keys_mode === 'replace'
     ? t('admin.riskControl.apiKeysModeReplaceHint')
     : t('admin.riskControl.apiKeysModeAppendHint')
-))
+)
 
 const hasModerationAuditInput = computed(() => {
   return moderationTestPrompt.value.trim() !== '' || moderationTestImages.value.length > 0
@@ -1598,66 +1588,67 @@ const hasModerationAuditInput = computed(() => {
 
 const isFlaggedHashInputValid = computed(() => /^[a-fA-F0-9]{64}$/.test(flaggedHashInput.value.trim()))
 
-const storedApiKeyTestButtonText = computed(() => {
-  if (apiKeyTesting.value) return t('admin.riskControl.testingApiKeys')
+const storedApiKeyTestButtonText = (engine: ModerationEngine) => {
+  if (testingEngine.value === engine) return t('admin.riskControl.testingApiKeys')
   if (hasModerationAuditInput.value) return t('admin.riskControl.testContentWithStoredApiKey')
   return t('admin.riskControl.testStoredApiKeys')
-})
+}
 
-const savedApiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => {
-  const verifierRows = status.value?.verifier_engine === configForm.engine ? status.value?.verifier_api_key_statuses : undefined // fork：两级审计
-  const rows = verifierRows?.length
-    ? verifierRows
-    : (status.value?.engine ?? 'openai') === configForm.engine && status.value?.api_key_statuses?.length
-      ? status.value.api_key_statuses
-      : configForm.api_key_statuses
+// Key 状态：初审对应 status.engine，复核对应 status.verifier_engine，否则取草稿里保存的状态
+function savedApiKeyRows(engine: ModerationEngine): ContentModerationAPIKeyStatus[] {
+  const current = status.value
+  const rows = current?.verifier_engine === engine && current.verifier_api_key_statuses?.length
+    ? current.verifier_api_key_statuses
+    : (current?.engine ?? 'openai') === engine && current?.api_key_statuses?.length
+      ? current.api_key_statuses
+      : engineDrafts[engine].api_key_statuses
   return Array.isArray(rows) ? rows : []
-})
+}
 
-const apiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => [
-  ...savedApiKeyRows.value,
-  ...testedApiKeyStatuses.value,
-])
+const apiKeyRows = (engine: ModerationEngine): ContentModerationAPIKeyStatus[] => [
+  ...savedApiKeyRows(engine),
+  ...testedApiKeyStatuses[engine],
+]
 
-const visibleApiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => {
+function visibleApiKeyRows(engine: ModerationEngine): ContentModerationAPIKeyStatus[] {
   // 只读弹窗里的按钮都被 fieldset 禁用，展开开关点不了，直接全部列出
-  if (apiKeyRowsExpanded.value || readonly.value) return apiKeyRows.value
-  return apiKeyRows.value.slice(0, maxVisibleApiKeyRows)
-})
+  if (apiKeyRowsExpanded[engine] || readonly.value) return apiKeyRows(engine)
+  return apiKeyRows(engine).slice(0, maxVisibleApiKeyRows)
+}
 
-const hiddenApiKeyRowCount = computed<number>(() => Math.max(0, apiKeyRows.value.length - visibleApiKeyRows.value.length))
+const hiddenApiKeyRowCount = (engine: ModerationEngine) => Math.max(0, apiKeyRows(engine).length - visibleApiKeyRows(engine).length)
 
-const canToggleApiKeyRows = computed<boolean>(() => !readonly.value && apiKeyRows.value.length > maxVisibleApiKeyRows)
+const canToggleApiKeyRows = (engine: ModerationEngine) => !readonly.value && apiKeyRows(engine).length > maxVisibleApiKeyRows
 
-const activeSavedApiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => (
-  savedApiKeyRows.value.filter((row) => !isStoredApiKeyPendingDelete(row))
-))
+const activeSavedApiKeyRows = (engine: ModerationEngine) => savedApiKeyRows(engine).filter((row) => !isStoredApiKeyPendingDelete(engine, row))
 
-const apiKeyHealthBadges = computed<Array<{ status: ContentModerationAPIKeyStatus['status']; count: number }>>(() => {
+function apiKeyHealthBadges(engine: ModerationEngine): Array<{ status: ContentModerationAPIKeyStatus['status']; count: number }> {
   const counts: Record<ContentModerationAPIKeyStatus['status'], number> = {
     ok: 0,
     error: 0,
     frozen: 0,
     unknown: 0,
   }
-  for (const row of activeSavedApiKeyRows.value) {
+  const activeRows = activeSavedApiKeyRows(engine)
+  for (const row of activeRows) {
     counts[row.status] = (counts[row.status] ?? 0) + 1
   }
-  if (activeSavedApiKeyRows.value.length === 0 && effectiveStoredApiKeyCount.value > 0) {
-    counts.unknown = effectiveStoredApiKeyCount.value
+  if (activeRows.length === 0 && effectiveStoredApiKeyCount(engine) > 0) {
+    counts.unknown = effectiveStoredApiKeyCount(engine)
   }
   return (['ok', 'frozen', 'error', 'unknown'] as Array<ContentModerationAPIKeyStatus['status']>)
     .map((item) => ({ status: item, count: counts[item] }))
     .filter((item) => item.count > 0)
-})
+}
 
-const apiKeyHealthSummary = computed(() => {
-  if (!configForm.api_key_configured) return ''
-  if (apiKeyHealthBadges.value.length === 0) return t('admin.riskControl.apiKeyStatusUnknown')
-  return apiKeyHealthBadges.value
+function apiKeyHealthSummary(engine: ModerationEngine): string {
+  if (!engineDrafts[engine].api_key_configured) return ''
+  const badges = apiKeyHealthBadges(engine)
+  if (badges.length === 0) return t('admin.riskControl.apiKeyStatusUnknown')
+  return badges
     .map((badge) => `${apiKeyStatusLabel(badge.status)} ${badge.count}`)
     .join(' · ')
-})
+}
 
 const overviewItems = computed<OverviewItem[]>(() => [
   {
@@ -1675,8 +1666,9 @@ const overviewItems = computed<OverviewItem[]>(() => [
   {
     key: 'api-key',
     label: t('admin.riskControl.overview.apiKey'),
-    value: configForm.api_key_configured ? t('admin.riskControl.apiKeyCount', { count: configForm.api_key_count }) : t('admin.riskControl.notConfigured'),
-    meta: configForm.api_key_configured ? apiKeyHealthSummary.value || configForm.model || '-' : configForm.model || '-',
+    // fork：两级审计 —— 两个引擎的 Key 一起概览
+    value: moderationEngines.map(engine => `${engineLabel(engine)} ${engineDrafts[engine].api_key_configured ? engineDrafts[engine].api_key_count : '-'}`).join(' · '),
+    meta: moderationEngines.map(engine => apiKeyHealthSummary(engine) || engineDrafts[engine].model || '-').join(' · '),
     icon: 'key',
     iconClass: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300',
   },
@@ -1698,8 +1690,8 @@ const overviewItems = computed<OverviewItem[]>(() => [
   },
 ])
 
-const moderationScoreRows = computed<ModerationScoreRow[]>(() => {
-  const result = moderationTestResult.value
+function moderationScoreRows(engine: ModerationEngine): ModerationScoreRow[] {
+  const result = moderationTestResults[engine]
   if (!result) return []
   return Object.entries(result.category_scores || {})
     .map(([category, score]) => {
@@ -1712,12 +1704,12 @@ const moderationScoreRows = computed<ModerationScoreRow[]>(() => {
       }
     })
     .sort((a, b) => b.score - a.score)
-})
+}
 
 const riskThresholdRows = computed<RiskThresholdRow[]>(() => (
   riskThresholdCategories.map((category) => ({
     category,
-    value: configForm.thresholds[category] ?? riskThresholdDefaults[category],
+    value: engineDrafts.typesafe.thresholds[category] ?? riskThresholdDefaults[category],
     defaultValue: riskThresholdDefaults[category],
   }))
 ))
@@ -1838,25 +1830,8 @@ const runtimeBadgeClass = computed(() => {
 
 function applyConfig(config: ContentModerationConfig) {
   savedEngine.value = config.engine ?? 'openai'
-  configForm.engine = savedEngine.value
   configForm.enabled = config.enabled
   configForm.mode = config.mode
-  configForm.base_url = config.base_url || 'https://api.openai.com'
-  configForm.model = config.model || 'deepseek-v4.1-flash'
-  configForm.proxy_id = config.proxy_id || null
-  configForm.api_keys_text = ''
-  configForm.api_key_configured = config.api_key_configured
-  configForm.api_key_masked = config.api_key_masked || ''
-  configForm.api_key_count = config.api_key_count || 0
-  configForm.api_key_masks = Array.isArray(config.api_key_masks) ? [...config.api_key_masks] : []
-  configForm.api_key_statuses = Array.isArray(config.api_key_statuses) ? [...config.api_key_statuses] : []
-  configForm.api_keys_mode = 'append'
-  configForm.clear_api_key = false
-  pendingDeleteApiKeyHashes.value = []
-  testedApiKeyStatuses.value = []
-  apiKeyRowsExpanded.value = false
-  configForm.timeout_ms = config.timeout_ms || 15000
-  configForm.retry_count = config.retry_count ?? 2
   configForm.sample_rate = config.sample_rate ?? 100
   configForm.all_groups = config.all_groups
   configForm.group_ids = Array.isArray(config.group_ids) ? [...config.group_ids] : []
@@ -1874,19 +1849,26 @@ function applyConfig(config: ContentModerationConfig) {
   configForm.hit_retention_days = config.hit_retention_days || 180
   configForm.non_hit_retention_days = Math.min(Math.max(config.non_hit_retention_days || 3, 1), 3)
   configForm.pre_hash_check_enabled = config.pre_hash_check_enabled ?? false
-  configForm.thresholds = riskThresholdsFromConfig(config.thresholds)
   configForm.blocked_keywords_text = Array.isArray(config.blocked_keywords) ? config.blocked_keywords.join('\n') : ''
   configForm.keyword_blocking_mode = normalizeKeywordBlockingMode(config.keyword_blocking_mode)
   const modelFilter = normalizeModelFilter(config.model_filter)
   configForm.model_filter_type = modelFilter.type
   configForm.model_filter_models = modelFilter.models
-  engineDrafts.value = {
-    openai: engineDraftFromConfig(config.engine_configs?.openai ?? (savedEngine.value === 'openai' ? config : undefined), 'openai'),
-    typesafe: engineDraftFromConfig(config.engine_configs?.typesafe ?? (savedEngine.value === 'typesafe' ? config : undefined), 'typesafe'),
+  for (const engine of moderationEngines) {
+    engineDrafts[engine] = engineDraftFromConfig(config.engine_configs?.[engine] ?? (savedEngine.value === engine ? config : undefined), engine)
+    testedApiKeyStatuses[engine] = []
+    apiKeyRowsExpanded[engine] = false
   }
-  const { pendingDeletes, ...fields } = structuredClone(toRaw(engineDrafts.value[configForm.engine]!))
-  Object.assign(configForm, fields)
-  pendingDeleteApiKeyHashes.value = [...pendingDeletes]
+}
+
+// 运行状态带回的 Key 健康度写回对应引擎的草稿
+function applyRuntimeKeyStatuses(runtimeStatus: ContentModerationRuntimeStatus) {
+  const primary = runtimeStatus.engine ?? 'openai'
+  if (Array.isArray(runtimeStatus.api_key_statuses)) engineDrafts[primary].api_key_statuses = [...runtimeStatus.api_key_statuses]
+  if (runtimeStatus.verifier_engine && Array.isArray(runtimeStatus.verifier_api_key_statuses)) {
+    engineDrafts[runtimeStatus.verifier_engine].api_key_statuses = [...runtimeStatus.verifier_api_key_statuses]
+  }
+  moderationEngines.forEach(prunePendingDeleteAPIKeyHashes)
 }
 
 async function loadAll() {
@@ -1903,10 +1885,7 @@ async function loadAll() {
     groups.value = groupItems
     status.value = runtimeStatus
     proxies.value = proxyItems
-    if ((runtimeStatus.engine ?? 'openai') === configForm.engine && Array.isArray(runtimeStatus.api_key_statuses)) {
-      configForm.api_key_statuses = [...runtimeStatus.api_key_statuses]
-      prunePendingDeleteAPIKeyHashes()
-    }
+    applyRuntimeKeyStatuses(runtimeStatus)
     await loadLogs()
   } catch (err: unknown) {
     appStore.showError(extractApiErrorMessage(err, t('admin.riskControl.loadFailed')))
@@ -1920,10 +1899,7 @@ async function loadStatus(silent = true) {
   try {
     const runtimeStatus = await adminAPI.riskControl.getStatus()
     status.value = runtimeStatus
-    if ((runtimeStatus.engine ?? 'openai') === configForm.engine && Array.isArray(runtimeStatus.api_key_statuses)) {
-      configForm.api_key_statuses = [...runtimeStatus.api_key_statuses]
-      prunePendingDeleteAPIKeyHashes()
-    }
+    applyRuntimeKeyStatuses(runtimeStatus)
   } catch (err: unknown) {
     if (!silent) {
       appStore.showError(extractApiErrorMessage(err, t('admin.riskControl.statusFailed')))
@@ -1942,20 +1918,12 @@ async function saveConfig() {
       return
     }
     const payload: UpdateContentModerationConfig = {
-      engine: configForm.engine,
       enabled: configForm.enabled,
       mode: configForm.mode,
-      base_url: configForm.base_url,
-      model: configForm.model,
-      // 后端语义：0 清除代理（直连），>0 指定代理
-      proxy_id: configForm.proxy_id ?? 0,
-      timeout_ms: Number(configForm.timeout_ms) || 15000,
-      retry_count: Number(configForm.retry_count) || 0,
       sample_rate: Number(configForm.sample_rate) || 0,
       all_groups: configForm.all_groups,
       group_ids: configForm.all_groups ? [] : [...configForm.group_ids],
       record_non_hits: configForm.record_non_hits,
-      clear_api_key: configForm.clear_api_key,
       worker_count: Number(configForm.worker_count) || 4,
       queue_size: Number(configForm.queue_size) || 32768,
       block_status: Number(configForm.block_status) || 403,
@@ -1969,27 +1937,19 @@ async function saveConfig() {
       hit_retention_days: Number(configForm.hit_retention_days) || 180,
       non_hit_retention_days: Math.min(Math.max(Number(configForm.non_hit_retention_days) || 3, 1), 3),
       pre_hash_check_enabled: configForm.pre_hash_check_enabled,
-      thresholds: buildRiskThresholdPayload(),
       blocked_keywords: blockedKeywordList.value,
       keyword_blocking_mode: configForm.keyword_blocking_mode,
       model_filter: modelFilterPayload,
     }
-    const keys = parseApiKeys(configForm.api_keys_text)
-    if (!payload.clear_api_key && configForm.api_keys_mode === 'replace' && keys.length === 0) {
-      appStore.showError(t('admin.riskControl.apiKeysReplaceNoInput'))
-      return
+    // fork：两级审计 —— 两个引擎的地址、模型、Key、阈值都走 engine_configs
+    for (const engine of moderationEngines) {
+      const draft = engineDrafts[engine]
+      if (!draft.clear_api_key && draft.api_keys_mode === 'replace' && parseApiKeys(draft.api_keys_text).length === 0) {
+        appStore.showError(t('admin.riskControl.apiKeysReplaceNoInput'))
+        return
+      }
     }
-    if (keys.length > 0) {
-      payload.api_keys = keys
-      payload.api_keys_mode = configForm.api_keys_mode
-      payload.clear_api_key = false
-    }
-    if (!payload.clear_api_key && configForm.api_keys_mode !== 'replace' && pendingDeleteApiKeyHashes.value.length > 0) {
-      payload.delete_api_key_hashes = [...pendingDeleteApiKeyHashes.value]
-    }
-
-    engineDrafts.value[configForm.engine] = captureEngineDraft()
-    payload.engine_configs = Object.fromEntries(Object.entries(engineDrafts.value).map(([engine, draft]) => [engine, engineDraftPayload(draft)]))
+    payload.engine_configs = Object.fromEntries(moderationEngines.map(engine => [engine, engineDraftPayload(engine, engineDrafts[engine])]))
     const updated = await adminAPI.riskControl.updateConfig(payload)
     applyConfig(updated)
     settingsOpen.value = false
@@ -2113,20 +2073,21 @@ function onPageSizeChange(pageSize: number) {
   void loadLogs()
 }
 
-function toggleClearApiKey() {
-  configForm.clear_api_key = !configForm.clear_api_key
-  if (configForm.clear_api_key) {
-    configForm.api_keys_text = ''
-    configForm.api_keys_mode = 'append'
-    testedApiKeyStatuses.value = []
-    pendingDeleteApiKeyHashes.value = []
+function toggleClearApiKey(engine: ModerationEngine) {
+  const draft = engineDrafts[engine]
+  draft.clear_api_key = !draft.clear_api_key
+  if (draft.clear_api_key) {
+    draft.api_keys_text = ''
+    draft.api_keys_mode = 'append'
+    draft.pendingDeletes = []
+    testedApiKeyStatuses[engine] = []
   }
 }
 
-function setAPIKeysMode(mode: APIKeysWriteMode) {
-  configForm.api_keys_mode = mode
+function setAPIKeysMode(engine: ModerationEngine, mode: APIKeysWriteMode) {
+  engineDrafts[engine].api_keys_mode = mode
   if (mode === 'replace') {
-    pendingDeleteApiKeyHashes.value = []
+    engineDrafts[engine].pendingDeletes = []
   }
 }
 
@@ -2137,32 +2098,33 @@ function setModelFilterType(type: ContentModerationModelFilterType) {
   }
 }
 
-async function testApiKeys(useInputKeys: boolean) {
-  const keys = useInputKeys ? parseApiKeys(configForm.api_keys_text) : []
+async function testApiKeys(engine: ModerationEngine, useInputKeys: boolean) {
+  const draft = engineDrafts[engine]
+  const keys = useInputKeys ? parseApiKeys(draft.api_keys_text) : []
   if (useInputKeys && keys.length === 0) {
     appStore.showError(t('admin.riskControl.apiKeyTestNoInput'))
     return
   }
-  apiKeyTesting.value = true
+  testingEngine.value = engine
   try {
     const result = await adminAPI.riskControl.testAPIKeys({
-      engine: configForm.engine,
-      thresholds: buildRiskThresholdPayload(),
+      engine,
+      thresholds: buildRiskThresholdPayload(draft),
       api_keys: keys,
-      base_url: configForm.base_url,
-      model: configForm.model,
-      timeout_ms: Number(configForm.timeout_ms) || 15000,
+      base_url: draft.base_url,
+      model: draft.model,
+      timeout_ms: Number(draft.timeout_ms) || (engine === 'typesafe' ? 3000 : 60000),
       // 与保存语义一致：0 强制直连，>0 指定代理，确保测试与实际审计走同一条链路
-      proxy_id: configForm.proxy_id ?? 0,
+      proxy_id: draft.proxy_id ?? 0,
       prompt: moderationTestPrompt.value,
       images: moderationTestImages.value,
     })
-    moderationTestResult.value = result.audit_result ?? null
+    moderationTestResults[engine] = result.audit_result ?? null
     if (useInputKeys) {
-      testedApiKeyStatuses.value = result.items.map((item) => ({ ...item, configured: false }))
+      testedApiKeyStatuses[engine] = result.items.map((item) => ({ ...item, configured: false }))
     } else {
-      mergeConfiguredAPIKeyStatuses(result.items)
-      testedApiKeyStatuses.value = []
+      mergeConfiguredAPIKeyStatuses(engine, result.items)
+      testedApiKeyStatuses[engine] = []
       await loadStatus(true)
     }
     if (result.items.length === 0 || result.items.some(item => item.status === 'error' || item.status === 'frozen')) {
@@ -2173,42 +2135,45 @@ async function testApiKeys(useInputKeys: boolean) {
   } catch (err: unknown) {
     appStore.showError(extractApiErrorMessage(err, t('admin.riskControl.apiKeyTestFailed')))
   } finally {
-    apiKeyTesting.value = false
+    testingEngine.value = null
   }
 }
 
-function mergeConfiguredAPIKeyStatuses(items: ContentModerationAPIKeyStatus[]) {
-  if (!hasModerationAuditInput.value || configForm.api_key_statuses.length === 0) {
-    configForm.api_key_statuses = items
+function mergeConfiguredAPIKeyStatuses(engine: ModerationEngine, items: ContentModerationAPIKeyStatus[]) {
+  const draft = engineDrafts[engine]
+  if (!hasModerationAuditInput.value || draft.api_key_statuses.length === 0) {
+    draft.api_key_statuses = items
     return
   }
   const updates = new Map(items.map((item) => [item.key_hash, item]))
-  configForm.api_key_statuses = configForm.api_key_statuses.map((item) => updates.get(item.key_hash) ?? item)
+  draft.api_key_statuses = draft.api_key_statuses.map((item) => updates.get(item.key_hash) ?? item)
 }
 
-function toggleDeleteStoredApiKey(row: ContentModerationAPIKeyStatus) {
+function toggleDeleteStoredApiKey(engine: ModerationEngine, row: ContentModerationAPIKeyStatus) {
   if (!row.configured || !row.key_hash) return
-  const index = pendingDeleteApiKeyHashes.value.indexOf(row.key_hash)
+  const pending = engineDrafts[engine].pendingDeletes
+  const index = pending.indexOf(row.key_hash)
   if (index >= 0) {
-    pendingDeleteApiKeyHashes.value.splice(index, 1)
+    pending.splice(index, 1)
     return
   }
-  pendingDeleteApiKeyHashes.value.push(row.key_hash)
+  pending.push(row.key_hash)
 }
 
-function isStoredApiKeyPendingDelete(row: ContentModerationAPIKeyStatus): boolean {
-  return row.configured && row.key_hash !== '' && pendingDeleteApiKeyHashes.value.includes(row.key_hash)
+function isStoredApiKeyPendingDelete(engine: ModerationEngine, row: ContentModerationAPIKeyStatus): boolean {
+  return row.configured && row.key_hash !== '' && engineDrafts[engine].pendingDeletes.includes(row.key_hash)
 }
 
-function prunePendingDeleteAPIKeyHashes() {
-  const currentHashes = new Set(savedApiKeyRows.value.map((row) => row.key_hash).filter(Boolean))
-  pendingDeleteApiKeyHashes.value = pendingDeleteApiKeyHashes.value.filter((hash) => currentHashes.has(hash))
+function prunePendingDeleteAPIKeyHashes(engine: ModerationEngine) {
+  const currentHashes = new Set(savedApiKeyRows(engine).map((row) => row.key_hash).filter(Boolean))
+  engineDrafts[engine].pendingDeletes = engineDrafts[engine].pendingDeletes.filter((hash) => currentHashes.has(hash))
 }
 
 function clearModerationTestInput() {
   moderationTestPrompt.value = ''
   moderationTestImages.value = []
-  moderationTestResult.value = null
+  moderationTestResults.typesafe = null
+  moderationTestResults.openai = null
 }
 
 function removeModerationTestImage(index: number) {
@@ -2458,16 +2423,18 @@ function riskThresholdsFromConfig(thresholds: Record<string, number> | null | un
   return out
 }
 
-function buildRiskThresholdPayload(): Record<string, number> {
+function buildRiskThresholdPayload(draft: EngineDraft): Record<string, number> {
   const payload: Record<string, number> = {}
   for (const category of riskThresholdCategories) {
-    payload[category] = Number((clampPercent(configForm.thresholds[category]) / 100).toFixed(4))
+    payload[category] = Number((clampPercent(draft.thresholds[category]) / 100).toFixed(4))
   }
   return payload
 }
 
 function resetRiskThresholds() {
-  configForm.thresholds = { ...riskThresholdDefaults }
+  for (const engine of moderationEngines) {
+    engineDrafts[engine].thresholds = { ...riskThresholdDefaults }
+  }
 }
 
 function clampPercent(value: unknown): number {

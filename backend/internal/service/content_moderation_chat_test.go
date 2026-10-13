@@ -151,7 +151,11 @@ func TestContentModerationConfig_MigratesModerationAPIDefaults(t *testing.T) {
 	cfg, err := parseContentModerationConfig(`{"engine":"openai","mode":"observe","base_url":"https://api.openai.com","model":"omni-moderation-latest","timeout_ms":3000,"block_status":403}`)
 	require.NoError(t, err)
 	require.Equal(t, "deepseek-v4.1-flash", cfg.Model)
-	require.Equal(t, 15000, cfg.TimeoutMS)
+	require.Equal(t, 60000, cfg.TimeoutMS)
+
+	cfg, err = parseContentModerationConfig(`{"engine":"openai","mode":"observe","model":"deepseek-v4.1-flash","timeout_ms":15000,"block_status":403}`)
+	require.NoError(t, err)
+	require.Equal(t, 60000, cfg.TimeoutMS, "the first chat default (15 s) moves to 60 s too")
 
 	cfg, err = parseContentModerationConfig(`{"engine":"openai","mode":"observe","model":"deepseek-v4-pro","timeout_ms":8000,"block_status":403}`)
 	require.NoError(t, err)
