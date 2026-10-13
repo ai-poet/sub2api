@@ -91,6 +91,7 @@ var ProviderSet = wire.NewSet(
 	NewUsageBillingRepository,
 	NewUsageBillingRetryRepository, // fork：扣费失败重试
 	NewBatchImageRepository,
+	NewGeminiCachedContentRepository,
 	NewIdempotencyRepository,
 	NewUsageCleanupRepository,
 	NewDashboardAggregationRepository,
