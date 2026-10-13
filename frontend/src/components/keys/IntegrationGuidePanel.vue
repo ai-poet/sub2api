@@ -170,6 +170,7 @@ import {
   grokCliInstallShellLabel,
   type GrokCliOS
 } from './grokCliGuide'
+import { claudeCodeSettingsEnv, codexConfigToml } from '@/utils/integrationGuideConfig'
 import type { ApiKey, GroupPlatform } from '@/types'
 
 interface Props {
@@ -458,14 +459,7 @@ $env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`
     ? '~/.claude/settings.json'
     : '%userprofile%\\.claude\\settings.json'
 
-  const vscodeContent = `{
-  "env": {
-    "ANTHROPIC_BASE_URL": "${baseUrl}",
-    "ANTHROPIC_AUTH_TOKEN": "${apiKey}",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
-  }
-}`
+  const vscodeContent = JSON.stringify({ env: claudeCodeSettingsEnv(baseUrl, apiKey) }, null, 2)
 
   return [
     { path, content },
@@ -474,71 +468,16 @@ $env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`
 }
 
 function generateOpenAIFiles(baseUrl: string, apiKey: string): FileConfig[] {
-  const isWindows = activeTab.value === 'windows'
-  const configDir = isWindows ? '%userprofile%\\.codex' : '~/.codex'
-
-  const configContent = `model_provider = "OpenAI"
-model = "gpt-5.6-sol"
-review_model = "gpt-5.6-terra"
-model_reasoning_effort = "xhigh"
-disable_response_storage = true
-network_access = "enabled"
-windows_wsl_setup_acknowledged = true
-model_context_window = 1000000
-model_auto_compact_token_limit = 900000
-
-[model_providers.OpenAI]
-name = "OpenAI"
-base_url = "${baseUrl}"
-wire_api = "responses"
-requires_openai_auth = false
-experimental_bearer_token = "${escapeTomlBasicString(apiKey)}"
-
-[model_providers.OpenAI.http_headers]
-x-openai-actor-authorization = "local-image-extension"
-
-[features]
-image_generation = true
-remote_compaction_v2 = true`
-
-  return [
-    {
-      path: `${configDir}/config.toml`,
-      content: configContent,
-      hint: t('keys.useKeyModal.openai.configTomlHint')
-    }
-  ]
+  return codexConfigFiles(codexConfigToml(baseUrl, apiKey))
 }
 
 function generateOpenAIWsFiles(baseUrl: string, apiKey: string): FileConfig[] {
+  return codexConfigFiles(codexConfigToml(baseUrl, apiKey, { websockets: true }))
+}
+
+function codexConfigFiles(configContent: string): FileConfig[] {
   const isWindows = activeTab.value === 'windows'
   const configDir = isWindows ? '%userprofile%\\.codex' : '~/.codex'
-
-  const configContent = `model_provider = "OpenAI"
-model = "gpt-5.6-sol"
-review_model = "gpt-5.6-terra"
-model_reasoning_effort = "xhigh"
-disable_response_storage = true
-network_access = "enabled"
-windows_wsl_setup_acknowledged = true
-model_context_window = 1000000
-model_auto_compact_token_limit = 900000
-
-[model_providers.OpenAI]
-name = "OpenAI"
-base_url = "${baseUrl}"
-wire_api = "responses"
-supports_websockets = true
-requires_openai_auth = false
-experimental_bearer_token = "${escapeTomlBasicString(apiKey)}"
-
-[model_providers.OpenAI.http_headers]
-x-openai-actor-authorization = "local-image-extension"
-
-[features]
-image_generation = true
-remote_compaction_v2 = true
-responses_websockets_v2 = true`
 
   return [
     {
@@ -547,10 +486,6 @@ responses_websockets_v2 = true`
       hint: t('keys.useKeyModal.openai.configTomlHint')
     }
   ]
-}
-
-function escapeTomlBasicString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
 function maskKey(key: string): string {

@@ -64,7 +64,7 @@
                 :class="{ 'segmented-item-active': index === activeInterval }"
                 @click="activeInterval = index"
               >
-                {{ formatTokenRange(interval.min_tokens, interval.max_tokens) }}
+                {{ intervalLabel(interval) }}
               </button>
             </div>
           </div>
@@ -107,7 +107,7 @@ import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import Icon from '@/components/icons/Icon.vue'
 import Collapse from '@/components/motion/Collapse.vue'
 import { vSegmented } from '@/directives/segmented'
-import type { ModelCatalogItem, ModelCatalogPricing } from '@/api/modelCatalog'
+import type { ModelCatalogItem, ModelCatalogPriceInterval, ModelCatalogPricing } from '@/api/modelCatalog'
 import ModelIdLabel from './ModelIdLabel.vue'
 import ModelModalityIcons from './ModelModalityIcons.vue'
 import { prettifyModelName } from './catalogGroups'
@@ -137,6 +137,11 @@ const mediaTiers = computed(() => props.item.pricing_details.media_tiers ?? [])
 const charge = (usd: number | null | undefined) => formatCharge(usd, props.priceContext)
 const perMTok = (usd: number | null | undefined) => `${charge(usd)} ${t('modelCatalog.card.perMTok')}`
 
+/** 分档标题：后端按扣费阈值给出（≤200K / >200K），没有时按区间拼。 */
+function intervalLabel(interval: ModelCatalogPriceInterval): string {
+  return interval.tier_label || formatTokenRange(interval.min_tokens, interval.max_tokens)
+}
+
 function mediaUnit(): string {
   const unit = props.item.pricing_details.media_unit || (props.item.billing_mode === 'video' ? 'second' : 'image')
   return unit === 'second' ? t('modelCatalog.card.perSecond') : t('modelCatalog.card.perImage')
@@ -164,7 +169,7 @@ const compactRows = computed<PriceRow[]>(() => {
   if (intervals.value.length > 0) {
     return intervals.value.map((interval, index) => ({
       key: `interval-${index}`,
-      label: formatTokenRange(interval.min_tokens, interval.max_tokens),
+      label: intervalLabel(interval),
       value: [
         interval.input_per_mtok_usd != null ? `${t('modelCatalog.priceLabels.input')} ${charge(interval.input_per_mtok_usd)}` : '',
         interval.output_per_mtok_usd != null ? `${t('modelCatalog.priceLabels.output')} ${charge(interval.output_per_mtok_usd)}` : '',

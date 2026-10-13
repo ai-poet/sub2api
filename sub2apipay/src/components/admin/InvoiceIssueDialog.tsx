@@ -1,12 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { pickLocaleText } from '@/lib/locale';
+import { checkInvoiceAmount, isPdfFile, readPdfText, type InvoiceAmountCheck } from '@/lib/invoice/pdf-amount';
 import type { AdminInvoice } from './InvoiceTable';
 
 const ACCEPTED = '.pdf,.ofd,.zip,.jpg,.jpeg,.png';
 const MAX_BYTES = 10 * 1024 * 1024;
+const TOAST_MS = 8000;
+
+type AmountCheckState = InvoiceAmountCheck | { status: 'checking' } | { status: 'unsupported' } | null;
+
+const yuan = (cents: number) => (cents / 100).toFixed(2);
 
 interface InvoiceIssueDialogProps {
   isDark: boolean;
@@ -47,11 +53,35 @@ export default function InvoiceIssueDialog({
     cancel: pickLocaleText(locale, '取消', 'Cancel'),
     submit: pickLocaleText(locale, '确认开票', 'Issue invoice'),
     submitting: pickLocaleText(locale, '处理中...', 'Processing...'),
+    amountChecking: pickLocaleText(locale, '正在核对发票金额...', 'Checking the invoice total...'),
+    amountMatch: (found: string) =>
+      pickLocaleText(locale, `发票金额 ¥${found}，与开票金额一致`, `Invoice total ¥${found} matches the requested amount`),
+    amountMismatch: (found: string, expected: string) =>
+      pickLocaleText(
+        locale,
+        `发票金额 ¥${found} 与用户申请的开票金额 ¥${expected} 不一致，请确认是否传错了发票`,
+        `The invoice total ¥${found} does not match the requested ¥${expected}. Check that this is the right invoice.`,
+      ),
+    amountUnknown: pickLocaleText(
+      locale,
+      '未能从 PDF 中识别发票金额，请人工核对',
+      "Couldn't read the total from this PDF. Check it manually.",
+    ),
+    amountUnsupported: pickLocaleText(
+      locale,
+      '仅 PDF 发票可自动核对金额，请人工核对',
+      'Only PDF invoices are checked automatically. Check this file manually.',
+    ),
+    dismiss: pickLocaleText(locale, '关闭', 'Dismiss'),
   };
 
   const [file, setFile] = useState<File | null>(null);
   const [adminNote, setAdminNote] = useState('');
   const [localError, setLocalError] = useState('');
+  const [amountCheck, setAmountCheck] = useState<AmountCheckState>(null);
+  const [toast, setToast] = useState('');
+  // 连续换文件时，只认最后一次选择的核对结果。
+  const checkRun = useRef(0);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -61,6 +91,12 @@ export default function InvoiceIssueDialog({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [submitting, onClose]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(''), TOAST_MS);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
   const labelClass = ['mb-1 block text-sm font-medium', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ');
   const inputClass = [
     'w-full rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none',
@@ -68,17 +104,81 @@ export default function InvoiceIssueDialog({
   ].join(' ');
 
   const handleFileChange = (selected: File | null) => {
+    const run = ++checkRun.current;
     setLocalError('');
+    setToast('');
+    setAmountCheck(null);
     if (selected && selected.size > MAX_BYTES) {
       setLocalError(text.tooLarge);
       setFile(null);
       return;
     }
     setFile(selected);
+    if (!selected) return;
+    if (!isPdfFile(selected)) {
+      setAmountCheck({ status: 'unsupported' });
+      return;
+    }
+
+    // 只提示不拦截：读错金额时管理员仍能照常开票。
+    setAmountCheck({ status: 'checking' });
+    void selected
+      .arrayBuffer()
+      .then((data) => readPdfText(new Uint8Array(data)))
+      .then((pdfText) => checkInvoiceAmount(pdfText, invoice.amount))
+      .catch((): InvoiceAmountCheck => ({ status: 'unknown' }))
+      .then((result) => {
+        if (run !== checkRun.current) return;
+        setAmountCheck(result);
+        if (result.status === 'mismatch') {
+          setToast(text.amountMismatch(yuan(result.foundCents), invoice.amount.toFixed(2)));
+        }
+      });
+  };
+
+  const amountHint = ((): { message: string; tone: 'ok' | 'error' | 'muted' } | null => {
+    switch (amountCheck?.status) {
+      case 'checking':
+        return { message: text.amountChecking, tone: 'muted' };
+      case 'match':
+        return { message: text.amountMatch(yuan(amountCheck.foundCents)), tone: 'ok' };
+      case 'mismatch':
+        return { message: text.amountMismatch(yuan(amountCheck.foundCents), invoice.amount.toFixed(2)), tone: 'error' };
+      case 'unknown':
+        return { message: text.amountUnknown, tone: 'muted' };
+      case 'unsupported':
+        return { message: text.amountUnsupported, tone: 'muted' };
+      default:
+        return null;
+    }
+  })();
+  const hintToneClass = {
+    ok: isDark ? 'text-emerald-400' : 'text-emerald-600',
+    error: isDark ? 'text-red-400' : 'text-red-600',
+    muted: isDark ? 'text-slate-400' : 'text-gray-500',
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      {toast && (
+        <div
+          role="alert"
+          className={[
+            'fixed left-1/2 top-4 z-10 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-lg',
+            isDark ? 'border-red-500/40 bg-red-950 text-red-200' : 'border-red-300 bg-red-50 text-red-700',
+          ].join(' ')}
+        >
+          <span className="flex-1">{toast}</span>
+          <button
+            type="button"
+            onClick={() => setToast('')}
+            aria-label={text.dismiss}
+            className="shrink-0 leading-none opacity-70 hover:opacity-100"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div
         className={[
           'max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl p-6 shadow-xl',
@@ -131,6 +231,9 @@ export default function InvoiceIssueDialog({
               className={`${inputClass} file:mr-3 file:rounded file:border-0 file:bg-slate-200 file:px-2 file:py-1 file:text-xs`}
             />
             <div className={['mt-1 text-xs', isDark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>{text.fileHint}</div>
+            {amountHint && (
+              <div className={['mt-1 text-xs', hintToneClass[amountHint.tone]].join(' ')}>{amountHint.message}</div>
+            )}
           </div>
 
           <div>

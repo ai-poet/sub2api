@@ -305,11 +305,12 @@ func (s *ModelCatalogService) buildEntry(
 	// 图片/视频可以配独立倍率，扣费时用的是它而不是分组文本倍率；展示价必须同源。
 	rateMultiplier = resolveCatalogModeRate(resolved.Mode, group, rateMultiplier)
 
-	effectivePricing := s.buildEffectivePricingFromResolved(model, resolved, rateMultiplier, group)
+	schedule := s.contextPricingSchedule(ctx, model, resolved, group)
+	effectivePricing := s.buildEffectivePricingFromResolved(model, resolved, rateMultiplier, group, schedule)
 	comparison, primarySavings, primaryInput := buildCatalogComparison(officialPricing, effectivePricing, resolved.Mode)
 
 	rawPricing := s.getRawPricing(model)
-	details := s.buildCatalogPricingDetails(model, rawPricing, officialBase, resolved, rateMultiplier, group)
+	details := s.buildCatalogPricingDetails(model, rawPricing, officialBase, resolved, rateMultiplier, group, schedule)
 
 	item := ModelCatalogItem{
 		Model:       model,
@@ -472,6 +473,7 @@ func (s *ModelCatalogService) buildEffectivePricingFromResolved(
 	resolved *ResolvedPricing,
 	rateMultiplier float64,
 	group Group,
+	schedule *ContextPricingSchedule,
 ) ModelCatalogPricing {
 	if resolved == nil {
 		return ModelCatalogPricing{Source: "none"}
@@ -501,6 +503,15 @@ func (s *ModelCatalogService) buildEffectivePricingFromResolved(
 		}
 	default:
 		if len(resolved.Intervals) > 0 {
+			// 渠道区间价多档时展示在 pricing_details.intervals；分组关闭长上下文计价时
+			// 扣费只取最低档，阶梯表合并成一档，这一档就是基础价。
+			if schedule != nil && len(schedule.Tiers) == 1 {
+				tier := schedule.Tiers[0]
+				pricing.InputPerMTokUSD = scaledMTokPtr(tier.Input, rateMultiplier)
+				pricing.OutputPerMTokUSD = scaledMTokPtr(tier.Output, rateMultiplier)
+				pricing.CacheWritePerMTokUSD = scaledMTokPtr(tier.CacheWrite, rateMultiplier)
+				pricing.CacheReadPerMTokUSD = scaledMTokPtr(tier.CacheRead, rateMultiplier)
+			}
 			return pricing
 		}
 		base := resolved.BasePricing
@@ -551,6 +562,7 @@ func (s *ModelCatalogService) buildCatalogPricingDetails(
 	resolved *ResolvedPricing,
 	rateMultiplier float64,
 	group Group,
+	schedule *ContextPricingSchedule,
 ) ModelCatalogPricingDetails {
 	details := ModelCatalogPricingDetails{
 		MediaTiers: []ModelCatalogMediaTier{},
@@ -583,11 +595,65 @@ func (s *ModelCatalogService) buildCatalogPricingDetails(
 			details.MediaTiers = s.buildVideoMediaTiers(model, resolved, rateMultiplier, group)
 			details.MediaUnit = MediaPriceUnitSecond
 		default:
-			details.Intervals = buildIntervals(resolved.Intervals, resolved.Mode, group)
+			details.Intervals = buildContextIntervals(resolved, rateMultiplier, group, schedule)
 		}
 	}
 
 	return details
+}
+
+// contextPricingSchedule 解析 token 模型按上下文长度分档的单价表，与扣费同源：渠道区间定价
+// 和价格目录的长上下文阶梯（如 Claude 超过 200K 后输入 ×2、输出 ×1.5）都在里面，
+// 分组关闭长上下文计价时合并成一档。非 token 模型或解析失败时返回 nil。
+func (s *ModelCatalogService) contextPricingSchedule(ctx context.Context, model string, resolved *ResolvedPricing, group Group) *ContextPricingSchedule {
+	if resolved == nil || (resolved.Mode != "" && resolved.Mode != BillingModeToken) {
+		return nil
+	}
+	platform := group.Platform
+	if platform == PlatformComposite {
+		platform = ""
+	}
+	schedule, err := s.billing.ResolveContextPricingSchedule(ctx, s.resolver, ContextPricingScheduleInput{
+		Model:    model,
+		Group:    &group,
+		Platform: platform,
+	})
+	if err != nil {
+		return nil
+	}
+	return schedule
+}
+
+// buildContextIntervals 把分档单价表换成展示价：乘分组倍率（扣费对区间价同样乘倍率）。
+// 只有一档时返回空，前端按普通输入 / 输出价展示。
+func buildContextIntervals(resolved *ResolvedPricing, rateMultiplier float64, group Group, schedule *ContextPricingSchedule) []ModelCatalogPriceInterval {
+	if schedule == nil {
+		return buildIntervals(resolved.Intervals, resolved.Mode, group)
+	}
+	if len(schedule.Tiers) < 2 {
+		return []ModelCatalogPriceInterval{}
+	}
+
+	out := make([]ModelCatalogPriceInterval, 0, len(schedule.Tiers))
+	for _, tier := range schedule.Tiers {
+		out = append(out, ModelCatalogPriceInterval{
+			MinTokens:            tier.MinTokens,
+			MaxTokens:            tier.MaxTokens,
+			TierLabel:            tier.Label,
+			InputPerMTokUSD:      scaledMTokPtr(tier.Input, rateMultiplier),
+			OutputPerMTokUSD:     scaledMTokPtr(tier.Output, rateMultiplier),
+			CacheWritePerMTokUSD: scaledMTokPtr(tier.CacheWrite, rateMultiplier),
+			CacheReadPerMTokUSD:  scaledMTokPtr(tier.CacheRead, rateMultiplier),
+		})
+	}
+	return out
+}
+
+func scaledMTokPtr(perToken *float64, rateMultiplier float64) *float64 {
+	if perToken == nil {
+		return nil
+	}
+	return mtokPtr(*perToken * rateMultiplier)
 }
 
 func buildIntervals(intervals []PricingInterval, mode BillingMode, group Group) []ModelCatalogPriceInterval {

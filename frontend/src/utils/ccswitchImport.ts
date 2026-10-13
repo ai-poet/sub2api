@@ -1,6 +1,7 @@
 import type { GroupPlatform } from '@/types'
+import { INTEGRATION_GUIDE_CODEX_MODEL, ccSwitchImportConfigParam } from '@/utils/integrationGuideConfig' // fork：与使用教程同源
 
-export const OPENAI_CC_SWITCH_CODEX_MODEL = 'gpt-5.6-sol'
+export const OPENAI_CC_SWITCH_CODEX_MODEL = INTEGRATION_GUIDE_CODEX_MODEL // fork：与使用教程同源
 export const GROK_CC_SWITCH_MODEL = 'grok-4.7'
 
 export type CcSwitchClientType = 'claude' | 'gemini'
@@ -99,6 +100,9 @@ export function buildCcSwitchImportDeeplink(input: CcSwitchImportDeeplinkInput):
   if (config.model) {
     entries.splice(2, 0, ['model', config.model])
   }
+
+  const guideConfig = ccSwitchImportConfigParam(config.app, config.endpoint, input.apiKey) // fork：附带使用教程的配置
+  if (guideConfig) entries.push(['config', guideConfig]) // fork：附带使用教程的配置
 
   return `ccswitch://v1/import?${new URLSearchParams(entries).toString()}`
 }

@@ -245,7 +245,7 @@ func TestModelCatalogService_GetCatalog_UsesUserOverrideRate(t *testing.T) {
 func TestModelCatalogService_GetCatalog_KeepsTokenIntervalsWithoutFlattening(t *testing.T) {
 	svc := newModelCatalogTestService(t,
 		[]Group{
-			{ID: 10, Name: "Tiered", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard},
+			{ID: 10, Name: "Tiered", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard, LongContextPricingEnabled: true},
 		},
 		map[int64][]string{
 			10: {"claude-sonnet-4"},
@@ -522,6 +522,123 @@ func TestModelCatalogService_GetCatalog_LongContextBadgeFollowsGroupSwitch(t *te
 
 	require.True(t, findCatalogItem(t, result.Items, 10).PricingDetails.HasLongContextMultiplier)
 	require.False(t, findCatalogItem(t, result.Items, 20).PricingDetails.HasLongContextMultiplier)
+}
+
+// 长上下文阶梯要作为分档价格展示：超过阈值整单按长上下文价计费，卡片只给基础价会让
+// 用户低估长对话的费用。单价与扣费同源，并乘上分组倍率。
+func TestModelCatalogService_GetCatalog_ShowsLongContextTiers(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{
+			{
+				ID: 10, Name: "LongOn", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+				LongContextPricingEnabled: true,
+			},
+			{
+				ID: 20, Name: "LongOff", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 1, SubscriptionType: SubscriptionTypeStandard,
+				LongContextPricingEnabled: false,
+			},
+			{
+				ID: 30, Name: "LongOnDouble", Platform: PlatformAnthropic, Status: StatusActive,
+				RateMultiplier: 2, SubscriptionType: SubscriptionTypeStandard,
+				LongContextPricingEnabled: true,
+			},
+		},
+		map[int64][]string{
+			10: {"claude-sonnet-4"},
+			20: {"claude-sonnet-4"},
+			30: {"claude-sonnet-4"},
+		},
+		nil,
+		map[string]*LiteLLMModelPricing{
+			"claude-sonnet-4": {
+				InputCostPerToken:               3e-6,
+				OutputCostPerToken:              15e-6,
+				CacheReadInputTokenCost:         0.3e-6,
+				LongContextInputTokenThreshold:  200000,
+				LongContextInputCostMultiplier:  2,
+				LongContextOutputCostMultiplier: 1.5,
+			},
+		},
+		nil,
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 3)
+
+	on := findCatalogItem(t, result.Items, 10)
+	intervals := on.PricingDetails.Intervals
+	require.Len(t, intervals, 2)
+	require.Equal(t, 0, intervals[0].MinTokens)
+	require.NotNil(t, intervals[0].MaxTokens)
+	require.Equal(t, 200000, *intervals[0].MaxTokens)
+	require.Equal(t, "≤200K", intervals[0].TierLabel)
+	require.Equal(t, 200000, intervals[1].MinTokens)
+	require.Nil(t, intervals[1].MaxTokens)
+	require.Equal(t, ">200K", intervals[1].TierLabel)
+	requireMTok(t, 3, intervals[0].InputPerMTokUSD)
+	requireMTok(t, 15, intervals[0].OutputPerMTokUSD)
+	requireMTok(t, 0.3, intervals[0].CacheReadPerMTokUSD)
+	requireMTok(t, 6, intervals[1].InputPerMTokUSD)
+	requireMTok(t, 22.5, intervals[1].OutputPerMTokUSD)
+	requireMTok(t, 0.6, intervals[1].CacheReadPerMTokUSD)
+	// 基础价仍在，官方价对比与节省百分比照常计算。
+	requireMTok(t, 3, on.EffectivePricingUSD.InputPerMTokUSD)
+
+	// 分组关闭长上下文计价时扣费只按最低档，目录也不能出现第二档。
+	require.Empty(t, findCatalogItem(t, result.Items, 20).PricingDetails.Intervals)
+
+	doubled := findCatalogItem(t, result.Items, 30).PricingDetails.Intervals
+	require.Len(t, doubled, 2)
+	requireMTok(t, 6, doubled[0].InputPerMTokUSD)
+	requireMTok(t, 45, doubled[1].OutputPerMTokUSD)
+}
+
+// 渠道区间价扣费时同样乘分组倍率，展示价必须一致。
+func TestModelCatalogService_GetCatalog_ChannelIntervalsApplyGroupRate(t *testing.T) {
+	svc := newModelCatalogTestService(t,
+		[]Group{
+			{ID: 10, Name: "Tiered", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1.5, SubscriptionType: SubscriptionTypeStandard, LongContextPricingEnabled: true},
+			{ID: 20, Name: "TieredOff", Platform: PlatformAnthropic, Status: StatusActive, RateMultiplier: 1.5, SubscriptionType: SubscriptionTypeStandard},
+		},
+		map[int64][]string{10: {"claude-sonnet-4"}, 20: {"claude-sonnet-4"}},
+		nil,
+		map[string]*LiteLLMModelPricing{
+			"claude-sonnet-4": {InputCostPerToken: 3e-6, OutputCostPerToken: 15e-6},
+		},
+		[]ChannelModelPricing{{
+			Platform:    PlatformAnthropic,
+			Models:      []string{"claude-sonnet-4"},
+			BillingMode: BillingModeToken,
+			Intervals: []PricingInterval{
+				{MinTokens: 0, MaxTokens: testPtrInt(128000), InputPrice: testPtrFloat64(2e-6), OutputPrice: testPtrFloat64(10e-6)},
+				{MinTokens: 128000, MaxTokens: nil, InputPrice: testPtrFloat64(4e-6), OutputPrice: testPtrFloat64(20e-6)},
+			},
+		}},
+	)
+
+	result, err := svc.GetCatalog(context.Background(), 1)
+	require.NoError(t, err)
+	intervals := findCatalogItem(t, result.Items, 10).PricingDetails.Intervals
+	require.Len(t, intervals, 2)
+	requireMTok(t, 3, intervals[0].InputPerMTokUSD)
+	requireMTok(t, 15, intervals[0].OutputPerMTokUSD)
+	requireMTok(t, 6, intervals[1].InputPerMTokUSD)
+	requireMTok(t, 30, intervals[1].OutputPerMTokUSD)
+
+	// 分组关闭长上下文计价时扣费只取最低档：不分档，最低档就是基础价，卡片不能空着。
+	off := findCatalogItem(t, result.Items, 20)
+	require.Empty(t, off.PricingDetails.Intervals)
+	requireMTok(t, 3, off.EffectivePricingUSD.InputPerMTokUSD)
+	requireMTok(t, 15, off.EffectivePricingUSD.OutputPerMTokUSD)
+}
+
+func requireMTok(t *testing.T, want float64, got *float64) {
+	t.Helper()
+	require.NotNil(t, got)
+	require.InDelta(t, want, *got, 1e-9)
 }
 
 // 上下文窗口：客户端用量计的分母。来源不知道时必须整个缺省，

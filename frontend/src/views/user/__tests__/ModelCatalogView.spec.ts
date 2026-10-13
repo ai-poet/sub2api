@@ -536,3 +536,55 @@ describe('ModelCatalogView polish (fork)', () => {
     expect(fetchPublicCurrencyRates).not.toHaveBeenCalled()
   })
 })
+
+describe('ModelCatalogView long-context tiers (fork)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    authState.isAuthenticated = true
+    publicSettings.group_status_enabled = false
+    fetchBalanceCreditCnyPerUsd.mockResolvedValue({ balanceCreditCnyPerUsd: null, usdExchangeRate: null, error: '' })
+  })
+
+  it('shows every context tier with the billing threshold labels', async () => {
+    const tier = (min: number, max: number | null, label: string, input: number, output: number) => ({
+      min_tokens: min,
+      max_tokens: max,
+      tier_label: label,
+      input_per_mtok_usd: input,
+      output_per_mtok_usd: output,
+      cache_write_per_mtok_usd: null,
+      cache_read_per_mtok_usd: input / 10,
+      per_request_usd: null,
+      per_image_usd: null,
+    })
+    getCatalog.mockResolvedValue(catalogResponse([tokenItem({
+      pricing_details: {
+        supports_prompt_caching: true,
+        has_long_context_multiplier: true,
+        long_context_input_threshold: 200000,
+        intervals: [tier(0, 200000, '≤200K', 3, 15), tier(200000, null, '>200K', 6, 22.5)],
+        media_tiers: [],
+        media_unit: '',
+      },
+    })]))
+
+    const wrapper = await mountView()
+    const card = wrapper.find('[data-testid="catalog-model-card"]')
+
+    // 预览每档一行，标题用扣费阈值口径（>200K，不是 ≥200K）
+    expect(card.text()).toContain('≤200K')
+    expect(card.text()).toContain('>200K')
+    expect(card.text()).not.toContain('≥200K')
+    expect(card.text()).toContain('$6.0000')
+    expect(card.text()).toContain('$22.500')
+
+    await card.find('[data-testid="model-pricing-toggle"]').trigger('click')
+    const switchButtons = card.findAll('[data-testid="pricing-interval-switch"] button')
+    expect(switchButtons.map((button) => button.text())).toEqual(['≤200K', '>200K'])
+
+    await switchButtons[1].trigger('click')
+    const panel = card.find('[data-testid="model-pricing-panel"]')
+    expect(panel.text()).toContain('$6.0000')
+    expect(panel.text()).toContain('$0.6000')
+  })
+})
