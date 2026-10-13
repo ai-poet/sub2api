@@ -610,7 +610,7 @@
                     ></textarea>
                     <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <span class="inline-flex rounded-md bg-gray-100 px-2 py-1 dark:bg-dark-700">
-                        {{ t('admin.riskControl.inputApiKeyCount(engine)', { count: inputApiKeyCount(engine) }) }}
+                        {{ t('admin.riskControl.inputApiKeyCount', { count: inputApiKeyCount(engine) }) }}
                       </span>
                       <span v-if="engineDrafts[engine].api_key_configured" class="inline-flex rounded-md bg-gray-100 px-2 py-1 dark:bg-dark-700">
                         {{ t('admin.riskControl.storedApiKeyCount', { count: engineDrafts[engine].api_key_count }) }}
@@ -688,7 +688,7 @@
 
                       <div v-if="canToggleApiKeyRows(engine)" class="flex items-center justify-between gap-3 rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-xs text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400">
                         <span class="min-w-0 truncate">
-                          {{ apiKeyRowsExpanded[engine] ? t('admin.riskControl.apiKeyRowsExpanded[engine]', { count: apiKeyRows(engine).length }) : t('admin.riskControl.apiKeyRowsCollapsed', { count: hiddenApiKeyRowCount(engine) }) }}
+                          {{ apiKeyRowsExpanded[engine] ? t('admin.riskControl.apiKeyRowsExpanded', { count: apiKeyRows(engine).length }) : t('admin.riskControl.apiKeyRowsCollapsed', { count: hiddenApiKeyRowCount(engine) }) }}
                         </span>
                         <button
                           type="button"
