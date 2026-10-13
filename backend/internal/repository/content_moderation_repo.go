@@ -236,9 +236,10 @@ func (r *contentModerationRepository) CleanupExpiredLogs(ctx context.Context, hi
 	if r == nil || r.db == nil {
 		return result, nil
 	}
+	// fork：两级审计，未经复核确认的 TypeSafe 命中（action='unconfirmed'）按命中保留期清理。
 	hitExec, err := r.db.ExecContext(ctx, `
 DELETE FROM content_moderation_logs
-WHERE flagged = TRUE AND created_at < $1
+WHERE (flagged = TRUE OR action = 'unconfirmed') AND created_at < $1
 `, hitBefore)
 	if err != nil {
 		return nil, fmt.Errorf("delete expired hit content moderation logs: %w", err)
@@ -247,7 +248,7 @@ WHERE flagged = TRUE AND created_at < $1
 
 	nonHitExec, err := r.db.ExecContext(ctx, `
 DELETE FROM content_moderation_logs
-WHERE flagged = FALSE AND created_at < $1
+WHERE flagged = FALSE AND action <> 'unconfirmed' AND created_at < $1
 `, nonHitBefore)
 	if err != nil {
 		return nil, fmt.Errorf("delete expired non-hit content moderation logs: %w", err)
@@ -278,7 +279,9 @@ func buildContentModerationLogWhere(filter service.ContentModerationLogFilter) (
 	case "blocked", "block":
 		where = append(where, "l.action IN ('block', 'keyword_block', 'hash_block')")
 	case "pass", "allow":
-		where = append(where, "l.flagged = FALSE AND l.error = ''")
+		where = append(where, "l.flagged = FALSE AND l.error = '' AND l.action <> 'unconfirmed'") // fork：两级审计
+	case "unconfirmed": // fork：两级审计
+		where = append(where, "l.action = 'unconfirmed'")
 	case "error":
 		where = append(where, "l.error <> ''")
 	}

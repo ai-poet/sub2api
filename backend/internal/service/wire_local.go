@@ -92,11 +92,15 @@ func ProvideContentModerationService(
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
 	emailService *EmailService,
 	siteMessages *SiteMessageService,
+	translations *ContentTranslationService,
 ) *ContentModerationService {
 	svc := NewContentModerationService(settingRepo, repo, hashCache, groupRepo, userRepo, proxyRepo, authCacheInvalidator, emailService)
 	// 显式判空，避免 nil 指针包进非 nil 接口
 	if siteMessages != nil {
 		svc.SetSiteMessageNotifier(siteMessages)
+	}
+	if translations != nil {
+		svc.SetVerifierChatFallback(translations) // 两级审计：复核没配 Key 时借用内容翻译的接口
 	}
 	return svc
 }

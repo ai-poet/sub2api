@@ -174,20 +174,26 @@ func TestContentModerationEngineRuntimeSwitchKeepsInFlightSnapshot(t *testing.T)
 		SettingKeyContentModerationConfig: string(raw),
 	}}
 	s := runtimeCacheTestService(repo, time.Hour)
+	// fork：两级审计 —— 两个引擎都有 Key 时固定 TypeSafe 初审、OpenAI 复核，engine 字段不再决定谁生效。
 	old, err := s.loadRuntimeSnapshot(context.Background())
 	require.NoError(t, err)
-	engine := "typesafe"
+	require.Equal(t, "typesafe", old.config.Engine)
+	engine := "openai"
 	_, err = s.UpdateConfig(context.Background(), UpdateContentModerationConfigInput{Engine: &engine})
 	require.NoError(t, err)
 	current, err := s.loadRuntimeSnapshot(context.Background())
 	require.NoError(t, err)
-	require.Equal(t, "typesafe", current.config.Engine)
-	require.Equal(t, []string{"typesafe-key"}, current.config.apiKeys())
-	require.Equal(t, 0.91, current.config.Thresholds["sexual"])
-	require.Equal(t, "openai", old.config.Engine)
-	require.Equal(t, []string{"openai-key"}, old.config.apiKeys())
+	for _, snapshot := range []*contentModerationRuntimeSnapshot{old, current} {
+		require.Equal(t, "typesafe", snapshot.config.Engine)
+		require.Equal(t, []string{"typesafe-key"}, snapshot.config.apiKeys())
+		require.Equal(t, 0.91, snapshot.config.Thresholds["sexual"])
+		require.Equal(t, "openai", snapshot.config.verifier.Engine)
+		require.Equal(t, []string{"openai-key"}, snapshot.config.verifier.apiKeys())
+	}
 	status, err := s.GetStatus(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "typesafe", status.Engine)
 	require.Equal(t, scopedModerationKeyHash("typesafe-key", "typesafe"), status.APIKeyStatuses[0].KeyHash)
+	require.Equal(t, "openai", status.VerifierEngine)
+	require.Equal(t, scopedModerationKeyHash("openai-key"), status.VerifierAPIKeyStatuses[0].KeyHash)
 }

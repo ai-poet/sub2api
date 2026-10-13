@@ -465,7 +465,29 @@ export default {
       "siteMessageOnHit": "Send site message on hit",
       "siteMessageOnHitHint": "Send the user a site message (shown as a popup) when a request hits a risk rule, the account is auto-disabled, or the cyber-security policy blocks a request. Works without email settings. When off, content audit sends no site messages at all, including disable notices.",
       "viewSettings": "View settings",
-      "readonlyNotice": "Operator read-only: you can view the content audit settings, runtime status and audit records. Changing settings, testing keys, unbanning users and clearing flagged hashes are left to the admin. Audit engine keys are not shown to operators."
+      "readonlyNotice": "Operator read-only: you can view the content audit settings, runtime status and audit records. Changing settings, testing keys, unbanning users and clearing flagged hashes are left to the admin. Audit engine keys are not shown to operators.",
+      "pipelineTwoStage": "Audit flow: TypeSafe AI screens, an LLM verifies (any OpenAI-compatible chat model). Only verified hits count as violations, warn the user and block; cleared or failed verifications are only recorded.",
+      "verifierUnavailable": "The LLM verifier has no usable endpoint: no keys of its own and none to borrow from content translation. TypeSafe hits are only recorded as unconfirmed, with no count, warning or block.",
+      "verifierUsesTranslation": "The LLM verifier has no keys of its own and is borrowing the content translation endpoint and key; model, timeout and thresholds still come from here.",
+      "enginePipelineHint": "Both engines are active: TypeSafe screens and an LLM verifies its hits through OpenAI-compatible /chat/completions (e.g. DeepSeek), returning JSON scores per category. Without keys it borrows the content translation endpoint and key. Pick which engine's settings to edit here.",
+      "engineRole": {
+        "primary": "screening",
+        "verifier": "verification"
+      },
+      "result": {
+        "unconfirmed": "Screened, not verified"
+      },
+      "action": {
+        "unconfirmed": "Unconfirmed"
+      },
+      "verification": {
+        "title": "Verification",
+        "confirmed": "Confirmed",
+        "cleared": "Cleared",
+        "error": "Failed",
+        "unavailable": "Unavailable",
+        "viaTranslation": "via content translation endpoint"
+      }
     },
     "groups": {
       "columns": {

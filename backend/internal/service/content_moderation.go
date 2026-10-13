@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
@@ -10,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -59,8 +57,8 @@ const (
 	ContentModerationProtocolTypeSafeSystemOne = "typesafe_systemone"
 
 	defaultContentModerationBaseURL   = "https://api.openai.com"
-	defaultContentModerationModel     = "omni-moderation-latest"
-	defaultContentModerationTimeoutMS = 3000
+	defaultContentModerationModel     = "deepseek-v4.1-flash" // fork：对话模型审计
+	defaultContentModerationTimeoutMS = 15000                 // fork：对话模型审计
 	maxContentModerationTimeoutMS     = 30000
 	maxModerationInputRunes           = 12000
 	maxModerationExcerptRunes         = 240
@@ -176,6 +174,8 @@ type ContentModerationConfig struct {
 	// 当次不判定封号，且历史 cyber 行在 CountFlaggedByUserSince 中被排除。
 	// 默认 false（计入，与历史行为一致；旧配置 JSON 无此字段时反序列化为 false）。
 	CyberPolicyExcludeFromBanCount bool `json:"cyber_policy_exclude_from_ban_count"`
+
+	verifier *ContentModerationConfig // fork：两级审计，OpenAI 复核的生效配置，只在运行时存在
 }
 
 type ContentModerationConfigView struct {
@@ -478,6 +478,11 @@ type ContentModerationRuntimeStatus struct {
 	LastCleanupAt                *time.Time                      `json:"last_cleanup_at,omitempty"`
 	LastCleanupDeletedHit        int64                           `json:"last_cleanup_deleted_hit"`
 	LastCleanupDeletedNonHit     int64                           `json:"last_cleanup_deleted_non_hit"`
+
+	// fork：两级审计，复核引擎（LLM）的 Key 状态与接口来源（keys / translation，不可用时为空）
+	VerifierEngine         string                          `json:"verifier_engine"`
+	VerifierAPIKeyStatuses []ContentModerationAPIKeyStatus `json:"verifier_api_key_statuses"`
+	VerifierSource         string                          `json:"verifier_source"`
 }
 
 type ContentModerationUnbanUserResult struct {
@@ -514,6 +519,8 @@ type ContentModerationHashCache interface {
 }
 
 type ContentModerationService struct {
+	verifierFallback contentModerationChatFallback // fork：两级审计，复核没配 Key 时借用内容翻译的接口
+
 	settingRepo              SettingRepository
 	repo                     ContentModerationRepository
 	hashCache                ContentModerationHashCache
@@ -1118,6 +1125,10 @@ func (s *ContentModerationService) checkSync(ctx context.Context, input ContentM
 	}
 
 	flagged, highestCategory, highestScore := evaluateModerationScores(result.CategoryScores, cfg.Thresholds)
+	verification := s.verifyFlaggedModeration(ctx, cfg, content, flagged, trackPreBlock) // fork：两级审计
+	if verification != nil {
+		flagged = verification.confirmed() // fork：两级审计，复核确认才算命中
+	}
 	action := ContentModerationActionAllow
 	blocked := false
 	if allowBlock && !input.riskControlLogOnly && flagged && cfg.Mode == ContentModerationModePreBlock {
@@ -1143,9 +1154,12 @@ func (s *ContentModerationService) checkSync(ctx context.Context, input ContentM
 		"highest_score", highestScore,
 		"latency_ms", latency,
 		"queue_delay_ms", queueDelay)
-	if flagged || cfg.RecordNonHits {
+	if flagged || cfg.RecordNonHits || verification != nil {
 		log := s.buildLog(input, cfg, action, flagged, highestCategory, highestScore, result.CategoryScores, content.ExcerptText(), &latency, queueDelay, "")
-		log.EngineMeta = result.EngineMeta
+		log.EngineMeta = withVerification(result.EngineMeta, verification) // fork：两级审计
+		if verification != nil && !flagged {
+			log.Action = ContentModerationActionUnconfirmed // fork：两级审计
+		}
 		if queueDelay == nil && cfg.Mode == ContentModerationModePreBlock {
 			s.enqueueRecord(input, cfg, log, hashText, flagged, flagged)
 		} else {
@@ -1418,7 +1432,7 @@ func (s *ContentModerationService) GetStatus(ctx context.Context) (*ContentModer
 	if err != nil {
 		return nil, err
 	}
-	cfg = cfg.effectiveEngine(cfg.Engine)
+	cfg = cfg.moderationPipeline() // fork：两级审计
 	riskEnabled := s.isRiskControlEnabled(ctx)
 	active := int(s.asyncActive.Load())
 	if active < 0 {
@@ -1484,6 +1498,9 @@ func (s *ContentModerationService) GetStatus(ctx context.Context) (*ContentModer
 		PreBlockAPIKeyTotalCalls:     s.preBlockAPIKeyTotalCalls(cfg.apiKeys(), cfg.Engine),
 		PreBlockAPIKeyLoads:          s.preBlockAPIKeyLoads(cfg.apiKeys(), cfg.Engine),
 		APIKeyStatuses:               s.apiKeyStatuses(cfg.apiKeys(), cfg.Engine),
+		VerifierEngine:               cfg.verifierEngine(),                                                    // fork：两级审计
+		VerifierAPIKeyStatuses:       s.apiKeyStatuses(cfg.verifier.apiKeys(), ContentModerationEngineOpenAI), // fork：两级审计
+		VerifierSource:               s.verifierSource(ctx, cfg),                                              // fork：两级审计
 		FlaggedHashCount:             flaggedHashCount,
 		LastCleanupAt:                lastCleanupAt,
 		LastCleanupDeletedHit:        s.lastCleanupDeletedHit.Load(),
@@ -1641,7 +1658,7 @@ func (s *ContentModerationService) refreshRuntimeSnapshot(ctx context.Context) (
 	if err != nil {
 		return nil, err
 	}
-	cfg = cfg.effectiveEngine(cfg.Engine)
+	cfg = cfg.moderationPipeline() // fork：两级审计
 	snapshot := &contentModerationRuntimeSnapshot{
 		allowlistedUsers:   allowlistedUsers,
 		riskControlEnabled: values[SettingKeyRiskControlEnabled] == "true",
@@ -1665,7 +1682,7 @@ func (s *ContentModerationService) replaceRuntimeConfig(cfg *ContentModerationCo
 	if !hasSnapshot {
 		return
 	}
-	config := cfg.effectiveEngine(cfg.Engine)
+	config := cfg.moderationPipeline() // fork：两级审计
 	keywordMatcher := newContentModerationKeywordMatcher(cfg.BlockedKeywords)
 	configDigest := sha256.Sum256(raw)
 
@@ -1795,56 +1812,8 @@ func (s *ContentModerationService) callModerationOnceWithInput(ctx context.Conte
 	if cfg.Engine == ContentModerationEngineTypeSafe {
 		return s.callTypeSafeModeration(ctx, cfg, apiKey, input, httpStatus)
 	}
-	base := strings.TrimRight(cfg.BaseURL, "/")
-	endpoint, err := url.JoinPath(base, "/v1/moderations")
-	if err != nil {
-		return nil, err
-	}
-	payload := moderationAPIRequest{
-		Model: cfg.Model,
-		Input: input,
-	}
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-	timeout := time.Duration(cfg.TimeoutMS) * time.Millisecond
-	reqCtx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(reqCtx, http.MethodPost, endpoint, bytes.NewReader(raw))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client, err := s.moderationHTTPClient(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	if httpStatus != nil {
-		*httpStatus = resp.StatusCode
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		return nil, fmt.Errorf("moderation api status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
-	}
-	var out moderationAPIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, err
-	}
-	if len(out.Results) == 0 {
-		return nil, errors.New("moderation api returned empty results")
-	}
-	out.Results[0].EngineMeta = &ContentModerationEngineMeta{Engine: ContentModerationEngineOpenAI, Model: out.Model}
-	return &out.Results[0], nil
+	// fork：OpenAI 引擎改走 OpenAI 兼容的 /chat/completions（content_moderation_chat.go）
+	return s.callChatModeration(ctx, cfg, apiKey, input, httpStatus)
 }
 
 // moderationProxyURLCacheEntry 缓存 proxy_id 到代理 URL 的解析结果，
@@ -2199,6 +2168,7 @@ func cloneContentModerationConfig(cfg *ContentModerationConfig) *ContentModerati
 		Type:   cfg.ModelFilter.Type,
 		Models: append([]string(nil), cfg.ModelFilter.Models...),
 	}
+	clone.verifier = cloneContentModerationConfig(cfg.verifier) // fork：两级审计
 	return &clone
 }
 
@@ -2230,6 +2200,7 @@ func (cfg *ContentModerationConfig) normalize() {
 	if cfg.TimeoutMS > maxContentModerationTimeoutMS {
 		cfg.TimeoutMS = maxContentModerationTimeoutMS
 	}
+	cfg.migrateLegacyChatModeration() // fork：对话模型审计
 	if cfg.SampleRate < 0 {
 		cfg.SampleRate = 0
 	}
@@ -2736,11 +2707,6 @@ func buildContentModerationTestAuditResult(result *moderationAPIResult, threshol
 	}
 }
 
-type moderationAPIRequest struct {
-	Model string `json:"model"`
-	Input any    `json:"input"`
-}
-
 type moderationAPIInputPart struct {
 	Type     string                    `json:"type"`
 	Text     string                    `json:"text,omitempty"`
@@ -2749,11 +2715,6 @@ type moderationAPIInputPart struct {
 
 type moderationAPIImageURLRef struct {
 	URL string `json:"url"`
-}
-
-type moderationAPIResponse struct {
-	Model   string                `json:"model"`
-	Results []moderationAPIResult `json:"results"`
 }
 
 type moderationAPIResult struct {

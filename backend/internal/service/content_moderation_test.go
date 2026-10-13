@@ -461,7 +461,7 @@ func TestContentModerationCheck_PreBlockKeywordHitSkipsUpstreamCall(t *testing.T
 	upstreamCalled := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upstreamCalled = true
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{}}})
+		writeChatModerationScores(w, "", nil)
 	}))
 	defer server.Close()
 
@@ -512,7 +512,7 @@ func TestContentModerationCheck_KeywordsIgnoredInObserveMode(t *testing.T) {
 	upstreamHits := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upstreamHits++
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{CategoryScores: map[string]float64{"sexual": 0.1}}}})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.1})
 	}))
 	defer server.Close()
 
@@ -557,7 +557,7 @@ func TestContentModerationCheck_KeywordOnlyStrategySkipsAPIOnMiss(t *testing.T) 
 	upstreamCalled := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upstreamCalled = true
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{CategoryScores: map[string]float64{"sexual": 0.99}}}})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.99})
 	}))
 	defer server.Close()
 
@@ -604,7 +604,7 @@ func TestContentModerationCheck_APIOnlyStrategyIgnoresKeywordList(t *testing.T) 
 	upstreamCalled := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upstreamCalled = true
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{CategoryScores: map[string]float64{"sexual": 0.1}}}})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.1})
 	}))
 	defer server.Close()
 
@@ -1011,15 +1011,11 @@ func TestExtractContentModerationInput_OpenAIResponsesCodexPayloadUsesLastUserMe
 }
 
 func TestContentModerationCheck_OpenAIResponsesRecordsNonHitForCodexPayload(t *testing.T) {
-	var moderationRequest moderationAPIRequest
+	var moderationInput string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v1/moderations", r.URL.Path)
-		require.NoError(t, json.NewDecoder(r.Body).Decode(&moderationRequest))
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{
-			Results: []moderationAPIResult{{
-				CategoryScores: map[string]float64{"sexual": 0.01},
-			}},
-		})
+		require.Equal(t, "/v1/chat/completions", r.URL.Path)
+		moderationInput = chatModerationAuditedText(t, r)
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.01})
 	}))
 	defer server.Close()
 
@@ -1071,19 +1067,15 @@ func TestContentModerationCheck_OpenAIResponsesRecordsNonHitForCodexPayload(t *t
 	require.Equal(t, ContentModerationActionAllow, logs[0].Action)
 	require.Equal(t, "/responses", logs[0].Endpoint)
 	require.Equal(t, "last user prompt", logs[0].InputExcerpt)
-	require.Equal(t, "last user prompt", moderationRequest.Input)
+	require.Equal(t, "last user prompt", moderationInput)
 }
 
 func TestContentModerationCheck_PreBlockBlocksCodexResponsesLatestUserInput(t *testing.T) {
-	var moderationRequest moderationAPIRequest
+	var moderationInput string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v1/moderations", r.URL.Path)
-		require.NoError(t, json.NewDecoder(r.Body).Decode(&moderationRequest))
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{
-			Results: []moderationAPIResult{{
-				CategoryScores: map[string]float64{"sexual": 0.9},
-			}},
-		})
+		require.Equal(t, "/v1/chat/completions", r.URL.Path)
+		moderationInput = chatModerationAuditedText(t, r)
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.9})
 	}))
 	defer server.Close()
 
@@ -1140,7 +1132,7 @@ func TestContentModerationCheck_PreBlockBlocksCodexResponsesLatestUserInput(t *t
 	require.Equal(t, ContentModerationActionBlock, logs[0].Action)
 	require.Equal(t, ContentModerationModePreBlock, logs[0].Mode)
 	require.Equal(t, "latest blocked prompt", logs[0].InputExcerpt)
-	require.Equal(t, "latest blocked prompt", moderationRequest.Input)
+	require.Equal(t, "latest blocked prompt", moderationInput)
 }
 
 func TestContentModerationStatusTracksPreBlockSyncMetrics(t *testing.T) {
@@ -1152,11 +1144,7 @@ func TestContentModerationStatusTracksPreBlockSyncMetrics(t *testing.T) {
 			score = 0.9
 		}
 		time.Sleep(5 * time.Millisecond)
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{
-			Results: []moderationAPIResult{{
-				CategoryScores: map[string]float64{"sexual": score},
-			}},
-		})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": score})
 	}))
 	defer server.Close()
 
@@ -1203,11 +1191,7 @@ func TestContentModerationStatusTracksPreBlockSyncMetrics(t *testing.T) {
 
 func TestContentModerationStatusTracksPreBlockAPIKeyLoad(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{
-			Results: []moderationAPIResult{{
-				CategoryScores: map[string]float64{"sexual": 0.01},
-			}},
-		})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.01})
 	}))
 	defer server.Close()
 
@@ -1470,11 +1454,7 @@ func TestContentModerationCheck_PreHashUsesRedisHashCache(t *testing.T) {
 
 func TestContentModerationCheck_HashBlockLogsDoNotIncreaseNextViolationCount(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{
-			Results: []moderationAPIResult{{
-				CategoryScores: map[string]float64{"sexual": 0.9},
-			}},
-		})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.9})
 	}))
 	defer server.Close()
 
@@ -1619,11 +1599,7 @@ func TestContentModerationCheck_PreBlockFlaggedWritesRedisHashCache(t *testing.T
 	requestCount := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount++
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{
-			Results: []moderationAPIResult{{
-				CategoryScores: map[string]float64{"sexual": 0.9},
-			}},
-		})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.9})
 	}))
 	defer server.Close()
 
@@ -1736,11 +1712,7 @@ func TestContentModerationClearFlaggedInputHashesAndStatusCount(t *testing.T) {
 
 func TestContentModerationCheck_AsyncFlaggedWritesRedisHashCache(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{
-			Results: []moderationAPIResult{{
-				CategoryScores: map[string]float64{"sexual": 0.9},
-			}},
-		})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.9})
 	}))
 	defer server.Close()
 

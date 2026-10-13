@@ -7,6 +7,20 @@ export interface ModerationEngineMeta {
   model: string
   rules_version: string
   skipped_images: number
+  verification?: ModerationVerification | null // fork：两级审计
+}
+// fork：两级审计 —— TypeSafe 初审命中后 OpenAI 复核的结果
+export type ModerationVerificationStatus = 'confirmed' | 'cleared' | 'error' | 'unavailable'
+export interface ModerationVerification {
+  status: ModerationVerificationStatus
+  engine: ModerationEngine
+  source?: 'keys' | 'translation' // fork：复核借用内容翻译的接口时为 translation
+  model?: string
+  highest_category?: string
+  highest_score?: number
+  category_scores?: Record<string, number>
+  latency_ms: number
+  error?: string
 }
 export type KeywordBlockingMode = 'keyword_only' | 'keyword_and_api' | 'api_only'
 export type ContentModerationModelFilterType = 'all' | 'include' | 'exclude'
@@ -173,6 +187,10 @@ export interface ContentModerationRuntimeStatus {
   last_cleanup_at?: string
   last_cleanup_deleted_hit: number
   last_cleanup_deleted_non_hit: number
+  // fork：两级审计，复核引擎；只用 OpenAI 单级审计时为空
+  verifier_engine?: ModerationEngine | ''
+  verifier_api_key_statuses?: ContentModerationAPIKeyStatus[]
+  verifier_source?: 'keys' | 'translation' | ''
 }
 
 export interface ContentModerationAPIKeyLoad {

@@ -28,7 +28,14 @@
         </p>
 
         <p class="text-sm text-gray-600 dark:text-gray-300" data-test="active-audit-engine">
-          {{ t('admin.riskControl.activeEngine', { engine: engineLabel(status?.engine ?? savedEngine) }) }}
+          <!-- fork：两级审计 -->
+          {{ status?.verifier_engine ? t('admin.riskControl.pipelineTwoStage') : t('admin.riskControl.activeEngine', { engine: engineLabel(status?.engine ?? savedEngine) }) }}
+        </p>
+        <p v-if="verifierUnavailable" class="text-sm text-amber-700 dark:text-amber-300" role="status" data-test="verifier-unavailable">
+          {{ t('admin.riskControl.verifierUnavailable') }}
+        </p>
+        <p v-else-if="status?.verifier_source === 'translation'" class="text-sm text-gray-500 dark:text-gray-400" data-test="verifier-uses-translation">
+          {{ t('admin.riskControl.verifierUsesTranslation') }}
         </p>
         <p v-if="status?.enabled && status.risk_control_enabled && status.mode !== 'off' && status.pre_block_api_key_available_count === 0" class="text-sm text-amber-700 dark:text-amber-300" role="status">
           {{ t('admin.riskControl.engineUnavailable') }}
@@ -417,6 +424,7 @@
               <div>
                 <label class="input-label">{{ t('admin.riskControl.engine') }}</label>
                 <Select data-test="audit-engine-select" :model-value="configForm.engine" :options="engineOptions" :disabled="apiKeyTesting || saving" @update:model-value="switchEngine" />
+                <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.enginePipelineHint') }}</p>
               </div>
               <div v-if="configForm.engine === 'typesafe'" class="lg:col-span-2 text-sm text-amber-700 dark:text-amber-300" role="status">
                 {{ t('admin.riskControl.typeSafeNotice') }}
@@ -427,7 +435,7 @@
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.model') }}</label>
-                <input v-model.trim="configForm.model" data-test="audit-model" type="text" class="input" :placeholder="configForm.engine === 'typesafe' ? 'jev-latest' : 'omni-moderation-latest'" />
+                <input v-model.trim="configForm.model" data-test="audit-model" type="text" class="input" :placeholder="configForm.engine === 'typesafe' ? 'jev-latest' : 'deepseek-v4.1-flash'" />
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.timeoutMs') }}</label>
@@ -1106,6 +1114,17 @@
             <template v-if="inputDetailRow.engine_meta">
               {{ engineLabel(inputDetailRow.engine_meta.engine) }} · {{ inputDetailRow.engine_meta.model || '-' }} · {{ inputDetailRow.engine_meta.rules_version || '-' }}
               <span v-if="inputDetailRow.engine_meta.skipped_images"> · {{ t('admin.riskControl.skippedImages', { count: inputDetailRow.engine_meta.skipped_images }) }}</span>
+              <span v-if="inputDetailRow.engine_meta.verification" class="block" data-test="audit-verification">
+                <!-- fork：两级审计 -->
+                <span class="font-medium">{{ t('admin.riskControl.verification.title') }}: </span>
+                {{ engineLabel(inputDetailRow.engine_meta.verification.engine) }} · {{ inputDetailRow.engine_meta.verification.model || '-' }} ·
+                <template v-if="inputDetailRow.engine_meta.verification.source === 'translation'">{{ t('admin.riskControl.verification.viaTranslation') }} ·</template>
+                {{ t(`admin.riskControl.verification.${inputDetailRow.engine_meta.verification.status}`) }}
+                <template v-if="inputDetailRow.engine_meta.verification.highest_category">
+                  · {{ inputDetailRow.engine_meta.verification.highest_category }} {{ (inputDetailRow.engine_meta.verification.highest_score ?? 0).toFixed(4) }}
+                </template>
+                <template v-if="inputDetailRow.engine_meta.verification.error"> · {{ inputDetailRow.engine_meta.verification.error }}</template>
+              </span>
             </template>
             <template v-else>{{ ['cyber_policy', 'keyword_block', 'hash_block'].includes(inputDetailRow.action) ? '-' : t('admin.riskControl.legacyAuditSource') }}</template>
           </div>
@@ -1274,8 +1293,18 @@ const moderationTestImages = ref<string[]>([])
 const moderationTestResult = ref<ContentModerationTestAuditResult | null>(null)
 const inputDetailRow = ref<ContentModerationLog | null>(null)
 const savedEngine = ref<ModerationEngine>('openai')
-const engineOptions: SelectOption[] = [{ value: 'openai', label: 'OpenAI' }, { value: 'typesafe', label: 'TypeSafe AI' }]
-const engineLabel = (engine: ModerationEngine) => engine === 'typesafe' ? 'TypeSafe AI' : 'OpenAI'
+// fork：两级审计 —— 两个引擎同时生效（TypeSafe 初审、LLM 复核），这里只选要编辑哪一个的配置
+const engineOptions = computed<SelectOption[]>(() => [
+  { value: 'typesafe', label: `TypeSafe AI · ${t('admin.riskControl.engineRole.primary')}` },
+  { value: 'openai', label: `LLM · ${t('admin.riskControl.engineRole.verifier')}` },
+])
+const verifierUnavailable = computed(() => {
+  const current = status.value
+  if (!current?.verifier_engine || !current.enabled || !current.risk_control_enabled || current.mode === 'off') return false
+  if (current.verifier_source === 'translation') return false
+  return !(current.verifier_api_key_statuses ?? []).some(item => item.status !== 'frozen')
+})
+const engineLabel = (engine: ModerationEngine) => engine === 'typesafe' ? 'TypeSafe AI' : 'LLM' // fork：对话模型审计
 let statusTimer: number | null = null
 
 const configForm = reactive({
@@ -1283,7 +1312,7 @@ const configForm = reactive({
   enabled: false,
   mode: 'pre_block' as ModerationMode,
   base_url: 'https://api.openai.com',
-  model: 'omni-moderation-latest',
+  model: 'deepseek-v4.1-flash', // fork：对话模型审计
   proxy_id: null as number | null,
   api_keys_text: '',
   api_key_configured: false,
@@ -1293,7 +1322,7 @@ const configForm = reactive({
   api_key_statuses: [] as ContentModerationAPIKeyStatus[],
   api_keys_mode: 'append' as APIKeysWriteMode,
   clear_api_key: false,
-  timeout_ms: 3000,
+  timeout_ms: 15000,
   retry_count: 2,
   sample_rate: 100,
   all_groups: true,
@@ -1344,12 +1373,12 @@ function switchEngine(value: string | number | boolean | null) {
 function engineDraftFromConfig(config: ContentModerationConfig | undefined, engine: ModerationEngine): EngineDraft {
   return {
     base_url: config?.base_url || (engine === 'typesafe' ? 'https://api.typesafe.ai' : 'https://api.openai.com'),
-    model: config?.model || (engine === 'typesafe' ? 'jev-latest' : 'omni-moderation-latest'),
+    model: config?.model || (engine === 'typesafe' ? 'jev-latest' : 'deepseek-v4.1-flash'),
     proxy_id: config?.proxy_id ?? null, api_keys_text: '', api_key_configured: config?.api_key_configured ?? false,
     api_key_masked: config?.api_key_masked ?? '', api_key_count: config?.api_key_count ?? 0,
     api_key_masks: [...(config?.api_key_masks ?? [])], api_key_statuses: [...(config?.api_key_statuses ?? [])],
     api_keys_mode: 'append', clear_api_key: false, pendingDeletes: [],
-    timeout_ms: config?.timeout_ms ?? 3000, retry_count: config?.retry_count ?? 2,
+    timeout_ms: config?.timeout_ms ?? (engine === 'typesafe' ? 3000 : 15000), retry_count: config?.retry_count ?? 2,
     thresholds: riskThresholdsFromConfig(config?.thresholds),
   }
 }
@@ -1492,6 +1521,7 @@ const resultOptions = computed<SelectOption[]>(() => [
   { value: '', label: t('admin.riskControl.result.all') },
   { value: 'hit', label: t('admin.riskControl.result.hit') },
   { value: 'blocked', label: t('admin.riskControl.result.blocked') },
+  { value: 'unconfirmed', label: t('admin.riskControl.result.unconfirmed') }, // fork：两级审计
   { value: 'pass', label: t('admin.riskControl.result.pass') },
   { value: 'error', label: t('admin.riskControl.result.error') },
 ])
@@ -1575,9 +1605,12 @@ const storedApiKeyTestButtonText = computed(() => {
 })
 
 const savedApiKeyRows = computed<ContentModerationAPIKeyStatus[]>(() => {
-  const rows = (status.value?.engine ?? 'openai') === configForm.engine && status.value?.api_key_statuses?.length
-    ? status.value.api_key_statuses
-    : configForm.api_key_statuses
+  const verifierRows = status.value?.verifier_engine === configForm.engine ? status.value?.verifier_api_key_statuses : undefined // fork：两级审计
+  const rows = verifierRows?.length
+    ? verifierRows
+    : (status.value?.engine ?? 'openai') === configForm.engine && status.value?.api_key_statuses?.length
+      ? status.value.api_key_statuses
+      : configForm.api_key_statuses
   return Array.isArray(rows) ? rows : []
 })
 
@@ -1809,7 +1842,7 @@ function applyConfig(config: ContentModerationConfig) {
   configForm.enabled = config.enabled
   configForm.mode = config.mode
   configForm.base_url = config.base_url || 'https://api.openai.com'
-  configForm.model = config.model || 'omni-moderation-latest'
+  configForm.model = config.model || 'deepseek-v4.1-flash'
   configForm.proxy_id = config.proxy_id || null
   configForm.api_keys_text = ''
   configForm.api_key_configured = config.api_key_configured
@@ -1822,7 +1855,7 @@ function applyConfig(config: ContentModerationConfig) {
   pendingDeleteApiKeyHashes.value = []
   testedApiKeyStatuses.value = []
   apiKeyRowsExpanded.value = false
-  configForm.timeout_ms = config.timeout_ms || 3000
+  configForm.timeout_ms = config.timeout_ms || 15000
   configForm.retry_count = config.retry_count ?? 2
   configForm.sample_rate = config.sample_rate ?? 100
   configForm.all_groups = config.all_groups
@@ -1916,7 +1949,7 @@ async function saveConfig() {
       model: configForm.model,
       // 后端语义：0 清除代理（直连），>0 指定代理
       proxy_id: configForm.proxy_id ?? 0,
-      timeout_ms: Number(configForm.timeout_ms) || 3000,
+      timeout_ms: Number(configForm.timeout_ms) || 15000,
       retry_count: Number(configForm.retry_count) || 0,
       sample_rate: Number(configForm.sample_rate) || 0,
       all_groups: configForm.all_groups,
@@ -2118,7 +2151,7 @@ async function testApiKeys(useInputKeys: boolean) {
       api_keys: keys,
       base_url: configForm.base_url,
       model: configForm.model,
-      timeout_ms: Number(configForm.timeout_ms) || 3000,
+      timeout_ms: Number(configForm.timeout_ms) || 15000,
       // 与保存语义一致：0 强制直连，>0 指定代理，确保测试与实际审计走同一条链路
       proxy_id: configForm.proxy_id ?? 0,
       prompt: moderationTestPrompt.value,
@@ -2259,6 +2292,7 @@ function resultLabel(row: ContentModerationLog): string {
   if (row.action === 'cyber_policy') return t('admin.riskControl.action.cyberPolicy')
   if (row.action === 'keyword_block') return t('admin.riskControl.action.keywordBlock')
   if (row.action === 'block') return t('admin.riskControl.action.block')
+  if (row.action === 'unconfirmed') return t('admin.riskControl.action.unconfirmed') // fork：两级审计
   if (row.action === 'error' || row.error) return t('admin.riskControl.action.error')
   if (row.flagged) return t('admin.riskControl.result.hit')
   return t('admin.riskControl.result.pass')
@@ -2266,6 +2300,7 @@ function resultLabel(row: ContentModerationLog): string {
 
 function resultBadgeClass(row: ContentModerationLog): string {
   if (row.action === 'block' || row.action === 'keyword_block' || row.action === 'cyber_policy') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+  if (row.action === 'unconfirmed') return 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300' // fork：两级审计
   if (row.action === 'error' || row.error) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
   if (row.flagged) return 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
   return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'

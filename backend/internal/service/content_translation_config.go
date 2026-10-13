@@ -215,3 +215,24 @@ func contentTranslationLoopbackBase(cfg *config.Config) string {
 	}
 	return "http://" + net.JoinHostPort(host, strconv.Itoa(port))
 }
+
+// ModerationChatEndpoint 内容翻译所配的对话接口地址与 Key，供内容审计的 LLM 复核在没配自己的
+// Key 时复用（fork：两级审计）。只借地址和 Key，模型由审计配置决定；不要求翻译功能开启，
+// Key 的校验与翻译调用一致（启用中、属于 admin）。
+func (s *ContentTranslationService) ModerationChatEndpoint(ctx context.Context) (string, string, error) {
+	if s == nil {
+		return "", "", ErrContentTranslationAPIKeyRequired
+	}
+	cfg, err := s.loadConfigFromStore(ctx)
+	if err != nil {
+		return "", "", err
+	}
+	if cfg.Model == "" {
+		cfg.Model = "-" // 复核不用翻译模型，只为通过 resolveCredentials 的模型检查
+	}
+	creds, err := s.resolveCredentials(ctx, cfg)
+	if err != nil {
+		return "", "", err
+	}
+	return strings.TrimSuffix(creds.Endpoint, "/v1/chat/completions"), creds.APIKey, nil
+}

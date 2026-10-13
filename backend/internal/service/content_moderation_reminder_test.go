@@ -58,16 +58,11 @@ func TestContentModerationCheck_ReminderKeywordModes(t *testing.T) {
 					var calls atomic.Int32
 					server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						calls.Add(1)
-						var payload struct {
-							Input string `json:"input"`
-						}
-						if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-							t.Error(err)
-						}
+						payload := struct{ Input string }{Input: chatModerationAuditedText(t, r)}
 						if payload.Input != semantic.Text {
 							t.Errorf("semantic input changed: %q != %q", payload.Input, semantic.Text)
 						}
-						_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{}}})
+						writeChatModerationScores(w, "", nil)
 					}))
 					defer server.Close()
 					cfg := defaultContentModerationConfig()
@@ -136,16 +131,11 @@ func TestContentModerationCheck_ReminderPolicyPreserved(t *testing.T) {
 			var calls atomic.Int32
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				calls.Add(1)
-				var payload struct {
-					Input string `json:"input"`
-				}
-				if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-					t.Error(err)
-				}
+				payload := struct{ Input string }{Input: chatModerationAuditedText(t, r)}
 				if payload.Input != "safe text" {
 					t.Errorf("unexpected semantic input: %q", payload.Input)
 				}
-				_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{}}})
+				writeChatModerationScores(w, "", nil)
 			}))
 			defer server.Close()
 			cfg := defaultContentModerationConfig()

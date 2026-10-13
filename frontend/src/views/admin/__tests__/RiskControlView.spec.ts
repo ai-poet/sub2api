@@ -605,4 +605,51 @@ describe('admin RiskControlView', () => {
     expect(unbanUser).not.toHaveBeenCalled()
     wrapper.unmount()
   })
+
+  // fork：两级审计
+  it('shows the two-stage pipeline and unconfirmed TypeSafe hits with their verification', async () => {
+    getConfig.mockResolvedValue(baseConfig())
+    getStatus.mockResolvedValue({ ...runtimeStatus(), engine: 'typesafe', verifier_engine: 'openai', verifier_api_key_statuses: [] })
+    listLogs.mockResolvedValue({
+      items: [{
+        id: 2, request_id: 'req-2', user_id: 9, user_email: 'user@example.com', api_key_id: 3, api_key_name: 'k',
+        group_id: 7, group_name: 'vip', endpoint: '/v1/messages', provider: 'openai', model: 'gpt-5.6', mode: 'pre_block',
+        action: 'unconfirmed', flagged: false, highest_category: 'sexual', highest_score: 0.97, matched_keyword: '',
+        category_scores: {}, threshold_snapshot: {}, input_excerpt: 'screened input', upstream_latency_ms: 10, error: '',
+        violation_count: 0, auto_banned: false, email_sent: false, user_status: 'active', queue_delay_ms: null,
+        created_at: '2026-10-13T00:00:00Z',
+        engine_meta: {
+          engine: 'typesafe', model: 'jev-test', rules_version: 'content-audit-13-zh-v1', skipped_images: 0,
+          verification: { status: 'cleared', engine: 'openai', model: 'omni-moderation-test', highest_category: 'sexual', highest_score: 0.01, latency_ms: 30 },
+        },
+      }],
+      total: 1, page: 1, page_size: 20, pages: 1,
+    })
+
+    const wrapper = mount(RiskControlView, { global: { stubs: { AppLayout: AppLayoutStub, BaseDialog: BaseDialogStub, Icon: true, Select: true, Toggle: true, Pagination: true, ModelWhitelistSelector: ModelWhitelistSelectorStub, ProxySelector: true } } })
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="active-audit-engine"]').text()).toContain('admin.riskControl.pipelineTwoStage')
+    expect(wrapper.find('[data-test="verifier-unavailable"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('admin.riskControl.action.unconfirmed')
+
+    await findButtonByText(wrapper, 'screened input').trigger('click')
+    const verification = wrapper.get('[data-test="audit-verification"]').text()
+    expect(verification).toContain('omni-moderation-test')
+    expect(verification).toContain('admin.riskControl.verification.cleared')
+    expect(verification).toContain('sexual 0.0100')
+    wrapper.unmount()
+  })
+
+  it('treats a verifier borrowing the content translation endpoint as available', async () => {
+    getConfig.mockResolvedValue(baseConfig())
+    getStatus.mockResolvedValue({ ...runtimeStatus(), engine: 'typesafe', verifier_engine: 'openai', verifier_api_key_statuses: [], verifier_source: 'translation' })
+
+    const wrapper = mount(RiskControlView, { global: { stubs: { AppLayout: AppLayoutStub, BaseDialog: BaseDialogStub, Icon: true, Select: true, Toggle: true, Pagination: true, ModelWhitelistSelector: ModelWhitelistSelectorStub, ProxySelector: true } } })
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="verifier-unavailable"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="verifier-uses-translation"]').text()).toContain('admin.riskControl.verifierUsesTranslation')
+    wrapper.unmount()
+  })
 })

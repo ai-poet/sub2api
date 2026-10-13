@@ -465,7 +465,29 @@ export default {
       "siteMessageOnHit": "命中时发送站内信",
       "siteMessageOnHitHint": "命中风控规则、账户被自动封禁或触发网络安全策略拦截时，给用户发站内信（默认弹窗提醒），不依赖邮件配置；关闭后内容审计不再发送任何站内信，包括封禁通知。",
       "viewSettings": "查看配置",
-      "readonlyNotice": "运维管理员只读：可以查看内容审计的配置、运行状态与审核记录；修改配置、测试密钥、解封用户和清理命中哈希需由管理员操作。审核引擎密钥不对运维显示。"
+      "readonlyNotice": "运维管理员只读：可以查看内容审计的配置、运行状态与审核记录；修改配置、测试密钥、解封用户和清理命中哈希需由管理员操作。审核引擎密钥不对运维显示。",
+      "pipelineTwoStage": "审计流程：TypeSafe AI 初审 → LLM 复核（OpenAI 兼容的对话模型）。复核确认才计入违规次数、警告用户和拦截；复核放行或失败只记录。",
+      "verifierUnavailable": "LLM 复核没有可用的接口：既没配 Key，也借不到内容翻译的接口与 Key。TypeSafe 的命中只记录为「未确认」，不计次、不警告也不拦截。",
+      "verifierUsesTranslation": "LLM 复核没有单独配 Key，正在复用「内容翻译」的接口地址与 Key；模型、超时与阈值仍按这里的配置。",
+      "enginePipelineHint": "两个引擎同时生效：TypeSafe 初审，命中后交给 LLM 复核。LLM 复核走 OpenAI 兼容的 /chat/completions（如 DeepSeek），按类别返回 JSON 分数；不填 Key 时复用内容翻译的接口与 Key。这里只选择要编辑哪个引擎的配置。",
+      "engineRole": {
+        "primary": "初审",
+        "verifier": "复核"
+      },
+      "result": {
+        "unconfirmed": "初审命中未确认"
+      },
+      "action": {
+        "unconfirmed": "未确认"
+      },
+      "verification": {
+        "title": "复核",
+        "confirmed": "已确认",
+        "cleared": "复核放行",
+        "error": "复核失败",
+        "unavailable": "复核不可用",
+        "viaTranslation": "复用内容翻译接口"
+      }
     },
     "groups": {
       "columns": {

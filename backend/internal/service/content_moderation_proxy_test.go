@@ -111,7 +111,7 @@ func TestContentModerationCallRoutesThroughProxy(t *testing.T) {
 		}
 		proxied.Add(1)
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{Flagged: false}}})
+		writeChatModerationScores(w, "", nil)
 	}))
 	defer proxySrv.Close()
 
@@ -150,7 +150,7 @@ func TestContentModerationProxyResolveFailureDoesNotFallBackToDirect(t *testing.
 	directSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		direct.Add(1)
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{Flagged: false}}})
+		writeChatModerationScores(w, "", nil)
 	}))
 	defer directSrv.Close()
 
@@ -237,7 +237,7 @@ func TestContentModerationTestAPIKeysProxySemantics(t *testing.T) {
 	proxySrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		proxied.Add(1)
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{Flagged: false}}})
+		writeChatModerationScores(w, "", nil)
 	}))
 	defer proxySrv.Close()
 	proxyAddr := strings.TrimPrefix(proxySrv.URL, "http://")
@@ -278,7 +278,7 @@ func TestContentModerationTestAPIKeysProxySemantics(t *testing.T) {
 	directSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		direct.Add(1)
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{Flagged: false}}})
+		writeChatModerationScores(w, "", nil)
 	}))
 	defer directSrv.Close()
 

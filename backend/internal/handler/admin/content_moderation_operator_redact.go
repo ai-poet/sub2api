@@ -23,6 +23,7 @@ func contentModerationStatusForViewer(c *gin.Context, status *service.ContentMod
 	}
 	clone := *status
 	clone.APIKeyStatuses = redactContentModerationAPIKeyStatuses(status.APIKeyStatuses)
+	clone.VerifierAPIKeyStatuses = redactContentModerationAPIKeyStatuses(status.VerifierAPIKeyStatuses) // fork：两级审计
 	if status.PreBlockAPIKeyLoads != nil {
 		loads := make([]service.ContentModerationAPIKeyLoad, len(status.PreBlockAPIKeyLoads))
 		for i, load := range status.PreBlockAPIKeyLoads {

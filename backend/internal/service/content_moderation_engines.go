@@ -41,6 +41,8 @@ type ContentModerationEngineMeta struct {
 	Model         string `json:"model"`
 	RulesVersion  string `json:"rules_version"`
 	SkippedImages int    `json:"skipped_images"`
+
+	Verification *ContentModerationVerification `json:"verification,omitempty"` // fork：两级审计
 }
 
 func moderationEngine(engine string) string {
@@ -55,9 +57,10 @@ func validModerationEngine(engine string) bool {
 }
 
 func moderationEngineDefaults(engine string) *ContentModerationEngineConfig {
-	p := &ContentModerationEngineConfig{BaseURL: defaultContentModerationBaseURL, Model: defaultContentModerationModel, TimeoutMS: 3000, RetryCount: 2, Thresholds: ContentModerationDefaultThresholds()}
+	p := &ContentModerationEngineConfig{BaseURL: defaultContentModerationBaseURL, Model: defaultContentModerationModel, TimeoutMS: defaultContentModerationTimeoutMS, RetryCount: 2, Thresholds: ContentModerationDefaultThresholds()}
 	if engine == ContentModerationEngineTypeSafe {
 		p.BaseURL, p.Model = "https://api.typesafe.ai", "jev-latest"
+		p.TimeoutMS = typeSafeDefaultTimeoutMS // fork：对话模型审计，OpenAI 引擎的默认超时加长了，TypeSafe 保持 3 秒
 	}
 	return p
 }

@@ -54,7 +54,7 @@ func TestRiskControlAllowlistRetainsLastGoodValueAndRetries(t *testing.T) {
 
 func TestRiskControlAllowlistAuditsWithoutLocalPenalties(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(moderationAPIResponse{Results: []moderationAPIResult{{CategoryScores: map[string]float64{"sexual": 0.99}}}})
+		writeChatModerationScores(w, "", map[string]float64{"sexual": 0.99})
 	}))
 	defer server.Close()
 	for _, path := range []string{"keyword", "hash", "pre_block", "observe"} {
