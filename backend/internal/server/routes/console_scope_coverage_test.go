@@ -70,6 +70,9 @@ var operatorScopeGolden = []string{
 	"GET /api/v1/admin/users/:id/subscriptions",
 	"GET /api/v1/admin/users/:id/site-messages",
 	"GET /api/v1/admin/users/:id/usage",
+	"GET /api/v1/admin/users/group-rates",
+	"GET /api/v1/admin/users/group-rates/groups",
+	"GET /api/v1/admin/users/group-rates/usage",
 	// 工单（fork 本地）：admin / operator 同权
 	"GET /api/v1/admin/tickets",
 	"GET /api/v1/admin/tickets/:id",
@@ -114,6 +117,7 @@ var operatorApprovalScopeGolden = []string{
 	"POST /api/v1/admin/users/:id/platform-quotas/reset",
 	"POST /api/v1/admin/users/:id/replace-group",
 	"POST /api/v1/admin/users/batch-concurrency",
+	"POST /api/v1/admin/users/batch-group-rates",
 	"POST /api/v1/admin/users/batch-limits",
 	"PUT /api/v1/admin/api-keys/:id",
 	"PUT /api/v1/admin/users/:id",

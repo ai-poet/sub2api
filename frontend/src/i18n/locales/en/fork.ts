@@ -307,7 +307,8 @@ export default {
     "communityGroupScanHint": "Scan the QR code with your phone",
     "communityGroupJoin": "Join Now",
     "approvals": "Approvals",
-    "tickets": "Tickets"
+    "tickets": "Tickets",
+    "userGroupRates": "Exclusive rates"
   },
   "auth": {
     "referralCodeLabel": "Referral Code",
@@ -459,6 +460,87 @@ export default {
         "loadFailed": "Failed to load message history",
         "showContent": "Show content",
         "hideContent": "Hide content"
+      }
+    },
+    "userGroupRates": {
+      "title": "Exclusive rates",
+      "description": "View and adjust every user with an exclusive group rate",
+      "summary": "{users} users · {entries} exclusive rates",
+      "searchPlaceholder": "Search email, username, notes or user ID",
+      "allGroups": "All groups",
+      "allStatuses": "All statuses",
+      "status": {
+        "active": "Active",
+        "disabled": "Disabled"
+      },
+      "add": "Add exclusive rate",
+      "batchAdjust": "Adjust prices ({count})",
+      "selectAllFiltered": "Select all filtered ({count})",
+      "clearSelection": "Clear selection",
+      "columns": {
+        "user": "User",
+        "group": "Group",
+        "groupRate": "Group rate",
+        "rate": "Exclusive rate",
+        "discount": "vs. group",
+        "usage30d": "Spend (30 days)",
+        "rpmOverride": "Exclusive RPM",
+        "updatedAt": "Updated",
+        "actions": "Actions"
+      },
+      "requests": "{count} requests",
+      "noUsage": "No calls",
+      "edit": "Edit",
+      "reset": "Restore default",
+      "resetConfirmTitle": "Restore the group default rate",
+      "resetConfirmMessage": "Remove the exclusive rate of {user} in \"{group}\"? They will then be billed at the group rate ×{rate}.",
+      "invalidRate": "Enter a rate greater than 0 (at most 4 decimals)",
+      "saved": "Saved: {updated} updated, {cleared} restored to default",
+      "loadFailed": "Failed to load exclusive rates",
+      "effectHint": "Changes reach the gateway within about 30 seconds. Changes made by an operator take effect after an admin approves them.",
+      "higherThanGroup": "Not below the group rate",
+      "empty": "No user has an exclusive rate yet",
+      "emptyFiltered": "No exclusive rates match the filters",
+      "batch": {
+        "title": "Adjust prices",
+        "selected": "{count} selected",
+        "mode": "Adjustment",
+        "modes": {
+          "set": "Set to a value",
+          "factor": "Multiply by",
+          "percent": "Change by percent",
+          "reset": "Restore group default"
+        },
+        "valueLabel": {
+          "set": "New rate",
+          "factor": "Factor (1.1 raises by 10%)",
+          "percent": "Percent (10 raises by 10%, -20 lowers by 20%)"
+        },
+        "preview": "Preview",
+        "current": "Current",
+        "next": "New",
+        "unchanged": "Unchanged",
+        "invalid": "Invalid",
+        "restoreDefault": "Restore default",
+        "submit": "Submit {count}",
+        "nothingToChange": "Nothing to change",
+        "higherWarning": "{count} items end up not below the group rate",
+        "invalidWarning": "{count} items cannot be calculated and will be skipped"
+      },
+      "addDialog": {
+        "title": "Add exclusive rate",
+        "user": "User",
+        "userSearch": "Search email, username or user ID",
+        "noUsers": "No users found",
+        "changeUser": "Change",
+        "groups": "Groups",
+        "groupsHint": "Only active pay-as-you-go groups are listed. An existing exclusive rate in a selected group is overwritten.",
+        "rate": "Exclusive rate",
+        "ratePlaceholder": "e.g. 0.8",
+        "existing": "Currently ×{rate}",
+        "selectUser": "Select a user first",
+        "selectGroups": "Select at least one group",
+        "submit": "Save"
       }
     },
     "riskControl": {
@@ -1406,7 +1488,9 @@ export default {
           "scopeUsers": "{count} users ({ids})",
           "days": "{n} days",
           "validityDefault": "Group default",
-          "bodyTooLong": "Content too long to preview. Expand the raw request below."
+          "bodyTooLong": "Content too long to preview. Expand the raw request below.",
+          "restoreDefault": "Restore group default",
+          "userRef": "User #{id}"
         },
         "summary": {
           "userCreate": "Create user {email}",
@@ -1434,6 +1518,7 @@ export default {
           "subscriptionRestore": "Restore subscription {target}",
           "subscriptionDelete": "Delete subscription {target}",
           "userSiteMessage": "Send a site message to {target}",
+          "userGroupRatesBatch": "Adjust exclusive rates for {users} users ({count} items)",
           "unknown": "{action}: {target}"
         }
       },
@@ -1457,7 +1542,8 @@ export default {
         "subscriptionResetQuota": "Reset subscription quota",
         "subscriptionRevoke": "Revoke subscription",
         "subscriptionRestore": "Restore subscription",
-        "userSiteMessage": "Send site message"
+        "userSiteMessage": "Send site message",
+        "userGroupRatesBatch": "Adjust exclusive rates"
       }
     }
   },

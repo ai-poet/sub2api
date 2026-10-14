@@ -37,6 +37,7 @@ import adminComplianceAPI from './compliance'
 import auditAPI from './audit'
 import pluginsAPI from './plugins'
 import consoleAPI from './console'
+import userGroupRatesAPI from './userGroupRates' // fork：专属倍率用户管理
 
 /**
  * Unified admin API object for convenient access
@@ -75,7 +76,8 @@ export const adminAPI = {
   compliance: adminComplianceAPI,
   audit: auditAPI,
   plugins: pluginsAPI,
-  console: consoleAPI
+  console: consoleAPI,
+  userGroupRates: userGroupRatesAPI // fork：专属倍率用户管理
 }
 
 export {
@@ -111,7 +113,8 @@ export {
   riskControlAPI,
   adminComplianceAPI,
   auditAPI,
-  pluginsAPI
+  pluginsAPI,
+  userGroupRatesAPI
 }
 
 export default adminAPI

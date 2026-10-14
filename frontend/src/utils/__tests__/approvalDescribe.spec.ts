@@ -52,6 +52,33 @@ describe('describeApproval', () => {
     expect(d.lines).toEqual([{ label: 'operator.approval.describe.fields.notes', value: '充值' }])
   })
 
+  it('describes a batch exclusive-rate adjustment item by item (fork)', () => {
+    const d = describeApproval(
+      req('admin.users.batch_group_rates.create', {
+        items: [
+          { user_id: 7, group_id: 3, rate_multiplier: 0.85 },
+          { user_id: 7, group_id: 4, rate_multiplier: null },
+          { user_id: 8, group_id: 9, rate_multiplier: 1.2 }
+        ]
+      }),
+      ctx
+    )
+    expect(d.summary).toBe('operator.approval.describe.summary.userGroupRatesBatch:{"users":2,"count":3}')
+    expect(d.lines).toEqual([
+      { label: 'operator.approval.describe.values.userRef:{"id":7} · Pro', value: 'x0.85' },
+      { label: 'operator.approval.describe.values.userRef:{"id":7} · Basic', value: 'operator.approval.describe.values.restoreDefault' },
+      { label: 'operator.approval.describe.values.userRef:{"id":8} · #9', value: 'x1.2' }
+    ])
+  })
+
+  it('falls back to a summary when the batch exclusive-rate body was truncated (fork)', () => {
+    const d = describeApproval(req('admin.users.batch_group_rates.create', '{"items":[{"user_id":1...<truncated>'), ctx)
+    expect(d.summary).toBe('operator.approval.describe.summary.userGroupRatesBatch:{"users":0,"count":0}')
+    expect(d.lines).toEqual([
+      { label: 'operator.approval.describe.fields.groupRates', value: 'operator.approval.describe.values.bodyTooLong' }
+    ])
+  })
+
   it('describes a user update field by field, never leaking the redacted password', () => {
     const d = describeApproval(
       req('admin.users.update', {

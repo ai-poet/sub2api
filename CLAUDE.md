@@ -545,6 +545,44 @@ The features below are locally maintained customizations of this fork. During up
 - 内容审计只读 (operator read-only content audit, local implementation): operators may open `/admin/risk-control` (content moderation) read-only. Only `GET /api/v1/admin/risk-control/{config,status,logs}` are allowlisted (pinned in `routes/console_scope_coverage_test.go` and `TestOperatorContentModerationScopeIsReadOnly`); saving the config, testing keys, unbanning and clearing flagged hashes stay denied and are never queued for approval. `handler/admin/content_moderation_operator_redact.go` strips the audit engine's key masks and hashes from the config and status for operators (one `// fork：运维只读投影` line each in `GetConfig` / `GetStatus`). Frontend: `operatorAllowed` on the route, the operator sidebar entry behind `flagRiskControl`, and the `readonly` branch of `views/admin/RiskControlView.vue` (groups from `/admin/usage/filter-groups`, no proxy lookup, the settings dialog inside a disabled `<fieldset>` with every write control removed, keys `admin.riskControl.viewSettings` / `readonlyNotice` in `fork.ts`). Prompt audit (`/admin/prompt-audit`) stays admin-only.
 - Design notes and the allowlist table live in `docs/OPERATOR_ROLE.md`. Keep this feature on upstream merges: resolve conflicts on the paths above in favour of the local version, never widen the allowlist while merging, and re-run the middleware / routes / handler tests afterwards.
 
+### 专属倍率用户管理 (User exclusive-rate management, local implementation)
+
+- **What it is.** An admin page, `/admin/user-group-rates` (sidebar 「专属倍率」 under 用户管理), that lists every (user, group) row of `user_group_rate_multipliers` with a non-NULL `rate_multiplier`. It supports:
+  - inline edit, and restoring the group default;
+  - batch adjustment: set to a value / × factor / ±% / restore default, with an old → new preview;
+  - adding a rate for a searched user in one or more active `standard` groups;
+  - a 30-day spend / request column.
+- **Operators follow the user-management rules.** Reads are in `operatorReadScope`. The single write, `POST /api/v1/admin/users/batch-group-rates`, is in `operatorApprovalScope`, so a whole batch becomes one approval. Both are pinned in `routes/console_scope_coverage_test.go` and `TestOperatorUserGroupRateScope`.
+  - All routes live under `/admin/users` because operators can never reach `/admin/groups/*`.
+  - The audit action `admin.users.batch_group_rates.create` is labelled 「调整专属倍率」 (`approvalActionLabels`, `APPROVAL_ACTION_LABEL_KEYS`).
+  - `approvalBodyPeek.Items` makes the target summary read "N users · M rates".
+  - `approvalDescribe.ts` renders each item as `用户 #id · 分组: ×rate / 恢复分组默认`.
+  - The batch cap is 200 items, so the redacted body stays inside the 16 KiB approval display limit.
+- **Data rules (do not weaken).**
+  - Writes touch **only** `rate_multiplier`, never `rpm_override`. A cleared row is deleted only when both columns are NULL.
+  - Users and groups are soft-deleted, so every query joins `deleted_at IS NULL`.
+  - The batch is validated (ids exist and are not deleted, no duplicate pair, `0 < rate < 1e6`, rounded to 4 decimals) and written in **one transaction**.
+  - `rate_multiplier` must be present in each item: `null` means restore the default; a missing field is a 400, never a silent clear.
+  - The billing-side rate cache is not invalidated (same as `PUT /admin/users/:id`), so the page says changes take up to ~30 s.
+- **Backend files.**
+  - `service/user_group_rate_admin.go` (types and `UserGroupRateAdminRepository`, separate from upstream's `UserGroupRateRepository` so its stubs don't change) and `service/user_group_rate_admin_service.go` (+ test).
+  - `repository/user_group_rate_admin_repo.go` (+ sqlmock test).
+  - `handler/admin/user_group_rate_handler.go` (+ test).
+  - `registerUserGroupRateRoutes` in `routes/admin.go`.
+  - The scope entries in `middleware/console_scope.go`.
+  - The approval label and peek in `service/approval_notify_service.go` / `service/admin_approval_service.go`.
+  - Wiring in `repository/wire.go`, `service/wire.go`, `handler/wire.go`, `handler/handler.go` (`UserGroupRate`) and `cmd/server/wire_gen.go`.
+- **Frontend files.**
+  - `api/admin/userGroupRates.ts` (+ `api/__tests__/admin.userGroupRates.spec.ts`), registered in `api/admin/index.ts`.
+  - `utils/userGroupRates.ts` (+ spec).
+  - `views/admin/UserGroupRatesView.vue` (+ spec).
+  - `components/admin/userGroupRates/{BatchAdjustRatesDialog,AddUserGroupRateDialog}.vue`.
+  - The route (`operatorAllowed: true`) in `router/index.ts`.
+  - Both sidebar lists in `AppSidebar.vue` (`ExclusiveRateIcon` in `sidebarForkIcons.ts`, `'ticket'` in `sidebarIconMap.ts`).
+  - The approval label / describer case.
+  - Keys `nav.userGroupRates`, `admin.userGroupRates.*`, `operator.approval.{actionLabels,describe.summary}.userGroupRatesBatch` and `operator.approval.describe.values.{restoreDefault,userRef}` in `i18n/locales/{zh,en}/fork.ts`.
+- Keep this feature on upstream merges; never let an operator write bypass the approval capture.
+
 ### 工单系统 (Support tickets, local implementation)
 
 - Users open support tickets (title + fixed category + Markdown body) and talk to staff in one thread; the single `admin` and the fork-local `operator` role are **equal peers** here: both see every ticket and reply / close / reopen directly. Operator writes are explicitly allowed in `operatorWriteScope` (never queued through the approval flow) and fully audited (`admin.tickets.reply|close|reopen`, extras `ticket_id` / `ticket_status` / `ticket_user_id`). State machine `open` → (staff reply) `replied` → (user reply) `open`, `close` from either non-closed state, `reopen` from `closed`; all transitions are atomic `UPDATE ... WHERE status` in the repo. Limits: title ≤ 200 runes, body ≤ 5000 runes, 5 active tickets per user, `panelRateLimiter.Heavy()` on create / reply. Badges: staff = `open` count, user = `user_unread` count (set by staff replies, cleared when the user fetches the detail). Optional Server酱³ push on new tickets / user replies via `ticket_notify_serverchan_enabled` (reuses the group-status UID / SendKey; staff replies never push).

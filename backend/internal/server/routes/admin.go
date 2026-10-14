@@ -39,6 +39,7 @@ func RegisterAdminRoutes(
 		registerTicketRoutes(admin, h)
 		registerPersonalTokenRoutes(admin, h)
 		registerUserSiteMessageRoutes(admin, h)
+		registerUserGroupRateRoutes(admin, h)           // fork：专属倍率用户管理
 		registerContentTranslationAdminRoutes(admin, h) // fork：内容自动翻译
 		registerInsightsAdminRoutes(admin, h)           // fork：排行榜 / 首页公开统计
 
@@ -887,6 +888,19 @@ func registerChannelRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		channels.POST("", h.Admin.Channel.Create)
 		channels.PUT("/:id", h.Admin.Channel.Update)
 		channels.DELETE("/:id", h.Admin.Channel.Delete)
+	}
+}
+
+// registerUserGroupRateRoutes 专属倍率用户管理（fork 本地）：跨用户列出 / 调整用户专属分组倍率。
+// 挂在 /admin/users 下且不加 AdminOnly：operator 的三个 GET 在 operatorReadScope 直接放行；
+// 批量写在 operatorApprovalScope，被 adminAuth 截获成审批申请，管理员批准后重放（见 middleware/console_scope.go）。
+func registerUserGroupRateRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	users := admin.Group("/users")
+	{
+		users.GET("/group-rates", h.Admin.UserGroupRate.List)
+		users.GET("/group-rates/groups", h.Admin.UserGroupRate.Groups)
+		users.GET("/group-rates/usage", h.Admin.UserGroupRate.Usage)
+		users.POST("/batch-group-rates", h.Admin.UserGroupRate.ApplyBatch)
 	}
 }
 

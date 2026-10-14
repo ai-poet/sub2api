@@ -51,6 +51,7 @@ func ProvideAdminHandlers(
 	personalTokenHandler *admin.PersonalTokenHandler,
 	userSiteMessageHandler *admin.UserSiteMessageHandler,
 	contentTranslationHandler *admin.ContentTranslationHandler,
+	userGroupRateHandler *admin.UserGroupRateHandler, // fork：专属倍率用户管理
 	upstreamBillingProbe *service.UpstreamBillingProbeService,
 	ollamaCloudUsage *service.OllamaCloudUsageService,
 	opencodeGoUsage *service.OpenCodeGoUsageService,
@@ -103,6 +104,9 @@ func ProvideAdminHandlers(
 
 		// fork：内容自动翻译
 		ContentTranslation: contentTranslationHandler,
+
+		// fork：专属倍率用户管理
+		UserGroupRate: userGroupRateHandler,
 	}
 }
 
@@ -356,6 +360,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewPersonalTokenHandler,
 	admin.NewUserSiteMessageHandler,
 	admin.NewContentTranslationHandler, // fork：内容自动翻译
+	admin.NewUserGroupRateHandler,      // fork：专属倍率用户管理
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,

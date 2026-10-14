@@ -90,6 +90,27 @@ describe('operator approval mode — SubscriptionsView', () => {
   })
 })
 
+// fork：专属倍率用户管理——与用户管理同一规则：运维可进，写操作一律走批量接口并在排队时静默收尾。
+describe('operator approval mode — UserGroupRatesView', () => {
+  const source = readSource('src/views/admin/UserGroupRatesView.vue')
+
+  it('never calls the operator-forbidden group endpoints', () => {
+    expect(source).not.toContain('adminAPI.groups.')
+    expect(source).toContain('adminAPI.userGroupRates.groups()')
+  })
+
+  it('sends every write through the batch endpoint and swallows the queued state', () => {
+    expect(source.match(/adminAPI\.userGroupRates\.applyBatch\(/g)?.length).toBe(1)
+    expect(source).toContain('if (isApprovalQueued(error)) {')
+  })
+
+  it('is an operator-allowed route', () => {
+    const router = readSource('src/router/index.ts')
+    const block = router.slice(router.indexOf("path: '/admin/user-group-rates'"), router.indexOf("path: '/admin/user-group-rates'") + 400)
+    expect(block).toContain('operatorAllowed: true')
+  })
+})
+
 describe('operator approval mode — routing and navigation', () => {
   it('marks users, subscriptions and approvals as operator-allowed routes', () => {
     const router = readSource('src/router/index.ts')

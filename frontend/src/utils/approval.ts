@@ -58,6 +58,7 @@ const APPROVAL_ACTION_LABEL_KEYS: Record<string, string> = {
   'admin.users.attributes.update': 'userAttributes',
   'admin.users.auth_identities.create': 'userAuthIdentity',
   'admin.users.site_messages.create': 'userSiteMessage',
+  'admin.users.batch_group_rates.create': 'userGroupRatesBatch', // fork：专属倍率用户管理
   'admin.api_keys.update': 'apiKeyUpdate',
   'admin.subscriptions.assign.create': 'subscriptionAssign',
   'admin.subscriptions.bulk_assign.create': 'subscriptionBulkAssign',

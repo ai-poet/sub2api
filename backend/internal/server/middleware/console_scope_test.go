@@ -164,6 +164,24 @@ func TestOperatorSiteMessageScope(t *testing.T) {
 	require.False(t, OperatorActionRefused(http.MethodPost, "/api/v1/admin/users/:id/site-messages"))
 }
 
+// 专属倍率用户管理（fork 本地）：operator 与用户管理同一规则——读直接放行，批量调整必须经管理员审批。
+func TestOperatorUserGroupRateScope(t *testing.T) {
+	t.Parallel()
+
+	for _, path := range []string{
+		"/api/v1/admin/users/group-rates",
+		"/api/v1/admin/users/group-rates/groups",
+		"/api/v1/admin/users/group-rates/usage",
+	} {
+		require.Truef(t, OperatorScopeAllows(http.MethodGet, path), "GET %s", path)
+	}
+
+	const write = "/api/v1/admin/users/batch-group-rates"
+	require.True(t, OperatorApprovalRequired(http.MethodPost, write))
+	require.False(t, OperatorScopeAllows(http.MethodPost, write), "batch adjustment must never bypass approval")
+	require.False(t, OperatorActionRefused(http.MethodPost, write))
+}
+
 // 内容审计：operator 只读配置、状态与记录；任何写操作既不直通也不入审批队列。
 func TestOperatorContentModerationScopeIsReadOnly(t *testing.T) {
 	t.Parallel()

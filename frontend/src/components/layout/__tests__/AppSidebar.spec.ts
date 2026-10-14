@@ -91,7 +91,7 @@ describe('AppSidebar operator (read-only ops role)', () => {
     const start = componentSource.indexOf('const operatorNavItems = computed(')
     expect(start).toBeGreaterThan(-1)
     const block = componentSource.slice(start, componentSource.indexOf('// Admin navigation items', start))
-    for (const allowed of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/subscriptions', '/admin/approvals', '/admin/tickets']) {
+    for (const allowed of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/user-group-rates', '/admin/subscriptions', '/admin/approvals', '/admin/tickets']) {
       expect(block).toContain(`path: '${allowed}'`)
     }
     for (const forbidden of ['/admin/groups', '/admin/accounts', '/admin/settings', '/admin/dashboard', '/admin/audit-logs']) {

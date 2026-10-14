@@ -214,7 +214,7 @@ import { useBatchImageAccess } from '@/composables/useBatchImageAccess'
 import { useContentTranslation } from '@/composables/useContentTranslation'
 import { applyDarkClass } from '@/utils/themeSwitch' // fork：主题切换冻结过渡
 import SidebarNavIcon from './SidebarNavIcon.vue' // fork：侧栏图标悬停动画
-import { TrophyIcon } from './sidebarForkIcons' // fork：排行榜入口图标
+import { ExclusiveRateIcon, TrophyIcon } from './sidebarForkIcons' // fork：排行榜 / 专属倍率入口图标
 import { isLeaderboardEnabled } from '@/utils/forkFeatureFlags' // fork：排行榜开关
 
 interface NavItem {
@@ -799,6 +799,7 @@ const operatorNavItems = computed((): NavItem[] => applyFeatureFlags([
   { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
   { path: '/admin/risk-control', label: t('nav.contentModeration'), icon: ShieldIcon, featureFlag: flagRiskControl },
   { path: '/admin/users', label: t('nav.users'), icon: UsersIcon },
+  { path: '/admin/user-group-rates', label: t('nav.userGroupRates'), icon: ExclusiveRateIcon }, // fork：专属倍率用户管理
   { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, featureFlag: flagSubscription },
   { path: '/admin/approvals', label: t('nav.approvals'), icon: ShieldIcon, badge: approvalBadge },
   { path: '/admin/tickets', label: t('nav.tickets'), icon: SupportIcon, badge: ticketOpenBadge }
@@ -813,6 +814,8 @@ const adminNavItems = computed((): NavItem[] => {
     { path: '/admin/dashboard', label: t('nav.dashboard'), icon: DashboardIcon },
     { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring },
     { path: '/admin/users', label: t('nav.users'), icon: UsersIcon, hideInSimpleMode: true },
+    // fork：专属倍率用户管理
+    { path: '/admin/user-group-rates', label: t('nav.userGroupRates'), icon: ExclusiveRateIcon, hideInSimpleMode: true },
     { path: '/admin/groups', label: t('nav.groups'), icon: FolderIcon },
     // 「仅充值」站点连管理端的「订阅管理」入口也一并收起（路由本身不拦截）。
     { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription },

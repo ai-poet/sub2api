@@ -83,7 +83,11 @@ var operatorReadScope = map[string]struct{}{
 	"GET /api/v1/admin/users/:id/subscriptions":   {},
 	// 站内信历史（fork 本地）：只有消息正文、发件工作人员邮箱与已读状态，无凭证 / 余额 / IP
 	"GET /api/v1/admin/users/:id/site-messages": {},
-	"GET /api/v1/admin/user-attributes":         {},
+	// 专属倍率用户管理（fork 本地）：列表 / 分组选项（含默认倍率）/ 近 30 天用量
+	"GET /api/v1/admin/users/group-rates":        {},
+	"GET /api/v1/admin/users/group-rates/groups": {},
+	"GET /api/v1/admin/users/group-rates/usage":  {},
+	"GET /api/v1/admin/user-attributes":          {},
 
 	// 订阅管理（只读部分）
 	"GET /api/v1/admin/subscriptions":              {},
@@ -142,6 +146,8 @@ var operatorApprovalScope = map[string]struct{}{
 	"POST /api/v1/admin/users/:id/auth-identities":       {},
 	// 给单个用户发站内信（fork 本地）：重放时 handler 把发件人记回发起的 operator
 	"POST /api/v1/admin/users/:id/site-messages": {},
+	// 专属倍率用户管理（fork 本地）：整批调整是一条审批
+	"POST /api/v1/admin/users/batch-group-rates": {},
 	// 用户 API Key 的分组调整（用户管理页的 API Key 弹窗）
 	"PUT /api/v1/admin/api-keys/:id": {},
 	// 订阅管理

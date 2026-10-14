@@ -248,6 +248,24 @@ export function describeApproval(req: AdminApprovalRequest, ctx: ApprovalDescrib
       }
       break
     }
+    // fork：专属倍率用户管理——每项一行「用户 #id · 分组: ×倍率 / 恢复分组默认」
+    case 'admin.users.batch_group_rates.create': {
+      const items = take('items')
+      const list = Array.isArray(items) ? (items as Body[]).filter((it) => it && typeof it === 'object') : []
+      const users = new Set(list.map((it) => fmtRaw(it.user_id)))
+      summary = t(`${P}.summary.userGroupRatesBatch`, { users: users.size, count: list.length })
+      for (const it of list) {
+        const uid = num(it.user_id)
+        const gid = num(it.group_id)
+        const rate = it.rate_multiplier
+        lines.push({
+          label: `${t(`${P}.values.userRef`, { id: uid ?? fmtRaw(it.user_id) })} · ${gid === null ? fmtRaw(it.group_id) : groupLabel(gid)}`,
+          value: rate === null || rate === undefined ? t(`${P}.values.restoreDefault`) : `x${fmtNum(rate)}`
+        })
+      }
+      if (list.length === 0) add('groupRates', t(`${P}.values.bodyTooLong`))
+      break
+    }
     case 'admin.users.auth_identities.create': {
       const provider = fmtRaw(take('provider_type') || '-')
       summary = t(`${P}.summary.authIdentity`, { target, provider })

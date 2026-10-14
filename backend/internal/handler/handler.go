@@ -47,6 +47,9 @@ type AdminHandlers struct {
 	PersonalToken         *admin.PersonalTokenHandler
 	UserSiteMessage       *admin.UserSiteMessageHandler
 
+	// fork：专属倍率用户管理
+	UserGroupRate *admin.UserGroupRateHandler
+
 	// fork：内容自动翻译
 	ContentTranslation *admin.ContentTranslationHandler
 }

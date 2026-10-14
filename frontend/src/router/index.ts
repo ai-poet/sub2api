@@ -530,6 +530,20 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'admin.users.description'
     }
   },
+  // fork：专属倍率用户管理（与用户管理同一规则：运维可进，写操作在后端排队等待管理员审批）
+  {
+    path: '/admin/user-group-rates',
+    name: 'AdminUserGroupRates',
+    component: () => import('@/views/admin/UserGroupRatesView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      operatorAllowed: true,
+      title: 'Exclusive Rates',
+      titleKey: 'admin.userGroupRates.title',
+      descriptionKey: 'admin.userGroupRates.description'
+    }
+  },
   {
     path: '/admin/groups',
     name: 'AdminGroups',

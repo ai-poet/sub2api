@@ -174,6 +174,10 @@ type approvalBodyPeek struct {
 	GroupID int64   `json:"group_id"`
 	UserIDs []int64 `json:"user_ids"`
 	All     bool    `json:"all"`
+	// fork：专属倍率用户管理的批量调整按 items[].user_id 计数
+	Items []struct {
+		UserID int64 `json:"user_id"`
+	} `json:"items"`
 }
 
 // SetSettingRepository 挂载设置仓储，让 Limits 读取站点设置里的数量上限；未挂载时用默认常量。
@@ -349,6 +353,13 @@ func (s *AdminApprovalService) resolveTarget(ctx context.Context, in *AdminAppro
 	case strings.HasPrefix(route, "/api/v1/admin/users/batch-"):
 		if peek.All {
 			return ApprovalTargetUsersBatch, nil, "all users"
+		}
+		if len(peek.Items) > 0 { // fork：专属倍率用户管理
+			users := make(map[int64]struct{}, len(peek.Items))
+			for _, item := range peek.Items {
+				users[item.UserID] = struct{}{}
+			}
+			return ApprovalTargetUsersBatch, nil, fmt.Sprintf("%d users · %d rates", len(users), len(peek.Items))
 		}
 		return ApprovalTargetUsersBatch, nil, fmt.Sprintf("%d users", len(peek.UserIDs))
 	case strings.HasPrefix(route, "/api/v1/admin/users/:id"):

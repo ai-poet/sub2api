@@ -307,7 +307,8 @@ export default {
     "communityGroupScanHint": "使用手机扫码加入",
     "communityGroupJoin": "点击加入",
     "approvals": "审批",
-    "tickets": "工单"
+    "tickets": "工单",
+    "userGroupRates": "专属倍率"
   },
   "auth": {
     "referralCodeLabel": "推荐码",
@@ -459,6 +460,87 @@ export default {
         "loadFailed": "加载站内信历史失败",
         "showContent": "查看正文",
         "hideContent": "收起正文"
+      }
+    },
+    "userGroupRates": {
+      "title": "专属倍率管理",
+      "description": "查看并调整所有设置了专属倍率的用户",
+      "summary": "{users} 位用户 · {entries} 项专属倍率",
+      "searchPlaceholder": "搜索邮箱、用户名、备注或用户 ID",
+      "allGroups": "全部分组",
+      "allStatuses": "全部状态",
+      "status": {
+        "active": "正常",
+        "disabled": "禁用"
+      },
+      "add": "新增专属倍率",
+      "batchAdjust": "批量调价（{count}）",
+      "selectAllFiltered": "选中全部筛选结果（{count}）",
+      "clearSelection": "取消选择",
+      "columns": {
+        "user": "用户",
+        "group": "分组",
+        "groupRate": "分组倍率",
+        "rate": "专属倍率",
+        "discount": "相对分组",
+        "usage30d": "近 30 天消费",
+        "rpmOverride": "专属 RPM",
+        "updatedAt": "更新时间",
+        "actions": "操作"
+      },
+      "requests": "{count} 次",
+      "noUsage": "无调用",
+      "edit": "修改",
+      "reset": "恢复默认",
+      "resetConfirmTitle": "恢复分组默认倍率",
+      "resetConfirmMessage": "确定移除 {user} 在「{group}」的专属倍率吗？之后按分组倍率 ×{rate} 计费。",
+      "invalidRate": "请输入大于 0 的倍率（最多 4 位小数）",
+      "saved": "已保存：{updated} 项更新，{cleared} 项恢复默认",
+      "loadFailed": "加载专属倍率失败",
+      "effectHint": "改动在网关最多约 30 秒内生效；运维管理员的修改需管理员审批后生效。",
+      "higherThanGroup": "不低于分组倍率",
+      "empty": "还没有用户设置专属倍率",
+      "emptyFiltered": "没有符合筛选条件的专属倍率",
+      "batch": {
+        "title": "批量调价",
+        "selected": "已选 {count} 项",
+        "mode": "调整方式",
+        "modes": {
+          "set": "设为固定值",
+          "factor": "按系数",
+          "percent": "按百分比",
+          "reset": "恢复分组默认"
+        },
+        "valueLabel": {
+          "set": "新倍率",
+          "factor": "系数（如 1.1 表示上调 10%）",
+          "percent": "百分比（10 表示上调 10%，-20 表示下调 20%）"
+        },
+        "preview": "预览",
+        "current": "当前",
+        "next": "调整后",
+        "unchanged": "不变",
+        "invalid": "无效",
+        "restoreDefault": "恢复默认",
+        "submit": "提交 {count} 项",
+        "nothingToChange": "没有需要修改的项",
+        "higherWarning": "{count} 项调整后不低于分组倍率",
+        "invalidWarning": "{count} 项无法计算，将被跳过"
+      },
+      "addDialog": {
+        "title": "新增专属倍率",
+        "user": "用户",
+        "userSearch": "搜索邮箱、用户名或用户 ID",
+        "noUsers": "没有找到用户",
+        "changeUser": "更换",
+        "groups": "分组",
+        "groupsHint": "只列出启用中的按量分组；已有专属倍率的分组保存后会被覆盖",
+        "rate": "专属倍率",
+        "ratePlaceholder": "例如 0.8",
+        "existing": "已有 ×{rate}",
+        "selectUser": "请先选择用户",
+        "selectGroups": "请至少选择一个分组",
+        "submit": "保存"
       }
     },
     "riskControl": {
@@ -1406,7 +1488,9 @@ export default {
           "scopeUsers": "{count} 个用户（{ids}）",
           "days": "{n} 天",
           "validityDefault": "按分组默认",
-          "bodyTooLong": "正文过长，无法预览，请展开下方的原始请求查看"
+          "bodyTooLong": "正文过长，无法预览，请展开下方的原始请求查看",
+          "restoreDefault": "恢复分组默认",
+          "userRef": "用户 #{id}"
         },
         "summary": {
           "userCreate": "新建用户 {email}",
@@ -1434,6 +1518,7 @@ export default {
           "subscriptionRestore": "恢复订阅 {target}",
           "subscriptionDelete": "删除订阅 {target}",
           "userSiteMessage": "给 {target} 发送站内信",
+          "userGroupRatesBatch": "调整 {users} 位用户的专属倍率（{count} 项）",
           "unknown": "{action}：{target}"
         }
       },
@@ -1457,7 +1542,8 @@ export default {
         "subscriptionResetQuota": "重置订阅额度",
         "subscriptionRevoke": "撤销订阅",
         "subscriptionRestore": "恢复订阅",
-        "userSiteMessage": "发送站内信"
+        "userSiteMessage": "发送站内信",
+        "userGroupRatesBatch": "调整专属倍率"
       }
     }
   },

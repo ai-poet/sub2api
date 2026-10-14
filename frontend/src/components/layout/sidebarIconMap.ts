@@ -27,6 +27,7 @@ export const SIDEBAR_ANIMATED_ICONS: Readonly<Record<string, AnimatedIconName>> 
   '/admin/usage': 'chart',
   '/admin/risk-control': 'shieldCheck',
   '/admin/users': 'users',
+  '/admin/user-group-rates': 'ticket', // fork：专属倍率用户管理
   '/admin/subscriptions': 'creditCard',
   '/admin/approvals': 'badge',
   '/admin/tickets': 'chat',

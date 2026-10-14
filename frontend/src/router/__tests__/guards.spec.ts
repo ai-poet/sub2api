@@ -287,7 +287,7 @@ describe('路由守卫逻辑', () => {
     })
 
     it('访问标了 operatorAllowed 的管理页面允许通过', () => {
-      for (const path of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/subscriptions', '/admin/approvals']) {
+      for (const path of ['/admin/ops', '/admin/usage', '/admin/users', '/admin/user-group-rates', '/admin/subscriptions', '/admin/approvals']) {
         expect(simulateGuard(path, { requiresAdmin: true, operatorAllowed: true }, authState)).toBeNull()
       }
     })
