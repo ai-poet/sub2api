@@ -7,6 +7,13 @@ const optionalTrimmedString = z.preprocess((value) => {
   return trimmed === '' ? undefined : trimmed;
 }, z.string().optional());
 
+/** 可选的非负数：未设置或为空时为 undefined */
+const optionalNonNegativeNumber = z
+  .string()
+  .optional()
+  .transform((v) => (v !== undefined && v.trim() !== '' ? Number(v) : undefined))
+  .pipe(z.number().min(0).optional());
+
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(16),
@@ -66,10 +73,11 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: optionalTrimmedString,
 
   ORDER_TIMEOUT_MINUTES: z.string().default('5').transform(Number).pipe(z.number().int().positive()),
-  MIN_RECHARGE_AMOUNT: z.string().default('1').transform(Number).pipe(z.number().positive()),
-  MAX_RECHARGE_AMOUNT: z.string().default('1000').transform(Number).pipe(z.number().positive()),
+  // 全局到账限额（USD），后台「支付配置」可覆盖；都没设置时不限制（不写死默认值）
+  MIN_RECHARGE_AMOUNT: optionalNonNegativeNumber,
+  MAX_RECHARGE_AMOUNT: optionalNonNegativeNumber,
   // 每日每用户最大累计充值额，0 = 不限制
-  MAX_DAILY_RECHARGE_AMOUNT: z.string().default('10000').transform(Number).pipe(z.number().min(0)),
+  MAX_DAILY_RECHARGE_AMOUNT: optionalNonNegativeNumber,
   BALANCE_CREDIT_CNY_PER_USD: z
     .string()
     .optional()
@@ -81,8 +89,8 @@ const envSchema = z.object({
     .transform((v) => (v !== undefined ? Number(v) : undefined))
     .pipe(z.number().positive().optional()),
 
-  // 每日各渠道全平台总限额，可选覆盖（0 = 不限制）。
-  // 未设置时由各 PaymentProvider.defaultLimits 提供默认值。
+  // 每日各渠道全平台总限额，可选（0 或不设置 = 不限制）。
+  // 代码里不写死各渠道限额；网关有上限时在支付实例的「每日限额 / 单笔最大」里配置。
   MAX_DAILY_AMOUNT_ALIPAY: z
     .string()
     .optional()

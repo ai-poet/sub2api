@@ -151,8 +151,8 @@ function PayContent() {
 
   const [config, setConfig] = useState<AppConfig>({
     enabledPaymentTypes: [],
-    minAmount: 1,
-    maxAmount: 1000,
+    minAmount: 0, // 0 = 不限，实际值以 /api/user 返回为准
+    maxAmount: 0,
     maxDailyAmount: 0,
   });
   const [userNotFound, setUserNotFound] = useState(false);
@@ -345,8 +345,8 @@ function PayContent() {
         if (cfgData.config) {
           setConfig({
             enabledPaymentTypes: cfgData.config.enabledPaymentTypes ?? ['alipay', 'wxpay'],
-            minAmount: cfgData.config.minAmount ?? 1,
-            maxAmount: cfgData.config.maxAmount ?? 1000,
+            minAmount: cfgData.config.minAmount ?? 0,
+            maxAmount: cfgData.config.maxAmount ?? 0,
             maxDailyAmount: cfgData.config.maxDailyAmount ?? 0,
             usdExchangeRate: cfgData.config.usdExchangeRate ?? null,
             balanceCreditCnyPerUsd: cfgData.config.balanceCreditCnyPerUsd ?? null,

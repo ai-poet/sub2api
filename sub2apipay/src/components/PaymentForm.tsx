@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { PAYMENT_TYPE_META, getPaymentIconType, getPaymentMeta, getPaymentDisplayInfo } from '@/lib/pay-utils';
 import { convertUsdBalanceToCnyPayment, getSettlementDisplay, isStablecoinPaymentType } from '@/lib/currency';
+import { amountRangePlaceholder, resolveAmountMax } from '@/lib/order/amount-range';
 import {
   formatAmount,
   mergeQuickAmounts,
@@ -111,7 +112,7 @@ export default function PaymentForm({
   const isMethodAvailable = !methodLimits || methodLimits[effectivePaymentType]?.available !== false;
   const methodSingleMax = methodLimits?.[effectivePaymentType]?.singleMax;
   const methodSingleMin = methodLimits?.[effectivePaymentType]?.singleMin;
-  const effectiveMax = methodSingleMax !== undefined && methodSingleMax > 0 ? methodSingleMax : maxAmount;
+  const effectiveMax = resolveAmountMax(maxAmount, methodSingleMax);
   const effectiveMin =
     methodSingleMin !== undefined && methodSingleMin > 0 ? Math.max(methodSingleMin, minAmount) : minAmount;
   const feeRate = methodLimits?.[effectivePaymentType]?.feeRate ?? 0;
@@ -128,7 +129,7 @@ export default function PaymentForm({
   const showPaymentSummary = selectedAmount > 0;
   const isValid =
     selectedAmount >= effectiveMin &&
-    selectedAmount <= effectiveMax &&
+    (effectiveMax <= 0 || selectedAmount <= effectiveMax) &&
     hasValidCentPrecision(selectedAmount) &&
     isMethodAvailable;
 
@@ -351,10 +352,10 @@ export default function PaymentForm({
                 inputMode="decimal"
                 step="0.01"
                 min={effectiveMin}
-                max={effectiveMax}
+                max={effectiveMax > 0 ? effectiveMax : undefined}
                 value={customAmount}
                 onChange={(e) => handleCustomAmountChange(e.target.value)}
-                placeholder={`${effectiveMin} - ${effectiveMax}`}
+                placeholder={amountRangePlaceholder(effectiveMin, effectiveMax) || (locale === 'en' ? 'Amount' : '到账金额')}
                 className={[
                   'w-full rounded-lg border py-3 pl-8 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
                   dark ? 'border-slate-700 bg-slate-900 text-slate-100' : 'border-gray-300 bg-white text-gray-900',
@@ -382,9 +383,9 @@ export default function PaymentForm({
               ? 'Amount must be within range and support up to 2 decimal places'
               : '到账金额需在范围内，且最多支持 2 位小数';
           if (!isNaN(num)) {
-            if (num < minAmount)
+            if (minAmount > 0 && num < minAmount)
               msg = locale === 'en' ? `Minimum credited balance: $${minAmount}` : `单笔最低到账 $${minAmount}`;
-            else if (num > effectiveMax)
+            else if (effectiveMax > 0 && num > effectiveMax)
               msg = locale === 'en' ? `Maximum credited balance: $${effectiveMax}` : `单笔最高到账 $${effectiveMax}`;
           }
           return <div className={['text-xs', dark ? 'text-amber-300' : 'text-amber-700'].join(' ')}>{msg}</div>;

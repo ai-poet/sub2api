@@ -26,9 +26,10 @@ export async function GET(request: NextRequest) {
       instanceDefaults: {},
       defaults: {
         ENABLED_PAYMENT_TYPES: '',
-        RECHARGE_MIN_AMOUNT: String(env.MIN_RECHARGE_AMOUNT),
-        RECHARGE_MAX_AMOUNT: String(env.MAX_RECHARGE_AMOUNT),
-        DAILY_RECHARGE_LIMIT: String(env.MAX_DAILY_RECHARGE_AMOUNT),
+        // 环境变量没设置时为空，表示不限
+        RECHARGE_MIN_AMOUNT: env.MIN_RECHARGE_AMOUNT !== undefined ? String(env.MIN_RECHARGE_AMOUNT) : '',
+        RECHARGE_MAX_AMOUNT: env.MAX_RECHARGE_AMOUNT !== undefined ? String(env.MAX_RECHARGE_AMOUNT) : '',
+        DAILY_RECHARGE_LIMIT: env.MAX_DAILY_RECHARGE_AMOUNT !== undefined ? String(env.MAX_DAILY_RECHARGE_AMOUNT) : '',
         USD_EXCHANGE_RATE: String(DEFAULT_USD_EXCHANGE_RATE),
         BALANCE_CREDIT_CNY_PER_USD: String(
           resolveBalanceCreditCnyPerUsd(env.BALANCE_CREDIT_CNY_PER_USD, env.BALANCE_CREDIT_USD_PER_CNY) ??

@@ -49,11 +49,6 @@ describe('AlipayProvider', () => {
       expect(provider.supportedTypes).toEqual(['alipay_direct']);
     });
 
-    it('should have default limits', () => {
-      expect(provider.defaultLimits).toEqual({
-        alipay_direct: { singleMax: 1000, dailyMax: 10000 },
-      });
-    });
   });
 
   describe('createPayment', () => {

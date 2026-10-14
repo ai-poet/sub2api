@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/db';
 import { ORDER_STATUS } from '@/lib/constants';
-import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import { getEnv } from '@/lib/config';
 import { getMethodFeeRate, getMaxSettlementAmountForPayLimit, getMinSettlementAmountForPayLimit } from './fee';
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
@@ -9,51 +8,28 @@ import { convertCnySettlementToUsdBalance, resolveBalanceCreditCnyPerUsd } from 
 import { instanceSupportsPaymentType } from '@/lib/payment/opt-in-types';
 
 /**
- * 获取指定支付渠道的每日全平台限额（0 = 不限制）。
- * 覆盖模式同 /api/user：getSystemConfig（DB → process.env） → provider 默认值。
- * 当 OVERRIDE_ENV_ENABLED=true 且无显式渠道配置时，跳过 provider 默认值。
+ * 渠道级限额只认显式配置：getSystemConfig（DB → process.env）里的 `<前缀>_<渠道>`，
+ * 没配置或配置无效时返回 0（不限）。
+ *
+ * 代码里不写死各渠道的限额：以前各 provider 自带 defaultLimits（如易支付单笔 1000、每日 10000），
+ * 后台既看不到也改不了，「最大到账金额」调到 5000 仍被单笔 1000 盖住。网关确有上限时，
+ * 在支付实例的「每日限额 / 单笔最大」里配置。
  */
-export async function getMethodDailyLimit(paymentType: string): Promise<number> {
-  const configVal = await getSystemConfig(`MAX_DAILY_AMOUNT_${paymentType.toUpperCase()}`);
-  if (configVal !== undefined) {
-    const num = Number(configVal);
-    if (Number.isFinite(num) && num >= 0) return num;
-  }
-
-  // 开启了在线配置覆盖 → 跳过 provider 硬编码默认值，使用全局限额
-  const overrideEnabled = await getSystemConfig('OVERRIDE_ENV_ENABLED');
-  if (overrideEnabled === 'true') return 0;
-
-  // Provider 默认值（未开启在线配置时兜底）
-  await ensureDBProviders();
-  const providerDefault = paymentRegistry.getDefaultLimit(paymentType);
-  if (providerDefault?.dailyMax !== undefined) return providerDefault.dailyMax;
-
-  return 0;
+async function getConfiguredMethodLimit(prefix: string, paymentType: string): Promise<number> {
+  const configVal = await getSystemConfig(`${prefix}_${paymentType.toUpperCase()}`);
+  if (configVal === undefined) return 0;
+  const num = Number(configVal);
+  return Number.isFinite(num) && num >= 0 ? num : 0;
 }
 
-/**
- * 获取指定支付渠道的单笔限额（0 = 使用全局 MAX_RECHARGE_AMOUNT）。
- * 覆盖模式同 /api/user：getSystemConfig（DB → process.env） → provider 默认值。
- * 当 OVERRIDE_ENV_ENABLED=true 且无显式渠道配置时，跳过 provider 默认值。
- */
-export async function getMethodSingleLimit(paymentType: string): Promise<number> {
-  const configVal = await getSystemConfig(`MAX_SINGLE_AMOUNT_${paymentType.toUpperCase()}`);
-  if (configVal !== undefined) {
-    const num = Number(configVal);
-    if (Number.isFinite(num) && num >= 0) return num;
-  }
+/** 指定支付渠道的每日全平台限额（0 = 不限制）。 */
+export function getMethodDailyLimit(paymentType: string): Promise<number> {
+  return getConfiguredMethodLimit('MAX_DAILY_AMOUNT', paymentType);
+}
 
-  // 开启了在线配置覆盖 → 跳过 provider 硬编码默认值，使用全局限额
-  const overrideEnabled = await getSystemConfig('OVERRIDE_ENV_ENABLED');
-  if (overrideEnabled === 'true') return 0;
-
-  // Provider 默认值（未开启在线配置时兜底）
-  await ensureDBProviders();
-  const providerDefault = paymentRegistry.getDefaultLimit(paymentType);
-  if (providerDefault?.singleMax !== undefined) return providerDefault.singleMax;
-
-  return 0;
+/** 指定支付渠道的单笔限额（0 = 使用全局 MAX_RECHARGE_AMOUNT）。 */
+export function getMethodSingleLimit(paymentType: string): Promise<number> {
+  return getConfiguredMethodLimit('MAX_SINGLE_AMOUNT', paymentType);
 }
 
 export interface MethodLimitStatus {

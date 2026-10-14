@@ -16,9 +16,6 @@ export class StripeProvider implements PaymentProvider {
   readonly name: string;
   readonly providerKey = 'stripe';
   readonly supportedTypes: PaymentType[] = ['stripe'];
-  readonly defaultLimits = {
-    stripe: { singleMax: 0, dailyMax: 0 }, // 0 = unlimited
-  };
   readonly instanceId?: string;
   private instanceConfig?: Record<string, string>;
 

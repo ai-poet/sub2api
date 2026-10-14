@@ -7,6 +7,7 @@ import { paymentRegistry } from '@/lib/payment';
 import { getPaymentDisplayInfo } from '@/lib/pay-utils';
 import { resolveLocale } from '@/lib/locale';
 import { getSystemConfig } from '@/lib/system-config';
+import { getRechargeLimits } from '@/lib/order/recharge-limits';
 import { getVisiblePaymentTypes } from '@/lib/payment/visibility';
 import { listAvailablePromotionsForUser } from '@/lib/promotion/service';
 import { readUserToken } from '@/lib/utils/request-token';
@@ -58,9 +59,7 @@ export async function GET(request: NextRequest) {
       getVisiblePaymentTypes(),
       getSystemConfig('BALANCE_PAYMENT_DISABLED'),
       getSystemConfig('MAX_PENDING_ORDERS'),
-      getSystemConfig('RECHARGE_MIN_AMOUNT'),
-      getSystemConfig('RECHARGE_MAX_AMOUNT'),
-      getSystemConfig('DAILY_RECHARGE_LIMIT'),
+      getRechargeLimits(),
       getSystemConfig('USD_EXCHANGE_RATE'),
       getSystemConfig('BALANCE_CREDIT_CNY_PER_USD'),
       getSystemConfig('BALANCE_CREDIT_USD_PER_CNY'),
@@ -69,9 +68,7 @@ export async function GET(request: NextRequest) {
         visibleTypes,
         balanceDisabledVal,
         maxPendingVal,
-        minAmountVal,
-        maxAmountVal,
-        dailyLimitVal,
+        rechargeLimits,
         usdExchangeRateVal,
         balanceCreditCnyPerUsdVal,
         legacyBalanceCreditUsdPerCnyVal,
@@ -82,9 +79,10 @@ export async function GET(request: NextRequest) {
           methodLimits,
           balanceDisabled: balanceDisabledVal === 'true',
           maxPendingOrders: maxPendingVal ? parseInt(maxPendingVal, 10) || 3 : 3,
-          minAmount: minAmountVal ? parseFloat(minAmountVal) || env.MIN_RECHARGE_AMOUNT : env.MIN_RECHARGE_AMOUNT,
-          maxAmount: maxAmountVal ? parseFloat(maxAmountVal) || env.MAX_RECHARGE_AMOUNT : env.MAX_RECHARGE_AMOUNT,
-          maxDailyAmount: dailyLimitVal ? parseFloat(dailyLimitVal) : env.MAX_DAILY_RECHARGE_AMOUNT,
+          // 0 = 不限
+          minAmount: rechargeLimits.minAmount,
+          maxAmount: rechargeLimits.maxAmount,
+          maxDailyAmount: rechargeLimits.maxDailyAmount,
           usdExchangeRate: normalizeUsdExchangeRate(usdExchangeRateVal) ?? DEFAULT_USD_EXCHANGE_RATE,
           balanceCreditCnyPerUsd:
             resolveBalanceCreditCnyPerUsd(

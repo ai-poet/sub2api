@@ -27,15 +27,6 @@ export class EasyPayProvider implements PaymentProvider {
     'bank',
     'paynow',
   ];
-  readonly defaultLimits = {
-    alipay: { singleMax: 1000, dailyMax: 10000 },
-    wxpay: { singleMax: 1000, dailyMax: 10000 },
-    'usdt.plasma': { singleMax: 1000, dailyMax: 10000 },
-    'usdt.polygon': { singleMax: 1000, dailyMax: 10000 },
-    'usdc.solana': { singleMax: 1000, dailyMax: 10000 },
-    bank: { singleMax: 1000, dailyMax: 10000 },
-    paynow: { singleMax: 1000, dailyMax: 10000 },
-  };
   readonly instanceId?: string;
   private instanceConfig?: Record<string, string>;
 

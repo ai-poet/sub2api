@@ -65,9 +65,6 @@ export class AlipayProvider implements PaymentProvider {
   readonly name: string;
   readonly providerKey = 'alipay';
   readonly supportedTypes: PaymentType[] = ['alipay_direct'];
-  readonly defaultLimits = {
-    alipay_direct: { singleMax: 1000, dailyMax: 10000 },
-  };
   readonly instanceId?: string;
   private readonly instanceConfig?: Record<string, string>;
 

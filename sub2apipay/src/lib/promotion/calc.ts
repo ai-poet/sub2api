@@ -135,7 +135,7 @@ export function mergeQuickAmounts(base: number[], thresholds: number[], min: num
   for (const value of [...base, ...thresholds]) {
     if (!Number.isFinite(value) || value <= 0) continue;
     const rounded = fromCents(toCents(value));
-    if (rounded < min || rounded > max) continue;
+    if (rounded < min || (max > 0 && rounded > max)) continue; // max 为 0 表示不限
     set.add(rounded);
   }
   return [...set].sort((a, b) => a - b);

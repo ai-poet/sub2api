@@ -132,6 +132,10 @@ describe('mergeQuickAmounts', () => {
   it('忽略非法值', () => {
     expect(mergeQuickAmounts([Number.NaN, -1, 20], [], 1, 100)).toEqual([20]);
   });
+
+  it('上下限为 0 表示不限', () => {
+    expect(mergeQuickAmounts([10, 50, 100], [5000], 0, 0)).toEqual([10, 50, 100, 5000]);
+  });
 });
 
 describe('isPromotionInWindow', () => {

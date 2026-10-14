@@ -4,6 +4,7 @@ import { buildDefaultRechargeSubject, buildDefaultSubscriptionSubject } from '@/
 import { ORDER_STATUS } from '@/lib/constants';
 import { generateRechargeCode } from './code-gen';
 import { getMethodDailyLimit } from './limits';
+import { getRechargeLimits } from './recharge-limits';
 import { getMethodFeeRate, calculatePayAmount, getMaxSettlementAmountForPayLimit } from './fee';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import type { PaymentType, PaymentNotification, PaymentProvider } from '@/lib/payment';
@@ -469,11 +470,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     ? parseInt(maxPendingConfig, 10) || DEFAULT_MAX_PENDING_ORDERS
     : DEFAULT_MAX_PENDING_ORDERS;
 
-  // 每日充值限额配置（参考 /api/user 覆盖模式：getSystemConfig → env 兜底）
-  const dailyLimitConfig = await getSystemConfig('DAILY_RECHARGE_LIMIT');
-  const maxDailyRechargeAmount = dailyLimitConfig
-    ? parseFloat(dailyLimitConfig) || env.MAX_DAILY_RECHARGE_AMOUNT
-    : env.MAX_DAILY_RECHARGE_AMOUNT;
+  // 每日累计到账上限（后台配置 → 环境变量；0 或没设置 = 不限）
+  const { maxDailyAmount: maxDailyRechargeAmount } = await getRechargeLimits();
 
   // 将限额校验与订单创建放在同一个 serializable 事务中，防止并发突破限额
   const order = await prisma.$transaction(async (tx) => {

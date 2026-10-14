@@ -24,9 +24,6 @@ export class WxpayProvider implements PaymentProvider {
   readonly name: string;
   readonly providerKey = 'wxpay';
   readonly supportedTypes: PaymentType[] = ['wxpay_direct'];
-  readonly defaultLimits = {
-    wxpay_direct: { singleMax: 1000, dailyMax: 10000 },
-  };
   readonly instanceId?: string;
   private readonly instanceConfig?: Record<string, string>;
 
