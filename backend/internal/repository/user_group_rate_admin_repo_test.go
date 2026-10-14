@@ -57,6 +57,26 @@ func TestBuildUserGroupRateAdminWhere_EscapesLikeAndSkipsIDForText(t *testing.T)
 	require.NotContains(t, where, "u.id =")
 }
 
+func TestUserGroupRateAdminRepo_ListByUpdatedAtKeepsUserRowsTogether(t *testing.T) {
+	repo, mock := newUserGroupRateAdminRepoMock(t)
+	now := time.Now()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT COUNT(*), COUNT(DISTINCT ugr.user_id)")).
+		WillReturnRows(sqlmock.NewRows([]string{"count", "users"}).AddRow(int64(1), int64(1)))
+	mock.ExpectQuery(regexp.QuoteMeta("ORDER BY MAX(ugr.updated_at) OVER (PARTITION BY ugr.user_id) DESC NULLS LAST, ugr.user_id ASC, ugr.group_id ASC LIMIT $1 OFFSET $2")).
+		WithArgs(20, 0).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"user_id", "email", "username", "notes", "status",
+			"group_id", "name", "platform", "group_status", "group_rate",
+			"rate", "rpm", "updated_at",
+		}).AddRow(int64(1), "a@b.c", "", "", "active", int64(10), "Claude", "anthropic", "active", 1.0, 0.8, nil, now))
+
+	out, err := repo.List(context.Background(), service.UserGroupRateListFilter{Page: 1, PageSize: 20, SortBy: "updated_at", SortOrder: "desc"})
+	require.NoError(t, err)
+	require.Len(t, out.Items, 1)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestUserGroupRateAdminRepo_ListEmptySkipsPageQuery(t *testing.T) {
 	repo, mock := newUserGroupRateAdminRepoMock(t)
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT COUNT(*), COUNT(DISTINCT ugr.user_id)")).

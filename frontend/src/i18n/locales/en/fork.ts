@@ -527,6 +527,11 @@ export default {
         "higherWarning": "{count} items end up not below the group rate",
         "invalidWarning": "{count} items cannot be calculated and will be skipped"
       },
+      "editDialog": {
+        "title": "Edit exclusive rate",
+        "currentRate": "Current exclusive rate",
+        "newRate": "New rate"
+      },
       "addDialog": {
         "title": "Add exclusive rate",
         "user": "User",

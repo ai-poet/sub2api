@@ -109,8 +109,20 @@
           @update:selected-keys="handleSelectedKeys"
         >
           <template #cell-user="{ row }">
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
+            <!-- 同一用户的连续行只在第一行显示用户（桌面表格）；手机卡片各自独立，仍完整显示 -->
+            <span
+              v-if="continuationKeys.has(rowKey(row))"
+              class="hidden pl-1 text-gray-400 dark:text-dark-400 md:inline"
+              :title="row.user_email"
+              :aria-label="row.user_email"
+              data-test="ugr-same-user"
+            >〃</span>
+            <div
+              class="w-56 min-w-0 max-w-[14rem]"
+              :class="{ 'md:hidden': continuationKeys.has(rowKey(row)) }"
+              :title="userTooltip(row)"
+            >
+              <div class="flex min-w-0 items-center gap-2">
                 <span class="truncate font-medium text-gray-900 dark:text-white">{{ row.user_email }}</span>
                 <span
                   v-if="row.user_status !== 'active'"
@@ -124,12 +136,7 @@
           </template>
 
           <template #cell-group_name="{ row }">
-            <GroupBadge
-              :name="row.group_name"
-              :platform="row.group_platform"
-              :rate-multiplier="row.group_rate_multiplier"
-              :user-rate-multiplier="row.rate_multiplier"
-            />
+            <GroupBadge :name="row.group_name" :platform="row.group_platform" :show-rate="false" />
           </template>
 
           <template #cell-group_rate_multiplier="{ row }">
@@ -137,44 +144,12 @@
           </template>
 
           <template #cell-rate_multiplier="{ row }">
-            <div v-if="editingKey === rowKey(row)" class="flex items-center gap-1">
-              <input
-                ref="editInput"
-                v-model.number="editingValue"
-                type="number"
-                step="0.0001"
-                min="0.0001"
-                class="input hide-spinner w-24 py-1 text-sm"
-                data-test="ugr-edit-input"
-                @keydown.enter.prevent="saveEdit(row)"
-                @keydown.esc.prevent="cancelEdit"
-              />
-              <button
-                type="button"
-                class="rounded p-1 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 dark:hover:bg-emerald-900/20"
-                :disabled="saving"
-                :title="t('common.save')"
-                data-test="ugr-edit-save"
-                @click="saveEdit(row)"
-              >
-                <Icon name="check" size="sm" />
-              </button>
-              <button
-                type="button"
-                class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-700"
-                :title="t('common.cancel')"
-                @click="cancelEdit"
-              >
-                <Icon name="x" size="sm" />
-              </button>
-            </div>
             <button
-              v-else
               type="button"
               class="group inline-flex items-center gap-1 rounded px-1 font-semibold text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20"
               :title="t('admin.userGroupRates.edit')"
               data-test="ugr-edit"
-              @click="startEdit(row)"
+              @click="openEdit(row)"
             >
               ×{{ formatRate(row.rate_multiplier) }}
               <Icon name="edit" size="xs" class="opacity-0 transition-opacity group-hover:opacity-100" />
@@ -213,7 +188,8 @@
               <button
                 type="button"
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary-600 dark:hover:bg-dark-700 dark:hover:text-primary-400"
-                @click="startEdit(row)"
+                data-test="ugr-edit-action"
+                @click="openEdit(row)"
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t('admin.userGroupRates.edit') }}</span>
@@ -258,6 +234,14 @@
       @submit="submitBatch"
     />
 
+    <EditUserGroupRateDialog
+      :show="editTarget !== null"
+      :row="editTarget"
+      :submitting="saving"
+      @close="editTarget = null"
+      @submit="submitEdit"
+    />
+
     <AddUserGroupRateDialog
       :show="showAddDialog"
       :groups="groups"
@@ -280,7 +264,7 @@
 <script setup lang="ts">
 // fork：专属倍率用户管理——跨用户列出 / 调整用户在各分组的专属计费倍率。
 // 运维管理员与用户管理同一规则：看得到全部内容，写操作被后端截获成审批（202），全局提示由 App.vue 弹出。
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
@@ -294,7 +278,7 @@ import {
 } from '@/api/admin/userGroupRates'
 import { isApprovalQueued } from '@/utils/approval'
 import { extractApiErrorMessage } from '@/utils/apiError'
-import { discountPercent, formatPercent, formatRate, isValidRate, roundRate, rowKey } from '@/utils/userGroupRates'
+import { discountPercent, formatPercent, formatRate, roundRate, rowKey } from '@/utils/userGroupRates'
 import { formatCurrency, formatDateTimeToMinute, formatNumber } from '@/utils/format'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import type { Column } from '@/components/common/types'
@@ -309,12 +293,13 @@ import GroupBadge from '@/components/common/GroupBadge.vue'
 import Icon from '@/components/icons/Icon.vue'
 import BatchAdjustRatesDialog from '@/components/admin/userGroupRates/BatchAdjustRatesDialog.vue'
 import AddUserGroupRateDialog from '@/components/admin/userGroupRates/AddUserGroupRateDialog.vue'
+import EditUserGroupRateDialog from '@/components/admin/userGroupRates/EditUserGroupRateDialog.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
 
 const columns = computed<Column[]>(() => [
-  { key: 'user', label: t('admin.userGroupRates.columns.user') },
+  { key: 'user', label: t('admin.userGroupRates.columns.user'), class: 'w-56 max-w-[14rem]' },
   { key: 'group_name', label: t('admin.userGroupRates.columns.group'), sortable: true },
   { key: 'group_rate_multiplier', label: t('admin.userGroupRates.columns.groupRate') },
   { key: 'rate_multiplier', label: t('admin.userGroupRates.columns.rate'), sortable: true },
@@ -356,6 +341,18 @@ const statusFilterOptions = computed(() => [
 
 const statusLabel = (status: string) =>
   status === 'active' || status === 'disabled' ? t(`admin.userGroupRates.status.${status}`) : status
+
+/** 与上一行是同一用户的行：桌面表格里不再重复显示用户 */
+const continuationKeys = computed(() => {
+  const keys = new Set<string>()
+  rows.value.forEach((row, index) => {
+    if (index > 0 && rows.value[index - 1].user_id === row.user_id) keys.add(rowKey(row))
+  })
+  return keys
+})
+
+const userTooltip = (row: UserGroupRateRow) =>
+  [row.user_email, `#${row.user_id}`, row.username, row.user_notes].filter(Boolean).join(' · ')
 
 function currentQuery(page: number, pageSize: number) {
   return {
@@ -562,39 +559,15 @@ async function submitAdd(items: UserGroupRateBatchItem[]) {
   if (await applyItems(items)) showAddDialog.value = false
 }
 
-// 行内编辑
-const editingKey = ref<string | null>(null)
-const editingValue = ref<number | ''>('')
-const editInput = ref<HTMLInputElement | HTMLInputElement[] | null>(null)
+// 修改单项（弹窗）
+const editTarget = ref<UserGroupRateRow | null>(null)
 
-async function startEdit(row: UserGroupRateRow) {
-  editingKey.value = rowKey(row)
-  editingValue.value = row.rate_multiplier
-  await nextTick()
-  const el = Array.isArray(editInput.value) ? editInput.value[0] : editInput.value
-  el?.focus()
-  el?.select()
+function openEdit(row: UserGroupRateRow) {
+  editTarget.value = row
 }
 
-function cancelEdit() {
-  editingKey.value = null
-  editingValue.value = ''
-}
-
-async function saveEdit(row: UserGroupRateRow) {
-  if (saving.value) return
-  const value = editingValue.value
-  if (!isValidRate(value)) {
-    appStore.showError(t('admin.userGroupRates.invalidRate'))
-    return
-  }
-  if (roundRate(value) === roundRate(row.rate_multiplier)) {
-    cancelEdit()
-    return
-  }
-  if (await applyItems([{ user_id: row.user_id, group_id: row.group_id, rate_multiplier: roundRate(value) }])) {
-    cancelEdit()
-  }
+async function submitEdit(item: UserGroupRateBatchItem) {
+  if (await applyItems([item])) editTarget.value = null
 }
 
 // 恢复分组默认
@@ -626,14 +599,3 @@ onUnmounted(() => {
   listController?.abort()
 })
 </script>
-
-<style scoped>
-.hide-spinner::-webkit-outer-spin-button,
-.hide-spinner::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.hide-spinner {
-  -moz-appearance: textfield;
-}
-</style>

@@ -142,7 +142,7 @@ describe('UserGroupRatesView (fork)', () => {
     expect(wrapper.find('[data-test="row-2:3"]').text()).toContain('admin.userGroupRates.noUsage')
   })
 
-  it('saves an inline edit as a one-item batch and reloads', async () => {
+  it('saves an edit made in the dialog as a one-item batch and reloads', async () => {
     const wrapper = mountView()
     await flushPromises()
 
@@ -157,17 +157,38 @@ describe('UserGroupRatesView (fork)', () => {
     expect(wrapper.find('[data-test="ugr-edit-input"]').exists()).toBe(false)
   })
 
-  it('rejects an invalid inline rate without calling the API', async () => {
+  it('rejects an invalid rate in the edit dialog without calling the API', async () => {
     const wrapper = mountView()
     await flushPromises()
 
-    await wrapper.find('[data-test="row-1:3"] [data-test="ugr-edit"]').trigger('click')
+    await wrapper.find('[data-test="row-1:3"] [data-test="ugr-edit-action"]').trigger('click')
+    const dialog = wrapper.find('[data-test="dialog-admin.userGroupRates.editDialog.title"]')
+    expect(dialog.exists()).toBe(true)
+    expect((wrapper.find('[data-test="ugr-edit-input"]').element as HTMLInputElement).value).toBe('0.8')
     await wrapper.find('[data-test="ugr-edit-input"]').setValue('0')
     await wrapper.find('[data-test="ugr-edit-save"]').trigger('click')
     await flushPromises()
 
     expect(state.applyBatch).not.toHaveBeenCalled()
-    expect(state.showError).toHaveBeenCalledWith('admin.userGroupRates.invalidRate')
+    expect(dialog.text()).toContain('admin.userGroupRates.invalidRate')
+  })
+
+  it('shows the user only on the first of consecutive rows of the same user', async () => {
+    state.list.mockResolvedValue({
+      items: [rateRow(1, 3, 0.8, { user_notes: 'vip' }), rateRow(1, 4, 0.5), rateRow(2, 3, 1.2)],
+      total: 3,
+      page: 1,
+      page_size: 20,
+      pages: 1,
+      user_count: 2
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="row-1:3"] [data-test="ugr-same-user"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="row-1:4"] [data-test="ugr-same-user"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="row-2:3"] [data-test="ugr-same-user"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="row-1:3"] [title]').attributes('title')).toBe('u1@example.com · #1 · vip')
   })
 
   it('treats a queued approval as done without reporting an error (operator)', async () => {

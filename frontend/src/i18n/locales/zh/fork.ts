@@ -527,6 +527,11 @@ export default {
         "higherWarning": "{count} 项调整后不低于分组倍率",
         "invalidWarning": "{count} 项无法计算，将被跳过"
       },
+      "editDialog": {
+        "title": "修改专属倍率",
+        "currentRate": "当前专属倍率",
+        "newRate": "新倍率"
+      },
       "addDialog": {
         "title": "新增专属倍率",
         "user": "用户",

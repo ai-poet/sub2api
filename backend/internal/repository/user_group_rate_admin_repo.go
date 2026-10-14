@@ -35,8 +35,9 @@ const userGroupRateAdminFrom = `
 	WHERE ugr.rate_multiplier IS NOT NULL`
 
 // userGroupRateAdminOrderBy 排序字段白名单 → SQL 表达式；service 已经把非法值归一成 updated_at。
+// updated_at 按「该用户最近一次改动」排序，让同一用户的行在页面上挨在一起（前端只在第一行显示用户）。
 var userGroupRateAdminOrderBy = map[string]string{
-	"updated_at":      "ugr.updated_at",
+	"updated_at":      "MAX(ugr.updated_at) OVER (PARTITION BY ugr.user_id)",
 	"rate_multiplier": "ugr.rate_multiplier",
 	"discount":        "(ugr.rate_multiplier / NULLIF(g.rate_multiplier, 0))",
 	"user_id":         "ugr.user_id",
