@@ -107,10 +107,11 @@ type LeaderboardModelsResult struct {
 	Items             []LeaderboardModelItem `json:"items"`
 }
 
-// LeaderboardUserItem 是用户榜的一行。不含用户 ID、邮箱和原始用户名。
+// LeaderboardUserItem 是用户榜的一行。普通用户看到的不含用户 ID、邮箱和原始用户名；
+// 管理员 / 运维管理员（Identified）额外拿到真实身份，三个字段对其他人一律不出现。
 type LeaderboardUserItem struct {
 	Rank int `json:"rank"`
-	// DisplayName 是脱敏后的名字；为空时前端显示「用户」。
+	// DisplayName 是脱敏后的名字（Identified 时为真实用户名，没有就是邮箱）；为空时前端显示「用户」。
 	DisplayName string `json:"display_name"`
 	// AvatarSeed 是生成头像的化名种子，不可反推用户。
 	AvatarSeed string   `json:"avatar_seed"`
@@ -118,6 +119,10 @@ type LeaderboardUserItem struct {
 	Requests   int64    `json:"requests"`
 	ActualCost *float64 `json:"actual_cost,omitempty"`
 	IsSelf     bool     `json:"is_self"`
+	// UserID / Email / Username 只对管理员和运维管理员下发。
+	UserID   *int64 `json:"user_id,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Username string `json:"username,omitempty"`
 }
 
 // LeaderboardUsersResult 是用户榜接口的响应。
@@ -133,8 +138,17 @@ type LeaderboardUsersResult struct {
 	Limit       int        `json:"limit"`
 	GeneratedAt *time.Time `json:"generated_at,omitempty"`
 	// InsufficientData 为 true 时参与人数太少，不公布榜单。
-	InsufficientData bool                  `json:"insufficient_data"`
-	Items            []LeaderboardUserItem `json:"items"`
+	InsufficientData bool `json:"insufficient_data"`
+	// Identified 为 true 时榜单是实名的（管理员 / 运维管理员视角）。
+	Identified bool                  `json:"identified,omitempty"`
+	Items      []LeaderboardUserItem `json:"items"`
+}
+
+// LeaderboardViewer 是用户榜的查看者：UserID 用来标记「你」，Identified 决定是否下发真实身份。
+type LeaderboardViewer struct {
+	UserID int64
+	// Identified 只给管理员和运维管理员（IsPrivilegedRole）：他们在用户管理和调用日志里本来就能看到这些信息。
+	Identified bool
 }
 
 // PublicStatsResult 是首页公开统计接口的响应。
@@ -333,10 +347,13 @@ func (s *InsightsService) publicModelPlatforms(ctx context.Context) (map[string]
 type cachedUserRankingRow struct {
 	userID      int64
 	displayName string
-	avatarSeed  string
-	tokens      int64
-	requests    int64
-	actualCost  float64
+	// username / email 只在服务端保留，按查看者投影时才决定是否下发。
+	username   string
+	email      string
+	avatarSeed string
+	tokens     int64
+	requests   int64
+	actualCost float64
 }
 
 type cachedUserRanking struct {
@@ -345,9 +362,16 @@ type cachedUserRanking struct {
 	generatedAt  time.Time
 }
 
-// UserRanking 返回用户榜。排名指标和条数来自后台设置（用户不能切换）；viewerID 只用来标记「你」，不影响缓存的榜单。
-// startDate / endDate 是 YYYY-MM-DD（服务器时区，含首尾），都不传时取今天。
+// UserRanking 返回匿名视角的用户榜，等价于 UserRankingForViewer(…, LeaderboardViewer{UserID: viewerID})。
 func (s *InsightsService) UserRanking(ctx context.Context, startDate, endDate string, viewerID int64) (*LeaderboardUsersResult, error) {
+	return s.UserRankingForViewer(ctx, startDate, endDate, LeaderboardViewer{UserID: viewerID})
+}
+
+// UserRankingForViewer 返回用户榜。排名指标和条数来自后台设置（用户不能切换）；查看者只影响投影
+// （「你」标记、是否实名），不影响缓存的榜单——缓存所有人共享一份，真实身份在这里按查看者决定是否下发。
+// startDate / endDate 是 YYYY-MM-DD（服务器时区，含首尾），都不传时取今天。
+func (s *InsightsService) UserRankingForViewer(ctx context.Context, startDate, endDate string, viewer LeaderboardViewer) (*LeaderboardUsersResult, error) {
+	viewerID := viewer.UserID
 	dateRange, err := ParseInsightsDateRange(startDate, endDate, s.now())
 	if err != nil {
 		return nil, err
@@ -382,7 +406,9 @@ func (s *InsightsService) UserRanking(ctx context.Context, startDate, endDate st
 
 	generatedAt := cached.generatedAt
 	result.GeneratedAt = &generatedAt
-	if cached.participants < insightsMinParticipants {
+	result.Identified = viewer.Identified
+	// 人数下限是为了匿名（人太少时排名等于点名），实名视角的管理员不受此限。
+	if cached.participants < insightsMinParticipants && !viewer.Identified {
 		result.InsufficientData = true
 		return result, nil
 	}
@@ -394,6 +420,13 @@ func (s *InsightsService) UserRanking(ctx context.Context, startDate, endDate st
 			Tokens:      row.tokens,
 			Requests:    row.requests,
 			IsSelf:      viewerID > 0 && row.userID == viewerID,
+		}
+		if viewer.Identified {
+			userID := row.userID
+			item.UserID = &userID
+			item.Email = row.email
+			item.Username = row.username
+			item.DisplayName = leaderboardRealName(row.username, row.email)
 		}
 		if cfg.UsageRankingShowCost {
 			cost := row.actualCost
@@ -414,6 +447,8 @@ func (s *InsightsService) loadUserRanking(ctx context.Context, dateRange Insight
 		rows = append(rows, cachedUserRankingRow{
 			userID:      row.UserID,
 			displayName: maskLeaderboardName(row.Username, row.Email),
+			username:    strings.TrimSpace(row.Username),
+			email:       strings.TrimSpace(row.Email),
 			avatarSeed:  leaderboardAvatarSeed(s.avatarKey, row.UserID),
 			tokens:      row.Tokens,
 			requests:    row.Requests,

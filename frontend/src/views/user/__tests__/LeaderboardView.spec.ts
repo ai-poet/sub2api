@@ -116,6 +116,43 @@ describe('LeaderboardView', () => {
     getUserLeaderboard.mockResolvedValue(users())
   })
 
+  it('shows real identities with a usage-log link for admins and operators (fork)', async () => {
+    getUserLeaderboard.mockResolvedValue(
+      users({
+        identified: true,
+        items: [
+          userItem(1, { display_name: 'alice', username: 'alice', email: 'alice@example.com', user_id: 42 }),
+          userItem(2, { display_name: 'bob@example.com', email: 'bob@example.com', user_id: 43 }),
+          userItem(3, { display_name: 'carol', username: 'carol', email: 'carol@example.com', user_id: 44 }),
+          userItem(4, { display_name: 'dave', username: 'dave', email: 'dave@example.com', user_id: 45 }),
+        ],
+      }),
+    )
+    const wrapper = await mountView()
+
+    const list = wrapper.get('[data-testid="user-ranking-list"]')
+    expect(list.text()).toContain('leaderboard.users.identifiedNote')
+    expect(list.text()).not.toContain('leaderboard.users.privacyNote')
+
+    const links = list.findAll('[data-testid="leaderboard-user-link"]')
+    expect(links).toHaveLength(4)
+    expect(links[0].text()).toBe('alice')
+    expect(JSON.parse(links[0].attributes('data-to')!)).toEqual({ path: '/admin/usage', query: { user_id: '42' } })
+    const details = list.findAll('[data-testid="leaderboard-user-detail"]').map(node => node.text())
+    expect(details[0]).toBe('#42 · alice@example.com')
+    // 显示名已经是邮箱时不重复邮箱
+    expect(details[1]).toBe('#43')
+    expect(wrapper.findAll('[data-testid="user-podium"] [data-testid="leaderboard-user-link"]')).toHaveLength(3)
+  })
+
+  it('keeps masked names without links for regular users (fork)', async () => {
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).toContain('leaderboard.users.privacyNote')
+    expect(wrapper.find('[data-testid="leaderboard-user-link"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="leaderboard-user-detail"]').exists()).toBe(false)
+  })
+
   it('opens on the user board for today and puts #1 in the middle of the podium', async () => {
     const wrapper = await mountView()
 

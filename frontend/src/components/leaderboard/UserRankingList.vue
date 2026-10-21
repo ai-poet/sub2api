@@ -4,7 +4,7 @@
       <div>
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ t('leaderboard.listTitle') }}</h2>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {{ t('leaderboard.limitHint', { limit: limit || items.length }) }} · {{ t('leaderboard.users.privacyNote') }}
+          {{ t('leaderboard.limitHint', { limit: limit || items.length }) }} · {{ identified ? t('leaderboard.users.identifiedNote') : t('leaderboard.users.privacyNote') }}
         </p>
       </div>
       <span class="text-xs text-gray-500 dark:text-gray-400" data-testid="ranking-range-label">{{ rangeLabel }}</span>
@@ -30,9 +30,7 @@
         <div class="flex min-w-0 items-center gap-3">
           <IdenticonAvatar :seed="item.avatar_seed" size-class="h-10 w-10" />
           <div class="flex min-w-0 items-center gap-2">
-            <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
-              {{ item.display_name || t('leaderboard.users.anonymous') }}
-            </p>
+            <LeaderboardUserName :item="item" name-class="text-sm font-medium text-gray-900 dark:text-white" />
             <span v-if="item.is_self" class="shrink-0 rounded-full bg-primary-500 px-2 py-0.5 text-[11px] font-semibold text-white">
               {{ t('leaderboard.users.you') }}
             </span>
@@ -60,6 +58,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IdenticonAvatar from './IdenticonAvatar.vue'
+import LeaderboardUserName from './LeaderboardUserName.vue'
 import type { LeaderboardMetric, LeaderboardUserItem } from '@/api/leaderboard'
 import {
   formatMetric,
@@ -78,6 +77,8 @@ const props = defineProps<{
   limit: number
   rangeLabel: string
   rangeKey: string
+  /** 实名视角（管理员 / 运维管理员）：表头说明换成实名提示 */
+  identified?: boolean
 }>()
 
 const { t } = useI18n()

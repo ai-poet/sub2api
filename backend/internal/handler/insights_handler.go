@@ -37,7 +37,9 @@ func (h *InsightsHandler) ModelLeaderboard(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// UserLeaderboard 用户用量榜（名字脱敏，不含用户 ID 与邮箱）。排名指标与条数由后台设置决定。
+// UserLeaderboard 用户用量榜。排名指标与条数由后台设置决定。普通用户看到脱敏名字、不含用户 ID 与邮箱；
+// 管理员和运维管理员看到真实身份（他们在用户管理与调用日志里本来就能看到）。角色取自 jwtAuth 写入的
+// 当前用户记录，是实时的。
 // GET /api/v1/leaderboard/users?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
 func (h *InsightsHandler) UserLeaderboard(c *gin.Context) {
 	subject, ok := middleware2.GetAuthSubjectFromContext(c)
@@ -46,12 +48,18 @@ func (h *InsightsHandler) UserLeaderboard(c *gin.Context) {
 		return
 	}
 	startDate, endDate := insightsDateQuery(c)
-	result, err := h.insights.UserRanking(c.Request.Context(), startDate, endDate, subject.UserID)
+	result, err := h.insights.UserRankingForViewer(c.Request.Context(), startDate, endDate, leaderboardViewer(c, subject.UserID))
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
 	response.Success(c, result)
+}
+
+// leaderboardViewer 只给管理员和运维管理员实名视角；申诉会话等把角色固定为 user 的入口自然是匿名视角。
+func leaderboardViewer(c *gin.Context, userID int64) service.LeaderboardViewer {
+	role, _ := middleware2.GetUserRoleFromContext(c)
+	return service.LeaderboardViewer{UserID: userID, Identified: service.IsPrivilegedRole(role)}
 }
 
 // PublicStats 首页公开统计。匿名可见，开关关闭或数据不可用时也返回 200，从不返回 401。

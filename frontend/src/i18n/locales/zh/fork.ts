@@ -1185,6 +1185,8 @@ export default {
       "you": "你",
       "anonymous": "用户",
       "privacyNote": "名字已脱敏，头像随机生成",
+      "identifiedNote": "管理员视角：显示真实用户，普通用户看到的仍是脱敏名字",
+      "viewUsage": "查看该用户的调用日志",
       "insufficientTitle": "参与的用户还太少",
       "insufficient": "至少 5 位用户产生用量后才会公布榜单，可以换个更长的时间范围看看。"
     }

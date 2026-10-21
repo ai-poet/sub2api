@@ -772,9 +772,10 @@ The features below are locally maintained customizations of this fork. During up
   - Public stats read only `usage_dashboard_daily`. They report unavailable when dashboard aggregation is off or the watermark is more than 2 h behind, and never fall back to `usage_logs`.
 - **Privacy rules (do not weaken)**:
   - The user board ranks only `role='user' AND status='active' AND deleted_at IS NULL`.
-  - Responses never carry user IDs, emails or raw usernames: `display_name` is masked (first + `***` + last, the email domain dropped), and `avatar_seed` is an HMAC of the user ID under a key derived from the JWT secret.
-  - Spend is left out unless the admin turns it on.
-  - With fewer than 5 participants the response is `insufficient_data` and lists nobody.
+  - Responses to regular users never carry user IDs, emails or raw usernames: `display_name` is masked (first + `***` + last, the email domain dropped), and `avatar_seed` is an HMAC of the user ID under a key derived from the JWT secret.
+  - **Admins and operators see the board by name** (`LeaderboardViewer.Identified`, decided in `handler/insights_handler.go::leaderboardViewer` from the live role via `IsPrivilegedRole`). They get `identified: true` plus `user_id` / `email` / `username` per row and the real name in `display_name` (`leaderboardRealName`), because user management and the usage logs already show them this. The cache stays shared: username and email live only in `cachedUserRankingRow` and are projected per request in `UserRankingForViewer`; the extra fields are `omitempty`, so a regular user's response is byte-for-byte the old one (pinned by `TestUserRankingForViewer_IdentifiedViewerSeesRealIdentity`).
+  - Spend is left out unless the admin turns it on, for every viewer.
+  - With fewer than 5 participants the response is `insufficient_data` and lists nobody; the identified view ignores this floor (it exists only for anonymity).
   - Public stats never include user counts.
 - **Frontend**:
   - `views/user/LeaderboardView.vue` on `/leaderboard` (sidebar label 「用量排行」) is its own lazy `feature-leaderboard` chunk. It is laid out like TokenRouter's UsageRankingView:
@@ -788,12 +789,13 @@ The features below are locally maintained customizations of this fork. During up
     - `IdenticonAvatar.vue` + `utils/identicon.ts`.
     - `leaderboardFormat.ts`: `rankTheme` and the metric helpers.
   - The viewer's own card and row get a 「你」 pill.
+  - Identified rows (admins and operators): `components/leaderboard/LeaderboardUserName.vue` links the name to `/admin/usage?user_id=` and adds a `#id · email` line; `UserRankingList` shows `leaderboard.users.identifiedNote` instead of `privacyNote`.
   - API wrappers: `api/leaderboard.ts`, `api/publicStats.ts`, `api/admin/insights.ts`.
   - Flags: `utils/forkFeatureFlags.ts`; the sidebar entry uses `flagLeaderboard` with `TrophyIcon` from `components/layout/sidebarForkIcons.ts`.
   - Home counters: `components/home/HomeLiveStats.vue`, a section of its own placed in `HomeView.vue` right after `HomeHero`, i.e. on the second screen. Never put it inside the hero: the first screen belongs to the client showcase. Nothing is requested while the switch is off; the cards rise and the numbers count up only once the section scrolls into view (3.2 s, unit locked).
   - i18n keys in `fork.ts`: `leaderboard.*`, `nav.leaderboard`, `home.liveStats.*`, `dashboard.fork.*`, `admin.settings.site.insights.*`.
 - **Tests**: `service/insights_test.go`, `repository/insights_repo_test.go`, `handler/insights_handler_test.go`, `views/user/__tests__/LeaderboardView.spec.ts`, `components/home/__tests__/HomeLiveStats.spec.ts`.
-- Keep on upstream merges; never add user identifiers to the ranking responses or widen the public stats.
+- Keep on upstream merges; never add user identifiers to the ranking responses for regular users, never cache an identified projection, and never widen the public stats.
 
 ### 支付页登录态不进地址 (Pay pages keep the login token out of URLs, local implementation)
 

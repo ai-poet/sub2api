@@ -1185,6 +1185,8 @@ export default {
       "you": "You",
       "anonymous": "User",
       "privacyNote": "Names are masked and avatars are generated",
+      "identifiedNote": "Admin view: real users are shown; regular users still see masked names",
+      "viewUsage": "View this user's usage logs",
       "insufficientTitle": "Too few users yet",
       "insufficient": "The ranking is published once at least 5 users have usage. Try a longer date range."
     }

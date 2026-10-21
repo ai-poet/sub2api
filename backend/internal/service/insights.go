@@ -239,6 +239,14 @@ func maskLeaderboardName(username, email string) string {
 	}
 }
 
+// leaderboardRealName 是实名视角（管理员 / 运维管理员）的显示名：优先用户名，没有就用完整邮箱。
+func leaderboardRealName(username, email string) string {
+	if name := strings.TrimSpace(username); name != "" {
+		return name
+	}
+	return strings.TrimSpace(email)
+}
+
 // leaderboardAvatarSeed 生成头像种子：HMAC 后取前 16 个十六进制字符。
 // 同一用户在各日期范围得到同一个种子（稳定的化名），但从种子反推不出用户 ID。
 func leaderboardAvatarSeed(key []byte, userID int64) string {

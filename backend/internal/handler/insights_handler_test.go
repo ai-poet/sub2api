@@ -103,3 +103,23 @@ func TestInsightsLeaderboards_RejectBadDateRanges(t *testing.T) {
 		}
 	}
 }
+
+// 只有管理员和运维管理员拿到实名视角；普通用户和没有角色的上下文都是匿名视角。
+func TestInsightsLeaderboardViewer_OnlyPrivilegedRolesAreIdentified(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cases := map[string]bool{
+		service.RoleAdmin:    true,
+		service.RoleOperator: true,
+		service.RoleUser:     false,
+		"":                   false,
+	}
+	for role, identified := range cases {
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+		if role != "" {
+			c.Set(string(middleware2.ContextKeyUserRole), role)
+		}
+		viewer := leaderboardViewer(c, 9)
+		require.Equal(t, int64(9), viewer.UserID, role)
+		require.Equal(t, identified, viewer.Identified, role)
+	}
+}

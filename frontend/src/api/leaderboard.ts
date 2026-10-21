@@ -1,5 +1,5 @@
 // fork：用量排行（登录可见）。按日期范围查询（YYYY-MM-DD，服务器时区，含首尾，最长 90 天），后端按范围缓存；
-// 用户榜不含用户 ID、邮箱和原始用户名，排名指标与条数由后台设置决定。
+// 用户榜对普通用户不含用户 ID、邮箱和原始用户名；管理员 / 运维管理员拿到实名（identified）。排名指标与条数由后台设置决定。
 import { apiClient } from './client'
 
 export type LeaderboardMetric = 'tokens' | 'requests' | 'cost'
@@ -42,6 +42,10 @@ export interface LeaderboardUserItem {
   requests: number
   actual_cost?: number
   is_self: boolean
+  /** 以下三项只对管理员和运维管理员下发 */
+  user_id?: number
+  email?: string
+  username?: string
 }
 
 export interface LeaderboardUsersResponse {
@@ -56,6 +60,8 @@ export interface LeaderboardUsersResponse {
   generated_at?: string
   /** 参与人数太少时不公布榜单 */
   insufficient_data: boolean
+  /** 实名视角（管理员 / 运维管理员） */
+  identified?: boolean
   items: LeaderboardUserItem[]
 }
 

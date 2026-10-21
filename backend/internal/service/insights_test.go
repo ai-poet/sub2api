@@ -386,6 +386,56 @@ func TestUserRanking_ProjectsWithoutIdentifiers(t *testing.T) {
 	}
 }
 
+// 管理员 / 运维管理员看到真实身份；同一份缓存随后给普通用户投影时仍然不带任何身份信息。
+func TestUserRankingForViewer_IdentifiedViewerSeesRealIdentity(t *testing.T) {
+	repo := &fakeInsightsRepo{userUsage: &InsightsUserUsage{Rows: usageRows(6), Participants: 6}}
+	svc, _ := newTestInsightsService(repo, InsightsConfig{UsageRankingEnabled: true, UsageRankingLimit: 20})
+
+	admin, err := svc.UserRankingForViewer(context.Background(), "", "", LeaderboardViewer{UserID: 1, Identified: true})
+	require.NoError(t, err)
+	require.True(t, admin.Identified)
+	require.Len(t, admin.Items, 6)
+	first := admin.Items[0]
+	require.NotNil(t, first.UserID)
+	require.Equal(t, int64(100), *first.UserID)
+	require.Equal(t, "privatea@example.com", first.Email)
+	require.Equal(t, "user-number-a", first.Username)
+	require.Equal(t, "user-number-a", first.DisplayName)
+	require.Nil(t, first.ActualCost, "identity does not reveal cost; the show-cost switch still decides")
+
+	anon, err := svc.UserRanking(context.Background(), "", "", 0)
+	require.NoError(t, err)
+	require.Equal(t, 1, repo.userCalls, "both views come from the same cached board")
+	require.False(t, anon.Identified)
+	raw, err := json.Marshal(anon)
+	require.NoError(t, err)
+	for _, forbidden := range []string{"user_id", "email", "example.com", "user-number", "identified"} {
+		require.NotContains(t, string(raw), forbidden)
+	}
+}
+
+// 人数下限只为匿名而设，实名视角照常列出。
+func TestUserRankingForViewer_IdentifiedIgnoresParticipantFloor(t *testing.T) {
+	repo := &fakeInsightsRepo{userUsage: &InsightsUserUsage{Rows: usageRows(2), Participants: 2}}
+	svc, _ := newTestInsightsService(repo, InsightsConfig{UsageRankingEnabled: true, UsageRankingLimit: 20})
+
+	admin, err := svc.UserRankingForViewer(context.Background(), "", "", LeaderboardViewer{UserID: 1, Identified: true})
+	require.NoError(t, err)
+	require.False(t, admin.InsufficientData)
+	require.Len(t, admin.Items, 2)
+
+	anon, err := svc.UserRanking(context.Background(), "", "", 0)
+	require.NoError(t, err)
+	require.True(t, anon.InsufficientData)
+	require.Empty(t, anon.Items)
+}
+
+// 实名显示名优先用户名，没有就用完整邮箱。
+func TestLeaderboardRealName(t *testing.T) {
+	require.Equal(t, "alice", leaderboardRealName(" alice ", "a@b.c"))
+	require.Equal(t, "a@b.c", leaderboardRealName("", " a@b.c "))
+}
+
 func TestUserRanking_InsufficientParticipants(t *testing.T) {
 	repo := &fakeInsightsRepo{userUsage: &InsightsUserUsage{Rows: usageRows(4), Participants: 4}}
 	svc, _ := newTestInsightsService(repo, InsightsConfig{UsageRankingEnabled: true, UsageRankingLimit: 20})

@@ -30,9 +30,13 @@
 
       <div class="relative mt-7 flex flex-col items-center text-center">
         <IdenticonAvatar :seed="item.avatar_seed" size-class="h-16 w-16" />
-        <h3 class="mt-4 max-w-full truncate text-lg font-semibold text-gray-900 dark:text-white">
-          {{ item.display_name || t('leaderboard.users.anonymous') }}
-        </h3>
+        <LeaderboardUserName
+          :item="item"
+          tag="h3"
+          center
+          class="mt-4 max-w-full"
+          name-class="text-lg font-semibold text-gray-900 dark:text-white"
+        />
         <AnimatedNumber
           :value="metricValue(item, primaryMetric)"
           :from="0"
@@ -66,6 +70,7 @@ import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import AnimatedNumber from '@/components/motion/AnimatedNumber.vue'
 import IdenticonAvatar from './IdenticonAvatar.vue'
+import LeaderboardUserName from './LeaderboardUserName.vue'
 import type { LeaderboardMetric, LeaderboardUserItem } from '@/api/leaderboard'
 import { formatMetric, metricFormatterFor, metricGridStyle, metricValue, rankTheme } from './leaderboardFormat'
 

@@ -98,6 +98,7 @@
             :limit="users.limit"
             :range-label="rangeLabel"
             :range-key="rangeKey"
+            :identified="users.identified === true"
           />
         </template>
         <section v-else-if="users" class="empty-box" data-testid="leaderboard-empty">
