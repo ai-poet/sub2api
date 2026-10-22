@@ -264,8 +264,13 @@ The features below are locally maintained customizations of this fork. During up
   gateway base and the shared timeouts, sends the key in `x-goog-api-key`
   only (never `?key=`, which was logged), streams `thought` parts as
   reasoning, counts thinking and cached tokens, classifies failures for the
-  retry loop, fails a stream without `finishReason`, and gives tool calls a
-  per-response nonce (`call_<name>` repeated across turns); `registry.rs`
+  retry loop, fails a stream without `finishReason`, gives tool calls a
+  per-response nonce (`call_<name>` repeated across turns), opens a block
+  for every `functionCall` part (parallel calls each arrive at `parts[0]` of
+  their own chunk; keyed by that position their arguments ran together as
+  `{…}{…}` and every call was refused as malformed JSON), and ends the turn
+  on a refused prompt (`promptFeedback.blockReason`) instead of retrying it
+  as a broken stream; `registry.rs`
   uses a configured base for `google`; `provider_options.rs` maps the effort
   onto Gemini 4's `thinkingLevel`. An `antigravity` group's Gemini requests
   go to `/antigravity/v1beta`, a `gemini` / `composite` group's to `/v1beta`
