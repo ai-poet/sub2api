@@ -257,6 +257,23 @@ The features below are locally maintained customizations of this fork. During up
   (`waku-agent-bridge/src/images.rs`): the engine never read the `@path`
   mentions the composer appends per attachment, so the bridge sends each
   mentioned PNG / JPEG / GIF / WebP as an image block ahead of the text.
+  Gemini 4 Argon — that model alone (`GEMINI_NATIVE_MODELS` in the bridge's
+  `config.rs`, `NATIVE_GEMINI_MODELS` in `native_agent.rs`, kept in step) —
+  speaks Gemini's own API as a fourth wire format, `gemini`, on the engine's
+  `google` adapter: `api/src/providers/google.rs::with_gateway` takes the
+  gateway base and the shared timeouts, sends the key in `x-goog-api-key`
+  only (never `?key=`, which was logged), streams `thought` parts as
+  reasoning, counts thinking and cached tokens, classifies failures for the
+  retry loop, fails a stream without `finishReason`, and gives tool calls a
+  per-response nonce (`call_<name>` repeated across turns); `registry.rs`
+  uses a configured base for `google`; `provider_options.rs` maps the effort
+  onto Gemini 4's `thinkingLevel`. An `antigravity` group's Gemini requests
+  go to `/antigravity/v1beta`, a `gemini` / `composite` group's to `/v1beta`
+  — chosen from `gateway_keys.model_platforms`, the platform of the group
+  each model is routed to (`Credentials::model_platforms`, filled from the
+  catalog's offers in `refresh_model_routes` / `route_one_model`). The
+  bridge also records each session's trajectory (`waku-agent-bridge/src/
+  trajectory.rs`, see 轨迹 below) without touching the engine.
   One more departure: on the Responses and Chat Completions routes the calls
   of one assistant message no longer run strictly one after another — each
   stretch of calls that may overlap (sub-agents and read-only tools,
@@ -436,6 +453,22 @@ The features below are locally maintained customizations of this fork. During up
 
 - An "Images" (画图) row under Search in the desktop client's sidebar opens a page in the main column: one field where a prompt alone draws (`/v1/images/generations`) and a prompt plus dropped / pasted / picked pictures edits them (`/v1/images/edits`, multipart `image[]`). Model, group, size (priced from the catalog's `pricing_details.media_tiers`), quality and count sit under the field; pictures go to the user's Pictures folder (`Pictures/CheapRouter/YYYY-MM/`), and the gallery, its history and references live in `~/.cheaprouter/image-studio/`. Files: `client/src/app/image_studio.rs` (state, store, job driver), `client/src/app/image_studio_view.rs`, the shared request layer `client/crates/sub2api/src/images.rs` (also used by the agents' `generate_image` in `client/src/js_repl_image.rs`), `form_text` / `form_file` / `download_to` in `client/crates/sub2api/src/http.rs`, and the hook points listed in `client/docs/FORK.md`. The model picker lists the image models of the model catalog (`model_plaza.items`); until that catalog has loaded it shows "loading" or the failure with a retry (`ModelPlazaState::status`, `CatalogStatus`) and drawing waits — never show the `gpt-image-2` fallback while the catalog is unknown (that is what made the list look like gpt-image-2 alone). A failed catalog fetch backs off 5 s → 15 s → 30 s → 60 s instead of holding the empty list for a minute.
 - **No backend change.** A job submits to `/v1/images/*/async` and polls `/v1/images/tasks/:id`; when the gateway answers `async image tasks are not enabled` (no object storage configured) it streams the synchronous endpoint instead, one picture per call, relying on the gateway's ten-second SSE keep-alive to get past Cloudflare's first-byte timeout. OpenAI groups default to `allow_image_generation = false` while the model catalog still lists image models under them, so a job walks the candidate groups (`images::image_route_candidates`) past a `403 Image generation is not enabled for this group`, remembers refusals for a day, and records the group that drew in `Credentials::image_groups`; `refresh_model_routes` keeps that group's key and routes the model there, so `gateway_keys.models` sends the agents' image calls to the same group. Keep this feature on upstream merges.
+- **Node choice.** A chip in the controls row picks the gateway node this page draws through — "follow the agents' node" (default) or any node with its last latency (`StudioPrefs::node`, `NodeMenu::node_items` in `src/app/cloud_origins.rs`). A job records the node it was sent to (`StudioJob::origin`), so a resumed task is polled where it was submitted; a removed node falls back to following the agents. The agents' `generate_image` keeps the agents' node.
+
+### 需要你 / 侧边提问 / 行内评论 (Client interactions after Claude Desktop, local implementation)
+
+- **Behaviour only**, after Claude Desktop's Code tab; no code or copy taken.
+- **Needs you** (`src/app/task_attention.rs`): a task holding a permission, a finished plan, a question or a team member's request (even on an idle captain) gets an alert icon with a tooltip in its sidebar row and on its folded group, sorts with the running tasks, counts in the macOS Dock badge, and ⇧⌘A / Ctrl+Shift+A (or the palette) goes to the next one. The state is read from the runtime's pending requests only, so it goes the moment the request is answered or the turn ends — never a stale mark.
+- **Side chat** (`src/app/side_chat.rs`, `crates/waku-client/src/side_chat.rs`, `crates/waku-agent-bridge/src/side_chat.rs`, `crates/waku-core/src/side_chat.rs`): ⌘; / Ctrl+; or `/btw <question>` asks about a task in a right-panel surface. A digest of Waku's own transcript (any provider) goes to the built-in engine through the daemon (additive `WorkspaceOperation::SideChat{Start,Poll,Cancel}`) and the answer streams back. It never touches the task's transcript, queue, agent or the disk. Escape in it never reaches `CancelTurn`.
+- **Review line comments** (`src/app/review_comments.rs`): "+" on a diff line (or the arrow keys and Enter / `c`) opens an inline editor; comments are anchored by file, side and line number, survive gap expansion, and ⌘↩ sends them all as one message (queued while a turn runs).
+- Keep on upstream merges.
+
+### 轨迹 Trajectory (Client trajectory, port of DeepSeek Harness ui-trajectory, local implementation)
+
+- Built-in agent only. The bridge records every model request (inferred start, first token, end, usage, retries, text and thinking previews), tool call, compaction, rewind and branch, plus the system prompt and tool catalog each turn ran with, into JSON-lines segments beside the transcript: `agent-sessions/<id>.trajectory/` (1 MiB segments, 24 MiB cap, owner-only), written by a per-session thread so `forward_events` never blocks (`crates/waku-agent-bridge/src/trajectory.rs`; hooks in `session.rs`, `subagent.rs`, `config.rs`, `native.rs`). No engine change, no wire change.
+- `crates/agent-trajectory` (pure, MIT notice for the translated parts) holds the record, the writer / reader, and dsh's ledger model, timeline projection (sequence / duration / actual) and timing rules. `src/app/trajectory_panel.rs` is the right-panel surface: three-lane timeline with interval focus, virtualized ledger, inspector tabs per record kind; tool rows get an Inspect pill. Read through the daemon like the Team panel.
+- Settings → Agent switches recording off via `trajectory.json` beside the engine's `settings.json` (never in `settings.json`: the engine's save drops unknown keys).
+- Keep on upstream merges.
 
 ### 智能体团队 AgentTeams (Client agent teams, local implementation)
 
