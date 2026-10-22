@@ -319,12 +319,46 @@ The features below are locally maintained customizations of this fork. During up
   gives AgentTeams members the unbounded budget, one-shot prompts the light
   one and memory consolidation one attempt, and resumes an active goal on
   its own after a transient failure (`session_goal_resume.rs`, 30 → 300 s,
-  five at most); the desktop shows `DriverEvent::ModelRetry` as
-  "Reconnecting (2/10, 8 s)", takes back a discarded half answer
-  (`src/app/model_retry.rs`), and offers "Continue" on a failed turn that
-  got work done. Never put per-attempt text into the system prompt or the
-  history: a retry resends the same bytes, which is what keeps the prompt
-  cache and the gateway's sticky routing.
+  five at most); the desktop shows `DriverEvent::ModelRetry` by its cause
+  ("Rate limited · retrying in 8 s (2/10)", then "Sending again (2/10)"
+  once the wait is over; `RetryCause` in `waku-protocol/src/turn_failure.rs`),
+  takes back a discarded half answer (`src/app/model_retry.rs`), and offers
+  "Continue" on a failed turn that got work done — unless its kind says
+  continuing cannot help. Never put per-attempt text into the system prompt
+  or the history: a retry resends the same bytes, which is what keeps the
+  prompt cache and the gateway's sticky routing.
+  A turn that gives up keeps its failure structured, after DeepSeek
+  Harness's `LlmFailure` / `displayFailure` (behaviour only):
+  `ModelFailure` carries the provider's `code` and the response's
+  `request_id` (`retry_policy::request_id_of`: `x-request-id` — what the
+  gateway's ops log is keyed on — then `request-id`; in-stream failures are
+  stamped by `ProviderError::with_request_id` in the Responses / Chat /
+  Gemini adapters, and `create_message_stream_once` returns the id), every
+  message is scrubbed by `retry_policy::redact_secrets`, an
+  `insufficient_quota` 429 no longer retries, and `retry_or_return!` sends
+  `QueryEvent::RequestFailed(ModelFailure)` right before `QueryOutcome::Error`
+  (`RetryNotice.request_id` too). The bridge's `forward_events` keeps the
+  last one; `waku-agent-bridge/src/failure.rs` names the failure from it
+  (`kind_of`; reading the flattened error is only the fallback for errors
+  outside the policy) — the gateway's account verdicts keep their text and
+  paywall, its content-policy verdicts and the transient ones that ran out
+  are named (`retry_rules::gateway_verdict`) — and decides the goal resume
+  from the class, not the text. `AgentEvent::TurnFailed { kind: Option, detail,
+  request_id }` is sent for every failed request; a refused key's provider
+  text is never shown (only its status). The driver adds a "Request ID"
+  line and sends the additive `DriverEvent::TurnFailure` (wire
+  `turnFailure`) before the message; `TurnError.kind` keeps it (an unknown
+  kind reads as `TurnFailureKind::Unknown`), and the error banner's actions
+  follow it (`error_banner::remedy`: overflow → Compact context then
+  Continue queued; auth / quota / forbidden → Model providers or Account
+  settings; content policy / bad request → no Continue). Sub-agents' and
+  team members' retries show as a line in their record and take back their
+  discarded half answer (`SubagentEvent::{Retry, Settled}`,
+  `SubagentFeed::retry`); the trajectory records each retry's reason, the
+  request's final `FailureInfo` and goal resumes (`Record::GoalResume`).
+  The desktop skips a driver event kind it does not know
+  (`UnsupportedDriverEvent`) instead of reporting the daemon as broken. No
+  model or provider failover, as in dsh: a retry stays on its route.
 - Computer Use and image generation reach the built-in agent with **no engine
   change at all**: the bridge pushes `waku_js_repl` into the session's
   `Config.mcp_servers`, `GuiPermissionHandler` promotes only *undecided*
@@ -413,14 +447,19 @@ The features below are locally maintained customizations of this fork. During up
   the request URL and the picker status; a 404 names model, route and URL
   (`AgentEvent::RouteNotFound`). On the managed gateway each model goes out with the key of
   the group that serves it: `client/crates/sub2api/src/model_routing.rs` picks
-  it (the CLI slot's group for Claude, GPT and Grok; the Chinese models'
+  it (the CLI slot's group for Claude, GPT and Grok; Gemini's own slot,
+  `GEMINI_LANE` / `Credentials::gemini_group_id`, bound to the first Gemini
+  group with a reused or newly minted key until the user picks another —
+  it used to share the general slot and so never got a group or key once
+  that slot held anything — and trusted even when its group lists nothing;
+  the Chinese models'
   own slot for DeepSeek, GLM, Kimi, MiniMax and Qwen, falling back to
   pay-as-you-go while a subscription picked there is spent; else a
   subscription group with room left, else a pay-as-you-go group, else a spent
   subscription) and `client/src/app/cloud_subscriptions.rs` refreshes it
   together with the subscriptions Settings → Cloud Account lists; the
-  per-model keys ride in `gateway_keys.models`. A Chinese model with no keyed
-  route yet is looked up on its own before its turn goes out
+  per-model keys ride in `gateway_keys.models`. A Chinese or Gemini model with
+  no keyed route yet is looked up on its own before its turn goes out
   (`sub2api::route_one_model`, `native_route_need` / `ensure_native_model_route`
   in `cloud_subscriptions.rs`) — otherwise the first turn after sign-in rides
   the general key to the wrong group. The Chinese models' groups are
