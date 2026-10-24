@@ -55,11 +55,7 @@
       </div>
 
       <!-- Contact -->
-      <div class="mt-10 border-t border-black/8 pt-8 dark:border-white/10">
-        <p class="text-sm leading-7 text-[#999] dark:text-white/38">
-          {{ pt('home.privacy.contact') }}
-        </p>
-      </div>
+      <LegalContactNote :lead="pt('home.privacy.contact')" />
     </article>
   </div>
 </template>
@@ -67,6 +63,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import LegalContactNote from '@/components/legal/LegalContactNote.vue'
 import { useAppStore } from '@/stores/app'
 
 const { t } = useI18n()
@@ -109,6 +106,7 @@ const sections = computed(() => [
     paragraphs: [
       pt('home.privacy.sections.code.p1'),
       pt('home.privacy.sections.code.p2'),
+      pt('home.privacy.sections.code.p3'),
     ],
   },
   {
@@ -123,6 +121,7 @@ const sections = computed(() => [
     items: [
       pt('home.privacy.sections.third.i1'),
       pt('home.privacy.sections.third.i2'),
+      pt('home.privacy.sections.third.i3'),
     ],
   },
   {

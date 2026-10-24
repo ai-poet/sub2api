@@ -174,6 +174,8 @@ type ContentModerationConfig struct {
 	// 当次不判定封号，且历史 cyber 行在 CountFlaggedByUserSince 中被排除。
 	// 默认 false（计入，与历史行为一致；旧配置 JSON 无此字段时反序列化为 false）。
 	CyberPolicyExcludeFromBanCount bool `json:"cyber_policy_exclude_from_ban_count"`
+	// UnselectedGroupsAuditOnly：指定分组时，未勾选的分组只审计、不警告不处罚。
+	UnselectedGroupsAuditOnly bool `json:"unselected_groups_audit_only"` // fork：未勾选分组仅审计
 
 	verifier *ContentModerationConfig // fork：两级审计，OpenAI 复核的生效配置，只在运行时存在
 }
@@ -195,6 +197,7 @@ type ContentModerationConfigView struct {
 	SampleRate                     int                                     `json:"sample_rate"`
 	AllGroups                      bool                                    `json:"all_groups"`
 	GroupIDs                       []int64                                 `json:"group_ids"`
+	UnselectedGroupsAuditOnly      bool                                    `json:"unselected_groups_audit_only"` // fork：未勾选分组仅审计
 	RecordNonHits                  bool                                    `json:"record_non_hits"`
 	Thresholds                     map[string]float64                      `json:"thresholds"`
 	WorkerCount                    int                                     `json:"worker_count"`
@@ -293,6 +296,7 @@ type UpdateContentModerationConfigInput struct {
 	SampleRate                     *int                          `json:"sample_rate"`
 	AllGroups                      *bool                         `json:"all_groups"`
 	GroupIDs                       *[]int64                      `json:"group_ids"`
+	UnselectedGroupsAuditOnly      *bool                         `json:"unselected_groups_audit_only"` // fork：未勾选分组仅审计
 	RecordNonHits                  *bool                         `json:"record_non_hits"`
 	Thresholds                     *map[string]float64           `json:"thresholds"`
 	WorkerCount                    *int                          `json:"worker_count"`
@@ -321,6 +325,7 @@ type ContentModerationModelFilter struct {
 
 type ContentModerationCheckInput struct {
 	riskControlLogOnly bool // Captured at admission and retained by asynchronous tasks.
+	groupAuditOnly     bool // fork：未勾选分组仅审计，入场时判定，异步任务沿用
 	RequestID          string
 	UserID             int64
 	UserEmail          string
@@ -708,6 +713,9 @@ func (s *ContentModerationService) UpdateConfig(ctx context.Context, input Updat
 	if input.GroupIDs != nil {
 		cfg.GroupIDs = normalizeInt64IDs(*input.GroupIDs)
 	}
+	if input.UnselectedGroupsAuditOnly != nil { // fork：未勾选分组仅审计
+		cfg.UnselectedGroupsAuditOnly = *input.UnselectedGroupsAuditOnly
+	}
 	if input.RecordNonHits != nil {
 		cfg.RecordNonHits = *input.RecordNonHits
 	}
@@ -870,7 +878,7 @@ func (s *ContentModerationService) Check(ctx context.Context, input ContentModer
 	_, input.riskControlLogOnly = runtimeSnapshot.allowlistedUsers[input.UserID]
 	// Keep audit evidence while ensuring all local rejection paths allow trusted users.
 	defer func() {
-		if input.riskControlLogOnly && decision != nil {
+		if input.logOnly() && decision != nil { // fork：未勾选分组仅审计
 			decision.Allowed, decision.Blocked = true, false
 			decision.Action = ContentModerationActionAllow
 			decision.Message, decision.StatusCode = "", 0
@@ -878,6 +886,7 @@ func (s *ContentModerationService) Check(ctx context.Context, input ContentModer
 	}()
 	cfg := runtimeSnapshot.config
 	inGroupScope := cfg.includesGroup(input.GroupID)
+	input.groupAuditOnly = cfg.groupAuditOnly(input.GroupID) // fork：未勾选分组仅审计
 	inModelScope := cfg.includesModel(input.Model)
 	slog.Info("content_moderation.config_loaded",
 		"user_id", input.UserID,
@@ -893,6 +902,7 @@ func (s *ContentModerationService) Check(ctx context.Context, input ContentModer
 		"all_groups", cfg.AllGroups,
 		"configured_group_ids", cfg.GroupIDs,
 		"in_group_scope", inGroupScope,
+		"group_audit_only", input.groupAuditOnly, // fork：未勾选分组仅审计
 		"model_filter_type", cfg.ModelFilter.Type,
 		"configured_models", cfg.ModelFilter.Models,
 		"in_model_scope", inModelScope,
@@ -918,7 +928,7 @@ func (s *ContentModerationService) Check(ctx context.Context, input ContentModer
 			"protocol", input.Protocol)
 		return allow, nil
 	}
-	if !inGroupScope {
+	if !inGroupScope && !input.groupAuditOnly { // fork：未勾选分组仅审计
 		slog.Info("content_moderation.skip_group_out_of_scope",
 			"user_id", input.UserID,
 			"api_key_id", input.APIKeyID,
@@ -948,7 +958,7 @@ func (s *ContentModerationService) Check(ctx context.Context, input ContentModer
 			keywordText := extractContentModerationKeywordText(input.Protocol, input.Body)
 			if keyword, hit := runtimeSnapshot.matchBlockedKeyword(keywordText); hit {
 				metricAction := ContentModerationActionKeywordBlock
-				if input.riskControlLogOnly {
+				if input.logOnly() { // fork：未勾选分组仅审计
 					metricAction = ContentModerationActionAllow
 				}
 				s.recordPreBlockSyncMetric(0, metricAction)
@@ -1017,7 +1027,7 @@ func (s *ContentModerationService) Check(ctx context.Context, input ContentModer
 		if matched {
 			if cfg.Mode == ContentModerationModePreBlock {
 				metricAction := ContentModerationActionHashBlock
-				if input.riskControlLogOnly {
+				if input.logOnly() { // fork：未勾选分组仅审计
 					metricAction = ContentModerationActionAllow
 				}
 				s.recordPreBlockSyncMetric(0, metricAction)
@@ -1072,7 +1082,7 @@ func (s *ContentModerationService) Check(ctx context.Context, input ContentModer
 			"protocol", input.Protocol)
 		return allow, nil
 	}
-	if cfg.Mode == ContentModerationModeObserve {
+	if cfg.Mode == ContentModerationModeObserve || input.groupAuditOnly { // fork：未勾选分组仅审计，从不拦截，不占同步延迟
 		slog.Info("content_moderation.enqueue_observe",
 			"user_id", input.UserID,
 			"api_key_id", input.APIKeyID,
@@ -1131,7 +1141,7 @@ func (s *ContentModerationService) checkSync(ctx context.Context, input ContentM
 	}
 	action := ContentModerationActionAllow
 	blocked := false
-	if allowBlock && !input.riskControlLogOnly && flagged && cfg.Mode == ContentModerationModePreBlock {
+	if allowBlock && !input.logOnly() && flagged && cfg.Mode == ContentModerationModePreBlock { // fork：未勾选分组仅审计
 		action = ContentModerationActionBlock
 		blocked = true
 	}
@@ -1314,7 +1324,11 @@ func (s *ContentModerationService) worker(id int) {
 				return
 			}
 			if !cfg.includesGroup(task.input.GroupID) {
-				return
+				// fork：未勾选分组仅审计：开关仍开着才审计；入场后被移出范围的分组也只审计
+				if !cfg.groupAuditOnly(task.input.GroupID) {
+					return
+				}
+				task.input.groupAuditOnly = true
 			}
 			if !cfg.includesModel(task.input.Model) {
 				return
@@ -1897,6 +1911,9 @@ func (s *ContentModerationService) buildLog(input ContentModerationCheckInput, c
 		mode = ContentModerationModeRiskControlLogOnly
 		action = ContentModerationActionAllow
 	}
+	if input.groupAuditOnly { // fork：未勾选分组仅审计
+		mode, action = ContentModerationModeGroupAuditOnly, ContentModerationActionAllow
+	}
 	return &ContentModerationLog{
 		RequestID:         input.RequestID,
 		UserID:            userID,
@@ -1926,7 +1943,7 @@ func (s *ContentModerationService) persistContentModerationLog(ctx context.Conte
 	if s == nil || log == nil {
 		return
 	}
-	if log.Mode == ContentModerationModeRiskControlLogOnly {
+	if contentModerationLogOnlyMode(log.Mode) { // fork：未勾选分组仅审计
 		recordHash, applySideEffects = false, false
 	}
 	if recordHash && s.hashCache != nil {
@@ -2469,6 +2486,7 @@ func (s *ContentModerationService) configView(cfg *ContentModerationConfig) *Con
 		SampleRate:                     cfg.SampleRate,
 		AllGroups:                      cfg.AllGroups,
 		GroupIDs:                       append([]int64(nil), cfg.GroupIDs...),
+		UnselectedGroupsAuditOnly:      cfg.UnselectedGroupsAuditOnly, // fork：未勾选分组仅审计
 		RecordNonHits:                  cfg.RecordNonHits,
 		Thresholds:                     cloneFloatMap(cfg.Thresholds),
 		WorkerCount:                    cfg.WorkerCount,
@@ -3045,9 +3063,11 @@ func (s *ContentModerationService) RecordCyberPolicyEvent(ctx context.Context, i
 		return
 	}
 	cfg := runtimeSnapshot.config
-	if !cfg.includesGroup(in.GroupID) || !cfg.includesModel(in.Model) {
+	groupAuditOnly := cfg.groupAuditOnly(in.GroupID) // fork：未勾选分组仅审计
+	if (!cfg.includesGroup(in.GroupID) && !groupAuditOnly) || !cfg.includesModel(in.Model) {
 		return
 	}
+	in.LogOnly = in.LogOnly || groupAuditOnly // fork：未勾选分组仅审计
 	var userID *int64
 	if in.UserID > 0 {
 		userID = &in.UserID
@@ -3088,6 +3108,9 @@ func (s *ContentModerationService) RecordCyberPolicyEvent(ctx context.Context, i
 	autoBanned := false
 	if in.LogOnly {
 		log.Mode = ContentModerationModeCyberLogOnly
+	}
+	if groupAuditOnly { // fork：未勾选分组仅审计
+		log.Mode = ContentModerationModeGroupAuditOnly
 	}
 	if !in.LogOnly && !cfg.CyberPolicyExcludeFromBanCount {
 		autoBanned = s.applyFlaggedAccountSideEffects(ctx, cfg, log)

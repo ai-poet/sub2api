@@ -25,6 +25,8 @@ const (
 	TicketCategoryBilling = "billing"
 	TicketCategoryAPI     = "api"
 	TicketCategoryOther   = "other"
+	// TicketCategoryReport 违规内容举报（fork 本地）：AIGC 使用规范里写明的举报入口，普通创建入口可选。
+	TicketCategoryReport = "report"
 	// TicketCategoryAppeal 封禁申诉（fork 本地）：只能经申诉会话（/api/v1/appeal/tickets）创建，见 ticket_appeal.go。
 	TicketCategoryAppeal = "appeal"
 )
@@ -42,10 +44,10 @@ const (
 )
 
 // TicketCategories 全部合法分类（顺序即前端展示顺序）。
-var TicketCategories = []string{TicketCategoryAccount, TicketCategoryBilling, TicketCategoryAPI, TicketCategoryOther, TicketCategoryAppeal}
+var TicketCategories = []string{TicketCategoryAccount, TicketCategoryBilling, TicketCategoryAPI, TicketCategoryReport, TicketCategoryOther, TicketCategoryAppeal}
 
 // TicketUserCategories 普通创建入口可选的分类（不含 appeal）。
-var TicketUserCategories = []string{TicketCategoryAccount, TicketCategoryBilling, TicketCategoryAPI, TicketCategoryOther}
+var TicketUserCategories = []string{TicketCategoryAccount, TicketCategoryBilling, TicketCategoryAPI, TicketCategoryReport, TicketCategoryOther}
 
 // IsValidTicketCategory 报告 v 是否为合法分类。
 func IsValidTicketCategory(v string) bool {

@@ -58,6 +58,7 @@ type contentModerationConfigRequest struct {
 	BlockedKeywords                *[]string                             `json:"blocked_keywords"`
 	KeywordBlockingMode            *string                               `json:"keyword_blocking_mode"`
 	ModelFilter                    *service.ContentModerationModelFilter `json:"model_filter"`
+	UnselectedGroupsAuditOnly      *bool                                 `json:"unselected_groups_audit_only"` // fork：未勾选分组仅审计
 }
 
 type contentModerationAPIKeyTestRequest struct {
@@ -126,6 +127,7 @@ func (h *ContentModerationHandler) UpdateConfig(c *gin.Context) {
 		BlockedKeywords:                req.BlockedKeywords,
 		KeywordBlockingMode:            req.KeywordBlockingMode,
 		ModelFilter:                    req.ModelFilter,
+		UnselectedGroupsAuditOnly:      req.UnselectedGroupsAuditOnly, // fork：未勾选分组仅审计
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

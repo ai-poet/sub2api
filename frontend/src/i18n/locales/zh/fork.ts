@@ -551,6 +551,13 @@ export default {
     "riskControl": {
       "siteMessageOnHit": "命中时发送站内信",
       "siteMessageOnHitHint": "命中风控规则、账户被自动封禁或触发网络安全策略拦截时，给用户发站内信（默认弹窗提醒），不依赖邮件配置；关闭后内容审计不再发送任何站内信，包括封禁通知。",
+      "unselectedGroupsAuditOnly": "未勾选的分组只审计不警告",
+      "unselectedGroupsAuditOnlyHint": "开启后，未勾选的分组（以及没有分组的请求）也会被审计并记录，但不拦截、不发邮件或站内信警告、不计入违规次数、不自动封禁；这些分组的审计在后台异步进行，不增加请求延迟。关闭时未勾选的分组完全不审计。",
+      "groupAuditOnlyBadge": "仅审计",
+      "selectedGroupsAuditOnlySummary": "{count} · 其余仅审计",
+      "logMode": {
+        "groupAuditOnly": "未勾选分组 · 仅审计"
+      },
       "viewSettings": "查看配置",
       "readonlyNotice": "运维管理员只读：可以查看内容审计的配置、运行状态与审核记录；修改配置、测试密钥、解封用户和清理命中哈希需由管理员操作。审核引擎密钥不对运维显示。",
       "pipelineTwoStage": "审计流程：TypeSafe AI 初审 → LLM 复核（OpenAI 兼容的对话模型）。复核确认才计入违规次数、警告用户和拦截；复核放行或失败只记录。",
@@ -1586,6 +1593,7 @@ export default {
       "account": "账号",
       "billing": "计费 / 额度",
       "api": "API 调用",
+      "report": "违规内容举报",
       "other": "其他",
       "appeal": "账号申诉"
     },

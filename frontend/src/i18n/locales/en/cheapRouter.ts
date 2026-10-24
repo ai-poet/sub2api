@@ -462,16 +462,25 @@ export default {
     "footer": {
       "allRightsReserved": "All rights reserved.",
       "privacy": "Privacy Policy",
-      "terms": "Terms of Service"
+      "terms": "Terms of Service",
+      "aup": "Acceptable Use Policy",
+      "onlineSupport": "Contact support",
+      "contact": "Contact"
+    },
+    "legal": {
+      "onlineSupport": "Online support: sign in and open a support ticket; our staff reply in the ticket.",
+      "onlineSupportLink": "Open a ticket",
+      "contactLabel": "Support contact: ",
+      "communityHint": "Scan to join our community group and reach support"
     },
     "privacy": {
       "title": "Privacy Policy",
       "backHome": "Back to home",
-      "lastUpdated": "Last updated: April 2026",
+      "lastUpdated": "Last updated: October 2026",
       "intro": "This Privacy Policy explains how {siteName} (\"we\", \"us\") collects, uses, and protects your information when you use our platform. We are committed to protecting your privacy, especially your code and prompt content.",
       "pledge": {
-        "title": "Your code and prompts are never stored or used for training",
-        "body": "All code, prompts, and conversation content you send through {siteName} is forwarded directly to the official upstream API. We do not store, log, or analyze request content, and we never use it for model training or any other purpose.",
+        "title": "Your code and prompts are never used for training",
+        "body": "All code, prompts, and conversation content you send through {siteName} is forwarded directly to the official upstream API. We never use it for model training, sell it or use it for advertising, and apart from the content safety moderation described in section 3 we do not keep request content.",
       },
       "sections": {
         "collection": {
@@ -492,8 +501,9 @@ export default {
         },
         "code": {
           "title": "3. Code & Prompt Protection",
-          "p1": "All request content you send via the API, including code, prompts, and conversation messages, is forwarded transparently to the official Anthropic and OpenAI APIs. {siteName} does not persist or store request content.",
-          "p2": "We will never use your code or prompts to train, fine-tune, or evaluate any machine learning model, and we will not share this content with third parties."
+          "p1": "All request content you send via the API, including code, prompts, conversation messages and uploaded images, is forwarded transparently to the official Anthropic and OpenAI APIs. {siteName} does not persist request content.",
+          "p2": "We will never use your code or prompts to train, fine-tune, or evaluate any machine learning model, and we will not sell this content or share it with unrelated third parties.",
+          "p3": "To enforce the AIGC Acceptable Use Policy, request content is screened by automated content safety checks, which may be performed by third-party content safety services or large language models. Only when a request triggers a moderation rule do we record the categories and an excerpt of at most 240 characters of the input, used to enforce the policy and review appeals, and delete it after the retention period set by the platform (180 days by default)."
         },
         "apikey": {
           "title": "4. API Key Security",
@@ -503,7 +513,8 @@ export default {
           "title": "5. Third-Party Services",
           "p1": "We forward API requests to the following third-party providers, each with their own privacy policies:",
           "i1": "Anthropic (Claude model family)",
-          "i2": "OpenAI (GPT / Codex model family)"
+          "i2": "OpenAI (GPT / Codex model family)",
+          "i3": "Content safety services (for automated moderation; they receive only the request content being checked)"
         },
         "retention": {
           "title": "6. Data Retention",
@@ -525,7 +536,7 @@ export default {
     },
     "terms": {
       "title": "Terms of Service",
-      "lastUpdated": "Last updated: April 2026",
+      "lastUpdated": "Last updated: October 2026",
       "intro": "Welcome to {siteName}. Please read these Terms of Service carefully before using our platform. By registering or using the service, you agree to be bound by these terms.",
       "sections": {
         "eligibility": {
@@ -541,7 +552,7 @@ export default {
         },
         "service": {
           "title": "3. Service Description",
-          "p1": "{siteName} is an AI API aggregation proxy that forwards your requests to official providers such as Anthropic and OpenAI. We are not responsible for the availability, response quality, or content of upstream providers.",
+          "p1": "{siteName} is an AI API aggregation proxy offering chat, code generation and image generation (text-to-image and image editing). It forwards your requests to official providers such as Anthropic and OpenAI. We are not responsible for the availability, response quality, or content of upstream providers.",
           "p2": "We reserve the right to modify, suspend, or terminate the service with advance notice. Service interruptions caused by upstream provider outages, maintenance, or force majeure events are outside our responsibility."
         },
         "billing": {
@@ -554,10 +565,12 @@ export default {
         "prohibited": {
           "title": "5. Prohibited Uses",
           "p1": "When using this service, you must not:",
-          "i1": "Use the platform to generate illegal, harmful, discriminatory, or infringing content",
+          "i1": "Generate, edit, or distribute content prohibited by the AIGC Acceptable Use Policy, including the six categories of sexual / NSFW content, violence / gore, hate speech, child safety (CSAM) content, deepfakes / impersonation, and copyright / trademark infringement, or any other illegal or harmful content",
           "i2": "Attempt to reverse-engineer, bypass, or abuse the platform rate limits or security mechanisms",
           "i3": "Resell, distribute, or use API keys for unauthorized commercial proxy services",
-          "i4": "Violate the usage policies of upstream model providers (Anthropic, OpenAI, etc.)"
+          "i4": "Violate the usage policies of upstream model providers (Anthropic, OpenAI, etc.)",
+          "p2": "The platform moderates generation requests automatically and accepts reports of prohibited content. The full list of prohibited content, how moderation works, how to report and how violations are handled are set out in the AIGC Acceptable Use Policy, which forms part of these terms.",
+          "link": "Read the AIGC Acceptable Use Policy"
         },
         "ip": {
           "title": "6. Intellectual Property",
@@ -577,6 +590,85 @@ export default {
         }
       },
       "contact": "If you have any questions about these Terms of Service, please contact us through the support channel in the platform."
+    },
+    "aup": {
+      "title": "AIGC Acceptable Use Policy",
+      "lastUpdated": "Last updated: October 2026",
+      "intro": "This policy covers every generation capability you use through {siteName}, including chat, code generation, text-to-image and image editing. It is part of the Terms of Service; by registering or using the service you agree to follow it. You are responsible for the prompts and materials you submit and for how you use the generated output.",
+      "sections": {
+        "prohibited": {
+          "title": "1. Prohibited Content",
+          "p1": "Whatever the purpose, you must not use the platform to generate, edit or distribute the following six categories of content, or prompt a model to produce them:",
+          "nsfw": {
+            "label": "Sexual / NSFW content",
+            "text": "Explicit depictions of sexual acts, sexualized nudity, solicitation of sexual services, and any sexualized content involving real people."
+          },
+          "violence": {
+            "label": "Violence / gore",
+            "text": "Content that glorifies, promotes or incites violence or terrorism, specific instructions for harming others or for self-harm or suicide, and graphic gore, cruelty or abuse presented for its own sake."
+          },
+          "hate": {
+            "label": "Hate speech",
+            "text": "Content that insults, discriminates against, harasses, threatens or dehumanizes people or groups on the basis of race, ethnicity, nationality, religion, gender, sexual orientation, disability or similar characteristics."
+          },
+          "csam": {
+            "label": "Child safety (CSAM)",
+            "text": "Any content that sexualizes minors, including fictional, animated or AI-generated depictions, and any content that grooms, exploits or harms minors. Zero tolerance applies."
+          },
+          "deepfake": {
+            "label": "Deepfakes / impersonation",
+            "text": "Realistic images, voices or videos of real people created or edited without their consent; impersonating individuals, organizations or officials to defraud or mislead; forged IDs, news, chat logs or other material made to deceive."
+          },
+          "copyright": {
+            "label": "Copyright / trademark infringement",
+            "text": "Copying or substantially reproducing copyrighted works, imitating others' trademarks, logos or brand identity to mislead, sell or promote, and content made to circumvent copyright protection."
+          }
+        },
+        "other": {
+          "title": "2. Other Prohibited Uses",
+          "p1": "In addition, you must not:",
+          "i1": "Use generated content for fraud, gambling, drugs, weapons trading or other illegal activity, or to write malware or carry out cyberattacks",
+          "i2": "Mass-produce spam, fake reviews or content intended to manipulate public opinion",
+          "i3": "Evade platform or upstream moderation by splitting, encoding or rewording prompts",
+          "i4": "Violate the usage policies of upstream model providers (Anthropic, OpenAI, Google, etc.)"
+        },
+        "moderation": {
+          "title": "3. How We Moderate Content",
+          "p1": "Generation requests made through the platform are moderated by automated detection combined with human handling:",
+          "i1": "Automated detection: chat, code and image generation requests (including reference images uploaded with them) are screened by automated content safety systems covering sexual content, sexual content involving minors, violence and gore, hate, harassment, self-harm and illegal activity, supplemented by a keyword blocklist maintained by the platform.",
+          "i2": "Two-stage review: a dedicated content safety service screens first, and a large language model re-checks every hit against the same category rules. Content counts as a violation only when both stages flag it, which reduces false positives.",
+          "i3": "Blocking: requests found to violate the policy are blocked with a notice and are not forwarded to the upstream model. The platform can also keep a fingerprint of confirmed violating content and block identical submissions immediately.",
+          "i4": "Upstream safeguards: image generation and other requests are also subject to the upstream providers' own safety systems, and requests they refuse produce no output.",
+          "i5": "Human handling: categories that automated detection cannot judge reliably, such as deepfakes and infringement, are handled mainly through user reports and manual review. Platform staff review moderation records and investigate reports.",
+          "i6": "Moderation records: when a request triggers a moderation rule we record the time, the model, the categories and scores, and an excerpt of at most 240 characters of the input, used to enforce this policy and to review appeals. Records are deleted automatically after the retention period set by the platform (180 days by default). No content is kept for requests that trigger no rule."
+        },
+        "enforcement": {
+          "title": "4. Enforcement",
+          "p1": "Depending on the nature and frequency of violations, the platform may:",
+          "i1": "Block violating requests and send a warning to the account by site message or email",
+          "i2": "Automatically suspend the account once violations within a set period reach the threshold set by the platform",
+          "i3": "For severe violations such as child safety content, suspend the account immediately, preserve the relevant records and report to the competent authorities as required by law",
+          "i4": "Disable the related API keys or account, or terminate the service; any remaining balance is handled under the Terms of Service"
+        },
+        "reporting": {
+          "title": "5. Reporting Violations",
+          "p1": "If you find content generated through the platform that violates this policy (for example, content that misuses your likeness or work), you can report it:",
+          "i1": "Registered users: sign in, open Support tickets and submit a ticket in the \"Report prohibited content\" category.",
+          "i1Link": "Report now",
+          "i2": "Non-users and rights holders: scan the support group QR code at the bottom of this page and in the site footer, or use any other support contact shown there.",
+          "p2": "Please include, where possible: screenshots or links to the content, when you found it, the model or request involved, and how to reach you. Rights holders should attach proof of ownership.",
+          "p3": "What happens next: we acknowledge the report and investigate it against moderation records and usage logs, normally reaching a decision within 3 business days. Confirmed violations are handled under section 4, and we tell you the outcome through the ticket or the contact you provided. Reports involving child safety are handled first. Reporter information is kept confidential."
+        },
+        "appeal": {
+          "title": "6. Appeals",
+          "p1": "If you believe your account was suspended by mistake, sign in as usual on the login page and you will be taken to the appeal page, where you can submit an appeal for manual review. If the suspension was a mistake, we restore the account and notify you by site message."
+        },
+        "changes": {
+          "title": "7. Changes to This Policy",
+          "p1": "We may update this policy in response to laws and regulations, upstream provider policies and platform operations. Material changes will be announced by in-app notice or email. Continued use of the service constitutes acceptance of the updated policy."
+        }
+      },
+      "contact": "If you have questions about this policy or need to report prohibited content, contact us through the channels below."
     }
   }
 }

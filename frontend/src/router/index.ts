@@ -78,6 +78,16 @@ const routes: RouteRecordRaw[] = [
       title: 'Terms of Service'
     }
   },
+  // fork：AIGC 内容使用规范
+  {
+    path: '/acceptable-use',
+    name: 'AcceptableUse',
+    component: () => import('@/views/AcceptableUsePolicyView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Acceptable Use Policy'
+    }
+  },
   {
     path: '/changelog',
     name: 'Changelog',

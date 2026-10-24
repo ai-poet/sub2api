@@ -154,6 +154,7 @@ var ticketCategoryLabels = map[string]string{
 	TicketCategoryAccount: "账号",
 	TicketCategoryBilling: "计费 / 额度",
 	TicketCategoryAPI:     "API 调用",
+	TicketCategoryReport:  "违规内容举报",
 	TicketCategoryOther:   "其他",
 	TicketCategoryAppeal:  "账号申诉",
 }

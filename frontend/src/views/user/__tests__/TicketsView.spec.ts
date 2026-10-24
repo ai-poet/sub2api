@@ -300,4 +300,23 @@ describe('user TicketsView (fork)', () => {
     await flushPromises()
     expect(state.get).toHaveBeenCalledWith(2)
   })
+
+  it('opens the create form with the report category from the ?new=report link', async () => {
+    state.routeQuery = { new: 'report' }
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.find('[data-test="stub-title"]').setValue('Deepfake of me')
+    await wrapper.find('[data-test="stub-body"]').setValue('Generated with my photo')
+    await wrapper.find('[data-test="ticket-submit"]').trigger('click')
+    await flushPromises()
+    expect(state.create).toHaveBeenCalledWith({ title: 'Deepfake of me', category: 'report', body: 'Generated with my photo' })
+  })
+
+  it('ignores ?new= values that are not user ticket categories', async () => {
+    state.routeQuery = { new: 'appeal' }
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.find('[data-test="ticket-submit"]').exists()).toBe(false)
+  })
 })

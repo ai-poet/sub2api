@@ -109,7 +109,8 @@ func TestContentModerationRepositoryCountFlaggedByUserSince_ExcludesCyberLogOnly
 	defer func() { _ = db.Close() }()
 	repo := NewContentModerationRepository(db)
 	since := time.Now().Add(-time.Hour)
-	mock.ExpectQuery(regexp.QuoteMeta("AND mode <> 'cyber_log_only'\n  AND mode <> 'risk_control_log_only'")).
+	// fork：未勾选分组仅审计，只审计的命中同样不计入封号次数
+	mock.ExpectQuery(regexp.QuoteMeta("AND mode <> 'cyber_log_only'\n  AND mode <> 'risk_control_log_only'\n  AND mode <> 'group_audit_only'")).
 		WithArgs(int64(12), since, false).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 	count, err := repo.CountFlaggedByUserSince(context.Background(), 12, since, false)

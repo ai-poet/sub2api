@@ -47,6 +47,8 @@ export interface ContentModerationConfig {
   sample_rate: number
   all_groups: boolean
   group_ids: number[]
+  /** fork：未勾选分组仅审计 */
+  unselected_groups_audit_only?: boolean
   record_non_hits: boolean
   thresholds: Record<string, number>
   worker_count: number
@@ -134,6 +136,8 @@ export interface UpdateContentModerationConfig {
   sample_rate?: number
   all_groups?: boolean
   group_ids?: number[]
+  /** fork：未勾选分组仅审计 */
+  unselected_groups_audit_only?: boolean
   record_non_hits?: boolean
   thresholds?: Record<string, number>
   worker_count?: number

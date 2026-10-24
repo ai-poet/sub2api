@@ -11,7 +11,7 @@
             <button type="button" class="btn btn-secondary btn-sm" :disabled="loading" @click="load">
               {{ t('common.refresh') }}
             </button>
-            <button type="button" class="btn btn-primary btn-sm" data-test="ticket-create" @click="openCreate">
+            <button type="button" class="btn btn-primary btn-sm" data-test="ticket-create" @click="openCreate()">
               {{ t('tickets.create') }}
             </button>
           </div>
@@ -219,6 +219,7 @@ import {
   TICKET_CATEGORIES,
   TICKET_TITLE_MAX,
   parseTicketDeepLinkId,
+  parseTicketNewCategory,
   ticketCategoryLabel,
   ticketStatusBadgeClass,
   ticketStatusLabel
@@ -331,9 +332,9 @@ const canSubmit = computed(() => {
   )
 })
 
-const openCreate = () => {
+const openCreate = (category: TicketCategory = 'other') => {
   form.title = ''
-  form.category = 'other'
+  form.category = category
   form.body = ''
   createVisible.value = true
 }
@@ -461,6 +462,8 @@ const reopenTicket = async () => {
 
 // ---------- 深链 ----------
 const openDeepLink = () => {
+  const category = parseTicketNewCategory(route.query.new)
+  if (category !== null) openCreate(category)
   const id = parseTicketDeepLinkId(route.query.id)
   if (id === null) return
   void openDetailById(id)

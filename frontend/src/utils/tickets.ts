@@ -9,7 +9,7 @@ import type { TicketCategory, TicketStatus } from '@/api/tickets'
 
 type TranslateFn = (key: string, ...args: any[]) => string
 
-export const TICKET_CATEGORIES: TicketCategory[] = ['account', 'billing', 'api', 'other']
+export const TICKET_CATEGORIES: TicketCategory[] = ['account', 'billing', 'api', 'report', 'other']
 export const TICKET_STATUSES: TicketStatus[] = ['open', 'replied', 'closed']
 export const TICKET_TITLE_MAX = 200
 export const TICKET_BODY_MAX = 5000
@@ -88,6 +88,8 @@ export function ticketCategoryLabel(t: TranslateFn, category: string): string {
       return t('tickets.category.billing')
     case 'api':
       return t('tickets.category.api')
+    case 'report':
+      return t('tickets.category.report')
     case 'other':
       return t('tickets.category.other')
     case 'appeal':
@@ -115,6 +117,12 @@ export function ticketStatusBadgeClass(status: string): string {
 }
 
 /** 解析 ?id= 深链（Server酱³ 推送里的链接），非法时返回 null。 */
+/** `/tickets?new=<分类>` 深链：直接打开新建表单并预选该分类（使用规范里的举报入口用它）。 */
+export function parseTicketNewCategory(raw: unknown): TicketCategory | null {
+  const text = typeof raw === 'string' ? raw : Array.isArray(raw) ? String(raw[0] ?? '') : ''
+  return (TICKET_CATEGORIES as string[]).includes(text) ? (text as TicketCategory) : null
+}
+
 export function parseTicketDeepLinkId(raw: unknown): number | null {
   const text = typeof raw === 'string' ? raw : Array.isArray(raw) ? String(raw[0] ?? '') : ''
   const id = Number.parseInt(text, 10)

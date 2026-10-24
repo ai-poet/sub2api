@@ -38,15 +38,23 @@
           <ul v-if="section.items" class="mt-3 space-y-2 pl-5 text-base leading-7 text-gray-600 dark:text-white/65">
             <li v-for="(item, i) in section.items" :key="i" class="list-disc">{{ item }}</li>
           </ul>
+          <div v-if="section.after" class="mt-3 space-y-3 text-base leading-8 text-gray-600 dark:text-white/65">
+            <p v-for="(para, i) in section.after" :key="i">{{ para }}</p>
+          </div>
+          <!-- fork：使用规范入口 -->
+          <RouterLink
+            v-if="section.link"
+            :to="section.link.to"
+            :data-test="`terms-link-${section.id}`"
+            class="mt-3 inline-block text-base font-medium text-primary-600 underline-offset-4 hover:underline dark:text-primary-400"
+          >
+            {{ section.link.label }}
+          </RouterLink>
         </section>
       </div>
 
       <!-- Contact -->
-      <div class="mt-10 border-t border-black/8 pt-8 dark:border-white/10">
-        <p class="text-sm leading-7 text-[#999] dark:text-white/38">
-          {{ pt('home.terms.contact') }}
-        </p>
-      </div>
+      <LegalContactNote :lead="pt('home.terms.contact')" />
     </article>
   </div>
 </template>
@@ -54,7 +62,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import LegalContactNote from '@/components/legal/LegalContactNote.vue'
 import { useAppStore } from '@/stores/app'
+
+interface TermsSection {
+  id: string
+  title: string
+  paragraphs: string[]
+  items?: string[]
+  after?: string[]
+  link?: { to: string; label: string }
+}
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -66,7 +84,7 @@ const siteName = computed(() => {
 
 const pt = (key: string) => t(key, { siteName: siteName.value })
 
-const sections = computed(() => [
+const sections = computed<TermsSection[]>(() => [
   {
     id: 'eligibility',
     title: pt('home.terms.sections.eligibility.title'),
@@ -110,6 +128,8 @@ const sections = computed(() => [
       pt('home.terms.sections.prohibited.i3'),
       pt('home.terms.sections.prohibited.i4'),
     ],
+    after: [pt('home.terms.sections.prohibited.p2')],
+    link: { to: '/acceptable-use', label: pt('home.terms.sections.prohibited.link') },
   },
   {
     id: 'ip',

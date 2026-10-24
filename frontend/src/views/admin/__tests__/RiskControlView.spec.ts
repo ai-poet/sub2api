@@ -626,4 +626,64 @@ describe('admin RiskControlView', () => {
     expect(wrapper.get('[data-test="verifier-uses-translation"]').text()).toContain('admin.riskControl.verifierUsesTranslation')
     wrapper.unmount()
   })
+
+  // fork：未勾选分组仅审计
+  it('lets unselected groups be audited without warnings and saves the switch', async () => {
+    const ToggleStub = defineComponent({
+      props: { modelValue: { type: Boolean, default: false } },
+      emits: ['update:modelValue'],
+      setup(props, { emit }) {
+        return () => h('button', { type: 'button', 'data-on': String(props.modelValue), onClick: () => emit('update:modelValue', !props.modelValue) })
+      },
+    })
+    getConfig.mockResolvedValue({ ...baseConfig(), all_groups: false, group_ids: [7] })
+    getGroups.mockResolvedValue([
+      { id: 7, name: 'vip', platform: 'openai' },
+      { id: 8, name: 'free', platform: 'openai' },
+    ])
+    const wrapper = mount(RiskControlView, { global: { stubs: { AppLayout: AppLayoutStub, BaseDialog: BaseDialogStub, Icon: true, Select: true, Toggle: ToggleStub, Pagination: true, ModelWhitelistSelector: ModelWhitelistSelectorStub, ProxySelector: true } } })
+    await flushPromises()
+
+    await findButtonByText(wrapper, 'admin.riskControl.openSettings').trigger('click')
+    await findButtonByText(wrapper, 'admin.riskControl.tabs.scope').trigger('click')
+    const toggle = wrapper.get('[data-testid="risk-unselected-groups-audit-only"]')
+    expect(toggle.attributes('data-on')).toBe('false')
+    expect(wrapper.findAll('[data-test="group-audit-only-badge"]')).toHaveLength(0)
+
+    await toggle.trigger('click')
+    const badges = wrapper.findAll('[data-test="group-audit-only-badge"]')
+    expect(badges).toHaveLength(1)
+    expect(findButtonByText(wrapper, 'free').find('[data-test="group-audit-only-badge"]').exists()).toBe(true)
+
+    await findButtonByText(wrapper, 'admin.riskControl.saveConfig').trigger('click')
+    await flushPromises()
+
+    expect(updateConfig).toHaveBeenCalledWith(expect.objectContaining({
+      all_groups: false,
+      group_ids: [7],
+      unselected_groups_audit_only: true,
+    }))
+    expect(showError).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('marks audit-only rows from unselected groups in the log', async () => {
+    listLogs.mockResolvedValue({
+      items: [{
+        id: 3, request_id: 'req-3', user_id: 9, user_email: 'user@example.com', api_key_id: 3, api_key_name: 'k',
+        group_id: 8, group_name: 'free', endpoint: '/v1/messages', provider: 'openai', model: 'gpt-5.6', mode: 'group_audit_only',
+        action: 'allow', flagged: true, highest_category: 'sexual', highest_score: 0.97, matched_keyword: '',
+        category_scores: {}, threshold_snapshot: {}, input_excerpt: 'audited input', upstream_latency_ms: 10, error: '',
+        violation_count: 0, auto_banned: false, email_sent: false, user_status: 'active', queue_delay_ms: 5,
+        created_at: '2026-10-23T00:00:00Z',
+      }],
+      total: 1, page: 1, page_size: 20, pages: 1,
+    })
+    const wrapper = mount(RiskControlView, { global: { stubs: { AppLayout: AppLayoutStub, BaseDialog: BaseDialogStub, Icon: true, Select: true, Toggle: true, Pagination: true, ModelWhitelistSelector: ModelWhitelistSelectorStub, ProxySelector: true } } })
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="log-group-audit-only"]').text()).toContain('admin.riskControl.logMode.groupAuditOnly')
+    expect(wrapper.text()).toContain('admin.riskControl.violationNotCounted')
+    wrapper.unmount()
+  })
 })

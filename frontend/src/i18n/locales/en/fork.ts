@@ -551,6 +551,13 @@ export default {
     "riskControl": {
       "siteMessageOnHit": "Send site message on hit",
       "siteMessageOnHitHint": "Send the user a site message (shown as a popup) when a request hits a risk rule, the account is auto-disabled, or the cyber-security policy blocks a request. Works without email settings. When off, content audit sends no site messages at all, including disable notices.",
+      "unselectedGroupsAuditOnly": "Audit unselected groups without warnings",
+      "unselectedGroupsAuditOnlyHint": "When on, groups you have not selected (and requests without a group) are audited and logged too, but never blocked, warned by email or site message, counted as violations or auto-disabled. Their audit runs in the background and adds no request latency. When off, unselected groups are not audited at all.",
+      "groupAuditOnlyBadge": "Audit only",
+      "selectedGroupsAuditOnlySummary": "{count} · rest audit only",
+      "logMode": {
+        "groupAuditOnly": "Unselected group · audit only"
+      },
       "viewSettings": "View settings",
       "readonlyNotice": "Operator read-only: you can view the content audit settings, runtime status and audit records. Changing settings, testing keys, unbanning users and clearing flagged hashes are left to the admin. Audit engine keys are not shown to operators.",
       "pipelineTwoStage": "Audit flow: TypeSafe AI screens, an LLM verifies (any OpenAI-compatible chat model). Only verified hits count as violations, warn the user and block; cleared or failed verifications are only recorded.",
@@ -1586,6 +1593,7 @@ export default {
       "account": "Account",
       "billing": "Billing / Quota",
       "api": "API calls",
+      "report": "Report prohibited content",
       "other": "Other",
       "appeal": "Account appeal"
     },

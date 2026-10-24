@@ -1,7 +1,8 @@
 <template>
   <footer class="relative z-10 overflow-hidden bg-primary-600 text-white dark:bg-primary-900">
     <div class="mx-auto max-w-[1200px] px-4 pt-16 md:px-6 md:pt-20">
-      <div class="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
+      <!-- fork：第四列「联系客服」 -->
+      <div class="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div class="flex items-center gap-2.5">
             <HomeBrandMark
@@ -56,8 +57,30 @@
             <li>
               <router-link to="/terms" :class="linkClass">{{ t('home.footer.terms') }}</router-link>
             </li>
+            <!-- fork：使用规范 -->
+            <li>
+              <router-link to="/acceptable-use" data-test="footer-aup" :class="linkClass">
+                {{ t('home.footer.aup') }}
+              </router-link>
+            </li>
           </ul>
         </nav>
+
+        <!-- fork：页脚公示客服联系方式（在线工单 + 后台客服联系方式 + 交流群二维码） -->
+        <div data-test="footer-contact-column">
+          <p class="text-xs font-bold uppercase tracking-[0.2em]">{{ t('home.footer.contact') }}</p>
+          <ul class="mt-5 space-y-3 text-sm font-semibold uppercase tracking-[0.06em] text-white/80">
+            <li>
+              <router-link to="/tickets" data-test="footer-support" :class="linkClass">
+                {{ t('home.footer.onlineSupport') }}
+              </router-link>
+            </li>
+            <li v-if="contactInfo" class="break-all normal-case tracking-normal" data-test="footer-contact">
+              {{ t('home.legal.contactLabel') }}<SupportContactLink :value="contactInfo" :class="linkClass" />
+            </li>
+          </ul>
+          <SupportCommunityQRCode class="mt-5 text-white/75" />
+        </div>
       </div>
 
       <div class="mt-14 border-t border-white/25 pt-6 text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
@@ -82,6 +105,9 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import HomeBrandMark from '@/components/home/HomeBrandMark.vue'
 import { useHomeSectionNav } from '@/components/home/useHomeSectionNav'
+import SupportContactLink from '@/components/common/SupportContactLink.vue'
+import SupportCommunityQRCode from '@/components/legal/SupportCommunityQRCode.vue'
+import { useAppStore } from '@/stores/app'
 
 const props = withDefaults(
   defineProps<{
@@ -101,6 +127,10 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const { goToSection } = useHomeSectionNav()
+const appStore = useAppStore()
+
+// 管理后台「客服联系方式」；没配置时页脚靠在线客服（工单）和交流群二维码公示联系方式
+const contactInfo = computed(() => appStore.contactInfo.trim())
 
 const linkClass = 'transition hover:text-white hover:underline hover:underline-offset-4'
 

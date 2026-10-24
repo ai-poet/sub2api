@@ -331,6 +331,10 @@
                       <span class="inline-flex rounded-md px-2 py-1 text-xs font-medium" :class="resultBadgeClass(row)">
                         {{ resultLabel(row) }}
                       </span>
+                      <!-- fork：未勾选分组仅审计 -->
+                      <div v-if="row.mode === 'group_audit_only'" class="mt-1 text-xs text-gray-400" data-test="log-group-audit-only">
+                        {{ t('admin.riskControl.logMode.groupAuditOnly') }}
+                      </div>
                     </td>
                     <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
                       <div>{{ row.highest_category || '-' }}</div>
@@ -771,6 +775,14 @@
             </div>
 
             <div v-if="!configForm.all_groups" class="space-y-4">
+              <!-- fork：未勾选分组仅审计 -->
+              <div class="flex items-center justify-between gap-4 rounded-lg border border-gray-100 p-4 dark:border-dark-700">
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('admin.riskControl.unselectedGroupsAuditOnly') }}</p>
+                  <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ t('admin.riskControl.unselectedGroupsAuditOnlyHint') }}</p>
+                </div>
+                <Toggle v-model="configForm.unselected_groups_audit_only" data-testid="risk-unselected-groups-audit-only" />
+              </div>
               <div class="relative">
                 <Icon name="search" size="sm" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input v-model.trim="groupSearch" type="search" class="input pl-9" :placeholder="t('admin.riskControl.searchGroups')" />
@@ -787,6 +799,12 @@
                   <span class="min-w-0">
                     <span class="block truncate text-sm font-semibold text-gray-900 dark:text-white">{{ group.name }}</span>
                     <span class="mt-1 inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-dark-700 dark:text-gray-400">{{ group.platform }}</span>
+                    <!-- fork：未勾选分组仅审计 -->
+                    <span
+                      v-if="configForm.unselected_groups_audit_only && !isGroupSelected(group.id)"
+                      class="ml-1.5 mt-1 inline-flex rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+                      data-test="group-audit-only-badge"
+                    >{{ t('admin.riskControl.groupAuditOnlyBadge') }}</span>
                   </span>
                   <span
                     class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border"
@@ -1316,6 +1334,7 @@ const configForm = reactive({
   sample_rate: 100,
   all_groups: true,
   group_ids: [] as number[],
+  unselected_groups_audit_only: false, // fork：未勾选分组仅审计
   record_non_hits: false,
   worker_count: 4,
   queue_size: 32768,
@@ -1675,7 +1694,12 @@ const overviewItems = computed<OverviewItem[]>(() => [
   {
     key: 'scope',
     label: t('admin.riskControl.overview.groupScope'),
-    value: configForm.all_groups ? t('admin.riskControl.allGroups') : selectedGroupCount.value,
+    value: configForm.all_groups
+      ? t('admin.riskControl.allGroups')
+      // fork：未勾选分组仅审计
+      : configForm.unselected_groups_audit_only
+        ? t('admin.riskControl.selectedGroupsAuditOnlySummary', { count: selectedGroupCount.value })
+        : selectedGroupCount.value,
     meta: modelFilterSummary.value,
     icon: 'users',
     iconClass: 'bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-300',
@@ -1835,6 +1859,7 @@ function applyConfig(config: ContentModerationConfig) {
   configForm.sample_rate = config.sample_rate ?? 100
   configForm.all_groups = config.all_groups
   configForm.group_ids = Array.isArray(config.group_ids) ? [...config.group_ids] : []
+  configForm.unselected_groups_audit_only = config.unselected_groups_audit_only ?? false // fork：未勾选分组仅审计
   configForm.record_non_hits = config.record_non_hits
   configForm.worker_count = config.worker_count || 4
   configForm.queue_size = config.queue_size || 32768
@@ -1923,6 +1948,7 @@ async function saveConfig() {
       sample_rate: Number(configForm.sample_rate) || 0,
       all_groups: configForm.all_groups,
       group_ids: configForm.all_groups ? [] : [...configForm.group_ids],
+      unselected_groups_audit_only: configForm.unselected_groups_audit_only, // fork：未勾选分组仅审计
       record_non_hits: configForm.record_non_hits,
       worker_count: Number(configForm.worker_count) || 4,
       queue_size: Number(configForm.queue_size) || 32768,
