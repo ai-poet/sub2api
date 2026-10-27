@@ -5,7 +5,7 @@ import { ORDER_STATUS } from '@/lib/constants';
 import { generateRechargeCode } from './code-gen';
 import { getMethodDailyLimit } from './limits';
 import { getRechargeLimits } from './recharge-limits';
-import { getMethodFeeRate, calculatePayAmount, getMaxSettlementAmountForPayLimit } from './fee';
+import { getMethodFeeConfig, calculatePaymentFeeQuote, getMaxSettlementAmountForPayLimit, hasPaymentFee } from './fee';
 import { ensureDBProviders, paymentRegistry } from '@/lib/payment';
 import type { PaymentType, PaymentNotification, PaymentProvider } from '@/lib/payment';
 import {
@@ -27,7 +27,11 @@ import { resolveAbsoluteUrl } from '@/lib/request-origin';
 import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
 import { selectInstance, getInstanceConfig, type LoadBalanceStrategy } from '@/lib/payment/load-balancer';
 import { createProviderFromInstance } from '@/lib/payment/provider-factory';
-import { convertCnySettlementToUsdBalance, convertUsdBalanceToCnyPayment, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
+import {
+  convertCnySettlementToUsdBalance,
+  convertUsdBalanceToCnyPayment,
+  resolveBalanceCreditCnyPerUsd,
+} from '@/lib/currency';
 import { applyRefundToInvoice } from '@/lib/invoice/service';
 import { resolvePromotionForOrder } from '@/lib/promotion/service';
 import { describePaymentGatewayError } from '@/lib/order/gateway-error';
@@ -66,6 +70,8 @@ export interface CreateOrderResult {
   amount: number;
   payAmount: number;
   feeRate: number;
+  fixedFee: number;
+  feeAmount: number;
   /** 充值活动赠送的到账金额（USD），无活动为 0 */
   bonusAmount: number;
   promotionName: string | null;
@@ -242,6 +248,8 @@ async function findReusableSubscriptionOrder(
     amount: Number(existing.amount),
     payAmount: Number(existing.payAmount ?? existing.amount),
     feeRate: existing.feeRate ? Number(existing.feeRate) : 0,
+    fixedFee: existing.fixedFee ? Number(existing.fixedFee) : 0,
+    feeAmount: existing.feeAmount ? Number(existing.feeAmount) : 0,
     bonusAmount: 0,
     promotionName: null,
     status: ORDER_STATUS.PENDING,
@@ -333,9 +341,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   }
 
   const balanceCreditConfigs =
-    orderType === 'balance'
-      ? await getSystemConfigs(['BALANCE_CREDIT_CNY_PER_USD', 'BALANCE_CREDIT_USD_PER_CNY'])
-      : {};
+    orderType === 'balance' ? await getSystemConfigs(['BALANCE_CREDIT_CNY_PER_USD', 'BALANCE_CREDIT_USD_PER_CNY']) : {};
   const balanceCreditCnyPerUsd =
     orderType === 'balance'
       ? resolveBalanceCreditCnyPerUsd(
@@ -452,11 +458,23 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
 
   const settlementAmount =
     orderType === 'balance'
-      ? convertUsdBalanceToCnyPayment(input.amount, balanceCreditCnyPerUsd) ?? input.amount
+      ? (convertUsdBalanceToCnyPayment(input.amount, balanceCreditCnyPerUsd) ?? input.amount)
       : input.amount;
-  const feeRate = getMethodFeeRate(input.paymentType);
-  const payAmountStr = calculatePayAmount(settlementAmount, feeRate);
-  const payAmountNum = Number(payAmountStr);
+  const feeConfig = await getMethodFeeConfig(input.paymentType);
+  const feeQuote = calculatePaymentFeeQuote(settlementAmount, feeConfig);
+  const payAmountStr = feeQuote.payAmount.toFixed(2);
+  const payAmountNum = feeQuote.payAmount;
+  if (payAmountNum > MAX_AMOUNT) {
+    throw new OrderError(
+      'AMOUNT_TOO_LARGE',
+      message(
+        locale,
+        '含手续费的实付金额超出允许上限',
+        'The payable amount including fees exceeds the allowed maximum',
+      ),
+      400,
+    );
+  }
 
   const orderTimeoutConfig = await getSystemConfig('ORDER_TIMEOUT_MINUTES');
   const orderTimeoutMinutes = orderTimeoutConfig
@@ -534,7 +552,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         const remainingCredited =
           orderType === 'balance' && balanceCreditCnyPerUsd
             ? convertCnySettlementToUsdBalance(
-                getMaxSettlementAmountForPayLimit(remainingGatewayPay, feeRate),
+                getMaxSettlementAmountForPayLimit(remainingGatewayPay, feeConfig),
                 balanceCreditCnyPerUsd,
               )
             : null;
@@ -557,8 +575,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     }
 
     // 充值活动：在事务内决定赠送额并快照到订单（客户端预览不可信）
-    const promotion =
-      orderType === 'balance' ? await resolvePromotionForOrder(tx, input.userId, input.amount) : null;
+    const promotion = orderType === 'balance' ? await resolvePromotionForOrder(tx, input.userId, input.amount) : null;
 
     const created = await tx.order.create({
       data: {
@@ -568,7 +585,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         userNotes: user.notes || null,
         amount: new Prisma.Decimal(input.amount.toFixed(2)),
         payAmount: new Prisma.Decimal(payAmountStr),
-        feeRate: feeRate > 0 ? new Prisma.Decimal(feeRate.toFixed(4)) : null,
+        feeRate: feeConfig.feeRate > 0 ? new Prisma.Decimal(feeConfig.feeRate.toFixed(4)) : null,
+        fixedFee: feeConfig.fixedFee > 0 ? new Prisma.Decimal(feeConfig.fixedFee.toFixed(2)) : null,
+        feeAmount: hasPaymentFee(feeConfig) ? new Prisma.Decimal(feeQuote.feeAmount.toFixed(2)) : null,
         rechargeCode: '',
         status: 'PENDING',
         paymentType: input.paymentType,
@@ -664,7 +683,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     let paymentSubject: string;
     if (subscriptionPlan) {
       // R3: 订阅订单优先使用套餐自定义商品名称
-      paymentSubject = subscriptionPlan.productName || buildDefaultSubscriptionSubject(subscriptionGroupName || subscriptionPlan.name);
+      paymentSubject =
+        subscriptionPlan.productName || buildDefaultSubscriptionSubject(subscriptionGroupName || subscriptionPlan.name);
     } else {
       // R5: 余额订单使用前缀/后缀配置
       const nameConfigs = await getSystemConfigs(['PRODUCT_NAME_PREFIX', 'PRODUCT_NAME_SUFFIX']);
@@ -709,6 +729,10 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         detail: JSON.stringify({
           userId: input.userId,
           amount: input.amount,
+          payAmount: payAmountNum,
+          feeRate: feeConfig.feeRate,
+          fixedFee: feeConfig.fixedFee,
+          feeAmount: feeQuote.feeAmount,
           paymentType: input.paymentType,
           orderType,
           ...(subscriptionPlan && {
@@ -730,7 +754,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       orderId: order.id,
       amount: input.amount,
       payAmount: payAmountNum,
-      feeRate,
+      feeRate: feeConfig.feeRate,
+      fixedFee: feeConfig.fixedFee,
+      feeAmount: feeQuote.feeAmount,
       bonusAmount: order.promotion?.bonusAmount ?? 0,
       promotionName: order.promotion?.promotionName ?? null,
       status: ORDER_STATUS.PENDING,
@@ -1920,8 +1946,7 @@ export async function processRefund(input: RefundInput): Promise<RefundResult> {
           balanceDeducted: plan.balanceAmount,
           subscriptionDaysDeducted: plan.subscriptionDays,
           // 充值活动赠送额随退款一并扣回（未扣余额时为 0）
-          bonusClawedBack:
-            deductBalance && order.orderType === 'balance' ? Number(order.bonusAmount ?? 0) : 0,
+          bonusClawedBack: deductBalance && order.orderType === 'balance' ? Number(order.bonusAmount ?? 0) : 0,
         }),
         operator: 'admin',
       },

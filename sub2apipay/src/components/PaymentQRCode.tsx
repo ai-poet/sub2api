@@ -21,6 +21,7 @@ interface PaymentQRCodeProps {
   paymentType?: string;
   amount: number;
   payAmount?: number;
+  feeAmount?: number;
   /** 充值活动赠送的到账金额（USD） */
   bonusAmount?: number;
   orderType?: 'balance' | 'subscription';
@@ -49,6 +50,7 @@ export default function PaymentQRCode({
   paymentType,
   amount,
   payAmount: payAmountProp,
+  feeAmount: feeAmountProp,
   bonusAmount = 0,
   orderType = 'balance',
   usdExchangeRate,
@@ -63,6 +65,7 @@ export default function PaymentQRCode({
 }: PaymentQRCodeProps) {
   const displayAmountCny = payAmountProp ?? amount;
   const settlementDisplay = getSettlementDisplay(displayAmountCny, paymentType, usdExchangeRate);
+  const feeSettlementDisplay = getSettlementDisplay(feeAmountProp ?? 0, paymentType, usdExchangeRate);
   const isBalanceOrder = orderType === 'balance';
   const showCreditedAmount = isBalanceOrder;
   const hasBonus = isBalanceOrder && bonusAmount > 0;
@@ -442,6 +445,13 @@ export default function PaymentQRCode({
                   : `（含活动赠送 $${bonusAmount.toFixed(2)}）`}
               </span>
             )}
+          </div>
+        )}
+        {feeAmountProp != null && feeAmountProp > 0 && (
+          <div className={['mt-1 text-sm', dark ? 'text-slate-400' : 'text-gray-500'].join(' ')}>
+            {locale === 'en' ? 'Payment fee: ' : '支付手续费：'}
+            {feeSettlementDisplay.symbol}
+            {feeSettlementDisplay.amount.toFixed(2)}
           </div>
         )}
         {settlementDisplay.currency === 'USD' && settlementDisplay.exchangeRate && (

@@ -27,6 +27,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     amount: Number(order.amount),
     payAmount: order.payAmount ? Number(order.payAmount) : null,
     feeRate: order.feeRate ? Number(order.feeRate) : null,
+    fixedFee: order.fixedFee ? Number(order.fixedFee) : null,
+    feeAmount: order.feeAmount ? Number(order.feeAmount) : null,
     refundAmount: order.refundAmount ? Number(order.refundAmount) : null,
     bonusAmount: order.bonusAmount ? Number(order.bonusAmount) : null,
   });

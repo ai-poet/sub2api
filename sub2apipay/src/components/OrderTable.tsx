@@ -120,7 +120,8 @@ export default function OrderTable({
   const [refundOrder, setRefundOrder] = useState<MyOrder | null>(null);
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
-  const formatOrderAmount = (order: MyOrder) => `${order.orderType === 'subscription' ? '¥' : '$'}${order.amount.toFixed(2)}`;
+  const formatOrderAmount = (order: MyOrder) =>
+    `${order.orderType === 'subscription' ? '¥' : '$'}${order.amount.toFixed(2)}`;
   const formatRefundAmount = (amount: number, order: MyOrder) =>
     `${order.orderType === 'subscription' ? '¥' : '$'}${amount.toFixed(2)}`;
 
@@ -271,6 +272,17 @@ export default function OrderTable({
                   <div className="font-medium">#{order.id.slice(0, 12)}</div>
                   <div className="font-semibold">
                     {formatOrderAmount(order)}
+                    {order.feeAmount != null && order.feeAmount > 0 && (
+                      <div
+                        className={['mt-0.5 text-xs font-normal', isDark ? 'text-slate-400' : 'text-slate-500'].join(
+                          ' ',
+                        )}
+                      >
+                        {locale === 'en'
+                          ? `Fee ¥${order.feeAmount.toFixed(2)} · Paid ¥${(order.payAmount ?? 0).toFixed(2)}`
+                          : `手续费 ¥${order.feeAmount.toFixed(2)} · 实付 ¥${(order.payAmount ?? 0).toFixed(2)}`}
+                      </div>
+                    )}
                     {order.bonusAmount != null && order.bonusAmount > 0 && (
                       <span
                         className={[
@@ -279,23 +291,32 @@ export default function OrderTable({
                         ].join(' ')}
                         title={order.promotionName ?? undefined}
                       >
-                        {locale === 'en' ? `Bonus +$${order.bonusAmount.toFixed(2)}` : `赠送 +$${order.bonusAmount.toFixed(2)}`}
+                        {locale === 'en'
+                          ? `Bonus +$${order.bonusAmount.toFixed(2)}`
+                          : `赠送 +$${order.bonusAmount.toFixed(2)}`}
                       </span>
                     )}
                   </div>
                   <div>{getPaymentDisplayInfo(order.paymentType, locale).channel}</div>
                   <div>
-                    <span className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(' ')}>
+                    <span
+                      className={['rounded-full px-2 py-0.5 text-xs', getStatusBadgeClass(order.status, isDark)].join(
+                        ' ',
+                      )}
+                    >
                       {formatStatus(order.status, locale)}
                     </span>
-                    {(order.status === 'PARTIALLY_REFUNDED' || order.status === 'REFUND_REQUESTED') && order.refundAmount != null && (
-                      <div className={['mt-1 text-xs', isDark ? 'text-fuchsia-300' : 'text-fuchsia-700'].join(' ')}>
-                        {order.status === 'PARTIALLY_REFUNDED' ? text.partialRefunded : text.requested}:{' '}
-                        {formatRefundAmount(order.refundAmount, order)}
-                      </div>
-                    )}
+                    {(order.status === 'PARTIALLY_REFUNDED' || order.status === 'REFUND_REQUESTED') &&
+                      order.refundAmount != null && (
+                        <div className={['mt-1 text-xs', isDark ? 'text-fuchsia-300' : 'text-fuchsia-700'].join(' ')}>
+                          {order.status === 'PARTIALLY_REFUNDED' ? text.partialRefunded : text.requested}:{' '}
+                          {formatRefundAmount(order.refundAmount, order)}
+                        </div>
+                      )}
                   </div>
-                  <div className={isDark ? 'text-slate-300' : 'text-slate-600'}>{formatCreatedAt(order.createdAt, locale)}</div>
+                  <div className={isDark ? 'text-slate-300' : 'text-slate-600'}>
+                    {formatCreatedAt(order.createdAt, locale)}
+                  </div>
                   <div>
                     {order.canRefundRequest ? (
                       <button
@@ -312,7 +333,9 @@ export default function OrderTable({
                         {submittingId === order.id ? '...' : text.refundRequest}
                       </button>
                     ) : order.status === 'REFUND_REQUESTED' ? (
-                      <span className={isDark ? 'text-violet-300 text-xs' : 'text-violet-700 text-xs'}>{text.requested}</span>
+                      <span className={isDark ? 'text-violet-300 text-xs' : 'text-violet-700 text-xs'}>
+                        {text.requested}
+                      </span>
                     ) : (
                       <span className={isDark ? 'text-slate-500 text-xs' : 'text-slate-400 text-xs'}>-</span>
                     )}
@@ -359,9 +382,7 @@ export default function OrderTable({
                           title={formatInvoiceIneligibleReason(order.invoiceIneligibleReason, locale)}
                           className={isDark ? 'text-slate-500 text-xs' : 'text-slate-400 text-xs'}
                         >
-                          {order.invoice?.status === 'REJECTED'
-                            ? formatInvoiceStatus('REJECTED', locale)
-                            : '-'}
+                          {order.invoice?.status === 'REJECTED' ? formatInvoiceStatus('REJECTED', locale) : '-'}
                         </span>
                       )}
                     </div>
@@ -376,10 +397,14 @@ export default function OrderTable({
       {refundOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className={['w-full max-w-md rounded-xl p-6 shadow-xl', isDark ? 'bg-slate-900' : 'bg-white'].join(' ')}>
-            <h3 className={['text-lg font-bold', isDark ? 'text-slate-100' : 'text-gray-900'].join(' ')}>{text.dialogTitle}</h3>
+            <h3 className={['text-lg font-bold', isDark ? 'text-slate-100' : 'text-gray-900'].join(' ')}>
+              {text.dialogTitle}
+            </h3>
 
             <div className="mt-4 space-y-3">
-              <div className={['grid grid-cols-2 gap-3 text-sm', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ')}>
+              <div
+                className={['grid grid-cols-2 gap-3 text-sm', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ')}
+              >
                 <div className={['rounded-lg p-3', isDark ? 'bg-slate-800' : 'bg-gray-50'].join(' ')}>
                   <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>{text.orderAmount}</div>
                   <div className="mt-1 font-semibold">${refundOrder.amount.toFixed(2)}</div>
@@ -391,7 +416,9 @@ export default function OrderTable({
               </div>
 
               <div>
-                <label className={['mb-1 block text-sm font-medium', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ')}>
+                <label
+                  className={['mb-1 block text-sm font-medium', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ')}
+                >
                   {text.refundAmount}
                 </label>
                 <input
@@ -406,7 +433,11 @@ export default function OrderTable({
                     isDark ? 'border-slate-600 bg-slate-800 text-slate-100' : 'border-gray-300 bg-white text-gray-900',
                   ].join(' ')}
                 />
-                {amountError && <div className={['mt-1 text-xs', isDark ? 'text-red-400' : 'text-red-600'].join(' ')}>{amountError}</div>}
+                {amountError && (
+                  <div className={['mt-1 text-xs', isDark ? 'text-red-400' : 'text-red-600'].join(' ')}>
+                    {amountError}
+                  </div>
+                )}
                 {refundBonus > 0 && (
                   <div className={['mt-1 text-xs', isDark ? 'text-emerald-300' : 'text-emerald-700'].join(' ')}>
                     {locale === 'en'
@@ -417,7 +448,9 @@ export default function OrderTable({
               </div>
 
               <div>
-                <label className={['mb-1 block text-sm font-medium', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ')}>
+                <label
+                  className={['mb-1 block text-sm font-medium', isDark ? 'text-slate-300' : 'text-gray-700'].join(' ')}
+                >
                   {text.refundReason}
                 </label>
                 <textarea
@@ -440,7 +473,9 @@ export default function OrderTable({
                 disabled={submittingId === refundOrder.id}
                 className={[
                   'flex-1 rounded-lg border py-2 text-sm',
-                  isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-800' : 'border-gray-300 text-gray-600 hover:bg-gray-50',
+                  isDark
+                    ? 'border-slate-600 text-slate-300 hover:bg-slate-800'
+                    : 'border-gray-300 text-gray-600 hover:bg-gray-50',
                 ].join(' ')}
               >
                 {text.cancel}
@@ -451,7 +486,9 @@ export default function OrderTable({
                 disabled={submittingId === refundOrder.id || !!amountError}
                 className={[
                   'flex-1 rounded-lg py-2 text-sm font-medium text-white disabled:cursor-not-allowed',
-                  isDark ? 'bg-red-600/90 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500' : 'bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:text-gray-400',
+                  isDark
+                    ? 'bg-red-600/90 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500'
+                    : 'bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:text-gray-400',
                 ].join(' ')}
               >
                 {submittingId === refundOrder.id ? text.submitting : text.submit}

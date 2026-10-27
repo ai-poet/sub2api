@@ -14,6 +14,7 @@ import {
 } from '@/lib/promotion/calc';
 import PromotionBanner from '@/components/PromotionBanner';
 import StablecoinPaymentNotice from '@/components/StablecoinPaymentNotice';
+import { calculatePaymentFeeQuote, type PaymentFeeConfig } from '@/lib/order/fee-calc';
 
 export interface MethodLimitInfo {
   available: boolean;
@@ -24,6 +25,10 @@ export interface MethodLimitInfo {
   singleMax?: number;
   /** 手续费率百分比，0 = 无手续费 */
   feeRate?: number;
+  /** 固定手续费（CNY） */
+  fixedFee?: number;
+  /** 是否由用户承担手续费；缺省时兼容旧接口，按 feeRate > 0 判断 */
+  feeEnabled?: boolean;
 }
 
 interface PaymentFormProps {
@@ -116,16 +121,25 @@ export default function PaymentForm({
   const effectiveMin =
     methodSingleMin !== undefined && methodSingleMin > 0 ? Math.max(methodSingleMin, minAmount) : minAmount;
   const feeRate = methodLimits?.[effectivePaymentType]?.feeRate ?? 0;
+  const fixedFee = methodLimits?.[effectivePaymentType]?.fixedFee ?? 0;
+  const feeEnabled = methodLimits?.[effectivePaymentType]?.feeEnabled ?? feeRate > 0;
+  const feeConfig: PaymentFeeConfig = { enabled: feeEnabled, feeRate, fixedFee };
   const settlementAmountCny =
     selectedAmount > 0 ? (convertUsdBalanceToCnyPayment(selectedAmount, balanceCreditCnyPerUsd) ?? selectedAmount) : 0;
-  const feeAmount =
-    feeRate > 0 && settlementAmountCny > 0 ? Math.ceil(((settlementAmountCny * feeRate) / 100) * 100) / 100 : 0;
-  const payAmountCny =
-    feeRate > 0 && settlementAmountCny > 0
-      ? Math.round((settlementAmountCny + feeAmount) * 100) / 100
-      : settlementAmountCny;
+  const feeQuote =
+    settlementAmountCny > 0
+      ? calculatePaymentFeeQuote(settlementAmountCny, feeConfig)
+      : { settlementAmount: 0, payAmount: 0, feeAmount: 0 };
+  const feeAmountCny = feeQuote.feeAmount;
+  const payAmountCny = feeQuote.payAmount;
+  const hasFee = feeEnabled && (feeRate > 0 || fixedFee > 0);
+  const feeRuleLabel = [feeRate > 0 ? `${feeRate}%` : null, fixedFee > 0 ? `¥${fixedFee.toFixed(2)}` : null]
+    .filter(Boolean)
+    .join(' + ');
   const settlementDisplay = getSettlementDisplay(payAmountCny, effectivePaymentType, usdExchangeRate);
-  const showStablecoinSettlement = isStablecoinPaymentType(effectivePaymentType) && settlementDisplay.currency === 'USD';
+  const feeSettlementDisplay = getSettlementDisplay(feeAmountCny, effectivePaymentType, usdExchangeRate);
+  const showStablecoinSettlement =
+    isStablecoinPaymentType(effectivePaymentType) && settlementDisplay.currency === 'USD';
   const showPaymentSummary = selectedAmount > 0;
   const isValid =
     selectedAmount >= effectiveMin &&
@@ -148,23 +162,24 @@ export default function PaymentForm({
   const bonusMatch = selectedAmount > 0 ? pickBestPromotion(selectedAmount, activePromos) : null;
   const bonusAmount = bonusMatch?.bonus ?? 0;
   const creditedTotal = Math.round((selectedAmount + bonusAmount) * 100) / 100;
-  const promotionHint = selectedAmount > 0 && activePromos.length > 0 ? nextPromotionHint(selectedAmount, activePromos) : null;
+  const promotionHint =
+    selectedAmount > 0 && activePromos.length > 0 ? nextPromotionHint(selectedAmount, activePromos) : null;
 
   const creditedAmountLabel = locale === 'en' ? 'Credited Balance (USD)' : '到账金额（USD）';
   const payAmountLabel =
     locale === 'en'
       ? settlementDisplay.currency === 'USD'
-        ? feeRate > 0
+        ? hasFee
           ? 'Amount to Pay (USD, incl. fee)'
           : 'Amount to Pay (USD)'
-        : feeRate > 0
+        : hasFee
           ? 'Amount to Pay (CNY, incl. fee)'
           : 'Amount to Pay (CNY)'
       : settlementDisplay.currency === 'USD'
-        ? feeRate > 0
+        ? hasFee
           ? '实付金额（USD，含手续费）'
           : '实付金额（USD）'
-        : feeRate > 0
+        : hasFee
           ? '实付金额（CNY，含手续费）'
           : '实付金额（CNY）';
 
@@ -278,9 +293,7 @@ export default function PaymentForm({
       </div>
 
       {/* 充值活动 */}
-      {promotions && promotions.length > 0 && (
-        <PromotionBanner promotions={promotions} isDark={dark} locale={locale} />
-      )}
+      {promotions && promotions.length > 0 && <PromotionBanner promotions={promotions} isDark={dark} locale={locale} />}
 
       {fixedAmount ? (
         <div
@@ -355,7 +368,9 @@ export default function PaymentForm({
                 max={effectiveMax > 0 ? effectiveMax : undefined}
                 value={customAmount}
                 onChange={(e) => handleCustomAmountChange(e.target.value)}
-                placeholder={amountRangePlaceholder(effectiveMin, effectiveMax) || (locale === 'en' ? 'Amount' : '到账金额')}
+                placeholder={
+                  amountRangePlaceholder(effectiveMin, effectiveMax) || (locale === 'en' ? 'Amount' : '到账金额')
+                }
                 className={[
                   'w-full rounded-lg border py-3 pl-8 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
                   dark ? 'border-slate-700 bg-slate-900 text-slate-100' : 'border-gray-300 bg-white text-gray-900',
@@ -486,9 +501,10 @@ export default function PaymentForm({
           {bonusMatch && bonusAmount > 0 && (
             <>
               <div
-                className={['mt-1.5 flex items-center justify-between', dark ? 'text-emerald-300' : 'text-emerald-600'].join(
-                  ' ',
-                )}
+                className={[
+                  'mt-1.5 flex items-center justify-between',
+                  dark ? 'text-emerald-300' : 'text-emerald-600',
+                ].join(' ')}
               >
                 <span>
                   {locale === 'en' ? 'Promotion Bonus' : '活动赠送'}
@@ -503,6 +519,18 @@ export default function PaymentForm({
                 <span className={dark ? 'text-emerald-300' : 'text-emerald-600'}>${creditedTotal.toFixed(2)}</span>
               </div>
             </>
+          )}
+          {hasFee && (
+            <div className="mt-1.5 flex items-center justify-between">
+              <span>
+                {locale === 'en' ? 'Payment Fee' : '支付手续费'}
+                <span className={`ml-1 text-xs ${dark ? 'text-slate-400' : 'text-slate-500'}`}>({feeRuleLabel})</span>
+              </span>
+              <span>
+                {feeSettlementDisplay.symbol}
+                {feeSettlementDisplay.amount.toFixed(2)}
+              </span>
+            </div>
           )}
           <div
             className={[
@@ -552,13 +580,13 @@ export default function PaymentForm({
           ? locale === 'en'
             ? 'Processing...'
             : '处理中...'
-            : pendingBlocked
-              ? locale === 'en'
-                ? 'Too many pending orders'
-                : '待支付订单过多'
-              : locale === 'en'
-                ? `Pay Now ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`
-                : `立即支付 ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
+          : pendingBlocked
+            ? locale === 'en'
+              ? 'Too many pending orders'
+              : '待支付订单过多'
+            : locale === 'en'
+              ? `Pay Now ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`
+              : `立即支付 ${settlementDisplay.symbol}${settlementDisplay.amount.toFixed(2)}`}
       </button>
 
       {/* 对话框里的按钮都是 type="button"，放在表单里不会触发提交 */}

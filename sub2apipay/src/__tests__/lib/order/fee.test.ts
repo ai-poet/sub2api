@@ -1,83 +1,130 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const mockGetSystemConfig = vi.fn<(key: string) => Promise<string | undefined>>();
+
+vi.mock('@/lib/system-config', () => ({
+  getSystemConfig: (...args: unknown[]) => mockGetSystemConfig(...(args as [string])),
+}));
 
 vi.mock('@/lib/payment', () => ({
   initPaymentProviders: vi.fn(),
   ensureDBProviders: vi.fn().mockResolvedValue(undefined),
   paymentRegistry: {
-    getProviderKey: vi.fn(),
+    getProviderKey: vi.fn().mockReturnValue('easypay'),
   },
 }));
 
-import { calculatePayAmount } from '@/lib/order/fee';
+import {
+  calculatePayAmount,
+  calculatePaymentFeeQuote,
+  getMaxSettlementAmountForPayLimit,
+  getMethodFeeConfigs,
+  getMinSettlementAmountForPayLimit,
+  parsePaymentMethodFees,
+  validatePaymentFeeConfig,
+} from '@/lib/order/fee';
 
-describe('calculatePayAmount', () => {
+describe('calculatePaymentFeeQuote', () => {
   it.each([
-    { rechargeAmount: 100, feeRate: 0, expected: '100.00', desc: 'feeRate=0 返回原金额' },
-    { rechargeAmount: 100, feeRate: -1, expected: '100.00', desc: 'feeRate<0 返回原金额' },
-    { rechargeAmount: 100, feeRate: 3, expected: '103.00', desc: '100 * 3% = 3.00' },
-    { rechargeAmount: 100, feeRate: 2.5, expected: '102.50', desc: '100 * 2.5% = 2.50' },
-    {
-      rechargeAmount: 99.99,
-      feeRate: 1,
-      expected: '100.99',
-      desc: '99.99 * 1% = 0.9999 → ROUND_UP → 1.00, total 100.99',
-    },
-    { rechargeAmount: 10, feeRate: 3, expected: '10.30', desc: '10 * 3% = 0.30' },
-    { rechargeAmount: 1, feeRate: 1, expected: '1.01', desc: '1 * 1% = 0.01' },
-  ])('$desc (amount=$rechargeAmount, rate=$feeRate)', ({ rechargeAmount, feeRate, expected }) => {
-    expect(calculatePayAmount(rechargeAmount, feeRate)).toBe(expected);
+    { amount: 100, feeRate: 0, fixedFee: 0, expected: '100.00', fee: '0.00' },
+    { amount: 100, feeRate: 10, fixedFee: 0, expected: '111.12', fee: '11.12' },
+    { amount: 100, feeRate: 0, fixedFee: 0.5, expected: '100.50', fee: '0.50' },
+    { amount: 100, feeRate: 3.9, fixedFee: 3.6, expected: '107.81', fee: '7.81' },
+    { amount: 0.01, feeRate: 1, fixedFee: 0, expected: '0.02', fee: '0.01' },
+    { amount: 10000, feeRate: 2.5, fixedFee: 0, expected: '10256.42', fee: '256.42' },
+  ])('反推实付与手续费（$amount, $feeRate%, ¥$fixedFee）', ({ amount, feeRate, fixedFee, expected, fee }) => {
+    const result = calculatePaymentFeeQuote(amount, { enabled: feeRate > 0 || fixedFee > 0, feeRate, fixedFee });
+    expect(result.payAmount.toFixed(2)).toBe(expected);
+    expect(result.feeAmount.toFixed(2)).toBe(fee);
   });
 
-  describe('ROUND_UP 向上取整', () => {
-    it('小数第三位非零时进位', () => {
-      // 33 * 1% = 0.33, 整除无进位
-      expect(calculatePayAmount(33, 1)).toBe('33.33');
-    });
-
-    it('产生无限小数时向上进位', () => {
-      // 10 * 3.3% = 0.33, 精确
-      expect(calculatePayAmount(10, 3.3)).toBe('10.33');
-      // 7 * 3% = 0.21, 精确
-      expect(calculatePayAmount(7, 3)).toBe('7.21');
-      // 1 * 0.7% = 0.007 → ROUND_UP → 0.01
-      expect(calculatePayAmount(1, 0.7)).toBe('1.01');
+  it('关闭时保留配置但不计费', () => {
+    expect(calculatePaymentFeeQuote(100, { enabled: false, feeRate: 3.9, fixedFee: 3.6 })).toEqual({
+      settlementAmount: 100,
+      payAmount: 100,
+      feeAmount: 0,
     });
   });
 
-  describe('极小金额', () => {
-    it('0.01 元 + 1% 手续费', () => {
-      // 0.01 * 1% = 0.0001 → ROUND_UP → 0.01
-      expect(calculatePayAmount(0.01, 1)).toBe('0.02');
-    });
+  it('无限小数按分向上取整', () => {
+    expect(calculatePayAmount(33, 1)).toBe('33.34');
+    expect(calculatePayAmount(7, 3)).toBe('7.22');
+    expect(calculatePayAmount(1, 0.7)).toBe('1.01');
+  });
+});
 
-    it('0.01 元 + 0 手续费', () => {
-      expect(calculatePayAmount(0.01, 0)).toBe('0.01');
+describe('validatePaymentFeeConfig', () => {
+  it.each([
+    { enabled: true, feeRate: 100, fixedFee: 0 },
+    { enabled: true, feeRate: -1, fixedFee: 0 },
+    { enabled: true, feeRate: 0.00001, fixedFee: 0 },
+    { enabled: true, feeRate: 0, fixedFee: -0.01 },
+    { enabled: true, feeRate: 0, fixedFee: 0.001 },
+    { enabled: true, feeRate: 0, fixedFee: 0 },
+  ])('拒绝非法配置 %j', (config) => {
+    expect(validatePaymentFeeConfig(config)).not.toBeNull();
+  });
+
+  it('允许禁用且全零的配置', () => {
+    expect(validatePaymentFeeConfig({ enabled: false, feeRate: 0, fixedFee: 0 })).toBeNull();
+  });
+});
+
+describe('配置解析与兼容回退', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetSystemConfig.mockResolvedValue(undefined);
+    delete process.env.FEE_RATE_ALIPAY;
+    delete process.env.FEE_RATE_PROVIDER_EASYPAY;
+  });
+
+  it('解析每种支付方式的开关、费率和固定费', () => {
+    expect(parsePaymentMethodFees(JSON.stringify({ alipay: { enabled: true, feeRate: 3.9, fixedFee: 3.6 } }))).toEqual({
+      alipay: { enabled: true, feeRate: 3.9, fixedFee: 3.6 },
     });
   });
 
-  describe('大金额', () => {
-    it('10000 元 + 2.5%', () => {
-      // 10000 * 2.5% = 250.00
-      expect(calculatePayAmount(10000, 2.5)).toBe('10250.00');
-    });
-
-    it('99999.99 元 + 5%', () => {
-      // 99999.99 * 5% = 4999.9995 → ROUND_UP → 5000.00
-      // 但 rechargeAmount 传入为 number 99999.99，Decimal(99999.99) 可能有浮点
-      // 实际: 99999.99 + 5000.00 = 104999.99
-      expect(calculatePayAmount(99999.99, 5)).toBe('104999.99');
-    });
+  it('拒绝非法 JSON 与非法费率', () => {
+    expect(() => parsePaymentMethodFees('{')).toThrow();
+    expect(() =>
+      parsePaymentMethodFees(JSON.stringify({ alipay: { enabled: true, feeRate: 100, fixedFee: 0 } })),
+    ).toThrow();
   });
 
-  describe('精度', () => {
-    it('输出始终为 2 位小数', () => {
-      const result = calculatePayAmount(100, 0);
-      expect(result).toMatch(/^\d+\.\d{2}$/);
-    });
+  it('数据库配置优先，未配置的方法回退旧环境变量', async () => {
+    process.env.FEE_RATE_WXPAY = '1.6';
+    mockGetSystemConfig.mockResolvedValue(JSON.stringify({ alipay: { enabled: true, feeRate: 3.9, fixedFee: 3.6 } }));
 
-    it('有手续费时输出也为 2 位小数', () => {
-      const result = calculatePayAmount(77, 3.33);
-      expect(result).toMatch(/^\d+\.\d{2}$/);
-    });
+    const result = await getMethodFeeConfigs(['alipay', 'wxpay', 'stripe']);
+    expect(result.alipay).toEqual({ enabled: true, feeRate: 3.9, fixedFee: 3.6 });
+    expect(result.wxpay).toEqual({ enabled: true, feeRate: 1.6, fixedFee: 0 });
+    expect(result.stripe).toEqual({ enabled: false, feeRate: 0, fixedFee: 0 });
+    expect(mockGetSystemConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it('显式禁用覆盖旧环境变量', async () => {
+    process.env.FEE_RATE_ALIPAY = '2';
+    mockGetSystemConfig.mockResolvedValue(JSON.stringify({ alipay: { enabled: false, feeRate: 2, fixedFee: 0 } }));
+    expect((await getMethodFeeConfigs(['alipay'])).alipay.enabled).toBe(false);
+  });
+});
+
+describe('实付限额反推', () => {
+  const fee = { enabled: true, feeRate: 3.9, fixedFee: 3.6 };
+
+  it('最大结算金额不会超过实付上限', () => {
+    const max = getMaxSettlementAmountForPayLimit(110, fee);
+    expect(max).toBe(102.11);
+    expect(calculatePaymentFeeQuote(max, fee).payAmount).toBeLessThanOrEqual(110);
+  });
+
+  it('固定费超过上限时没有可支付的正金额', () => {
+    expect(getMaxSettlementAmountForPayLimit(3, fee)).toBe(0);
+  });
+
+  it('最小结算金额至少达到实付下限', () => {
+    const min = getMinSettlementAmountForPayLimit(110, fee);
+    expect(min).toBe(102.11);
+    expect(calculatePaymentFeeQuote(min, fee).payAmount).toBeGreaterThanOrEqual(110);
   });
 });

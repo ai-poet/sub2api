@@ -13,6 +13,8 @@ import {
   legacyBalanceCreditUsdPerCnyToCnyPerUsd,
 } from '@/lib/currency';
 import { isOptInPaymentType, withoutOptInPaymentTypes } from '@/lib/payment/opt-in-types';
+import { PAYMENT_TYPE } from '@/lib/constants';
+import type { PaymentFeeConfig } from '@/lib/order/fee-calc';
 
 // ── i18n ──
 
@@ -84,6 +86,12 @@ function getTexts(locale: Locale) {
         allChannels: 'All Channels',
         defaultDeductBalance: 'Default Deduct Balance',
         defaultDeductBalanceHint: 'When enabled, refund approval defaults to deducting balance/subscription',
+        methodFees: 'Payment Method Fees',
+        methodFeesHint:
+          'Charge the payer using gross-up: the fee itself is also included in the provider fee base. Fixed fees are in CNY.',
+        userPaysFee: 'User pays fee',
+        feeRatePercent: 'Rate (%)',
+        fixedFeeCny: 'Fixed fee (CNY)',
       }
     : {
         missingToken: '缺少管理员凭证',
@@ -121,7 +129,8 @@ function getTexts(locale: Locale) {
         usdExchangeRate: '美元汇率',
         usdExchangeRateHint: '用于展示 USDT/USDC 的美元实付金额。填写规则：1 USD = 多少 CNY。',
         balanceCreditCnyPerUsd: '到账单价',
-        balanceCreditCnyPerUsdHint: '用于余额充值到账换算。填写规则：到账 1 USD 余额需要多少 CNY。非稳定币支付按此单价计算实际实付。',
+        balanceCreditCnyPerUsdHint:
+          '用于余额充值到账换算。填写规则：到账 1 USD 余额需要多少 CNY。非稳定币支付按此单价计算实际实付。',
         orderTimeoutMinutes: '订单超时（分钟）',
         loadingEnvDefaults: '加载默认值...',
         providerManagement: '服务商管理',
@@ -150,6 +159,11 @@ function getTexts(locale: Locale) {
         allChannels: '全部渠道',
         defaultDeductBalance: '默认扣除余额/订阅',
         defaultDeductBalanceHint: '开启后，退款通过时默认扣除余额/订阅；关闭时默认不扣除',
+        methodFees: '支付方式手续费',
+        methodFeesHint: '按足额到账反推：手续费本身也参与渠道计费。固定手续费以人民币（CNY）填写。',
+        userPaysFee: '用户承担手续费',
+        feeRatePercent: '费率（%）',
+        fixedFeeCny: '固定手续费（CNY）',
       };
 }
 
@@ -183,6 +197,14 @@ const PROVIDER_SUPPORTED_TYPES: Record<string, string[]> = {
   wxpay: ['wxpay_direct'],
   stripe: ['stripe'],
 };
+
+const CONFIGURABLE_PAYMENT_TYPES = Object.values(PAYMENT_TYPE);
+
+function emptyPaymentMethodFees(): Record<string, PaymentFeeConfig> {
+  return Object.fromEntries(
+    CONFIGURABLE_PAYMENT_TYPES.map((type) => [type, { enabled: false, feeRate: 0, fixedFee: 0 }]),
+  );
+}
 
 interface ConfigFieldDef {
   key: string;
@@ -318,6 +340,8 @@ function PaymentConfigContent() {
     DEFAULT_BALANCE_CREDIT_CNY_PER_USD.toFixed(4),
   );
   const [rcOrderTimeout, setRcOrderTimeout] = useState('');
+  const [rcPaymentMethodFees, setRcPaymentMethodFees] =
+    useState<Record<string, PaymentFeeConfig>>(emptyPaymentMethodFees);
   const [loadingEnvDefaults, setLoadingEnvDefaults] = useState(false);
 
   // Instances
@@ -384,10 +408,14 @@ function PaymentConfigContent() {
         if (c.key === 'LOAD_BALANCE_STRATEGY') setRcLoadBalanceStrategy(c.value || 'round-robin');
         if (c.key === 'DEFAULT_DEDUCT_BALANCE') setRcAutoRefundEnabled(c.value === 'true');
       }
+      setRcPaymentMethodFees({ ...emptyPaymentMethodFees(), ...(data.paymentMethodFees ?? {}) });
       setRcBalanceCreditCnyPerUsd(
         balanceCreditCnyPerUsdValue ||
           (legacyBalanceCreditUsdPerCnyValue
-            ? String(legacyBalanceCreditUsdPerCnyToCnyPerUsd(legacyBalanceCreditUsdPerCnyValue) ?? DEFAULT_BALANCE_CREDIT_CNY_PER_USD)
+            ? String(
+                legacyBalanceCreditUsdPerCnyToCnyPerUsd(legacyBalanceCreditUsdPerCnyValue) ??
+                  DEFAULT_BALANCE_CREDIT_CNY_PER_USD,
+              )
             : DEFAULT_BALANCE_CREDIT_CNY_PER_USD.toFixed(4)),
       );
       setRcOverrideEnv(true);
@@ -571,6 +599,16 @@ function PaymentConfigContent() {
     }
   };
 
+  const updatePaymentMethodFee = (paymentType: string, patch: Partial<PaymentFeeConfig>) => {
+    setRcPaymentMethodFees((current) => ({
+      ...current,
+      [paymentType]: {
+        ...(current[paymentType] ?? { enabled: false, feeRate: 0, fixedFee: 0 }),
+        ...patch,
+      },
+    }));
+  };
+
   // ── Save config ──
 
   const saveConfig = async () => {
@@ -646,10 +684,20 @@ function PaymentConfigContent() {
               group: 'payment',
               label: '启用的支付方式',
             },
+            {
+              key: 'PAYMENT_METHOD_FEES',
+              value: JSON.stringify(rcPaymentMethodFees),
+              group: 'payment',
+              label: '支付方式手续费',
+            },
           ],
         }),
       });
-      if (!res.ok) setError(t.configSaveFailed);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || t.configSaveFailed);
+        return;
+      }
     } catch {
       setError(t.configSaveFailed);
     } finally {
@@ -991,6 +1039,63 @@ function PaymentConfigContent() {
                 <div className={`-mt-1 mb-4 space-y-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   <p>{t.usdExchangeRateHint}</p>
                   <p>{t.balanceCreditCnyPerUsdHint}</p>
+                </div>
+
+                {/* Payment method fees */}
+                <div className={`mb-4 rounded-lg border p-4 ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+                  <h3 className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {t.methodFees}
+                  </h3>
+                  <p className={`mt-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.methodFeesHint}</p>
+                  <div className="mt-3 space-y-2">
+                    {CONFIGURABLE_PAYMENT_TYPES.map((type) => {
+                      const fee = rcPaymentMethodFees[type] ?? { enabled: false, feeRate: 0, fixedFee: 0 };
+                      return (
+                        <div
+                          key={type}
+                          className={`flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2 ${
+                            isDark ? 'border-slate-600 bg-slate-800/40' : 'border-slate-200 bg-white'
+                          }`}
+                        >
+                          <Toggle
+                            value={fee.enabled}
+                            onChange={() => updatePaymentMethodFee(type, { enabled: !fee.enabled })}
+                          />
+                          <span className={`w-36 text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                            {PAYMENT_TYPE_LABELS[type]?.[locale] || type}
+                          </span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {t.userPaysFee}
+                          </span>
+                          <label className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            <span className="mr-2">{t.feeRatePercent}</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="99.9999"
+                              step="0.0001"
+                              disabled={!fee.enabled}
+                              value={fee.feeRate}
+                              onChange={(e) => updatePaymentMethodFee(type, { feeRate: Number(e.target.value) })}
+                              className={[inputCls, '!w-28 !py-1.5'].join(' ')}
+                            />
+                          </label>
+                          <label className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            <span className="mr-2">{t.fixedFeeCny}</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              disabled={!fee.enabled}
+                              value={fee.fixedFee}
+                              onChange={(e) => updatePaymentMethodFee(type, { fixedFee: Number(e.target.value) })}
+                              className={[inputCls, '!w-28 !py-1.5'].join(' ')}
+                            />
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* ── 服务商管理 ── */}

@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { ORDER_STATUS } from '@/lib/constants';
 import { getEnv } from '@/lib/config';
-import { getMethodFeeRate, getMaxSettlementAmountForPayLimit, getMinSettlementAmountForPayLimit } from './fee';
+import { getMethodFeeConfigs, getMaxSettlementAmountForPayLimit, getMinSettlementAmountForPayLimit } from './fee';
 import { getBizDayStartUTC } from '@/lib/time/biz-day';
 import { getSystemConfig } from '@/lib/system-config';
 import { convertCnySettlementToUsdBalance, resolveBalanceCreditCnyPerUsd } from '@/lib/currency';
@@ -40,6 +40,8 @@ export interface MethodLimitStatus {
   singleMin: number;
   singleMax: number;
   feeRate: number;
+  fixedFee: number;
+  feeEnabled: boolean;
 }
 
 interface InstanceChannelLimits {
@@ -229,12 +231,13 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
   ]);
 
   const usageMap = Object.fromEntries(usageRows.map((row) => [row.paymentType, Number(row._sum.payAmount ?? 0)]));
+  const feeConfigs = await getMethodFeeConfigs(paymentTypes);
 
   const result: Record<string, MethodLimitStatus> = {};
   for (const type of paymentTypes) {
     const globalDailyLimit = await getMethodDailyLimit(type);
     const globalSingleMax = await getMethodSingleLimit(type);
-    const feeRate = getMethodFeeRate(type);
+    const feeConfig = feeConfigs[type];
     const usedPayAmount = usageMap[type] ?? 0;
     const remainingPayAmount = globalDailyLimit > 0 ? Math.max(0, globalDailyLimit - usedPayAmount) : null;
 
@@ -259,16 +262,17 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
 
     // 全局剩余日容量约束
     if (remainingPayAmount !== null && remainingPayAmount >= 0) {
-      singleMaxPayAmount = singleMaxPayAmount > 0 ? Math.min(singleMaxPayAmount, remainingPayAmount) : remainingPayAmount;
+      singleMaxPayAmount =
+        singleMaxPayAmount > 0 ? Math.min(singleMaxPayAmount, remainingPayAmount) : remainingPayAmount;
     }
 
-    const usedSettlementAmount = getMaxSettlementAmountForPayLimit(usedPayAmount, feeRate);
+    const usedSettlementAmount = getMaxSettlementAmountForPayLimit(usedPayAmount, feeConfig);
     const remainingSettlementAmount =
-      remainingPayAmount !== null ? getMaxSettlementAmountForPayLimit(remainingPayAmount, feeRate) : null;
+      remainingPayAmount !== null ? getMaxSettlementAmountForPayLimit(remainingPayAmount, feeConfig) : null;
     const singleMinSettlementAmount =
-      singleMinPayAmount > 0 ? getMinSettlementAmountForPayLimit(singleMinPayAmount, feeRate) : 0;
+      singleMinPayAmount > 0 ? getMinSettlementAmountForPayLimit(singleMinPayAmount, feeConfig) : 0;
     const singleMaxSettlementAmount =
-      singleMaxPayAmount > 0 ? getMaxSettlementAmountForPayLimit(singleMaxPayAmount, feeRate) : 0;
+      singleMaxPayAmount > 0 ? getMaxSettlementAmountForPayLimit(singleMaxPayAmount, feeConfig) : 0;
 
     const used = convertSettlementCnyToCreditedUsd(usedSettlementAmount, balanceCreditCnyPerUsd, 'floor');
     const remaining =
@@ -278,7 +282,7 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
     const dailyLimit =
       globalDailyLimit > 0
         ? convertSettlementCnyToCreditedUsd(
-            getMaxSettlementAmountForPayLimit(globalDailyLimit, feeRate),
+            getMaxSettlementAmountForPayLimit(globalDailyLimit, feeConfig),
             balanceCreditCnyPerUsd,
             'floor',
           )
@@ -293,7 +297,11 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
         : 0;
 
     // 最终可用性：如果换算后的到账区间为空，该渠道实质不可用
-    const effectivelyAvailable = globalAvailable && instanceAvailable && (singleMin === 0 || singleMax >= singleMin);
+    const effectivelyAvailable =
+      globalAvailable &&
+      instanceAvailable &&
+      !(singleMaxPayAmount > 0 && singleMaxSettlementAmount < 0.01) &&
+      (singleMin === 0 || singleMax >= singleMin);
 
     result[type] = {
       dailyLimit,
@@ -302,7 +310,9 @@ export async function queryMethodLimits(paymentTypes: string[]): Promise<Record<
       available: effectivelyAvailable,
       singleMin,
       singleMax,
-      feeRate,
+      feeRate: feeConfig.feeRate,
+      fixedFee: feeConfig.fixedFee,
+      feeEnabled: feeConfig.enabled,
     };
   }
   return result;

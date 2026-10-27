@@ -1,5 +1,20 @@
 import { initPaymentProviders, paymentRegistry } from '@/lib/payment';
-import { Prisma } from '@prisma/client';
+import { getSystemConfig } from '@/lib/system-config';
+import {
+  amountToCents,
+  calculatePaymentFeeQuote,
+  centsToAmount,
+  feeConfigFrom,
+  legacyFeeRateConfig,
+  quoteFromCents,
+  validatePaymentFeeConfig,
+  type PaymentFeeConfig,
+} from './fee-calc';
+
+export { calculatePaymentFeeQuote, hasPaymentFee, validatePaymentFeeConfig } from './fee-calc';
+export type { PaymentFeeConfig, PaymentFeeQuote } from './fee-calc';
+
+export const PAYMENT_METHOD_FEES_CONFIG_KEY = 'PAYMENT_METHOD_FEES';
 
 function getProviderKeyForType(paymentType: string): string | undefined {
   const registry = paymentRegistry as {
@@ -23,18 +38,16 @@ function getProviderKeyForType(paymentType: string): string | undefined {
 }
 
 /**
- * 获取指定支付渠道的手续费率（百分比）。
- * 优先级：FEE_RATE_{TYPE} > FEE_RATE_PROVIDER_{KEY} > 0
+ * 旧环境变量费率（百分比）：FEE_RATE_{TYPE} > FEE_RATE_PROVIDER_{KEY} > 0。
+ * 新部署应在支付管理中配置 PAYMENT_METHOD_FEES。
  */
 export function getMethodFeeRate(paymentType: string): number {
-  // 渠道级别：FEE_RATE_ALIPAY / FEE_RATE_WXPAY / FEE_RATE_STRIPE
   const methodRaw = process.env[`FEE_RATE_${paymentType.toUpperCase()}`];
   if (methodRaw !== undefined && methodRaw !== '') {
     const num = Number(methodRaw);
     if (Number.isFinite(num) && num >= 0) return num;
   }
 
-  // 提供商级别：FEE_RATE_PROVIDER_EASYPAY / FEE_RATE_PROVIDER_STRIPE
   initPaymentProviders();
   const providerKey = getProviderKeyForType(paymentType);
   if (providerKey) {
@@ -48,47 +61,73 @@ export function getMethodFeeRate(paymentType: string): number {
   return 0;
 }
 
-/** decimal.js ROUND_UP = 0（远离零方向取整） */
-const ROUND_UP = 0;
+export function parsePaymentMethodFees(raw: string): Record<string, PaymentFeeConfig> {
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    throw new Error('PAYMENT_METHOD_FEES 必须是合法 JSON');
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('PAYMENT_METHOD_FEES 必须是按支付方式 keyed 的 JSON 对象');
+  }
 
-/**
- * 根据到账金额和手续费率计算实付金额（使用 Decimal 精确计算，避免浮点误差）。
- * feeAmount = ceil(rechargeAmount * feeRate / 100, 保留2位小数)
- * payAmount = rechargeAmount + feeAmount
- */
-export function calculatePayAmount(rechargeAmount: number, feeRate: number): string {
-  if (feeRate <= 0) return rechargeAmount.toFixed(2);
-  const amount = new Prisma.Decimal(rechargeAmount);
-  const rate = new Prisma.Decimal(feeRate.toString());
-  const feeAmount = amount.mul(rate).div(100).toDecimalPlaces(2, ROUND_UP);
-  return amount.plus(feeAmount).toFixed(2);
+  const result: Record<string, PaymentFeeConfig> = {};
+  for (const [paymentType, entry] of Object.entries(value)) {
+    if (!/^[a-z0-9._-]+$/i.test(paymentType)) throw new Error(`无效的支付方式: ${paymentType}`);
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      throw new Error(`支付方式 ${paymentType} 的手续费配置必须是对象`);
+    }
+    const candidate = entry as Record<string, unknown>;
+    const config: PaymentFeeConfig = {
+      enabled: candidate.enabled as boolean,
+      feeRate: candidate.feeRate as number,
+      fixedFee: candidate.fixedFee as number,
+    };
+    const error = validatePaymentFeeConfig(config);
+    if (error) throw new Error(`支付方式 ${paymentType}: ${error}`);
+    result[paymentType] = config;
+  }
+  return result;
 }
 
-export function calculatePayAmountNumber(rechargeAmount: number, feeRate: number): number {
-  return Number(calculatePayAmount(rechargeAmount, feeRate));
+function getLegacyMethodFeeConfig(paymentType: string): PaymentFeeConfig {
+  return legacyFeeRateConfig(getMethodFeeRate(paymentType));
 }
 
-function toCents(amount: number): number {
-  return Math.max(0, Math.round(amount * 100));
+export async function getMethodFeeConfigs(paymentTypes: string[]): Promise<Record<string, PaymentFeeConfig>> {
+  const raw = await getSystemConfig(PAYMENT_METHOD_FEES_CONFIG_KEY);
+  const configured = raw ? parsePaymentMethodFees(raw) : {};
+  return Object.fromEntries(
+    paymentTypes.map((paymentType) => [paymentType, configured[paymentType] ?? getLegacyMethodFeeConfig(paymentType)]),
+  );
 }
 
-/**
- * 在网关实付限额（CNY）下，反推最多允许的结算金额（CNY）。
- * 结算金额经过手续费后不会超过给定的实付上限。
- */
-export function getMaxSettlementAmountForPayLimit(payLimit: number, feeRate: number): number {
+export async function getMethodFeeConfig(paymentType: string): Promise<PaymentFeeConfig> {
+  return (await getMethodFeeConfigs([paymentType]))[paymentType];
+}
+
+/** 兼容旧调用方：仅传费率时也表示启用百分比手续费。 */
+export function calculatePayAmount(rechargeAmount: number, fee: number | PaymentFeeConfig): string {
+  return calculatePaymentFeeQuote(rechargeAmount, feeConfigFrom(fee)).payAmount.toFixed(2);
+}
+
+export function calculatePayAmountNumber(rechargeAmount: number, fee: number | PaymentFeeConfig): number {
+  return Number(calculatePayAmount(rechargeAmount, fee));
+}
+
+/** 在网关实付上限（CNY）下反推最大结算金额；0 表示没有可支付的正金额。 */
+export function getMaxSettlementAmountForPayLimit(payLimit: number, fee: number | PaymentFeeConfig): number {
   if (!Number.isFinite(payLimit) || payLimit <= 0) return 0;
-  if (feeRate <= 0) return Number(payLimit.toFixed(2));
-
-  const limitCents = toCents(payLimit);
-  let left = 0;
+  const config = feeConfigFrom(fee);
+  const limitCents = amountToCents(payLimit);
+  let left = 1;
   let right = limitCents;
   let best = 0;
 
   while (left <= right) {
     const mid = Math.floor((left + right) / 2);
-    const settlementAmount = mid / 100;
-    const actualPayCents = toCents(calculatePayAmountNumber(settlementAmount, feeRate));
+    const actualPayCents = amountToCents(quoteFromCents(mid, config).payAmount);
     if (actualPayCents <= limitCents) {
       best = mid;
       left = mid + 1;
@@ -97,26 +136,21 @@ export function getMaxSettlementAmountForPayLimit(payLimit: number, feeRate: num
     }
   }
 
-  return best / 100;
+  return centsToAmount(best);
 }
 
-/**
- * 在网关实付下限（CNY）下，反推至少需要的结算金额（CNY）。
- * 结算金额经过手续费后不会低于给定的实付下限。
- */
-export function getMinSettlementAmountForPayLimit(payLimit: number, feeRate: number): number {
+/** 在网关实付下限（CNY）下反推最小正结算金额。 */
+export function getMinSettlementAmountForPayLimit(payLimit: number, fee: number | PaymentFeeConfig): number {
   if (!Number.isFinite(payLimit) || payLimit <= 0) return 0;
-  if (feeRate <= 0) return Number(payLimit.toFixed(2));
-
-  const limitCents = toCents(payLimit);
-  let left = 0;
+  const config = feeConfigFrom(fee);
+  const limitCents = amountToCents(payLimit);
+  let left = 1;
   let right = limitCents;
   let best = limitCents;
 
   while (left <= right) {
     const mid = Math.floor((left + right) / 2);
-    const settlementAmount = mid / 100;
-    const actualPayCents = toCents(calculatePayAmountNumber(settlementAmount, feeRate));
+    const actualPayCents = amountToCents(quoteFromCents(mid, config).payAmount);
     if (actualPayCents >= limitCents) {
       best = mid;
       right = mid - 1;
@@ -125,5 +159,5 @@ export function getMinSettlementAmountForPayLimit(payLimit: number, feeRate: num
     }
   }
 
-  return best / 100;
+  return centsToAmount(best);
 }

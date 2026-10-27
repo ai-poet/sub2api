@@ -9,10 +9,13 @@ import type { PlanInfo } from '@/components/SubscriptionPlanCard';
 import { PlanInfoDisplay } from '@/components/SubscriptionPlanCard';
 import { getSettlementDisplay, isStablecoinPaymentType } from '@/lib/currency';
 import StablecoinPaymentNotice from '@/components/StablecoinPaymentNotice';
+import type { MethodLimitInfo } from '@/components/PaymentForm';
+import { calculatePaymentFeeQuote, type PaymentFeeConfig } from '@/lib/order/fee-calc';
 
 interface SubscriptionConfirmProps {
   plan: PlanInfo;
   paymentTypes: string[];
+  methodLimits?: Record<string, MethodLimitInfo>;
   usdExchangeRate?: number | null;
   onBack: () => void;
   onSubmit: (paymentType: string) => void;
@@ -24,6 +27,7 @@ interface SubscriptionConfirmProps {
 export default function SubscriptionConfirm({
   plan,
   paymentTypes,
+  methodLimits,
   usdExchangeRate,
   onBack,
   onSubmit,
@@ -33,7 +37,28 @@ export default function SubscriptionConfirm({
 }: SubscriptionConfirmProps) {
   const [selectedPayment, setSelectedPayment] = useState(paymentTypes[0] || '');
   const [stablecoinNoticeOpen, setStablecoinNoticeOpen] = useState(false);
-  const settlementDisplay = getSettlementDisplay(plan.price, selectedPayment, usdExchangeRate);
+  const feeRate = methodLimits?.[selectedPayment]?.feeRate ?? 0;
+  const fixedFee = methodLimits?.[selectedPayment]?.fixedFee ?? 0;
+  const feeEnabled = methodLimits?.[selectedPayment]?.feeEnabled ?? feeRate > 0;
+  const feeConfig: PaymentFeeConfig = { enabled: feeEnabled, feeRate, fixedFee };
+  const feeQuote = calculatePaymentFeeQuote(plan.price, feeConfig);
+  const hasFee = feeEnabled && (feeRate > 0 || fixedFee > 0);
+  const feeRuleLabel = [feeRate > 0 ? `${feeRate}%` : null, fixedFee > 0 ? `¥${fixedFee.toFixed(2)}` : null]
+    .filter(Boolean)
+    .join(' + ');
+  const settlementDisplay = getSettlementDisplay(feeQuote.payAmount, selectedPayment, usdExchangeRate);
+  const feeSettlementDisplay = getSettlementDisplay(feeQuote.feeAmount, selectedPayment, usdExchangeRate);
+  const amountDueLabel = hasFee
+    ? pickLocaleText(
+        locale,
+        settlementDisplay.currency === 'USD' ? '应付金额（USD，含手续费）' : '应付金额（含手续费）',
+        settlementDisplay.currency === 'USD' ? 'Amount Due (USD, incl. fee)' : 'Amount Due (incl. fee)',
+      )
+    : pickLocaleText(
+        locale,
+        settlementDisplay.currency === 'USD' ? '应付金额（USD）' : '应付金额',
+        settlementDisplay.currency === 'USD' ? 'Amount Due (USD)' : 'Amount Due',
+      );
 
   const handleSubmit = () => {
     if (!selectedPayment || loading) return;
@@ -149,28 +174,38 @@ export default function SubscriptionConfirm({
       {/* Amount to pay */}
       <div
         className={[
-          'flex items-center justify-between rounded-xl border px-4 py-3',
+          'space-y-2 rounded-xl border px-4 py-3',
           isDark ? 'border-slate-700 bg-slate-800/60' : 'border-slate-200 bg-slate-50',
         ].join(' ')}
       >
-        <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-          {pickLocaleText(
-            locale,
-            settlementDisplay.currency === 'USD' ? '应付金额（USD）' : '应付金额',
-            settlementDisplay.currency === 'USD' ? 'Amount Due (USD)' : 'Amount Due',
-          )}
-        </span>
-        <div className="text-right">
-          <div className="text-xl font-bold text-emerald-500">
-            {settlementDisplay.symbol}
-            {settlementDisplay.amount.toFixed(2)}
+        {hasFee && (
+          <div className="flex items-center justify-between text-sm">
+            <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>
+              {pickLocaleText(locale, '支付手续费', 'Payment Fee')}
+              <span className={`ml-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>({feeRuleLabel})</span>
+            </span>
+            <span className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+              {feeSettlementDisplay.symbol}
+              {feeSettlementDisplay.amount.toFixed(2)}
+            </span>
           </div>
-          {settlementDisplay.currency === 'USD' && settlementDisplay.exchangeRate && (
-            <div className={['mt-1 text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
-              {pickLocaleText(locale, '套餐价格', 'Plan Price')} ¥{plan.price.toFixed(2)} · 1 USD = ¥
-              {settlementDisplay.exchangeRate.toFixed(4)}
+        )}
+        <div className="flex items-center justify-between">
+          <span className={['text-sm font-medium', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
+            {amountDueLabel}
+          </span>
+          <div className="text-right">
+            <div className="text-xl font-bold text-emerald-500">
+              {settlementDisplay.symbol}
+              {settlementDisplay.amount.toFixed(2)}
             </div>
-          )}
+            {settlementDisplay.currency === 'USD' && settlementDisplay.exchangeRate && (
+              <div className={['mt-1 text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                {pickLocaleText(locale, '套餐价格', 'Plan Price')} ¥{plan.price.toFixed(2)} · 1 USD = ¥
+                {settlementDisplay.exchangeRate.toFixed(4)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

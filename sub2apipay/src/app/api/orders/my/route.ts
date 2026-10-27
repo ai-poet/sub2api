@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
           amount: true,
           // 开票金额是实付人民币，不是到账美元余额。
           payAmount: true,
+          feeRate: true,
+          fixedFee: true,
+          feeAmount: true,
           status: true,
           paymentType: true,
           createdAt: true,
@@ -107,6 +110,9 @@ export async function GET(request: NextRequest) {
           id: item.id,
           amount: Number(item.amount),
           payAmount: item.payAmount ? Number(item.payAmount) : null,
+          feeRate: item.feeRate ? Number(item.feeRate) : null,
+          fixedFee: item.fixedFee ? Number(item.fixedFee) : null,
+          feeAmount: item.feeAmount ? Number(item.feeAmount) : null,
           canRequestInvoice: eligibility.eligible,
           invoiceIneligibleReason: eligibility.reason ?? null,
           invoice: invoice

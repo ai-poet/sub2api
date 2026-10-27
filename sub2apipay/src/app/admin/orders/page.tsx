@@ -39,6 +39,10 @@ interface AdminOrder {
 }
 
 interface AdminOrderDetail extends AdminOrder {
+  payAmount: number | null;
+  feeRate: number | null;
+  fixedFee: number | null;
+  feeAmount: number | null;
   rechargeCode: string;
   paymentTradeNo: string | null;
   refundAmount: number | null;

@@ -38,6 +38,9 @@ interface OrderResult {
   orderId: string;
   amount: number;
   payAmount?: number;
+  feeRate?: number;
+  fixedFee?: number;
+  feeAmount?: number;
   orderType: 'balance' | 'subscription';
   status: string;
   paymentType: string;
@@ -207,9 +210,11 @@ function PayContent() {
         )}
         {helpText && (
           <div className={['mt-3 space-y-1 text-sm leading-6', isDark ? 'text-slate-300' : 'text-slate-600'].join(' ')}>
-            {tx(helpText).split('\n').map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
+            {tx(helpText)
+              .split('\n')
+              .map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
           </div>
         )}
       </div>
@@ -479,7 +484,10 @@ function PayContent() {
       authHeaders(),
       `invoice-${invoiceId}`,
     );
-    if (!ok) setError(pickLocaleText(locale, '发票下载失败，请稍后重试。', 'Invoice download failed. Please try again later.'));
+    if (!ok)
+      setError(
+        pickLocaleText(locale, '发票下载失败，请稍后重试。', 'Invoice download failed. Please try again later.'),
+      );
   };
 
   useEffect(() => {
@@ -661,6 +669,9 @@ function PayContent() {
         orderId: data.orderId,
         amount: data.amount,
         payAmount: data.payAmount,
+        feeRate: data.feeRate,
+        fixedFee: data.fixedFee,
+        feeAmount: data.feeAmount,
         orderType: 'balance',
         bonusAmount: typeof data.bonusAmount === 'number' ? data.bonusAmount : 0,
         promotionName: typeof data.promotionName === 'string' ? data.promotionName : null,
@@ -722,6 +733,9 @@ function PayContent() {
         orderId: data.orderId,
         amount: data.amount,
         payAmount: data.payAmount,
+        feeRate: data.feeRate,
+        fixedFee: data.fixedFee,
+        feeAmount: data.feeAmount,
         orderType: 'subscription',
         status: data.status,
         paymentType: data.paymentType || paymentType,
@@ -1169,6 +1183,7 @@ function PayContent() {
               <SubscriptionConfirm
                 plan={translatePlan(selectedPlan, tx)}
                 paymentTypes={config.enabledPaymentTypes}
+                methodLimits={config.methodLimits}
                 usdExchangeRate={config.usdExchangeRate}
                 onBack={() => setSelectedPlan(null)}
                 onSubmit={handleSubscriptionSubmit}
@@ -1211,6 +1226,7 @@ function PayContent() {
             paymentType={orderResult.paymentType}
             amount={orderResult.amount}
             payAmount={orderResult.payAmount}
+            feeAmount={orderResult.feeAmount}
             bonusAmount={orderResult.bonusAmount}
             orderType={orderResult.orderType}
             usdExchangeRate={config.usdExchangeRate}

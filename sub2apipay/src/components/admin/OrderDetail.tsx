@@ -19,6 +19,10 @@ interface OrderDetailProps {
     userName: string | null;
     userEmail: string | null;
     amount: number;
+    payAmount: number | null;
+    feeRate: number | null;
+    fixedFee: number | null;
+    feeAmount: number | null;
     status: string;
     paymentType: string;
     rechargeCode: string;
@@ -73,6 +77,10 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
           userName: 'Username',
           email: 'Email',
           amount: 'Amount',
+          payAmount: 'Paid Amount (CNY)',
+          feeRate: 'Fee Rate',
+          fixedFee: 'Fixed Fee (CNY)',
+          feeAmount: 'Fee Amount (CNY)',
           status: 'Status',
           paymentSuccess: 'Payment Success',
           rechargeSuccess: 'Recharge Success',
@@ -115,6 +123,10 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
           userName: '用户名',
           email: '邮箱',
           amount: '金额',
+          payAmount: '实付金额（CNY）',
+          feeRate: '手续费率',
+          fixedFee: '固定手续费（CNY）',
+          feeAmount: '手续费金额（CNY）',
           status: '状态',
           paymentSuccess: '支付成功',
           rechargeSuccess: '充值成功',
@@ -161,6 +173,10 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
     { label: text.userName, value: order.userName || '-' },
     { label: text.email, value: order.userEmail || '-' },
     { label: text.amount, value: `${currency}${order.amount.toFixed(2)}` },
+    { label: text.payAmount, value: order.payAmount != null ? `¥${order.payAmount.toFixed(2)}` : '-' },
+    { label: text.feeRate, value: order.feeRate != null ? `${order.feeRate}%` : '-' },
+    { label: text.fixedFee, value: order.fixedFee != null ? `¥${order.fixedFee.toFixed(2)}` : '-' },
+    { label: text.feeAmount, value: order.feeAmount != null ? `¥${order.feeAmount.toFixed(2)}` : '-' },
     { label: text.status, value: formatStatus(order.status, locale) },
     {
       label: text.orderType,
@@ -193,7 +209,10 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
 
   if (order.refundRequestedAt || order.refundRequestReason || order.refundRequestedBy != null) {
     fields.push(
-      { label: text.refundRequestedAt, value: order.refundRequestedAt ? formatCreatedAt(order.refundRequestedAt, locale) : '-' },
+      {
+        label: text.refundRequestedAt,
+        value: order.refundRequestedAt ? formatCreatedAt(order.refundRequestedAt, locale) : '-',
+      },
       { label: text.refundRequestReason, value: order.refundRequestReason || '-' },
       { label: text.refundRequestedBy, value: order.refundRequestedBy != null ? String(order.refundRequestedBy) : '-' },
     );
@@ -201,7 +220,10 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
 
   if (order.bonusAmount != null && order.bonusAmount > 0) {
     fields.push(
-      { label: locale === 'en' ? 'Promotion Bonus (USD)' : '活动赠送（USD）', value: `$${order.bonusAmount.toFixed(2)}` },
+      {
+        label: locale === 'en' ? 'Promotion Bonus (USD)' : '活动赠送（USD）',
+        value: `$${order.bonusAmount.toFixed(2)}`,
+      },
       { label: locale === 'en' ? 'Promotion' : '参与活动', value: order.promotionName || '-' },
       {
         label: locale === 'en' ? 'Total Credited (USD)' : '实际到账（USD）',
@@ -213,7 +235,10 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
   if (order.orderType === 'subscription') {
     fields.push(
       { label: text.planId, value: order.planId || '-' },
-      { label: text.subscriptionGroupId, value: order.subscriptionGroupId != null ? String(order.subscriptionGroupId) : '-' },
+      {
+        label: text.subscriptionGroupId,
+        value: order.subscriptionGroupId != null ? String(order.subscriptionGroupId) : '-',
+      },
       { label: text.subscriptionDays, value: order.subscriptionDays != null ? String(order.subscriptionDays) : '-' },
     );
   }
@@ -229,10 +254,15 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className={`max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl p-6 shadow-xl ${dark ? 'bg-slate-800 text-slate-100' : 'bg-white'}`}>
+      <div
+        className={`max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl p-6 shadow-xl ${dark ? 'bg-slate-800 text-slate-100' : 'bg-white'}`}
+      >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold">{text.title}</h3>
-          <button onClick={onClose} className={dark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}>
+          <button
+            onClick={onClose}
+            className={dark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}
+          >
             ✕
           </button>
         </div>
@@ -250,20 +280,38 @@ export default function OrderDetail({ order, onClose, dark, locale = 'zh' }: Ord
           <h4 className={`mb-3 font-medium ${dark ? 'text-slate-100' : 'text-gray-900'}`}>{text.auditLogs}</h4>
           <div className="space-y-2">
             {order.auditLogs.map((log) => (
-              <div key={log.id} className={`rounded-lg border p-3 ${dark ? 'border-slate-600 bg-slate-700/60' : 'border-gray-100 bg-gray-50'}`}>
+              <div
+                key={log.id}
+                className={`rounded-lg border p-3 ${dark ? 'border-slate-600 bg-slate-700/60' : 'border-gray-100 bg-gray-50'}`}
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{log.action}</span>
-                  <span className={`text-xs ${dark ? 'text-slate-500' : 'text-gray-400'}`}>{formatCreatedAt(log.createdAt, locale)}</span>
+                  <span className={`text-xs ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
+                    {formatCreatedAt(log.createdAt, locale)}
+                  </span>
                 </div>
-                {log.detail && <div className={`mt-1 break-all text-xs ${dark ? 'text-slate-400' : 'text-gray-500'}`}>{log.detail}</div>}
-                {log.operator && <div className={`mt-1 text-xs ${dark ? 'text-slate-500' : 'text-gray-400'}`}>{text.operator}: {log.operator}</div>}
+                {log.detail && (
+                  <div className={`mt-1 break-all text-xs ${dark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    {log.detail}
+                  </div>
+                )}
+                {log.operator && (
+                  <div className={`mt-1 text-xs ${dark ? 'text-slate-500' : 'text-gray-400'}`}>
+                    {text.operator}: {log.operator}
+                  </div>
+                )}
               </div>
             ))}
-            {order.auditLogs.length === 0 && <div className={`text-center text-sm ${dark ? 'text-slate-500' : 'text-gray-400'}`}>{text.emptyLogs}</div>}
+            {order.auditLogs.length === 0 && (
+              <div className={`text-center text-sm ${dark ? 'text-slate-500' : 'text-gray-400'}`}>{text.emptyLogs}</div>
+            )}
           </div>
         </div>
 
-        <button onClick={onClose} className={`mt-6 w-full rounded-lg border py-2 text-sm ${dark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+        <button
+          onClick={onClose}
+          className={`mt-6 w-full rounded-lg border py-2 text-sm ${dark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+        >
           {text.close}
         </button>
       </div>

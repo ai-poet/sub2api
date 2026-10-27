@@ -9,6 +9,7 @@ const mockOrderFindFirst = vi.fn();
 const mockAuditLogCreate = vi.fn();
 const mockTransaction = vi.fn();
 const mockOrderDelete = vi.fn();
+const mockOrderUpdate = vi.fn();
 const mockInstanceCount = vi.fn();
 
 vi.mock('@/lib/db', () => ({
@@ -19,6 +20,7 @@ vi.mock('@/lib/db', () => ({
     order: {
       findFirst: (...args: unknown[]) => mockOrderFindFirst(...args),
       delete: (...args: unknown[]) => mockOrderDelete(...args),
+      update: (...args: unknown[]) => mockOrderUpdate(...args),
     },
     paymentProviderInstance: {
       count: (...args: unknown[]) => mockInstanceCount(...args),
@@ -75,6 +77,7 @@ import { createOrder, OrderError, PAYMENT_GATEWAY_ERROR_STATUS } from '@/lib/ord
 import { paymentRegistry } from '@/lib/payment';
 import { selectInstance } from '@/lib/payment/load-balancer';
 import { verifyOrderStatusAccessToken } from '@/lib/order/status-access';
+import { getSystemConfig, getSystemConfigs } from '@/lib/system-config';
 
 const TX_REACHED = new Error('transaction reached');
 
@@ -85,6 +88,8 @@ function pendingOrder(overrides: Record<string, unknown> = {}) {
     amount: new Prisma.Decimal('29.90'),
     payAmount: new Prisma.Decimal('30.08'),
     feeRate: new Prisma.Decimal('0.0060'),
+    fixedFee: new Prisma.Decimal('0.50'),
+    feeAmount: new Prisma.Decimal('0.68'),
     status: ORDER_STATUS.PENDING,
     orderType: 'subscription',
     planId: 'plan-1',
@@ -134,6 +139,8 @@ describe('createOrder — pending subscription order reuse', () => {
     expect(result.orderId).toBe('order-plan-1');
     expect(result.qrCode).toBe('https://gw.example.com/pay/order-plan-1');
     expect(result.payAmount).toBeCloseTo(30.08);
+    expect(result.fixedFee).toBe(0.5);
+    expect(result.feeAmount).toBe(0.68);
     expect(verifyOrderStatusAccessToken('order-plan-1', result.statusAccessToken)).toBe(true);
     expect(mockTransaction).not.toHaveBeenCalled();
     expect(mockAuditLogCreate).toHaveBeenCalledWith(
@@ -148,9 +155,7 @@ describe('createOrder — pending subscription order reuse', () => {
   });
 
   it('never reuses for mobile requests', async () => {
-    await expect(createOrder(input({ isMobile: true }) as Parameters<typeof createOrder>[0])).rejects.toBe(
-      TX_REACHED,
-    );
+    await expect(createOrder(input({ isMobile: true }) as Parameters<typeof createOrder>[0])).rejects.toBe(TX_REACHED);
     expect(mockOrderFindFirst).not.toHaveBeenCalled();
   });
 
@@ -225,5 +230,49 @@ describe('createOrder — payment channel failures', () => {
     expect(error.statusCode).toBe(PAYMENT_GATEWAY_ERROR_STATUS);
     expect(error.message).toContain('暂未配置');
     expect(error.data).toEqual({ reference: 'order-gw-1' });
+  });
+
+  it('rejects a payable amount that exceeds the database amount limit', async () => {
+    mockPlanFindUnique.mockResolvedValue({
+      id: 'plan-1',
+      groupId: 7,
+      price: new Prisma.Decimal('99999999.99'),
+      validityDays: 1,
+      validityUnit: 'month',
+      name: 'Pro',
+      productName: null,
+      forSale: true,
+    });
+    vi.mocked(getSystemConfig).mockImplementation(async (key) => {
+      if (key === 'PAYMENT_METHOD_FEES') {
+        return JSON.stringify({ paynow: { enabled: true, feeRate: 99, fixedFee: 0 } });
+      }
+      return undefined;
+    });
+
+    const error = await createOrder(input({ paymentType: 'paynow' }) as Parameters<typeof createOrder>[0]).catch(
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(OrderError);
+    expect((error as OrderError).code).toBe('AMOUNT_TOO_LARGE');
+    expect(createPayment).not.toHaveBeenCalled();
+  });
+
+  it('returns the grossed-up fee snapshot and sends the payable amount to the provider', async () => {
+    vi.mocked(getSystemConfig).mockImplementation(async (key) => {
+      if (key === 'PAYMENT_METHOD_FEES') {
+        return JSON.stringify({ paynow: { enabled: true, feeRate: 3.9, fixedFee: 0.5 } });
+      }
+      return undefined;
+    });
+    vi.mocked(getSystemConfigs).mockResolvedValue({});
+    createPayment.mockResolvedValue({ tradeNo: 'trade-fee-1', payUrl: 'https://pay.example.com/fee' });
+
+    const result = await createOrder(input({ paymentType: 'paynow' }) as Parameters<typeof createOrder>[0]);
+
+    expect(result.payAmount).toBe(31.64);
+    expect(result.feeAmount).toBe(1.74);
+    expect(result.fixedFee).toBe(0.5);
+    expect(createPayment).toHaveBeenCalledWith(expect.objectContaining({ amount: 31.64 }));
   });
 });

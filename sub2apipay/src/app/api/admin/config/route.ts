@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth';
 import { getAllSystemConfigs, setSystemConfigs, getSystemConfig } from '@/lib/system-config';
 import { prisma } from '@/lib/db';
+import { PAYMENT_TYPE } from '@/lib/constants';
+import { getMethodFeeConfigs, parsePaymentMethodFees, PAYMENT_METHOD_FEES_CONFIG_KEY } from '@/lib/order/fee';
 
 const SENSITIVE_PATTERNS = ['KEY', 'SECRET', 'PASSWORD', 'PRIVATE'];
 const MASK_RE = /\*{4,}/;
@@ -67,7 +69,8 @@ export async function GET(request: NextRequest) {
       ...config,
       value: maskSensitiveValue(config.key, config.value),
     }));
-    return NextResponse.json({ configs: masked });
+    const paymentMethodFees = await getMethodFeeConfigs(Object.values(PAYMENT_TYPE));
+    return NextResponse.json({ configs: masked, paymentMethodFees });
   } catch (error) {
     console.error('Failed to get system configs:', error instanceof Error ? error.message : String(error));
     return NextResponse.json({ error: '获取系统配置失败' }, { status: 500 });
@@ -95,6 +98,7 @@ const ALLOWED_CONFIG_KEYS = new Set([
   'LOAD_BALANCE_STRATEGY',
   'ENABLED_PROVIDERS',
   'DEFAULT_DEDUCT_BALANCE',
+  PAYMENT_METHOD_FEES_CONFIG_KEY,
   // 发票
   'invoice_enabled',
   'invoice_max_age_days',
@@ -113,12 +117,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: '缺少必填字段: configs 数组' }, { status: 400 });
     }
 
+    const normalizedValues = new Map<string, string>();
     for (const config of configs) {
       if (!config.key || config.value === undefined) {
         return NextResponse.json({ error: '每条配置必须包含 key 和 value' }, { status: 400 });
       }
       if (!ALLOWED_CONFIG_KEYS.has(config.key)) {
         return NextResponse.json({ error: `不允许修改配置项: ${config.key}` }, { status: 400 });
+      }
+      if (config.key === PAYMENT_METHOD_FEES_CONFIG_KEY) {
+        try {
+          normalizedValues.set(config.key, JSON.stringify(parsePaymentMethodFees(config.value)));
+        } catch (error) {
+          return NextResponse.json(
+            { error: error instanceof Error ? error.message : '支付方式手续费配置无效' },
+            { status: 400 },
+          );
+        }
       }
     }
 
@@ -134,7 +149,7 @@ export async function PUT(request: NextRequest) {
     await setSystemConfigs(
       filteredConfigs.map((c: { key: string; value: string; group?: string; label?: string }) => ({
         key: c.key,
-        value: c.value,
+        value: normalizedValues.get(c.key) ?? c.value,
         group: c.group,
         label: c.label,
       })),

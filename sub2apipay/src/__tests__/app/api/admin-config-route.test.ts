@@ -6,6 +6,15 @@ const mockGetAllSystemConfigs = vi.fn();
 const mockSetSystemConfigs = vi.fn();
 const mockGetSystemConfig = vi.fn();
 const mockGroupBy = vi.fn();
+const mockGetMethodFeeConfigs = vi.fn();
+
+vi.mock('@/lib/order/fee', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/order/fee')>();
+  return {
+    ...actual,
+    getMethodFeeConfigs: (...args: unknown[]) => mockGetMethodFeeConfigs(...args),
+  };
+});
 
 vi.mock('@/lib/admin-auth', () => ({
   verifyAdminToken: (...args: unknown[]) => mockVerifyAdminToken(...args),
@@ -42,6 +51,7 @@ describe('GET /api/admin/config', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockVerifyAdminToken.mockResolvedValue(true);
+    mockGetMethodFeeConfigs.mockResolvedValue({ alipay: { enabled: true, feeRate: 3.9, fixedFee: 3.6 } });
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -91,6 +101,14 @@ describe('GET /api/admin/config', () => {
     expect(data.configs[0].value).toMatch(/^\*+d123$/);
     expect(data.configs[1].value).toMatch(/^\*+data$/);
     expect(data.configs[2].value).toMatch(/^\*+-val$/);
+  });
+
+  it('returns effective payment method fees including legacy fallback', async () => {
+    mockGetAllSystemConfigs.mockResolvedValue([]);
+    const res = await GET(createRequest());
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.paymentMethodFees.alipay).toEqual({ enabled: true, feeRate: 3.9, fixedFee: 3.6 });
   });
 
   it('returns 500 on error', async () => {
@@ -160,6 +178,28 @@ describe('PUT /api/admin/config', () => {
         expect.objectContaining({ key: 'USD_EXCHANGE_RATE', value: '7.2' }),
       ]),
     );
+  });
+
+  it('validates and saves payment method fees', async () => {
+    const value = JSON.stringify({ alipay: { enabled: true, feeRate: 3.9, fixedFee: 3.6 } });
+    const res = await PUT(createRequest('PUT', { configs: [{ key: 'PAYMENT_METHOD_FEES', value }] }));
+    expect(res.status).toBe(200);
+    expect(mockSetSystemConfigs).toHaveBeenCalledWith([expect.objectContaining({ key: 'PAYMENT_METHOD_FEES', value })]);
+  });
+
+  it('rejects invalid payment method fees with 400', async () => {
+    const res = await PUT(
+      createRequest('PUT', {
+        configs: [
+          {
+            key: 'PAYMENT_METHOD_FEES',
+            value: JSON.stringify({ alipay: { enabled: true, feeRate: 100, fixedFee: 0 } }),
+          },
+        ],
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect(mockSetSystemConfigs).not.toHaveBeenCalled();
   });
 
   it('rejects env-only sensitive keys even when the value is masked', async () => {

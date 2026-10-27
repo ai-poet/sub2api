@@ -108,12 +108,42 @@ describe('queryMethodLimits', () => {
 
     const result = await queryMethodLimits(['alipay']);
 
-    expect(result.alipay.singleMax).toBe(100);
+    expect(result.alipay.singleMax).toBe(99);
+  });
+
+  it('固定手续费也参与实付上限反推', async () => {
+    mockGetSystemConfig.mockImplementation(async (key) => {
+      if (key === 'MAX_SINGLE_AMOUNT_ALIPAY') return '100';
+      if (key === 'PAYMENT_METHOD_FEES') {
+        return JSON.stringify({ alipay: { enabled: true, feeRate: 0, fixedFee: 3.6 } });
+      }
+      return undefined;
+    });
+
+    const result = await queryMethodLimits(['alipay']);
+    expect(result.alipay.singleMax).toBe(96.4);
+    expect(result.alipay.fixedFee).toBe(3.6);
+    expect(result.alipay.feeEnabled).toBe(true);
+  });
+
+  it('固定费超过实付上限时渠道不可用', async () => {
+    mockGetSystemConfig.mockImplementation(async (key) => {
+      if (key === 'MAX_SINGLE_AMOUNT_ALIPAY') return '3';
+      if (key === 'PAYMENT_METHOD_FEES') {
+        return JSON.stringify({ alipay: { enabled: true, feeRate: 0, fixedFee: 3.6 } });
+      }
+      return undefined;
+    });
+
+    const result = await queryMethodLimits(['alipay']);
+    expect(result.alipay.available).toBe(false);
   });
 
   // 线上问题：最大到账金额设成 5000，易支付写死的单笔 1000 仍把付款上限卡在 1000。
   it('什么都没配时渠道不设单笔与每日上限，前端按全局最大到账金额', async () => {
-    mockGetSystemConfig.mockImplementation(async (key) => (key === 'BALANCE_CREDIT_CNY_PER_USD' ? '1.0000' : undefined));
+    mockGetSystemConfig.mockImplementation(async (key) =>
+      key === 'BALANCE_CREDIT_CNY_PER_USD' ? '1.0000' : undefined,
+    );
 
     const result = await queryMethodLimits(['alipay', 'wxpay', 'usdc.solana']);
 

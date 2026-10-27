@@ -91,6 +91,30 @@ describe('GET /api/orders/my - canRefundRequest', () => {
     expect(mockGetCurrentUserByToken).toHaveBeenCalledWith('header-token');
   });
 
+  it('returns stored fee snapshots without recalculating historical orders', async () => {
+    mockOrderFindMany.mockResolvedValue([
+      {
+        id: 'order-fee',
+        amount: 100,
+        payAmount: 107.81,
+        feeRate: 3.9,
+        fixedFee: 3.6,
+        feeAmount: 7.81,
+        status: 'COMPLETED',
+        paymentType: 'alipay',
+        createdAt: new Date(),
+        paidAt: new Date(),
+        completedAt: new Date(),
+        orderType: 'balance',
+        providerInstanceId: null,
+      },
+    ]);
+
+    const res = await GET(createRequest());
+    const data = await res.json();
+    expect(data.orders[0]).toMatchObject({ payAmount: 107.81, feeRate: 3.9, fixedFee: 3.6, feeAmount: 7.81 });
+  });
+
   it('canRefundRequest = true when orderType=balance + status=COMPLETED + refundEnabled=true', async () => {
     mockOrderFindMany.mockResolvedValue([
       {

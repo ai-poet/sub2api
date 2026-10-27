@@ -20,6 +20,9 @@ export interface MyOrder {
   amount: number;
   /** 实付人民币，也是开票金额；老订单可能为 null。 */
   payAmount?: number | null;
+  feeRate?: number | null;
+  fixedFee?: number | null;
+  feeAmount?: number | null;
   status: string;
   paymentType: string;
   createdAt: string;

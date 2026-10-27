@@ -47,7 +47,8 @@ export default function MobileOrderList({
     if (activeFilter === 'ALL') return orders;
     return orders.filter((item) => item.status === activeFilter);
   }, [orders, activeFilter]);
-  const formatOrderAmount = (order: MyOrder) => `${order.orderType === 'subscription' ? '¥' : '$'}${order.amount.toFixed(2)}`;
+  const formatOrderAmount = (order: MyOrder) =>
+    `${order.orderType === 'subscription' ? '¥' : '$'}${order.amount.toFixed(2)}`;
 
   useEffect(() => {
     if (!hasMore || loadingMore) return;
@@ -121,6 +122,13 @@ export default function MobileOrderList({
               <div className="flex items-center justify-between">
                 <span className="flex items-baseline gap-2">
                   <span className="text-2xl font-semibold">{formatOrderAmount(order)}</span>
+                  {order.feeAmount != null && order.feeAmount > 0 && (
+                    <span className={['text-xs', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>
+                      {locale === 'en'
+                        ? `Fee ¥${order.feeAmount.toFixed(2)} · Paid ¥${(order.payAmount ?? 0).toFixed(2)}`
+                        : `手续费 ¥${order.feeAmount.toFixed(2)} · 实付 ¥${(order.payAmount ?? 0).toFixed(2)}`}
+                    </span>
+                  )}
                   {order.bonusAmount != null && order.bonusAmount > 0 && (
                     <span
                       className={[
@@ -129,7 +137,9 @@ export default function MobileOrderList({
                       ].join(' ')}
                       title={order.promotionName ?? undefined}
                     >
-                      {locale === 'en' ? `Bonus +$${order.bonusAmount.toFixed(2)}` : `赠送 +$${order.bonusAmount.toFixed(2)}`}
+                      {locale === 'en'
+                        ? `Bonus +$${order.bonusAmount.toFixed(2)}`
+                        : `赠送 +$${order.bonusAmount.toFixed(2)}`}
                     </span>
                   )}
                 </span>
