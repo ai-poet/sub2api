@@ -1368,8 +1368,8 @@ func TestOpenAIResponsesWebSocket_ContentModerationBlocksFirstFrame(t *testing.T
 	gin.SetMode(gin.TestMode)
 
 	moderationServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v1/moderations", r.URL.Path)
-		_, _ = w.Write([]byte(`{"results":[{"category_scores":{"sexual":0.9}}]}`))
+		require.Equal(t, "/v1/chat/completions", r.URL.Path)
+		_, _ = w.Write([]byte(`{"choices":[{"message":{"role":"assistant","content":"{\"sexual\":0.9}"}}]}`))
 	}))
 	defer moderationServer.Close()
 

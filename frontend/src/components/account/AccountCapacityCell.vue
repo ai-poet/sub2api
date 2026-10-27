@@ -83,6 +83,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Account } from '@/types'
+import { supportsAccountQuota } from '@/utils/accountQuota'
 import QuotaBadge from './QuotaBadge.vue'
 
 const props = defineProps<{
@@ -292,24 +293,23 @@ const rpmTooltip = computed(() => {
   }
 })
 
-// 是否显示各维度配额（apikey / bedrock 类型）
-const isQuotaEligible = computed(() => props.account.type === 'apikey' || props.account.type === 'bedrock')
-
-const showDailyQuota = computed(() => {
-  return isQuotaEligible.value && (props.account.quota_daily_limit ?? 0) > 0
-})
-
-const showWeeklyQuota = computed(() => {
-  return isQuotaEligible.value && (props.account.quota_weekly_limit ?? 0) > 0
-})
-
-const showTotalQuota = computed(() => {
-  return isQuotaEligible.value && (props.account.quota_limit ?? 0) > 0
-})
-
 // 格式化费用显示
 const formatCost = (value: number | null | undefined) => {
   if (value === null || value === undefined) return '0'
   return value.toFixed(2)
 }
+
+// ====== 配额 ======
+const isQuotaEligible = computed(() => supportsAccountQuota(props.account.type))
+
+const showDailyQuota = computed(() =>
+  isQuotaEligible.value && props.account.quota_daily_limit != null && props.account.quota_daily_limit > 0
+)
+const showWeeklyQuota = computed(() =>
+  isQuotaEligible.value && props.account.quota_weekly_limit != null && props.account.quota_weekly_limit > 0
+)
+const showTotalQuota = computed(() =>
+  isQuotaEligible.value && props.account.quota_limit != null && props.account.quota_limit > 0
+)
+
 </script>
