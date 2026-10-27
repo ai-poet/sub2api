@@ -1494,6 +1494,7 @@ export default {
           "statusActive": "启用",
           "statusDisabled": "禁用",
           "unlimited": "不限",
+          "globalDefault": "跟随全局默认",
           "quotaDaily": "每日",
           "quotaWeekly": "每周",
           "quotaMonthly": "每月",

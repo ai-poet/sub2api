@@ -195,6 +195,7 @@
           :page="pagination.page"
           :total="pagination.total"
           :page-size="pagination.page_size"
+          :show-jump="true"
           @update:page="handlePageChange"
           @update:pageSize="handlePageSizeChange"
         />

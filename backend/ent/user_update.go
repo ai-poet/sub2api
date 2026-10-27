@@ -171,6 +171,20 @@ func (_u *UserUpdate) AddConcurrency(v int) *UserUpdate {
 	return _u
 }
 
+// SetConcurrencyIsDefault sets the "concurrency_is_default" field.
+func (_u *UserUpdate) SetConcurrencyIsDefault(v bool) *UserUpdate {
+	_u.mutation.SetConcurrencyIsDefault(v)
+	return _u
+}
+
+// SetNillableConcurrencyIsDefault sets the "concurrency_is_default" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableConcurrencyIsDefault(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetConcurrencyIsDefault(*v)
+	}
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *UserUpdate) SetStatus(v string) *UserUpdate {
 	_u.mutation.SetStatus(v)
@@ -1099,6 +1113,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.AddedConcurrency(); ok {
 		_spec.AddField(user.FieldConcurrency, field.TypeInt, value)
 	}
+	if value, ok := _u.mutation.ConcurrencyIsDefault(); ok {
+		_spec.SetField(user.FieldConcurrencyIsDefault, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
 	}
@@ -1964,6 +1981,20 @@ func (_u *UserUpdateOne) SetNillableConcurrency(v *int) *UserUpdateOne {
 // AddConcurrency adds value to the "concurrency" field.
 func (_u *UserUpdateOne) AddConcurrency(v int) *UserUpdateOne {
 	_u.mutation.AddConcurrency(v)
+	return _u
+}
+
+// SetConcurrencyIsDefault sets the "concurrency_is_default" field.
+func (_u *UserUpdateOne) SetConcurrencyIsDefault(v bool) *UserUpdateOne {
+	_u.mutation.SetConcurrencyIsDefault(v)
+	return _u
+}
+
+// SetNillableConcurrencyIsDefault sets the "concurrency_is_default" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableConcurrencyIsDefault(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetConcurrencyIsDefault(*v)
+	}
 	return _u
 }
 
@@ -2924,6 +2955,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.AddedConcurrency(); ok {
 		_spec.AddField(user.FieldConcurrency, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.ConcurrencyIsDefault(); ok {
+		_spec.SetField(user.FieldConcurrencyIsDefault, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)

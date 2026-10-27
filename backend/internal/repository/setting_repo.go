@@ -3,10 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
+	dbuser "github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 )
 
@@ -113,6 +116,61 @@ func (r *settingRepository) SetMultiple(ctx context.Context, settings map[string
 		OnConflictColumns(setting.FieldKey).
 		UpdateNewValues().
 		Exec(ctx)
+}
+
+// SetMultipleWithDefaultConcurrency persists settings and materializes a new
+// default for followers atomically. User triggers enqueue auth-cache invalidations
+// in the same transaction; custom concurrency values are deliberately untouched.
+func (r *settingRepository) SetMultipleWithDefaultConcurrency(ctx context.Context, settings map[string]string) error {
+	if len(settings) == 0 {
+		return nil
+	}
+	rawDefault, hasDefault := settings[service.SettingKeyDefaultConcurrency]
+	if !hasDefault {
+		return r.SetMultiple(ctx, settings)
+	}
+	defaultConcurrency, err := strconv.Atoi(rawDefault)
+	if err != nil || defaultConcurrency < 1 {
+		return fmt.Errorf("default concurrency must be a positive integer")
+	}
+
+	tx, err := r.client.Tx(ctx)
+	if err != nil && !errors.Is(err, ent.ErrTxStarted) {
+		return err
+	}
+	client := r.client
+	if err == nil {
+		defer func() { _ = tx.Rollback() }()
+		client = tx.Client()
+	}
+
+	now := time.Now()
+	builders := make([]*ent.SettingCreate, 0, len(settings))
+	for key, value := range settings {
+		builders = append(builders, client.Setting.Create().SetKey(key).SetValue(value).SetUpdatedAt(now))
+	}
+	if err := client.Setting.
+		CreateBulk(builders...).
+		OnConflictColumns(setting.FieldKey).
+		UpdateNewValues().
+		Exec(ctx); err != nil {
+		return err
+	}
+	if _, err := client.User.Update().
+		Where(
+			dbuser.ConcurrencyIsDefaultEQ(true),
+			dbuser.ConcurrencyNEQ(defaultConcurrency),
+			dbuser.DeletedAtIsNil(),
+		).
+		SetConcurrency(defaultConcurrency).
+		SetUpdatedAt(now).
+		Save(ctx); err != nil {
+		return err
+	}
+	if tx != nil {
+		return tx.Commit()
+	}
+	return nil
 }
 
 func (r *settingRepository) GetAll(ctx context.Context) (map[string]string, error) {

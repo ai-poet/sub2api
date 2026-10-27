@@ -4174,22 +4174,6 @@
                           placeholder="0.00"
                         />
                       </div>
-                      <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
-                          {{ t("admin.settings.defaults.defaultConcurrency") }}
-                        </label>
-                        <input
-                          v-model.number="
-                            authSourceDefaults[authSource.source].concurrency
-                          "
-                          type="number"
-                          min="1"
-                          class="input"
-                          placeholder="5"
-                        />
-                      </div>
                     </div>
 
                     <div

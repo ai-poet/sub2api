@@ -203,9 +203,10 @@ func (s *UserRepoSuite) TestUpdate() {
 
 func (s *UserRepoSuite) TestBatchUpdateLimitsUpdatesOnlyProvidedFields() {
 	user := s.mustCreateUser(&service.User{
-		Email:       "batch-limits-one-field@test.com",
-		Concurrency: 4,
-		RPMLimit:    20,
+		Email:                "batch-limits-one-field@test.com",
+		Concurrency:          4,
+		ConcurrencyIsDefault: true,
+		RPMLimit:             20,
 	})
 	concurrency := 9
 
@@ -216,6 +217,7 @@ func (s *UserRepoSuite) TestBatchUpdateLimitsUpdatesOnlyProvidedFields() {
 	updated, err := s.repo.GetByID(s.ctx, user.ID)
 	s.Require().NoError(err)
 	s.Equal(9, updated.Concurrency)
+	s.False(updated.ConcurrencyIsDefault)
 	s.Equal(20, updated.RPMLimit)
 }
 

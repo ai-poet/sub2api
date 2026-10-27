@@ -34,10 +34,10 @@ vi.mock('vue-i18n', async (importOriginal) => ({
   })
 }))
 
-const mountModal = (concurrency: number) => mount(UserEditModal, {
+const mountModal = (concurrency: number, concurrencyIsDefault = false) => mount(UserEditModal, {
   props: {
     show: true,
-    user: { id: 7, email: 'user@example.test', username: 'user', notes: '', role: 'user', concurrency, rpm_limit: 0 } as never
+    user: { id: 7, email: 'user@example.test', username: 'user', notes: '', role: 'user', concurrency, concurrency_is_default: concurrencyIsDefault, rpm_limit: 0 } as never
   },
   global: {
     stubs: {
@@ -86,5 +86,26 @@ describe('UserEditModal concurrency', () => {
 
     expect(showError).toHaveBeenCalledWith('admin.users.concurrencyNonNegative')
     expect(update).not.toHaveBeenCalled()
+  })
+
+  it('keeps a follower on the global default when editing unrelated fields', async () => {
+    const wrapper = mountModal(9, true)
+
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(update).toHaveBeenCalledWith(7, expect.objectContaining({ use_default_concurrency: true }))
+    expect(update.mock.calls[0][1]).not.toHaveProperty('concurrency')
+  })
+
+  it('restores the global default from a custom override', async () => {
+    const wrapper = mountModal(3, false)
+
+    await wrapper.get('[role="switch"]').trigger('click')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(update).toHaveBeenCalledWith(7, expect.objectContaining({ use_default_concurrency: true }))
+    expect(update.mock.calls[0][1]).not.toHaveProperty('concurrency')
   })
 })

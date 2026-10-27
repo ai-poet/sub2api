@@ -404,7 +404,7 @@ export default {
         affiliateRebateRate: '邀请返利比例',
         affiliateRebateRateHint: '充值后返给邀请人的比例（0-100%，例如填写 10 表示返利 10%）',
         defaultConcurrency: '默认并发数',
-        defaultConcurrencyHint: '新用户的最大并发请求数',
+        defaultConcurrencyHint: '新用户及所有跟随默认的用户的最大并发请求数；个人覆盖不受影响',
         defaultUserRpmLimit: '默认用户 RPM 限制',
         defaultUserRpmLimitHint: '新用户默认每分钟最大请求数，0 = 不限制；仅作用于新用户创建时初始化',
         defaultSubscriptions: '默认订阅列表',
@@ -1185,7 +1185,7 @@ export default {
       },
       authSourceDefaults: {
         title: '认证来源默认值',
-        description: '按注册来源配置新用户默认余额、并发、订阅与授权策略。',
+        description: '按注册来源配置新用户默认余额、订阅与授权策略。',
         requireEmailLabel: '第三方注册强制补充邮箱',
         requireEmailHint: '启用后，OIDC、微信注册缺少邮箱时必须先补充邮箱地址。Linux DO 登录不受此开关影响，始终直接登录。',
         enabledHint: '以下默认值会在该来源注册新用户时发放；首次绑定时授权仅作用于已有账号绑定该来源。',

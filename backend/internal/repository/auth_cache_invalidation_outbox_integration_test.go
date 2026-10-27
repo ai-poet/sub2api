@@ -81,6 +81,15 @@ func TestAuthCacheInvalidationTriggers_CoverSecurityMutationsOnly(t *testing.T) 
 	require.NoError(t, err)
 	require.Zero(t, count(), "balance update with unchanged allowed groups must not enqueue")
 
+	_, err = integrationDB.ExecContext(ctx, "UPDATE users SET concurrency = 9 WHERE id = $1", user.ID)
+	require.NoError(t, err)
+	require.Equal(t, 1, count(), "effective concurrency changes must enqueue all active keys")
+	clear()
+
+	_, err = integrationDB.ExecContext(ctx, "UPDATE users SET notes = 'cosmetic' WHERE id = $1", user.ID)
+	require.NoError(t, err)
+	require.Zero(t, count(), "cosmetic user updates must not enqueue")
+
 	_, err = integrationDB.ExecContext(ctx, "UPDATE users SET status = 'disabled' WHERE id = $1", user.ID)
 	require.NoError(t, err)
 	require.Equal(t, 1, count(), "user disable must enqueue all active keys")

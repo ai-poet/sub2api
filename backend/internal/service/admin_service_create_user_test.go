@@ -15,6 +15,7 @@ func TestAdminService_CreateUser_Success(t *testing.T) {
 	repo := &userRepoStub{nextID: 10}
 	svc := &adminServiceImpl{userRepo: repo}
 	balance := 12.5
+	concurrency := 7
 
 	input := &CreateUserInput{
 		Email:         "user@test.com",
@@ -22,7 +23,7 @@ func TestAdminService_CreateUser_Success(t *testing.T) {
 		Username:      "tester",
 		Notes:         "note",
 		Balance:       &balance,
-		Concurrency:   7,
+		Concurrency:   &concurrency,
 		AllowedGroups: []int64{3, 5},
 	}
 
@@ -34,13 +35,46 @@ func TestAdminService_CreateUser_Success(t *testing.T) {
 	require.Equal(t, input.Username, user.Username)
 	require.Equal(t, input.Notes, user.Notes)
 	require.Equal(t, balance, user.Balance)
-	require.Equal(t, input.Concurrency, user.Concurrency)
+	require.Equal(t, concurrency, user.Concurrency)
+	require.False(t, user.ConcurrencyIsDefault)
 	require.Equal(t, input.AllowedGroups, user.AllowedGroups)
 	require.Equal(t, RoleUser, user.Role)
 	require.Equal(t, StatusActive, user.Status)
 	require.True(t, user.CheckPassword(input.Password))
 	require.Len(t, repo.created, 1)
 	require.Equal(t, user, repo.created[0])
+}
+
+func TestAdminService_CreateUser_ConcurrencyDefaultAndExplicitZero(t *testing.T) {
+	newService := func() (*adminServiceImpl, *userRepoStub) {
+		repo := &userRepoStub{nextID: 20}
+		cfg := &config.Config{Default: config.DefaultConfig{UserConcurrency: 5}}
+		settings := NewSettingService(&settingRepoStub{values: map[string]string{
+			SettingKeyDefaultConcurrency: "9",
+		}}, cfg)
+		return &adminServiceImpl{userRepo: repo, settingService: settings}, repo
+	}
+
+	t.Run("omitted follows global default", func(t *testing.T) {
+		svc, _ := newService()
+		user, err := svc.CreateUser(context.Background(), &CreateUserInput{
+			Email: "default-concurrency@test.com", Password: "strong-pass",
+		})
+		require.NoError(t, err)
+		require.Equal(t, 9, user.Concurrency)
+		require.True(t, user.ConcurrencyIsDefault)
+	})
+
+	t.Run("explicit zero is a custom unlimited value", func(t *testing.T) {
+		svc, _ := newService()
+		zero := 0
+		user, err := svc.CreateUser(context.Background(), &CreateUserInput{
+			Email: "unlimited-concurrency@test.com", Password: "strong-pass", Concurrency: &zero,
+		})
+		require.NoError(t, err)
+		require.Equal(t, 0, user.Concurrency)
+		require.False(t, user.ConcurrencyIsDefault)
+	})
 }
 
 func TestAdminService_CreateUser_UsesDefaultBalanceWhenBalanceOmitted(t *testing.T) {

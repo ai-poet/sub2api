@@ -148,6 +148,7 @@ func (r *userRepository) create(ctx context.Context, userIn *service.User, guard
 		SetRole(userIn.Role).
 		SetBalance(userIn.Balance).
 		SetConcurrency(userIn.Concurrency).
+		SetConcurrencyIsDefault(userIn.ConcurrencyIsDefault).
 		SetStatus(userIn.Status).
 		SetSignupSource(userSignupSourceOrDefault(userIn.SignupSource)).
 		SetReferralCode(userIn.ReferralCode).
@@ -311,6 +312,9 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User, field
 	}
 	if fields.Concurrency {
 		updateOp = updateOp.SetConcurrency(userIn.Concurrency)
+	}
+	if fields.ConcurrencyIsDefault {
+		updateOp = updateOp.SetConcurrencyIsDefault(userIn.ConcurrencyIsDefault)
 	}
 	if fields.RPMLimit {
 		updateOp = updateOp.SetRpmLimit(userIn.RPMLimit)
@@ -1043,7 +1047,7 @@ func scanBalanceChange(ctx context.Context, client *dbent.Client, query string, 
 
 func (r *userRepository) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
 	client := clientFromContext(ctx, r.client)
-	n, err := client.User.Update().Where(dbuser.IDEQ(id)).AddConcurrency(amount).Save(ctx)
+	n, err := client.User.Update().Where(dbuser.IDEQ(id)).AddConcurrency(amount).SetConcurrencyIsDefault(false).Save(ctx)
 	if err != nil {
 		return translatePersistenceError(err, service.ErrUserNotFound, nil)
 	}
@@ -1056,7 +1060,9 @@ func (r *userRepository) UpdateConcurrency(ctx context.Context, id int64, amount
 func (r *userRepository) ApplyRedeemConcurrencyAdjustment(ctx context.Context, id int64, delta int) error {
 	const updateSQL = `
 		UPDATE users
-		SET concurrency = GREATEST(concurrency + $1, 0), updated_at = NOW()
+		SET concurrency = GREATEST(concurrency + $1, 0),
+		    concurrency_is_default = FALSE,
+		    updated_at = NOW()
 		WHERE id = $2 AND deleted_at IS NULL
 	`
 	client := clientFromContext(ctx, r.client)
@@ -1082,7 +1088,7 @@ func (r *userRepository) BatchSetConcurrency(ctx context.Context, userIDs []int6
 		value = 0
 	}
 	res, err := r.sql.ExecContext(ctx,
-		"UPDATE users SET concurrency = $1, updated_at = NOW() WHERE id = ANY($2) AND deleted_at IS NULL",
+		"UPDATE users SET concurrency = $1, concurrency_is_default = FALSE, updated_at = NOW() WHERE id = ANY($2) AND deleted_at IS NULL",
 		value, pq.Array(userIDs))
 	if err != nil {
 		return 0, fmt.Errorf("batch set concurrency: %w", err)
@@ -1096,7 +1102,7 @@ func (r *userRepository) BatchAddConcurrency(ctx context.Context, userIDs []int6
 		return 0, nil
 	}
 	res, err := r.sql.ExecContext(ctx,
-		"UPDATE users SET concurrency = GREATEST(concurrency + $1, 0), updated_at = NOW() WHERE id = ANY($2) AND deleted_at IS NULL",
+		"UPDATE users SET concurrency = GREATEST(concurrency + $1, 0), concurrency_is_default = FALSE, updated_at = NOW() WHERE id = ANY($2) AND deleted_at IS NULL",
 		delta, pq.Array(userIDs))
 	if err != nil {
 		return 0, fmt.Errorf("batch add concurrency: %w", err)
@@ -1116,6 +1122,7 @@ func (r *userRepository) BatchUpdateLimits(ctx context.Context, userIDs []int64,
 		value := max(*concurrency, 0)
 		args = append(args, value)
 		setClauses = append(setClauses, fmt.Sprintf("concurrency = $%d", len(args)))
+		setClauses = append(setClauses, "concurrency_is_default = FALSE")
 	}
 	if rpmLimit != nil {
 		value := max(*rpmLimit, 0)

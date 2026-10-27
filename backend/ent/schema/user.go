@@ -54,6 +54,8 @@ func (User) Fields() []ent.Field {
 			Default(0),
 		field.Int("concurrency").
 			Default(5),
+		field.Bool("concurrency_is_default").
+			Default(false),
 		field.String("status").
 			MaxLen(20).
 			Default(domain.StatusActive),

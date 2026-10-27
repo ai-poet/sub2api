@@ -666,6 +666,9 @@ export default {
         rpmLimit: '每分钟请求数 (RPM)',
         concurrencyPlaceholder: '0 表示不限制',
         concurrencyHint: '该用户的最大并发请求数，0 = 不限制',
+        followGlobalConcurrency: '跟随全局默认并发',
+        followGlobalConcurrencyHint: '默认值调整时自动更新；关闭后可设置个人并发',
+        concurrencyDefaultBadge: '默认',
         rpmLimitPlaceholder: '0 表示不限制',
         rpmLimitHint: '该用户每分钟最大请求数，0 = 不限制；仅在所用分组未设置 rpm_limit 时作为兜底生效'
       },

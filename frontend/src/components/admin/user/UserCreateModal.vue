@@ -39,8 +39,26 @@
           <input v-model="form.balance" type="number" step="any" class="input" />
         </div>
         <div>
-          <label class="input-label">{{ t('admin.users.columns.concurrency') }}</label>
-          <input v-model.number="form.concurrency" type="number" class="input" />
+          <div class="mb-2 flex items-center justify-between gap-3">
+            <label class="input-label mb-0">{{ t('admin.users.columns.concurrency') }}</label>
+            <Toggle
+              v-model="form.use_default_concurrency"
+              :aria-label="t('admin.users.form.followGlobalConcurrency')"
+              data-test="follow-default-toggle"
+            />
+          </div>
+          <input
+            v-if="!form.use_default_concurrency"
+            v-model.number="form.concurrency"
+            type="number"
+            min="0"
+            step="1"
+            class="input"
+            data-test="concurrency-input"
+          />
+          <p class="input-hint">
+            {{ form.use_default_concurrency ? t('admin.users.form.followGlobalConcurrencyHint') : t('admin.users.form.concurrencyHint') }}
+          </p>
         </div>
       </div>
       <div>
@@ -76,6 +94,7 @@ import { useI18n } from 'vue-i18n'; import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores/app'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Icon from '@/components/icons/Icon.vue'
+import Toggle from '@/components/common/Toggle.vue'
 import { useStepUp, isStepUpBlocked, isStepUpCancelled, stepUpBlockReason } from '@/composables/useStepUp'
 import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
 import { isApprovalQueued } from '@/utils/approval'
@@ -85,18 +104,23 @@ const props = withDefaults(defineProps<{ show: boolean; readonly?: boolean }>(),
 const emit = defineEmits(['close', 'success']); const { t } = useI18n()
 const appStore = useAppStore()
 
-const form = reactive({ email: '', password: '', username: '', notes: '', role: 'user' as 'user' | 'admin', balance: '', concurrency: 1, rpm_limit: 0 })
+const form = reactive({ email: '', password: '', username: '', notes: '', role: 'user' as 'user' | 'admin', balance: '', concurrency: 1, use_default_concurrency: true, rpm_limit: 0 })
 
 const stepUp = useStepUp()
 const loading = ref(false)
 
 const submit = async () => {
   if (loading.value) return
+  if (!form.use_default_concurrency && (!Number.isInteger(form.concurrency) || form.concurrency < 0)) {
+    appStore.showError(t('admin.users.concurrencyNonNegative'))
+    return
+  }
   loading.value = true
   try {
-    const { balance: rawBalance, ...rest } = { ...form }
+    const { balance: rawBalance, use_default_concurrency: useDefault, ...rest } = { ...form }
     const balance = String(rawBalance).trim()
-    const payload: typeof rest & { balance?: number } = { ...rest }
+    const payload: Parameters<typeof adminAPI.users.create>[0] = { ...rest }
+    if (useDefault) delete payload.concurrency
     if (balance !== '') {
       payload.balance = Number(balance)
     }
@@ -123,7 +147,7 @@ const submit = async () => {
   } finally { loading.value = false }
 }
 
-watch(() => props.show, (v) => { if(v) Object.assign(form, { email: '', password: '', username: '', notes: '', role: 'user', balance: '', concurrency: 1, rpm_limit: 0 }) })
+watch(() => props.show, (v) => { if(v) Object.assign(form, { email: '', password: '', username: '', notes: '', role: 'user', balance: '', concurrency: 1, use_default_concurrency: true, rpm_limit: 0 }) })
 
 const generateRandomPassword = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*'

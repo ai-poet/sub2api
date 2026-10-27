@@ -26,6 +26,7 @@ type userRepoStub struct {
 	nextID               int64
 	created              []*User
 	updated              []*User
+	updatedFields        []UserUpdateFields
 	deletedIDs           []int64
 	usersByEmail         map[string]*User
 	getByEmailErr        error
@@ -124,6 +125,7 @@ func (s *userRepoStub) GetFirstAdmin(ctx context.Context) (*User, error) {
 
 func (s *userRepoStub) Update(ctx context.Context, user *User, fields UserUpdateFields) error {
 	s.updated = append(s.updated, user)
+	s.updatedFields = append(s.updatedFields, fields)
 	if s.usersByEmail == nil {
 		s.usersByEmail = make(map[string]*User)
 	}

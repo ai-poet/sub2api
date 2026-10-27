@@ -97,17 +97,18 @@ type UserListFilters struct {
 // 注意这里没有 balance / total_recharged：余额只能经由 AdjustBalance、
 // SetBalance、UpdateBalance、DeductBalance 等原子接口修改，Update 永远不碰它们。
 type UserUpdateFields struct {
-	Email        bool
-	Username     bool
-	Notes        bool
-	PasswordHash bool
-	Role         bool
-	Status       bool
-	Concurrency  bool
-	RPMLimit     bool
-	SignupSource bool
-	LastLoginAt  bool
-	LastActiveAt bool
+	Email                bool
+	Username             bool
+	Notes                bool
+	PasswordHash         bool
+	Role                 bool
+	Status               bool
+	Concurrency          bool
+	ConcurrencyIsDefault bool
+	RPMLimit             bool
+	SignupSource         bool
+	LastLoginAt          bool
+	LastActiveAt         bool
 	// ReferralCode 为 fork 自有列：推荐码仅在首次生成时写入。
 	ReferralCode bool
 	// BalanceNotifySettings 覆盖 balance_notify_enabled / _threshold_type / _threshold。
@@ -541,7 +542,9 @@ func (s *UserService) updateProfile(ctx context.Context, userID int64, req Updat
 
 	if req.Concurrency != nil {
 		user.Concurrency = *req.Concurrency
+		user.ConcurrencyIsDefault = false
 		fields.Concurrency = true
+		fields.ConcurrencyIsDefault = true
 	}
 
 	if req.BalanceNotifyEnabled != nil {

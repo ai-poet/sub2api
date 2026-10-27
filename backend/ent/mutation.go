@@ -63371,6 +63371,7 @@ type UserMutation struct {
 	addfrozen_balance             *float64
 	concurrency                   *int
 	addconcurrency                *int
+	concurrency_is_default        *bool
 	status                        *string
 	username                      *string
 	notes                         *string
@@ -63932,6 +63933,42 @@ func (m *UserMutation) AddedConcurrency() (r int, exists bool) {
 func (m *UserMutation) ResetConcurrency() {
 	m.concurrency = nil
 	m.addconcurrency = nil
+}
+
+// SetConcurrencyIsDefault sets the "concurrency_is_default" field.
+func (m *UserMutation) SetConcurrencyIsDefault(b bool) {
+	m.concurrency_is_default = &b
+}
+
+// ConcurrencyIsDefault returns the value of the "concurrency_is_default" field in the mutation.
+func (m *UserMutation) ConcurrencyIsDefault() (r bool, exists bool) {
+	v := m.concurrency_is_default
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConcurrencyIsDefault returns the old "concurrency_is_default" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldConcurrencyIsDefault(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConcurrencyIsDefault is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConcurrencyIsDefault requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConcurrencyIsDefault: %w", err)
+	}
+	return oldValue.ConcurrencyIsDefault, nil
+}
+
+// ResetConcurrencyIsDefault resets all changes to the "concurrency_is_default" field.
+func (m *UserMutation) ResetConcurrencyIsDefault() {
+	m.concurrency_is_default = nil
 }
 
 // SetStatus sets the "status" field.
@@ -65462,7 +65499,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 26)
+	fields := make([]string, 0, 27)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -65489,6 +65526,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.concurrency != nil {
 		fields = append(fields, user.FieldConcurrency)
+	}
+	if m.concurrency_is_default != nil {
+		fields = append(fields, user.FieldConcurrencyIsDefault)
 	}
 	if m.status != nil {
 		fields = append(fields, user.FieldStatus)
@@ -65567,6 +65607,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.FrozenBalance()
 	case user.FieldConcurrency:
 		return m.Concurrency()
+	case user.FieldConcurrencyIsDefault:
+		return m.ConcurrencyIsDefault()
 	case user.FieldStatus:
 		return m.Status()
 	case user.FieldUsername:
@@ -65628,6 +65670,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldFrozenBalance(ctx)
 	case user.FieldConcurrency:
 		return m.OldConcurrency(ctx)
+	case user.FieldConcurrencyIsDefault:
+		return m.OldConcurrencyIsDefault(ctx)
 	case user.FieldStatus:
 		return m.OldStatus(ctx)
 	case user.FieldUsername:
@@ -65733,6 +65777,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetConcurrency(v)
+		return nil
+	case user.FieldConcurrencyIsDefault:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConcurrencyIsDefault(v)
 		return nil
 	case user.FieldStatus:
 		v, ok := value.(string)
@@ -66042,6 +66093,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldConcurrency:
 		m.ResetConcurrency()
+		return nil
+	case user.FieldConcurrencyIsDefault:
+		m.ResetConcurrencyIsDefault()
 		return nil
 	case user.FieldStatus:
 		m.ResetStatus()

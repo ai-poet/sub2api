@@ -44,7 +44,7 @@ func (s *SettingService) UpdateSettingsOmitting(ctx context.Context, settings *S
 	}
 	omitted.dropFrom(updates)
 
-	if err := s.settingRepo.SetMultiple(ctx, updates); err != nil {
+	if err := s.persistSettingsUpdates(ctx, updates); err != nil {
 		return err
 	}
 	s.refreshCachedSettingsAfterWrite(ctx, settings, omitted)
@@ -74,11 +74,24 @@ func (s *SettingService) UpdateSettingsWithAuthSourceDefaultsOmitting(ctx contex
 	}
 	omitted.dropFrom(updates)
 
-	if err := s.settingRepo.SetMultiple(ctx, updates); err != nil {
+	if err := s.persistSettingsUpdates(ctx, updates); err != nil {
 		return err
 	}
 	s.refreshCachedSettingsAfterWrite(ctx, settings, omitted)
 	return nil
+}
+
+// defaultConcurrencyFollowerWriter keeps the setting and its followers in one
+// transaction. Test repositories that do not implement it retain the old write path.
+type defaultConcurrencyFollowerWriter interface {
+	SetMultipleWithDefaultConcurrency(ctx context.Context, updates map[string]string) error
+}
+
+func (s *SettingService) persistSettingsUpdates(ctx context.Context, updates map[string]string) error {
+	if repo, ok := s.settingRepo.(defaultConcurrencyFollowerWriter); ok {
+		return repo.SetMultipleWithDefaultConcurrency(ctx, updates)
+	}
+	return s.settingRepo.SetMultiple(ctx, updates)
 }
 
 // refreshCachedSettingsAfterWrite keeps the in-process caches in step with the

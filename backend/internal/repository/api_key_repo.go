@@ -930,17 +930,18 @@ func userEntityToService(u *dbent.User) *service.User {
 		return nil
 	}
 	out := &service.User{
-		ID:            u.ID,
-		Email:         u.Email,
-		Username:      u.Username,
-		Notes:         u.Notes,
-		PasswordHash:  u.PasswordHash,
-		Role:          u.Role,
-		Balance:       u.Balance,
-		FrozenBalance: u.FrozenBalance,
-		Concurrency:   u.Concurrency,
-		Status:        u.Status,
-		SignupSource:  u.SignupSource,
+		ID:                   u.ID,
+		Email:                u.Email,
+		Username:             u.Username,
+		Notes:                u.Notes,
+		PasswordHash:         u.PasswordHash,
+		Role:                 u.Role,
+		Balance:              u.Balance,
+		FrozenBalance:        u.FrozenBalance,
+		Concurrency:          u.Concurrency,
+		ConcurrencyIsDefault: u.ConcurrencyIsDefault,
+		Status:               u.Status,
+		SignupSource:         u.SignupSource,
 		// ReferralCode 是推荐系统(fork 自有)的唯一读取通道:此行缺失时
 		// GenerateReferralCode 会把每个用户的推荐码反复重新生成覆盖,
 		// 已分发的邀请链接全部失效。上游合并重写本字面量时必须保留。

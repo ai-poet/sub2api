@@ -154,7 +154,7 @@ func TestAuthServiceBindEmailIdentity_UpdatesEmailAndAppliesFirstBindDefaults(t 
 	require.NoError(t, err)
 	require.Equal(t, "newemail@example.com", storedUser.Email)
 	require.Equal(t, 11.0, storedUser.Balance)
-	require.Equal(t, 5, storedUser.Concurrency)
+	require.Equal(t, 1, storedUser.Concurrency)
 	require.True(t, svc.CheckPassword("new-password", storedUser.PasswordHash))
 
 	identityCount, err := client.AuthIdentity.Query().

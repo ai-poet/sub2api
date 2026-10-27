@@ -100,6 +100,11 @@ func Concurrency(v int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldConcurrency, v))
 }
 
+// ConcurrencyIsDefault applies equality check predicate on the "concurrency_is_default" field. It's identical to ConcurrencyIsDefaultEQ.
+func ConcurrencyIsDefault(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldConcurrencyIsDefault, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldStatus, v))
@@ -628,6 +633,16 @@ func ConcurrencyLT(v int) predicate.User {
 // ConcurrencyLTE applies the LTE predicate on the "concurrency" field.
 func ConcurrencyLTE(v int) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldConcurrency, v))
+}
+
+// ConcurrencyIsDefaultEQ applies the EQ predicate on the "concurrency_is_default" field.
+func ConcurrencyIsDefaultEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldConcurrencyIsDefault, v))
+}
+
+// ConcurrencyIsDefaultNEQ applies the NEQ predicate on the "concurrency_is_default" field.
+func ConcurrencyIsDefaultNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldConcurrencyIsDefault, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

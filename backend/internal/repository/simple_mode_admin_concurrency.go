@@ -36,6 +36,7 @@ func ensureSimpleModeAdminConcurrency(ctx context.Context, client *dbent.Client)
 			dbuser.ConcurrencyEQ(simpleModeLegacyAdminConcurrency),
 		).
 		SetConcurrency(simpleModeTargetAdminConcurrency).
+		SetConcurrencyIsDefault(false).
 		Save(ctx); err != nil {
 		return fmt.Errorf("upgrade simple mode admin concurrency: %w", err)
 	}

@@ -574,10 +574,18 @@
           </template>
 
           <template #cell-concurrency="{ row }">
-            <UserConcurrencyCell
-              :current="row.current_concurrency ?? 0"
-              :max="row.concurrency"
-            />
+            <div class="flex items-center gap-2">
+              <UserConcurrencyCell
+                :current="row.current_concurrency ?? 0"
+                :max="row.concurrency"
+              />
+              <span
+                v-if="row.concurrency_is_default"
+                class="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-dark-700 dark:text-gray-400"
+              >
+                {{ t('admin.users.form.concurrencyDefaultBadge') }}
+              </span>
+            </div>
           </template>
 
           <template #cell-status="{ value }">

@@ -600,6 +600,9 @@ export default {
         rpmLimit: 'Requests Per Minute (RPM)',
         concurrencyPlaceholder: '0 = unlimited',
         concurrencyHint: 'Max concurrent requests for this user; 0 = unlimited.',
+        followGlobalConcurrency: 'Follow global default concurrency',
+        followGlobalConcurrencyHint: 'Updates automatically when the default changes; turn off to set a custom limit',
+        concurrencyDefaultBadge: 'Default',
         rpmLimitPlaceholder: '0 = unlimited',
         rpmLimitHint: 'Max requests per minute for this user; 0 = unlimited. Acts as a fallback only when the group has no rpm_limit set.'
       },

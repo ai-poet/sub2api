@@ -87,7 +87,8 @@ export interface User {
   role: 'admin' | 'user' | 'operator' // User role for authorization (operator = read-only ops role)
   balance: number // User balance for API usage
   frozen_balance?: number // Balance currently held by async batch jobs
-  concurrency: number // Allowed concurrent requests
+  concurrency: number // Effective concurrent request limit
+  concurrency_is_default?: boolean // Whether concurrency follows the global default
   rpm_limit?: number // User-level RPM cap (0 = unlimited); effective as fallback when group has no rpm_limit
   status: 'active' | 'disabled' // Account status
   allowed_groups: number[] | null // Allowed group IDs (null = all non-exclusive groups)
@@ -2121,6 +2122,7 @@ export interface UpdateUserRequest {
   role?: 'admin' | 'user' | 'operator'
   balance?: number
   concurrency?: number
+  use_default_concurrency?: boolean
   rpm_limit?: number
   status?: 'active' | 'disabled'
   allowed_groups?: number[] | null

@@ -1494,6 +1494,7 @@ export default {
           "statusActive": "Active",
           "statusDisabled": "Disabled",
           "unlimited": "Unlimited",
+          "globalDefault": "Follow global default",
           "quotaDaily": "Daily",
           "quotaWeekly": "Weekly",
           "quotaMonthly": "Monthly",

@@ -102,6 +102,19 @@ describe('describeApproval', () => {
     expect(JSON.stringify(d)).not.toContain('***')
   })
 
+  it('describes default concurrency without turning it into a fixed value', () => {
+    const created = describeApproval(req('admin.users.create', { email: 'new@example.com' }), ctx)
+    expect(created.lines).toContainEqual({
+      label: 'operator.approval.describe.fields.concurrency',
+      value: 'operator.approval.describe.values.globalDefault'
+    })
+    const updated = describeApproval(req('admin.users.update', { use_default_concurrency: true }), ctx)
+    expect(updated.lines).toContainEqual({
+      label: 'operator.approval.describe.fields.concurrency',
+      value: 'operator.approval.describe.values.globalDefault'
+    })
+  })
+
   it('describes subscription assignment with group name and validity', () => {
     const d = describeApproval(req('admin.subscriptions.assign.create', { user_id: 7, group_id: 3, validity_days: 30 }), ctx)
     expect(d.lines).toEqual([

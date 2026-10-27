@@ -108,8 +108,8 @@ export function describeApproval(req: AdminApprovalRequest, ctx: ApprovalDescrib
 
   switch (req.action) {
     case 'admin.users.create': {
-      const email = fmtRaw(take('email'))
-      summary = t(`${P}.summary.userCreate`, { email })
+      const email = take('email')
+      summary = t(`${P}.summary.userCreate`, { email: fmtRaw(email) })
       take('password')
       const username = take('username')
       if (isPresent(username)) add('username', fmtRaw(username))
@@ -117,6 +117,7 @@ export function describeApproval(req: AdminApprovalRequest, ctx: ApprovalDescrib
       if (isPresent(balance)) add('initialBalance', fmtNum(balance))
       const concurrency = take('concurrency')
       if (num(concurrency)) add('concurrency', fmtNum(concurrency))
+      else if (isPresent(email)) add('concurrency', t(`${P}.values.globalDefault`))
       const rpm = take('rpm_limit')
       if (num(rpm)) add('rpmLimit', fmtNum(rpm))
       const groups = take('allowed_groups')
@@ -144,8 +145,10 @@ export function describeApproval(req: AdminApprovalRequest, ctx: ApprovalDescrib
       }
       const balance = take('balance')
       if (isPresent(balance)) add('balance', fmtNum(balance))
+      const useDefaultConcurrency = take('use_default_concurrency')
       const concurrency = take('concurrency')
-      if (isPresent(concurrency)) add('concurrency', fmtNum(concurrency))
+      if (useDefaultConcurrency === true) add('concurrency', t(`${P}.values.globalDefault`))
+      else if (isPresent(concurrency)) add('concurrency', fmtNum(concurrency))
       const rpm = take('rpm_limit')
       if (isPresent(rpm)) add('rpmLimit', fmtNum(rpm))
       const groups = take('allowed_groups')

@@ -1255,15 +1255,11 @@ func mergeProviderDefaultGrantSettings(globalDefaults ProviderDefaultGrantSettin
 		GrantOnFirstBind: providerDefaults.GrantOnFirstBind,
 	}
 
-	// 注意：不能把 parse 默认值 (defaultAuthSourceBalance / defaultAuthSourceConcurrency)
-	// 当作"未配置"哨兵——admin 完全有权显式设成相同的值，那时仍应覆盖 globalDefaults。
-	// 旧实现的 `!= defaultAuthSourceConcurrency` 会把 admin 设的 5 与 fallback 5 混淆，
-	// 导致渠道发放退回到全局默认（如 1），表现为"管理员设 5、新用户实际拿 1"。
+	// Parse defaults are values, not "unset" sentinels: an administrator may
+	// deliberately configure the same value as the global default. Concurrency is
+	// intentionally always global; provider-specific concurrency is legacy data.
 	if providerDefaults.Balance >= 0 {
 		result.Balance = providerDefaults.Balance
-	}
-	if providerDefaults.Concurrency > 0 {
-		result.Concurrency = providerDefaults.Concurrency
 	}
 	if len(providerDefaults.Subscriptions) > 0 {
 		result.Subscriptions = append([]DefaultSubscriptionSetting(nil), providerDefaults.Subscriptions...)

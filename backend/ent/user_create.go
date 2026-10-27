@@ -144,6 +144,20 @@ func (_c *UserCreate) SetNillableConcurrency(v *int) *UserCreate {
 	return _c
 }
 
+// SetConcurrencyIsDefault sets the "concurrency_is_default" field.
+func (_c *UserCreate) SetConcurrencyIsDefault(v bool) *UserCreate {
+	_c.mutation.SetConcurrencyIsDefault(v)
+	return _c
+}
+
+// SetNillableConcurrencyIsDefault sets the "concurrency_is_default" field if the given value is not nil.
+func (_c *UserCreate) SetNillableConcurrencyIsDefault(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetConcurrencyIsDefault(*v)
+	}
+	return _c
+}
+
 // SetStatus sets the "status" field.
 func (_c *UserCreate) SetStatus(v string) *UserCreate {
 	_c.mutation.SetStatus(v)
@@ -659,6 +673,10 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultConcurrency
 		_c.mutation.SetConcurrency(v)
 	}
+	if _, ok := _c.mutation.ConcurrencyIsDefault(); !ok {
+		v := user.DefaultConcurrencyIsDefault
+		_c.mutation.SetConcurrencyIsDefault(v)
+	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := user.DefaultStatus
 		_c.mutation.SetStatus(v)
@@ -750,6 +768,9 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.Concurrency(); !ok {
 		return &ValidationError{Name: "concurrency", err: errors.New(`ent: missing required field "User.concurrency"`)}
+	}
+	if _, ok := _c.mutation.ConcurrencyIsDefault(); !ok {
+		return &ValidationError{Name: "concurrency_is_default", err: errors.New(`ent: missing required field "User.concurrency_is_default"`)}
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
@@ -869,6 +890,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Concurrency(); ok {
 		_spec.SetField(user.FieldConcurrency, field.TypeInt, value)
 		_node.Concurrency = value
+	}
+	if value, ok := _c.mutation.ConcurrencyIsDefault(); ok {
+		_spec.SetField(user.FieldConcurrencyIsDefault, field.TypeBool, value)
+		_node.ConcurrencyIsDefault = value
 	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
@@ -1338,6 +1363,18 @@ func (u *UserUpsert) AddConcurrency(v int) *UserUpsert {
 	return u
 }
 
+// SetConcurrencyIsDefault sets the "concurrency_is_default" field.
+func (u *UserUpsert) SetConcurrencyIsDefault(v bool) *UserUpsert {
+	u.Set(user.FieldConcurrencyIsDefault, v)
+	return u
+}
+
+// UpdateConcurrencyIsDefault sets the "concurrency_is_default" field to the value that was provided on create.
+func (u *UserUpsert) UpdateConcurrencyIsDefault() *UserUpsert {
+	u.SetExcluded(user.FieldConcurrencyIsDefault)
+	return u
+}
+
 // SetStatus sets the "status" field.
 func (u *UserUpsert) SetStatus(v string) *UserUpsert {
 	u.Set(user.FieldStatus, v)
@@ -1772,6 +1809,20 @@ func (u *UserUpsertOne) AddConcurrency(v int) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateConcurrency() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateConcurrency()
+	})
+}
+
+// SetConcurrencyIsDefault sets the "concurrency_is_default" field.
+func (u *UserUpsertOne) SetConcurrencyIsDefault(v bool) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetConcurrencyIsDefault(v)
+	})
+}
+
+// UpdateConcurrencyIsDefault sets the "concurrency_is_default" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateConcurrencyIsDefault() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateConcurrencyIsDefault()
 	})
 }
 
@@ -2417,6 +2468,20 @@ func (u *UserUpsertBulk) AddConcurrency(v int) *UserUpsertBulk {
 func (u *UserUpsertBulk) UpdateConcurrency() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateConcurrency()
+	})
+}
+
+// SetConcurrencyIsDefault sets the "concurrency_is_default" field.
+func (u *UserUpsertBulk) SetConcurrencyIsDefault(v bool) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetConcurrencyIsDefault(v)
+	})
+}
+
+// UpdateConcurrencyIsDefault sets the "concurrency_is_default" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateConcurrencyIsDefault() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateConcurrencyIsDefault()
 	})
 }
 

@@ -408,7 +408,7 @@ export default {
         affiliateRebateRateHint:
           'Rebate percentage credited to inviter after recharge (0-100%, e.g. 10 means 10%)',
         defaultConcurrency: 'Default Concurrency',
-        defaultConcurrencyHint: 'Maximum concurrent requests for new users',
+        defaultConcurrencyHint: 'Maximum concurrent requests for new users and users following the default; custom overrides are unchanged',
         defaultUserRpmLimit: 'Default User RPM Limit',
         defaultUserRpmLimitHint: 'Default max requests per minute for new users; 0 = unlimited. Only applied at new user creation.',
         defaultSubscriptions: 'Default Subscriptions',
@@ -1191,7 +1191,7 @@ export default {
       },
       authSourceDefaults: {
         title: 'Auth Source Defaults',
-        description: 'Configure per-source default balance, concurrency, subscriptions, and grant rules.',
+        description: 'Configure per-source default balance, subscriptions, and grant rules.',
         requireEmailLabel: 'Require email on third-party signup',
         requireEmailHint: 'When enabled, OIDC and WeChat signups must provide an email before account creation. Linux DO sign-in is not affected and always logs in directly.',
         enabledHint: 'These defaults apply when a new user registers through this source. Grant on first bind only applies when an existing user binds this source.',

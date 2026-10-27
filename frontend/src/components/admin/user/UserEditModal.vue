@@ -42,8 +42,21 @@
         <textarea v-model="form.notes" rows="3" class="input"></textarea>
       </div>
       <div>
-        <label class="input-label">{{ t('admin.users.columns.concurrency') }}</label>
+        <div class="mb-2 flex items-center justify-between gap-4">
+          <label class="input-label mb-0">{{ t('admin.users.columns.concurrency') }}</label>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.users.form.followGlobalConcurrency') }}
+            </span>
+            <Toggle
+              v-model="form.use_default_concurrency"
+              :aria-label="t('admin.users.form.followGlobalConcurrency')"
+              data-test="follow-default-toggle"
+            />
+          </div>
+        </div>
         <input
+          v-if="!form.use_default_concurrency"
           v-model.number="form.concurrency"
           type="number"
           min="0"
@@ -52,7 +65,12 @@
           :placeholder="t('admin.users.form.concurrencyPlaceholder')"
           data-test="concurrency-input"
         />
-        <p class="input-hint">{{ t('admin.users.form.concurrencyHint') }}</p>
+        <p v-else class="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-dark-700 dark:text-gray-300">
+          {{ form.concurrency }}
+        </p>
+        <p class="input-hint">
+          {{ form.use_default_concurrency ? t('admin.users.form.followGlobalConcurrencyHint') : t('admin.users.form.concurrencyHint') }}
+        </p>
       </div>
       <div>
         <label class="input-label">{{ t('admin.users.form.rpmLimit') }}</label>
@@ -91,6 +109,7 @@ import { adminAPI } from '@/api/admin'
 import type { AdminUser, UserAttributeValuesMap } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Select from '@/components/common/Select.vue'
+import Toggle from '@/components/common/Toggle.vue'
 import UserAttributeForm from '@/components/user/UserAttributeForm.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { useStepUp, isStepUpBlocked, isStepUpCancelled, stepUpBlockReason } from '@/composables/useStepUp'
@@ -117,13 +136,14 @@ const form = reactive({
   notes: '',
   role: 'user' as AdminUser['role'],
   concurrency: 1,
+  use_default_concurrency: false,
   rpm_limit: 0,
   customAttributes: {} as UserAttributeValuesMap
 })
 
 watch(() => props.user, (u) => {
   if (u) {
-    Object.assign(form, { email: u.email, password: '', username: u.username || '', notes: u.notes || '', role: u.role || 'user', concurrency: u.concurrency, rpm_limit: u.rpm_limit ?? 0, customAttributes: {} })
+    Object.assign(form, { email: u.email, password: '', username: u.username || '', notes: u.notes || '', role: u.role || 'user', concurrency: u.concurrency, use_default_concurrency: u.concurrency_is_default ?? false, rpm_limit: u.rpm_limit ?? 0, customAttributes: {} })
     passwordCopied.value = false
   }
 }, { immediate: true })
@@ -147,14 +167,16 @@ const handleUpdateUser = async () => {
     return
   }
   // 0 = 不限制，与网关 (AcquireUserSlot: maxConcurrency <= 0) 和批量改限额一致
-  if (!Number.isInteger(form.concurrency) || form.concurrency < 0) {
+  if (!form.use_default_concurrency && (!Number.isInteger(form.concurrency) || form.concurrency < 0)) {
     appStore.showError(t('admin.users.concurrencyNonNegative'))
     return
   }
   const userId = props.user.id
   submitting.value = true
   try {
-    const data: any = { email: form.email, username: form.username, notes: form.notes, concurrency: form.concurrency, rpm_limit: form.rpm_limit }
+    const data: any = { email: form.email, username: form.username, notes: form.notes, rpm_limit: form.rpm_limit }
+    if (form.use_default_concurrency) data.use_default_concurrency = true
+    else data.concurrency = form.concurrency
     if (!props.readonly) data.role = form.role
     if (form.password.trim()) data.password = form.password.trim()
     // 提升为管理员属敏感操作：后端返回 STEP_UP_REQUIRED 时弹 TOTP 验证并重试

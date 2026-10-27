@@ -112,6 +112,7 @@ const DataTableStub = {
       </template>
       <div v-for="row in data" :key="row.id">
         <slot name="cell-last_used_at" :value="row.last_used_at" :row="row" />
+        <slot name="cell-concurrency" :row="row" />
         <div :data-test="'actions-' + row.id"><slot name="cell-actions" :row="row" /></div>
       </div>
     </div>
@@ -287,6 +288,18 @@ describe('admin UsersView', () => {
 
     expect(deleteUser.mock.calls).toEqual([[42]])
     expect(wrapper.get('[data-test="selected-keys"]').text()).toBe('43')
+    wrapper.unmount()
+  })
+
+  it('marks users whose concurrency follows the global default', async () => {
+    listUsers.mockResolvedValue({
+      items: [createAdminUser({ concurrency_is_default: true })],
+      total: 1, page: 1, page_size: 20, pages: 1
+    })
+    const wrapper = mountBulkDeleteView()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('admin.users.form.concurrencyDefaultBadge')
     wrapper.unmount()
   })
 

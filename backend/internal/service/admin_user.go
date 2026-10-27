@@ -136,16 +136,24 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 		}
 	}
 
+	concurrency := s.defaultConcurrency(ctx)
+	concurrencyIsDefault := true
+	if input.Concurrency != nil {
+		concurrency = *input.Concurrency
+		concurrencyIsDefault = false
+	}
+
 	user := &User{
-		Email:         input.Email,
-		Username:      input.Username,
-		Notes:         input.Notes,
-		Role:          role,
-		Balance:       balance,
-		Concurrency:   input.Concurrency,
-		RPMLimit:      input.RPMLimit,
-		Status:        StatusActive,
-		AllowedGroups: input.AllowedGroups,
+		Email:                input.Email,
+		Username:             input.Username,
+		Notes:                input.Notes,
+		Role:                 role,
+		Balance:              balance,
+		Concurrency:          concurrency,
+		ConcurrencyIsDefault: concurrencyIsDefault,
+		RPMLimit:             input.RPMLimit,
+		Status:               StatusActive,
+		AllowedGroups:        input.AllowedGroups,
 
 		RestrictPublicGroups: input.RestrictPublicGroups,
 	}
@@ -216,6 +224,16 @@ func (s *adminServiceImpl) assignDefaultSubscriptions(ctx context.Context, userI
 			logger.LegacyPrintf("service.admin", "failed to assign default subscription: user_id=%d group_id=%d err=%v", userID, item.GroupID, err)
 		}
 	}
+}
+
+func (s *adminServiceImpl) defaultConcurrency(ctx context.Context) int {
+	if s.settingService != nil {
+		return s.settingService.GetDefaultConcurrency(ctx)
+	}
+	if s.cfg != nil && s.cfg.Default.UserConcurrency > 0 {
+		return s.cfg.Default.UserConcurrency
+	}
+	return 5
 }
 
 func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *UpdateUserInput) (*User, error) {
@@ -296,9 +314,29 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		fields.Role = true
 	}
 
-	if input.Concurrency != nil {
-		user.Concurrency = *input.Concurrency
+	useDefaultConcurrency := input.UseDefaultConcurrency != nil && *input.UseDefaultConcurrency
+	if useDefaultConcurrency && input.Concurrency != nil {
+		return nil, infraerrors.BadRequest("INVALID_CONCURRENCY_DEFAULT", "use_default_concurrency cannot be combined with concurrency")
+	}
+	if input.UseDefaultConcurrency != nil && !*input.UseDefaultConcurrency && input.Concurrency == nil {
+		return nil, infraerrors.BadRequest("INVALID_CONCURRENCY_DEFAULT", "concurrency is required when use_default_concurrency is false")
+	}
+	switch {
+	case useDefaultConcurrency:
+		user.Concurrency = s.defaultConcurrency(ctx)
+		user.ConcurrencyIsDefault = true
 		fields.Concurrency = true
+		fields.ConcurrencyIsDefault = true
+	case input.Concurrency != nil:
+		// Older edit forms always send concurrency, even for an unrelated profile
+		// change. Keep a follower unchanged when that legacy payload is a no-op.
+		if user.ConcurrencyIsDefault && *input.Concurrency == user.Concurrency && *input.Concurrency == s.defaultConcurrency(ctx) {
+			break
+		}
+		user.Concurrency = *input.Concurrency
+		user.ConcurrencyIsDefault = false
+		fields.Concurrency = true
+		fields.ConcurrencyIsDefault = true
 	}
 
 	if input.RPMLimit != nil {
