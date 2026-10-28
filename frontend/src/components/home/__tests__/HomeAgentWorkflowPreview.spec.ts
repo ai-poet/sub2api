@@ -207,10 +207,27 @@ describe('HomeAgentWorkflowPreview', () => {
 
     expect(view.find('[data-test="preview-composer-draft"]').text()).toContain('Send people back after sign-in')
     expect(view.find('[data-test="preview-mode-chip"]').text()).toBe('Plan')
-    expect(view.find('[data-test="preview-model-picker"]').classes()).toContain('opacity-0')
+    expect(view.find('[data-test="preview-model-picker"]').classes()).toContain('is-closed')
     expect(view.find('[data-test="preview-balance"]').text()).toContain('$36.52')
     expect(view.find('[data-test="preview-chapter-plan"]').attributes('aria-current')).toBe('true')
     expect(vi.mocked(preloadDemoImages)).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps lower-frequency surfaces in the More menu and the working row quiet', async () => {
+    const view = mountPreview()
+
+    const more = view.find('[data-test="preview-surface-more"]')
+    expect(more.find('.cw-surface-popup').classes()).toContain('cw-frost')
+    expect(more.text()).toContain('right_panel.browser')
+    expect(more.text()).toContain('session_rail.surface')
+    expect(more.text()).toContain('side_chat.surface')
+    expect(more.text()).toContain('trajectory.surface')
+
+    await advance(MOMENTS.planRows[1] + 100)
+    const status = view.find('[data-test="preview-status-line"]')
+    expect(status.findAll('.cw-working-cells i')).toHaveLength(9)
+    expect(status.find('.cw-shimmer').exists()).toBe(false)
+    expect(status.text()).toContain('home.clientWorkflow.status.tokens')
   })
 
   it('opens on the new-task welcome screen with its activity overview until the prompt is sent', async () => {

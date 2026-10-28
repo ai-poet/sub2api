@@ -16,6 +16,18 @@ export default {
       "attempts": "{n} attempts"
     }
   },
+  "right_panel": {
+    "browser": "Browser"
+  },
+  "session_rail": {
+    "surface": "Session details"
+  },
+  "side_chat": {
+    "surface": "Side chat"
+  },
+  "trajectory": {
+    "surface": "Trajectory"
+  },
   "home": {
     "loginConsole": "Sign in to dashboard",
     "headerTagline": "One-click access to Claude Code / Codex",

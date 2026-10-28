@@ -49,9 +49,9 @@
       </div>
 
       <!-- 状态行：工作中 · 时长 · 本轮 tokens · 此刻在做什么（0.2.10） -->
-      <div v-if="statusLine" class="mt-2 flex min-w-0 items-center gap-2 text-[12.5px]" data-test="preview-status-line">
-        <span class="cw-wave shrink-0" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="cw-shimmer min-w-0 truncate">{{ statusLine }}</span>
+      <div v-if="statusLine" class="mt-2 flex h-[22px] min-w-0 items-center gap-2 text-[12.5px] text-[color:var(--cw-text-tertiary)]" data-test="preview-status-line">
+        <WorkingCells />
+        <span class="min-w-0 truncate font-medium">{{ statusLine }}</span>
       </div>
     </div>
 
@@ -92,6 +92,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ClientIcon from './ClientIcon.vue'
+import WorkingCells from './WorkingCells.vue'
 import type { ClientIconName } from './icons'
 import { formatTokens, type PreviewFrame, type TurnStatus } from './timeline'
 
@@ -165,47 +166,5 @@ const statusLine = computed(() => {
 .cw-changes {
   border: 1px solid var(--cw-border-strong);
   background: var(--cw-overlay);
-}
-
-.cw-wave {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--cw-text-tertiary);
-}
-
-.cw-wave i {
-  height: 4px;
-  width: 4px;
-  border-radius: 9999px;
-  background: currentColor;
-  opacity: 0.35;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .cw-wave i {
-    animation: wave 1.2s ease-in-out infinite;
-  }
-
-  .cw-wave i:nth-child(2) {
-    animation-delay: 0.15s;
-  }
-
-  .cw-wave i:nth-child(3) {
-    animation-delay: 0.3s;
-  }
-}
-
-@keyframes wave {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.35;
-  }
-  30% {
-    transform: translateY(-3px);
-    opacity: 0.9;
-  }
 }
 </style>

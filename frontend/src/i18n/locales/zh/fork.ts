@@ -16,6 +16,18 @@ export default {
       "attempts": "已重试 {n} 次"
     }
   },
+  "right_panel": {
+    "browser": "浏览器"
+  },
+  "session_rail": {
+    "surface": "会话详情"
+  },
+  "side_chat": {
+    "surface": "侧边提问"
+  },
+  "trajectory": {
+    "surface": "轨迹"
+  },
   "home": {
     "loginConsole": "登录控制台",
     "headerTagline": "Claude Code / Codex 一键接入",

@@ -1,11 +1,11 @@
 <template>
   <!-- 客户端输入框上方的模型选择器：左栏是各家 Agent，内置 Agent 按厂商分栏，每个模型带一句用途说明 -->
   <div
-    class="absolute bottom-full left-0 z-20 mb-2 h-[300px] w-full max-w-[560px] origin-bottom-left transition-all duration-200 ease-out motion-reduce:transition-none sm:h-[340px]"
-    :class="open ? 'scale-100 opacity-100' : 'pointer-events-none scale-[0.97] opacity-0'"
+    class="cw-picker-motion absolute bottom-full left-0 z-20 mb-2 h-[300px] w-full max-w-[560px] sm:h-[340px]"
+    :class="open ? 'is-open' : 'is-closed'"
     data-test="preview-model-picker"
   >
-    <div class="cw-picker flex h-full overflow-hidden rounded-[13px] shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
+    <div class="cw-picker cw-frost flex h-full overflow-hidden rounded-[13px] shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
       <!-- 左栏：收藏 + 各家 Agent，只显示图标 -->
       <div class="cw-rail relative flex w-[46px] shrink-0 flex-col items-center gap-px overflow-hidden py-1.5">
         <span class="cw-rail-item text-[color:var(--cw-text-tertiary)]">
@@ -26,7 +26,7 @@
         </span>
       </div>
 
-      <div class="flex min-w-0 flex-1 flex-col bg-[color:var(--cw-surface)]">
+      <div class="flex min-w-0 flex-1 flex-col">
         <div class="m-2 flex h-[34px] items-center gap-2 rounded-[9px] border border-[color:var(--cw-border)] px-2.5 text-[13px] text-[color:var(--cw-text-ghost)]">
           <ClientIcon name="search" class="h-3.5 w-3.5" />
           <span>{{ t('home.clientWorkflow.picker.search') }}</span>
@@ -138,11 +138,29 @@ const models = computed(() => [
 <style scoped>
 .cw-picker {
   border: 1px solid var(--cw-border-strong);
-  background: var(--cw-raised);
+}
+
+.cw-picker-motion {
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease,
+    backdrop-filter 0.14s ease;
+}
+
+.cw-picker-motion.is-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cw-picker-motion.is-closed {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition-duration: 0.1s;
 }
 
 .cw-rail {
-  background: var(--cw-canvas);
+  background: var(--cw-overlay);
 }
 
 .cw-rail-item {
@@ -157,5 +175,11 @@ const models = computed(() => [
 
 .cw-rail-item.is-active {
   background: var(--cw-overlay-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-picker-motion {
+    transition: none;
+  }
 }
 </style>

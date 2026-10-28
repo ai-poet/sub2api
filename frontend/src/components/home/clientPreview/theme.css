@@ -26,6 +26,7 @@
   --cw-on-inverse: #f8f8f9;
   --cw-mark: #34363b;
   --cw-warning: #a66b20;
+  --cw-frost: rgba(236, 236, 236, 0.88);
   /* 子智能体类型 explore 的颜色：客户端按类型名哈希取色相（subagent_row.rs），explore 落在 185° */
   --cw-kind-explore: hsl(185 62% 40%);
 
@@ -59,6 +60,7 @@
   --cw-on-inverse: #17181c;
   --cw-mark: #f3f3f3;
   --cw-warning: #e0b36a;
+  --cw-frost: rgba(35, 35, 35, 0.86);
   --cw-kind-explore: hsl(185 62% 72%);
 }
 
@@ -182,6 +184,48 @@
 
 :where(.client-window .cw-primary-button .cw-key) {
   background: color-mix(in srgb, var(--cw-on-inverse) 16%, transparent);
+}
+
+/* 浮层统一使用主题色的半透明版本，模糊只作用于弹出的表面 */
+:where(.client-window .cw-frost) {
+  background: var(--cw-frost);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+:where(.client-window .cw-working-cells) {
+  display: grid;
+  grid-template-columns: repeat(3, 2px);
+  gap: 1.5px;
+  color: var(--cw-accent);
+}
+
+:where(.client-window .cw-working-cells i) {
+  width: 2px;
+  height: 2px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.client-window .cw-working-cells i) {
+    animation: cw-working-cell 1.2s steps(18, end) infinite;
+    animation-delay: calc(var(--cw-cell-phase) * -1.2s);
+  }
+}
+
+@keyframes cw-working-cell {
+  0% {
+    opacity: 0.7;
+  }
+  45%,
+  92% {
+    opacity: 0.18;
+  }
+  100% {
+    opacity: 0.7;
+  }
 }
 
 /* 用户消息气泡 */

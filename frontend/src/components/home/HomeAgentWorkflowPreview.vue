@@ -138,6 +138,16 @@
             <span v-for="surface in SURFACES" :key="surface" class="cw-icon-button max-md:hidden">
               <ClientIcon :name="surface" class="h-3.5 w-3.5" />
             </span>
+            <!-- 低频入口收进「更多面板」，菜单材质和客户端浮层一致 -->
+            <span class="cw-surface-menu group/surface relative" data-test="preview-surface-more">
+              <span class="cw-icon-button"><ClientIcon name="ellipsis" class="h-3.5 w-3.5" /></span>
+              <span class="cw-surface-popup cw-frost">
+                <span class="cw-surface-item"><ClientIcon name="globe" />{{ t('right_panel.browser') }}</span>
+                <span class="cw-surface-item"><ClientIcon name="panelRight" />{{ t('session_rail.surface') }}</span>
+                <span class="cw-surface-item"><ClientIcon name="cornerDownRight" />{{ t('side_chat.surface') }}</span>
+                <span class="cw-surface-item"><ClientIcon name="chartColumn" />{{ t('trajectory.surface') }}</span>
+              </span>
+            </span>
             <!-- 有团队的任务多一个「团队」按钮，交过计划的任务多一个「计划」按钮（surface_bar.rs 的顺序） -->
             <span
               v-if="frame.panel === 'team'"
@@ -227,8 +237,8 @@ const { t } = useI18n()
 // 客户端在 macOS 上把红绿灯放在侧栏顶部，在 Windows 上把窗口按钮放在标题栏右端
 const isMac = detectPreferredClientPlatform() === 'macos'
 
-// 标题栏右侧的四个工具面板：终端 / 文件 / 浏览器 / 审阅
-const SURFACES: ClientIconName[] = ['terminal', 'folder', 'globe', 'fileDiff']
+// 标题栏只固定终端 / 文件 / 审阅；浏览器和诊断入口进「更多面板」
+const SURFACES: ClientIconName[] = ['terminal', 'folder', 'fileDiff']
 
 // 演示用余额：Agent 这一轮、团队、一张图各扣一次
 const BALANCE = 36.52
@@ -511,9 +521,57 @@ onBeforeUnmount(() => {
   background: #38bdf8;
 }
 
+.cw-surface-popup {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 40;
+  display: flex;
+  width: 176px;
+  flex-direction: column;
+  border: 1px solid var(--cw-border-strong);
+  border-radius: 9px;
+  padding: 4px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.1s ease,
+    transform 0.1s ease,
+    backdrop-filter 0.1s ease;
+}
+
+.cw-surface-menu:hover .cw-surface-popup {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-duration: 0.14s;
+}
+
+.cw-surface-item {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 0 8px;
+  color: var(--cw-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cw-surface-item :global(svg) {
+  height: 14px;
+  width: 14px;
+  color: var(--cw-text-tertiary);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cw-nav-row,
-  .cw-task {
+  .cw-task,
+  .cw-surface-popup,
+  .cw-surface-menu:hover .cw-surface-popup {
     transition: none;
   }
 }
