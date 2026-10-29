@@ -8,6 +8,7 @@ export const SIDEBAR_ANIMATED_ICONS: Readonly<Record<string, AnimatedIconName>> 
   '/dashboard': 'dashboard',
   '/keys': 'key',
   '/batch-image': 'batchImage',
+  '/canvas': 'batchImage',
   '/usage': 'chart',
   '/available-channels': 'layers',
   '/subscriptions': 'creditCard',

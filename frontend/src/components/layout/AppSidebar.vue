@@ -211,6 +211,7 @@ import { sanitizeUrl } from '@/utils/url'
 import { FeatureFlags, makeSidebarFlag } from '@/utils/featureFlags'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
 import { useBatchImageAccess } from '@/composables/useBatchImageAccess'
+import { useCanvasAccess } from '@/composables/useCanvasAccess' // fork：画布工作台
 import { useContentTranslation } from '@/composables/useContentTranslation'
 import { applyDarkClass } from '@/utils/themeSwitch' // fork：主题切换冻结过渡
 import SidebarNavIcon from './SidebarNavIcon.vue' // fork：侧栏图标悬停动画
@@ -272,6 +273,7 @@ const ticketsStore = useTicketsStore()
 const ticketOpenBadge = () => ticketsStore.openCount
 const ticketUnreadBadge = () => ticketsStore.unreadCount
 const { canUseBatchImage, refreshBatchImageAccess } = useBatchImageAccess()
+const { canUseCanvas, refreshCanvasAccess } = useCanvasAccess() // fork：画布工作台
 
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const mobileOpen = computed(() => appStore.mobileOpen)
@@ -356,6 +358,22 @@ const BatchImageIcon = {
           'stroke-linecap': 'round',
           'stroke-linejoin': 'round',
           d: 'M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z'
+        })
+      ]
+    )
+}
+
+// fork：画布工作台入口图标
+const CanvasIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.25 2.25 2.25 2.25 0 012.25 2.25 3 3 0 005.78 1.128m0 0a3 3 0 005.78 1.128 2.25 2.25 0 012.25 2.25 2.25 2.25 0 01-2.25 2.25 3 3 0 01-5.78-1.128m0 0V3.545m0 12.577V3.545m0 12.577a3 3 0 00-5.78-1.128M18.75 4.5V21m0 0a3 3 0 005.78 1.128 2.25 2.25 0 002.25-2.25 2.25 2.25 0 00-2.25-2.25 3 3 0 00-5.78 1.128m0 0V4.5m0 0V3.545'
         })
       ]
     )
@@ -726,6 +744,7 @@ const flagForkReferral = () => {
 }
 const flagLeaderboard = () => isLeaderboardEnabled(forkPublicSettings()) // fork：排行榜（模型榜或用户榜任一开启）
 const flagBatchImageAccess = () => canUseBatchImage.value
+const flagCanvasAccess = () => canUseCanvas.value // fork：画布工作台
 // 工单：用户侧入口只给普通用户；admin / operator 走控制台的「工单管理」，不在"我的账户"区重复出现
 const flagUserTickets = () => !authStore.hasConsoleAccess
 
@@ -742,6 +761,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
   items.push(
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/batch-image', label: t('nav.batchImage'), icon: BatchImageIcon, hideInSimpleMode: true, featureFlag: flagBatchImageAccess },
+    { path: '/canvas', label: t('nav.canvas'), icon: CanvasIcon, hideInSimpleMode: true, featureFlag: flagCanvasAccess }, // fork：画布工作台
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/available-channels', label: t('nav.availableChannels'), icon: ChannelIcon, hideInSimpleMode: true, featureFlag: flagAvailableChannels },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription },
@@ -970,6 +990,7 @@ watch(
 
 onMounted(() => {
   void refreshBatchImageAccess()
+  void refreshCanvasAccess()
   if (hasConsoleAccess.value) {
     adminSettingsStore.fetch()
   }

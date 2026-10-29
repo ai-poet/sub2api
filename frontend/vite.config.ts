@@ -146,6 +146,17 @@ export default defineConfig(({ mode }) => {
               return 'feature-leaderboard'
             }
 
+            // fork：画布工作台与 Fabric 只在打开 /canvas 时下载，不进首屏
+            if (
+              normalizedId.includes('/node_modules/fabric/') ||
+              normalizedId.includes('/src/components/canvas/') ||
+              normalizedId.includes('/src/views/user/CanvasStudioView.vue') ||
+              normalizedId.includes('/src/utils/canvasComposite.ts') ||
+              normalizedId.includes('/src/utils/canvasLocalStore.ts')
+            ) {
+              return 'feature-canvas-studio'
+            }
+
             if (id.includes('node_modules')) {
               // Vue 核心库
               if (

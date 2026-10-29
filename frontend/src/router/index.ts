@@ -411,6 +411,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/canvas',
+    name: 'CanvasStudio',
+    component: () => import('@/views/user/CanvasStudioView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Canvas Studio',
+      titleKey: 'canvas.title',
+      descriptionKey: 'canvas.subtitle'
+    }
+  },
+  {
     path: '/usage',
     name: 'Usage',
     component: () => import('@/views/user/UsageView.vue'),
