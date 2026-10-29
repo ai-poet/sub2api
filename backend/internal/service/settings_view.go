@@ -187,14 +187,15 @@ type SystemSettings struct {
 	CommunityQRCode                              string // 交流群二维码图片 (base64)
 	CommunityGroupURL                            string // 交流群链接/群号
 
-	DefaultConcurrency          int
-	DefaultBalance              float64
-	RiskControlEnabled          bool
-	CyberSessionBlockEnabled    bool
-	CyberPolicyUserAllowlist    string
-	CyberSessionBlockTTLSeconds int
-	DefaultUserRPMLimit         int
-	DefaultSubscriptions        []DefaultSubscriptionSetting
+	DefaultConcurrency           int
+	DefaultConcurrencyAutoFollow bool
+	DefaultBalance               float64
+	RiskControlEnabled           bool
+	CyberSessionBlockEnabled     bool
+	CyberPolicyUserAllowlist     string
+	CyberSessionBlockTTLSeconds  int
+	DefaultUserRPMLimit          int
+	DefaultSubscriptions         []DefaultSubscriptionSetting
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`

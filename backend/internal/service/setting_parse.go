@@ -412,6 +412,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	} else {
 		result.DefaultConcurrency = s.cfg.Default.UserConcurrency
 	}
+	result.DefaultConcurrencyAutoFollow = settings[SettingKeyDefaultConcurrencyAutoFollow] == "true"
 
 	if rpm, err := strconv.Atoi(settings[SettingKeyDefaultUserRPMLimit]); err == nil && rpm >= 0 {
 		result.DefaultUserRPMLimit = rpm

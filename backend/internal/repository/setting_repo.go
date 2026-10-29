@@ -159,6 +159,20 @@ func (r *settingRepository) SetMultipleWithDefaultConcurrency(ctx context.Contex
 	}
 
 	now := time.Now()
+	previousDefault := defaultConcurrency
+	autoFollow, _ := strconv.ParseBool(settings[service.SettingKeyDefaultConcurrencyAutoFollow])
+	if autoFollow {
+		previous, err := client.Setting.Query().Where(setting.KeyEQ(service.SettingKeyDefaultConcurrency)).Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
+			return err
+		}
+		if err == nil {
+			if parsed, parseErr := strconv.Atoi(previous.Value); parseErr == nil && parsed >= 1 {
+				previousDefault = parsed
+			}
+		}
+	}
+
 	builders := make([]*ent.SettingCreate, 0, len(settings))
 	for key, value := range settings {
 		builders = append(builders, client.Setting.Create().SetKey(key).SetValue(value).SetUpdatedAt(now))
@@ -180,6 +194,22 @@ func (r *settingRepository) SetMultipleWithDefaultConcurrency(ctx context.Contex
 		SetUpdatedAt(now).
 		Save(ctx); err != nil {
 		return err
+	}
+	if autoFollow {
+		// 兼容引入“跟随默认”之前的存量用户：只有仍停留在原默认值的
+		// 非跟随用户会被纳入；个人自定义值和 0（不限）不受影响。
+		if _, err := client.User.Update().
+			Where(
+				dbuser.ConcurrencyIsDefaultEQ(false),
+				dbuser.ConcurrencyEQ(previousDefault),
+				dbuser.DeletedAtIsNil(),
+			).
+			SetConcurrency(defaultConcurrency).
+			SetConcurrencyIsDefault(true).
+			SetUpdatedAt(now).
+			Save(ctx); err != nil {
+			return err
+		}
 	}
 	if tx != nil {
 		return tx.Commit()

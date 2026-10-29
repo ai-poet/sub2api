@@ -405,6 +405,8 @@ export default {
         affiliateRebateRateHint: '充值后返给邀请人的比例（0-100%，例如填写 10 表示返利 10%）',
         defaultConcurrency: '默认并发数',
         defaultConcurrencyHint: '新用户及所有跟随默认的用户的最大并发请求数；个人覆盖不受影响',
+        defaultConcurrencyAutoFollow: '同步未自定义并发的现有用户',
+        defaultConcurrencyAutoFollowHint: '保存时，将仍使用原默认值的存量用户设为跟随；个人自定义值和 0（不限）不受影响',
         defaultUserRpmLimit: '默认用户 RPM 限制',
         defaultUserRpmLimitHint: '新用户默认每分钟最大请求数，0 = 不限制；仅作用于新用户创建时初始化',
         defaultSubscriptions: '默认订阅列表',

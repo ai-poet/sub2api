@@ -35,3 +35,16 @@ func TestSettingService_PersistSettingsUpdatesUsesDefaultConcurrencyWriter(t *te
 	require.Equal(t, updates, repo.followerUpdates)
 	require.Nil(t, repo.updates, "the plain SetMultiple fallback must not be used")
 }
+
+func TestSettingService_DefaultConcurrencyAutoFollowRoundTrip(t *testing.T) {
+	svc := NewSettingService(&settingUpdateRepoStub{}, &config.Config{})
+	parsed := svc.parseSettings(map[string]string{SettingKeyDefaultConcurrencyAutoFollow: "true"})
+	require.True(t, parsed.DefaultConcurrencyAutoFollow)
+
+	updates, err := svc.buildSystemSettingsUpdates(context.Background(), &SystemSettings{
+		DefaultConcurrency:           5,
+		DefaultConcurrencyAutoFollow: true,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "true", updates[SettingKeyDefaultConcurrencyAutoFollow])
+}

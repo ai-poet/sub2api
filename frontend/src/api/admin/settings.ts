@@ -427,6 +427,7 @@ export interface SystemSettings {
   // Default settings
   default_balance: number;
   default_concurrency: number;
+  default_concurrency_auto_follow: boolean;
   default_user_rpm_limit: number;
   default_subscriptions: DefaultSubscriptionSetting[];
   auth_source_default_email_balance?: number;
@@ -811,6 +812,7 @@ export interface UpdateSettingsRequest {
   login_agreement_documents?: LoginAgreementDocument[];
   default_balance?: number;
   default_concurrency?: number;
+  default_concurrency_auto_follow?: boolean;
   default_user_rpm_limit?: number;
   default_subscriptions?: DefaultSubscriptionSetting[];
   auth_source_default_email_balance?: number;

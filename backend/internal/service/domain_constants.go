@@ -386,10 +386,11 @@ const (
 	SettingKeyCommunityGroupURL            = "community_group_url"             // 交流群链接/群号
 
 	// 默认配置
-	SettingKeyDefaultConcurrency   = "default_concurrency"    // 新用户默认并发量
-	SettingKeyDefaultBalance       = "default_balance"        // 新用户默认余额
-	SettingKeyDefaultSubscriptions = "default_subscriptions"  // 新用户默认订阅列表（JSON）
-	SettingKeyDefaultUserRPMLimit  = "default_user_rpm_limit" // 新用户默认 RPM 限制（0 = 不限制）
+	SettingKeyDefaultConcurrency           = "default_concurrency"             // 新用户默认并发量
+	SettingKeyDefaultConcurrencyAutoFollow = "default_concurrency_auto_follow" // 保存时纳入仍使用原默认值的存量用户
+	SettingKeyDefaultBalance               = "default_balance"                 // 新用户默认余额
+	SettingKeyDefaultSubscriptions         = "default_subscriptions"           // 新用户默认订阅列表（JSON）
+	SettingKeyDefaultUserRPMLimit          = "default_user_rpm_limit"          // 新用户默认 RPM 限制（0 = 不限制）
 
 	// 第三方认证来源默认授予配置
 	SettingKeyAuthSourceDefaultEmailBalance             = "auth_source_default_email_balance"

@@ -409,6 +409,9 @@ export default {
           'Rebate percentage credited to inviter after recharge (0-100%, e.g. 10 means 10%)',
         defaultConcurrency: 'Default Concurrency',
         defaultConcurrencyHint: 'Maximum concurrent requests for new users and users following the default; custom overrides are unchanged',
+        defaultConcurrencyAutoFollow: 'Include existing users without custom concurrency',
+        defaultConcurrencyAutoFollowHint:
+          'On save, users still on the previous default start following it; custom values and 0 (unlimited) are unchanged',
         defaultUserRpmLimit: 'Default User RPM Limit',
         defaultUserRpmLimitHint: 'Default max requests per minute for new users; 0 = unlimited. Only applied at new user creation.',
         defaultSubscriptions: 'Default Subscriptions',

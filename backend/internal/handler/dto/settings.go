@@ -180,10 +180,11 @@ type SystemSettings struct {
 	CommunityQRCode                              string           `json:"community_qr_code"`
 	CommunityGroupURL                            string           `json:"community_group_url"`
 
-	DefaultConcurrency   int                          `json:"default_concurrency"`
-	DefaultBalance       float64                      `json:"default_balance"`
-	DefaultUserRPMLimit  int                          `json:"default_user_rpm_limit"`
-	DefaultSubscriptions []DefaultSubscriptionSetting `json:"default_subscriptions"`
+	DefaultConcurrency           int                          `json:"default_concurrency"`
+	DefaultConcurrencyAutoFollow bool                         `json:"default_concurrency_auto_follow"`
+	DefaultBalance               float64                      `json:"default_balance"`
+	DefaultUserRPMLimit          int                          `json:"default_user_rpm_limit"`
+	DefaultSubscriptions         []DefaultSubscriptionSetting `json:"default_subscriptions"`
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`

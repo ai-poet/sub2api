@@ -189,6 +189,7 @@ type UpdateSettingsRequest struct {
 
 	// 默认配置
 	DefaultConcurrency                        int                               `json:"default_concurrency"`
+	DefaultConcurrencyAutoFollow              bool                              `json:"default_concurrency_auto_follow"`
 	DefaultBalance                            float64                           `json:"default_balance"`
 	DefaultUserRPMLimit                       int                               `json:"default_user_rpm_limit"`
 	DefaultSubscriptions                      []dto.DefaultSubscriptionSetting  `json:"default_subscriptions"`
@@ -1607,6 +1608,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		CustomMenuItems:                        customMenuJSON,
 		CustomEndpoints:                        customEndpointsJSON,
 		DefaultConcurrency:                     req.DefaultConcurrency,
+		DefaultConcurrencyAutoFollow:           req.DefaultConcurrencyAutoFollow,
 		DefaultBalance:                         req.DefaultBalance,
 		DefaultUserRPMLimit:                    req.DefaultUserRPMLimit,
 		DefaultSubscriptions:                   defaultSubscriptions,
@@ -2196,6 +2198,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		CustomMenuItems:                                        dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
 		CustomEndpoints:                                        dto.ParseCustomEndpoints(updatedSettings.CustomEndpoints),
 		DefaultConcurrency:                                     updatedSettings.DefaultConcurrency,
+		DefaultConcurrencyAutoFollow:                           updatedSettings.DefaultConcurrencyAutoFollow,
 		DefaultBalance:                                         updatedSettings.DefaultBalance,
 		DefaultUserRPMLimit:                                    updatedSettings.DefaultUserRPMLimit,
 		DefaultSubscriptions:                                   updatedDefaultSubscriptions,

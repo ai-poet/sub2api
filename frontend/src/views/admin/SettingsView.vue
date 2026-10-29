@@ -3832,6 +3832,17 @@
                   <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
                     {{ t("admin.settings.defaults.defaultConcurrencyHint") }}
                   </p>
+                  <label class="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input
+                      v-model="form.default_concurrency_auto_follow"
+                      type="checkbox"
+                      class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    {{ t("admin.settings.defaults.defaultConcurrencyAutoFollow") }}
+                  </label>
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t("admin.settings.defaults.defaultConcurrencyAutoFollowHint") }}
+                  </p>
                 </div>
                 <div>
                   <label
@@ -8705,6 +8716,7 @@ const form = reactive<SettingsForm>({
   default_platform_quotas: normalizePlatformQuotasMap() as DefaultPlatformQuotasMap,
   account_scheduling_thresholds: normalizeAccountSchedulingThresholdsMap(),
   default_concurrency: 1,
+  default_concurrency_auto_follow: false,
   default_subscriptions: [],
   force_email_on_third_party_signup: false,
   default_user_rpm_limit: 0,
@@ -10410,6 +10422,7 @@ async function saveSettings() {
       login_agreement_documents: form.login_agreement_documents,
       default_balance: form.default_balance,
       default_concurrency: form.default_concurrency,
+      default_concurrency_auto_follow: form.default_concurrency_auto_follow,
       default_subscriptions: normalizedDefaultSubscriptions,
       force_email_on_third_party_signup: form.force_email_on_third_party_signup,
       default_user_rpm_limit: form.default_user_rpm_limit,
