@@ -12,13 +12,8 @@ CREATE TABLE IF NOT EXISTS user_affiliates (
     aff_code_custom BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT user_affiliates_quotas_nonnegative CHECK (
-        aff_quota >= 0 AND aff_frozen_quota >= 0 AND aff_history_quota >= 0
-    ),
-    CONSTRAINT user_affiliates_rebate_rate_valid CHECK (
-        aff_rebate_rate_percent IS NULL OR
-        (aff_rebate_rate_percent >= 0 AND aff_rebate_rate_percent <= 100)
-    )
+    CONSTRAINT user_affiliates_quotas_nonnegative CHECK (aff_quota >= 0 AND aff_frozen_quota >= 0 AND aff_history_quota >= 0),
+    CONSTRAINT user_affiliates_rebate_rate_valid CHECK (aff_rebate_rate_percent IS NULL OR (aff_rebate_rate_percent >= 0 AND aff_rebate_rate_percent <= 100))
 );
 
 CREATE TABLE IF NOT EXISTS user_affiliate_ledger (
@@ -40,20 +35,13 @@ CREATE TABLE IF NOT EXISTS user_affiliate_ledger (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_affiliates_inviter_id ON user_affiliates(inviter_id);
-CREATE INDEX IF NOT EXISTS idx_user_affiliates_admin_settings ON user_affiliates(updated_at DESC)
-    WHERE aff_code_custom = TRUE OR aff_rebate_rate_percent IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_user_affiliates_admin_settings ON user_affiliates(updated_at DESC) WHERE aff_code_custom = TRUE OR aff_rebate_rate_percent IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_user_affiliate_ledger_user ON user_affiliate_ledger(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_affiliate_ledger_source_user ON user_affiliate_ledger(source_user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_user_affiliate_ledger_frozen_thaw ON user_affiliate_ledger(user_id, frozen_until)
-    WHERE action = 'accrue' AND frozen_until IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_user_affiliate_ledger_order_unique
-    ON user_affiliate_ledger(source_order_ref)
-    WHERE action = 'accrue' AND source_order_ref IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_user_affiliate_ledger_action_created
-    ON user_affiliate_ledger(action, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_affiliate_ledger_frozen_thaw ON user_affiliate_ledger(user_id, frozen_until) WHERE action = 'accrue' AND frozen_until IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_affiliate_ledger_order_unique ON user_affiliate_ledger(source_order_ref) WHERE action = 'accrue' AND source_order_ref IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_user_affiliate_ledger_action_created ON user_affiliate_ledger(action, created_at DESC);
 
--- 每个已有用户都有档案。旧码大写后沿用；极端情况下大小写归一造成冲突时，
--- 为后处理用户生成确定性的替代码，避免整个升级事务失败。
 DO $$
 DECLARE
     u RECORD;
@@ -62,9 +50,7 @@ DECLARE
 BEGIN
     FOR u IN SELECT id, referral_code, created_at FROM users ORDER BY id LOOP
         candidate := upper(btrim(COALESCE(u.referral_code, '')));
-        IF candidate !~ '^[A-Z0-9_-]{4,32}$' OR EXISTS (
-            SELECT 1 FROM user_affiliates WHERE aff_code = candidate AND user_id <> u.id
-        ) THEN
+        IF candidate !~ '^[A-Z0-9_-]{4,32}$' OR EXISTS (SELECT 1 FROM user_affiliates WHERE aff_code = candidate AND user_id <> u.id) THEN
             suffix := upper(substr(md5(u.id::text || ':affiliate'), 1, 12));
             candidate := 'CR' || suffix;
             WHILE EXISTS (SELECT 1 FROM user_affiliates WHERE aff_code = candidate AND user_id <> u.id) LOOP
@@ -72,31 +58,24 @@ BEGIN
                 candidate := 'CR' || suffix;
             END LOOP;
         END IF;
+        -- 旧系统的邀请码均为自动生成，不属于管理员自定义配置。
         INSERT INTO user_affiliates (user_id, aff_code, aff_code_custom, created_at, updated_at)
-        VALUES (u.id, candidate, COALESCE(u.referral_code, '') <> '', COALESCE(u.created_at, NOW()), NOW())
+        VALUES (u.id, candidate, FALSE, COALESCE(u.created_at, NOW()), NOW())
         ON CONFLICT (user_id) DO NOTHING;
     END LOOP;
 END $$;
 
--- 只填补尚未绑定的用户；撤销/删除用户引用由外键处理。
-UPDATE user_affiliates ua
-SET inviter_id = ur.referrer_id, updated_at = NOW()
+UPDATE user_affiliates ua SET inviter_id = ur.referrer_id, updated_at = NOW()
 FROM user_referrals ur
-WHERE ua.user_id = ur.referee_id
-  AND ua.inviter_id IS NULL
-  AND ur.referrer_id <> ur.referee_id
+WHERE ua.user_id = ur.referee_id AND ua.inviter_id IS NULL AND ur.referrer_id <> ur.referee_id
   AND EXISTS (SELECT 1 FROM users WHERE id = ur.referrer_id);
 
-UPDATE user_affiliates ua
-SET aff_count = counts.total, updated_at = NOW()
-FROM (
-    SELECT inviter_id, COUNT(*)::INT AS total
-    FROM user_affiliates WHERE inviter_id IS NOT NULL GROUP BY inviter_id
-) counts
+UPDATE user_affiliates ua SET aff_count = counts.total, updated_at = NOW()
+FROM (SELECT inviter_id, COUNT(*)::INT AS total FROM user_affiliates WHERE inviter_id IS NOT NULL GROUP BY inviter_id) counts
 WHERE ua.user_id = counts.inviter_id;
 
-INSERT INTO settings (key, value, created_at, updated_at)
-SELECT 'affiliate_enabled', value, NOW(), NOW() FROM settings WHERE key = 'referral_enabled'
+INSERT INTO settings (key, value, updated_at)
+SELECT 'affiliate_enabled', value, NOW() FROM settings WHERE key = 'referral_enabled'
 ON CONFLICT (key) DO NOTHING;
 
 DELETE FROM settings WHERE key IN (
