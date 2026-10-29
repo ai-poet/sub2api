@@ -81,6 +81,15 @@ describe('AppSidebar subscription feature flag', () => {
   })
 })
 
+describe('AppSidebar affiliate administration', () => {
+  it('gives admins a referral settings entry without exposing it to operators', () => {
+    expect(componentSource).toContain("{ path: '/admin/referral', label: t('nav.referralSettings'), icon: UsersIcon, hideInSimpleMode: true }")
+    const start = componentSource.indexOf('const operatorNavItems = computed(')
+    const operatorBlock = componentSource.slice(start, componentSource.indexOf('// Admin navigation items', start))
+    expect(operatorBlock).not.toContain("path: '/admin/referral'")
+  })
+})
+
 describe('AppSidebar operator (read-only ops role)', () => {
   it('renders the console branch for any console role, not only admins', () => {
     expect(componentSource).toContain('<template v-if="hasConsoleAccess">')
