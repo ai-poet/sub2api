@@ -82,6 +82,12 @@ declare module 'vue-router' {
     requiresSubscription?: boolean
 
     /**
+     * fork：画布工作台站点开关（canvas_studio_enabled，默认关闭）
+     * @default false
+     */
+    requiresCanvasStudio?: boolean
+
+    /**
      * i18n key for the page title
      */
     titleKey?: string

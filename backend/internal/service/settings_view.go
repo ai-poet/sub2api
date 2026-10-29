@@ -168,6 +168,7 @@ type SystemSettings struct {
 	ClientDownloadWindowsURL     string
 	ClientDownloadMacOSURL       string
 	GroupStatusEnabled           bool
+	CanvasStudioEnabled          bool
 	// 分组运行状态 → Server酱³ 推送（fork 自有）；SendKey 只用于写入，读取侧只暴露 Configured
 	GroupStatusNotifyServerChanEnabled bool
 	// 运维写操作审批 → Server酱³ 推送（fork 自有，复用上面的 UID / SendKey）
@@ -386,6 +387,7 @@ type PublicSettings struct {
 	CustomMenuItems              string // JSON array of custom menu items
 	CustomEndpoints              string // JSON array of custom endpoints
 	GroupStatusEnabled           bool
+	CanvasStudioEnabled          bool
 
 	LinuxDoOAuthEnabled      bool
 	DingTalkOAuthEnabled     bool

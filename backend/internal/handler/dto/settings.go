@@ -168,6 +168,7 @@ type SystemSettings struct {
 	ClientDownloadWindowsURL                     string           `json:"client_download_windows_url"`
 	ClientDownloadMacOSURL                       string           `json:"client_download_macos_url"`
 	GroupStatusEnabled                           bool             `json:"group_status_enabled"`
+	CanvasStudioEnabled                          bool             `json:"canvas_studio_enabled"`
 	GroupStatusNotifyServerChanEnabled           bool             `json:"group_status_notify_serverchan_enabled"`
 	ApprovalNotifyServerChanEnabled              bool             `json:"approval_notify_serverchan_enabled"`
 	ApprovalPendingLimitPerUser                  int              `json:"approval_pending_limit_per_user"`
@@ -434,6 +435,7 @@ type PublicSettings struct {
 	ClientDownloadWindowsURL     string `json:"client_download_windows_url"`
 	ClientDownloadMacOSURL       string `json:"client_download_macos_url"`
 	GroupStatusEnabled           bool   `json:"group_status_enabled"`
+	CanvasStudioEnabled          bool   `json:"canvas_studio_enabled"`
 	ReferralEnabled              bool   `json:"referral_enabled"`
 	AffiliateEnabled             bool   `json:"affiliate_enabled"`
 	CommunityQRCode              string `json:"community_qr_code"`

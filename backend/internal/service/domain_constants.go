@@ -447,7 +447,8 @@ const (
 	SettingKeyEnableIdentityPatch = "enable_identity_patch"
 	SettingKeyIdentityPatchPrompt = "identity_patch_prompt"
 
-	SettingKeyGroupStatusEnabled = "group_status_enabled"
+	SettingKeyGroupStatusEnabled  = "group_status_enabled"
+	SettingKeyCanvasStudioEnabled = "canvas_studio_enabled" // fork：画布工作台，默认关闭
 
 	// 分组运行状态 → Server酱³ 推送（本 fork 自有功能）
 	SettingKeyGroupStatusNotifyServerChanEnabled = "group_status_notify_serverchan_enabled"

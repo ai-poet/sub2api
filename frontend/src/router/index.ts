@@ -15,6 +15,7 @@ import { resolveAffiliateReferralCodeFromQuery } from '@/utils/oauthAffiliate'
 import { SESSION_HANDOFF_GIVE_PATH, hasPendingGive } from '@/utils/sessionHandoff'
 import { resolveCompletedSetupRedirectPath } from './setupRedirect'
 import { allowAnonymousCatalog } from './publicCatalog' // fork：模型广场匿名可见
+import { isCanvasStudioEnabled } from '@/utils/forkFeatureFlags' // fork：画布工作台默认关闭
 import { resolveRouteDocumentTitle } from './title'
 
 /**
@@ -417,6 +418,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       requiresAdmin: false,
+      requiresCanvasStudio: true,
       title: 'Canvas Studio',
       titleKey: 'canvas.title',
       descriptionKey: 'canvas.subtitle'
@@ -951,7 +953,7 @@ router.beforeEach(async (to, _from, next) => {
   // 公共设置可能尚未加载（App.vue 的 onMounted 异步拉取晚于首次导航，且纯静态部署
   // 无 __APP_CONFIG__ 注入）。此时 cachedPublicSettings 为空会把 payment/risk_control
   // 误判为“未启用”而错误拦截，故这里先确保设置加载完成。
-  if ((to.meta.requiresRiskControl || to.meta.requiresSubscription) && !appStore.publicSettingsLoaded) {
+  if ((to.meta.requiresRiskControl || to.meta.requiresSubscription || to.meta.requiresCanvasStudio) && !appStore.publicSettingsLoaded) {
     try {
       await appStore.fetchPublicSettings()
     } catch (error) {
@@ -976,6 +978,12 @@ router.beforeEach(async (to, _from, next) => {
     appStore.publicSettingsLoaded &&
     appStore.cachedPublicSettings?.subscription_enabled === false
   ) {
+    next(authStore.homePath)
+    return
+  }
+
+  // fork：画布默认关闭；直达也必须服从站点开关，而不只是隐藏侧栏。
+  if (to.meta.requiresCanvasStudio && !isCanvasStudioEnabled(appStore.cachedPublicSettings)) {
     next(authStore.homePath)
     return
   }

@@ -906,6 +906,8 @@ export default {
         "redirectUrlSetAndCopied": "已使用当前站点生成回调地址并复制到剪贴板"
       },
       "site": {
+        "canvasStudioEnabled": "启用画布工作台",
+        "canvasStudioEnabledDescription": "默认关闭。开启后，拥有生图权限的用户可看到“画布工作台”菜单并访问页面。",
         "groupStatusEnabled": "开放模型运行状态",
         "groupStatusEnabledDescription": "开启后，普通用户侧边栏会显示“模型运行状态”菜单，并开放对应用户接口。",
         "groupStatusNotify": {

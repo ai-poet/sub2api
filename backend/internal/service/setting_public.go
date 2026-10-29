@@ -161,6 +161,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		// fork 自有的公开设置
 		SettingKeyAffiliateEnabled,
 		SettingKeyGroupStatusEnabled,
+		SettingKeyCanvasStudioEnabled,
 		SettingKeyPurchaseSubscriptionOpenMode,
 		SettingKeyClientDownloadWindowsURL,
 		SettingKeyClientDownloadMacOSURL,
@@ -367,6 +368,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		ClientDownloadWindowsURL:     strings.TrimSpace(settings[SettingKeyClientDownloadWindowsURL]),
 		ClientDownloadMacOSURL:       strings.TrimSpace(settings[SettingKeyClientDownloadMacOSURL]),
 		GroupStatusEnabled:           settings[SettingKeyGroupStatusEnabled] == "true",
+		CanvasStudioEnabled:          settings[SettingKeyCanvasStudioEnabled] == "true",
 		CommunityQRCode:              settings[SettingKeyCommunityQRCode],
 		CommunityGroupURL:            strings.TrimSpace(settings[SettingKeyCommunityGroupURL]),
 
@@ -634,6 +636,7 @@ type PublicSettingsInjectionPayload struct {
 	ClientDownloadWindowsURL     string `json:"client_download_windows_url"`
 	ClientDownloadMacOSURL       string `json:"client_download_macos_url"`
 	GroupStatusEnabled           bool   `json:"group_status_enabled"`
+	CanvasStudioEnabled          bool   `json:"canvas_studio_enabled"`
 	ReferralEnabled              bool   `json:"referral_enabled"`
 	AffiliateEnabled             bool   `json:"affiliate_enabled"`
 	CommunityQRCode              string `json:"community_qr_code"`
@@ -754,6 +757,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ClientDownloadWindowsURL:     settings.ClientDownloadWindowsURL,
 		ClientDownloadMacOSURL:       settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:           settings.GroupStatusEnabled,
+		CanvasStudioEnabled:          settings.CanvasStudioEnabled,
 		ReferralEnabled:              settings.ReferralEnabled,
 		AffiliateEnabled:             settings.AffiliateEnabled,
 		CommunityQRCode:              settings.CommunityQRCode,

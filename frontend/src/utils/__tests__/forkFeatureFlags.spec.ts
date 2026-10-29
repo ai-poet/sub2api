@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/stores/app', () => ({ useAppStore: () => ({ cachedPublicSettings: null }) }))
 
-import { ForkFeatureFlags, isLeaderboardEnabled } from '../forkFeatureFlags'
+import { ForkFeatureFlags, isCanvasStudioEnabled, isLeaderboardEnabled } from '../forkFeatureFlags'
 import { resolveFeatureFlag } from '../featureFlags'
 
 describe('forkFeatureFlags', () => {
@@ -10,6 +10,13 @@ describe('forkFeatureFlags', () => {
     expect(resolveFeatureFlag(null, ForkFeatureFlags.modelRanking)).toBe(true)
     expect(resolveFeatureFlag(null, ForkFeatureFlags.usageRanking)).toBe(false)
     expect(resolveFeatureFlag(null, ForkFeatureFlags.publicStats)).toBe(false)
+  })
+
+  it('keeps canvas hidden unless the admin explicitly enables it', () => {
+    expect(isCanvasStudioEnabled(undefined)).toBe(false)
+    expect(isCanvasStudioEnabled({})).toBe(false)
+    expect(isCanvasStudioEnabled({ canvas_studio_enabled: false })).toBe(false)
+    expect(isCanvasStudioEnabled({ canvas_studio_enabled: true })).toBe(true)
   })
 
   it('shows the leaderboard entry while either board is on', () => {

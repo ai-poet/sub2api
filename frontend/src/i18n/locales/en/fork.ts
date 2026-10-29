@@ -906,6 +906,8 @@ export default {
         "redirectUrlSetAndCopied": "Redirect URL generated and copied to clipboard"
       },
       "site": {
+        "canvasStudioEnabled": "Enable Canvas Studio",
+        "canvasStudioEnabledDescription": "Off by default. When enabled, users with image-generation access can open Canvas Studio from the sidebar.",
         "groupStatusEnabled": "Enable Model Status",
         "groupStatusEnabledDescription": "When enabled, regular users can see the \"Model Status\" menu and use the corresponding runtime status APIs.",
         "groupStatusNotify": {

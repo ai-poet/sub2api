@@ -321,6 +321,7 @@ export const useAppStore = defineStore('app', () => {
       github_oauth_enabled: config.github_oauth_enabled ?? false,
       referral_enabled: config.referral_enabled ?? false,
       group_status_enabled: config.group_status_enabled ?? false,
+      canvas_studio_enabled: config.canvas_studio_enabled ?? false,
       client_download_windows_url: config.client_download_windows_url ?? '',
       client_download_macos_url: config.client_download_macos_url ?? '',
       purchase_subscription_open_mode: normalizePurchaseSubscriptionOpenMode(

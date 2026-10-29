@@ -128,6 +128,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		ClientDownloadWindowsURL:                               settings.ClientDownloadWindowsURL,
 		ClientDownloadMacOSURL:                                 settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
+		CanvasStudioEnabled:                                    settings.CanvasStudioEnabled,
 		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
 		ApprovalNotifyServerChanEnabled:                        settings.ApprovalNotifyServerChanEnabled,
 		ApprovalPendingLimitPerUser:                            settings.ApprovalPendingLimitPerUser,

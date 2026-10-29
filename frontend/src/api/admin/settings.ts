@@ -496,6 +496,7 @@ export interface SystemSettings {
   client_download_windows_url: string
   client_download_macos_url: string
   group_status_enabled: boolean
+  canvas_studio_enabled: boolean
   // 分组运行状态 → Server酱³ 推送（fork 自有）；sendkey 只写不读
   group_status_notify_serverchan_enabled: boolean
   group_status_notify_serverchan_uid: string
@@ -780,6 +781,7 @@ export interface UpdateSettingsRequest {
   client_download_windows_url?: string;
   client_download_macos_url?: string;
   group_status_enabled?: boolean;
+  canvas_studio_enabled?: boolean;
   group_status_notify_serverchan_enabled?: boolean;
   approval_notify_serverchan_enabled?: boolean;
   approval_pending_limit_per_user?: number;

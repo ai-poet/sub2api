@@ -8984,6 +8984,7 @@ const form = reactive<SettingsForm>({
   client_download_windows_url: "",
   client_download_macos_url: "",
   group_status_enabled: false,
+  canvas_studio_enabled: false,
   group_status_notify_serverchan_enabled: false,
   approval_notify_serverchan_enabled: false,
   approval_pending_limit_per_user: 20,
@@ -10715,6 +10716,7 @@ async function saveSettings() {
       client_download_windows_url: form.client_download_windows_url,
       client_download_macos_url: form.client_download_macos_url,
       group_status_enabled: form.group_status_enabled,
+      canvas_studio_enabled: form.canvas_studio_enabled,
       group_status_notify_serverchan_enabled:
         form.group_status_notify_serverchan_enabled,
       approval_notify_serverchan_enabled:

@@ -3,6 +3,21 @@
        form 是父组件 SettingsView 的共享 reactive 表单对象：本区块按约定直接 v-model
        其字段（与 SettingsView 其余内联设置区块一致），保存动作仍由父组件统一提交。 -->
   <div class="space-y-6">
+    <!-- 画布工作台：默认关闭，避免实验功能直接暴露给用户 -->
+    <div
+      class="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-dark-600"
+    >
+      <div>
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+          {{ t('admin.settings.site.canvasStudioEnabled') }}
+        </h3>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {{ t('admin.settings.site.canvasStudioEnabledDescription') }}
+        </p>
+      </div>
+      <Toggle v-model="form.canvas_studio_enabled" />
+    </div>
+
     <!-- 分组运行状态 -->
     <div
       class="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-950/20"
@@ -350,6 +365,7 @@ import { extractApiErrorMessage } from '@/utils/apiError'
 // 后续同步上游时这些定制不再产生冲突。
 interface ForkSettingsForm {
   group_status_enabled: boolean
+  canvas_studio_enabled: boolean
   // 分组运行状态 → Server酱³ 推送；sendkey 只写不读，configured 用于占位提示
   group_status_notify_serverchan_enabled: boolean
   group_status_notify_serverchan_uid: string

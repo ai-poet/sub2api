@@ -97,6 +97,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		GitHubOAuthEnabled:                  settings.GitHubOAuthEnabled,
 		GoogleOAuthEnabled:                  settings.GoogleOAuthEnabled,
 		GroupStatusEnabled:                  settings.GroupStatusEnabled,
+		CanvasStudioEnabled:                 settings.CanvasStudioEnabled,
 		ReferralEnabled:                     settings.ReferralEnabled,
 		AffiliateEnabled:                    settings.AffiliateEnabled,
 		BackendModeEnabled:                  settings.BackendModeEnabled,

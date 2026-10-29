@@ -16,6 +16,9 @@ const authStore = vi.hoisted(() => ({
   isAdmin: false,
   isSimpleMode: false,
   hasPendingAuthSession: false,
+  get homePath() {
+    return this.isAdmin ? '/admin/dashboard' : '/dashboard'
+  },
 }))
 
 const appStore = vi.hoisted(() => ({
@@ -26,6 +29,7 @@ const appStore = vi.hoisted(() => ({
     payment_enabled?: boolean
     risk_control_enabled?: boolean
     subscription_enabled?: boolean
+    canvas_studio_enabled?: boolean
     custom_menu_items?: []
   },
   fetchPublicSettings: vi.fn(),
@@ -165,6 +169,7 @@ describe('feature route guard', () => {
       '/admin/settings',
     ],
     ['subscription', { requiresSubscription: true }, { subscription_enabled: false }, '/dashboard'],
+    ['canvas studio', { requiresCanvasStudio: true }, { canvas_studio_enabled: false }, '/dashboard'],
   ])('redirects when loaded settings explicitly disable %s', async (_name, meta, settings, target) => {
     authStore.isAdmin = meta.requiresRiskControl === true
     appStore.cachedPublicSettings = settings
@@ -208,5 +213,48 @@ describe('subscription route guard (opt-out flag)', () => {
     await navigation
 
     expect(next).toHaveBeenCalledWith('/admin/dashboard')
+  })
+})
+
+
+describe('canvas studio route guard (opt-in flag)', () => {
+  beforeEach(() => {
+    authStore.isAdmin = false
+    authStore.isSimpleMode = false
+    appStore.publicSettingsLoaded = true
+    appStore.cachedPublicSettings = null
+    appStore.fetchPublicSettings.mockReset()
+  })
+
+  it.each([
+    ['settings are unavailable', null],
+    ['the key is missing', {}],
+    ['the flag is false', { canvas_studio_enabled: false }],
+  ])('redirects /canvas when %s', async (_name, settings) => {
+    appStore.cachedPublicSettings = settings
+
+    const { navigation, next } = runGuard({ requiresCanvasStudio: true }, '/canvas')
+    await navigation
+
+    expect(next).toHaveBeenCalledWith('/dashboard')
+  })
+
+  it('allows /canvas only after public settings explicitly enable it', async () => {
+    const deferred = createDeferred<{ canvas_studio_enabled: boolean }>()
+    appStore.publicSettingsLoaded = false
+    appStore.fetchPublicSettings.mockImplementation(async () => {
+      const settings = await deferred.promise
+      appStore.cachedPublicSettings = settings
+      appStore.publicSettingsLoaded = true
+      return settings
+    })
+
+    const { navigation, next } = runGuard({ requiresCanvasStudio: true }, '/canvas')
+    await vi.waitFor(() => expect(appStore.fetchPublicSettings).toHaveBeenCalledTimes(1))
+    expect(next).not.toHaveBeenCalled()
+
+    deferred.resolve({ canvas_studio_enabled: true })
+    await navigation
+    expect(next).toHaveBeenCalledWith()
   })
 })

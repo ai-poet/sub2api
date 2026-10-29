@@ -28,6 +28,7 @@ type UpdateSettingsRequest struct {
 	ClientDownloadWindowsURL              *string  `json:"client_download_windows_url"`
 	ClientDownloadMacOSURL                *string  `json:"client_download_macos_url"`
 	GroupStatusEnabled                    *bool    `json:"group_status_enabled"`
+	CanvasStudioEnabled                   *bool    `json:"canvas_studio_enabled"`
 	AffiliateEnabled                      *bool    `json:"affiliate_enabled"`
 	AffiliateRebateRate                   *float64 `json:"affiliate_rebate_rate"`
 	AffiliateRebateFreezeHours            *int     `json:"affiliate_rebate_freeze_hours"`
@@ -2064,6 +2065,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		ClientDownloadWindowsURL:                               settings.ClientDownloadWindowsURL,
 		ClientDownloadMacOSURL:                                 settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:                                     settings.GroupStatusEnabled,
+		CanvasStudioEnabled:                                    settings.CanvasStudioEnabled,
 		GroupStatusNotifyServerChanEnabled:                     settings.GroupStatusNotifyServerChanEnabled,
 		ApprovalNotifyServerChanEnabled:                        settings.ApprovalNotifyServerChanEnabled,
 		ApprovalPendingLimitPerUser:                            updatedSettings.ApprovalPendingLimitPerUser,
@@ -2452,6 +2454,11 @@ func applyForkSettingsFromRequest(
 	settings.GroupStatusEnabled = previous.GroupStatusEnabled
 	if req.GroupStatusEnabled != nil {
 		settings.GroupStatusEnabled = *req.GroupStatusEnabled
+	}
+
+	settings.CanvasStudioEnabled = previous.CanvasStudioEnabled
+	if req.CanvasStudioEnabled != nil {
+		settings.CanvasStudioEnabled = *req.CanvasStudioEnabled
 	}
 
 	settings.AffiliateEnabled = previous.AffiliateEnabled

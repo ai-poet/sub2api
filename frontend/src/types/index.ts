@@ -248,6 +248,8 @@ export interface PublicSettings {
   session_handoff_login_origin?: string
   /** fork：多域名登录交接——允许接收会话的别名域名 */
   session_handoff_alias_origins?: string[] | null
+  /** fork：画布工作台，默认关闭；旧后端未返回时也按关闭处理 */
+  canvas_studio_enabled?: boolean
   /** fork：排行榜 / 首页公开统计（insights_config，见 utils/forkFeatureFlags.ts） */
   model_ranking_enabled?: boolean
   usage_ranking_enabled?: boolean

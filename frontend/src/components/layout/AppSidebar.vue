@@ -216,7 +216,7 @@ import { useContentTranslation } from '@/composables/useContentTranslation'
 import { applyDarkClass } from '@/utils/themeSwitch' // fork：主题切换冻结过渡
 import SidebarNavIcon from './SidebarNavIcon.vue' // fork：侧栏图标悬停动画
 import { ExclusiveRateIcon, TrophyIcon } from './sidebarForkIcons' // fork：排行榜 / 专属倍率入口图标
-import { isLeaderboardEnabled } from '@/utils/forkFeatureFlags' // fork：排行榜开关
+import { isCanvasStudioEnabled, isLeaderboardEnabled } from '@/utils/forkFeatureFlags' // fork：排行榜 / 画布开关
 
 interface NavItem {
   path: string
@@ -744,7 +744,7 @@ const flagForkReferral = () => {
 }
 const flagLeaderboard = () => isLeaderboardEnabled(forkPublicSettings()) // fork：排行榜（模型榜或用户榜任一开启）
 const flagBatchImageAccess = () => canUseBatchImage.value
-const flagCanvasAccess = () => canUseCanvas.value // fork：画布工作台
+const flagCanvasAccess = () => isCanvasStudioEnabled(forkPublicSettings()) && canUseCanvas.value // fork：画布工作台默认隐藏
 // 工单：用户侧入口只给普通用户；admin / operator 走控制台的「工单管理」，不在"我的账户"区重复出现
 const flagUserTickets = () => !authStore.hasConsoleAccess
 

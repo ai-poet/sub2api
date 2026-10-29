@@ -353,6 +353,7 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyClientDownloadWindowsURL] = strings.TrimSpace(settings.ClientDownloadWindowsURL)
 	updates[SettingKeyClientDownloadMacOSURL] = strings.TrimSpace(settings.ClientDownloadMacOSURL)
 	updates[SettingKeyGroupStatusEnabled] = strconv.FormatBool(settings.GroupStatusEnabled)
+	updates[SettingKeyCanvasStudioEnabled] = strconv.FormatBool(settings.CanvasStudioEnabled)
 	updates[SettingKeyGroupStatusNotifyServerChanEnabled] = strconv.FormatBool(settings.GroupStatusNotifyServerChanEnabled)
 	updates[SettingKeyApprovalNotifyServerChanEnabled] = strconv.FormatBool(settings.ApprovalNotifyServerChanEnabled)
 	// 运维写操作审批的数量上限；0 / 越界的值落库后由 ParseApprovalLimits 回退默认
