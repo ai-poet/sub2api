@@ -20,7 +20,7 @@ type PanelRateLimitSettings struct {
 	UserRPM int `json:"user_rpm"`
 	// HeavyRPM 每用户每分钟重查询上限（usage/dashboard 等聚合统计接口；0 = 不限制）
 	HeavyRPM int `json:"heavy_rpm"`
-	// ExemptAdmin 管理员账号是否豁免按用户限流
+	// ExemptAdmin 控制台角色（admin / operator）是否豁免按用户限流
 	ExemptAdmin bool `json:"exempt_admin"`
 	// PublicIPRPM 无需认证的公开接口每 IP 每分钟上限（0 = 不限制）
 	PublicIPRPM int `json:"public_ip_rpm"`

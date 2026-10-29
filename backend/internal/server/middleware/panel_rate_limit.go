@@ -79,7 +79,11 @@ func (p *PanelRateLimiter) userScoped(scope string, limitOf func(service.PanelRa
 		}
 		principal := adminaccess.FromContext(c.Request.Context())
 		if settings.ExemptAdmin && principal == nil {
-			if role, hasRole := GetUserRoleFromContext(c); hasRole && role == service.RoleAdmin {
+			// fork：控制台角色（admin / operator）一律豁免。
+			// operator 的脚本化调用（个人令牌）此前和浏览器会话一样被按用户计数，
+			// 令牌批量运维会被 429 打断；限流不是 operator 的兜底防线，
+			// 它的可访问范围由 console_scope.go 的默认拒绝白名单 + 审批捕获决定。
+			if role, hasRole := GetUserRoleFromContext(c); hasRole && service.IsPrivilegedRole(role) {
 				c.Next()
 				return
 			}

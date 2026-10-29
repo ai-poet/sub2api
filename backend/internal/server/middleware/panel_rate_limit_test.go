@@ -221,6 +221,48 @@ func TestPanelRateLimiterAdminExemption(t *testing.T) {
 	require.Equal(t, http.StatusTooManyRequests, performPanelRequest(admin2, "127.0.0.1:1000").Code)
 }
 
+// 运维管理员（operator）同样豁免按用户限流：其脚本化调用（个人令牌）与浏览器会话
+// 一致，不再被 429 打断。普通用户仍按 user_rpm 计数。
+func TestPanelRateLimiterOperatorExemption(t *testing.T) {
+	allower := &fakePanelAllower{}
+	p := &PanelRateLimiter{
+		limiter:        allower,
+		settingService: newPanelRateLimitTestService(t, `{"enabled":true,"user_rpm":1,"heavy_rpm":1,"exempt_admin":true,"public_ip_rpm":0}`),
+	}
+
+	operator := newPanelTestRouter(p.Global(), &panelTestIdentity{userID: 12, role: service.RoleOperator})
+	for i := 0; i < 5; i++ {
+		require.Equal(t, http.StatusOK, performPanelRequest(operator, "127.0.0.1:1000").Code)
+	}
+
+	// 严格档（Heavy）同样豁免
+	heavyRouter := newPanelTestRouter(p.Heavy(), &panelTestIdentity{userID: 12, role: service.RoleOperator})
+	for i := 0; i < 5; i++ {
+		require.Equal(t, http.StatusOK, performPanelRequest(heavyRouter, "127.0.0.1:1000").Code)
+	}
+
+	// 普通用户不受影响，仍按 user_rpm 计数
+	plain := newPanelTestRouter(p.Global(), &panelTestIdentity{userID: 13, role: service.RoleUser})
+	require.Equal(t, http.StatusOK, performPanelRequest(plain, "127.0.0.1:1000").Code)
+	require.Equal(t, http.StatusTooManyRequests, performPanelRequest(plain, "127.0.0.1:1000").Code)
+
+	allower.mu.Lock()
+	defer allower.mu.Unlock()
+	require.NotContains(t, allower.counts, "panel:global:user:12")
+	require.Contains(t, allower.counts, "panel:global:user:13")
+}
+
+// 豁免开关关闭时，运维管理员与管理员一样受限。
+func TestPanelRateLimiterOperatorExemptionDisabled(t *testing.T) {
+	p := &PanelRateLimiter{
+		limiter:        &fakePanelAllower{},
+		settingService: newPanelRateLimitTestService(t, `{"enabled":true,"user_rpm":1,"heavy_rpm":1,"exempt_admin":false,"public_ip_rpm":0}`),
+	}
+	operator := newPanelTestRouter(p.Global(), &panelTestIdentity{userID: 12, role: service.RoleOperator})
+	require.Equal(t, http.StatusOK, performPanelRequest(operator, "127.0.0.1:1000").Code)
+	require.Equal(t, http.StatusTooManyRequests, performPanelRequest(operator, "127.0.0.1:1000").Code)
+}
+
 func TestPanelRateLimiterDisabledOrMissingSubject(t *testing.T) {
 	// 总开关关闭
 	p := &PanelRateLimiter{

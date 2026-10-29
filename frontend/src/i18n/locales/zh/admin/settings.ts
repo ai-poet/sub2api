@@ -204,7 +204,7 @@ export default {
         publicIpRpmHint: '无需登录的公开接口（如站点公开设置）每个真实客户端 IP 每分钟的请求上限；0 表示不限制。',
         perMinute: '次/分钟',
         exemptAdmin: '管理员豁免',
-        exemptAdminHint: '开启后管理员账号不受面板限流约束，避免批量运维操作被误拦。',
+        exemptAdminHint: '开启后管理员与运维管理员账号不受面板限流约束，避免批量运维操作被误拦。',
         saved: '面板接口限流配置已保存',
         saveFailed: '保存面板接口限流配置失败'
       },

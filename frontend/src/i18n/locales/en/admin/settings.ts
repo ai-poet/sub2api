@@ -204,7 +204,7 @@ export default {
         publicIpRpmHint: 'Requests per minute allowed per real client IP for unauthenticated endpoints (e.g. public site settings). 0 = unlimited.',
         perMinute: 'req/min',
         exemptAdmin: 'Exempt administrators',
-        exemptAdminHint: 'When enabled, admin accounts bypass panel rate limits so bulk operations are never throttled.',
+        exemptAdminHint: 'When enabled, admin and operator accounts bypass panel rate limits so bulk operations are never throttled.',
         saved: 'Panel rate limit settings saved',
         saveFailed: 'Failed to save panel rate limit settings'
       },
