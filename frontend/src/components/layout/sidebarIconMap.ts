@@ -40,6 +40,7 @@ export const SIDEBAR_ANIMATED_ICONS: Readonly<Record<string, AnimatedIconName>> 
   '/admin/prompt-audit': 'shield',
   '/admin/redeem': 'ticket',
   '/admin/promo-codes': 'gift',
+  '/admin/referral': 'affiliate',
   '/admin/payment-management': 'order',
   '/admin/audit-logs': 'history',
   '/admin/settings': 'cog',
