@@ -720,7 +720,10 @@ type adminServiceImpl struct {
 	personalTokenRevoker PersonalTokenRevoker
 	// fork：账号状态变更通知（申诉会话；SetUserStatusObserver 注入，可为 nil）
 	userStatusObserver UserStatusObserver
+	affiliateService   *ReferralService
 }
+
+func (s *adminServiceImpl) SetAffiliateService(svc *ReferralService) { s.affiliateService = svc }
 
 // ChannelCacheInvalidator 失效渠道缓存。
 // 窄接口，避免 admin 服务依赖整个 ChannelService——与 APIKeyAuthCacheInvalidator 同一思路。

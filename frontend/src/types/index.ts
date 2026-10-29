@@ -149,8 +149,8 @@ export interface RegisterRequest {
 export interface AffiliateInvitee {
   user_id: number
   email: string
-  username: string
-  created_at?: string
+  username?: string
+  created_at: string
   total_rebate: number
 }
 
@@ -2866,6 +2866,11 @@ export interface ReferralInfo {
   referral_link: string
   stats: ReferralStats
   rewards?: ReferralSettings
+  aff_quota: number
+  aff_frozen_quota: number
+  aff_history_quota: number
+  effective_rebate_rate_percent: number
+  invitees: AffiliateInvitee[]
 }
 
 export interface ReferralStats {
@@ -2877,32 +2882,56 @@ export interface ReferralStats {
 
 export interface ReferralSettings {
   enabled: boolean
-  referrer_balance_reward: number
-  referrer_group_id: number
-  referrer_subscription_days: number
-  referee_balance_reward: number
-  referee_group_id: number
-  referee_subscription_days: number
-  max_per_user: number
+  rebate_rate_percent: number
+  rebate_freeze_hours: number
+  rebate_duration_days: number
+  rebate_per_invitee_cap: number
+  admin_recharge_enabled: boolean
+}
+
+export interface AffiliateLedgerEntry {
+  id: number
+  user_id: number
+  action: 'accrue' | 'transfer'
+  amount: number
+  source_user_id?: number | null
+  source_order_ref?: string | null
+  frozen_until?: string | null
+  balance_after?: number | null
+  aff_quota_after?: number | null
+  aff_frozen_quota_after?: number | null
+  aff_history_quota_after?: number | null
+  created_at: string
+  email?: string
+  username?: string
+  source_email?: string
+  source_username?: string
+}
+
+export type UserReferral = AffiliateLedgerEntry
+
+export interface AffiliateRelation {
+  user_id: number
+  aff_code: string
+  inviter_id?: number | null
+  aff_count: number
+  aff_quota: number
+  aff_frozen_quota: number
+  aff_history_quota: number
+  aff_rebate_rate_percent?: number | null
+  aff_code_custom: boolean
+  created_at: string
+  updated_at: string
+  email?: string
+  username?: string
+  inviter_email?: string
+  inviter_username?: string
+}
+
+export interface AffiliateDetail extends AffiliateRelation {
+  effective_rebate_rate_percent: number
+  invitees: AffiliateInvitee[]
 }
 
 export type GroupRuntimeStatus = 'up' | 'degraded' | 'down'
 
-export interface UserReferral {
-  id: number
-  referrer_id: number
-  referee_id: number
-  status: 'pending' | 'rewarded'
-  referrer_balance_reward: number
-  referrer_group_id: number | null
-  referrer_subscription_days: number
-  referrer_rewarded_at: string | null
-  referee_balance_reward: number
-  referee_group_id: number | null
-  referee_subscription_days: number
-  referee_rewarded_at: string | null
-  created_at: string
-  updated_at: string
-  referrer_email?: string
-  referee_email?: string
-}

@@ -326,7 +326,14 @@ type SystemSettings struct {
 	AccountSchedulingThresholds map[string]int `json:"account_scheduling_thresholds"`
 
 	// 允许终端用户在用量页查看自己的失败请求
-	AllowUserViewErrorRequests bool
+	AllowUserViewErrorRequests    bool
+	ReferralEnabled               bool
+	AffiliateEnabled              bool
+	AffiliateRebateRate           float64
+	AffiliateRebateFreezeHours    int
+	AffiliateRebateDurationDays   int
+	AffiliateRebatePerInviteeCap  float64
+	AffiliateAdminRechargeEnabled bool
 	// 官网更新日志来源的 GitHub 仓库（owner/repo），留空用 DefaultClientChangelogGitHubRepo
 	ClientChangelogGitHubRepo string
 }
@@ -439,6 +446,7 @@ type PublicSettings struct {
 	TablePageSizeOptions []int
 
 	ReferralEnabled   bool
+	AffiliateEnabled  bool
 	CommunityQRCode   string // 交流群二维码图片 (base64)
 	CommunityGroupURL string // 交流群链接/群号
 }

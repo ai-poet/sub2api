@@ -1310,7 +1310,7 @@ export async function executeRecharge(orderId: string): Promise<void> {
         ? `payment center recharge order:${orderId} | bonus ${bonusAmount.toFixed(2)} (${order.promotionName ?? order.promotionId ?? 'promotion'})`
         : `payment center recharge order:${orderId}`;
 
-    await createAndRedeem(order.rechargeCode, creditedTotal, order.userId, notes);
+    await createAndRedeem(order.rechargeCode, creditedTotal, order.userId, notes, { sourceOrderRef: `pay-order:${orderId}` });
 
     await prisma.order.updateMany({
       where: { id: orderId, status: ORDER_STATUS.RECHARGING },

@@ -361,6 +361,12 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyTicketNotifyServerChanEnabled] = strconv.FormatBool(settings.TicketNotifyServerChanEnabled)
 	updates[SettingKeyBillingFailureNotifyServerChanEnabled] = strconv.FormatBool(settings.BillingFailureNotifyServerChanEnabled)
 	updates[SettingKeyPersonalTokenEnabled] = strconv.FormatBool(settings.PersonalTokenEnabled)
+	updates[SettingKeyAffiliateEnabled] = strconv.FormatBool(settings.AffiliateEnabled)
+	updates[SettingKeyAffiliateRebateRate] = strconv.FormatFloat(ClampAffiliateRebateRate(settings.AffiliateRebateRate), 'f', 8, 64)
+	updates[SettingKeyAffiliateRebateFreezeHours] = strconv.Itoa(max(0, min(settings.AffiliateRebateFreezeHours, AffiliateRebateFreezeHoursMax)))
+	updates[SettingKeyAffiliateRebateDurationDays] = strconv.Itoa(max(0, min(settings.AffiliateRebateDurationDays, AffiliateRebateDurationDaysMax)))
+	updates[SettingKeyAffiliateRebatePerInviteeCap] = strconv.FormatFloat(math.Max(0, settings.AffiliateRebatePerInviteeCap), 'f', 8, 64)
+	updates[SettingKeyAffiliateAdminRechargeEnabled] = strconv.FormatBool(settings.AffiliateAdminRechargeEnabled)
 	updates[SettingKeyGroupStatusNotifyServerChanUID] = strings.TrimSpace(settings.GroupStatusNotifyServerChanUID)
 	// SendKey 留空表示保留已保存的密钥
 	if settings.GroupStatusNotifyServerChanSendKey != "" {

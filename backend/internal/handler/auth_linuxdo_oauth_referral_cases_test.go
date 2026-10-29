@@ -80,7 +80,7 @@ func TestLinuxDoOAuthCallbackDirectLoginBindsReferral(t *testing.T) {
 	referrals := &oauthPendingFlowReferralRepoStub{}
 	handler, client := newOAuthPendingFlowTestHandlerWithDependencies(t, oauthPendingFlowTestHandlerOptions{
 		referralRepo:  referrals,
-		settingValues: map[string]string{service.SettingKeyReferralEnabled: "true"},
+		settingValues: map[string]string{service.SettingKeyAffiliateEnabled: "true"},
 	})
 	t.Cleanup(func() { _ = client.Close() })
 	configureLinuxDoOAuthTestHandler(handler, linuxDoReferralTestConfig(upstream.URL))
@@ -101,8 +101,8 @@ func TestLinuxDoOAuthCallbackDirectLoginBindsReferral(t *testing.T) {
 		Only(context.Background())
 	require.NoError(t, err)
 	require.Len(t, referrals.created, 1)
-	require.Equal(t, referrer.ID, referrals.created[0].ReferrerID)
-	require.Equal(t, referee.ID, referrals.created[0].RefereeID)
+	require.Equal(t, referrer.ID, *referrals.created[0].InviterID)
+	require.Equal(t, referee.ID, referrals.created[0].UserID)
 }
 
 // 补邀请码时 body 不带 aff_code（sessionStorage 丢了的情形），靠 start 时存进 session 的那份。
@@ -111,7 +111,7 @@ func TestCompleteLinuxDoOAuthRegistrationFallsBackToSessionAffiliateCode(t *test
 	referrals := &oauthPendingFlowReferralRepoStub{}
 	handler, client := newOAuthPendingFlowTestHandlerWithDependencies(t, oauthPendingFlowTestHandlerOptions{
 		referralRepo:  referrals,
-		settingValues: map[string]string{service.SettingKeyReferralEnabled: "true"},
+		settingValues: map[string]string{service.SettingKeyAffiliateEnabled: "true"},
 	})
 	t.Cleanup(func() { _ = client.Close() })
 	ctx := context.Background()
@@ -152,6 +152,6 @@ func TestCompleteLinuxDoOAuthRegistrationFallsBackToSessionAffiliateCode(t *test
 	referee, err := client.User.Query().Where(dbuser.EmailEQ(session.ResolvedEmail)).Only(ctx)
 	require.NoError(t, err)
 	require.Len(t, referrals.created, 1)
-	require.Equal(t, referrer.ID, referrals.created[0].ReferrerID)
-	require.Equal(t, referee.ID, referrals.created[0].RefereeID)
+	require.Equal(t, referrer.ID, *referrals.created[0].InviterID)
+	require.Equal(t, referee.ID, referrals.created[0].UserID)
 }

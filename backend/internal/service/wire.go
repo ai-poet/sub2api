@@ -1013,7 +1013,7 @@ var ProviderSet = wire.NewSet(
 	NewDesktopLoginService,
 	NewSessionHandoffService, // fork：多域名登录交接
 	ProvideReferralRewardRecordRepository,
-	NewReferralService,
+	ProvideReferralService,
 	wire.Bind(new(modelCatalogAccessService), new(*APIKeyService)),
 	wire.Bind(new(modelCatalogModelsService), new(*GatewayService)),
 )

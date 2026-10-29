@@ -2518,7 +2518,7 @@ type oauthPendingFlowTestHandlerOptions struct {
 	emailCache         service.EmailCache
 	settingValues      map[string]string
 	promoRepo          service.PromoCodeRepository
-	referralRepo       service.ReferralRepository
+	referralRepo       service.AffiliateRepository
 	defaultSubAssigner service.DefaultSubscriptionAssigner
 	totpCache          service.TotpCache
 	totpEncryptor      service.SecretEncryptor
@@ -2612,6 +2612,9 @@ CREATE TABLE IF NOT EXISTS user_affiliates (
 	// 推荐关系：RegisterReferral 只用 referralRepo / userRepo.GetByReferralCode / settingRepo(referral_enabled)。
 	var referralService *service.ReferralService
 	if options.referralRepo != nil {
+		if binder, ok := options.referralRepo.(interface{ SetAffiliateClient(*dbent.Client) }); ok {
+			binder.SetAffiliateClient(client)
+		}
 		referralService = service.NewReferralService(options.referralRepo, nil, userRepo, &oauthPendingFlowSettingRepoStub{values: settingValues}, nil, nil)
 	}
 	var emailService *service.EmailService

@@ -603,14 +603,12 @@ const (
 	// Referral System
 	// =========================
 
-	SettingKeyReferralEnabled                  = "referral_enabled"                    // 是否启用推荐功能
-	SettingKeyReferralReferrerBalanceReward    = "referral_referrer_balance_reward"    // 推荐人余额奖励
-	SettingKeyReferralReferrerGroupID          = "referral_referrer_group_id"          // 推荐人订阅分组 ID
-	SettingKeyReferralReferrerSubscriptionDays = "referral_referrer_subscription_days" // 推荐人订阅天数
-	SettingKeyReferralRefereeBalanceReward     = "referral_referee_balance_reward"     // 被推荐人余额奖励
-	SettingKeyReferralRefereeGroupID           = "referral_referee_group_id"           // 被推荐人订阅分组 ID
-	SettingKeyReferralRefereeSubscriptionDays  = "referral_referee_subscription_days"  // 被推荐人订阅天数
-	SettingKeyReferralMaxPerUser               = "referral_max_per_user"               // 每用户最大推荐人数
+	SettingKeyAffiliateEnabled              = "affiliate_enabled"
+	SettingKeyAffiliateRebateRate           = "affiliate_rebate_rate"
+	SettingKeyAffiliateRebateFreezeHours    = "affiliate_rebate_freeze_hours"
+	SettingKeyAffiliateRebateDurationDays   = "affiliate_rebate_duration_days"
+	SettingKeyAffiliateRebatePerInviteeCap  = "affiliate_rebate_per_invitee_cap"
+	SettingKeyAffiliateAdminRechargeEnabled = "affiliate_admin_recharge_enabled"
 
 	// =========================
 	// Request Rectifier (请求整流器)

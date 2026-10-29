@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"math"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -23,22 +24,28 @@ import (
 // UpdateSettingsRequest 更新设置请求
 type UpdateSettingsRequest struct {
 	// fork 自有设置
-	PurchaseSubscriptionOpenMode          *string `json:"purchase_subscription_open_mode"`
-	ClientDownloadWindowsURL              *string `json:"client_download_windows_url"`
-	ClientDownloadMacOSURL                *string `json:"client_download_macos_url"`
-	GroupStatusEnabled                    *bool   `json:"group_status_enabled"`
-	GroupStatusNotifyServerChanEnabled    *bool   `json:"group_status_notify_serverchan_enabled"`
-	ApprovalNotifyServerChanEnabled       *bool   `json:"approval_notify_serverchan_enabled"`
-	ApprovalPendingLimitPerUser           *int    `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
-	ApprovalBatchLimit                    *int    `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
-	TicketNotifyServerChanEnabled         *bool   `json:"ticket_notify_serverchan_enabled"`
-	BillingFailureNotifyServerChanEnabled *bool   `json:"billing_failure_notify_serverchan_enabled"`
-	PersonalTokenEnabled                  *bool   `json:"personal_token_enabled"`
-	GroupStatusNotifyServerChanUID        *string `json:"group_status_notify_serverchan_uid"`
-	GroupStatusNotifyServerChanSendKey    *string `json:"group_status_notify_serverchan_sendkey"`
-	CommunityQRCode                       *string `json:"community_qr_code"`
-	CommunityGroupURL                     *string `json:"community_group_url"`
-	ClientChangelogGitHubRepo             *string `json:"client_changelog_github_repo"`
+	PurchaseSubscriptionOpenMode          *string  `json:"purchase_subscription_open_mode"`
+	ClientDownloadWindowsURL              *string  `json:"client_download_windows_url"`
+	ClientDownloadMacOSURL                *string  `json:"client_download_macos_url"`
+	GroupStatusEnabled                    *bool    `json:"group_status_enabled"`
+	AffiliateEnabled                      *bool    `json:"affiliate_enabled"`
+	AffiliateRebateRate                   *float64 `json:"affiliate_rebate_rate"`
+	AffiliateRebateFreezeHours            *int     `json:"affiliate_rebate_freeze_hours"`
+	AffiliateRebateDurationDays           *int     `json:"affiliate_rebate_duration_days"`
+	AffiliateRebatePerInviteeCap          *float64 `json:"affiliate_rebate_per_invitee_cap"`
+	AffiliateAdminRechargeEnabled         *bool    `json:"affiliate_admin_recharge_enabled"`
+	GroupStatusNotifyServerChanEnabled    *bool    `json:"group_status_notify_serverchan_enabled"`
+	ApprovalNotifyServerChanEnabled       *bool    `json:"approval_notify_serverchan_enabled"`
+	ApprovalPendingLimitPerUser           *int     `json:"approval_pending_limit_per_user"` // 每个运维管理员待审上限（省略=保持现值）
+	ApprovalBatchLimit                    *int     `json:"approval_batch_limit"`            // 批量通过单次上限（省略=保持现值）
+	TicketNotifyServerChanEnabled         *bool    `json:"ticket_notify_serverchan_enabled"`
+	BillingFailureNotifyServerChanEnabled *bool    `json:"billing_failure_notify_serverchan_enabled"`
+	PersonalTokenEnabled                  *bool    `json:"personal_token_enabled"`
+	GroupStatusNotifyServerChanUID        *string  `json:"group_status_notify_serverchan_uid"`
+	GroupStatusNotifyServerChanSendKey    *string  `json:"group_status_notify_serverchan_sendkey"`
+	CommunityQRCode                       *string  `json:"community_qr_code"`
+	CommunityGroupURL                     *string  `json:"community_group_url"`
+	ClientChangelogGitHubRepo             *string  `json:"client_changelog_github_repo"`
 
 	// 注册设置
 	RegistrationEnabled                 bool                         `json:"registration_enabled"`
@@ -2064,6 +2071,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		TicketNotifyServerChanEnabled:                          settings.TicketNotifyServerChanEnabled,
 		BillingFailureNotifyServerChanEnabled:                  settings.BillingFailureNotifyServerChanEnabled,
 		PersonalTokenEnabled:                                   settings.PersonalTokenEnabled,
+		AffiliateEnabled:                                       settings.AffiliateEnabled,
+		AffiliateRebateRate:                                    settings.AffiliateRebateRate,
+		AffiliateRebateFreezeHours:                             settings.AffiliateRebateFreezeHours,
+		AffiliateRebateDurationDays:                            settings.AffiliateRebateDurationDays,
+		AffiliateRebatePerInviteeCap:                           settings.AffiliateRebatePerInviteeCap,
+		AffiliateAdminRechargeEnabled:                          settings.AffiliateAdminRechargeEnabled,
 		GroupStatusNotifyServerChanUID:                         settings.GroupStatusNotifyServerChanUID,
 		GroupStatusNotifyServerChanSendKeyConfigured:           updatedSettings.GroupStatusNotifyServerChanSendKeyConfigured,
 		CommunityQRCode:                                        settings.CommunityQRCode,
@@ -2439,6 +2452,47 @@ func applyForkSettingsFromRequest(
 	settings.GroupStatusEnabled = previous.GroupStatusEnabled
 	if req.GroupStatusEnabled != nil {
 		settings.GroupStatusEnabled = *req.GroupStatusEnabled
+	}
+
+	settings.AffiliateEnabled = previous.AffiliateEnabled
+	if req.AffiliateEnabled != nil {
+		settings.AffiliateEnabled = *req.AffiliateEnabled
+	}
+	settings.AffiliateRebateRate = previous.AffiliateRebateRate
+	if req.AffiliateRebateRate != nil {
+		if math.IsNaN(*req.AffiliateRebateRate) || math.IsInf(*req.AffiliateRebateRate, 0) || *req.AffiliateRebateRate < 0 || *req.AffiliateRebateRate > 100 {
+			response.BadRequest(c, "affiliate_rebate_rate must be between 0 and 100")
+			return false
+		}
+		settings.AffiliateRebateRate = *req.AffiliateRebateRate
+	}
+	settings.AffiliateRebateFreezeHours = previous.AffiliateRebateFreezeHours
+	if req.AffiliateRebateFreezeHours != nil {
+		if *req.AffiliateRebateFreezeHours < 0 || *req.AffiliateRebateFreezeHours > service.AffiliateRebateFreezeHoursMax {
+			response.BadRequest(c, "invalid affiliate freeze hours")
+			return false
+		}
+		settings.AffiliateRebateFreezeHours = *req.AffiliateRebateFreezeHours
+	}
+	settings.AffiliateRebateDurationDays = previous.AffiliateRebateDurationDays
+	if req.AffiliateRebateDurationDays != nil {
+		if *req.AffiliateRebateDurationDays < 0 || *req.AffiliateRebateDurationDays > service.AffiliateRebateDurationDaysMax {
+			response.BadRequest(c, "invalid affiliate duration days")
+			return false
+		}
+		settings.AffiliateRebateDurationDays = *req.AffiliateRebateDurationDays
+	}
+	settings.AffiliateRebatePerInviteeCap = previous.AffiliateRebatePerInviteeCap
+	if req.AffiliateRebatePerInviteeCap != nil {
+		if math.IsNaN(*req.AffiliateRebatePerInviteeCap) || math.IsInf(*req.AffiliateRebatePerInviteeCap, 0) || *req.AffiliateRebatePerInviteeCap < 0 {
+			response.BadRequest(c, "invalid affiliate per-invitee cap")
+			return false
+		}
+		settings.AffiliateRebatePerInviteeCap = *req.AffiliateRebatePerInviteeCap
+	}
+	settings.AffiliateAdminRechargeEnabled = previous.AffiliateAdminRechargeEnabled
+	if req.AffiliateAdminRechargeEnabled != nil {
+		settings.AffiliateAdminRechargeEnabled = *req.AffiliateAdminRechargeEnabled
 	}
 
 	// 分组运行状态 → Server酱³ 推送

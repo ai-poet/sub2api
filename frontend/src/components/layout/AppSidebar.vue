@@ -720,7 +720,10 @@ const flagOpsMonitoring = () => adminSettingsStore.opsMonitoringEnabled
 const forkPublicSettings = () => appStore.cachedPublicSettings
 const flagForkPurchase = () => forkPublicSettings()?.purchase_subscription_enabled === true
 const flagForkGroupStatus = () => forkPublicSettings()?.group_status_enabled === true
-const flagForkReferral = () => forkPublicSettings()?.referral_enabled === true
+const flagForkReferral = () => {
+  const settings = forkPublicSettings()
+  return settings?.affiliate_enabled === true || settings?.referral_enabled === true
+}
 const flagLeaderboard = () => isLeaderboardEnabled(forkPublicSettings()) // fork：排行榜（模型榜或用户榜任一开启）
 const flagBatchImageAccess = () => canUseBatchImage.value
 // 工单：用户侧入口只给普通用户；admin / operator 走控制台的「工单管理」，不在"我的账户"区重复出现

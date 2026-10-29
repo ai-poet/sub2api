@@ -2080,6 +2080,66 @@ var (
 			},
 		},
 	}
+	// UserAffiliatesColumns holds the columns for the "user_affiliates" table.
+	UserAffiliatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "user_id", Type: field.TypeInt64, Unique: true},
+		{Name: "aff_code", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "inviter_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "aff_count", Type: field.TypeInt, Default: 0},
+		{Name: "aff_quota", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "aff_frozen_quota", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "aff_history_quota", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "aff_rebate_rate_percent", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(5,2)"}},
+		{Name: "aff_code_custom", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// UserAffiliatesTable holds the schema information for the "user_affiliates" table.
+	UserAffiliatesTable = &schema.Table{
+		Name:       "user_affiliates",
+		Columns:    UserAffiliatesColumns,
+		PrimaryKey: []*schema.Column{UserAffiliatesColumns[0]},
+	}
+	// UserAffiliateLedgerColumns holds the columns for the "user_affiliate_ledger" table.
+	UserAffiliateLedgerColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "action", Type: field.TypeString, Size: 32},
+		{Name: "amount", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "source_user_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "source_order_ref", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "frozen_until", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "balance_after", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "aff_quota_after", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "aff_frozen_quota_after", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "aff_history_quota_after", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// UserAffiliateLedgerTable holds the schema information for the "user_affiliate_ledger" table.
+	UserAffiliateLedgerTable = &schema.Table{
+		Name:       "user_affiliate_ledger",
+		Columns:    UserAffiliateLedgerColumns,
+		PrimaryKey: []*schema.Column{UserAffiliateLedgerColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "useraffiliateledger_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserAffiliateLedgerColumns[1], UserAffiliateLedgerColumns[11]},
+			},
+			{
+				Name:    "useraffiliateledger_source_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserAffiliateLedgerColumns[4], UserAffiliateLedgerColumns[11]},
+			},
+			{
+				Name:    "useraffiliateledger_action_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{UserAffiliateLedgerColumns[2], UserAffiliateLedgerColumns[11]},
+			},
+		},
+	}
 	// UserAllowedGroupsColumns holds the columns for the "user_allowed_groups" table.
 	UserAllowedGroupsColumns = []*schema.Column{
 		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
@@ -2433,6 +2493,8 @@ var (
 		UsageCleanupTasksTable,
 		UsageLogsTable,
 		UsersTable,
+		UserAffiliatesTable,
+		UserAffiliateLedgerTable,
 		UserAllowedGroupsTable,
 		UserAttributeDefinitionsTable,
 		UserAttributeValuesTable,
@@ -2592,6 +2654,12 @@ func init() {
 	}
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",
+	}
+	UserAffiliatesTable.Annotation = &entsql.Annotation{
+		Table: "user_affiliates",
+	}
+	UserAffiliateLedgerTable.Annotation = &entsql.Annotation{
+		Table: "user_affiliate_ledger",
 	}
 	UserAllowedGroupsTable.ForeignKeys[0].RefTable = UsersTable
 	UserAllowedGroupsTable.ForeignKeys[1].RefTable = GroupsTable

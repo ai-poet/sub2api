@@ -98,6 +98,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		GoogleOAuthEnabled:                  settings.GoogleOAuthEnabled,
 		GroupStatusEnabled:                  settings.GroupStatusEnabled,
 		ReferralEnabled:                     settings.ReferralEnabled,
+		AffiliateEnabled:                    settings.AffiliateEnabled,
 		BackendModeEnabled:                  settings.BackendModeEnabled,
 		Version:                             h.version,
 		ServerTimezone:                      timezone.Name(),

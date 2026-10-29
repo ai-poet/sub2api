@@ -627,6 +627,7 @@ func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, 
 		}()
 	}
 
+	affiliateSourceRef := ""
 	if balanceDiff != 0 {
 		code, err := GenerateRedeemCode()
 		if err != nil {
@@ -634,6 +635,7 @@ func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, 
 			return user, nil
 		}
 
+		affiliateSourceRef = "admin-balance:" + code
 		adjustmentRecord := &RedeemCode{
 			Code:   code,
 			Type:   AdjustmentTypeAdminBalance,
@@ -647,6 +649,12 @@ func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, 
 
 		if err := s.redeemCodeRepo.Create(ctx, adjustmentRecord); err != nil {
 			logger.LegacyPrintf("service.admin", "failed to create balance adjustment redeem code: %v", err)
+		}
+	}
+
+	if operation == "add" && balanceDiff > 0 && affiliateSourceRef != "" && s.affiliateService != nil && s.affiliateService.GetReferralSettings(ctx).AdminRechargeEnabled {
+		if _, err := s.affiliateService.AccrueInviteRebate(ctx, userID, balanceDiff, affiliateSourceRef); err != nil {
+			logger.LegacyPrintf("service.admin", "accrue admin recharge affiliate rebate failed: user_id=%d err=%v", userID, err)
 		}
 	}
 
@@ -780,6 +788,7 @@ func (s *adminServiceImpl) getAllUserBalanceHistory(ctx context.Context, userID 
 	if err != nil {
 		return nil, 0, 0, err
 	}
+	codes = paginateBalanceHistoryCodes(codes, params)
 
 	totalRecharged, err := s.redeemCodeRepo.SumPositiveBalanceByUser(ctx, userID)
 	if err != nil {
@@ -815,6 +824,23 @@ func (s *adminServiceImpl) listRedeemBalanceHistoryForMerge(ctx context.Context,
 		out = out[:needed]
 	}
 	return out, total, nil
+}
+
+// paginateBalanceHistoryCodes 把已取回的前 offset+limit 条余额变动记录切成当前页。
+//
+// 上游的 mergeBalanceHistoryCodes 同时负责合并兑换码与邀请返利两种来源并切页；
+// 本仓库移除了邀请返利（见 830ce5a49），合并只剩兑换码一种，但切页不能丢：
+// 直接返回前 offset+limit 条会让第 2 页重复返回第 1 页的内容。
+func paginateBalanceHistoryCodes(codes []RedeemCode, params pagination.PaginationParams) []RedeemCode {
+	offset := params.Offset()
+	if offset >= len(codes) {
+		return []RedeemCode{}
+	}
+	end := offset + params.Limit()
+	if end > len(codes) {
+		end = len(codes)
+	}
+	return codes[offset:end]
 }
 
 func (s *adminServiceImpl) BindUserAuthIdentity(ctx context.Context, userID int64, input AdminBindAuthIdentityInput) (*AdminBoundAuthIdentity, error) {

@@ -132,6 +132,7 @@ var operatorRefusedScopeGolden = []string{
 
 // operatorForbiddenPrefixes 永远不允许出现在白名单里的管理域（余额 / 账号 / 分组 / 设置 / 备份 / 系统 / 仪表盘）。
 var operatorForbiddenPrefixes = []string{
+	"/api/v1/admin/affiliates",
 	"/api/v1/admin/accounts",
 	"/api/v1/admin/groups",
 	"/api/v1/admin/settings",

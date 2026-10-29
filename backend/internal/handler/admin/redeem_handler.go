@@ -46,15 +46,16 @@ type GenerateRedeemCodesRequest struct {
 // CreateAndRedeemCodeRequest represents creating a fixed code and redeeming it for a target user.
 // Type 为 omitempty 而非 required 是为了向后兼容旧版调用方（不传 type 时默认 balance）。
 type CreateAndRedeemCodeRequest struct {
-	Code          string     `json:"code" binding:"required,min=3,max=128"`
-	Type          string     `json:"type" binding:"omitempty,oneof=balance concurrency subscription invitation"` // 不传时默认 balance（向后兼容）
-	Value         float64    `json:"value" binding:"required"`
-	UserID        int64      `json:"user_id" binding:"required,gt=0"`
-	GroupID       *int64     `json:"group_id"`      // subscription 类型必填
-	ValidityDays  int        `json:"validity_days"` // subscription 类型：正数增加，负数退款扣减
-	Notes         string     `json:"notes"`
-	ExpiresAt     *time.Time `json:"expires_at"`
-	ExpiresInDays *int       `json:"expires_in_days" binding:"omitempty,min=1,max=3650"`
+	Code           string     `json:"code" binding:"required,min=3,max=128"`
+	Type           string     `json:"type" binding:"omitempty,oneof=balance concurrency subscription invitation"` // 不传时默认 balance（向后兼容）
+	Value          float64    `json:"value" binding:"required"`
+	UserID         int64      `json:"user_id" binding:"required,gt=0"`
+	GroupID        *int64     `json:"group_id"`      // subscription 类型必填
+	ValidityDays   int        `json:"validity_days"` // subscription 类型：正数增加，负数退款扣减
+	Notes          string     `json:"notes"`
+	SourceOrderRef string     `json:"source_order_ref" binding:"omitempty,max=64"`
+	ExpiresAt      *time.Time `json:"expires_at"`
+	ExpiresInDays  *int       `json:"expires_in_days" binding:"omitempty,min=1,max=3650"`
 }
 
 func resolveRedeemCodeExpiresAt(expiresAt *time.Time, expiresInDays *int) (*time.Time, error) {
@@ -183,6 +184,13 @@ func (h *RedeemHandler) CreateAndRedeem(c *gin.Context) {
 		req.Type = "balance"
 	}
 
+	if req.SourceOrderRef != "" {
+		if err := service.ValidateAffiliateSourceRef(req.SourceOrderRef); err != nil {
+			response.ErrorFrom(c, err)
+			return
+		}
+	}
+
 	if req.Type == "subscription" {
 		if req.GroupID == nil {
 			response.BadRequest(c, "group_id is required for subscription type")
@@ -201,6 +209,9 @@ func (h *RedeemHandler) CreateAndRedeem(c *gin.Context) {
 	}
 
 	executeAdminIdempotentJSON(c, "admin.redeem_codes.create_and_redeem", req, service.DefaultWriteIdempotencyTTL(), func(ctx context.Context) (any, error) {
+		if req.SourceOrderRef != "" {
+			ctx = service.ContextRedeemAffiliateSource(ctx, req.SourceOrderRef)
+		}
 		existing, err := h.redeemService.GetByCode(ctx, req.Code)
 		if err == nil {
 			return h.resolveCreateAndRedeemExisting(ctx, existing, req.UserID)
@@ -260,6 +271,7 @@ func (h *RedeemHandler) resolveCreateAndRedeemExisting(ctx context.Context, exis
 	}
 
 	if existing.UsedBy != nil && *existing.UsedBy == userID {
+		h.redeemService.EnsureAffiliateRebate(ctx, existing, userID)
 		return gin.H{"redeem_code": dto.RedeemCodeFromServiceAdmin(existing)}, nil
 	}
 

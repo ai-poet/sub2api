@@ -65,7 +65,7 @@ export async function createAndRedeem(
   value: number,
   userId: number,
   notes: string,
-  options?: { type?: 'balance' | 'subscription'; groupId?: number; validityDays?: number },
+  options?: { type?: 'balance' | 'subscription'; groupId?: number; validityDays?: number; sourceOrderRef?: string },
 ): Promise<Sub2ApiRedeemCode> {
   const url = buildInternalUrl('/api/internal/pay/redeem-codes/create-and-redeem');
   const body = JSON.stringify({
@@ -74,6 +74,7 @@ export async function createAndRedeem(
     value,
     user_id: userId,
     notes,
+    ...(options?.sourceOrderRef && { source_order_ref: options.sourceOrderRef }),
     ...(options?.type === 'subscription' && {
       group_id: options.groupId,
       validity_days: options.validityDays,

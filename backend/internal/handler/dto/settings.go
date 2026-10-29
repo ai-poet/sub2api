@@ -175,6 +175,12 @@ type SystemSettings struct {
 	TicketNotifyServerChanEnabled                bool             `json:"ticket_notify_serverchan_enabled"`
 	BillingFailureNotifyServerChanEnabled        bool             `json:"billing_failure_notify_serverchan_enabled"`
 	PersonalTokenEnabled                         bool             `json:"personal_token_enabled"`
+	AffiliateEnabled                             bool             `json:"affiliate_enabled"`
+	AffiliateRebateRate                          float64          `json:"affiliate_rebate_rate"`
+	AffiliateRebateFreezeHours                   int              `json:"affiliate_rebate_freeze_hours"`
+	AffiliateRebateDurationDays                  int              `json:"affiliate_rebate_duration_days"`
+	AffiliateRebatePerInviteeCap                 float64          `json:"affiliate_rebate_per_invitee_cap"`
+	AffiliateAdminRechargeEnabled                bool             `json:"affiliate_admin_recharge_enabled"`
 	GroupStatusNotifyServerChanUID               string           `json:"group_status_notify_serverchan_uid"`
 	GroupStatusNotifyServerChanSendKeyConfigured bool             `json:"group_status_notify_serverchan_sendkey_configured"`
 	CommunityQRCode                              string           `json:"community_qr_code"`
@@ -429,6 +435,7 @@ type PublicSettings struct {
 	ClientDownloadMacOSURL       string `json:"client_download_macos_url"`
 	GroupStatusEnabled           bool   `json:"group_status_enabled"`
 	ReferralEnabled              bool   `json:"referral_enabled"`
+	AffiliateEnabled             bool   `json:"affiliate_enabled"`
 	CommunityQRCode              string `json:"community_qr_code"`
 	CommunityGroupURL            string `json:"community_group_url"`
 }

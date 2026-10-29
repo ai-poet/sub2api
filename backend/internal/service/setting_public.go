@@ -159,7 +159,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyRegistrationEnabled,
 		SettingKeyEmailVerifyEnabled,
 		// fork 自有的公开设置
-		SettingKeyReferralEnabled,
+		SettingKeyAffiliateEnabled,
 		SettingKeyGroupStatusEnabled,
 		SettingKeyPurchaseSubscriptionOpenMode,
 		SettingKeyClientDownloadWindowsURL,
@@ -361,7 +361,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		BalanceLowNotifyThreshold:           balanceLowNotifyThreshold,
 		BalanceLowNotifyRechargeURL:         settings[SettingKeyBalanceLowNotifyRechargeURL],
 		// fork 自有设置
-		ReferralEnabled:              settings[SettingKeyReferralEnabled] == "true",
+		ReferralEnabled:              settings[SettingKeyAffiliateEnabled] == "true",
+		AffiliateEnabled:             settings[SettingKeyAffiliateEnabled] == "true",
 		PurchaseSubscriptionOpenMode: firstNonEmpty(settings[SettingKeyPurchaseSubscriptionOpenMode], "iframe"),
 		ClientDownloadWindowsURL:     strings.TrimSpace(settings[SettingKeyClientDownloadWindowsURL]),
 		ClientDownloadMacOSURL:       strings.TrimSpace(settings[SettingKeyClientDownloadMacOSURL]),
@@ -634,6 +635,7 @@ type PublicSettingsInjectionPayload struct {
 	ClientDownloadMacOSURL       string `json:"client_download_macos_url"`
 	GroupStatusEnabled           bool   `json:"group_status_enabled"`
 	ReferralEnabled              bool   `json:"referral_enabled"`
+	AffiliateEnabled             bool   `json:"affiliate_enabled"`
 	CommunityQRCode              string `json:"community_qr_code"`
 	CommunityGroupURL            string `json:"community_group_url"`
 	// 服务器全局时区（IANA 名称与当前 UTC 偏移），高峰时段等服务端本地时间窗口的展示标注用
@@ -753,6 +755,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ClientDownloadMacOSURL:       settings.ClientDownloadMacOSURL,
 		GroupStatusEnabled:           settings.GroupStatusEnabled,
 		ReferralEnabled:              settings.ReferralEnabled,
+		AffiliateEnabled:             settings.AffiliateEnabled,
 		CommunityQRCode:              settings.CommunityQRCode,
 		CommunityGroupURL:            settings.CommunityGroupURL,
 

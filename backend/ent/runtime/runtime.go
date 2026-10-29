@@ -48,6 +48,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
+	"github.com/Wei-Shaw/sub2api/ent/useraffiliate"
+	"github.com/Wei-Shaw/sub2api/ent/useraffiliateledger"
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
 	"github.com/Wei-Shaw/sub2api/ent/userattributedefinition"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
@@ -2702,6 +2704,62 @@ func init() {
 	userDescRpmLimit := userFields[23].Descriptor()
 	// user.DefaultRpmLimit holds the default value on creation for the rpm_limit field.
 	user.DefaultRpmLimit = userDescRpmLimit.Default.(int)
+	useraffiliateFields := schema.UserAffiliate{}.Fields()
+	_ = useraffiliateFields
+	// useraffiliateDescAffCode is the schema descriptor for aff_code field.
+	useraffiliateDescAffCode := useraffiliateFields[1].Descriptor()
+	// useraffiliate.AffCodeValidator is a validator for the "aff_code" field. It is called by the builders before save.
+	useraffiliate.AffCodeValidator = useraffiliateDescAffCode.Validators[0].(func(string) error)
+	// useraffiliateDescAffCount is the schema descriptor for aff_count field.
+	useraffiliateDescAffCount := useraffiliateFields[3].Descriptor()
+	// useraffiliate.DefaultAffCount holds the default value on creation for the aff_count field.
+	useraffiliate.DefaultAffCount = useraffiliateDescAffCount.Default.(int)
+	// useraffiliateDescAffQuota is the schema descriptor for aff_quota field.
+	useraffiliateDescAffQuota := useraffiliateFields[4].Descriptor()
+	// useraffiliate.DefaultAffQuota holds the default value on creation for the aff_quota field.
+	useraffiliate.DefaultAffQuota = useraffiliateDescAffQuota.Default.(float64)
+	// useraffiliateDescAffFrozenQuota is the schema descriptor for aff_frozen_quota field.
+	useraffiliateDescAffFrozenQuota := useraffiliateFields[5].Descriptor()
+	// useraffiliate.DefaultAffFrozenQuota holds the default value on creation for the aff_frozen_quota field.
+	useraffiliate.DefaultAffFrozenQuota = useraffiliateDescAffFrozenQuota.Default.(float64)
+	// useraffiliateDescAffHistoryQuota is the schema descriptor for aff_history_quota field.
+	useraffiliateDescAffHistoryQuota := useraffiliateFields[6].Descriptor()
+	// useraffiliate.DefaultAffHistoryQuota holds the default value on creation for the aff_history_quota field.
+	useraffiliate.DefaultAffHistoryQuota = useraffiliateDescAffHistoryQuota.Default.(float64)
+	// useraffiliateDescAffCodeCustom is the schema descriptor for aff_code_custom field.
+	useraffiliateDescAffCodeCustom := useraffiliateFields[8].Descriptor()
+	// useraffiliate.DefaultAffCodeCustom holds the default value on creation for the aff_code_custom field.
+	useraffiliate.DefaultAffCodeCustom = useraffiliateDescAffCodeCustom.Default.(bool)
+	// useraffiliateDescCreatedAt is the schema descriptor for created_at field.
+	useraffiliateDescCreatedAt := useraffiliateFields[9].Descriptor()
+	// useraffiliate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	useraffiliate.DefaultCreatedAt = useraffiliateDescCreatedAt.Default.(func() time.Time)
+	// useraffiliateDescUpdatedAt is the schema descriptor for updated_at field.
+	useraffiliateDescUpdatedAt := useraffiliateFields[10].Descriptor()
+	// useraffiliate.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	useraffiliate.DefaultUpdatedAt = useraffiliateDescUpdatedAt.Default.(func() time.Time)
+	// useraffiliate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	useraffiliate.UpdateDefaultUpdatedAt = useraffiliateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	useraffiliateledgerFields := schema.UserAffiliateLedger{}.Fields()
+	_ = useraffiliateledgerFields
+	// useraffiliateledgerDescAction is the schema descriptor for action field.
+	useraffiliateledgerDescAction := useraffiliateledgerFields[1].Descriptor()
+	// useraffiliateledger.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	useraffiliateledger.ActionValidator = useraffiliateledgerDescAction.Validators[0].(func(string) error)
+	// useraffiliateledgerDescSourceOrderRef is the schema descriptor for source_order_ref field.
+	useraffiliateledgerDescSourceOrderRef := useraffiliateledgerFields[4].Descriptor()
+	// useraffiliateledger.SourceOrderRefValidator is a validator for the "source_order_ref" field. It is called by the builders before save.
+	useraffiliateledger.SourceOrderRefValidator = useraffiliateledgerDescSourceOrderRef.Validators[0].(func(string) error)
+	// useraffiliateledgerDescCreatedAt is the schema descriptor for created_at field.
+	useraffiliateledgerDescCreatedAt := useraffiliateledgerFields[10].Descriptor()
+	// useraffiliateledger.DefaultCreatedAt holds the default value on creation for the created_at field.
+	useraffiliateledger.DefaultCreatedAt = useraffiliateledgerDescCreatedAt.Default.(func() time.Time)
+	// useraffiliateledgerDescUpdatedAt is the schema descriptor for updated_at field.
+	useraffiliateledgerDescUpdatedAt := useraffiliateledgerFields[11].Descriptor()
+	// useraffiliateledger.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	useraffiliateledger.DefaultUpdatedAt = useraffiliateledgerDescUpdatedAt.Default.(func() time.Time)
+	// useraffiliateledger.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	useraffiliateledger.UpdateDefaultUpdatedAt = useraffiliateledgerDescUpdatedAt.UpdateDefault.(func() time.Time)
 	userallowedgroupFields := schema.UserAllowedGroup{}.Fields()
 	_ = userallowedgroupFields
 	// userallowedgroupDescCreatedAt is the schema descriptor for created_at field.

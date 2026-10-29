@@ -8,8 +8,9 @@ import (
 	"testing"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
+	dbuser "github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
+	"github.com/Wei-Shaw/sub2api/internal/repository"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"github.com/stretchr/testify/require"
@@ -19,70 +20,39 @@ import (
 // 回调直登 / 补邀请码 / 补邮箱建号三条路都要能落到 user_referrals。
 // 本文件是桩与夹具，用例在 auth_linuxdo_oauth_referral_cases_test.go。
 
-// oauthPendingFlowReferralRepoStub 只记录 RegisterReferral 写下的推荐关系，其余方法在这些流程里用不到。
+// oauthPendingFlowReferralRepoStub delegates to the real affiliate SQL once
+// the test database exists, and records bindings for assertions.
 type oauthPendingFlowReferralRepoStub struct {
-	mu      sync.Mutex
-	created []service.UserReferral
+	service.AffiliateRepository
+	mu       sync.Mutex
+	delegate service.AffiliateRepository
+	client   *dbent.Client
+	created  []service.AffiliateSummary
 }
 
-func (s *oauthPendingFlowReferralRepoStub) Create(_ context.Context, ref *service.UserReferral) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	ref.ID = int64(len(s.created) + 1)
-	s.created = append(s.created, *ref)
-	return nil
+func (s *oauthPendingFlowReferralRepoStub) SetAffiliateClient(client *dbent.Client) {
+	s.client = client
+	s.delegate = repository.NewReferralRepository(client)
 }
 
-func (s *oauthPendingFlowReferralRepoStub) GetByRefereeID(_ context.Context, refereeID int64) (*service.UserReferral, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for i := range s.created {
-		if s.created[i].RefereeID == refereeID {
-			ref := s.created[i]
-			return &ref, nil
-		}
+func (s *oauthPendingFlowReferralRepoStub) EnsureUserAffiliate(ctx context.Context, userID int64) (*service.AffiliateSummary, error) {
+	return s.delegate.EnsureUserAffiliate(ctx, userID)
+}
+
+func (s *oauthPendingFlowReferralRepoStub) GetAffiliateByCode(ctx context.Context, code string) (*service.AffiliateSummary, error) {
+	u, err := s.client.User.Query().Where(dbuser.ReferralCodeEQ(code)).Only(ctx)
+	if err != nil { return nil, service.ErrAffiliateCodeInvalid }
+	return s.delegate.EnsureUserAffiliate(ctx, u.ID)
+}
+
+func (s *oauthPendingFlowReferralRepoStub) BindInviter(ctx context.Context, userID, inviterID int64) (bool, error) {
+	bound, err := s.delegate.BindInviter(ctx, userID, inviterID)
+	if bound {
+		s.mu.Lock()
+		s.created = append(s.created, service.AffiliateSummary{UserID: userID, InviterID: &inviterID})
+		s.mu.Unlock()
 	}
-	return nil, service.ErrReferralNotFound
-}
-
-func (s *oauthPendingFlowReferralRepoStub) GetByID(context.Context, int64) (*service.UserReferral, error) {
-	return nil, service.ErrReferralNotFound
-}
-
-func (s *oauthPendingFlowReferralRepoStub) UpdateStatus(context.Context, int64, string, *service.ReferralRewardSnapshot) error {
-	return nil
-}
-
-func (s *oauthPendingFlowReferralRepoStub) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
-	return fn(ctx)
-}
-
-func (s *oauthPendingFlowReferralRepoStub) CountByReferrerID(_ context.Context, referrerID int64) (int, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	n := 0
-	for _, ref := range s.created {
-		if ref.ReferrerID == referrerID {
-			n++
-		}
-	}
-	return n, nil
-}
-
-func (s *oauthPendingFlowReferralRepoStub) CountByReferrerIDAndStatus(context.Context, int64, string) (int, error) {
-	return 0, nil
-}
-
-func (s *oauthPendingFlowReferralRepoStub) SumReferrerBalanceReward(context.Context, int64) (float64, error) {
-	return 0, nil
-}
-
-func (s *oauthPendingFlowReferralRepoStub) ListByReferrerID(context.Context, int64, pagination.PaginationParams) ([]service.UserReferral, *pagination.PaginationResult, error) {
-	return nil, nil, nil
-}
-
-func (s *oauthPendingFlowReferralRepoStub) ListAll(context.Context, pagination.PaginationParams) ([]service.UserReferral, *pagination.PaginationResult, error) {
-	return nil, nil, nil
+	return bound, err
 }
 
 func linuxDoReferralTestConfig(upstreamURL string) config.LinuxDoConnectConfig {

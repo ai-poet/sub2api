@@ -33,6 +33,23 @@ func ProvideGroupStatusProbeService(
 	return svc
 }
 
+// ProvideReferralService attaches the optional admin-recharge rebate hook.
+func ProvideReferralService(
+	repo AffiliateRepository,
+	cache ReferralCache,
+	users UserRepository,
+	settings SettingRepository,
+	rewardRecords ReferralRewardRecordRepository,
+	subscriptions *SubscriptionService,
+	admin AdminService,
+) *ReferralService {
+	svc := NewReferralService(repo, cache, users, settings, rewardRecords, subscriptions)
+	if target, ok := admin.(interface{ SetAffiliateService(*ReferralService) }); ok {
+		target.SetAffiliateService(svc)
+	}
+	return svc
+}
+
 // ProvideReferralRewardRecordRepository reuses redeem code persistence for referral rewards.
 func ProvideReferralRewardRecordRepository(redeemRepo RedeemCodeRepository) ReferralRewardRecordRepository {
 	return redeemRepo

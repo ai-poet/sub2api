@@ -852,6 +852,16 @@ func registerReferralRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		referral.PUT("/settings", h.Admin.Referral.UpdateSettings)
 		referral.GET("/list", h.Admin.Referral.ListReferrals)
 	}
+	affiliates := admin.Group("/affiliates")
+	{
+		affiliates.GET("/invites", h.Admin.Referral.ListInvites)
+		affiliates.GET("/rebates", h.Admin.Referral.ListRebates)
+		affiliates.GET("/transfers", h.Admin.Referral.ListTransfers)
+		affiliates.GET("/users/:id/overview", h.Admin.Referral.GetUserOverview)
+		affiliates.PUT("/users/:id", h.Admin.Referral.UpdateUser)
+		affiliates.DELETE("/users/:id/code", h.Admin.Referral.ResetUserCode)
+		affiliates.POST("/users/batch-rate", h.Admin.Referral.BatchSetRate)
+	}
 }
 
 func registerTLSFingerprintProfileRoutes(admin *gin.RouterGroup, h *handler.Handlers) {

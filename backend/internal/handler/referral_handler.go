@@ -58,12 +58,43 @@ func (h *ReferralHandler) GetHistory(c *gin.Context) {
 		return
 	}
 
-	out := make([]dto.UserReferral, 0, len(refs))
-	for i := range refs {
-		out = append(out, *dto.UserReferralFromService(&refs[i]))
-	}
+	response.PaginatedWithResult(c, refs, referralPagToResponse(pag))
+}
 
-	response.PaginatedWithResult(c, out, referralPagToResponse(pag))
+// GetAffiliate exposes the upstream-compatible affiliate detail shape.
+// GET /api/v1/user/aff
+func (h *ReferralHandler) GetAffiliate(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok { response.Unauthorized(c, "User not authenticated"); return }
+	detail, err := h.referralService.GetAffiliateDetail(c.Request.Context(), subject.UserID)
+	if err != nil { response.ErrorFrom(c, err); return }
+	response.Success(c, detail)
+}
+
+// TransferAffiliate exposes the upstream-compatible transfer response.
+// POST /api/v1/user/aff/transfer
+func (h *ReferralHandler) TransferAffiliate(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok { response.Unauthorized(c, "User not authenticated"); return }
+	entry, err := h.referralService.TransferQuotaToBalance(c.Request.Context(), subject.UserID)
+	if err != nil { response.ErrorFrom(c, err); return }
+	response.Success(c, gin.H{"transferred_quota": entry.Amount, "balance_after": entry.BalanceAfter, "balance": entry.BalanceAfter})
+}
+
+// Transfer moves all available rebate into the user's main balance.
+// POST /api/v1/referral/transfer
+func (h *ReferralHandler) Transfer(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+	entry, err := h.referralService.TransferQuotaToBalance(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, entry)
 }
 
 func referralPagToResponse(p *pagination.PaginationResult) *response.PaginationResult {

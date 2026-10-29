@@ -45,6 +45,21 @@ func ContextSkipRedeemAffiliate(ctx context.Context) context.Context {
 	return context.WithValue(ctx, ctxKeySkipRedeemAffiliate{}, true)
 }
 
+type ctxKeyRedeemAffiliateSource struct{}
+
+// ContextRedeemAffiliateSource binds a trusted payment/admin fulfillment to its
+// durable source reference. The affiliate ledger enforces uniqueness.
+func ContextRedeemAffiliateSource(ctx context.Context, sourceOrderRef string) context.Context {
+	return context.WithValue(ctx, ctxKeyRedeemAffiliateSource{}, sourceOrderRef)
+}
+
+func redeemAffiliateSource(ctx context.Context, redeemCode string) string {
+	if ref, ok := ctx.Value(ctxKeyRedeemAffiliateSource{}).(string); ok && ref != "" {
+		return ref
+	}
+	return "redeem:" + redeemCode
+}
+
 // RedeemCache defines cache operations for redeem service
 type RedeemCache interface {
 	GetRedeemAttemptCount(ctx context.Context, userID int64) (int, error)
@@ -162,6 +177,9 @@ func NewRedeemService(
 	referralService *ReferralService,
 ) *RedeemService {
 	redeemUserRepo, _ := userRepo.(RedeemUserAdjustmentRepository)
+	if referralService != nil {
+		referralService.SetCacheInvalidators(authCacheInvalidator, billingCacheService)
+	}
 	return &RedeemService{
 		redeemRepo:           redeemRepo,
 		userRepo:             userRepo,
@@ -413,6 +431,19 @@ func (s *RedeemService) RedeemForAdminFulfillment(ctx context.Context, userID in
 	return s.redeem(ctx, userID, code, bypassRedeemRateLimit)
 }
 
+// EnsureAffiliateRebate is also called when an idempotent fulfillment finds an
+// already-used code, closing the crash window between balance commit and rebate.
+func (s *RedeemService) EnsureAffiliateRebate(ctx context.Context, redeemCode *RedeemCode, userID int64) {
+	if redeemCode == nil || redeemCode.Type != RedeemTypeBalance || redeemCode.Value <= 0 || s.referralService == nil {
+		return
+	}
+	rebateCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+	defer cancel()
+	if _, err := s.referralService.AccrueInviteRebate(rebateCtx, userID, redeemCode.Value, redeemAffiliateSource(ctx, redeemCode.Code)); err != nil {
+		log.Printf("[Affiliate] accrue rebate for redeem %s and user %d: %v", redeemCode.Code, userID, err)
+	}
+}
+
 func (s *RedeemService) redeem(ctx context.Context, userID int64, code string, rateLimitPolicy redeemRateLimitPolicy) (*RedeemCode, error) {
 	if rateLimitPolicy == enforceRedeemRateLimit {
 		if err := s.checkRedeemRateLimit(ctx, userID); err != nil {
@@ -551,16 +582,11 @@ func (s *RedeemService) redeem(ctx context.Context, userID int64, code string, r
 	// 事务提交成功后失效缓存
 	s.invalidateRedeemCaches(ctx, userID, redeemCode)
 
-	// 余额类型兑换成功后，异步触发推荐奖励
-	if redeemCode.Type == RedeemTypeBalance && s.referralService != nil {
-		go func() {
-			defer func() {
-				if r := recover(); r != nil {
-					log.Printf("[Redeem] Panic in referral reward trigger: %v", r)
-				}
-			}()
-			s.referralService.TriggerReferralReward(context.Background(), userID)
-		}()
+	// 余额充值提交后同步计提；返利失败不回滚已经完成的充值。
+	if redeemCode.Type == RedeemTypeBalance && redeemCode.Value > 0 && s.referralService != nil {
+		if skip, _ := ctx.Value(ctxKeySkipRedeemAffiliate{}).(bool); !skip {
+			s.EnsureAffiliateRebate(ctx, redeemCode, userID)
+		}
 	}
 
 	// 重新获取更新后的兑换码

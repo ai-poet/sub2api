@@ -28,6 +28,8 @@ func RegisterUserRoutes(
 		// 用户接口
 		user := authenticated.Group("/user")
 		{
+			user.GET("/aff", h.Referral.GetAffiliate)
+			user.POST("/aff/transfer", h.Referral.TransferAffiliate)
 			user.GET("/profile", h.User.GetProfile)
 			user.PUT("/password", h.User.ChangePassword)
 			user.PUT("", h.User.UpdateProfile)
@@ -135,6 +137,7 @@ func RegisterUserRoutes(
 		{
 			referral.GET("/info", h.Referral.GetInfo)
 			referral.GET("/history", h.Referral.GetHistory)
+			referral.POST("/transfer", h.Referral.Transfer)
 		}
 
 		models := authenticated.Group("/models")

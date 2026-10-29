@@ -72,7 +72,7 @@ func TestSettingHandler_GetPublicSettings_IncludesReferralEnabled(t *testing.T) 
 
 	settingRepo := &stubSettingRepoForPublicSettings{
 		values: map[string]string{
-			service.SettingKeyReferralEnabled: "true",
+			service.SettingKeyAffiliateEnabled: "true",
 		},
 	}
 
