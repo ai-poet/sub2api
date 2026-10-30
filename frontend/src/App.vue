@@ -59,7 +59,6 @@ watch(
     () => appStore.siteName,
     () => appStore.cachedPublicSettings?.custom_menu_items,
     () => appStore.cachedPublicSettings?.subscription_enabled,
-    () => appStore.cachedPublicSettings?.payment_balance_disabled,
     () => authStore.hasConsoleAccess,
     () => adminSettingsStore.customMenuItems,
   ],

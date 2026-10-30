@@ -367,3 +367,55 @@ describe('canvas outputs', () => {
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
   })
 })
+
+describe('canvas outputs via gateway proxy', () => {
+  it('fetches HTTP output through the same-origin content endpoint with the original key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => new Blob(['proxied'], { type: 'image/png' }),
+    } as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const blob = await fetchTaskOutputBlob(
+      { url: 'http://cdn.example.com/a.png?sig=x' },
+      undefined,
+      { apiKey: 'sk-orig', taskId: 'task_9', index: 2 },
+    )
+    expect(blob?.size).toBe(7)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toContain('/v1/images/tasks/task_9/outputs/2/content')
+    expect(url).not.toContain('cdn.example.com')
+    expect((options.headers as Record<string, string>).Authorization).toBe('Bearer sk-orig')
+    expect((options.headers as Record<string, string>).Accept).toBe('image/*')
+    expect(url).not.toContain('sk-orig')
+  })
+
+  it('never falls back to the external URL when the gateway content request fails', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 502 } as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const blob = await fetchTaskOutputBlob(
+      { url: 'http://cdn.example.com/a.png' },
+      undefined,
+      { apiKey: 'sk-orig', taskId: 'task_9', index: 0 },
+    )
+    expect(blob).toBeNull()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls[0][0]).toContain('/v1/images/tasks/')
+  })
+
+  it('rejects malformed source locally without any request', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    for (const source of [
+      { apiKey: '', taskId: 't', index: 0 },
+      { apiKey: 'k', taskId: ' ', index: 0 },
+      { apiKey: 'k', taskId: 't', index: -1 },
+      { apiKey: 'k', taskId: 't', index: 1.5 },
+    ]) {
+      expect(await fetchTaskOutputBlob({ url: 'http://a/x.png' }, undefined, source)).toBeNull()
+    }
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})

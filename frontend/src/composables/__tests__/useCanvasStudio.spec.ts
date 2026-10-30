@@ -849,3 +849,118 @@ describe('useCanvasStudio lifecycle', () => {
     expect(await listRuns(scope)).toEqual([])
   })
 })
+
+describe('useCanvasStudio outputs via gateway proxy', () => {
+  it('harvests an HTTP output through the gateway with the frozen run key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => new Blob(['remote-png'], { type: 'image/png' }),
+    } as Response)
+    vi.stubGlobal('fetch', fetchMock)
+    const scope = scopeFor()
+    await saveRun(scope, makeRun('r-http', { apiKeyId: 1 }))
+    const studio = useCanvasStudio()
+    const gate = deferred<never>()
+    pollMock.mockImplementation(() => gate.promise as never)
+    await studio.initialize()
+    // The panel key switches after the run started; the download must still
+    // carry the key the task was submitted with.
+    studio.apiKeyId.value = 2
+    gate.resolve(completedTask([{ url: 'http://cdn.example.com/out.png' }]) as never)
+    await vi.advanceTimersByTimeAsync(3000)
+    await flush()
+
+    const content = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/v1/images/tasks/r-http/outputs/0/content'),
+    )
+    expect(content).toHaveLength(1)
+    const [, options] = content[0] as [string, RequestInit]
+    expect((options.headers as Record<string, string>).Authorization).toBe('Bearer sk-1')
+    expect(
+      fetchMock.mock.calls.every(([url]) => !String(url).includes('cdn.example.com')),
+    ).toBe(true)
+    expect(fetchMock.mock.calls.every(([url]) => !String(url).includes('sk-1'))).toBe(true)
+    const r = studio.history.value.find((run) => run.id === 'r-http')!
+    expect(r.outputs[0].state).toBe('local')
+    expect((await loadAsset(scope, 'output:r-http:0'))?.blob.size).toBe(9)
+  })
+
+  it('retries a stored remote output through the gateway with the run key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => new Blob(['bytes'], { type: 'image/png' }),
+    } as Response)
+    vi.stubGlobal('fetch', fetchMock)
+    const scope = scopeFor()
+    await saveRun(
+      scope,
+      makeRun('r-remote', {
+        apiKeyId: 2,
+        status: 'completed',
+        outputs: [{ index: 1, state: 'remote', remoteUrl: 'http://cdn.example.com/x.png' }],
+      }),
+    )
+    const studio = useCanvasStudio()
+    await studio.initialize()
+    pollMock.mockResolvedValue(
+      completedTask([{ b64_json: 'aGk=' }, { url: 'http://cdn.example.com/x.png' }]) as never,
+    )
+
+    const ok = await studio.retryOutputs('r-remote')
+    expect(ok).toBe(true)
+    const content = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/v1/images/tasks/r-remote/outputs/1/content'),
+    )
+    expect(content).toHaveLength(1)
+    const [, options] = content[0] as [string, RequestInit]
+    expect((options.headers as Record<string, string>).Authorization).toBe('Bearer sk-2')
+    const r = studio.history.value.find((run) => run.id === 'r-remote')!
+    expect(r.outputs[1].state).toBe('local')
+  })
+
+  it('takes a remote output through the gateway with the run key, and reports key-missing', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => new Blob(['bytes'], { type: 'image/png' }),
+    } as Response)
+    vi.stubGlobal('fetch', fetchMock)
+    const scope = scopeFor()
+    await saveRun(
+      scope,
+      makeRun('r-take', {
+        apiKeyId: 2,
+        status: 'completed',
+        outputs: [{ index: 0, state: 'remote', remoteUrl: 'http://cdn.example.com/x.png' }],
+      }),
+    )
+    const studio = useCanvasStudio()
+    await studio.initialize()
+
+    const blob = await studio.takeOutput('r-take', 0)
+    expect(blob?.size).toBe(5)
+    const content = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/v1/images/tasks/r-take/outputs/0/content'),
+    )
+    expect(content).toHaveLength(1)
+    const [, options] = content[0] as [string, RequestInit]
+    expect((options.headers as Record<string, string>).Authorization).toBe('Bearer sk-2')
+
+    // Without the run's key the output is reported missing, never fetched with
+    // the currently selected key.
+    await saveRun(
+      scope,
+      makeRun('r-nokey', {
+        apiKeyId: 9,
+        status: 'completed',
+        outputs: [{ index: 0, state: 'remote', remoteUrl: 'http://cdn.example.com/y.png' }],
+      }),
+    )
+    const studio2 = useCanvasStudio()
+    await studio2.initialize()
+    fetchMock.mockClear()
+    const missing = await studio2.takeOutput('r-nokey', 0)
+    expect(missing).toBeNull()
+    expect(studio2.errorMessage.value).toBe('key-missing')
+    expect(fetchMock.mock.calls.every(([url]) => !String(url).includes('r-nokey'))).toBe(true)
+  })
+})

@@ -7129,136 +7129,8 @@
 	        <!-- Tab: Features (功能开关) -->
         <div v-show="activeTab === 'features'" class="space-y-6">
 
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.features.channelMonitor.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.features.channelMonitor.description') }}
-            </p>
-            <p class="mt-1.5 text-xs">
-              <router-link
-                to="/admin/channels/monitor"
-                class="inline-flex items-center gap-1 text-primary-600 hover:underline dark:text-primary-400"
-              >
-                {{ t('admin.settings.features.channelMonitor.configureLink') }}
-                <span aria-hidden="true">→</span>
-              </router-link>
-            </p>
-          </div>
-          <div class="space-y-5 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.features.channelMonitor.enabled') }}
-                </label>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.features.channelMonitor.enabledHint') }}
-                </p>
-              </div>
-              <Toggle v-model="form.channel_monitor_enabled" />
-            </div>
-
-            <div v-if="form.channel_monitor_enabled" class="space-y-5">
-              <div>
-                <label class="input-label">
-                  {{ t('admin.settings.features.channelMonitor.mode') }}
-                </label>
-                <div class="mt-1.5 inline-flex w-full max-w-md rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-dark-600 dark:bg-dark-900/40">
-                  <button
-                    type="button"
-                    class="inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
-                    :class="
-                      form.channel_monitor_mode === 'v2'
-                        ? 'bg-white text-primary-700 shadow-sm dark:bg-dark-800 dark:text-primary-300'
-                        : 'text-gray-600 hover:text-gray-900 dark:text-dark-300 dark:hover:text-white'
-                    "
-                    @click="form.channel_monitor_mode = 'v2'"
-                  >
-                    {{ t('admin.settings.features.channelMonitor.modeV2') }}
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
-                    :class="
-                      form.channel_monitor_mode === 'v1'
-                        ? 'bg-white text-primary-700 shadow-sm dark:bg-dark-800 dark:text-primary-300'
-                        : 'text-gray-600 hover:text-gray-900 dark:text-dark-300 dark:hover:text-white'
-                    "
-                    @click="form.channel_monitor_mode = 'v1'"
-                  >
-                    {{ t('admin.settings.features.channelMonitor.modeV1') }}
-                  </button>
-                </div>
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{
-                    form.channel_monitor_mode === 'v1'
-                      ? t('admin.settings.features.channelMonitor.modeV1Hint')
-                      : t('admin.settings.features.channelMonitor.modeV2Hint')
-                  }}
-                </p>
-                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                  {{ t('admin.settings.features.channelMonitor.modeHint') }}
-                </p>
-              </div>
-
-              <div v-if="form.channel_monitor_mode === 'v1'">
-                <label class="input-label">
-                  {{ t('admin.settings.features.channelMonitor.defaultInterval') }}
-                  <span class="text-red-500">*</span>
-                </label>
-                <input
-                  v-model.number="form.channel_monitor_default_interval_seconds"
-                  type="number"
-                  min="15"
-                  max="3600"
-                  class="input"
-                />
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ t('admin.settings.features.channelMonitor.defaultIntervalHint') }}
-                </p>
-              </div>
-
-              <div v-if="form.channel_monitor_mode === 'v2'" class="space-y-4">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
-                      {{ t('admin.settings.features.channelMonitor.hideThroughput') }}
-                    </p>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('admin.settings.features.channelMonitor.hideThroughputHint') }}
-                    </p>
-                  </div>
-                  <Toggle v-model="form.channel_monitor_hide_throughput" />
-                </div>
-                <div class="flex items-start justify-between gap-4">
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
-                      {{ t('admin.settings.features.channelMonitor.hideUserRanking') }}
-                    </p>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('admin.settings.features.channelMonitor.hideUserRankingHint') }}
-                    </p>
-                  </div>
-                  <Toggle v-model="form.channel_monitor_hide_user_ranking" />
-                </div>
-              </div>
-
-              <div v-if="form.channel_monitor_mode === 'v1'" class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ t('admin.settings.features.channelMonitor.showQuota') }}
-                  </p>
-                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {{ t('admin.settings.features.channelMonitor.showQuotaHint') }}
-                  </p>
-                </div>
-                <Toggle v-model="form.channel_monitor_show_quota" />
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- fork：画布工作台 -->
+        <CanvasStudioSettingsCard :form="form" />
 
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -7320,29 +7192,26 @@
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.features.siteBillingMode.title') }}
+              {{ t('admin.settings.features.subscription.title') }}
             </h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.features.siteBillingMode.description') }}
+              {{ t('admin.settings.features.subscription.description') }}
             </p>
           </div>
           <div class="space-y-5 p-6">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="flex items-center justify-between gap-4">
               <div class="min-w-0">
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.features.siteBillingMode.label') }}
+                  {{ t('admin.settings.features.subscription.enabled') }}
                 </label>
                 <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ siteBillingModeHint }}
+                  {{ t('admin.settings.features.subscription.enabledHint') }}
                 </p>
               </div>
-              <div class="w-full shrink-0 sm:w-56">
-                <Select
-                  :modelValue="siteBillingMode"
-                  :options="siteBillingModeOptions"
-                  @update:modelValue="siteBillingMode = $event as SiteBillingMode"
-                />
-              </div>
+              <Toggle
+                v-model="form.subscription_enabled"
+                data-testid="subscription-enabled-toggle"
+              />
             </div>
           </div>
         </div>
@@ -7956,15 +7825,9 @@ import type {
 } from "@/types";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import ForkSettingsSection from "@/components/admin/settings/ForkSettingsSection.vue";
+import CanvasStudioSettingsCard from "@/components/admin/settings/CanvasStudioSettingsCard.vue"; // fork：画布工作台
 import Icon from "@/components/icons/Icon.vue";
-import Select, { type SelectOption } from "@/components/common/Select.vue";
-import {
-  SITE_BILLING_MODES,
-  SITE_BILLING_MODE_I18N_KEYS,
-  billingModeToSettings,
-  resolveSiteBillingMode,
-  type SiteBillingMode,
-} from "@/utils/siteBillingMode";
+import Select from "@/components/common/Select.vue";
 import GroupBadge from "@/components/common/GroupBadge.vue";
 import GroupOptionItem from "@/components/common/GroupOptionItem.vue";
 import Toggle from "@/components/common/Toggle.vue";
@@ -8638,10 +8501,6 @@ type SettingsForm = Omit<
   | "wechat_connect_mobile_enabled"
   | "openai_oauth_scheduling_rate_multiplier"
 > & {
-  /** Form always binds a concrete boolean (SystemSettings marks this optional). */
-  channel_monitor_hide_throughput: boolean;
-  channel_monitor_show_quota: boolean;
-  channel_monitor_hide_user_ranking: boolean;
   smtp_password: string;
   turnstile_secret_key: string;
   tencent_captcha_app_secret_key: string;
@@ -8740,7 +8599,6 @@ const form = reactive<SettingsForm>({
   payment_daily_limit: 50000,
   payment_max_pending_orders: 3,
   payment_order_timeout_minutes: 30,
-  payment_balance_disabled: false,
   payment_balance_recharge_multiplier: 1,
   payment_subscription_usd_to_cny_rate: 0,
   payment_recharge_fee_rate: 0,
@@ -8959,13 +8817,6 @@ const form = reactive<SettingsForm>({
   subscription_expiry_notify_enabled: true,
   account_quota_notify_enabled: false,
   account_quota_notify_emails: [] as NotifyEmailEntry[],
-  // Channel Monitor feature switch
-  channel_monitor_enabled: true,
-  channel_monitor_mode: 'v1' as 'v1' | 'v2',
-  channel_monitor_default_interval_seconds: 60,
-  channel_monitor_hide_throughput: false,
-  channel_monitor_show_quota: false,
-  channel_monitor_hide_user_ranking: false,
   // Available Channels feature switch
   available_channels_enabled: false,
   // Public pricing catalog on the landing page (opt-out, default enabled)
@@ -10007,17 +9858,6 @@ async function loadSettings() {
       : defaultFingerprintSignalRows();
     form.login_agreement_mode =
       settings.login_agreement_mode === "checkbox" ? "checkbox" : "modal";
-    form.channel_monitor_mode =
-      settings.channel_monitor_mode === "v2" ? "v2" : "v1";
-    form.channel_monitor_hide_throughput = Boolean(
-      settings.channel_monitor_hide_throughput
-    );
-    form.channel_monitor_show_quota = Boolean(
-      settings.channel_monitor_show_quota
-    );
-    form.channel_monitor_hide_user_ranking = Boolean(
-      settings.channel_monitor_hide_user_ranking
-    );
     form.login_agreement_updated_at =
       settings.login_agreement_updated_at || "2026-03-31";
     form.login_agreement_documents =
@@ -10218,24 +10058,6 @@ function findDuplicateDefaultSubscription(
     return false;
   });
 }
-
-// 站点类型：由 subscription_enabled 与 payment_balance_disabled 两个开关派生的单选，
-// 保存时同时写回两者，避免出现「既无充值也无订阅」的组合。
-const siteBillingModeOptions = computed<SelectOption[]>(() =>
-  SITE_BILLING_MODES.map((mode) => ({
-    value: mode,
-    label: t(`admin.settings.features.siteBillingMode.options.${SITE_BILLING_MODE_I18N_KEYS[mode]}`),
-  })),
-);
-const siteBillingMode = computed<SiteBillingMode>({
-  get: () => resolveSiteBillingMode(form),
-  set: (mode) => {
-    Object.assign(form, billingModeToSettings(mode));
-  },
-});
-const siteBillingModeHint = computed(() =>
-  t(`admin.settings.features.siteBillingMode.hints.${SITE_BILLING_MODE_I18N_KEYS[siteBillingMode.value]}`),
-);
 
 async function saveSettings() {
   saving.value = true;
@@ -10625,7 +10447,6 @@ async function saveSettings() {
       payment_max_pending_orders: Number(form.payment_max_pending_orders) || 0,
       payment_order_timeout_minutes:
         Number(form.payment_order_timeout_minutes) || 0,
-      payment_balance_disabled: form.payment_balance_disabled,
       payment_balance_recharge_multiplier:
         Number(form.payment_balance_recharge_multiplier) || 1,
       payment_subscription_usd_to_cny_rate:
@@ -10691,14 +10512,6 @@ async function saveSettings() {
       account_quota_notify_emails: (
         form.account_quota_notify_emails || []
       ).filter((e) => e.email.trim() !== ""),
-      // Channel Monitor feature switch
-      channel_monitor_enabled: form.channel_monitor_enabled,
-      channel_monitor_mode: form.channel_monitor_mode === 'v1' ? 'v1' : 'v2',
-      channel_monitor_default_interval_seconds:
-        Number(form.channel_monitor_default_interval_seconds) || 60,
-      channel_monitor_hide_throughput: Boolean(form.channel_monitor_hide_throughput),
-      channel_monitor_show_quota: Boolean(form.channel_monitor_show_quota),
-      channel_monitor_hide_user_ranking: Boolean(form.channel_monitor_hide_user_ranking),
       // Available Channels feature switch
       available_channels_enabled: form.available_channels_enabled,
       // Public pricing catalog on the landing page

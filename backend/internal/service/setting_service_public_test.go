@@ -385,7 +385,3 @@ func TestSettingService_GetPublicSettingsForInjection_MirrorsSubscriptionEnabled
 		require.Equal(t, value == "true", payload.SubscriptionEnabled, "value=%q", value)
 	}
 }
-
-// payment_balance_disabled is exposed publicly so the user shell can derive the site
-// billing mode (recharge & subscription / recharge only / subscription only) before any
-// authenticated checkout call. Strict true, mirroring the payment-config parser.

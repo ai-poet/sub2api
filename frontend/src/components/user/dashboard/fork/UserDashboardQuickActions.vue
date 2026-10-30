@@ -91,7 +91,7 @@
 
 <script setup lang="ts">
 // fork：快捷操作，逐项移植自 TokenRouter UserDashboardQuickActions.vue。
-// 唯一的差别是购买入口：本项目按公开设置的购买开关（简易模式下隐藏）显示，文案随站点计费模式切换，与侧栏一致。
+// 唯一的差别是购买入口：本项目按公开设置的购买开关（简易模式下隐藏）显示，文案随订阅开关切换，与侧栏一致。
 // 深色背景比 TokenRouter 浅一档（本项目深色卡片是 dark-800，TokenRouter 是 dark-900）。
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -113,13 +113,11 @@ const purchaseEnabled = computed(() => (
   appStore.cachedPublicSettings?.purchase_subscription_enabled === true && !authStore.isSimpleMode
 ))
 
-// 购买入口文案随站点计费模式切换，与侧栏一致。
+// 购买入口文案随订阅开关切换，与侧栏一致。
 const purchaseTitle = computed(() => {
   switch (resolveSiteBillingMode(appStore.cachedPublicSettings)) {
     case 'recharge_only':
       return t('nav.recharge')
-    case 'subscription_only':
-      return t('nav.subscribe')
     default:
       return t('nav.buySubscription')
   }

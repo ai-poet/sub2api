@@ -277,23 +277,11 @@ export interface PublicSettings {
   balance_low_notify_enabled: boolean
   account_quota_notify_enabled: boolean
   balance_low_notify_threshold: number
-  channel_monitor_enabled: boolean
-  /** Exclusive mode: v1 active probes or v2 passive aggregation. Default v2. */
-  channel_monitor_mode?: 'v1' | 'v2'
-  channel_monitor_default_interval_seconds: number
-  /** When true, user monitor hides RPM/TPM so scale cannot be reverse-estimated. */
-  channel_monitor_hide_throughput?: boolean
-  /** When true, user monitor shows account quota/balance snapshots (default off). */
-  channel_monitor_show_quota?: boolean
-  /** When true, user monitor hides the user ranking tab and /users payload. */
-  channel_monitor_hide_user_ranking?: boolean
   available_channels_enabled: boolean
   /** 落地页公开定价目录开关（opt-out，默认开启） */
   public_pricing_enabled: boolean
   /** When false, the whole user-facing subscription surface is hidden. Default true. */
   subscription_enabled: boolean
-  /** Mirrors payment config BALANCE_PAYMENT_DISABLED; true = balance top-up closed (subscription-only site). */
-  payment_balance_disabled: boolean
   plugin_management_enabled: boolean
   service_quota_enabled: boolean
   affiliate_enabled: boolean

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -142,4 +143,71 @@ func TestAsyncImageHandlerDisabledReturns404(t *testing.T) {
 
 	// No task was created / persisted.
 	require.Empty(t, store.tasks)
+}
+
+type outputRoundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f outputRoundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+var outputTestPNG = append([]byte("\x89PNG\r\n\x1a\n"), make([]byte, 600)...)
+
+func TestAsyncImageOutputContent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var upstreamCalls int64
+	rt := outputRoundTripFunc(func(r *http.Request) (*http.Response, error) {
+		upstreamCalls++
+		require.Empty(t, r.Header.Get("Authorization"))
+		require.Empty(t, r.Header.Get("Cookie"))
+		require.Equal(t, "sig=keep", r.URL.RawQuery)
+		return &http.Response{StatusCode: 200, Header: http.Header{"Content-Type": {"image/png"}}, Body: io.NopCloser(strings.NewReader(string(outputTestPNG)))}, nil
+	})
+	store := &asyncImageMemoryStore{tasks: make(map[string]*service.ImageTaskRecord)}
+	uploader := service.NewImageResultUploader(nil, "", 32<<20, &http.Client{Transport: rt})
+	tasks := service.NewImageTaskServiceWithResolver(store,
+		func() (*service.ImageResultUploader, bool) { return uploader, true }, time.Hour, time.Minute)
+	require.NoError(t, store.Save(context.Background(), &service.ImageTaskRecord{
+		ID: "task_x", UserID: 7, APIKeyID: 9, Status: service.ImageTaskStatusCompleted,
+		Result: json.RawMessage(`{"data":[{"url":"https://cdn.test/a.png?sig=keep"}]}`),
+	}, time.Hour))
+
+	h := &AsyncImageHandler{tasks: tasks}
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set(string(middleware2.ContextKeyAPIKey), &service.APIKey{ID: 9, UserID: 7})
+		c.Next()
+	})
+	router.GET("/v1/images/tasks/:task_id/outputs/:index/content", h.OutputContent)
+
+	get := func(path string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		return w
+	}
+
+	w := get("/v1/images/tasks/task_x/outputs/0/content?url=https://evil.test/x")
+	require.Equal(t, http.StatusOK, w.Code)
+	require.Equal(t, outputTestPNG, w.Body.Bytes())
+	require.Equal(t, "image/png", w.Header().Get("Content-Type"))
+	require.Equal(t, "no-store", w.Header().Get("Cache-Control"))
+	require.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
+	require.Equal(t, `attachment; filename="image-0.png"`, w.Header().Get("Content-Disposition"))
+	require.EqualValues(t, 1, upstreamCalls, "query url param must not redirect the fetch")
+
+	require.Equal(t, http.StatusBadRequest, get("/v1/images/tasks/task_x/outputs/-1/content").Code)
+	require.Equal(t, http.StatusBadRequest, get("/v1/images/tasks/task_x/outputs/abc/content").Code)
+	require.Equal(t, http.StatusNotFound, get("/v1/images/tasks/task_x/outputs/3/content").Code)
+	require.Equal(t, http.StatusNotFound, get("/v1/images/tasks/task_missing/outputs/0/content").Code)
+	require.EqualValues(t, 1, upstreamCalls, "invalid indexes must not fetch upstream")
+
+	// Cross-owner: task belongs to key 9; a different key sees 404, no fetch.
+	other := gin.New()
+	other.Use(func(c *gin.Context) {
+		c.Set(string(middleware2.ContextKeyAPIKey), &service.APIKey{ID: 55, UserID: 7})
+		c.Next()
+	})
+	other.GET("/v1/images/tasks/:task_id/outputs/:index/content", h.OutputContent)
+	w2 := httptest.NewRecorder()
+	other.ServeHTTP(w2, httptest.NewRequest(http.MethodGet, "/v1/images/tasks/task_x/outputs/0/content", nil))
+	require.Equal(t, http.StatusNotFound, w2.Code)
+	require.EqualValues(t, 1, upstreamCalls)
 }

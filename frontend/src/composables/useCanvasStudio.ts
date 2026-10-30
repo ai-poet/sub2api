@@ -638,6 +638,7 @@ async function harvestOutput(
   ctx: HarvestCtx,
   run: CanvasRun,
   item: CanvasTaskOutput,
+  apiKey: string,
 ): Promise<void> {
   if (!isCtxCurrent(ctx)) return
   let output = run.outputs[item.index]
@@ -662,7 +663,11 @@ async function harvestOutput(
 
   let blob: Blob | null = null
   try {
-    blob = await fetchTaskOutputBlob(item, ctx.signal)
+    blob = await fetchTaskOutputBlob(item, ctx.signal, {
+      apiKey,
+      taskId: run.id,
+      index: item.index,
+    })
   } catch (error) {
     if (isAbortError(error)) return // rotation/user switch: leave state alone
     blob = null
@@ -736,7 +741,7 @@ async function harvestRun(tracker: RunTracker, run: CanvasRun, task: CanvasTask)
   persistRun(run)
   for (const item of items) {
     if (!isCtxCurrent(ctx)) return
-    await harvestOutput(ctx, run, item)
+    await harvestOutput(ctx, run, item, tracker.apiKey)
   }
   if (!isCtxCurrent(ctx)) return
   run.status = 'completed'
@@ -1266,7 +1271,7 @@ async function retryOutputs(runId: string): Promise<boolean> {
     )
     for (const item of items) {
       if (!isCtxCurrent(ctx)) return false
-      await harvestOutput(ctx, run, item)
+      await harvestOutput(ctx, run, item, key.key)
     }
     persistRun(run)
     return true
@@ -1312,9 +1317,22 @@ async function takeOutput(runId: string, index: number): Promise<Blob | null> {
       if (asset) return asset.blob
     }
     if (output.state === 'remote' && output.remoteUrl) {
+      if (keysLoadState.value !== 'ok') {
+        await loadApiKeys(ctx.generation, current)
+        if (!isCtxCurrent(ctx)) return null
+      }
+      const key = apiKeys.value.find((item) => item.id === run.apiKeyId)
+      if (!key) {
+        errorMessage.value = 'key-missing'
+        return null
+      }
       let blob: Blob | null = null
       try {
-        blob = await fetchTaskOutputBlob({ url: output.remoteUrl }, ctx.signal)
+        blob = await fetchTaskOutputBlob({ url: output.remoteUrl }, ctx.signal, {
+          apiKey: key.key,
+          taskId: run.id,
+          index,
+        })
       } catch {
         return null
       }

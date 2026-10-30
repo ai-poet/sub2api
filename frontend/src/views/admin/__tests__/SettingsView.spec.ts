@@ -484,7 +484,6 @@ const baseSettingsResponse = {
   payment_order_timeout_minutes: 30,
   payment_max_pending_orders: 3,
   payment_enabled_types: [],
-  payment_balance_disabled: false,
   payment_balance_recharge_multiplier: 1,
   payment_subscription_usd_to_cny_rate: 0,
   payment_recharge_fee_rate: 0,
@@ -596,6 +595,16 @@ async function openUsersTab(wrapper: ReturnType<typeof mountView>) {
 
   expect(usersTabButton).toBeDefined();
   await usersTabButton?.trigger("click");
+  await flushPromises();
+}
+
+async function openFeaturesTab(wrapper: ReturnType<typeof mountView>) {
+  const featuresTabButton = wrapper
+    .findAll("button")
+    .find((node) => node.text().includes("admin.settings.tabs.features"));
+
+  expect(featuresTabButton).toBeDefined();
+  await featuresTabButton?.trigger("click");
   await flushPromises();
 }
 
@@ -713,6 +722,45 @@ describe("admin SettingsView payment visible method controls", () => {
     });
     fetchPublicSettings.mockResolvedValue(undefined);
     adminSettingsFetch.mockResolvedValue(undefined);
+  });
+
+  it("keeps canvas under feature switches and stops saving retired controls", async () => {
+    const wrapper = mountView();
+    await flushPromises();
+
+    const canvasToggle = wrapper.get('[data-testid="canvas-studio-toggle"]');
+    expect(canvasToggle.isVisible()).toBe(false);
+    expect(wrapper.text()).not.toContain("admin.settings.features.channelMonitor.title");
+    expect(wrapper.text()).not.toContain("admin.settings.features.siteBillingMode.title");
+
+    await openFeaturesTab(wrapper);
+    expect(wrapper.get("#settings-tab-features").attributes("aria-selected")).toBe("true");
+    const featuresPanel = wrapper.get('[data-testid="canvas-studio-toggle"]').element.closest(".space-y-6") as HTMLElement;
+    expect(featuresPanel.style.display).not.toBe("none");
+    expect(wrapper.findAll('[data-testid="canvas-studio-toggle"]')).toHaveLength(1);
+
+    await canvasToggle.setValue(true);
+    await wrapper.get('[data-testid="subscription-enabled-toggle"]').setValue(false);
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    const payload = updateSettings.mock.calls[0][0];
+    expect(payload).toEqual(expect.objectContaining({
+      canvas_studio_enabled: true,
+      subscription_enabled: false,
+    }));
+    for (const key of [
+      "channel_monitor_enabled",
+      "channel_monitor_mode",
+      "channel_monitor_default_interval_seconds",
+      "channel_monitor_hide_throughput",
+      "channel_monitor_show_quota",
+      "channel_monitor_hide_user_ranking",
+      "payment_balance_disabled",
+    ]) {
+      expect(payload).not.toHaveProperty(key);
+    }
+    wrapper.unmount();
   });
 
   it("loads and saves the open button visibility for each custom menu", async () => {

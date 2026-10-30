@@ -202,6 +202,7 @@ func TestGatewayRoutesGroupModelAllowlistModelFreeRoutesUnaffected(t *testing.T)
 		"/v1/videos/generations/req-1",
 		"/v1/videos/req-1/content",
 		"/v1/images/tasks/task-1",
+		"/v1/images/tasks/task-1/outputs/0/content",
 		"/v1/custom-voices",
 	} {
 		req := httptest.NewRequest(http.MethodGet, path, nil)

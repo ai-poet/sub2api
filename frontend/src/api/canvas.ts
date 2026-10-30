@@ -426,6 +426,7 @@ function decodeBase64Blob(b64: string): Blob | null {
 export async function fetchTaskOutputBlob(
   output: Pick<CanvasTaskOutput, 'url' | 'b64'>,
   signal?: AbortSignal,
+  source?: CanvasTaskOutputSource,
 ): Promise<Blob | null> {
   if (signal?.aborted) {
     throw signal.reason ?? new DOMException('aborted', 'AbortError')
@@ -435,6 +436,13 @@ export async function fetchTaskOutputBlob(
     if (blob) {
       return blob
     }
+  }
+  if (source !== undefined) {
+    // A task source pins the download to the gateway content endpoint with the
+    // task's original key. Whether it succeeds or fails we never touch the
+    // external URL: HTTPS pages cannot reach plain-HTTP storage and the API key
+    // must never be sent off-origin.
+    return fetchGatewayOutput(source, signal)
   }
   if (output.url && isSafeOutputUrl(output.url)) {
     const controller = new AbortController()
@@ -468,4 +476,67 @@ export async function fetchTaskOutputBlob(
     }
   }
   return null
+}
+
+/**
+ * CanvasTaskOutputSource identifies which stored task output a remote URL came
+ * from so fetchTaskOutputBlob can fetch it through the same-origin gateway
+ * proxy (the backend downloads the origin bytes under the SSRF guard).
+ */
+export interface CanvasTaskOutputSource {
+  /** The frozen key that submitted the run — never the currently selected key. */
+  apiKey: string
+  taskId: string
+  index: number
+}
+
+function isValidOutputSource(source: CanvasTaskOutputSource): boolean {
+  return (
+    typeof source.apiKey === 'string' &&
+    source.apiKey.length > 0 &&
+    typeof source.taskId === 'string' &&
+    source.taskId.trim().length > 0 &&
+    Number.isInteger(source.index) &&
+    source.index >= 0 &&
+    source.index <= Number.MAX_SAFE_INTEGER
+  )
+}
+
+async function fetchGatewayOutput(
+  source: CanvasTaskOutputSource,
+  signal?: AbortSignal,
+): Promise<Blob | null> {
+  if (!isValidOutputSource(source)) {
+    return null
+  }
+  const controller = new AbortController()
+  const onAbort = () => controller.abort(signal?.reason)
+  if (signal) {
+    if (signal.aborted) controller.abort(signal.reason)
+    else signal.addEventListener('abort', onAbort, { once: true })
+  }
+  const timer = setTimeout(
+    () => controller.abort(new DOMException('output fetch timeout', 'TimeoutError')),
+    OUTPUT_FETCH_TIMEOUT_MS,
+  )
+  try {
+    const response = await fetch(
+      buildGatewayUrl(`/v1/images/tasks/${encodeURIComponent(source.taskId)}/outputs/${source.index}/content`),
+      {
+        headers: authHeaders(source.apiKey, { Accept: 'image/*' }),
+        signal: controller.signal,
+      },
+    )
+    if (!response.ok) {
+      return null
+    }
+    return await response.blob()
+  } catch (error) {
+    // Caller aborts still propagate; local timeouts and failures report null.
+    if (signal?.aborted) throw error
+    return null
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', onAbort)
+  }
 }

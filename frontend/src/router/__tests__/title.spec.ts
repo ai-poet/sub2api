@@ -82,13 +82,6 @@ describe('resolveRouteMetaKeys', () => {
     })
   })
 
-  it('仅订阅时 /purchase 切换为纯订阅文案', () => {
-    expect(resolveRouteMetaKeys(purchaseRoute, { billingMode: 'subscription_only' })).toEqual({
-      titleKey: 'nav.subscribe',
-      descriptionKey: 'purchase.subscriptionDescription'
-    })
-  })
-
   it('站点类型不影响其他路由', () => {
     const route = { name: 'Subscriptions', meta: { titleKey: 'userSubscriptions.title' } }
     expect(resolveRouteMetaKeys(route, { billingMode: 'recharge_only' })).toEqual({
@@ -108,11 +101,6 @@ describe('resolveRouteDocumentTitle 站点类型', () => {
   it('仅充值时 document.title 不再带「订阅」', () => {
     const title = resolveRouteDocumentTitle(purchaseRoute, 'EzouAPI', [], { billingMode: 'recharge_only' })
     expect(title).toBe('充值 - EzouAPI')
-  })
-
-  it('仅订阅时 document.title 只剩「订阅」', () => {
-    const title = resolveRouteDocumentTitle(purchaseRoute, 'EzouAPI', [], { billingMode: 'subscription_only' })
-    expect(title).toBe('订阅 - EzouAPI')
   })
 
   it('充值 & 订阅时保留原标题', () => {

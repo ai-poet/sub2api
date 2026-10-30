@@ -27,8 +27,8 @@ export function resolveDocumentTitle(routeTitle: unknown, siteName?: string, tit
 
 export interface RouteTitleOptions {
   /**
-   * 站点计费模式（见 utils/billingMode.ts）。/purchase 的标题与描述随之切换：
-   * 仅充值 → 「充值」，仅订阅 → 「订阅」，缺省/两者都有 → 「充值/订阅」。
+   * 购买入口的文案模式（见 utils/siteBillingMode.ts）。/purchase 的标题与描述随之切换：
+   * 关闭订阅 → 「充值」，开启或未知 → 「充值/订阅」。
    */
   billingMode?: SiteBillingMode
 }
@@ -52,9 +52,6 @@ export function resolveRouteMetaKeys(
   if (route.name === PURCHASE_ROUTE_NAME) {
     if (options.billingMode === 'recharge_only') {
       return { titleKey: 'nav.recharge', descriptionKey: 'purchase.rechargeDescription' }
-    }
-    if (options.billingMode === 'subscription_only') {
-      return { titleKey: 'nav.subscribe', descriptionKey: 'purchase.subscriptionDescription' }
     }
   }
   return {

@@ -720,13 +720,11 @@ const ChevronDownIcon = {
 const flagAvailableChannels = makeSidebarFlag(FeatureFlags.availableChannels)
 const flagSubscription = makeSidebarFlag(FeatureFlags.subscription)
 
-// 购买入口文案随站点计费模式切换：仅充值 → 「充值」，仅订阅 → 「订阅」，否则沿用 fork 的「充值/订单」。
+// 购买入口文案随订阅开关切换：关闭订阅 → 「充值」，否则沿用 fork 的「充值/订单」。
 const purchaseNavLabel = computed(() => {
   switch (resolveSiteBillingMode(appStore.cachedPublicSettings)) {
     case 'recharge_only':
       return t('nav.recharge')
-    case 'subscription_only':
-      return t('nav.subscribe')
     default:
       return t('nav.buySubscription')
   }
