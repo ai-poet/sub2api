@@ -12,7 +12,7 @@ export default function PlanModelUsage({ plans, isDark, locale }: {
   plans: PlanInfo[]; isDark: boolean; locale: Locale;
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>(() => plans.slice(0, 2).map((plan) => plan.id));
-  const [window, setWindow] = useState<PlanWindow>('daily');
+  const [window, setWindow] = useState<PlanWindow>('monthly');
   const [input, setInput] = useState('10000');
   const [output, setOutput] = useState('2000');
   const id = useId();
