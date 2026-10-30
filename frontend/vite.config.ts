@@ -151,8 +151,13 @@ export default defineConfig(({ mode }) => {
               normalizedId.includes('/node_modules/fabric/') ||
               normalizedId.includes('/src/components/canvas/') ||
               normalizedId.includes('/src/views/user/CanvasStudioView.vue') ||
+              normalizedId.includes('/src/composables/useCanvasStudio.ts') ||
+              normalizedId.includes('/src/api/canvas.ts') ||
               normalizedId.includes('/src/utils/canvasComposite.ts') ||
-              normalizedId.includes('/src/utils/canvasLocalStore.ts')
+              normalizedId.includes('/src/utils/canvasGeometry.ts') ||
+              normalizedId.includes('/src/utils/canvasLocalStore.ts') ||
+              normalizedId.includes('/src/utils/canvasMask.ts') ||
+              normalizedId.includes('/src/utils/canvasScene.ts')
             ) {
               return 'feature-canvas-studio'
             }

@@ -63,3 +63,12 @@ cd sub2apipay && pnpm test
 ## Scope Reminder
 
 - Keep merge and sync work limited to the gateway service itself unless the task explicitly expands scope.
+
+## Local Features
+
+### 分组倍率站内信 (Group rate site messages, local implementation)
+
+- `backend/migrations/254_group_rate_site_messages.sql` installs two triggers: `trg_groups_rate_site_messages` on `groups` (AFTER UPDATE OF rate_multiplier / image_rate_independent / image_rate_multiplier / video_rate_independent / video_rate_multiplier only, WHEN any of them IS DISTINCT) and `trg_user_group_rates_site_messages` on `user_group_rate_multipliers` (AFTER INSERT/UPDATE/DELETE). They insert `category='system'` bilingual (zh + `---` + en) Markdown rows into `site_messages` (source_type `group_rate_changed` / `user_group_rate_changed`, source_id `group:<id>:tx:<txid>`, sender NULL) as part of the saving transaction — rollback reverts rate and mail together, and a failed insert rolls back the save.
+- Recipients = active non-deleted users consuming the group via a valid API key (active, undeleted, unexpired) or an active unexpired started subscription, deduped; exclusive groups and `restrict_public_groups` users need a `user_allowed_groups` row, while `subscription_type='subscription'` groups bypass that allowlist. Disabled/deleted groups and users are skipped; new group INSERTs, no-op re-saves (incl. DECIMAL(10,4) rounding), name/description/model_pricing/peak changes, and disabled-independent image/video numeric saves produce no mail.
+- Per-user overrides (`user_group_rate_multipliers.rate_multiplier`, NULL = inherit) fix the effective base value: a consumer with a fixed override gets no mail for default-only base changes but still sees independent image/video rows; RPM-only rows never notify. Personal override set/update/clear/delete notifies only that consumer, falling back to the group default. Group name is whitespace-normalized, truncated to 120 chars and Markdown-escaped. No backfill on install; messages state that new rates take effect after billing caches refresh and that peak rules still apply per group configuration.
+- Coverage: `migrations/group_rate_site_messages_migration_test.go` (structural) and `migrations/group_rate_site_messages_postgres_integration_test.go` (`go test -tags=integration`, needs `SUB2API_TEST_DATABASE_URL`). Keep this feature on upstream merges.
