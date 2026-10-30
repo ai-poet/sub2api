@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -8,11 +10,17 @@ import (
 )
 
 type ModelCatalogHandler struct {
-	modelCatalogService *service.ModelCatalogService
+	modelCatalogService interface {
+		GetCatalog(context.Context, int64) (*service.ModelCatalogResponse, error)
+		GetPayGroupCatalog(context.Context, service.Group) (*service.ModelCatalogResponse, error)
+	}
+	payGroupReader interface {
+		GetGroup(context.Context, int64) (*service.Group, error)
+	}
 }
 
-func NewModelCatalogHandler(modelCatalogService *service.ModelCatalogService) *ModelCatalogHandler {
-	return &ModelCatalogHandler{modelCatalogService: modelCatalogService}
+func NewModelCatalogHandler(modelCatalogService *service.ModelCatalogService, adminService service.AdminService) *ModelCatalogHandler {
+	return &ModelCatalogHandler{modelCatalogService: modelCatalogService, payGroupReader: adminService}
 }
 
 func (h *ModelCatalogHandler) List(c *gin.Context) {

@@ -13,7 +13,7 @@ import InvoiceRequestDialog, {
 } from '@/components/InvoiceRequestDialog';
 import MainTabs from '@/components/MainTabs';
 import ChannelGrid from '@/components/ChannelGrid';
-import SubscriptionPlanCard from '@/components/SubscriptionPlanCard';
+import SubscriptionPlanCatalog from '@/components/SubscriptionPlanCatalog';
 import SubscriptionConfirm from '@/components/SubscriptionConfirm';
 import UserSubscriptions from '@/components/UserSubscriptions';
 import PromotionBanner from '@/components/PromotionBanner';
@@ -1122,26 +1122,12 @@ function PayContent() {
                         {pickLocaleText(locale, '查看全部套餐', 'View All Plans')}
                       </button>
                     )}
-                    {userSubscriptions.length > 0 && renewGroupId === null && (
-                      <h3
-                        className={['text-lg font-semibold mb-3', isDark ? 'text-slate-200' : 'text-slate-800'].join(
-                          ' ',
-                        )}
-                      >
-                        {pickLocaleText(locale, '可选套餐', 'Available Plans')}
-                      </h3>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => (
-                        <SubscriptionPlanCard
-                          key={plan.id}
-                          plan={translatePlan(plan, tx)}
-                          onSubscribe={() => setSelectedPlan(plan)}
-                          isDark={isDark}
-                          locale={locale}
-                        />
-                      ))}
-                    </div>
+                    <SubscriptionPlanCatalog
+                      plans={(renewGroupId !== null ? plans.filter((p) => p.groupId === renewGroupId) : plans).map((plan) => translatePlan(plan, tx))}
+                      onSubscribe={(planId) => setSelectedPlan(plans.find((plan) => plan.id === planId) ?? null)}
+                      isDark={isDark}
+                      locale={locale}
+                    />
                   </div>
 
                   {renderHelpSection('')}

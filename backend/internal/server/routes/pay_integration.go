@@ -74,6 +74,7 @@ func RegisterPayRoutes(
 
 		adminInternal.GET("/groups/all", h.Admin.Group.GetAll)
 		adminInternal.GET("/groups/:id", h.Admin.Group.GetByID)
+		adminInternal.GET("/groups/:id/models", h.ModelCatalog.ListPayGroup)
 
 		adminInternal.GET("/subscriptions", h.Admin.Subscription.List)
 		adminInternal.POST("/subscriptions/assign", h.Admin.Subscription.Assign)

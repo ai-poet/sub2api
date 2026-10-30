@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getCurrentUserByToken, getGroup } from '@/lib/sub2api/client';
+import { getCurrentUserByToken, getGroup, getGroupModels } from '@/lib/sub2api/client';
 import { syncPayTranslationSourcesIfStale } from '@/lib/sub2api/content-translations';
 import { readUserToken } from '@/lib/utils/request-token';
 
@@ -25,6 +25,12 @@ export async function GET(request: NextRequest) {
       orderBy: { sortOrder: 'asc' },
     });
 
+    // Several durations of one plan share a group. Load its catalog once.
+    const modelCatalogs = new Map<number, ReturnType<typeof getGroupModels>>();
+    const loadModels = (groupId: number) => {
+      if (!modelCatalogs.has(groupId)) modelCatalogs.set(groupId, getGroupModels(groupId));
+      return modelCatalogs.get(groupId)!;
+    };
     // 并发校验每个套餐对应的 Sub2API 分组是否存在
     const results = await Promise.all(
       plans.map(async (plan) => {
@@ -68,10 +74,10 @@ export async function GET(request: NextRequest) {
           platform: group?.platform ?? null,
           rateMultiplier: group?.rate_multiplier ?? null,
           limits: groupInfo,
+          // Failure stays distinct from an empty catalog and never blocks checkout.
+          models: await loadModels(plan.groupId).catch(() => null),
           allowMessagesDispatch: group?.allow_messages_dispatch ?? false,
           defaultMappedModel: group?.default_mapped_model ?? null,
-          // A group the user has not bought is absent from their model catalog;
-          // its scopes are the only hint of what the plan serves.
           supportedModelScopes: group?.supported_model_scopes ?? [],
         };
       }),

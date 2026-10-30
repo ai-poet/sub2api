@@ -98,6 +98,29 @@ func newModelCatalogTestService(t *testing.T, groups []Group, modelsByGroup map[
 	)
 }
 
+func TestModelCatalogService_GetPayGroupCatalog_PrePurchaseGroupPrices(t *testing.T) {
+	group := Group{ID: 10, Name: "For sale", Status: StatusActive, Platform: PlatformAnthropic, RateMultiplier: 0.5, SubscriptionType: SubscriptionTypeSubscription}
+	svc := newModelCatalogTestService(t, nil, map[int64][]string{10: {"claude-sonnet-4"}},
+		map[int64]float64{10: 0.1}, map[string]*LiteLLMModelPricing{
+			"claude-sonnet-4": {InputCostPerToken: 3e-6, OutputCostPerToken: 15e-6},
+		}, nil)
+	// The buyer's accessible catalog is empty. The preview must still use only
+	// the offered group, with its own rate, and no other group's models.
+	result, err := svc.GetPayGroupCatalog(context.Background(), group)
+	require.NoError(t, err)
+	require.Len(t, result.Items, 1)
+	item := result.Items[0]
+	require.Equal(t, "claude-sonnet-4", item.Model)
+	require.InDelta(t, 1.5, *item.EffectivePricingUSD.InputPerMTokUSD, 1e-9)
+	require.InDelta(t, 7.5, *item.EffectivePricingUSD.OutputPerMTokUSD, 1e-9)
+	require.Equal(t, "group_default", item.BestGroup.RateSource)
+	require.Empty(t, item.OtherGroups)
+
+	group.Status = "disabled"
+	_, err = svc.GetPayGroupCatalog(context.Background(), group)
+	require.ErrorIs(t, err, ErrGroupNotFound)
+}
+
 func TestModelCatalogService_GetCatalog_ReturnsGroupModelCards(t *testing.T) {
 	pricing := map[string]*LiteLLMModelPricing{
 		"claude-sonnet-4": {

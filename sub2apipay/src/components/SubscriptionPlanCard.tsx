@@ -5,6 +5,9 @@ import type { Locale } from '@/lib/locale';
 import { pickLocaleText } from '@/lib/locale';
 import { formatValidityLabel, formatValiditySuffix, type ValidityUnit } from '@/lib/subscription-utils';
 import { PlatformBadge, getPlatformStyle } from '@/lib/platform-style';
+import { planWindowLimit, PLAN_WINDOWS, type PlanWindow } from '@/lib/plan-usage';
+import { formatUsageUsd } from '@/lib/subscription-utils';
+import type { PlanModel } from '@/lib/plan-model-usage';
 
 export interface PlanInfo {
   id: string;
@@ -26,6 +29,7 @@ export interface PlanInfo {
   } | null;
   allowMessagesDispatch: boolean;
   defaultMappedModel: string | null;
+  models?: PlanModel[] | null;
 }
 
 /** 套餐信息展示（Header + 价格 + 描述 + 倍率/限额 + 特性），不含操作按钮 */
@@ -34,11 +38,11 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
   const periodLabel = formatValidityLabel(plan.validityDays, unit, locale);
   const periodSuffix = formatValiditySuffix(plan.validityDays, unit, locale);
 
-  const hasLimits =
-    plan.limits &&
-    (plan.limits.daily_limit_usd !== null ||
-      plan.limits.weekly_limit_usd !== null ||
-      plan.limits.monthly_limit_usd !== null);
+  const windowLabels: Record<PlanWindow, string> = {
+    daily: pickLocaleText(locale, '日额度', 'Daily quota'),
+    weekly: pickLocaleText(locale, '周额度', 'Weekly quota'),
+    monthly: pickLocaleText(locale, '月额度', 'Monthly quota'),
+  };
 
   const isOpenAI = plan.platform?.toLowerCase() === 'openai';
   const ps = getPlatformStyle(plan.platform ?? '');
@@ -50,7 +54,6 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
       <div className="mb-4">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           {plan.platform && <PlatformBadge platform={plan.platform} />}
-          <h3 className={['text-lg font-bold', isDark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>{plan.name}</h3>
           <span
             className={[
               'rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -75,6 +78,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
             </span>
           )}
         </div>
+        <h3 className={['mb-3 text-xl font-semibold tracking-tight', isDark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>{plan.name}</h3>
 
         {/* Price */}
         <div className="flex items-baseline gap-2">
@@ -83,7 +87,7 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
               ¥{plan.originalPrice}
             </span>
           )}
-          <span className={['text-3xl font-bold', accentCls].join(' ')}>¥{plan.price}</span>
+          <span className={['text-4xl font-semibold tracking-tight', isDark ? 'text-slate-100' : 'text-slate-900'].join(' ')}>¥{plan.price}</span>
           <span className={['text-sm', isDark ? 'text-slate-400' : 'text-slate-500'].join(' ')}>{periodSuffix}</span>
         </div>
       </div>
@@ -95,53 +99,26 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
         </p>
       )}
 
-      {/* Rate + Limits grid */}
-      {(plan.rateMultiplier != null || hasLimits) && (
-        <div className="mb-4 grid grid-cols-2 gap-3">
-          {plan.rateMultiplier != null && (
-            <div>
-              <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '倍率', 'Rate')}
-              </span>
-              <div className="flex items-baseline">
-                <span className={['text-lg font-bold', accentCls].join(' ')}>1</span>
-                <span className={['mx-1 text-base', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>:</span>
-                <span className={['text-lg font-bold', accentCls].join(' ')}>{plan.rateMultiplier}</span>
-              </div>
+      <dl className={`mb-5 space-y-3 border-y py-4 text-sm ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+        {PLAN_WINDOWS.map((window) => {
+          const limit = planWindowLimit(plan.limits, window);
+          return (
+            <div key={window} className="flex items-baseline justify-between gap-3">
+              <dt className={isDark ? 'text-slate-400' : 'text-slate-500'}>{windowLabels[window]}</dt>
+              <dd className="text-right font-medium tabular-nums">
+                {limit === undefined ? pickLocaleText(locale, '待确认', 'Unavailable')
+                  : limit === null ? pickLocaleText(locale, '该窗口不限额', 'Uncapped window') : `$${formatUsageUsd(limit)}`}
+              </dd>
             </div>
-          )}
-          {plan.limits?.daily_limit_usd !== null && plan.limits?.daily_limit_usd !== undefined && (
-            <div>
-              <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '日限额', 'Daily Limit')}
-              </span>
-              <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                ${plan.limits.daily_limit_usd}
-              </div>
-            </div>
-          )}
-          {plan.limits?.weekly_limit_usd !== null && plan.limits?.weekly_limit_usd !== undefined && (
-            <div>
-              <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '周限额', 'Weekly Limit')}
-              </span>
-              <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                ${plan.limits.weekly_limit_usd}
-              </div>
-            </div>
-          )}
-          {plan.limits?.monthly_limit_usd !== null && plan.limits?.monthly_limit_usd !== undefined && (
-            <div>
-              <span className={['text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
-                {pickLocaleText(locale, '月限额', 'Monthly Limit')}
-              </span>
-              <div className={['text-lg font-semibold', isDark ? 'text-slate-200' : 'text-slate-800'].join(' ')}>
-                ${plan.limits.monthly_limit_usd}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+          );
+        })}
+        {plan.rateMultiplier != null && (
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className={isDark ? 'text-slate-400' : 'text-slate-500'}>{pickLocaleText(locale, '分组倍率', 'Group rate')}</dt>
+            <dd className={`font-semibold ${accentCls}`}>×{plan.rateMultiplier}</dd>
+          </div>
+        )}
+      </dl>
 
       {/* Features */}
       {plan.features.length > 0 && (
@@ -149,19 +126,17 @@ export function PlanInfoDisplay({ plan, isDark, locale }: { plan: PlanInfo; isDa
           <p className={['mb-2 text-xs', isDark ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
             {pickLocaleText(locale, '功能特性', 'Features')}
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <ul className="space-y-2">
             {plan.features.map((feature) => (
-              <span
+              <li
                 key={feature}
-                className={[
-                  'rounded-md px-2 py-1 text-xs',
-                  isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700',
-                ].join(' ')}
+                className={`flex items-start gap-2 text-sm leading-5 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}
               >
-                {feature}
-              </span>
+                <span aria-hidden="true" className="text-emerald-500">✓</span>
+                <span>{feature}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
     </>
@@ -181,8 +156,8 @@ export default function SubscriptionPlanCard({ plan, onSubscribe, isDark, locale
   return (
     <div
       className={[
-        'flex flex-col rounded-2xl border p-6 transition-shadow hover:shadow-lg',
-        isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-white',
+        'flex min-w-0 flex-col rounded-2xl border p-6 transition-colors',
+        isDark ? 'border-slate-700 bg-slate-800/40 hover:border-slate-500' : 'border-slate-200 bg-white hover:border-slate-400',
       ].join(' ')}
     >
       <PlanInfoDisplay plan={plan} isDark={isDark} locale={locale} />

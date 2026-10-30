@@ -194,6 +194,19 @@ func (s *ModelCatalogService) GetPublicCatalog(ctx context.Context) (*ModelCatal
 	return s.buildCatalog(ctx, groups, nil), nil
 }
 
+// GetPayGroupCatalog previews one for-sale group's models before purchase. Only
+// the internal pay bridge calls this; normal catalog access remains unchanged.
+// Prices include the group's rates, never another user's personal overrides.
+func (s *ModelCatalogService) GetPayGroupCatalog(ctx context.Context, group Group) (*ModelCatalogResponse, error) {
+	if err := s.ensureConfigured(); err != nil {
+		return nil, err
+	}
+	if group.Status != StatusActive {
+		return nil, ErrGroupNotFound
+	}
+	return s.buildCatalog(ctx, []Group{group}, nil), nil
+}
+
 func (s *ModelCatalogService) ensureConfigured() error {
 	if s == nil || s.accessService == nil || s.modelService == nil || s.billing == nil || s.resolver == nil {
 		return fmt.Errorf("model catalog service is not configured")

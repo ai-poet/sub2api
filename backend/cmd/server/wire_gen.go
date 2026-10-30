@@ -323,7 +323,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	totpHandler := handler.NewTotpHandler(totpService)
 	handlerReferralHandler := handler.NewReferralHandler(referralService)
 	modelCatalogService := service.NewModelCatalogService(apiKeyService, gatewayService, billingService, modelPricingResolver)
-	modelCatalogHandler := handler.NewModelCatalogHandler(modelCatalogService)
+	modelCatalogHandler := handler.NewModelCatalogHandler(modelCatalogService, adminService)
 	publicPricingHandler := handler.NewPublicPricingHandler(modelCatalogService, settingService)
 	clientChangelogService := service.NewClientChangelogService(gitHubReleaseClient, settingRepository)
 	clientChangelogHandler := handler.NewClientChangelogHandler(clientChangelogService)

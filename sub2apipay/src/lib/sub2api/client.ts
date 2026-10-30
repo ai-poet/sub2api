@@ -1,6 +1,7 @@
 import { getEnv } from '@/lib/config';
 import { getInternalPayHeaders } from '@/lib/internal-auth';
 import type { Sub2ApiUser, Sub2ApiRedeemCode, Sub2ApiGroup, Sub2ApiSubscription } from './types';
+import type { PlanModel } from '../plan-model-usage';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const RECHARGE_TIMEOUT_MS = 30_000;
@@ -143,6 +144,17 @@ export async function getGroup(groupId: number): Promise<Sub2ApiGroup | null> {
 }
 
 // ── 订阅 API ──
+
+export async function getGroupModels(groupId: number): Promise<PlanModel[]> {
+  const response = await fetch(buildInternalUrl(`/api/internal/pay/groups/${groupId}/models`), {
+    headers: getHeaders(),
+    signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`Failed to get plan models: ${response.status}`);
+  const data = await response.json();
+  if (!Array.isArray(data.data?.models)) throw new Error('Invalid plan model catalog');
+  return data.data.models as PlanModel[];
+}
 
 export async function assignSubscription(
   userId: number,
