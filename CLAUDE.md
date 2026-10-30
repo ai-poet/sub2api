@@ -79,6 +79,13 @@ cd sub2apipay && pnpm test        # 测试
 - If an upstream commit contains both gateway and payment changes, do not cherry-pick it wholesale. Keep only the gateway-related portion or skip it.
 - If a cherry-pick becomes empty because the fix already exists locally, skip it rather than forcing a duplicate commit.
 
+### 画布工作台 (Canvas Studio, local implementation)
+
+- Route `/canvas` gated by `canvas_studio_enabled`. Files: `frontend/src/views/user/CanvasStudioView.vue` (thin shell), `frontend/src/components/canvas/{CanvasEditor,CanvasToolbar,CanvasPromptPanel,CanvasHistoryDrawer,CropImageModal,CanvasIcon}.vue`, `frontend/src/composables/useCanvasStudio.ts`, `frontend/src/api/canvas.ts`, `frontend/src/utils/{canvasLocalStore,canvasGeometry,canvasScene,canvasMask}.ts`, `frontend/src/types/canvas.ts`, i18n `canvas` keys in `locales/{zh,en}/canvas.ts`, `AppLayout.vue` `fullViewport` prop (default false).
+- Local persistence: IndexedDB `sub2api-canvas-studio` v2, stores `scenes`/`assets`/`runs`/`settings`, key prefix `u<userId>|w<workspaceId>|`; v1 records left unclaimed; workspace UUID in `localStorage canvas:workspace:<userId>` (rotation invalidates cross-tab). Scene snapshot stores per-object `transform` (world Mat6) and `src:"asset://<key>"`.
+- Runs reuse gateway `POST /v1/images/{generations,edits}/async` + `GET /v1/images/tasks/:id` with frozen params + original key polling (3s, independent per run, transient pause/manual resume). Mask polarity: per-image natural-pixel masks, painted=transparent/redraw on opaque white, exported at source resolution; strokes in `maskStrokes {mode,shape,width,points}`.
+- Upstream-merge rule: local wins; never replace with upstream counterpart.
+
 ## Local Features (always keep)
 
 The features below are locally maintained customizations of this fork. During upstream merges, cherry-picks, or conflict resolution the local implementation always wins; never replace them with the upstream counterpart unless an explicit task says otherwise.

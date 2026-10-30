@@ -1,149 +1,158 @@
-<script setup lang="ts">
-/**
- * CanvasToolbar.vue 是画布工作台的工具栏。
- *
- * 只做画布内的操作：切工具、调笔刷、撤销重做、删图层、清空。
- * 提交相关的操作在参数面板里，两块职责分开。
- */
-import { computed } from 'vue'
-import Icon from '@/components/icons/Icon.vue'
-import type { CanvasTool } from './types'
-
-const props = defineProps<{
-  /** 当前工具。 */
-  tool: CanvasTool
-  /** 笔刷粗细。 */
-  brushSize: number
-  /** 是否可以撤销。 */
-  canUndo: boolean
-  /** 是否可以重做。 */
-  canRedo: boolean
-  /** 是否有可删除的选中对象。 */
-  canDelete: boolean
-  /** 是否已禁用（提交中）。 */
-  disabled: boolean
-}>()
-
-const emit = defineEmits<{
-  (event: 'update:tool', value: CanvasTool): void
-  (event: 'update:brushSize', value: number): void
-  (event: 'undo'): void
-  (event: 'redo'): void
-  (event: 'delete'): void
-  (event: 'clear'): void
-}>()
-
-/** 工具按钮定义。图标名取自 Icon.vue 已有的图标集合。 */
-const tools = computed(() => [
-  { id: 'select' as CanvasTool, icon: 'grid', label: 'canvas.tools.select' },
-  { id: 'brush' as CanvasTool, icon: 'sparkles', label: 'canvas.tools.brush' },
-  { id: 'eraser' as CanvasTool, icon: 'ban', label: 'canvas.tools.eraser' },
-  { id: 'text' as CanvasTool, icon: 'edit', label: 'canvas.tools.text' },
-] as const)
-
-/** 笔刷粗细档位。 */
-const brushSizes = [8, 16, 32, 64]
-
-/**
- * selectTool 切换工具。
- */
-function selectTool(tool: CanvasTool): void {
-  emit('update:tool', tool)
-}
-</script>
-
 <template>
-  <div
-    class="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-white px-2 py-1.5 dark:border-dark-700 dark:bg-dark-800"
-  >
-    <!-- 工具切换 -->
-    <div class="flex items-center gap-0.5">
+  <div class="canvas-toolbar" role="toolbar" aria-label="canvas tools">
+    <button
+      v-for="t in tools"
+      :key="t.name"
+      class="tool-btn"
+      :class="{ active: tool === t.name }"
+      :title="t.title"
+      :disabled="!state.ready"
+      @click="$emit('update:tool', t.name)"
+    >
+      <CanvasIcon :name="t.icon" />
+    </button>
+    <span class="divider" />
+    <template v-if="tool === 'brush' || tool === 'eraser'">
       <button
-        v-for="item in tools"
-        :key="item.id"
-        type="button"
-        :disabled="disabled"
-        :title="$t(item.label)"
-        :aria-label="$t(item.label)"
-        class="rounded-md p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-        :class="
-          props.tool === item.id
-            ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-            : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-700'
-        "
-        @click="selectTool(item.id)"
-      >
-        <Icon :name="item.icon" size="sm" />
-      </button>
-    </div>
-
-    <div class="mx-1 h-5 w-px bg-gray-200 dark:bg-dark-700" />
-
-    <!-- 笔刷粗细 -->
-    <div v-if="props.tool === 'brush' || props.tool === 'eraser'" class="flex items-center gap-1">
+        class="tool-btn"
+        :class="{ active: brushShape === 'round' }"
+        :title="t('canvas.tools.brush') + ' ●'"
+        @click="$emit('update:brushShape', 'round')"
+      ><CanvasIcon name="circle" /></button>
       <button
-        v-for="size in brushSizes"
-        :key="size"
-        type="button"
-        :disabled="disabled"
-        class="rounded-md px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-        :class="
-          props.brushSize === size
-            ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-            : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-700'
-        "
-        @click="emit('update:brushSize', size)"
-      >
-        {{ size }}
-      </button>
-    </div>
-
-    <div class="mx-1 h-5 w-px bg-gray-200 dark:bg-dark-700" />
-
-    <!-- 历史 -->
-    <button
-      type="button"
-      :disabled="disabled || !props.canUndo"
-      :title="$t('canvas.actions.undo')"
-      :aria-label="$t('canvas.actions.undo')"
-      class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-dark-700"
-      @click="emit('undo')"
-    >
-      <Icon name="arrowLeft" size="sm" />
-    </button>
-    <button
-      type="button"
-      :disabled="disabled || !props.canRedo"
-      :title="$t('canvas.actions.redo')"
-      :aria-label="$t('canvas.actions.redo')"
-      class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-dark-700"
-      @click="emit('redo')"
-    >
-      <Icon name="arrowRight" size="sm" />
-    </button>
-
-    <div class="mx-1 h-5 w-px bg-gray-200 dark:bg-dark-700" />
-
-    <!-- 删除与清空 -->
-    <button
-      type="button"
-      :disabled="disabled || !props.canDelete"
-      :title="$t('canvas.actions.delete')"
-      :aria-label="$t('canvas.actions.delete')"
-      class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-dark-700"
-      @click="emit('delete')"
-    >
-      <Icon name="trash" size="sm" />
-    </button>
-    <button
-      type="button"
-      :disabled="disabled"
-      :title="$t('canvas.actions.clear')"
-      :aria-label="$t('canvas.actions.clear')"
-      class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-dark-700"
-      @click="emit('clear')"
-    >
-      <Icon name="xCircle" size="sm" />
-    </button>
+        class="tool-btn"
+        :class="{ active: brushShape === 'square' }"
+        :title="t('canvas.tools.brush') + ' ■'"
+        @click="$emit('update:brushShape', 'square')"
+      ><CanvasIcon name="square" /></button>
+      <input
+        type="range"
+        class="brush-slider"
+        :min="4"
+        :max="160"
+        :value="brushSize"
+        :title="String(brushSize)"
+        @input="$emit('update:brushSize', Number(($event.target as HTMLInputElement).value))"
+      />
+      <span class="divider" />
+    </template>
+    <template v-if="tool === 'text'">
+      <input
+        type="color"
+        class="color-input"
+        :value="textColor"
+        @input="$emit('update:textColor', ($event.target as HTMLInputElement).value)"
+      />
+      <input
+        type="range"
+        class="brush-slider"
+        :min="10"
+        :max="120"
+        :value="textSize"
+        :title="t('canvas.composer.prompt')"
+        @input="$emit('update:textSize', Number(($event.target as HTMLInputElement).value))"
+      />
+      <span class="divider" />
+    </template>
+    <button class="tool-btn" :disabled="!state.canUndo" :title="t('canvas.actions.undo')" @click="$emit('undo')"><CanvasIcon name="undo" /></button>
+    <button class="tool-btn" :disabled="!state.canRedo" :title="t('canvas.actions.redo')" @click="$emit('redo')"><CanvasIcon name="redo" /></button>
+    <span class="divider" />
+    <button class="tool-btn" :disabled="state.selectedCount === 0" :title="t('canvas.actions.delete')" @click="$emit('remove-selected')"><Icon name="trash" size="sm" /></button>
+    <button class="tool-btn" :disabled="!state.hasMask" :title="t('canvas.actions.clearMask')" @click="$emit('clear-mask')"><CanvasIcon name="eraser" /></button>
+    <button class="tool-btn" :disabled="state.selectedCount === 0" :title="t('canvas.actions.mergeToImage')" @click="$emit('flatten')"><CanvasIcon name="merge" /></button>
+    <button class="tool-btn" :disabled="state.selectedImageCount === 0" :title="t('canvas.actions.downloadSelected')" @click="$emit('download')"><Icon name="download" size="sm" /></button>
+    <span class="divider" />
+    <button class="tool-btn" :disabled="state.imageCount === 0" :title="t('canvas.actions.fit')" @click="$emit('fit')"><CanvasIcon name="fit" /></button>
+    <button class="tool-btn" :title="t('canvas.actions.zoomOut')" @click="$emit('zoom', 0.8)"><CanvasIcon name="zoomOut" /></button>
+    <span class="zoom-label">{{ Math.round(state.zoom * 100) }}%</span>
+    <button class="tool-btn" :title="t('canvas.actions.zoomIn')" @click="$emit('zoom', 1.25)"><CanvasIcon name="zoomIn" /></button>
+    <span class="divider" />
+    <button class="tool-btn" :title="t('canvas.actions.importImage')" @click="$emit('upload')"><Icon name="upload" size="sm" /></button>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Icon } from '@/components/icons'
+import CanvasIcon from './CanvasIcon.vue'
+import type { CanvasTool, EditorStateSnapshot } from './types'
+
+const props = defineProps<{
+  tool: CanvasTool
+  brushSize: number
+  brushShape: 'round' | 'square'
+  textColor: string
+  textSize: number
+  state: EditorStateSnapshot
+}>()
+
+defineEmits<{
+  'update:tool': [t: CanvasTool]
+  'update:brushSize': [v: number]
+  'update:brushShape': [v: 'round' | 'square']
+  'update:textColor': [v: string]
+  'update:textSize': [v: number]
+  undo: []
+  redo: []
+  'remove-selected': []
+  'clear-mask': []
+  flatten: []
+  download: []
+  fit: []
+  zoom: [factor: number]
+  upload: []
+}>()
+
+const { t } = useI18n()
+void props
+
+const tools = computed(() => [
+  { name: 'select' as const, icon: 'select', title: t('canvas.tools.select') },
+  { name: 'pan' as const, icon: 'pan', title: t('canvas.tools.pan') },
+  { name: 'brush' as const, icon: 'brush', title: t('canvas.tools.brush') },
+  { name: 'eraser' as const, icon: 'eraser', title: t('canvas.tools.eraser') },
+  { name: 'text' as const, icon: 'text', title: t('canvas.tools.text') },
+])
+</script>
+
+<style scoped>
+.canvas-toolbar {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(8px);
+  z-index: 20;
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.canvas-toolbar::-webkit-scrollbar { display: none; }
+/* Corner buttons share the top row on phones — drop the pill under them. */
+@media (max-width: 767px) {
+  .canvas-toolbar { top: 56px; }
+}
+.dark .canvas-toolbar { background: rgba(17, 24, 39, 0.92); }
+.tool-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  color: #4b5563; transition: background 0.15s, color 0.15s;
+}
+.dark .tool-btn { color: #9ca3af; }
+.tool-btn:hover:not(:disabled) { background: rgba(20, 184, 166, 0.12); color: #14b8a6; }
+.tool-btn.active { background: #14b8a6; color: #fff; }
+.tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.divider { width: 1px; height: 20px; background: rgba(0, 0, 0, 0.1); margin: 0 4px; }
+.dark .divider { background: rgba(255, 255, 255, 0.12); }
+.brush-slider { width: 90px; accent-color: #14b8a6; }
+.color-input { width: 28px; height: 28px; border: none; background: none; padding: 0; cursor: pointer; }
+.zoom-label { font-size: 11px; color: #6b7280; min-width: 38px; text-align: center; }
+</style>

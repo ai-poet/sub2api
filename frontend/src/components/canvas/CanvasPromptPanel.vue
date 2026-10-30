@@ -1,220 +1,167 @@
+<template>
+  <div class="composer" :class="{ collapsed }">
+    <div class="composer-row">
+      <div class="seg" role="radiogroup">
+        <button
+          v-for="op in operations"
+          :key="op"
+          class="seg-btn"
+          :class="{ active: operation === op }"
+          @click="updateField('operation', op)"
+        >{{ t(`canvas.composer.${op}`) || opLabel(op) }}</button>
+      </div>
+      <button class="collapse-btn" @click="collapsed = !collapsed">
+        {{ collapsed ? t('canvas.composer.expandParams') : t('canvas.composer.collapseParams') }}
+      </button>
+    </div>
+    <div v-show="!collapsed" class="composer-body">
+      <textarea
+        v-model="promptText"
+        class="prompt-input"
+        rows="2"
+        :placeholder="t('canvas.composer.promptPlaceholder')"
+        @keydown="onKeydown"
+      />
+      <div class="param-row">
+        <select :value="apiKeyId" class="param" @change="updateField('apiKeyId', Number(($event.target as HTMLSelectElement).value))">
+          <option :value="null" disabled>{{ t('canvas.composer.apiKeyPlaceholder') }}</option>
+          <option v-for="k in eligibleKeys" :key="k.id" :value="k.id">{{ k.name }}</option>
+        </select>
+        <select :value="model" class="param" :disabled="imageModels.length === 0" @change="updateField('model', ($event.target as HTMLSelectElement).value)">
+          <option v-if="imageModels.length === 0" value="">{{ t('canvas.composer.modelEmpty') }}</option>
+          <option v-for="m in imageModels" :key="m" :value="m">{{ m }}</option>
+        </select>
+        <select :value="size" class="param" @change="updateField('size', ($event.target as HTMLSelectElement).value)">
+          <option v-for="s in ['1024x1024','1024x1536','1536x1024']" :key="s" :value="s">{{ s }}</option>
+        </select>
+        <select :value="quality" class="param" @change="updateField('quality', ($event.target as HTMLSelectElement).value)">
+          <option v-for="q in ['','low','medium','high']" :key="q" :value="q">{{ t(`canvas.quality.${q || 'default'}`) }}</option>
+        </select>
+        <select :value="count" class="param narrow" @change="updateField('count', Number(($event.target as HTMLSelectElement).value))">
+          <option v-for="n in [1,2,3,4]" :key="n" :value="n">{{ n }}</option>
+        </select>
+        <button class="submit-btn" :disabled="submitting || !ready" @click="$emit('submit')">
+          {{ submitting ? t('canvas.composer.submitting') : t('canvas.composer.submit') }}
+        </button>
+      </div>
+      <p class="guide">{{ guide }}</p>
+      <p v-if="operation !== 'generate'" class="guide dim">{{ t('canvas.composer.annotationsNote') }}</p>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 /**
- * CanvasPromptPanel.vue 是画布的提示词与参数面板。
- *
- * 负责：选 API Key、选模型、写提示词、调尺寸/质量/张数，然后提交生成。
- * 提交前需要拿到画布的合成结果，所以由父组件通过 expose 提供。
+ * Floating composer: operation segmented control, prompt, and the
+ * key/model/size/quality/count params bound straight to the studio refs.
+ * Submit emits once; the in-flight POST lock lives in useCanvasStudio.
  */
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Select from '@/components/common/Select.vue'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import type { ApiKey } from '@/types'
-
-const { t } = useI18n()
-
-/** 可选的图片尺寸。 */
-const SIZES = ['1024x1024', '1024x1536', '1536x1024'] as const
-
-/** 可选的质量档位。空串表示不传（用上游默认）。 */
-const QUALITIES = ['', 'low', 'medium', 'high'] as const
+import type { CanvasOperation } from '@/types/canvas'
 
 const props = defineProps<{
-  /** 当前用户的 API Key 列表。 */
-  apiKeys: ApiKey[]
-  /** 当前选中的 API Key ID。 */
-  apiKeyId: number | null
-  /** 可选的图片模型名。 */
-  models: string[]
-  /** 当前选中的模型。 */
-  model: string
-  /** 提示词。 */
+  operation: CanvasOperation
   prompt: string
-  /** 当前尺寸。 */
+  apiKeyId: number | null
+  model: string
   size: string
-  /** 当前质量档位。 */
   quality: string
-  /** 当前生成张数。 */
   count: number
-  /** 是否正在提交。 */
+  eligibleKeys: ApiKey[]
+  imageModels: string[]
   submitting: boolean
-  /** 提交失败时的错误文案。 */
-  errorMessage: string
+  ready: boolean
 }>()
 
 const emit = defineEmits<{
-  (event: 'update:apiKeyId', value: number | null): void
-  (event: 'update:model', value: string): void
-  (event: 'update:prompt', value: string): void
-  (event: 'update:size', value: string): void
-  (event: 'update:quality', value: string): void
-  (event: 'update:count', value: number): void
-  (event: 'submit'): void
+  'update:operation': [v: CanvasOperation]
+  'update:prompt': [v: string]
+  'update:apiKeyId': [v: number]
+  'update:model': [v: string]
+  'update:size': [v: string]
+  'update:quality': [v: string]
+  'update:count': [v: number]
+  submit: []
 }>()
 
-/** 提示词输入框的引用，用于快捷键聚焦。 */
-const promptInput = ref<HTMLTextAreaElement | null>(null)
+const { t } = useI18n()
+const collapsed = ref(typeof window !== 'undefined' && window.innerWidth < 768)
+const operations: CanvasOperation[] = ['generate', 'edit', 'inpaint']
 
-/** 是否可以提交：必须有 Key、模型和提示词。 */
-const canSubmit = computed(() => {
-  return (
-    !props.submitting &&
-    props.apiKeyId !== null &&
-    props.model.trim().length > 0 &&
-    props.prompt.trim().length > 0
-  )
+const promptText = computed({
+  get: () => props.prompt,
+  set: (v: string) => emit('update:prompt', v),
 })
 
-/** 尺寸选项。 */
-const sizeOptions = computed(() => SIZES.map((value) => ({ value, label: value })))
-
-/** 质量选项。 */
-const qualityOptions = computed(() =>
-  QUALITIES.map((value) => ({
-    value,
-    label: t(value ? `canvas.quality.${value}` : 'canvas.quality.default'),
-  })),
-)
-
-function updateApiKey(value: string | number | boolean | null): void {
-  emit('update:apiKeyId', typeof value === 'number' ? value : null)
+function opLabel(op: CanvasOperation): string {
+  return op
 }
 
-function updateString(
-  field: 'model' | 'size' | 'quality',
-  value: string | number | boolean | null,
-): void {
-  const text = typeof value === 'string' ? value : String(value ?? '')
-  if (field === 'model') emit('update:model', text)
-  if (field === 'size') emit('update:size', text)
-  if (field === 'quality') emit('update:quality', text)
+function updateField(field: string, value: unknown): void {
+  emit(`update:${field}` as never, value as never)
 }
 
-/**
- * focusPrompt 让外部可以聚焦到提示词输入框。
- */
-function focusPrompt(): void {
-  promptInput.value?.focus()
-}
+const guide = computed(() => {
+  if (props.operation === 'edit') return t('canvas.composer.guideEdit')
+  if (props.operation === 'inpaint') return t('canvas.composer.guideInpaint')
+  return t('canvas.composer.guideGenerate')
+})
 
-defineExpose({ focusPrompt })
+function onKeydown(e: KeyboardEvent): void {
+  // Cmd/Ctrl+Enter submits; never while an IME composition is active.
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !e.isComposing) {
+    e.preventDefault()
+    emit('submit')
+  }
+}
 </script>
 
-<template>
-  <div class="flex h-full flex-col gap-4 overflow-y-auto p-4">
-    <!-- API Key -->
-    <div>
-      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
-        {{ $t('canvas.panel.apiKey') }}
-      </label>
-      <Select
-        :model-value="props.apiKeyId"
-        :options="props.apiKeys.map((key) => ({ value: key.id, label: key.name }))"
-        :disabled="props.submitting"
-        :placeholder="$t('canvas.panel.apiKeyPlaceholder')"
-        @update:model-value="updateApiKey"
-      />
-    </div>
-
-    <!-- 模型 -->
-    <div>
-      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
-        {{ $t('canvas.panel.model') }}
-      </label>
-      <Select
-        :model-value="props.model"
-        :options="props.models.map((name) => ({ value: name, label: name }))"
-        :disabled="props.submitting"
-        :placeholder="$t('canvas.panel.modelPlaceholder')"
-        @update:model-value="(value) => updateString('model', value)"
-      />
-    </div>
-
-    <!-- 提示词 -->
-    <div>
-      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
-        {{ $t('canvas.panel.prompt') }}
-      </label>
-      <textarea
-        ref="promptInput"
-        :value="props.prompt"
-        :disabled="props.submitting"
-        rows="5"
-        :placeholder="$t('canvas.panel.promptPlaceholder')"
-        class="w-full resize-y rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-primary-500 disabled:opacity-60 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-100 dark:placeholder:text-gray-500"
-        @input="(event: Event) => emit('update:prompt', (event.target as HTMLTextAreaElement).value)"
-      />
-    </div>
-
-    <!-- 尺寸 -->
-    <div>
-      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
-        {{ $t('canvas.panel.size') }}
-      </label>
-      <Select
-        :model-value="props.size"
-        :options="sizeOptions"
-        :disabled="props.submitting"
-        @update:model-value="(value) => updateString('size', value)"
-      />
-    </div>
-
-    <!-- 质量 -->
-    <div>
-      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
-        {{ $t('canvas.panel.quality') }}
-      </label>
-      <Select
-        :model-value="props.quality"
-        :options="qualityOptions"
-        :disabled="props.submitting"
-        @update:model-value="(value) => updateString('quality', value)"
-      />
-    </div>
-
-    <!-- 张数 -->
-    <div>
-      <label class="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
-        {{ $t('canvas.panel.count') }}
-      </label>
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          :disabled="props.submitting || props.count <= 1"
-          class="rounded-md border border-gray-200 px-2.5 py-1 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-700 dark:text-gray-400 dark:hover:bg-dark-700"
-          @click="emit('update:count', props.count - 1)"
-        >
-          −
-        </button>
-        <span class="min-w-8 text-center text-sm text-gray-900 dark:text-gray-100">{{ props.count }}</span>
-        <button
-          type="button"
-          :disabled="props.submitting || props.count >= 4"
-          class="rounded-md border border-gray-200 px-2.5 py-1 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-700 dark:text-gray-400 dark:hover:bg-dark-700"
-          @click="emit('update:count', props.count + 1)"
-        >
-          +
-        </button>
-      </div>
-    </div>
-
-    <!-- 错误 -->
-    <p
-      v-if="props.errorMessage"
-      class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
-    >
-      {{ props.errorMessage }}
-    </p>
-
-    <!-- 提交 -->
-    <button
-      type="button"
-      :disabled="!canSubmit"
-      class="btn btn-primary mt-auto w-full justify-center disabled:cursor-not-allowed disabled:opacity-50"
-      @click="emit('submit')"
-    >
-      <LoadingSpinner v-if="props.submitting" size="sm" class="mr-2" />
-      {{ props.submitting ? $t('canvas.panel.submitting') : $t('canvas.panel.submit') }}
-    </button>
-  </div>
-</template>
+<style scoped>
+.composer {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(680px, calc(100% - 32px));
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(10px);
+  padding: 10px 14px;
+  z-index: 20;
+}
+.dark .composer { background: rgba(17, 24, 39, 0.95); }
+.composer-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.seg { display: flex; gap: 4px; background: rgba(0,0,0,0.05); border-radius: 10px; padding: 3px; }
+.dark .seg { background: rgba(255,255,255,0.06); }
+.seg-btn { padding: 4px 12px; border-radius: 8px; font-size: 13px; color: #4b5563; }
+.dark .seg-btn { color: #9ca3af; }
+.seg-btn.active { background: #14b8a6; color: #fff; }
+.collapse-btn { font-size: 12px; color: #6b7280; }
+.composer-body { margin-top: 8px; }
+.prompt-input {
+  width: 100%; resize: none; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px;
+  padding: 8px 10px; font-size: 14px; background: transparent; color: inherit;
+}
+.dark .prompt-input { border-color: rgba(255,255,255,0.12); }
+.param-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+.param {
+  font-size: 12px; padding: 5px 8px; border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.1); background: transparent; color: inherit;
+  max-width: 160px;
+}
+.dark .param { border-color: rgba(255,255,255,0.12); background: #1f2937; }
+.param.narrow { width: 60px; }
+.submit-btn {
+  margin-left: auto; padding: 7px 20px; border-radius: 10px;
+  background: #14b8a6; color: #fff; font-size: 13px; font-weight: 600;
+}
+.submit-btn:disabled { opacity: 0.5; }
+.guide { font-size: 11px; color: #6b7280; margin-top: 6px; }
+.guide.dim { opacity: 0.8; }
+@media (max-width: 640px) {
+  .param-row .param { flex: 1 1 40%; max-width: none; }
+}
+</style>

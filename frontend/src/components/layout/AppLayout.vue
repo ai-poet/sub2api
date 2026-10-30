@@ -16,7 +16,14 @@
 
       <!-- Main Content：合规声明未确认前不挂载页面内容，避免首屏一批管理接口同时 423 刷出成串错误提示 -->
       <!-- fork：fork-content-reveal 换页时内容淡入（styles/fork-motion.css） -->
-      <main class="fork-content-reveal p-4 md:p-6 lg:p-8">
+      <!-- fullViewport 的页面自己管理内边距与滚动（如画布工作台），其余页面保持不变 -->
+      <main
+        :class="
+          fullViewport
+            ? 'relative overflow-hidden h-[calc(100dvh-4rem)]'
+            : 'fork-content-reveal p-4 md:p-6 lg:p-8'
+        "
+      >
         <slot v-if="!complianceBlocking" />
         <div v-else class="flex min-h-[40vh] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
           {{ t('legal.adminCompliance') }}
@@ -37,6 +44,8 @@ import { useOnboardingTour } from '@/composables/useOnboardingTour'
 import { useOnboardingStore } from '@/stores/onboarding'
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'
+
+defineProps<{ fullViewport?: boolean }>()
 
 const appStore = useAppStore()
 const authStore = useAuthStore()
